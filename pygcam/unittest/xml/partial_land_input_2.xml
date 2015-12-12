@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+   <world>
+      <region name="Brazil">
+         <LandAllocatorRoot name="root">
+            <LandNode name="AgroForestLandAEZ04">
+               <LandNode name="AgroForest_NonPastureAEZ04">
+                  <logit-exponent fillout="1" year="1975">2.5</logit-exponent>
+               </LandNode>
+               <LandNode name="AllPastureLandAEZ04">
+                  <logit-exponent fillout="1" year="1975">3</logit-exponent>
+                  <UnmanagedLandLeaf name="UnmanagedPastureAEZ04">
+                     <land-use-history>
+                        <allocation year="1700">1.0545291</allocation>
+                        <allocation year="1750">1.7250538</allocation>
+                        <allocation year="1800">3.0863187</allocation>
+                        <allocation year="1850">10.4198079</allocation>
+                        <allocation year="1900">33.7937207</allocation>
+                        <allocation year="1950">129.0223452</allocation>
+                        <allocation year="1975">193.0613973</allocation>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.5</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">193.0613973</landAllocation>
+                     <landAllocation year="1990">211.5325668</landAllocation>
+                     <landAllocation year="2005">208.4650415</landAllocation>
+                     <landAllocation year="2010">209.0173224</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.5</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </UnmanagedLandLeaf>
+                  <LandLeaf name="PastureAEZ04">
+                     <land-use-history>
+                        <allocation year="1700">0.0947328</allocation>
+                        <allocation year="1750">0.1549688</allocation>
+                        <allocation year="1800">0.277257</allocation>
+                        <allocation year="1850">0.9360551</allocation>
+                        <allocation year="1900">3.0358319</allocation>
+                        <allocation year="1950">11.5906192</allocation>
+                        <allocation year="1975">19.2191083</allocation>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.5</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">19.2191083</landAllocation>
+                     <landAllocation year="1990">28.5500549</landAllocation>
+                     <landAllocation year="2005">43.1545282</landAllocation>
+                     <landAllocation year="2010">47.1747907</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.5</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </LandLeaf>
+               </LandNode>
+            </LandNode>
+            <LandNode name="AgroForestLandAEZ05">
+               <LandNode name="AgroForest_NonPastureAEZ05">
+                  <logit-exponent fillout="1" year="1975">2.5</logit-exponent>
+               </LandNode>
+               <LandNode name="AllPastureLandAEZ05">
+                  <logit-exponent fillout="1" year="1975">3</logit-exponent>
+                  <UnmanagedLandLeaf name="UnmanagedPastureAEZ05">
+                     <land-use-history>
+                        <allocation year="1700">5.1552167</allocation>
+                        <allocation year="1750">7.5264937</allocation>
+                        <allocation year="1800">12.2784575</allocation>
+                        <allocation year="1850">39.6275003</allocation>
+                        <allocation year="1900">126.3220539</allocation>
+                        <allocation year="1950">480.2900315</allocation>
+                        <allocation year="1975">724.7730486</allocation>
+                        <above-ground-carbon-density>0.8</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.7</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">724.7730486</landAllocation>
+                     <landAllocation year="1990">796.5046947</landAllocation>
+                     <landAllocation year="2005">786.6999784</landAllocation>
+                     <landAllocation year="2010">787.0723827</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.8</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.7</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </UnmanagedLandLeaf>
+                  <LandLeaf name="PastureAEZ05">
+                     <land-use-history>
+                        <allocation year="1700">0.4631148</allocation>
+                        <allocation year="1750">0.6761365</allocation>
+                        <allocation year="1800">1.1030254</allocation>
+                        <allocation year="1850">3.5599048</allocation>
+                        <allocation year="1900">11.3480407</allocation>
+                        <allocation year="1950">43.1464709</allocation>
+                        <allocation year="1975">72.1505796</allocation>
+                        <above-ground-carbon-density>0.8</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.7</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">72.1505796</landAllocation>
+                     <landAllocation year="1990">107.5023722</landAllocation>
+                     <landAllocation year="2005">162.8554416</landAllocation>
+                     <landAllocation year="2010">177.6406591</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.8</above-ground-carbon-density>
+                        <below-ground-carbon-density>9.7</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </LandLeaf>
+               </LandNode>
+            </LandNode>
+         </LandAllocatorRoot>
+      </region>
+      <region name="USA">
+         <LandAllocatorRoot name="root">
+            <LandNode name="AgroForestLandAEZ07">
+               <LandNode name="AgroForest_NonPastureAEZ07">
+                  <logit-exponent fillout="1" year="1975">1.25</logit-exponent>
+               </LandNode>
+               <LandNode name="AllPastureLandAEZ07">
+                  <logit-exponent fillout="1" year="1975">1.5</logit-exponent>
+                  <UnmanagedLandLeaf name="UnmanagedPastureAEZ07">
+                     <land-use-history>
+                        <allocation year="1700">6.5040383</allocation>
+                        <allocation year="1750">15.8334559</allocation>
+                        <allocation year="1800">43.5279119</allocation>
+                        <allocation year="1850">132.4157343</allocation>
+                        <allocation year="1900">716.2943826</allocation>
+                        <allocation year="1950">1208.3518386</allocation>
+                        <allocation year="1975">1259.5058893</allocation>
+                        <above-ground-carbon-density>0.6</above-ground-carbon-density>
+                        <below-ground-carbon-density>8.6</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">1259.5058893</landAllocation>
+                     <landAllocation year="1990">1307.4539821</landAllocation>
+                     <landAllocation year="2005">1250.8499735</landAllocation>
+                     <landAllocation year="2010">1325.2167407</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.6</above-ground-carbon-density>
+                        <below-ground-carbon-density>8.6</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </UnmanagedLandLeaf>
+                  <LandLeaf name="PastureAEZ07">
+                     <land-use-history>
+                        <allocation year="1700">0.4655608</allocation>
+                        <allocation year="1750">1.1333629</allocation>
+                        <allocation year="1800">3.1157392</allocation>
+                        <allocation year="1850">9.4783526</allocation>
+                        <allocation year="1900">51.2725379</allocation>
+                        <allocation year="1950">86.4941384</allocation>
+                        <allocation year="1975">99.3884357</allocation>
+                        <above-ground-carbon-density>0.6</above-ground-carbon-density>
+                        <below-ground-carbon-density>8.6</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">99.3884357</landAllocation>
+                     <landAllocation year="1990">29.6077637</landAllocation>
+                     <landAllocation year="2005">4.8766765</landAllocation>
+                     <landAllocation year="2010">10.6098386</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.6</above-ground-carbon-density>
+                        <below-ground-carbon-density>8.6</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </LandLeaf>
+               </LandNode>
+            </LandNode>
+            <LandNode name="AgroForestLandAEZ08">
+               <LandNode name="AgroForest_NonPastureAEZ08">
+                  <logit-exponent fillout="1" year="1975">2.5</logit-exponent>
+               </LandNode>
+               <LandNode name="AllPastureLandAEZ08">
+                  <logit-exponent fillout="1" year="1975">3</logit-exponent>
+                  <UnmanagedLandLeaf name="UnmanagedPastureAEZ08">
+                     <land-use-history>
+                        <allocation year="1700">1.7021035</allocation>
+                        <allocation year="1750">4.7531154</allocation>
+                        <allocation year="1800">13.3817559</allocation>
+                        <allocation year="1850">41.2876516</allocation>
+                        <allocation year="1900">223.497144</allocation>
+                        <allocation year="1950">375.16137</allocation>
+                        <allocation year="1975">392.0851106</allocation>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>10</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">392.0851106</landAllocation>
+                     <landAllocation year="1990">406.8649037</landAllocation>
+                     <landAllocation year="2005">389.2193626</landAllocation>
+                     <landAllocation year="2010">407.8869945</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>10</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </UnmanagedLandLeaf>
+                  <LandLeaf name="PastureAEZ08">
+                     <land-use-history>
+                        <allocation year="1700">0.121837</allocation>
+                        <allocation year="1750">0.3402292</allocation>
+                        <allocation year="1800">0.9578696</allocation>
+                        <allocation year="1850">2.9553808</allocation>
+                        <allocation year="1900">15.9979836</allocation>
+                        <allocation year="1950">26.8541483</allocation>
+                        <allocation year="1975">30.9396932</allocation>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>10</below-ground-carbon-density>
+                     </land-use-history>
+                     <landAllocation year="1975">30.9396932</landAllocation>
+                     <landAllocation year="1990">9.2136015</landAllocation>
+                     <landAllocation year="2005">1.5174457</landAllocation>
+                     <landAllocation year="2010">3.2655905</landAllocation>
+                     <minAboveGroundCDensity>0</minAboveGroundCDensity>
+                     <minBelowGroundCDensity>0</minBelowGroundCDensity>
+                     <land-carbon-densities>
+                        <above-ground-carbon-density>0.7</above-ground-carbon-density>
+                        <below-ground-carbon-density>10</below-ground-carbon-density>
+                        <mature-age fillout="1" year="1975">10</mature-age>
+                     </land-carbon-densities>
+                  </LandLeaf>
+               </LandNode>
+            </LandNode>
+         </LandAllocatorRoot>
+      </region>
+   </world>
+</scenario>

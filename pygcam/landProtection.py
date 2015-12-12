@@ -8,7 +8,10 @@ from lxml import etree as ET
 import copy
 
 def makeRegionXpath(regions):
-    if regions and isinstance(regions, (str, unicode)):
+    if not regions:
+        return ""
+
+    if isinstance(regions, (str, unicode)):
         regions = [regions]
 
     patterns = map(lambda s: "@name='%s'" % s, regions)
@@ -58,18 +61,5 @@ def createProtected(tree, fraction, landCovers=AllUnmanagedLand, regions=None):
             originalAreas = node.xpath(allocXpath)
             protectedAreas = new.xpath(allocXpath)
 
-            multiplyValues(originalAreas, 1 - protFrac)
-            multiplyValues(protectedAreas, protFrac)
-
-
-if __name__ == '__main__':
-    filename='/tmp/land_input_3.xml'
-    parser = ET.XMLParser(remove_blank_text=True)
-    tree = ET.parse(filename, parser)
-
-    protFrac = 0.9
-    covers = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland']
-    regions = ['Africa_Eastern', 'USA']
-
-    createProtected(tree, protFrac, landCovers=covers, regions=regions)
-    tree.write('/tmp/mod3.xml', xml_declaration=True, pretty_print=True)
+            multiplyValues(originalAreas, 1 - fraction)
+            multiplyValues(protectedAreas, fraction)
