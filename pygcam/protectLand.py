@@ -1,8 +1,9 @@
 '''
+Created on 12/12/15
 @author: Richard Plevin
 
-Copyright (c) 2014. The Regents of the University of California (Regents).
-See the file COPYRIGHT.txt for details.
+Copyright (c) 2015 Richard Plevin
+See the https://opensource.org/licenses/MIT for license details.
 '''
 from lxml import etree as ET
 import copy
