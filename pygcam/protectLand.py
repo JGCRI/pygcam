@@ -21,15 +21,15 @@ def _makeRegionXpath(regions):
     xpath = "//region[%s]" % regionPattern
     return xpath
 
-def _makeLandClassXpath(landClasses):
+def _makeLandClassXpath(landClasses, protected=False):
     if isinstance(landClasses, (str, unicode)):
         landClasses = [landClasses]
 
-    patterns = map(lambda s: "starts-with(@name, '%s')" % s, landClasses)
+    prefix = 'Protected' if protected else ''
+    patterns = map(lambda s: "starts-with(@name, '%s%s')" % (prefix, s), landClasses)
     landPattern = ' or '.join(patterns)
     xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
     return xpath
-
 
 def createProtected(tree, fraction, landClasses=AllUnmanagedLand, regions=None):
     """
@@ -43,7 +43,6 @@ def createProtected(tree, fraction, landClasses=AllUnmanagedLand, regions=None):
            regions are modified.
     :return: None
     """
-
     def multiplyValues(nodes, factor):
         for n in nodes:
             newValue = float(n.text) * factor
@@ -52,10 +51,21 @@ def createProtected(tree, fraction, landClasses=AllUnmanagedLand, regions=None):
     regionXpath = _makeRegionXpath(regions) if regions else ''
     landRoots = tree.xpath(regionXpath + '//LandAllocatorRoot')
 
-    unmgdXpath = _makeLandClassXpath(landClasses)
+    unmgdXpath     = _makeLandClassXpath(landClasses)
+    protectedXpath = _makeLandClassXpath(landClasses, protected=True)
 
     for landRoot in landRoots:
+
+        # ensure that we're not protecting an already-protected land class in these regions
+        nodes = landRoot.xpath(protectedXpath)
+        if len(nodes) > 0:
+            node = nodes[0]
+            regNodes = list(node.iterancestors(tag='region'))
+            region = regNodes[0].get('name')
+            raise Exception('Error: Land class %s is already protected in region %s' % (node.tag, region))
+
         nodes = landRoot.xpath(unmgdXpath)
+
         for node in nodes:
             landnode = ET.SubElement(landRoot, 'LandNode')
             new = copy.deepcopy(node)
