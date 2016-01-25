@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 '''
-Created on 12/12/15
-@author: Rich Plevin (rich@plevin.com)
+a@author: Rich Plevin (rich@plevin.com)
 
 Copyright (c) 2015 Richard Plevin
 See the https://opensource.org/licenses/MIT for license details.

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file defines one or more "projects" that are run using the runProjects.py script.
+See runProject.md for documentation.
+-->
+<projects>
+	<defaults>
+		<vars>
+			<!-- Required variables, generally set in .pygcam.cfg -->
+			<var name="workspaceRoot" configVar="GCAM.WorkspaceRoot"/>
+			<var name="xmlsrc" configVar="GCAM.XmlSrc"/>
+			<var name="localXml" configVar="GCAM.LocalXml"/>
+
+			<!-- User variables, used only by defined steps -->
+			<var name="setup">setup.py</var>
+			<var name="startYear">2015</var>
+			<var name="endYear">2050</var>
+			<var name="shockYear">2020</var>
+			<var name="queryDir" configVar="GCAM.QueryDir"/>
+			<var name="repoBin" configVar="GCAM.RepoBin"/>
+			<var name="queryPath" configVar="GCAM.QueryPath">.:{queryDir}:{queryDir}/Main_queries_customized.xml</var>
+			<var name="queryFile">{queryDir}/carbonIntensityQueries.txt</var>
+			<var name="plotScenariosFile">{repoBin}/plotAll-args.txt</var>
+			<var name="plotDiffsFile">{repoBin}/plotDiffs-args.txt</var>
+		</vars>
+		<steps>
+			<!--
+			The names defined in steps can be used on the command-line to limit operations to these steps
+			If runFor="baseline", the step is run only for baseline scenarios. If runFor="policy", it
+			is run only for non-baseline scenarios. If not set (or any other value) the step is run for all
+			scenarios.
+			 -->
+			<step seq="05" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
+			<step seq="10" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+			<step seq="15" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+			<step seq="20" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
+			<step seq="25" name="gcam"  runFor="policy">queueGCAM.py -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+			<step seq="30" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
+			<step seq="35" name="plotScenarios">chartGCAM.py {scenarioPlotArgs} --scenario {scenario} --fromFile {plotScenariosFile}</step>
+			<step seq="40" name="diff" runFor="policy">computeDiffs.sh {baseline} {scenario}</step>
+			<step seq="45" name="plotDiffs" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {plotDiffsFile}</step>
+			<step seq="45" name="diff-xlsx1" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx *.csv</step>
+			<step seq="45" name="diff-xlsx2" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i *.csv</step>
+			<step seq="50" name="CI" runFor="policy">carbonIntensity.py -d {diffsDir} -f {diffsDir}/fuelEJ.txt -s "_GUESS_" {baseline} {scenario} -v -y {years} -Y {shockYear}</step>
+			<step seq="55" name="plotCI" runFor="policy">plotCI.sh {baseline} {scenario} {years} {diffsDir}</step>
+		</steps>
+		<!--
+		Variable names that refer to files can be set the filename directly or from configVars,
+		or the file contents can be specified here, line by line, in which case a temp file is
+		created in the given dir (default dir="/tmp"), unless delete="0", all temp files created
+		during the invocation of runProject are deleted before the program exits. If the attribute
+		append="1" is set, the contents are appended to these already defined for this varName.
+		The resulting variable, referring either to a known file or a temp file, can be use in
+		commands in any <step>.
+		-->
+		<tmpFile varName="queryTempFile" dir="/tmp/runProject" delete="1">
+			<!-- optional tag lets a project declare same with active='0' to deactivate -->
+			<text tag="ag_n2o_ch4">Ag_N2O_and_CH4_emissions</text>
+			<text>Ag_Production_by_Crop_Type</text>
+			<text>Ag_non-burning_N2O_emissions</text>
+			<text>CO2_emissions_from_fertilizer_production</text>
+			<text>Climate_forcing</text>
+			<text>energy-consumption-by-sector-USA</text>
+			<text>GHG_emissions_by_aggregated_sector</text>
+			<text>GHG_emissions_by_region</text>
+			<text>Global_mean_temperature</text>
+			<text>Kyoto_gas_forcing</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg</text>
+			<text tag="msw">MSW_production</text>
+			<text>More_Aggregated_Land_Allocation</text>
+			<text>More_Aggregated_Land_Allocation_Wise_agg</text>
+			<text>Slightly_Less_Aggregated_Land_Allocation</text>
+			<text>Purpose-grown_biomass_production</text>
+			<text>Residue_biomass_production</text>
+			<text>Total_biomass_consumption</text>
+			<text tag="prices">prices-by-select-sectors-USA</text>
+			<text>refined-liquids-prod-by-tech-USA</text>
+			<text>refined-liquids-prod-by-tech</text>
+		</tmpFile>
+		<vars>
+			<var name="scenPlotArgs">-D {batchDir} --outputDir figures --years ${years} --label --labelColor black --box --enumerate</var>
+		</vars>
+		<tmpFile varName="scenPlots" dir="/tmp/runProject" delete="0" replace="1">
+			<text>More_Aggregated_Land_Allocation-{scenario}.csv -Y "10$^3$ km$^2$" -i -n 3 -T 'Land Allocation' -x by-land-allocation.png -I land-allocation --format=","</text>
+			<text>More_Aggregated_Land_Allocation-{scenario}.csv -Y "10$^3$ km$^2$" -i -n 4 -T 'Land Allocation' -x by-region.png -I region --format=","</text>
+			<text>refined-liquids-prod-by-tech-USA-{scenario}.csv -Y EJ -I technology -i -T 'Refined liquid fuels production in USA' -c region -n 4</text>
+			<text>Purpose-grown_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -c output -I region -T 'Purpose-grown biomass production' -x by-region.png</text>
+		</tmpFile>
+		<vars>
+			<var name="diffPlotArgs">-D {diffsDir} --outputDir figures --years ${years} --label --enumerate --ygrid --zeroLine</var>
+		</vars>
+		<tmpfile varName="diffPlots" dir="/tmp/runProject">
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+		</tmpfile>
+
+		<queries>
+			<!--
+			Decide whether to defined these here or just use a file, which is a bit simpler.
+			The advantage of having it here is that the correspondence between queries and
+			plot commands is easier to maintain.
+			-->
+			<query>Ag_N2O_and_CH4_emissions</query>
+			<query>Ag_Production_by_Crop_Type</query>
+			<query>Ag_non-burning_N2O_emissions</query>
+			<query>CO2_emissions_from_fertilizer_production</query>
+			<query>Climate_forcing</query>
+			<query>energy-consumption-by-sector-USA</query>
+			<query>GHG_emissions_by_aggregated_sector</query>
+			<query>GHG_emissions_by_region</query>
+			<query>Global_mean_temperature</query>
+			<query>Kyoto_gas_forcing</query>
+			<query>LUC_Emission_by_More_Aggregated_LUT</query>
+			<query>LUC_Emission_by_More_Aggregated_LUT_Wise_agg</query>
+			<query>MSW_production</query>
+			<query>More_Aggregated_Land_Allocation</query>
+			<query>More_Aggregated_Land_Allocation_Wise_agg</query>
+			<query>Slightly_Less_Aggregated_Land_Allocation</query>
+			<query>Purpose-grown_biomass_production</query>
+			<query>Residue_biomass_production</query>
+			<query>Total_biomass_consumption</query>
+			<query>prices-by-select-sectors-USA</query>
+			<query>refined-liquids-prod-by-tech-USA</query>
+			<query>refined-liquids-prod-by-tech</query>
+		</queries>
+		<scenarioPlots>
+			<commonArgs>-D {batchDir} --outputDir figures --years ${years} --label --labelColor black --box --enumerate</commonArgs>
+			<plot>More_Aggregated_Land_Allocation-{scenario}.csv -Y "10$^3$ km$^2$" -i -n 3 -T 'Land Allocation' -x by-land-allocation.png -I land-allocation --format=","</plot>
+			<plot>More_Aggregated_Land_Allocation-{scenario}.csv -Y "10$^3$ km$^2$" -i -n 4 -T 'Land Allocation' -x by-region.png -I region --format=","</plot>
+			<plot>refined-liquids-prod-by-tech-USA-{scenario}.csv -Y EJ -I technology -i -T 'Refined liquid fuels production in USA' -c region -n 4</plot>
+			<plot>Purpose-grown_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -c output -I region -T 'Purpose-grown biomass production' -x by-region.png</plot>
+		</scenarioPlots>
+		<diffPlots>
+			<commonArgs>-D {diffsDir} --outputDir figures --years ${years} --label --enumerate --ygrid --zeroLine</commonArgs>
+			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</plot>
+			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</plot>
+			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</plot>
+			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</plot>
+		</diffPlots>
+	</defaults>
+
+	<project name="EPA" subdir="EPA">
+		<vars>
+			<var name="startYear">2010</var>
+			<var name="endYear">2050</var>
+			<var name="shockYear">2015</var>
+		</vars>
+		<steps>
+			<!-- Any matching name and seq is replaced with the one here -->
+			<step seq="8" name="CI" runFor="policy">carbonIntensity.py -d {diffsDir} -f {diffsDir}/fuelEJ.txt -s "corn-etoh" {baseline} {scenario} -v -y {years} -Y {shockYear}</step>
+		</steps>
+		<scenario name="aeo2014" baseline="1"/>
+		<scenario name="corn-1-bgy"/>
+		<scenario name="corn-5-bgy" active="0"/>
+		<scenario name="corn-10-bgy"/>
+		<vars>
+			<var name="scenPlotArgs">--outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
+		</vars>
+	</project>
+
+	<project name="Paper1" subdir="Paper1">
+		<scenario name="base-1" subdir="baseline" baseline="1"/>
+		<scenario name="corn-1" subdir="corn"/>
+		<scenario name="stover-1" subdir="stover"/>
+		<scenario name="switchgrass-1" subdir="switchgrass"/>
+		<scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
+		<queries>
+			<!-- Allow projects to deactivate select queries -->
+			<query active="0">MSW_production</query>
+		</queries>
+		<vars>
+			<var name="scenPlotArgs">--outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
+			<var name="diffsPlotArgs">--outputDir figures --years {years} --label --enumerate --ygrid --zeroLine</var>
+		</vars>
+		<tempFile varName="diffsPlots" append="1">
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+		</tempFile>
+		<tempFile varName="scenPlots" append="1">
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+		</tempFile>
+	</project>
+</projects>
