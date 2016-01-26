@@ -18,8 +18,8 @@ See runProject.md for documentation.
 			<var name="shockYear">2020</var>
 			<var name="queryDir" configVar="GCAM.QueryDir"/>
 			<var name="repoBin" configVar="GCAM.RepoBin"/>
-			<var name="queryPath" configVar="GCAM.QueryPath">.:{queryDir}:{queryDir}/Main_queries_customized.xml</var>
-			<var name="queryFile">{queryDir}/carbonIntensityQueries.txt</var>
+			<var name="queryPath" configVar="GCAM.QueryPath"></var>
+			<!-- <var name="queryFile">{queryDir}/carbonIntensityQueries.txt</var> -->
 			<var name="plotScenariosFile">{repoBin}/plotAll-args.txt</var>
 			<var name="plotDiffsFile">{repoBin}/plotDiffs-args.txt</var>
 		</vars>
@@ -32,11 +32,11 @@ See runProject.md for documentation.
 			 -->
 			<step seq="05" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
 			<step seq="10" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
-			<step seq="15" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+			<step seq="15" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryTmpFile}"</step>
 			<step seq="20" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
-			<step seq="25" name="gcam"  runFor="policy">queueGCAM.py -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
-			<step seq="30" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
-			<step seq="35" name="plotScenarios">chartGCAM.py {scenarioPlotArgs} --scenario {scenario} --fromFile {plotScenariosFile}</step>
+			<step seq="25" name="gcam"  runFor="policy">queueGCAM.py -l -S 	 {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+			<step seq="30" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryTmpFile}"</step>
+			<step seq="35" name="plotScenarios">chartGCAM.py {scenPlots} --scenario {scenario} --fromFile {plotScenariosFile}</step>
 			<step seq="40" name="diff" runFor="policy">computeDiffs.sh {baseline} {scenario}</step>
 			<step seq="45" name="plotDiffs" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {plotDiffsFile}</step>
 			<step seq="45" name="diff-xlsx1" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx *.csv</step>
@@ -53,7 +53,7 @@ See runProject.md for documentation.
 		The resulting variable, referring either to a known file or a temp file, can be use in
 		commands in any <step>.
 		-->
-		<tmpFile varName="queryTempFile" dir="/tmp/runProject" delete="1">
+		<tmpFile varName="queryTmpFile">
 			<!-- optional tag lets a project declare same with active='0' to deactivate -->
 			<text tag="ag_n2o_ch4">Ag_N2O_and_CH4_emissions</text>
 			<text>Ag_Production_by_Crop_Type</text>
@@ -126,20 +126,6 @@ See runProject.md for documentation.
 			<query>refined-liquids-prod-by-tech-USA</query>
 			<query>refined-liquids-prod-by-tech</query>
 		</queries>
-		<scenarioPlots>
-			<commonArgs>-D {batchDir} --outputDir figures --years ${years} --label --labelColor black --box --enumerate</commonArgs>
-			<plot>More_Aggregated_Land_Allocation-{scenario}.csv -Y "10$^3$ km$^2$" -i -n 3 -T 'Land Allocation' -x by-land-allocation.png -I land-allocation --format=","</plot>
-			<plot>More_Aggregated_Land_Allocation-{scenario}.csv -Y "10$^3$ km$^2$" -i -n 4 -T 'Land Allocation' -x by-region.png -I region --format=","</plot>
-			<plot>refined-liquids-prod-by-tech-USA-{scenario}.csv -Y EJ -I technology -i -T 'Refined liquid fuels production in USA' -c region -n 4</plot>
-			<plot>Purpose-grown_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -c output -I region -T 'Purpose-grown biomass production' -x by-region.png</plot>
-		</scenarioPlots>
-		<diffPlots>
-			<commonArgs>-D {diffsDir} --outputDir figures --years ${years} --label --enumerate --ygrid --zeroLine</commonArgs>
-			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</plot>
-			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</plot>
-			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</plot>
-			<plot>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</plot>
-		</diffPlots>
 	</defaults>
 
 	<project name="EPA" subdir="EPA">
@@ -159,6 +145,11 @@ See runProject.md for documentation.
 		<vars>
 			<var name="scenPlotArgs">--outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
 		</vars>
+		<tmpFile varName="queryTmpFile">
+			<!-- don't bother with these queries -->
+			<text tag="msw"/>
+			<text tag="prices"/>
+		</tmpFile>
 	</project>
 
 	<project name="Paper1" subdir="Paper1">
@@ -175,17 +166,37 @@ See runProject.md for documentation.
 			<var name="scenPlotArgs">--outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
 			<var name="diffsPlotArgs">--outputDir figures --years {years} --label --enumerate --ygrid --zeroLine</var>
 		</vars>
-		<tempFile varName="diffsPlots" append="1">
+		<tmpFile varName="queryTempFile" delete="0">
+			<!-- not needed, so don't bother with these queries -->
+			<text tag="msw"/>
+			<text tag="prices"/>
+		</tmpFile>
+		<tmpFile varName="diffsPlots" append="1">
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
-		</tempFile>
-		<tempFile varName="scenPlots" append="1">
+		</tmpFile>
+		<tmpFile varName="scenPlots" append="1">
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{baseline}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
-		</tempFile>
+		</tmpFile>
+	</project>
+
+	<project name="EM">
+		<vars>
+			<var name="startYear">2015</var>
+			<var name="endYear">2050</var>
+			<var name="shockYear">2020</var>
+		</vars>
+		<scenario name="ctrl-9" subdir="baseline" baseline="1"/>
+		<scenario name="corn-9" subdir="corn"/>
+		<scenario name="stover-9" subdir="stover"/>
+		<vars>
+			<var name="scenPlotArgs">--outputDir figures --years {years} --label --labelColor black --box --enumerate --zeroLine</var>
+			<var name="diffPlotArgs">--outputDir figures --years {years} --label --enumerate --ygrid --zeroLine</var>
+		</vars>
 	</project>
 </projects>

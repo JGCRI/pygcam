@@ -92,7 +92,7 @@ the project defines a `<step>` with the same values for the attributes `name`,
 `seq`, and `runFor`. A default step can be deleted by redefining it with no text
 value, e.g., 
 
-    <step seq="10" name="gcam" runFor="base"/>
+    <step seq="10" name="gcam" runFor="baseline"/>
 
 Steps defined in projects that do not match default steps are added to the set 
 in the order indicated by `seq`.
