@@ -5,6 +5,74 @@ runProject.py is a workflow management script for GCAM. It reads a single XML in
 file that defines one or more projects, one or more scenarios, and one or more
 workflow steps. The file elements are described below.
 
+Usage
+-----
+    $ runProject.py -h
+    usage: runProject.py [-h] [-l] [-L] [-n] [-p PROJECTFILE] [-s STEPS]
+                         [-S SCENARIOS] [--vars] [-v] [-V]
+                         project
+    
+    Perform a series of steps typical for a GCAM-based analysis. This script reads
+    instructions from the file project.xml, the location of which is taken from
+    the user's pygcam.cfg file.
+    
+    positional arguments:
+      project               The project to run.
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -l, --listSteps       List the steps defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not
+                            displayed.
+      -L, --listScenarios   List the scenarios defined for the given project and
+                            exit. Dynamic variables (created at run-time) are not
+                            displayed.
+      -n, --noRun           Display the commands that would be run, but don't run
+                            them.
+      -p PROJECTFILE, --projectFile PROJECTFILE
+                            The directory into which to write the modified files.
+                            Default is taken from config file variable
+                            GCAM.ProjectXmlFile, if defined, otherwise the default
+                            is './project.xml'.
+      -s STEPS, --step STEPS
+                            The steps to run. These must be names of steps defined
+                            in the project.xml file. Multiple steps can be given
+                            in a single (comma-delimited) argument, or the -s flag
+                            can be repeated to indicate additional steps. By
+                            default, all steps are run.
+      -S SCENARIOS, --scenario SCENARIOS
+                            Which of the scenarios defined for the given project
+                            should be run. Multiple scenarios can be given in a
+                            single (comma-delimited) argument, or the -S flag can
+                            be repeated to indicate additional steps. By default,
+                            all active scenarios are run.
+      --vars                List variables and their values
+      -v, --verbose         Show diagnostic output
+      -V, --version         show program's version number and exit
+
+#### Examples
+
+Run all steps for project Foo:
+
+    runProject.py Foo
+
+Run all steps for project Foo, but only for scenarios 'baseline' and 'policy-1':
+
+    runProject Foo -S baseline,policy1
+    
+or, equivalently:
+
+    runProject Foo -S baseline -S policy1
+
+Run steps 'setup' and 'gcam' for scenario 'baseline' only
+
+    runProject Foo -s setup,gcam -S baseline,policy-1
+
+Show the commands that would be executed for the above command, but don't run them:
+
+    runProject Foo -s setup,gcam -S baseline,policy-1 -n
+
+
 Projects
 --------
 The element `<projects>` encloses one or more `<project>` elements and zero or 
@@ -116,7 +184,12 @@ assigned directly to variable names, as in:
 which assigns the value `foo` to the variable named `myVar`, which can be
 referenced in a `<step>` as `{myVar}`.
 
-### Config file variables
+#### Variables containing variables
+In some cases, a variable contains a variable reference that should be 
+evaluated before it is substituted into a command string. To do this, set
+the attribute `eval="1"`. Default is `eval="0"`.
+
+#### Config file variables
 
 Any `<var>` can take its value from the value of a configuration file 
 (`~/.config/pygcam.cfg`) variable by specifying the attribute `configVar="XXX"`,
@@ -127,7 +200,7 @@ where *XXX* is the name of the config file variable to copy. For example:
 assigns to the variable `queryFile` the value from the configuration file 
 variable named `GCAM.QueryFile`.
 
-### Required variables
+#### Required variables
 There are three required variables:
 
 * `<var name="wsRoot">` -- Set this to the top-level directory holding
@@ -187,6 +260,11 @@ exits. By default, `delete="1"`, i.e., the temp files are deleted. The value
 replace or append to the default value for this file variable. By default,
 values are appended, i.e., `replace="0"`. Setting `replace="1"` causes the
 project values to replace the default values.
+
+* `interpolate` indicates whether to perform variable substitution on the
+<text> values before writing the tmp file, as is done before executing
+<step> commands. By default, `interpolate="1"`, i.e., variable substitution
+is performed. Disable this by specifying `interpolate="0"`.
 
 For example, 
 

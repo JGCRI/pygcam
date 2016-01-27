@@ -106,6 +106,7 @@ class TmpFile(object):
 
         self.delete  = int(node.get('delete',  '1'))
         self.replace = int(node.get('replace', '0'))
+        self.interp  = int(node.get('interpolate', '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
         self.varName = name
 
@@ -139,19 +140,21 @@ class TmpFile(object):
     @classmethod
     def writeFiles(cls, argDict):
         for tmpFile in cls.Instances.values():
-            path = tmpFile.write()
+            path = tmpFile.write(argDict)
             argDict[tmpFile.varName] = path
 
-    def write(self):
+    def write(self, argDict):
         path = getTempFile('.txt', tmpDir=self.dir)
         if self.delete:
             self.FilesToDelete.append(path)
 
+        interp = self.interp
+
         with open(path, 'w') as f:
-            for node in self.textNodes:
-                if node.text:
-                    f.write(node.text)
-                    f.write('\n')
+            text = '\n'.join(map(lambda x: x.text or '', self.textNodes)) + '\n'
+            if interp and text:
+                text = text.format(**argDict) if interp else text
+            f.write(text)
 
         self.path = path
         return path
@@ -259,6 +262,7 @@ class Project(object):
         self.knownSteps = set([step.name for step in self.stepsList])
 
         self.vars = {}
+        self.varsToEval = [] # TBD: better as a 'Variable' class
         self.setProjectVarsFromNode(defaultsNode)   # set default values
         self.setProjectVarsFromNode(projectNode)    # override whichever are specified
 
@@ -290,15 +294,25 @@ class Project(object):
             if not name:
                 raise ProjectException('<var> definition is missing a name attribute')
 
+            if int(elt.get('eval', 0)):
+                self.varsToEval.append(name)
+
             # read config var if indicated
             configVar = elt.get('configVar')
-            value = getParam(configVar) if configVar else elt.text
-            self.vars[name] = value
+            text = getParam(configVar) if configVar else elt.text
+            self.vars[name] = text
 
     def setVarFromDefault(self, varName, defaultName):
         vars = self.vars
         if not varName in vars:
             vars[varName] = vars[defaultName]
+
+    def evaluateVars(self):
+        '''Evaluate vars that indicated eval="1"'''
+        argDict = self.argDict
+        for name in self.varsToEval:
+            text = argDict[name]
+            argDict[name] = text.format(**argDict) if text else ''
 
     def run(self, scenarios, steps, args):
         """
@@ -306,10 +320,11 @@ class Project(object):
         to create the command to execute in the shell. Variables are defined in
         the <vars> section of the project XML file.
         """
-        # TBD: document the available variables
+
         # Create a dict for use in formatting command templates
         vars = self.vars
-        argDict = vars.copy()
+        self.argDict = argDict = vars.copy()
+
         subdir = self.subdir
         xmlSrc = vars['xmlsrc']
         argDict['projectSubdir'] = subdir
@@ -345,9 +360,6 @@ class Project(object):
                 print "%20s = %s" % (name, value)
             sys.exit(0)
 
-        # generate temporary files and save paths in variables indicated in <tmpFile>
-        TmpFile.writeFiles(argDict)
-
         for stepName in steps:
             if not stepName in self.knownSteps:
                 raise ProjectException('Requested step "%s" does not exist in project description' % stepName)
@@ -370,6 +382,13 @@ class Project(object):
             argDict['scenarioWsDir'] = scenarioWsDir = join(projectWsDir, scenario.name)
             argDict['diffsDir'] = join(scenarioWsDir, 'diffs')
             argDict['batchDir'] = join(scenarioWsDir, 'batch-' + scenarioName)
+
+            # Generate temporary files and save paths in variables indicated in <tmpFile>.
+            # This is in the scenario loop so run-time variables are handled correctly,
+            # though it does result in the files being written multiple times (though with
+            # different values.)
+            self.evaluateVars()
+            TmpFile.writeFiles(argDict)
 
             # Loop over all defined steps and run those that user has requested
             for step in self.stepsList:
