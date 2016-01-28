@@ -6,7 +6,7 @@ See runProject.md for documentation.
 <projects>
 	<defaults>
 		<vars>
-			<!-- Required variables, generally set in .pygcam.cfg -->
+			<!-- Required variables, 'configVar' takes value from variable in ~/.pygcam.cfg -->
 			<var name="workspaceRoot" configVar="GCAM.WorkspaceRoot"/>
 			<var name="xmlsrc" configVar="GCAM.XmlSrc"/>
 			<var name="localXml" configVar="GCAM.LocalXml"/>
@@ -23,29 +23,30 @@ See runProject.md for documentation.
 		<steps>
 			<!--
 			The names defined in steps can be used on the command-line to limit operations to these steps
-			If runFor="baseline", the step is run only for baseline scenarios. If runFor="policy", it
-			is run only for non-baseline scenarios. If not set (or any other value) the step is run for all
-			scenarios.
+			If runFor="baseline", the step is run only for baseline scenarios. If runFor="policy", the step
+			is run only for non-baseline scenarios. If not set (or set to any other value) the step is run
+			for all scenarios. Steps with same seq number can be run in any order.
 			 -->
-			<step seq="05" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
-			<step seq="10" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
-			<step seq="15" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-			<step seq="20" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
-			<step seq="25" name="gcam"  runFor="policy">queueGCAM.py -l -S 	 {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
-			<step seq="30" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
-			<step seq="35" name="plotScenarios">chartGCAM.py {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-			<step seq="40" name="diff" runFor="policy">computeDiffs.sh {baseline} {scenario}</step>
-			<step seq="45" name="plotDiffs" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-			<step seq="45" name="diff-xlsx1" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx *.csv</step>
-			<step seq="45" name="diff-xlsx2" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i *.csv</step>
-			<step seq="50" name="CI" runFor="policy">carbonIntensity.py -d {diffsDir} -f {diffsDir}/fuelEJ.txt -s "_GUESS_" {baseline} {scenario} -v -y {years} -Y {shockYear}</step>
-			<step seq="55" name="plotCI" runFor="policy">plotCI.sh {baseline} {scenario} {years} {diffsDir}</step>
+			<step seq="1" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
+			<step seq="2" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+			<step seq="3" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+			<step seq="4" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
+			<step seq="5" name="gcam"  runFor="policy">queueGCAM.py -l -S 	 {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+			<step seq="6" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
+			<step seq="7" name="plotScen">chartGCAM.py {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+			<step seq="7" name="diff" runFor="policy">csvDiff.py -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+			<step seq="8" name="CI" runFor="policy">carbonIntensity.py -d {diffsDir} -f {diffsDir}/fuelEJ.txt -s "_GUESS_" {baseline} {scenario} -v -y {years} -Y {shockYear}</step>
+			<step seq="9" name="plotDiff" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+			<step seq="9" name="plotCI" runFor="policy">plotCI.sh {baseline} {scenario} {years} {diffsDir}</step>
+			<step seq="9" name="xlsx" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx *.csv</step>
+			<step seq="9" name="xlsx" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i *.csv</step>
 		</steps>
-		<tmpFile varName="queryFile" interpolate="0">
-			<!-- optional tag lets a project declare same with active='0' to deactivate -->
+		<tmpFile varName="queryFile" evaluate="0">
+			<!-- Providing an optional tag lets a project declare same with no text to deactivate -->
 			<text tag="ag_n2o_ch4">Ag_N2O_and_CH4_emissions</text>
 			<text>Ag_Production_by_Crop_Type</text>
 			<text>Ag_non-burning_N2O_emissions</text>
+			<text>Ag_waste_burning_N2O_emissions</text>
 			<text>CO2_emissions_from_fertilizer_production</text>
 			<text>Climate_forcing</text>
 			<text>energy-consumption-by-sector-USA</text>
@@ -145,7 +146,6 @@ See runProject.md for documentation.
 			<text>Kyoto_gas_forcing-{scenario}-{reference}.csv -Y 'W/m$^2$' --timeseries -T '$\Delta$ Kyoto Gas Forcing'</text>
 			<text>Climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
 			<text>Global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
-			<text>CO2_concentrations-{scenario}-{reference}.csv -Y 'Parts per million' --timeseries -T '$\Delta$ CO$_2$ Concentration'</text>
 		</tmpFile>
 	</defaults>
 
@@ -163,7 +163,7 @@ See runProject.md for documentation.
 			<var name="diffPlotArgs">--verbose -D {diffsDir} --outputDir figures --years {years} --label --enumerate --ygrid --zeroLine</var>
 		</vars>
 
-		<tmpFile varName="queryFile" delete="0">
+		<tmpFile varName="queryFile" replace="0">
 			<!-- These queries are not needed, so don't bother with these queries -->
 			<text tag="msw"/>
 			<text tag="prices"/>
@@ -176,19 +176,16 @@ See runProject.md for documentation.
 			<var name="endYear">2050</var>
 			<var name="shockYear">2015</var>
 		</vars>
-		<steps>
-			<!-- Any matching name and seq is replaced with the one here -->
-			<step seq="8" name="CI" runFor="policy">carbonIntensity.py -d {diffsDir} -f {diffsDir}/fuelEJ.txt -s "corn-etoh" {baseline} {scenario} -v -y {years} -Y {shockYear}</step>
-		</steps>
 		<scenario name="aeo2014" baseline="1"/>
 		<scenario name="corn-1-bgy"/>
 		<scenario name="corn-5-bgy" active="0"/>
 		<scenario name="corn-10-bgy"/>
 		<vars>
+			<!-- custom arguments to format graphical output -->
 			<var name="scenPlotArgs">--outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
 		</vars>
 		<tmpFile varName="queryFile">
-			<!-- don't bother with these queries -->
+			<!-- These queries aren't needed, so we drop them -->
 			<text tag="msw"/>
 			<text tag="prices"/>
 		</tmpFile>

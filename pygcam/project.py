@@ -99,14 +99,14 @@ class TmpFile(object):
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="0" replace="1">
+        # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" evaluate="1">
         name = node.get('varName')
         if not name:
             raise ProjectException("tmpFile element is missing its required 'name' attribute")
 
         self.delete  = int(node.get('delete',  '1'))
         self.replace = int(node.get('replace', '0'))
-        self.interp  = int(node.get('interpolate', '1'))    # convert {args} before writing file
+        self.eval    = int(node.get('evaluate', '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
         self.varName = name
 
@@ -148,12 +148,10 @@ class TmpFile(object):
         if self.delete:
             self.FilesToDelete.append(path)
 
-        interp = self.interp
-
         with open(path, 'w') as f:
             text = '\n'.join(map(lambda x: x.text or '', self.textNodes)) + '\n'
-            if interp and text:
-                text = text.format(**argDict) if interp else text
+            if text and self.eval:
+                text = text.format(**argDict)
             f.write(text)
 
         self.path = path
@@ -204,7 +202,7 @@ class Step(object):
         except KeyError as e:
             raise ProjectException("%s -- No such variable exists in the project XML file" % e)
 
-        print "[%s, %s] %s" % (scenario.name, self.seq, command)
+        print "[%s, %s, %s] %s" % (scenario.name, self.seq, self.name, command)
 
         if not noRun:
             shellCommand(command)
