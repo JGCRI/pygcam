@@ -36,10 +36,10 @@ See runProject.md for documentation.
 			<step seq="7" name="plotScen">chartGCAM.py {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
 			<step seq="7" name="diff" runFor="policy">csvDiff.py -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
 			<step seq="8" name="CI" runFor="policy">carbonIntensity.py -d {diffsDir} -f {diffsDir}/fuelEJ.txt -s "_GUESS_" {baseline} {scenario} -v -y {years} -Y {shockYear}</step>
-			<step seq="9" name="plotDiff" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+			<step seq="8" name="plotDiff" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
 			<step seq="9" name="plotCI" runFor="policy">plotCI.sh {baseline} {scenario} {years} {diffsDir}</step>
-			<step seq="9" name="xlsx" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx *.csv</step>
-			<step seq="9" name="xlsx" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i *.csv</step>
+			<step seq="9" name="xlsx" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/*.csv</step>
+			<step seq="10" name="xlsx" runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
 		</steps>
 		<tmpFile varName="queryFile" evaluate="0">
 			<!-- Providing an optional tag lets a project declare same with no text to deactivate -->
