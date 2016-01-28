@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This is an example project definition file, which is run using the runProjects.py
+script. Project files can define any number of projects as well as defaults that
+are shared by all projects (or overridden in projects).
+
+See runProject.md for documentation.
+-->
+
+<projects>
+  <defaults>
+	<vars>
+		<!-- Required variables -->
+		<var name="workspaceRoot" configVar="GCAM.WorkspaceRoot"/>
+		<var name="xmlsrc" configVar="GCAM.XmlSrc"/>
+		<var name="localXml" configVar="GCAM.LocalXml"/>
+
+		<!-- User variables, used only by defined steps -->
+		<var name="setup">setup.py</var>
+		<var name="startYear">2015</var>
+		<var name="endYear">2050</var>
+		<var name="shockYear">2020</var>
+		<var name="queryDir" configVar="GCAM.QueryDir"/>
+		<var name="repoBin" configVar="GCAM.RepoBin"/>
+		<var name="queryPath" configVar="GCAM.QueryPath"></var>
+	</vars>
+
+	<!--
+	The names defined in <steps> can be used on the command-line to limit operations to these steps
+	If runFor="baseline", the step is run only for baseline scenarios. If runFor="policy", the step
+	is run only for non-baseline scenarios. If not set (or set to any other value) the step is run
+	for all scenarios. Steps with same seq number can be run in any order.
+	 -->
+	<steps>
+		<step seq="1" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
+		<step seq="2" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+		<step seq="3" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step seq="4" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
+		<step seq="5" name="gcam"  runFor="policy">queueGCAM.py -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+		<step seq="6" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
+		<step seq="7" name="plotScen">chartGCAM.py {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+		<step seq="8" name="diff"  runFor="policy">csvDiff.py -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+		<step seq="9" name="plotDiff" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+		<step seq="10" name="xlsx"  runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/*.csv</step>
+		<step seq="11" name="xlsx"  runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+	</steps>
+
+	<tmpFile varName="queryFile" evaluate="0">
+		<text>Residue_biomass_production</text>
+		<text>refined-liquids-prod-by-tech</text>
+		<text>Purpose-grown_biomass_production</text>
+		<text>Kyoto_gas_forcing</text>
+	</tmpFile>
+
+	<vars>
+		<var name="scenPlotArgs" eval="1">--verbose -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
+		<var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years}</var>
+		<var name="scenRefCsv" eval="1">{scenario}-{reference}.csv</var>
+	</vars>
+	<tmpFile varName="diffPlots">
+		<text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
+		<text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
+		<text>refined-liquids-prod-by-tech-{scenRefCsv} -I technology -T '$\Delta$ Refined liquid fuels production' -c region -n 3</text>
+		<text>Purpose-grown_biomass_production-{scenRefCsv} -Y "EJ biomass" -n 4 -c output -I region -z -T '$\Delta$ Purpose-grown biomass production' -x by-region.png</text>
+		<text>Kyoto_gas_forcing-{scenRefCsv} -Y 'W/m$^2$' --timeseries -T '$\Delta$ Kyoto Gas Forcing'</text>
+	</tmpFile>
+  </defaults>
+
+  <project name="Paper1">
+	<scenario name="base-1" subdir="baseline" baseline="1"/>
+	<scenario name="corn-1" subdir="corn"/>
+	<scenario name="stover-1" subdir="stover" active="0"/>
+	<scenario name="switchgrass-1" subdir="switchgrass" active="0"/>
+	<scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
+  </project>
+</projects>

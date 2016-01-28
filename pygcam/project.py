@@ -169,7 +169,7 @@ class Scenario(object):
 class Step(object):
     # seq="1" name="gcam"  scenario="baseline" replace="1"
     def __init__(self, node):
-        self.seq     = int(node.get('seq', 0))
+        self.seq     = float(node.get('seq', 0))
         self.name    = node.get('name')
         self.runFor  = node.get('runFor', 'all')
         self.command = node.text
@@ -372,12 +372,11 @@ class Project(object):
                 print '  %s is inactive' % scenarioName
                 continue
 
-            # TBD: document the available variables
             argDict['scenario'] = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir
             argDict['scenarioSrcDir'] = join(projectSrcDir, scenario.subdir)
             argDict['scenarioXmlDir'] = join(projectXmlDir, scenario.subdir)
-            argDict['scenarioWsDir'] = scenarioWsDir = join(projectWsDir, scenario.name)
+            argDict['scenarioWsDir'] = scenarioWsDir = join(projectWsDir, scenarioName)
             argDict['diffsDir'] = join(scenarioWsDir, 'diffs')
             argDict['batchDir'] = join(scenarioWsDir, 'batch-' + scenarioName)
 

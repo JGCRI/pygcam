@@ -117,11 +117,12 @@ the project is run.
 ###Steps
 
 The element `<steps>` contains a series of `<step>` declarations, and has no
-attributes.
+attributes. Multiple `<steps>` elements are allowed.
 
-A `<step>` describes one step in the workflow. Each step has a name and an integer
-sequence number, neither of which needs to be unique. Steps can be referenced by 
-name from the command-line to run all steps of the given name(s).
+A `<step>` describes one step in the workflow. Each step has a name and a sequence
+number, which can be integer or float. Steps (from one or more `<steps>` sections)
+are sorted by sequence number before execution. By definition, steps with the same
+same sequence number are order independent; they can run in any order. 
 
 Steps are generalized by using variable definitions, some of which are set directly
 by the user and other which are set by the runProject.py script at run-time. Variables
@@ -156,9 +157,6 @@ For example, the block:
 defines a series of steps that calls setup scripts, runs GCAM, runs a set of XML batch 
 queries, computes differences between policy and baseline scenarios, and plots the
 differences.
-
-Steps are sorted by their integer sequence number. By definition, steps with the
-same sequence number are order independent; they can run in any order. 
 
 Steps can be defined in the `<defaults>` section, in which case they apply to all
 projects. Projects, however, can add, delete, or redefine steps. To redefine a step,
