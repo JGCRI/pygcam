@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''
+"""
 @author: Rich Plevin (rich@plevin.com)
 
 Copyright (c) 2015 Richard Plevin
@@ -7,7 +7,7 @@ See the https://opensource.org/licenses/MIT for license details.
 
 Support for running a sequence of operations for a GCAM project
 that is described in an XML file.
-'''
+"""
 
 # TBD: After library is created from the gcam-utils, rewrite this to use it.
 
@@ -17,6 +17,7 @@ import platform
 from itertools import chain
 import argparse
 import subprocess
+#from collections import OrderedDict
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
@@ -88,10 +89,37 @@ def shellCommand(command):
     if exitStatus <> 0:
         raise ProjectException("Command failed: %s\nexit status %s" % (command, exitStatus))
 
+def checkAttributes(node, allowed, required):
+    """
+    Checks that the node has all required attributes and doesn't
+    have any unknown attributes. The arguments 'given' and 'required'
+    are sets.
+    """
+    given = set(node.keys())
+
+    missing = required - given
+    if missing:
+        raise ProjectException('<%s> element is missing required attributes: %s' % (node.tag, ' '.join(missing)))
+
+    unknown = given - allowed
+    if unknown:
+        raise ProjectException('<%s> element has unknown attributes: %s' % (node.tag, ' '.join(unknown)))
+
+def getBaseline(scenarioNodes):
+    '''Check that exactly one active baseline is defined, and if so, return it'''
+
+    baselines = [s for s in scenarioNodes if s.get('baseline', '0') == '1' and s.get('active', '1') == '1']
+    if len(baselines) == 1:
+        return baselines[0]
+
+    raise ProjectException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+
 
 class TmpFile(object):
     FilesToDelete = []
     Instances = {}  # keyed by name
+    Allowed  = {'varName', 'delete', 'replace', 'eval', 'dir'}
+    Required = {'varName'}
 
     def __init__(self, node):
         """
@@ -99,14 +127,16 @@ class TmpFile(object):
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" evaluate="1">
+        checkAttributes(node, self.Allowed, self.Required)
+
+        # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
         name = node.get('varName')
         if not name:
             raise ProjectException("tmpFile element is missing its required 'name' attribute")
 
         self.delete  = int(node.get('delete',  '1'))
         self.replace = int(node.get('replace', '0'))
-        self.eval    = int(node.get('evaluate', '1'))    # convert {args} before writing file
+        self.eval    = int(node.get('eval',    '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
         self.varName = name
 
@@ -159,7 +189,12 @@ class TmpFile(object):
 
 
 class Scenario(object):
+    Allowed  = {'name', 'active', 'baseline', 'subdir'}
+    Required = {'name'}
+
     def __init__(self, node):
+        checkAttributes(node, self.Allowed, self.Required)
+
         self.name = node.get('name')
         self.isActive   = node.get('active',   default='1') == '1'
         self.isBaseline = node.get('baseline', default='0') == '1'
@@ -167,15 +202,16 @@ class Scenario(object):
 
 
 class Step(object):
-    # seq="1" name="gcam"  scenario="baseline" replace="1"
+    Allowed  = {'name', 'seq', 'runFor'}
+    Required = {'name', 'seq'}
+
     def __init__(self, node):
-        self.seq     = float(node.get('seq', 0))
+        checkAttributes(node, self.Allowed, self.Required)
+
+        self.seq     = int(node.get('seq', 0))
         self.name    = node.get('name')
         self.runFor  = node.get('runFor', 'all')
         self.command = node.text
-
-        if not self.name:
-            raise ProjectException("<step> requires a name attribute")
 
         if not self.command:
             raise ProjectException("<step name='%s'> is missing command text" % self.name)
@@ -207,15 +243,76 @@ class Step(object):
         if not noRun:
             shellCommand(command)
 
+class Variable(object):
+    Allowed  = {'name', 'eval', 'configVar'}
+    Required = {'name'}
+    Instances = {}
+
+    def __init__(self, node):
+        checkAttributes(node, self.Allowed, self.Required)
+        self.name = node.get('name')
+        self.configVar = configVar = node.get('configVar')
+        self.value = getParam(configVar) if configVar else node.text
+        self.eval = int(node.get('eval', 0))
+
+        self.Instances[self.name] = self
+
+    @classmethod
+    def instances(cls):
+        return cls.Instances.values()
+
+    @classmethod
+    def definedVars(cls):
+        return cls.Instances.keys()
+
+    @classmethod
+    def setFromDefault(cls, varName, defaultName):
+        vars = cls.Instances
+        if not varName in vars:
+            vars[varName] = vars[defaultName]
+
+    @classmethod
+    def getDict(cls):
+        argDict = {name: var.value for name, var in cls.Instances.iteritems()}
+        return argDict
+
+    @classmethod
+    def evaluateVars(cls, argDict):
+        '''Evaluate vars and store results in argDict'''
+        for name, var in cls.Instances.iteritems():
+            # TBD: might only do this if var.evaluate is set
+            argDict[name] = var.evaluate(argDict)
+
+    def evaluate(self, argDict):
+        value = self.getValue()
+        result = value.format(**argDict) if value and self.eval else value
+        return result
+
+    def getValue(self):
+        return self.value
+
+    def setValue(self, value):
+        self.value = value
+
 
 class Project(object):
+    Allowed  = {'name', 'subdir'}
+    Required = {'name'}
 
     def __init__(self, tree, projectName):
         self.projectName = projectName
 
-        projectNode = tree.find('project[@name="%s"]' % projectName)
-        if projectNode is None:
+        projectNodes = tree.findall('project[@name="%s"]' % projectName)
+
+        if len(projectNodes) == 0:
             raise ProjectException("Project '%s' is not defined" % projectName)
+
+        if len(projectNodes) > 1:
+            raise ProjectException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
+
+        projectNode = projectNodes[0]
+
+        checkAttributes(projectNode, self.Allowed, self.Required)
 
         self.subdir = projectNode.get('subdir', projectName)        # subdir defaults to project name
 
@@ -224,48 +321,27 @@ class Project(object):
         scenarioNodes = projectNode.findall('scenario')
         self.scenarioDict = {node.name : node for node in map(Scenario, scenarioNodes)}
 
-        # Check that exactly one active baseline is defined
-        baselines = [s for s in scenarioNodes if s.get('baseline', '0') == '1' and s.get('active', '1') == '1']
-        if len(baselines) != 1:
-            raise ProjectException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+        self.baselineNode = getBaseline(scenarioNodes)
+        self.baselineName = self.baselineNode.get('name')
 
-        self.baseline = baselines[0]
-        self.baselineName = self.baseline.get('name')
+        dfltSteps = map(Step, defaultsNode.findall('./steps/step'))
+        projSteps = map(Step, projectNode.findall('./steps/step'))
+        allSteps  = dfltSteps + projSteps
 
-        def collectInfo(node):
-            queriesNode = node.find('queries')
-            queries = list(queriesNode.itertext()) if queriesNode is not None else []
-
-            stepNodes = node.findall('./steps/step')
-            steps = map(Step, stepNodes)
-            return queries, steps
-
-        dfltQueries, dfltSteps = collectInfo(defaultsNode)
-        projQueries, projSteps = collectInfo(projectNode)
-
-        # Combine default queries with project-specific queries
-        self.queries = dfltQueries + projQueries
-
-        # Combine default steps with project-specific steps
+        # project steps with same name and seq overwrite defaults
         self.stepsDict = stepsDict = {}
-        allSteps = dfltSteps + projSteps
-
-        # project steps with same name and seq overwrite defaults in tmpDict
         for step in allSteps:
             key = "%s-%d" % (step.name, step.seq)
             stepsDict[key] = step
 
-        # sort by seq and save a set of all known steps
-        self.stepsList  = sorted(stepsDict.values(), key=lambda node: node.seq)
-        self.knownSteps = set([step.name for step in self.stepsList])
-
         self.vars = {}
-        self.varsToEval = [] # TBD: better as a 'Variable' class
-        self.setProjectVarsFromNode(defaultsNode)   # set default values
-        self.setProjectVarsFromNode(projectNode)    # override whichever are specified
 
-        self.setVarFromDefault('shockYear', 'startYear')    # set defaults from other vars
-        self.setVarFromDefault('analysisEndYear', 'endYear')
+        map(Variable, defaultsNode.findall('./vars/var'))
+        map(Variable,  projectNode.findall('./vars/var'))
+
+        # Deprecated?
+        Variable.setFromDefault('shockYear', 'startYear')    # set defaults from other vars
+        Variable.setFromDefault('analysisEndYear', 'endYear')
 
         self.checkRequiredVars()
 
@@ -273,44 +349,76 @@ class Project(object):
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
-
     def checkRequiredVars(self):
         # Ensure that the required vars are set to non-empty strings
-        required = ['xmlsrc', 'workspaceRoot', 'localXml']
-        missing = []
-        for var in required:
-            if var not in self.vars or not self.vars[var]:
-                missing.append(var)
-
-        if len(missing):
+        required = {'xmlsrc', 'workspaceRoot', 'localXml'}
+        given = set(Variable.definedVars())
+        missing = required - given
+        if missing:
             raise ProjectException("Missing required variables: %s" % missing)
 
-    def setProjectVarsFromNode(self, node):
-        nodeList = node.findall('./vars/var')   # allows for multiple <vars> sections
-        for elt in nodeList:
-            name = elt.get('name')
-            if not name:
-                raise ProjectException('<var> definition is missing a name attribute')
+    def maybeListProjectArgs(self, args, knownScenarios, knownSteps):
+        '''
+        If user asked to list scenarios, steps, or variables, do so and quit.
+        '''
+        self.quit = False
 
-            if int(elt.get('eval', 0)):
-                self.varsToEval.append(name)
+        def showList(strings, header):
+            self.quit = True
+            if header:
+                print header
+            for s in strings:
+                print '  ', s
 
-            # read config var if indicated
-            configVar = elt.get('configVar')
-            text = getParam(configVar) if configVar else elt.text
-            self.vars[name] = text
+        if args.listScenarios:
+            showList(knownScenarios, 'Scenarios:')
 
-    def setVarFromDefault(self, varName, defaultName):
-        vars = self.vars
-        if not varName in vars:
-            vars[varName] = vars[defaultName]
+        if args.listSteps:
+            showList(knownSteps, 'Steps:')
 
-    def evaluateVars(self):
-        '''Evaluate vars that indicated eval="1"'''
-        argDict = self.argDict
-        for name in self.varsToEval:
-            text = argDict[name]
-            argDict[name] = text.format(**argDict) if text else ''
+        if args.vars:
+            varList = ["%15s = %s" % (name, value) for name, value in sorted(argDict.iteritems())]
+            showList(varList, 'Vars:')
+
+        if self.quit:
+            sys.exit(0)
+
+    def getKnownSteps(self):
+        '''
+        Return a list of known steps in seq order, without duplicates.
+        '''
+        tmpDict = {}    # used to eliminate duplicates
+
+        def uniqStep(step):
+            key = step.name
+            if tmpDict.get(key):
+                return False # already in dict
+
+            tmpDict[key] = 1
+            return key       # first time for this name
+
+        self.sortedSteps = sortedSteps = sorted(self.stepsDict.values(), key=lambda node: node.seq)
+        knownSteps = [step.name for step in sortedSteps if uniqStep(step)]
+        return knownSteps
+
+    def getKnownScenarios(self):
+        '''
+        Return a list of known scenarios for the current project, alpha sorted
+        '''
+        # sorting by not(node.isBaseline) results in baseline preceding scenarios
+        self.sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)
+        knownScenarios  = map(lambda node: node.name, self.sortedScenarios)
+        return knownScenarios
+
+    def validateProjectArgs(self, userArgs, knownArgs, argName):
+        '''
+        If the user requested steps or scenarios that are not defined, raise an error.
+        '''
+        unknownArgs = set(userArgs) - set(knownArgs)
+        if unknownArgs:
+            s = ' '.join(unknownArgs)
+            raise ProjectException("Requested %s do not exist in project %s: %s" % \
+                                   (argName, self.projectName, s))
 
     def run(self, scenarios, steps, args):
         """
@@ -318,60 +426,39 @@ class Project(object):
         to create the command to execute in the shell. Variables are defined in
         the <vars> section of the project XML file.
         """
+        # Get the text values for all variables
+        self.argDict = argDict = Variable.getDict()
 
-        # Create a dict for use in formatting command templates
-        vars = self.vars
-        self.argDict = argDict = vars.copy()
-
-        subdir = self.subdir
-        xmlSrc = vars['xmlsrc']
-        argDict['projectSubdir'] = subdir
+        xmlSrc = argDict['xmlsrc']
+        argDict['project']       = self.projectName
+        argDict['projectSubdir'] = subdir = self.subdir
         argDict['projectSrcDir'] = projectSrcDir = join(xmlSrc, subdir)
-        argDict['projectWsDir']  = projectWsDir  = join(vars['workspaceRoot'], subdir)
-        argDict['projectXmlDir'] = projectXmlDir = join(vars['localXml'], subdir)
-        argDict['project'] = self.projectName
-        argDict['baseline'] = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
-        argDict['years'] = vars['startYear'] + '-' + vars['endYear']
+        argDict['projectWsDir']  = projectWsDir  = join(argDict['workspaceRoot'], subdir)
+        argDict['projectXmlDir'] = projectXmlDir = join(argDict['localXml'], subdir)
+        argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
+        argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
 
-        # Set steps and scenarios to "all" if user doesn't specify
-        if not steps:
-            steps = self.knownSteps
+        knownScenarios = self.getKnownScenarios()
+        knownSteps     = self.getKnownSteps()
 
-        if not scenarios:
-            # sorting by the integer value of isBaseline results in baseline preceding scenarios
-            sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)
-            scenarios = map(lambda node: node.name, sortedScenarios)
+        self.maybeListProjectArgs(args, knownScenarios, knownSteps)
 
-        def listAndExit(strings):
-            for s in strings:
-                print s
-            sys.exit(0)
+        # Set steps / scenarios to all known values if user doesn't specify any
+        steps = steps or knownSteps
+        scenarios = scenarios or knownScenarios
 
-        if args.listScenarios:
-            listAndExit(scenarios)
-
-        if args.listSteps:
-            listAndExit(steps)
-
-        if args.vars:
-            for name, value in sorted(argDict.iteritems()):
-                print "%20s = %s" % (name, value)
-            sys.exit(0)
-
-        for stepName in steps:
-            if not stepName in self.knownSteps:
-                raise ProjectException('Requested step "%s" does not exist in project description' % stepName)
+        # Check that the requested scenarios and steps are defined
+        self.validateProjectArgs(scenarios, knownScenarios, 'scenarios')
+        self.validateProjectArgs(steps,     knownSteps,     'steps')
 
         for scenarioName in scenarios:
-            try:
-                scenario = self.scenarioDict[scenarioName]
-            except:
-                raise ProjectException('Scenario "%s" not found for project "%s"' % (scenarioName, self.projectName))
+            scenario = self.scenarioDict[scenarioName]
 
             if not scenario.isActive:
-                print '  %s is inactive' % scenarioName
+                print '  Skipping inactive scenario: %s' % scenarioName
                 continue
 
+            # These get reset as each scenario is processed
             argDict['scenario'] = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir
             argDict['scenarioSrcDir'] = join(projectSrcDir, scenario.subdir)
@@ -380,28 +467,27 @@ class Project(object):
             argDict['diffsDir'] = join(scenarioWsDir, 'diffs')
             argDict['batchDir'] = join(scenarioWsDir, 'batch-' + scenarioName)
 
-            # Generate temporary files and save paths in variables indicated in <tmpFile>.
-            # This is in the scenario loop so run-time variables are handled correctly,
-            # though it does result in the files being written multiple times (though with
-            # different values.)
-            self.evaluateVars()
+            # Evaluate dynamic variables and re-generate temporary files, saving paths in
+            # variables indicated in <tmpFile>. This is in the scenario loop so run-time
+            # variables are handled correctly, though it does result in the files being
+            # written multiple times (though with different values.)
+            Variable.evaluateVars(argDict)
             TmpFile.writeFiles(argDict)
 
-            # Loop over all defined steps and run those that user has requested
-            for step in self.stepsList:
-                if steps is None or step.name in steps:
-                    argDict['step'] = step
-
+            # Loop over all steps and run those that user has requested
+            for step in self.sortedSteps:
+                if step.name in steps:
+                    argDict['step'] = step.name
                     step.run(self, baseline, scenario, argDict, args, noRun=args.noRun)
 
     def dump(self, steps, scenarios):
-        print "Steps:", steps
-        print "\nScenarios:", scenarios
-        print "\nDefined steps: \n  %s" % "\n  ".join(map(str, self.stepsList))
-        print "\nDefined queries:\n  %s" % "\n  ".join(self.queries)
-        print '\nDefined vars:'
-        for name, value in self.vars.iteritems():
-            print "  %15s : %s" % (name, value)
+        print "Requested steps:", steps
+        print "Requested scenarios:", scenarios
+        print "Defined steps:", self.getKnownSteps()
+        print "Defined scenarios:", self.getKnownScenarios()
+        print 'Defined vars:'
+        for name, var in Variable.Instances.iteritems():
+            print "  %15s : %s" % (name, var.getValue())
         print '\nTmpFiles:'
         for t in self.tmpFiles:
             print "  ", t.varName

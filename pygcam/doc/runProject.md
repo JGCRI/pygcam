@@ -82,8 +82,8 @@ Show the commands that would be executed for the above command, but don't run th
 The element `<projects>` encloses one or more `<project>` elements and zero or 
 more `<defaults>` elements. The `<projects>` element has no attributes.
 
-A `<project>` defines a set of variables, scenarios, and workflow steps, as described
-below.
+A `<project>` requires a 'name' attribute, and defines a set of variables, 
+scenarios, and workflow steps, as described below.
 
 The element `<defaults>` sets default values for variables and workflow steps. This 
 allows definitions to be shared across projects, reducing redundancy. Individual 
@@ -119,10 +119,10 @@ the project is run.
 The element `<steps>` contains a series of `<step>` declarations, and has no
 attributes. Multiple `<steps>` elements are allowed.
 
-A `<step>` describes one step in the workflow. Each step has a name and a sequence
-number, which can be integer or float. Steps (from one or more `<steps>` sections)
-are sorted by sequence number before execution. By definition, steps with the same
-same sequence number are order independent; they can run in any order. 
+A `<step>` describes one step in the workflow. Each step has a name and an integer
+sequence number. Steps (from one or more `<steps>` sections) are sorted by sequence
+number before execution. By definition, steps with the same sequence number are 
+order independent; they can run in any order. 
 
 Steps are generalized by using variable definitions, some of which are set directly
 by the user and other which are set by the runProject.py script at run-time. Variables
