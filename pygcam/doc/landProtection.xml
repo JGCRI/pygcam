@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This is a prototype file defining land-protection scenarios for use with gcamProtectLand.py.
+
+The script should allow:
+- specification of the XML pathname (default from GCAM.LandProtectionFile)
+- selection of one scenario
+- the name of the target files to create
+-->
+
+<landProtection>
+    <!--
+    <group> assigns to a set of regions a name that can be used in protection scenarios.
+
+    The "Global" group should be defined by the script since this is a constant.
+    -->
+    <group name="Global">
+        <region name="Africa_Eastern"/>
+        <region name="Africa_Northern"/>
+        <region name="Africa_Southern"/>
+        <region name="Africa_Western"/>
+        <region name="Argentina"/>
+        <region name="Australia_NZ"/>
+        <region name="Brazil"/>
+        <region name="Canada"/>
+        <region name="Central America and Caribbean"/>
+        <region name="Central Asia"/>
+        <region name="China"/>
+        <region name="Colombia"/>
+        <region name="EU-12"/>
+        <region name="EU-15"/>
+        <region name="Europe_Eastern"/>
+        <region name="Europe_Non_EU"/>
+        <region name="European Free Trade Association"/>
+        <region name="India"/>
+        <region name="Indonesia"/>
+        <region name="Japan"/>
+        <region name="Mexico"/>
+        <region name="Middle East"/>
+        <region name="Pakistan"/>
+        <region name="Russia"/>
+        <region name="South Africa"/>
+        <region name="South America_Northern"/>
+        <region name="South America_Southern"/>
+        <region name="South Asia"/>
+        <region name="South Korea"/>
+        <region name="Southeast Asia"/>
+        <region name="Taiwan"/>
+        <region name="USA"/>
+    </group>
+
+    <group name="Developing">
+        <region name="Africa_Eastern"/>
+        <region name="Africa_Northern"/>
+        <region name="Africa_Southern"/>
+        <region name="Africa_Western"/>
+        <region name="Central America and Caribbean"/>
+        <region name="Central Asia"/>
+        <region name="Colombia"/>
+        <region name="Middle East"/>
+        <region name="Pakistan"/>
+        <region name="South America_Northern"/>
+        <region name="South America_Southern"/>
+        <region name="South Asia"/>
+        <region name="Southeast Asia"/>
+    </group>
+
+    <group name="BRIC">
+        <region name="Brazil"/>
+        <region name="Russia"/>
+        <region name="India"/>
+        <region name="China"/>
+    </group>
+
+    <group name="Intermediate">
+        <region name="Brazil"/>
+        <region name="China"/>
+        <region name="India"/>
+        <region name="Indonesia"/>
+        <region name="Mexico"/>
+        <region name="South Africa"/>
+    </group>
+
+    <group name="Europe">
+        <region name="EU-12"/>
+        <region name="EU-15"/>
+        <region name="Europe_Eastern"/>
+        <region name="Europe_Non_EU"/>
+        <region name="European Free Trade Association"/>
+    </group>
+
+    <group name="Developed">
+        <region name="Argentina"/>
+        <region name="Australia_NZ"/>
+        <region name="Canada"/>
+        <region name="Europe"/>     <!-- group names are expanded as if the regions in the group were added -->
+        <region name="Japan"/>
+        <region name="Russia"/>
+        <region name="South Korea"/>
+    </group>
+
+    <scenario name="X">
+        <!--
+        Scenarios define a level of land protection for regions or groups.
+        Regions are processed in the order defined. Any redefinition of the
+        protection in a region overwrites what was given previously. This
+        allows the use of groups followed by differentiation for individual
+        regions within the group.
+        -->
+        <region name="Developing">
+            <protection fraction="0.5">
+                <landClass>UnmanagedForest</landClass>
+                <landClass>UnmanagedPasture</landClass>
+            </protection>
+            <protection fraction="0.25">
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </region>
+
+        <region name="Intermediate">
+            <protection fraction="0.7">
+                <landClass>UnmanagedForest</landClass>
+                <landClass>UnmanagedPasture</landClass>
+            </protection>
+            <protection fraction="0.4">
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </region>
+
+        <!-- Brazil is given a different treatment -->
+        <region name="Brazil">
+            <protection fraction="0.5">
+                <landClass>UnmanagedForest</landClass>
+            </protection>
+            <protection fraction="0.4">
+                <landClass>UnmanagedPasture</landClass>
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </region>
+
+        <region name="Developed">
+            <protection fraction="0.9">
+                <landClass>UnmanagedForest</landClass>
+                <landClass>UnmanagedPasture</landClass>
+            </protection>
+            <protection fraction="0.5">
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </region>
+    </scenario>
+
+    <scenario name="Y">
+        <!-- etc. -->
+    </scenario>
+</landProtection>
