@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!-- Derived using MOSO Xmplify 1.7.6 by Richard Plevin on 2016-01-30 17:59:46 +0000 -->
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+    <xs:element name='projects'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='defaults'/>
+                <xs:element ref='project'/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='defaults'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='steps'/>
+                <xs:element ref='tmpFile'/>
+                <xs:element ref='vars'/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='project'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='steps'/>
+                <xs:element ref='tmpFile'/>
+                <xs:element ref='vars'/>
+                <xs:element ref='scenario'/>
+            </xs:choice>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='scenario'>
+        <xs:complexType>
+            <xs:attribute name='active' type='xs:integer'/>
+            <xs:attribute name='baseline' type='xs:integer'/>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+            <xs:attribute name='subdir' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='vars'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='var'/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='var'>
+        <xs:complexType mixed='true'>
+            <xs:attribute name='configVar' type='xs:NCName'/>
+            <xs:attribute name='eval' type='xs:integer'/>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='tmpFile'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='text'/>
+            </xs:sequence>
+            <xs:attribute name='delete' type='xs:integer'/>
+            <xs:attribute name='eval' type='xs:integer'/>
+            <xs:attribute name='replace' type='xs:integer'/>
+            <xs:attribute name='varName' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='text'>
+        <xs:complexType mixed='true'>
+            <xs:attribute name='tag' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='steps'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='step'/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='step'>
+        <xs:complexType mixed='true'>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+            <xs:attribute name='runFor' type='xs:NCName'/>
+            <xs:attribute name='seq' use='required' type='xs:integer'/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

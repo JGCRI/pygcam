@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Prototypical project.xml file that has all the variation needed so that
+     Xmplify.app can generate a proper XMLSchema (.xsd) file for validation.
+-->
+<projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<project name="x">
+		<scenario name="x"/>
+		<scenario name="y" subdir="baseline" baseline="1" active="1"/>
+	</project>
+	<defaults>
+		<vars>
+			<var name="x" configVar="varName"/>
+			<var name="y" eval="1">text</var>
+			<var name="z">text</var>
+		</vars>
+		<steps>
+			<step seq="1" name="x">{foo}</step>
+			<step seq="2" name="y" runFor="z">text</step>
+		</steps>
+		<vars>
+			<var name="x" configVar="varName"/>
+			<var name="y" eval="1">text</var>
+			<var name="z">text</var>
+		</vars>
+		<tmpFile varName="x">
+			<text>text</text>
+			<text tag="x">text</text>
+		</tmpFile>
+		<vars>
+			<var name="x" configVar="varName"/>
+			<var name="y" eval="1">text</var>
+			<var name="z">text</var>
+		</vars>
+		<tmpFile varName="x" eval="0" replace="0" delete="0">
+			<text>text</text>
+			<text tag="x">{foo}</text>
+		</tmpFile>
+	</defaults>
+
+	<project name="x">
+		<scenario name="x"/>
+		<vars>
+			<var name="x" configVar="varName"/>
+			<var name="y" eval="1">text</var>
+			<var name="z">text</var>
+		</vars>
+		<scenario name="y" subdir="baseline" baseline="1" active="1"/>
+		<steps>
+			<step seq="1" name="x">text</step>
+			<step seq="2" name="y" runFor="z">text</step>
+		</steps>
+		<vars>
+			<var name="x" configVar="varName"/>
+			<var name="y" eval="1">text</var>
+			<var name="z">text</var>
+		</vars>
+		<tmpFile varName="x">
+			<text>text</text>
+			<text tag="x">text</text>
+		</tmpFile>
+		<vars>
+			<var name="x" configVar="varName"/>
+			<var name="y" eval="1">text</var>
+			<var name="z">text</var>
+		</vars>
+		<tmpFile varName="x" eval="0" replace="0" delete="0">
+			<text>text</text>
+			<text tag="x">text</text>
+		</tmpFile>
+	</project>
+</projects>

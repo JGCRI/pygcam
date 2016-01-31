@@ -17,7 +17,6 @@ import platform
 from itertools import chain
 import argparse
 import subprocess
-#from collections import OrderedDict
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
@@ -32,6 +31,7 @@ class ProjectException(Exception):
     pass
 
 DefaultProjectFile = './project.xml'
+
 
 def parseArgs():
     parser = argparse.ArgumentParser(
@@ -118,8 +118,6 @@ def getBaseline(scenarioNodes):
 class TmpFile(object):
     FilesToDelete = []
     Instances = {}  # keyed by name
-    Allowed  = {'varName', 'delete', 'replace', 'eval', 'dir'}
-    Required = {'varName'}
 
     def __init__(self, node):
         """
@@ -127,8 +125,6 @@ class TmpFile(object):
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        checkAttributes(node, self.Allowed, self.Required)
-
         # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
         name = node.get('varName')
         if not name:
@@ -189,12 +185,7 @@ class TmpFile(object):
 
 
 class Scenario(object):
-    Allowed  = {'name', 'active', 'baseline', 'subdir'}
-    Required = {'name'}
-
     def __init__(self, node):
-        checkAttributes(node, self.Allowed, self.Required)
-
         self.name = node.get('name')
         self.isActive   = node.get('active',   default='1') == '1'
         self.isBaseline = node.get('baseline', default='0') == '1'
@@ -202,12 +193,7 @@ class Scenario(object):
 
 
 class Step(object):
-    Allowed  = {'name', 'seq', 'runFor'}
-    Required = {'name', 'seq'}
-
     def __init__(self, node):
-        checkAttributes(node, self.Allowed, self.Required)
-
         self.seq     = int(node.get('seq', 0))
         self.name    = node.get('name')
         self.runFor  = node.get('runFor', 'all')
@@ -244,12 +230,9 @@ class Step(object):
             shellCommand(command)
 
 class Variable(object):
-    Allowed  = {'name', 'eval', 'configVar'}
-    Required = {'name'}
     Instances = {}
 
     def __init__(self, node):
-        checkAttributes(node, self.Allowed, self.Required)
         self.name = node.get('name')
         self.configVar = configVar = node.get('configVar')
         self.value = getParam(configVar) if configVar else node.text
@@ -296,10 +279,8 @@ class Variable(object):
 
 
 class Project(object):
-    Allowed  = {'name', 'subdir'}
-    Required = {'name'}
-
     def __init__(self, tree, projectName):
+        self.validateXML(tree)
         self.projectName = projectName
 
         projectNodes = tree.findall('project[@name="%s"]' % projectName)
@@ -311,8 +292,6 @@ class Project(object):
             raise ProjectException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
 
         projectNode = projectNodes[0]
-
-        checkAttributes(projectNode, self.Allowed, self.Required)
 
         self.subdir = projectNode.get('subdir', projectName)        # subdir defaults to project name
 
@@ -349,6 +328,20 @@ class Project(object):
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
+    @staticmethod
+    def validateXML(doc, raiseError=True):
+        '''
+        Validate a parsed project.xml file
+        '''
+        schemaFile = os.path.join(os.path.dirname(__file__), 'etc', 'project-schema.xsd')
+        schemaDoc = ET.parse(schemaFile)
+        schema = ET.XMLSchema(schemaDoc)
+
+        if raiseError:
+            schema.assertValid(doc)
+        else:
+            return schema.validate(doc)
+
     def checkRequiredVars(self):
         # Ensure that the required vars are set to non-empty strings
         required = {'xmlsrc', 'workspaceRoot', 'localXml'}
@@ -377,7 +370,7 @@ class Project(object):
             showList(knownSteps, 'Steps:')
 
         if args.vars:
-            varList = ["%15s = %s" % (name, value) for name, value in sorted(argDict.iteritems())]
+            varList = ["%15s = %s" % (name, value) for name, value in sorted(self.argDict.iteritems())]
             showList(varList, 'Vars:')
 
         if self.quit:
@@ -492,7 +485,6 @@ class Project(object):
         for t in self.tmpFiles:
             print "  ", t.varName
 
-
 def main(args):
     readConfigFiles()
 
@@ -501,7 +493,7 @@ def main(args):
 
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
-    projectFile = getParam('GCAM.ProjectXmlFile') or args.projectFile or './project.xml'
+    projectFile = getParam('GCAM.ProjectXmlFile') or args.projectFile or DefaultProjectFile
     projectName = args.project
 
     parser  = ET.XMLParser(remove_blank_text=True)

@@ -11,7 +11,8 @@ import sys
 import platform
 from itertools import chain
 import argparse
-from pygcam.protectLand import AllUnmanagedLand, protectLand
+from pygcam.protectLand import AllUnmanagedLand, protectLand, XMLFile, LandProtection
+from pygcam.common import mkdirs
 
 # Read the following imports from the same dir as the script
 sys.path.insert(0, os.path.dirname(sys.argv[0]))
@@ -38,17 +39,28 @@ def parseArgs():
                        distinct regions or land classes. The script detects if you attempt to protect
                        already-protected land class and region combinations, as this fails in GCAM.''')
 
-    parser.add_argument('-f', '--fraction', type=float, required=True,
+    parser.add_argument('-b', '--backup', action='store_true',
+                        help='''Make a copy of the output file, if it exists (with an added ~ after
+                        filename) before writing new output.''')
+
+    parser.add_argument('-f', '--fraction', type=float, default=None,
                         help='''The fraction of land in the given land classes to protect. (Required)''')
 
     parser.add_argument('-i', '--inFile', action='append',
                         help='''One or more input files to process. Use separate -i flags for each file.''')
+
+    parser.add_argument('--inPlace', action='store_true',
+                        help='''Edit the file in place. This must be given explicitly, to avoid overwriting
+                        files by mistake.''')
 
     parser.add_argument('-l', '--landClasses', action='append',
                         help='''The land class or classes to protect in the given regions. Multiple,
                         comma-delimited land types can be given in a single argument, or the -l flag can
                         be repeated to indicate additional land classes. By default, all unmanaged land
                         classes are protected. Allowed land classes are %s''' % AllUnmanagedLand)
+
+    parser.add_argument('-m', '--mkdir', action='store_true',
+                        help='''Make the output dir if necessary.''')
 
     parser.add_argument('-o', '--outDir', type=str, default='.',
                         help='''The directory into which to write the modified files. Default is current directory.''')
@@ -68,6 +80,13 @@ def parseArgs():
                         help='''The region or regions for which to protect land. Multiple, comma-delimited
                         regions can be given in a single argument, or the -r flag can be repeated to indicate
                         additional regions. By default, all regions are protected.''')
+
+    parser.add_argument('-s', '--scenario', default=None,
+                        help='''The name of a land-protection scenario defined in the file given by the --scenarioFile
+                        argument or it's default value.''')
+
+    parser.add_argument('-S', '--scenarioFile', default=None,
+                        help='''An XML file defining land-protection scenarios. Default is [WHAT?]''')
 
     parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
 
@@ -92,13 +111,16 @@ def main():
     global Verbose
     Verbose = args.verbose
 
-    landClasses = flatten(map(lambda s: s.split(','), args.landClasses)) if args.landClasses else AllUnmanagedLand
-    regions     = args.regions and flatten(map(lambda s: s.split(','), args.regions))
-    fraction  = float(args.fraction)
+    landClasses  = flatten(map(lambda s: s.split(','), args.landClasses)) if args.landClasses else AllUnmanagedLand
+    scenarioFile = args.scenarioFile
+    scenarioName = args.scenario
+    regions   = args.regions and flatten(map(lambda s: s.split(','), args.regions))
     outDir    = args.outDir
     inFiles   = args.inFile
     workspace = args.workspace
     template  = args.template
+    inPlace   = args.inPlace
+    backup    = args.backup
 
     if not inFiles and not workspace:
         raise Exception('Must specify either inFiles or workspace')
@@ -112,6 +134,35 @@ def main():
         xmlDir = os.path.join(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
         inFiles = map(lambda filename: os.path.join(xmlDir, filename), filenames)
 
+    if args.mkdir:
+        mkdirs(outDir)
+
+    if scenarioName:
+        if not scenarioFile:
+            raise Exception('A scenario file was not identified')
+
+        print "Land-protection scenario '%s'" % scenarioName
+
+        schemaFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'etc', 'protection-schema.xsd')
+        xmlFile = XMLFile(scenarioFile, schemaFile=schemaFile, rootClass=LandProtection)
+        landProtection = xmlFile.getRoot()
+        for inFile in inFiles:
+            basename = os.path.basename(inFile)
+            outFile  = os.path.join(outDir, basename)
+
+            # check that we're not clobbering the input file
+            if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
+                raise Exception("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
+
+            landProtection.protectLand(inFile, outFile, scenarioName, backup=backup)
+
+        return
+
+    fraction = args.fraction
+    if fraction is None:
+        raise Exception('If not using protection scenarios, fraction must be provided')
+
+    fraction = float(fraction)
     templateDict = {'fraction' : str(int(fraction * 100)),
                     'regions'  : '-'.join(regions) if regions else 'global',
                     'classes'  : '-'.join(landClasses) if args.landClasses else 'unmanaged'}
@@ -124,7 +175,7 @@ def main():
         outFile = template.format(**templateDict)
         outPath = os.path.join(outDir, outFile)
         printmsg( "protectLand(%s, %s, %0.2f, %s, %s)" % (path, outFile, fraction, landClasses, regions))
-        protectLand(path, outPath, fraction, landClasses=landClasses, regions=regions, template=args.template)
+        protectLand(path, outPath, fraction, landClasses=landClasses, regions=regions) #, template=template)
 
 if __name__ == '__main__':
     status = -1
@@ -133,5 +184,6 @@ if __name__ == '__main__':
         status = 0
     except Exception as e:
         print "%s: %s" % (PROGRAM, e)
+        raise
 
     sys.exit(status)

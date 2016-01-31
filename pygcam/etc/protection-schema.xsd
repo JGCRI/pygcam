@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!-- Derived using MOSO Xmplify 1.7.6 by Richard Plevin on 2016-01-30 23:41:55 +0000 -->
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+    <xs:element name='landProtection'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='group'/>
+                <xs:element maxOccurs='unbounded' ref='scenario'/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='group'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='region'/>
+            </xs:sequence>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='region' type='xs:string'/>
+    <xs:element name='scenario'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs='0' maxOccurs='unbounded' ref='protectedRegion'/>
+            </xs:sequence>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='protectedRegion'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='protection'/>
+            </xs:sequence>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='protection'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='landClass'/>
+            </xs:sequence>
+            <xs:attribute name='fraction' use='required' type='xs:decimal'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='landClass' type='xs:NCName'/>
+</xs:schema>
