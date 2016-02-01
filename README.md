@@ -1,12 +1,17 @@
-# README #
+# pygcam #
 
-The **pygcam** package will provide a library of classes and functions and a set of scripts for working with GCAM. The package is currently in the initial stages of development.
+The **pygcam** package is currently under initial development. It is a Python package 
+that will provide a classes, functions, and scripts for working with GCAM. 
 
 ### Intended functionality ###
 
 * Functions for manipulating GCAM's XML input files and setting up experiments
-* Functions to run queries and perform basic manipulation of results (e.g., interpolating between timesteps, computing differences between scenarios).
-* Scripts that provide flexible command-line interfaces to the functionality provided by the library.
+
+* Functions to run queries and perform basic manipulation of results (e.g., interpolating 
+between timesteps, computing differences between scenarios).
+
+* Scripts that provide flexible command-line interfaces to the functionality provided by 
+the library.
 
 ### How do I get set up? ###
 

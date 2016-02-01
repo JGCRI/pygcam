@@ -9,9 +9,11 @@ Try to keep config vars to a minimum by allowing them to be set in XML files use
 
 ## Relationship between command-line scripts and library
 
-The scripts should all define a main(args) so that a calling script can just create the arg dictionary and call module.main(args). The calling script should be only a couple of lines long, as with gcammcs driver.
+The scripts should all define a main(args) so that a calling script can create an arg dictionary and 
+call module.main(args). The calling script should be only:
 
-   * Have a flag that causes the main() to let errors pass through rather than trapping it in main(), allowing the caller to do whatever they want with it.
+   * an argument parsing function
+   * a call to main(args) in a try/except wrapper 
 
 ## Modules
 
