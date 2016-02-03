@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-This is a prototypical file defining land-protection scenarios for use with protectLand.py.
-The file is used by Xmplify.app to derive a corresponding XMLSchema file (protection-schema.xsd),
-which is used to validate the user's protection XML file.
+This is a sample file defining land-protection scenarios for use with protectLand.py.
 -->
 
 <landProtection>
@@ -48,7 +46,7 @@ which is used to validate the user's protection XML file.
         <region>Argentina</region>
         <region>Australia_NZ</region>
         <region>Canada</region>
-        <region>Europe</region>     <!-- group names (e.g., Europe) are expanded to the underlying regions -->
+        <region>Europe</region>     <!-- group names are expanded as if the regions in the group were added -->
         <region>Japan</region>
         <region>Russia</region>
         <region>South Korea</region>
