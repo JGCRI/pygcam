@@ -38,7 +38,11 @@ Common functions and data
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from itertools import chain
 from .config import getParam
+
+class ToolException(Exception):
+    pass
 
 GCAM_32_REGIONS = [
     'Africa_Eastern',
@@ -74,6 +78,10 @@ GCAM_32_REGIONS = [
     'Taiwan',
     'USA'
 ]
+
+def flatten(listOfLists):
+    "Flatten one level of nesting"
+    return list(chain.from_iterable(listOfLists))
 
 def ensureXLSX(filename):
     '''Force an extension of ".xlsx" on a filename'''

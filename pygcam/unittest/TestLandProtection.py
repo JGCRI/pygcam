@@ -1,7 +1,7 @@
 import unittest
 import os
 import subprocess
-from pygcam.protectLand import _makeLandClassXpath, _makeRegionXpath, protectLand
+from pygcam.landProtection import _makeLandClassXpath, _makeRegionXpath, protectLand
 
 class TestLandProtection(unittest.TestCase):
     def setUp(self):

@@ -5,8 +5,13 @@
 -->
 <projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<project name="x">
-		<scenario name="x"/>
-		<scenario name="y" subdir="baseline" baseline="1" active="1"/>
+		<scenarioGroup name="default" default="1">
+			<scenario name="x"/>
+			<scenario name="y" subdir="baseline" baseline="1" active="1"/>
+		</scenarioGroup>
+		<scenarioGroup name="other">
+			<scenario name="z"/>
+		</scenarioGroup>
 	</project>
 	<defaults>
 		<vars>
@@ -39,17 +44,23 @@
 	</defaults>
 
 	<project name="x">
-		<scenario name="x"/>
 		<vars>
 			<var name="x" configVar="varName"/>
 			<var name="y" eval="1">text</var>
 			<var name="z">text</var>
 		</vars>
-		<scenario name="y" subdir="baseline" baseline="1" active="1"/>
+		<scenarioGroup name="bar">
+			<scenario name="bar1" baseline="1"/>
+			<scenario name="bar2" active="1"/>
+		</scenarioGroup>
 		<steps>
 			<step seq="1" name="x">text</step>
 			<step seq="2" name="y" runFor="z">text</step>
 		</steps>
+		<scenarioGroup name="foo" default="1">
+			<scenario name="foo1" baseline="1"/>
+			<scenario name="foo2" subdir="foo"/>
+		</scenarioGroup>
 		<vars>
 			<var name="x" configVar="varName"/>
 			<var name="y" eval="1">text</var>
@@ -69,4 +80,12 @@
 			<text tag="x">text</text>
 		</tmpFile>
 	</project>
+
+	<defaults>
+		<vars>
+			<var name="a" configVar="varName"/>
+			<var name="b" eval="1">text</var>
+			<var name="c">text</var>
+		</vars>
+	</defaults>
 </projects>

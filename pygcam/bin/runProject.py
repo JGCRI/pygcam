@@ -18,7 +18,7 @@ import argparse
 # sys.path.insert(0, dirname(dirname(dirname(sys.argv[0]))))
 # print 'sys.path=',sys.path
 
-from pygcam.project import ProjectException, main
+from pygcam.project import ToolException, main
 
 PROGRAM = os.path.basename(__file__)
 VERSION = "0.1"
@@ -33,6 +33,13 @@ def parseArgs():
         user's pygcam.cfg file.''')
 
     parser.add_argument('project', help='''The project to run.''')
+
+    parser.add_argument('-g', '--group', type=str, default=None,
+                        help='''The name of the scenario group to process. If not specified,
+                        the group with attribute default="1" is processed.''')
+
+    parser.add_argument('-G', '--listGroups', action='store_true',
+                        help='''List the scenario groups defined in the project file and exit.''')
 
     parser.add_argument('-l', '--listSteps', action='store_true', default=False,
                         help='''List the steps defined for the given project and exit.
@@ -79,7 +86,7 @@ if __name__ == '__main__':
     try:
         main(args)
         status = 0
-    except ProjectException as e:
+    except ToolException as e:
         print "%s: %s" % (PROGRAM, e)
 
     sys.exit(status)

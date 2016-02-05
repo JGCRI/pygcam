@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!-- Derived using MOSO Xmplify 1.7.6 by Richard Plevin on 2016-01-30 17:59:46 +0000 -->
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
     <xs:element name='projects'>
         <xs:complexType>
@@ -24,8 +23,17 @@
                 <xs:element ref='steps'/>
                 <xs:element ref='tmpFile'/>
                 <xs:element ref='vars'/>
-                <xs:element ref='scenario'/>
+                <xs:element ref='scenarioGroup'/>
             </xs:choice>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='scenarioGroup'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='scenario'/>
+            </xs:sequence>
+            <xs:attribute name='default' type='xs:integer'/>
             <xs:attribute name='name' use='required' type='xs:NCName'/>
         </xs:complexType>
     </xs:element>
@@ -35,6 +43,20 @@
             <xs:attribute name='baseline' type='xs:integer'/>
             <xs:attribute name='name' use='required' type='xs:NCName'/>
             <xs:attribute name='subdir' type='xs:NCName'/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='steps'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='step'/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name='step'>
+        <xs:complexType mixed='true'>
+            <xs:attribute name='name' use='required' type='xs:NCName'/>
+            <xs:attribute name='runFor' type='xs:NCName'/>
+            <xs:attribute name='seq' use='required' type='xs:integer'/>
         </xs:complexType>
     </xs:element>
     <xs:element name='vars'>
@@ -65,20 +87,6 @@
     <xs:element name='text'>
         <xs:complexType mixed='true'>
             <xs:attribute name='tag' type='xs:NCName'/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name='steps'>
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='step'/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name='step'>
-        <xs:complexType mixed='true'>
-            <xs:attribute name='name' use='required' type='xs:NCName'/>
-            <xs:attribute name='runFor' type='xs:NCName'/>
-            <xs:attribute name='seq' use='required' type='xs:integer'/>
         </xs:complexType>
     </xs:element>
 </xs:schema>

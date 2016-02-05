@@ -14,80 +14,23 @@ that is described in an XML file.
 import os
 import sys
 import platform
-from itertools import chain
-import argparse
 import subprocess
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
-from .common import getTempFile
+from .common import getTempFile, flatten, ToolException
 
 PROGRAM = os.path.basename(__file__)
 VERSION = "0.1"
 PlatformName = platform.system()
 Verbose = False
 
-class ProjectException(Exception):
-    pass
-
 DefaultProjectFile = './project.xml'
-
-
-def parseArgs():
-    parser = argparse.ArgumentParser(
-        prog=PROGRAM,
-        description='''Perform a series of steps typical for a GCAM-based analysis. This script
-        reads instructions from the file project.xml, the location of which is taken from the
-        user's pygcam.cfg file.''')
-
-    parser.add_argument('project', help='''The project to run.''')
-
-    parser.add_argument('-l', '--listSteps', action='store_true', default=False,
-                        help='''List the steps defined for the given project and exit.
-                        Dynamic variables (created at run-time) are not displayed.''')
-
-    parser.add_argument('-L', '--listScenarios', action='store_true', default=False,
-                        help='''List the scenarios defined for the given project and exit.
-                        Dynamic variables (created at run-time) are not displayed.''')
-
-    parser.add_argument('-n', '--noRun', action='store_true', default=False,
-                        help='''Display the commands that would be run, but don't run them.''')
-
-    parser.add_argument('-p', '--projectFile', default=None,
-                        help='''The directory into which to write the modified files.
-                        Default is taken from config file variable GCAM.ProjectXmlFile,
-                        if defined, otherwise the default is '%s'.''' % DefaultProjectFile)
-
-    parser.add_argument('-s', '--step', dest='steps', action='append',
-                        help='''The steps to run. These must be names of steps defined in the
-                        project.xml file. Multiple steps can be given in a single (comma-delimited)
-                        argument, or the -s flag can be repeated to indicate additional steps.
-                        By default, all steps are run.''')
-
-    parser.add_argument('-S', '--scenario', dest='scenarios', action='append',
-                        help='''Which of the scenarios defined for the given project should
-                        be run. Multiple scenarios can be given in a single (comma-delimited)
-                        argument, or the -S flag can be repeated to indicate additional steps.
-                        By default, all active scenarios are run.''')
-
-    parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
-
-    parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
-
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
-
-    args = parser.parse_args()
-    return args
-
-
-def flatten(listOfLists):
-    "Flatten one level of nesting"
-    return list(chain.from_iterable(listOfLists))
 
 def shellCommand(command):
     exitStatus = subprocess.call(command, shell=True)
     if exitStatus <> 0:
-        raise ProjectException("Command failed: %s\nexit status %s" % (command, exitStatus))
+        raise ToolException("Command failed: %s\nexit status %s" % (command, exitStatus))
 
 def checkAttributes(node, allowed, required):
     """
@@ -99,20 +42,34 @@ def checkAttributes(node, allowed, required):
 
     missing = required - given
     if missing:
-        raise ProjectException('<%s> element is missing required attributes: %s' % (node.tag, ' '.join(missing)))
+        raise ToolException('<%s> element is missing required attributes: %s' % (node.tag, ' '.join(missing)))
 
     unknown = given - allowed
     if unknown:
-        raise ProjectException('<%s> element has unknown attributes: %s' % (node.tag, ' '.join(unknown)))
+        raise ToolException('<%s> element has unknown attributes: %s' % (node.tag, ' '.join(unknown)))
 
-def getBaseline(scenarioNodes):
+def getBaseline(scenarios):
     '''Check that exactly one active baseline is defined, and if so, return it'''
 
-    baselines = [s for s in scenarioNodes if s.get('baseline', '0') == '1' and s.get('active', '1') == '1']
+    baselines = [s for s in scenarios if s.isBaseline and s.isActive]
     if len(baselines) == 1:
         return baselines[0]
 
-    raise ProjectException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+    raise ToolException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+
+def getDefaultGroup(groups):
+    '''
+    Check that exactly one default scenarioGroup is defined, unless there is only one group,
+    in which case it is obviously the default.
+    '''
+    if len(groups) == 1:
+        return groups[0]
+
+    defaults = [group for group in groups if group.isDefault]
+    if len(defaults) == 1:
+        return defaults[0]
+
+    raise ToolException('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
 
 class TmpFile(object):
@@ -128,7 +85,7 @@ class TmpFile(object):
         # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
         name = node.get('varName')
         if not name:
-            raise ProjectException("tmpFile element is missing its required 'name' attribute")
+            raise ToolException("tmpFile element is missing its required 'name' attribute")
 
         self.delete  = int(node.get('delete',  '1'))
         self.replace = int(node.get('replace', '0'))
@@ -184,6 +141,19 @@ class TmpFile(object):
         return path
 
 
+class ScenarioGroup(object):
+    def __init__(self, node):
+        self.name = node.get('name')
+        self.isDefault = node.get('default',   default='0') == '1'
+
+        scenarioNodes = node.findall('scenario')
+        scenarios = map(Scenario, scenarioNodes)
+
+        self.scenarioDict = {scen.name : scen for scen in scenarios}
+
+        baselineNode = getBaseline(scenarios)
+        self.baseline = baselineNode.name
+
 class Scenario(object):
     def __init__(self, node):
         self.name = node.get('name')
@@ -200,7 +170,7 @@ class Step(object):
         self.command = node.text
 
         if not self.command:
-            raise ProjectException("<step name='%s'> is missing command text" % self.name)
+            raise ToolException("<step name='%s'> is missing command text" % self.name)
 
     def __str__(self):
         return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
@@ -222,7 +192,7 @@ class Step(object):
         try:
             command = self.command.format(**argDict)    # replace vars in template
         except KeyError as e:
-            raise ProjectException("%s -- No such variable exists in the project XML file" % e)
+            raise ToolException("%s -- No such variable exists in the project XML file" % e)
 
         print "[%s, %s, %s] %s" % (scenario.name, self.seq, self.name, command)
 
@@ -279,17 +249,17 @@ class Variable(object):
 
 
 class Project(object):
-    def __init__(self, tree, projectName):
+    def __init__(self, tree, projectName, groupName):
         self.validateXML(tree)
         self.projectName = projectName
 
         projectNodes = tree.findall('project[@name="%s"]' % projectName)
 
         if len(projectNodes) == 0:
-            raise ProjectException("Project '%s' is not defined" % projectName)
+            raise ToolException("Project '%s' is not defined" % projectName)
 
         if len(projectNodes) > 1:
-            raise ProjectException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
+            raise ToolException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
 
         projectNode = projectNodes[0]
 
@@ -297,11 +267,13 @@ class Project(object):
 
         defaultsNode = tree.find('defaults')   # returns 1st match
 
-        scenarioNodes = projectNode.findall('scenario')
-        self.scenarioDict = {node.name : node for node in map(Scenario, scenarioNodes)}
+        scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
+        self.scenarioGroupDict = groupDict = {group.name : group for group in scenarioGroups}
+        self.scenarioGroupName = groupName = groupName or getDefaultGroup(scenarioGroups)
 
-        self.baselineNode = getBaseline(scenarioNodes)
-        self.baselineName = self.baselineNode.get('name')
+        self.scenarioGroup = scenarioGroup = groupDict[groupName]
+        self.baselineName  = scenarioGroup.baseline
+        self.scenarioDict  = scenarioGroup.scenarioDict
 
         dfltSteps = map(Step, defaultsNode.findall('./steps/step'))
         projSteps = map(Step, projectNode.findall('./steps/step'))
@@ -348,9 +320,9 @@ class Project(object):
         given = set(Variable.definedVars())
         missing = required - given
         if missing:
-            raise ProjectException("Missing required variables: %s" % missing)
+            raise ToolException("Missing required variables: %s" % missing)
 
-    def maybeListProjectArgs(self, args, knownScenarios, knownSteps):
+    def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
         '''
         If user asked to list scenarios, steps, or variables, do so and quit.
         '''
@@ -362,6 +334,9 @@ class Project(object):
                 print header
             for s in strings:
                 print '  ', s
+
+        if args.listGroups:
+            showList(knownGroups, 'Scenario groups:')
 
         if args.listScenarios:
             showList(knownScenarios, 'Scenarios:')
@@ -396,12 +371,20 @@ class Project(object):
 
     def getKnownScenarios(self):
         '''
-        Return a list of known scenarios for the current project, alpha sorted
+        Return a list of known scenarios for the current project and scenarioGroup, alpha sorted
         '''
         # sorting by not(node.isBaseline) results in baseline preceding scenarios
-        self.sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)
-        knownScenarios  = map(lambda node: node.name, self.sortedScenarios)
+        sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)
+        knownScenarios  = map(lambda node: node.name, sortedScenarios)
         return knownScenarios
+
+    def getKnownGroups(self):
+        '''
+        Return a list of known scenarioGroups for the current project.
+        '''
+        sortedGroups = sorted(self.scenarioGroupDict.values(), key=lambda node: node.name)
+        knownGroups = map(lambda node: node.name, sortedGroups)
+        return knownGroups
 
     def validateProjectArgs(self, userArgs, knownArgs, argName):
         '''
@@ -410,8 +393,8 @@ class Project(object):
         unknownArgs = set(userArgs) - set(knownArgs)
         if unknownArgs:
             s = ' '.join(unknownArgs)
-            raise ProjectException("Requested %s do not exist in project %s: %s" % \
-                                   (argName, self.projectName, s))
+            raise ToolException("Requested %s do not exist in project '%s', group '%s': %s" % \
+                                   (argName, self.projectName, self.scenarioGroupName, s))
 
     def run(self, scenarios, steps, args):
         """
@@ -430,11 +413,13 @@ class Project(object):
         argDict['projectXmlDir'] = projectXmlDir = join(argDict['localXml'], subdir)
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
+        argDict['scenarioGroup'] = self.scenarioGroupName
 
+        knownGroups    = self.getKnownGroups()
         knownScenarios = self.getKnownScenarios()
         knownSteps     = self.getKnownSteps()
 
-        self.maybeListProjectArgs(args, knownScenarios, knownSteps)
+        self.maybeListProjectArgs(args, knownGroups, knownScenarios, knownSteps)
 
         # Set steps / scenarios to all known values if user doesn't specify any
         steps = steps or knownSteps
@@ -455,7 +440,7 @@ class Project(object):
             argDict['scenario'] = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir
             argDict['scenarioSrcDir'] = join(projectSrcDir, scenario.subdir)
-            argDict['scenarioXmlDir'] = join(projectXmlDir, scenario.subdir)
+            argDict['scenarioXmlDir'] = join(projectXmlDir, scenarioName)
             argDict['scenarioWsDir'] = scenarioWsDir = join(projectWsDir, scenarioName)
             argDict['diffsDir'] = join(scenarioWsDir, 'diffs')
             argDict['batchDir'] = join(scenarioWsDir, 'batch-' + scenarioName)
@@ -474,6 +459,7 @@ class Project(object):
                     step.run(self, baseline, scenario, argDict, args, noRun=args.noRun)
 
     def dump(self, steps, scenarios):
+        print "Scenario group: %s" % self.scenarioGroupName
         print "Requested steps:", steps
         print "Requested scenarios:", scenarios
         print "Defined steps:", self.getKnownSteps()
@@ -494,11 +480,10 @@ def main(args):
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
     projectFile = getParam('GCAM.ProjectXmlFile') or args.projectFile or DefaultProjectFile
-    projectName = args.project
 
     parser  = ET.XMLParser(remove_blank_text=True)
     tree    = ET.parse(projectFile, parser)
-    project = Project(tree, projectName)
+    project = Project(tree, args.project, args.group)
 
     if args.verbose:
         project.dump(steps, scenarios)

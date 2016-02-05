@@ -36,14 +36,6 @@ which is used to validate the user's protection XML file.
         <region>South Africa</region>
     </group>
 
-    <group name="Europe">
-        <region>EU-12</region>
-        <region>EU-15</region>
-        <region>Europe_Eastern</region>
-        <region>Europe_Non_EU</region>
-        <region>European Free Trade Association</region>
-    </group>
-
     <group name="Developed">
         <region>Argentina</region>
         <region>Australia_NZ</region>
@@ -109,7 +101,15 @@ which is used to validate the user's protection XML file.
             </protection>
         </protectedRegion>
     </scenario>
-
+    
+    <group name="Europe">
+        <region>EU-12</region>
+        <region>EU-15</region>
+        <region>Europe_Eastern</region>
+        <region>Europe_Non_EU</region>
+        <region>European Free Trade Association</region>
+    </group>
+    
     <scenario name="protectHalf">
         <protectedRegion name="Global">
             <protection fraction="0.5">
