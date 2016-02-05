@@ -5,7 +5,7 @@
 -->
 <projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<project name="x">
-		<scenarioGroup name="default" default="1">
+		<scenarioGroup name="foo" default="1">
 			<scenario name="x"/>
 			<scenario name="y" subdir="baseline" baseline="1" active="1"/>
 		</scenarioGroup>

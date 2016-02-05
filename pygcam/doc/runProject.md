@@ -2,8 +2,7 @@ runProject.py
 =============
 
 runProject.py is a workflow management script for GCAM. It reads a single XML input
-file that defines one or more projects, one or more scenarios, and one or more
-workflow steps. The workflow steps for the chosen projectd and scenario(s) are run
+file that defines one or more projects, one or more groups of scenarios, one or more scenarios, and one or more workflow steps. The workflow steps for the chosen project and scenario(s) are run
 in the order defined. The script was developed for use with the [gcam-utils](https://bitbucket.org/plevin/gcam-utils/wiki/Home) scripts, however any scripts or programs can be called in workflow 'steps'.
 
 Command-line usage and the `project.xml` file elements are described below.
@@ -11,8 +10,8 @@ Command-line usage and the `project.xml` file elements are described below.
 ## Command-line Usage
 
     $ runProject.py -h
-    usage: runProject.py [-h] [-l] [-L] [-n] [-p PROJECTFILE] [-s STEPS]
-                         [-S SCENARIOS] [--vars] [-v] [-V]
+    usage: runProject.py [-h] [-g GROUP] [-G] [-l] [-L] [-n] [-p PROJECTFILE]
+                         [-s STEPS] [-S SCENARIOS] [--vars] [-v] [-V]
                          project
     
     Perform a series of steps typical for a GCAM-based analysis. This script reads
@@ -24,6 +23,12 @@ Command-line usage and the `project.xml` file elements are described below.
     
     optional arguments:
       -h, --help            show this help message and exit
+      -g GROUP, --group GROUP
+                            The name of the scenario group to process. If not
+                            specified, the group with attribute default="1" is
+                            processed.
+      -G, --listGroups      List the scenario groups defined in the project file
+                            and exit.
       -l, --listSteps       List the steps defined for the given project and exit.
                             Dynamic variables (created at run-time) are not
                             displayed.
@@ -55,19 +60,19 @@ Command-line usage and the `project.xml` file elements are described below.
 
 #### Examples
 
-Run all steps for project Foo:
+Run all steps for the default scenario group for project 'Foo':
 
     runProject.py Foo
 
-Run all steps for project Foo, but only for scenarios 'baseline' and 'policy-1':
+Run all steps for scenario group 'test' for project 'Foo', but only for scenarios 'baseline' and 'policy-1':
 
-    runProject Foo -S baseline,policy1
+    runProject Foo -g test -S baseline,policy1
     
 or, equivalently:
 
-    runProject Foo -S baseline -S policy1
+    runProject Foo --group test --scenario baseline --step policy1
 
-Run steps 'setup' and 'gcam' for scenario 'baseline' only
+Run only the 'setup' and 'gcam' steps for scenario 'baseline' in the default scenario group:
 
     runProject Foo -s setup,gcam -S baseline,policy-1
 
@@ -77,21 +82,49 @@ Show the commands that would be executed for the above command, but don't run th
 
 ## XML elements used to describe projects (project.xml)
 
-###Projects
+The elements that comprise the project.xml file are described below.
 
-The element `<projects>` encloses one or more `<project>` elements and zero or 
-more `<defaults>` elements. The `<projects>` element has no attributes.
+### &lt;projects>
+
+The top-most element, `<projects>`, encloses one or more `<project>` elements and zero or 
+more `<defaults>` elements. The `<projects>` element takes no attributes.
+
+### &lt;project>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+name      | yes      | (none)  | text
 
 A `<project>` requires a 'name' attribute, and defines a set of variables, 
-scenarios, and workflow steps, as described below.
+scenario groups, scenarios, and workflow steps, as described below.
+
+### &lt;defaults>
 
 The element `<defaults>` sets default values for variables and workflow steps. This 
 allows definitions to be shared across projects, reducing redundancy. Individual 
-projects can be override variables and declare new variables and steps as needed.
-The `<defaults>` element has no attributes.
+projects can override and/or declare new variables steps as needed. The `<defaults>`
+element takes no attributes.
 
 ----
-###Scenarios
+### &lt;scenarioGroup>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+name      | yes      | (none)  | text 
+default   | no       | "0"     | {"0", "1"}
+
+The `<scenarioGroup>` element names and defines a list of scenarios. This allows several distinct baselines and related policies to be defined within a project.
+
+One `<scenarioGroup>` can have the attribute `default="1"` to identify it as the default attribute, i.e., the one selected if no group is named on the command line. If there is only one `<scenarioGroup>` defined for a project, it is treated as the default; in this case setting `default="1"` is redundant.
+
+----
+### &lt;scenario>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+name      | yes      | (none)  | text
+baseline  | no       | "0"     | {"0", "1"}
+subdir    | no       | (none)  | text
 
 The `<scenario>` element describes a single GCAM scenario, which is either a baseline
 scenario or a policy scenario. Each scenario must have a unique name within the project.
@@ -114,10 +147,18 @@ defines a scenario named `biodiesel-1` that is found in the sub-directory
 the project is run.
 
 ----
-###Steps
+### &lt;steps>
 
-The element `<steps>` contains a series of `<step>` declarations, and has no
+The element `<steps>` contains a one or more `<step>` elements, and takes no
 attributes. Multiple `<steps>` elements are allowed.
+
+### &lt;step>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+name      | yes      | (none)  | text
+seq       | yes      | (none)  | integer
+runFor    | no       | "all"   | {"baseline", "policy", "all"}
 
 A `<step>` describes one step in the workflow. Each step has a name and an integer
 sequence number. Steps (from one or more `<steps>` sections) are sorted by sequence
@@ -170,7 +211,17 @@ Steps defined in projects that do not match default steps are added to the set
 in the order indicated by `seq`.
 
 ----
-###Variables
+### &lt;vars>
+
+The `<vars>` element encloses a list of `<var>` elements, and takes no attributes.
+
+### &lt;var>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+name      | yes      | (none)  | text
+configVar | no       | (none)  | name of a variable in ~/.pygcam
+eval      | no       | "0"     | {"0", "1"}
 
 Variables provide text that can be used in the command templates defined by
 `<step>` elements. To access the variable, the name is enclosed in curly braces,
@@ -225,6 +276,7 @@ runProject.py creates several convenience variables at run-time that are accessi
 in the commands for any <step>. These included:
 
 * `{project}` : the project name
+* `{scenarioGroup}` : the name of scenario group
 * `{scenario}` : scenario name
 * `{baseline}` : the name of the scenario with baseline="1"
 * `{reference}` : a synonym for baseline
@@ -241,7 +293,15 @@ in the commands for any <step>. These included:
 * `{diffsDir}` : {scenarioWsDir}/diffs
 * `{batchDir}` : {scenarioWsDir}/batch-{scenarioName}
 
-#### File variables
+### &lt;tmpFile>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+varName   | yes      | (none)  | text
+dir       | no       | "/tmp"  | a legal directory name
+delete    | no       | "1"     | {"0", "1"}
+replace   | no       | "0"     | {"0", "1"}
+eval      | no       | "1"     | {"0", "1"}
 
 To avoid a proliferation of files, it is possible to define the contents of a
 temporary file directly in the project XML file. At run-time, the temporary
@@ -266,10 +326,11 @@ replace or append to the default value for this file variable. By default,
 values are appended, i.e., `replace="0"`. Setting `replace="1"` causes the
 project values to replace the default values.
 
-* `evaluate` indicates whether to perform variable substitution on the
+* `eval` indicates whether to perform variable substitution on the
 <text> values when writing the temporary file, as is done before executing
 <step> commands. By default, `evaluate="1"`, i.e., variable substitution
-is performed. Disable this by specifying `evaluate="0"`.
+is performed. Disable this by specifying `evaluate="0"`, e.g., if part 
+of your text might be confused for a variable reference.
 
 For example, 
 
@@ -285,10 +346,16 @@ temp file is assigned to the variable `queryTempFile`, which can be used in any
 values are evaluated when writing them to the temp file, so `{scenario}` in the 
 first line is replaced with the name of the scenario being processed.
 
-The `<text>` element can take an option `tag` attribute, which, provides a unique
-name to a line of text so that projects can selectively drop lines by redefining
-an empty `<text>` element with the same tag name. For example, if the defaults
-section has this definition:
+### &lt;text>
+
+Attribute | Required | Default | Values
+----------|:--------:|:-------:|:------:
+tag       | no       | (none)  | text
+
+The `<text>` element can take an option `tag` attribute, which provides a unique
+name to a line of text so that projects can selectively drop the line by redefining
+an a `<text>` element with the same tag name. To delete a value, provide no value.
+For example, if the defaults section has this definition:
 
     <tmpFile varName="queryTempFile" dir="/tmp/myProject">
         <text>line 1</text>
@@ -349,6 +416,7 @@ by specifying:
 			<var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years}</var>
 			<var name="scenRefCsv" eval="1">{scenario}-{reference}.csv</var>
 		</vars>
+		
 		<tmpFile varName="diffPlots">
 			<text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
 			<text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
@@ -359,10 +427,12 @@ by specifying:
 	  </defaults>
 
       <project name="Paper1">
-		<scenario name="base-1" subdir="baseline" baseline="1"/>
-		<scenario name="corn-1" subdir="corn"/>
-		<scenario name="stover-1" subdir="stover" active="0"/>
-		<scenario name="switchgrass-1" subdir="switchgrass" active="0"/>
-		<scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
+          <scenarioGroup name="anything" default="1">
+			  <scenario name="base-1" subdir="baseline" baseline="1"/>
+		      <scenario name="corn-1" subdir="corn"/>
+	 	      <scenario name="stover-1" subdir="stover" active="0"/>
+		      <scenario name="switchgrass-1" subdir="switchgrass" active="0"/>
+		      <scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
+		  <scenarioGroup>
 	  </project>
 	</projects>
