@@ -269,8 +269,14 @@ class Project(object):
 
         scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
         self.scenarioGroupDict = groupDict = {group.name : group for group in scenarioGroups}
-        self.scenarioGroupName = groupName = groupName or getDefaultGroup(scenarioGroups)
+        if not groupName:
+            defaultGroup = getDefaultGroup(scenarioGroups)
+            groupName = defaultGroup.name
 
+        if groupName not in groupDict:
+            raise ToolException("Group '%s' is not defined for project '%s'" % (groupName, projectName))
+
+        self.scenarioGroupName = groupName
         self.scenarioGroup = scenarioGroup = groupDict[groupName]
         self.baselineName  = scenarioGroup.baseline
         self.scenarioDict  = scenarioGroup.scenarioDict
