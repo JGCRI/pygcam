@@ -39,6 +39,7 @@ Common functions and data
 
 import os
 from itertools import chain
+import subprocess
 from .config import getParam
 
 class ToolException(Exception):
@@ -78,6 +79,14 @@ GCAM_32_REGIONS = [
     'Taiwan',
     'USA'
 ]
+
+def shellCommand(command, shell=True, raiseError=True):
+    exitStatus = subprocess.call(command, shell=shell)
+    if exitStatus <> 0:
+        if raiseError:
+            raise ToolException("Command failed: %s\nexit status %s" % (command, exitStatus))
+
+    return exitStatus
 
 def flatten(listOfLists):
     "Flatten one level of nesting"

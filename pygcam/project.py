@@ -8,17 +8,13 @@ See the https://opensource.org/licenses/MIT for license details.
 Support for running a sequence of operations for a GCAM project
 that is described in an XML file.
 """
-
-# TBD: After library is created from the gcam-utils, rewrite this to use it.
-
 import os
 import sys
 import platform
-import subprocess
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
-from .common import getTempFile, flatten, ToolException
+from .common import getTempFile, flatten, shellCommand, ToolException
 
 PROGRAM = os.path.basename(__file__)
 VERSION = "0.1"
@@ -26,11 +22,6 @@ PlatformName = platform.system()
 Verbose = False
 
 DefaultProjectFile = './project.xml'
-
-def shellCommand(command):
-    exitStatus = subprocess.call(command, shell=True)
-    if exitStatus <> 0:
-        raise ToolException("Command failed: %s\nexit status %s" % (command, exitStatus))
 
 def checkAttributes(node, allowed, required):
     """
