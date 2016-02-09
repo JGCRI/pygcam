@@ -426,6 +426,8 @@ class Project(object):
         self.validateProjectArgs(scenarios, knownScenarios, 'scenarios')
         self.validateProjectArgs(steps,     knownSteps,     'steps')
 
+        quitProgram = args.quit
+
         for scenarioName in scenarios:
             scenario = self.scenarioDict[scenarioName]
 
@@ -449,11 +451,17 @@ class Project(object):
             Variable.evaluateVars(argDict)
             TmpFile.writeFiles(argDict)
 
-            # Loop over all steps and run those that user has requested
-            for step in self.sortedSteps:
-                if step.name in steps:
-                    argDict['step'] = step.name
-                    step.run(self, baseline, scenario, argDict, args, noRun=args.noRun)
+            try:
+                # Loop over all steps and run those that user has requested
+                for step in self.sortedSteps:
+                    if step.name in steps:
+                        argDict['step'] = step.name
+                        step.run(self, baseline, scenario, argDict, args, noRun=args.noRun)
+            except ToolException as e:
+                if quitProgram:
+                    raise
+                print e
+
 
     def dump(self, steps, scenarios):
         print "Scenario group: %s" % self.scenarioGroupName

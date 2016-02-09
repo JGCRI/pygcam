@@ -84,7 +84,7 @@ def shellCommand(command, shell=True, raiseError=True):
     exitStatus = subprocess.call(command, shell=shell)
     if exitStatus <> 0:
         if raiseError:
-            raise ToolException("Command failed: %s\nexit status %s" % (command, exitStatus))
+            raise ToolException("\n*** Command failed: %s\n*** Command exited with status %s\n" % (command, exitStatus))
 
     return exitStatus
 

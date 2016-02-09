@@ -57,6 +57,10 @@ def parseArgs():
                         Default is taken from config file variable GCAM.ProjectXmlFile,
                         if defined, otherwise the default is './project.xml'.''')
 
+    parser.add_argument('-q', '--quit', action='store_true',
+                        help='''Quit if an error occurs when processing a scenario. By default, the
+                        next scenario (if any) is run when an error occurs in a scenario.''')
+
     parser.add_argument('-s', '--step', dest='steps', action='append',
                         help='''The steps to run. These must be names of steps defined in the
                         project.xml file. Multiple steps can be given in a single (comma-delimited)
@@ -87,6 +91,6 @@ if __name__ == '__main__':
         main(args)
         status = 0
     except ToolException as e:
-        print "%s: %s" % (PROGRAM, e)
+        print "\n****%s: %s" % (PROGRAM, e)
 
     sys.exit(status)
