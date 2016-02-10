@@ -6,20 +6,16 @@ Copyright (c) 2015-2016 Richard Plevin
 See the https://opensource.org/licenses/MIT for license details.
 '''
 import sys
-import os
-from pygcam.landProtection import ToolException, main, parseArgs
+from pygcam.landProtection import ToolException, main, parseArgs, PROGRAM
 
 if __name__ == '__main__':
-    program = os.path.basename(__file__)
-    version = '0.1'
-
+    args = parseArgs()
     status = -1
-    args = parseArgs(program, version)
 
     try:
         main(args)
         status = 0
     except ToolException as e:
-        print "%s: %s" % (program, e)
+        print "%s: %s" % (PROGRAM, e)
 
     sys.exit(status)

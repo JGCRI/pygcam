@@ -1,43 +1,26 @@
 #!/usr/bin/env python
 """
-@author: Rich Plevin (rich@plevin.com)
+.. codeauthor:: Rich Plevin <rich@plevin.com>
 
-Copyright (c) 2015 Richard Plevin
-See the https://opensource.org/licenses/MIT for license details.
+.. Copyright (c) 2015 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 
-Support for running a sequence of operations for a GCAM project
-that is described in an XML file.
+   Support for running a sequence of operations for a GCAM project
+   that is described in an XML file.
 """
 import os
 import sys
-import platform
+import argparse
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
 from .common import getTempFile, flatten, shellCommand, ToolException
 
-PROGRAM = os.path.basename(__file__)
+PROGRAM = 'runProject.py'
 VERSION = "0.1"
-PlatformName = platform.system()
 Verbose = False
 
 DefaultProjectFile = './project.xml'
-
-def checkAttributes(node, allowed, required):
-    """
-    Checks that the node has all required attributes and doesn't
-    have any unknown attributes. The arguments 'given' and 'required'
-    are sets.
-    """
-    given = set(node.keys())
-
-    missing = required - given
-    if missing:
-        raise ToolException('<%s> element is missing required attributes: %s' % (node.tag, ' '.join(missing)))
-
-    unknown = given - allowed
-    if unknown:
-        raise ToolException('<%s> element has unknown attributes: %s' % (node.tag, ' '.join(unknown)))
 
 def getBaseline(scenarios):
     '''Check that exactly one active baseline is defined, and if so, return it'''
@@ -64,6 +47,9 @@ def getDefaultGroup(groups):
 
 
 class TmpFile(object):
+    """
+    Represents the ``<tmpFile>`` element in the projects.xml file.
+    """
     FilesToDelete = []
     Instances = {}  # keyed by name
 
@@ -133,6 +119,9 @@ class TmpFile(object):
 
 
 class ScenarioGroup(object):
+    """
+    Represents the ``<scenarioGroup>`` element in the projects.xml file.
+    """
     def __init__(self, node):
         self.name = node.get('name')
         self.isDefault = node.get('default',   default='0') == '1'
@@ -146,6 +135,9 @@ class ScenarioGroup(object):
         self.baseline = baselineNode.name
 
 class Scenario(object):
+    """
+    Represents the ``<scenario>`` element in the projects.xml file.
+    """
     def __init__(self, node):
         self.name = node.get('name')
         self.isActive   = node.get('active',   default='1') == '1'
@@ -154,6 +146,9 @@ class Scenario(object):
 
 
 class Step(object):
+    """
+    Represents the ``<step>`` element in the projects.xml file.
+    """
     def __init__(self, node):
         self.seq     = int(node.get('seq', 0))
         self.name    = node.get('name')
@@ -191,6 +186,9 @@ class Step(object):
             shellCommand(command)
 
 class Variable(object):
+    """
+    Represents the ``<var>`` element in the projects.xml file.
+    """
     Instances = {}
 
     def __init__(self, node):
@@ -240,6 +238,9 @@ class Variable(object):
 
 
 class Project(object):
+    """
+    Represents the ``<project>`` element in the projects.xml file.
+    """
     def __init__(self, tree, projectName, groupName):
         self.validateXML(tree)
         self.projectName = projectName
@@ -312,7 +313,7 @@ class Project(object):
             return schema.validate(doc)
 
     def checkRequiredVars(self):
-        # Ensure that the required vars are set to non-empty strings
+        '''Ensure that the required vars are set to non-empty strings'''
         required = {'xmlsrc', 'workspaceRoot', 'localXml'}
         given = set(Variable.definedVars())
         missing = required - given
@@ -384,9 +385,17 @@ class Project(object):
         return knownGroups
 
     def validateProjectArgs(self, userArgs, knownArgs, argName):
-        '''
+        """
         If the user requested steps or scenarios that are not defined, raise an error.
-        '''
+
+        :param userArgs: a list of the elements (projects, groups, scenarios, steps)
+          passed by the user on the command-line.
+        :param knownArgs: a list of known elements of the given type
+        :param argName: the tag of the XML element
+        :return: nothing
+        :raises: ToolException if the elements requested by the user are not defined in
+          the current (project, scenario) context
+        """
         unknownArgs = set(userArgs) - set(knownArgs)
         if unknownArgs:
             s = ' '.join(unknownArgs)
@@ -475,6 +484,73 @@ class Project(object):
         print '\nTmpFiles:'
         for t in self.tmpFiles:
             print "  ", t.varName
+
+def argParser():
+    parser = argparse.ArgumentParser(
+        prog=PROGRAM,
+        description='''Perform a series of steps typical for a GCAM-based analysis.
+This script reads instructions from the file project.xml, the
+location of which is taken from the user's ~/.pygcam.cfg file.''')
+
+    parser.add_argument('project', help='''The name of the project to run.''')
+
+    parser.add_argument('-g', '--group', type=str, default=None,
+                        help='''The name of the scenario group to process. If not specified,
+                        the group with attribute default="1" is processed.''')
+
+    parser.add_argument('-G', '--listGroups', action='store_true',
+                        help='''List the scenario groups defined in the project file and exit.''')
+
+    parser.add_argument('-l', '--listSteps', action='store_true', default=False,
+                        help='''List the steps defined for the given project and exit.
+                        Dynamic variables (created at run-time) are not displayed.''')
+
+    parser.add_argument('-L', '--listScenarios', action='store_true', default=False,
+                        help='''List the scenarios defined for the given project and exit.
+                        Dynamic variables (created at run-time) are not displayed.''')
+
+    parser.add_argument('-n', '--noRun', action='store_true', default=False,
+                        help='''Display the commands that would be run, but don't run them.''')
+
+    parser.add_argument('-p', '--projectFile', default=None,
+                        help='''The directory into which to write the modified files.
+                        Default is taken from config file variable GCAM.ProjectXmlFile,
+                        if defined, otherwise the default is './project.xml'.''')
+
+    parser.add_argument('-q', '--quit', action='store_true',
+                        help='''Quit if an error occurs when processing a scenario. By default, the
+                        next scenario (if any) is run when an error occurs in a scenario.''')
+
+    parser.add_argument('-s', '--step', dest='steps', action='append',
+                        help='''The steps to run. These must be names of steps defined in the
+                        project.xml file. Multiple steps can be given in a single (comma-delimited)
+                        argument, or the -s flag can be repeated to indicate additional steps.
+                        By default, all steps are run.''')
+
+    parser.add_argument('-S', '--scenario', dest='scenarios', action='append',
+                        help='''Which of the scenarios defined for the given project should
+                        be run. Multiple scenarios can be given in a single (comma-delimited)
+                        argument, or the -S flag can be repeated to indicate additional steps.
+                        By default, all active scenarios are run.''')
+
+    parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
+
+    parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
+
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+
+    return parser
+
+
+def parseArgs(args=None):
+    """
+    Allows calling the arg parser programmatically.
+    :param args: The parameter list to parse.
+    :return: populated Namespace instance
+    """
+    parser = argParser()
+    args = parser.parse_args(args=args)
+    return args
 
 def main(args):
     readConfigFiles()
