@@ -19,6 +19,8 @@ ThisModule = sys.modules[__name__]
 
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 
+PROGRAM = 'protectLand.py'
+VERSION = '0.1'
 Verbose = False
 
 def _makeRegionXpath(regions):
@@ -310,14 +312,14 @@ PlatformName = platform.system()
 
 DefaultTemplate = 'prot_{fraction}_{filename}'
 
-def parseArgs(program='', version='', args=None):
+def argParser():
     parser = argparse.ArgumentParser(
-        prog=program,
-        description='''Generate versions of GCAM's land_input XML files that protect a given fraction
-                       of land of the given land types in the given regions. The script can be run
-                       multiple times on the same file to apply different percentage protection to
-                       distinct regions or land classes. The script detects if you attempt to protect
-                       already-protected land class and region combinations, as this fails in GCAM.''')
+        prog=PROGRAM,
+        description='''Generate versions of GCAM's land_input XML files that protect a
+given fraction of land of the given land types in the given regions. The script can be
+run multiple times on the same file to apply different percentage protection to
+distinct regions or land classes. The script detects if you attempt to protect
+already-protected land class and region combinations, as this fails in GCAM.''')
 
     parser.add_argument('-b', '--backup', action='store_true',
                         help='''Make a copy of the output file, if it exists (with an added ~ after
@@ -371,14 +373,23 @@ def parseArgs(program='', version='', args=None):
 
     parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
 
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version)
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
 
     parser.add_argument('-w', '--workspace', type=str, default=None,
                         help='''Specify the path to the GCAM workspace to use. If input files are not identified
                         explicitly, the files in {workspace}/input/gcam-data-system/xml/aglu-xml/land_input_{2,3}.xml
                         are used as inputs. Default is value of configuration parameter GCAM.ReferenceWorkspace.''')
 
-    args = parser.parse_args(args=args) # allow call from program, passing explicit paramter list
+    return parser
+
+def parseArgs(args=None):
+    """
+    Allows calling the arg parser programatically.
+    :param args: The parameter list to parse.
+    :return: populated Namespace instance
+    """
+    parser = argParser()
+    args = parser.parse_args(args=args)
     return args
 
 

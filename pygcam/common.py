@@ -1,9 +1,9 @@
 '''
-Created on: 2/12/15
+.. Created on: 2/12/15
+   Common functions and data
 
-@author: Rich Plevin (rich@plevin.com)
+.. codeauthor:: Rich Plevin <rich@plevin.com>
 
-Common functions and data
 '''
 
 # Copyright (c) 2015, Richard Plevin.
@@ -81,6 +81,16 @@ GCAM_32_REGIONS = [
 ]
 
 def shellCommand(command, shell=True, raiseError=True):
+    """
+    Run a shell command and optionally raise ToolException error.
+
+    :param command: the command to run, with arguments. This can be expressed
+      either as a string or as a list of strings.
+    :param shell: if True, run `command` in a shell, otherwise run it directly.
+    :param raiseError: if True, raise `ToolError` on command failure.
+    :return: exit status of executed command
+    :raises: ToolError
+    """
     exitStatus = subprocess.call(command, shell=shell)
     if exitStatus <> 0:
         if raiseError:
@@ -89,11 +99,23 @@ def shellCommand(command, shell=True, raiseError=True):
     return exitStatus
 
 def flatten(listOfLists):
-    "Flatten one level of nesting"
+    """
+    Flatten one level of nesting given a list of lists. That is, convert
+    [[1, 2, 3], [4, 5, 6]] to [1, 2, 3, 4, 5, 6].
+
+    :param listOfLists: a list of lists, obviously
+    :return: the flattened list
+    """
     return list(chain.from_iterable(listOfLists))
 
 def ensureXLSX(filename):
-    '''Force an extension of ".xlsx" on a filename'''
+    """
+    Force a filename to have the '.xlsx' extension, removing any other extension
+    if present.
+
+    :param filename: filename
+    :return: filename with '.xlsx' extention
+    """
     xlsx = '.xlsx'
 
     mainPart, extension = os.path.splitext(filename)
@@ -106,6 +128,16 @@ def ensureXLSX(filename):
 
 
 def getTempFile(suffix, text=True, tmpDir=None):
+    """
+    Construct the name of a temporary file.
+
+    :param suffix: the extension to give the temporary file
+    :param text: True if this will be a text file
+    :param tmpDir: the directory in which to create the (defaults to
+      the value of configuration file variable 'GCAM.TempDir', or '/tmp'
+      if the variable is not found.
+    :return: the name of the temporary file
+    """
     from tempfile import mkstemp
 
     tmpDir = tmpDir or getParam('GCAM.TempDir') or "/tmp"
@@ -116,7 +148,12 @@ def getTempFile(suffix, text=True, tmpDir=None):
     return tmpFile
 
 def mkdirs(newdir):
-    '''Try to create the full path and ignore error if it already exists'''
+    """
+    Try to create the full path `newdir` and ignore the error if it already exists.
+
+    :param newdir: the directory to create (along with any needed parent directories)
+    :return: nothing
+    """
     from errno import EEXIST
 
     try:
@@ -126,11 +163,14 @@ def mkdirs(newdir):
             raise
 
 def readRegionMap(filename):
-    '''
+    """
     Read a region map file and return the contents as a dictionary with each
     key equal to a standard GCAM region and each value being the region to
     map the original to (which can be an existing GCAM region or a new name.)
-    '''
+
+    :param filename: the name of a file containing region mappings
+    :return: a dictionary holding the mappings read from `filename`
+    """
     import re
     mapping = {}
     pattern = re.compile('\t+')
@@ -157,7 +197,16 @@ def readRegionMap(filename):
 # TBD: bundle some of these functions into a "GcamResults" class
 #
 def limitYears(df, years):
-    'Return the DF, stripping years outside the given limits'
+    """
+    Return the the given DataFrame after dropping any year columns that
+    fall outside the given limits.
+
+    :param df: a `DataFrame` with columns whose names are string
+      representations of years.
+    :param years: a hyphen-delimited string representing the range of
+      years to keep, i.e., of the form 'XXXX-YYYY'
+    :return: nothing (though the DataFrame is modified in-place.)
+    """
     first, last = map(int, years)
     yearCols  = map(int, filter(str.isdigit, df.columns))
     dropYears = map(str, filter(lambda y: y < first or y > last, yearCols))
@@ -165,6 +214,14 @@ def limitYears(df, years):
 
 
 def dropExtraCols(df, inplace=True):
+    """
+    Drop some columns that GCAM queries sometimes return, but which we generally don't need.
+    The columns dropped are ['scenario', 'Notes', 'Date'].
+
+    :param df: the DataFrame from which to drop the columns.
+    :param inplace: if True, modify `df` in-place; otherwise return a modified copy.
+    :return: the original `df` (if inplace=True) or the modified copy.
+    """
     columns = df.columns
     unnamed = 'Unnamed:'    # extra (empty) columns can sneak in; eliminate them
     dropCols = filter(lambda s: s[0:len(unnamed)] == unnamed, columns)
@@ -178,12 +235,17 @@ def dropExtraCols(df, inplace=True):
 
 
 def interpolateYears(df, startYear=0):
-    '''
+    """
     Interpolate linearly between each pair of years in the GCAM output. The
     timestep is calculated from the numerical (string) column headings given
-    in the dataframe, which are assumed to represent years in the timeseries.
-    If startYear is given, begin interpolation at this year.
-    '''
+    in the DataFrame `df`.
+
+    :param df: a DataFrame with columns whose names are string values of years,
+       e.g., '2010', '2015', '2020', as returned from standard GCAM database queries.
+    :param startYear: If `startYear` is non-zero, begin interpolation at this year,
+      otherwise values are interpolated between all time-steps.
+    :return: a copy of `df`, with interpolated values
+    """
     yearCols = filter(str.isdigit, df.columns)
     years = map(int, yearCols)
 
@@ -241,7 +303,9 @@ FuelDensity = {
 def fuelDensityMjPerGal(fuelname):
     '''
     Return the fuel energy density of the named fuel.
-    :param fuelname: the name of a fuel (currently must be one of {fame,bd,ethanol,etoh,biogasoline,bio-gasoline}.
+
+    :param fuelname: the name of a fuel (currently must be from the set m{fame, bd, biodiesel, ethanol, etoh,
+      'corn ethanol', 'cellulosic ethanol', 'sugar cane ethanol', ft, 'FT biofuels', biogasoline, bio-gasoline}.
     :return: energy density (MJ/gal)
     '''
     return FuelDensity[fuelname.lower()]
