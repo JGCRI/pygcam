@@ -132,7 +132,7 @@ same as the scenario, but this can be defined separately using the
 
 For example,
 
-::
+  .. code-block:: xml
 
     <scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
 
@@ -178,7 +178,7 @@ and policy scenarios.
 
 For example,
 
-::
+  .. code-block:: xml
 
     <step seq="10" name="gcam" runFor="baseline">
 
@@ -187,7 +187,7 @@ only for the baseline scenario.
 
 For example, the block:
 
-::
+  .. code-block:: xml
 
     <steps>
         <step seq="05" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
@@ -210,7 +210,7 @@ steps. To redefine a step, the project defines a ``<step>`` with the
 same values for the attributes ``name``, ``seq``, and ``runFor``. A
 default step can be deleted by redefining it with no text value, e.g.,
 
-::
+  .. code-block:: xml
 
     <step seq="10" name="gcam" runFor="baseline"/>
 
@@ -249,7 +249,7 @@ file variables and automatic variables) are described further below.
 The ``<vars>`` element contains a series of ``<var>`` declarations.
 Values can be assigned directly to variable names, as in:
 
-::
+  .. code-block:: xml
 
     <var name="myVar">foo</var>
 
@@ -271,7 +271,7 @@ Any ``<var>`` can take its value from the value of a configuration file
 ``configVar="XXX"``, where *XXX* is the name of the config file variable
 to copy. For example:
 
-::
+  .. code-block:: xml
 
     <var name="queryFile" configVar="GCAM.QueryFile"/>
 
@@ -370,7 +370,7 @@ The ``<tmpFile>`` element defines several attributes:
 
 For example,
 
-::
+  .. code-block:: xml
 
     <tmpFile varName="queryTempFile" dir="/tmp/myProject">
         <text>some text {scenario}</text>
@@ -400,7 +400,7 @@ selectively drop the line by redefining an a ``<text>`` element with the
 same tag name. To delete a value, provide no value. For example, if the
 defaults section has this definition:
 
-::
+  .. code-block:: xml
 
     <tmpFile varName="queryTempFile" dir="/tmp/myProject">
         <text>line 1</text>
@@ -410,7 +410,7 @@ defaults section has this definition:
 a project can cause the second line to be dropped when writing the temp
 file, by specifying:
 
-::
+  .. code-block:: xml
 
     <tmpFile varName="queryTempFile" dir="/tmp/myProject">
         <text tag="2"/>
@@ -420,7 +420,7 @@ file, by specifying:
 Example project.xml file
 ------------------------
 
-::
+  .. code-block:: xml
 
     <projects>
       <defaults>

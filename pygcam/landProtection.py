@@ -335,11 +335,6 @@ def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, reg
     createProtected(tree, fraction, landClasses=landClasses, regions=regions)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
-# Read the following imports from the same dir as the script
-# sys.path.insert(0, os.path.dirname(sys.argv[0]))
-
-PlatformName = platform.system()
-
 DefaultTemplate = 'prot_{fraction}_{filename}'
 
 def argParser():
