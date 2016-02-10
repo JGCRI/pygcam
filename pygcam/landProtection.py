@@ -1,10 +1,12 @@
-'''
-Created on 12/12/15
-@author: Richard Plevin
+"""
+.. codeauthor:: Rich Plevin <rich@plevin.com>
 
-Copyright (c) 2015 Richard Plevin
-See the https://opensource.org/licenses/MIT for license details.
-'''
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+
+   Support for running a sequence of operations for a GCAM project
+   that is described in an XML file.
+"""
 import sys
 import os
 from lxml import etree as ET
@@ -48,16 +50,19 @@ def _makeLandClassXpath(landClasses, protected=False):
     return xpath
 
 def findChildren(node, tag, cls=None):
-    '''
+    """
+    Find all the children beneath `node` with the given `tag`, and
+    return an instance of the class `cls` representing that node.
+
     :param node: the node to find children from
     :param tag: the tag for the children to find
     :param cls: optional class to instantiate for each child. If
-    not specified, the class is assumed to be named by the
-    capitalized version of the tag, i.e., tag 'foo' implies class Foo.
-    As a special case, if cls == str, a list of the text contents for
-    the given tag is returned.
+      not specified, the class is assumed to be named by the
+      capitalized version of the tag, i.e., tag 'foo' implies class Foo.
+      As a special case, if cls == str, a list of the text contents for
+      the given tag is returned.
     :return: a list of elements of type 'cls' or the imputed class.
-    '''
+    """
     if not cls:
         className = tag[0].upper() + tag[1:]    # retains camelCase
         cls = getattr(ThisModule, className)
@@ -70,9 +75,17 @@ def findChildren(node, tag, cls=None):
 
     return children
 
+# TBD: move to common once debugged; use it in project.py as well.
 class XMLFile(object):
-    # TBD: move to common once debugged; use it in project.py as well.
+    """
+    Represents an XML file, which is parsed by lxml.etree and stored internally.
 
+    :param xmlFile: pathname of the XML file
+    :param schemaFile: optional XMLSchema file to use for validation
+    :param raiseError: if True, raise an error if validation fails
+    :param rootClass: optional root class, which is instantiated for the parsed
+      tree and stored internally
+    """
     def __init__(self, xmlFile, schemaFile=None, raiseError=True, rootClass=None):
         parser = ET.XMLParser(remove_blank_text=True)
         self.tree = ET.parse(xmlFile, parser)
@@ -97,6 +110,12 @@ class XMLFile(object):
         return self.root
 
 class LandProtection(object):
+    """
+    Stores the application's representation of the parsed XML file describing land
+    protection scenarios.
+
+    :param node: an lxml.etree.Element representing the top-level ``<landProtection>`` node
+    """
     def __init__(self, node):
         self.groups    = findChildren(node, 'group')
         self.scenarios = findChildren(node, 'scenario')
@@ -105,6 +124,17 @@ class LandProtection(object):
         return Scenario.getScenario(name)
 
     def protectLand(self, infile, outfile, scenarioName, backup=True):
+        """
+        Generate a copy of `infile` with land protected according to `scenarioName`,
+        writing the output to `outfile`.
+
+        :param infile: input file (should be one of the GCAM aglu-xml land files)
+        :param outfile: the file to create which represents the desired land protection
+        :param scenarioName: a scenario in the landProtection.xml file
+        :param backup: if True, create a backup `outfile`, with a '~' appended to the name,
+          before writing a new file.
+        :return: none
+        """
         parser = ET.XMLParser(remove_blank_text=True)
         tree = ET.parse(infile, parser)
 

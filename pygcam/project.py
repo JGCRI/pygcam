@@ -545,6 +545,7 @@ location of which is taken from the user's ~/.pygcam.cfg file.''')
 def parseArgs(args=None):
     """
     Allows calling the arg parser programmatically.
+
     :param args: The parameter list to parse.
     :return: populated Namespace instance
     """
