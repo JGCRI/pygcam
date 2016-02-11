@@ -126,6 +126,40 @@ def ensureXLSX(filename):
 
     return filename
 
+def readCsv(filename, skiprows=1):
+    """
+    Read a .csv file and return a DataFrame with the file contents.
+    :param filename: the path to a .csv file
+    :param skiprows: the number of rows to skip before reading the data
+    :return: a DataFrame with the file contents
+    """
+    import pandas as pd     # lazy import avoids long startup if readCsv is not needed
+
+    try:
+        df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
+
+    except Exception, e:
+        raise ToolException("*** Reading file '%s' failed: %s\n" % (filename, e))
+
+    return df
+
+# For testing, workspace = '/Users/rjp/bitbucket/gcam-core'
+
+def readRegionList(workspace):
+    """
+    Read the region names from the gcam-data-system input in the `workspace`.
+
+    :param workspace: the path a Main_User_Workspace that has the file
+      `input/gcam-data-system/_common/mappings/GCAM_region_names.csv`
+
+    :return: a list of strings representing the defined regions
+    """
+    relpath = 'input/gcam-data-system/_common/mappings/GCAM_region_names.csv'
+    path = os.path.join(workspace, relpath)
+
+    df = readCsv(path, skiprows=3)  # this is a gcam-data-system input file (different format)
+    regions = list(df.region)
+    return regions
 
 def getTempFile(suffix, text=True, tmpDir=None):
     """
@@ -192,90 +226,6 @@ def readRegionMap(filename):
 
     return mapping
 
-
-#
-# TBD: bundle some of these functions into a "GcamResults" class
-#
-def limitYears(df, years):
-    """
-    Return the the given DataFrame after dropping any year columns that
-    fall outside the given limits.
-
-    :param df: a `DataFrame` with columns whose names are string
-      representations of years.
-    :param years: a hyphen-delimited string representing the range of
-      years to keep, i.e., of the form 'XXXX-YYYY'
-    :return: nothing (though the DataFrame is modified in-place.)
-    """
-    first, last = map(int, years)
-    yearCols  = map(int, filter(str.isdigit, df.columns))
-    dropYears = map(str, filter(lambda y: y < first or y > last, yearCols))
-    df.drop(dropYears, axis=1, inplace=True)
-
-
-def dropExtraCols(df, inplace=True):
-    """
-    Drop some columns that GCAM queries sometimes return, but which we generally don't need.
-    The columns dropped are ['scenario', 'Notes', 'Date'].
-
-    :param df: the DataFrame from which to drop the columns.
-    :param inplace: if True, modify `df` in-place; otherwise return a modified copy.
-    :return: the original `df` (if inplace=True) or the modified copy.
-    """
-    columns = df.columns
-    unnamed = 'Unnamed:'    # extra (empty) columns can sneak in; eliminate them
-    dropCols = filter(lambda s: s[0:len(unnamed)] == unnamed, columns)
-
-    unneeded  = set(['scenario', 'Notes', 'Date'])
-    columnSet = set(columns)
-    dropCols += columnSet & unneeded    # drop any columns in both sets
-
-    resultDF = df.drop(dropCols, axis=1, inplace=inplace)
-    return resultDF
-
-
-def interpolateYears(df, startYear=0):
-    """
-    Interpolate linearly between each pair of years in the GCAM output. The
-    timestep is calculated from the numerical (string) column headings given
-    in the DataFrame `df`.
-
-    :param df: a DataFrame with columns whose names are string values of years,
-       e.g., '2010', '2015', '2020', as returned from standard GCAM database queries.
-    :param startYear: If `startYear` is non-zero, begin interpolation at this year,
-      otherwise values are interpolated between all time-steps.
-    :return: a copy of `df`, with interpolated values
-    """
-    yearCols = filter(str.isdigit, df.columns)
-    years = map(int, yearCols)
-
-    for i in range(0, len(years)-1):
-        start = years[i]
-        end   = years[i+1]
-        timestep = end - start
-
-        if timestep == 1:       # don't interpolate annual results (LUC emissions, forcing)
-            continue
-
-        startCol = df[str(start)]
-        endCol   = df[str(end)]
-
-        # compute vector of annual deltas for each row
-        delta = (endCol - startCol)/timestep
-
-        # interpolate the whole column -- but don't interpolate before the start year
-        for j in range(1, timestep):
-            nextYear = start + j
-            df[str(nextYear)] = df[str(nextYear-1)] + (0 if nextYear < startYear else delta)
-
-    yearCols = filter(str.isdigit, df.columns)  # get annualized year columns
-    years = map(int, yearCols)       # sort as integers
-    years.sort()
-    yearCols = map(str, years)       # convert back to strings, now sorted
-
-    nonYearCols = list(set(df.columns) - set(yearCols))
-    result = df.reindex_axis(nonYearCols + yearCols, axis=1, copy=True)
-    return result
 
 FT_DIESEL_MJ_PER_GAL   = 130.4
 FAME_MJ_PER_GAL        = 126.0

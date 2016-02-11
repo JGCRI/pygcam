@@ -21,6 +21,7 @@ Contents
 
    rst/intro
    rst/common
+   rst/query
    rst/project
    rst/landProtection
    rst/runProject

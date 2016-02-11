@@ -1,5 +1,5 @@
-The ``common.py`` module
-========================
+The ``pygcam.common`` module
+============================
 
 This module contains constants, functions, and classes that are used by various
 other modules of the pygcam toolkit.

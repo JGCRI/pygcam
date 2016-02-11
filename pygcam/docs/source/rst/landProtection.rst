@@ -1,5 +1,5 @@
-The ``landProtection.py`` module
-================================
+The ``pygcam.landProtection`` module
+=====================================
 
 This module provides all the functionality that is exposed through the command-line
 to the :doc:`protectLand` script. It is provided in library form so that it can be
