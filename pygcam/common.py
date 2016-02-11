@@ -13,41 +13,6 @@ import subprocess
 from pygcam.config import getParam
 from pygcam.error import PygcamException
 
-GCAM_32_REGIONS = [
-    'Africa_Eastern',
-    'Africa_Northern',
-    'Africa_Southern',
-    'Africa_Western',
-    'Argentina',
-    'Australia_NZ',
-    'Brazil',
-    'Canada',
-    'Central America and Caribbean',
-    'Central Asia',
-    'China',
-    'Colombia',
-    'EU-12',
-    'EU-15',
-    'Europe_Eastern',
-    'Europe_Non_EU',
-    'European Free Trade Association',
-    'India',
-    'Indonesia',
-    'Japan',
-    'Mexico',
-    'Middle East',
-    'Pakistan',
-    'Russia',
-    'South Africa',
-    'South America_Northern',
-    'South America_Southern',
-    'South Asia',
-    'South Korea',
-    'Southeast Asia',
-    'Taiwan',
-    'USA'
-]
-
 def shellCommand(command, shell=True, raiseError=True):
     """
     Run a shell command and optionally raise PygcamException error.
@@ -76,68 +41,26 @@ def flatten(listOfLists):
     """
     return list(chain.from_iterable(listOfLists))
 
-def ensureXLSX(filename):
+def ensureExtension(filename, ext):
     """
-    Force a filename to have the '.xlsx' extension, removing any other extension
-    if present.
+    Force a filename to have the given extension, `ext`, adding it to
+    any other extension, if present. That is, if `filename` is ``foo.bar``,
+    and `ext` is ``baz``, the result will be ``foo.bar.baz``.
+    If `ext` doesn't start with a ".", one is added.
 
     :param filename: filename
-    :return: filename with '.xlsx' extention
+    :param ext: the desired filename extension
+    :return: filename with extension `ext`
     """
-    xlsx = '.xlsx'
-
     mainPart, extension = os.path.splitext(filename)
+    ext = ext if ext[0] == '.' else '.' + ext
+
     if not extension:
-        filename = mainPart + xlsx
-    elif extension != xlsx:
-        filename += xlsx
+        filename = mainPart + ext
+    elif extension != ext:
+        filename += ext
 
     return filename
-
-def readCsv(filename, skiprows=1):
-    """
-    Read a .csv file and return a DataFrame with the file contents.
-    :param filename: the path to a .csv file
-    :param skiprows: the number of rows to skip before reading the data
-    :return: a DataFrame with the file contents
-    """
-    import pandas as pd     # lazy import avoids long startup if readCsv is not needed
-
-    try:
-        df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
-
-    except Exception, e:
-        raise PygcamException("*** Reading file '%s' failed: %s\n" % (filename, e))
-
-    return df
-
-# For testing, workspace = '/Users/rjp/bitbucket/gcam-core'
-
-def getRegionList(workspace=None):
-    """
-    Get a list of the defined region names.
-
-    :param workspace: the path to a ``Main_User_Workspace`` directory that
-      has the file
-      ``input/gcam-data-system/_common/mappings/GCAM_region_names.csv``,
-      or ``None``, in which case the value of config variable
-      ``GCAM.SourceWorkspace`` (if defined) is used. If `workspace` is
-      empty or ``None``, and the config variable ``GCAM.SourceWorkspace`` is
-      empty (the default value), the built-in default 32-region list is returned.
-    :return: a list of strings with the names of the defined regions
-    """
-    relpath = 'input/gcam-data-system/_common/mappings/GCAM_region_names.csv'
-
-    workspace = workspace or getParam('GCAM.SourceWorkspace')
-    if not workspace:
-        return GCAM_32_REGIONS
-
-    path = os.path.join(workspace, relpath)
-
-    print "Reading", path
-    df = readCsv(path, skiprows=3)  # this is a gcam-data-system input file (different format)
-    regions = list(df.region)
-    return regions
 
 def getTempFile(suffix, text=True, tmpDir=None):
     """
@@ -175,37 +98,6 @@ def mkdirs(newdir):
         if e.errno != EEXIST:
             raise
 
-def readRegionMap(filename):
-    """
-    Read a region map file and return the contents as a dictionary with each
-    key equal to a standard GCAM region and each value being the region to
-    map the original to (which can be an existing GCAM region or a new name.)
-
-    :param filename: the name of a file containing region mappings
-    :return: a dictionary holding the mappings read from `filename`
-    """
-    import re
-    mapping = {}
-    pattern = re.compile('\t+')
-
-    print "Reading region map '%s'" % filename
-    with open(filename) as f:
-        lines = f.readlines()
-
-    for line in lines:
-        line = line.strip()
-        if line[0] == '#':
-            continue
-
-        tokens = pattern.split(line)
-        #print "Line: '%s', tokens: %s" % (line, tokens)
-        assert len(tokens) == 2, "Badly formatted line in region map '%s': %s" % (filename, line)
-
-        mapping[tokens[0]] = tokens[1]
-
-    return mapping
-
-
 FT_DIESEL_MJ_PER_GAL   = 130.4
 FAME_MJ_PER_GAL        = 126.0
 ETOH_MJ_PER_GAL        = 81.3
@@ -233,16 +125,22 @@ def fuelDensityMjPerGal(fuelname):
     '''
     Return the fuel energy density of the named fuel.
 
-    :param fuelname: the name of a fuel (currently must be from the set m{fame, bd, biodiesel, ethanol, etoh,
-      'corn ethanol', 'cellulosic ethanol', 'sugar cane ethanol', ft, 'FT biofuels', biogasoline, bio-gasoline}.
+    :param fuelname: the name of a fuel, which must be one of:
+      ``{fame, bd, biodiesel, ethanol, etoh, corn ethanol, cellulosic ethanol, sugar cane ethanol, ft, FT biofuels, biogasoline, bio-gasoline}``.
     :return: energy density (MJ/gal)
     '''
     return FuelDensity[fuelname.lower()]
 
 
 if __name__ == '__main__':
-    l = getRegionList()
-    print "(%d) %s" % (len(l), l)
-    print
-    l = getRegionList('/Users/rjp/bitbucket/gcam-core')
-    print "(%d) %s" % (len(l), l)
+
+    # TBD: move to unittest
+    if False:
+        print ensureExtension('/a/b/c/foo', '.baz')
+        print ensureExtension('/a/b/c/foo.bar', 'baz')
+
+        l = getRegionList()
+        print "(%d) %s" % (len(l), l)
+        print
+        l = getRegionList('/Users/rjp/bitbucket/gcam-core')
+        print "(%d) %s" % (len(l), l)

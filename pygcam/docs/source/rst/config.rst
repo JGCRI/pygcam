@@ -5,6 +5,13 @@ This module provides access to configuration parameters. The parameters listed b
 are defined with the given defaults, and then the user's ``~/.pygcam.cfg`` file is read,
 overriding any defaults. User values should be defined in a section called ``[GCAM]``.
 
+API
+---
+
+.. automodule:: pygcam.config
+   :members:
+
+
 Default values
 --------------
 The following config file is read (from the string ``pygcam.config._SystemDefaults``)
@@ -53,6 +60,9 @@ after the closing parenthesis, which is necessary or an exception will be thrown
       # directories or XML files in which to find batch query definitions.
       GCAM.QueryPath = .
 
+      # Columns to drop when processing results of XML batch queries
+      GCAM.ColumnsToDrop = scenario,Notes,Date
+
       # The name of the queue used for submitting batch jobs on a cluster.
       GCAM.DefaultQueue = standard
 
@@ -95,10 +105,3 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 
       # Where to create temporary files
       GCAM.TempDir = /tmp
-
-
-API
----
-
-.. automodule:: pygcam.config
-   :members:

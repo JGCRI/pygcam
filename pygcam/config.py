@@ -71,6 +71,9 @@ GCAM.JavaArgs = -Xms512m -Xmx2g
 # directories or XML files in which to find batch query definitions.
 GCAM.QueryPath = .
 
+# Columns to drop when processing results of XML batch queries
+GCAM.ColumnsToDrop = scenario,Notes,Date
+
 # The name of the queue used for submitting batch jobs on a cluster.
 GCAM.DefaultQueue = standard
 

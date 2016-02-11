@@ -12,7 +12,13 @@ class PygcamException(Exception):
     """
     pass
 
-class ConfigFileError(PygcamException):
+class FileFormatError(PygcamException):
+    """
+    Indicate a syntax error in a user-managed file.
+    """
+    pass
+
+class ConfigFileError(FileFormatError):
     """
     Raised when an error is found in the configuration file ``~/.pygcam.cfg``.
     """
