@@ -12,7 +12,8 @@ from lxml import etree as ET
 import copy
 import argparse
 
-from .common import GCAM_32_REGIONS, mkdirs, flatten
+from .common import mkdirs, flatten
+from .query import GCAM_32_REGIONS
 from .config import readConfigFiles, getParam
 from .error import PygcamException
 

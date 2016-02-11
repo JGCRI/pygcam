@@ -19,13 +19,13 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   rst/intro
-   rst/common
-   rst/error
-   rst/config
-   rst/query
-   rst/project
-   rst/landProtection
-   rst/runProject
-   rst/protectLand
+   intro
+   common
+   error
+   config
+   query
+   project
+   landProtection
+   runProject
+   protectLand
 
