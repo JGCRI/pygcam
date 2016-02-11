@@ -1,21 +1,20 @@
 """
+.. Support for generating land-protection scenarios described in an XML file.
+
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-
-   Support for running a sequence of operations for a GCAM project
-   that is described in an XML file.
 """
 import sys
 import os
 from lxml import etree as ET
 import copy
-import platform
 import argparse
 
-from .common import GCAM_32_REGIONS, mkdirs, ToolException, flatten
+from .common import GCAM_32_REGIONS, mkdirs, flatten
 from .config import readConfigFiles, getParam
+from .error import PygcamException
 
 ThisModule = sys.modules[__name__]
 
@@ -100,7 +99,7 @@ class XMLFile(object):
             try:
                 schema.assertValid(self.tree)
             except ET.DocumentInvalid as e:
-                raise ToolException("Validation of '%s'\n  using schema '%s' failed:\n  %s" % (xmlFile, schemaFile, e))
+                raise PygcamException("Validation of '%s'\n  using schema '%s' failed:\n  %s" % (xmlFile, schemaFile, e))
         else:
             return schema.validate(self.tree)
 
@@ -140,7 +139,7 @@ class LandProtection(object):
 
         scenario = Scenario.getScenario(scenarioName)
         if not scenario:
-            raise ToolException("Scenario '%s' was not found" % scenarioName)
+            raise PygcamException("Scenario '%s' was not found" % scenarioName)
 
         # Iterate over all definitions for this scenario, applying the protections
         # incrementally to the tree representing the XML file that was read in.
@@ -296,7 +295,7 @@ def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=No
             node = nodes[0]
             regNodes = list(node.iterancestors(tag='region'))
             region = regNodes[0].get('name')
-            raise ToolException('Error: Land class %s is already protected in region %s' % (node.tag, region))
+            raise PygcamException('Error: Land class %s is already protected in region %s' % (node.tag, region))
 
         nodes = landRoot.xpath(unmgdXpath)
 
@@ -435,7 +434,7 @@ def main(args):
     backup    = args.backup
 
     if not inFiles and not workspace:
-        raise ToolException('Must specify either inFiles or workspace')
+        raise PygcamException('Must specify either inFiles or workspace')
 
     if workspace:
         if inFiles:
@@ -451,7 +450,7 @@ def main(args):
 
     if scenarioName:
         if not scenarioFile:
-            raise ToolException('A scenario file was not identified')
+            raise PygcamException('A scenario file was not identified')
 
         print "Land-protection scenario '%s'" % scenarioName
 
@@ -464,7 +463,7 @@ def main(args):
 
             # check that we're not clobbering the input file
             if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
-                raise ToolException("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
+                raise PygcamException("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
 
             landProtection.protectLand(inFile, outFile, scenarioName, backup=backup)
 
@@ -472,7 +471,7 @@ def main(args):
 
     fraction = args.fraction
     if fraction is None:
-        raise ToolException('If not using protection scenarios, fraction must be provided')
+        raise PygcamException('If not using protection scenarios, fraction must be provided')
 
     fraction = float(fraction)
     templateDict = {'fraction' : str(int(fraction * 100)),

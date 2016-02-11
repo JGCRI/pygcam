@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 '''
-a@author: Rich Plevin (rich@plevin.com)
+.. Main program for generating land-protection scenarios.
 
-Copyright (c) 2015-2016 Richard Plevin
-See the https://opensource.org/licenses/MIT for license details.
+.. code-author:: Rich Plevin <rich@plevin.com>
+
+.. Copyright (c) 2015-2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 '''
 import sys
-from pygcam.landProtection import ToolException, main, parseArgs, PROGRAM
+from pygcam.landProtection import main, parseArgs, PROGRAM
+from pygcam.error import PygcamException
 
 if __name__ == '__main__':
     args = parseArgs()
@@ -15,7 +18,7 @@ if __name__ == '__main__':
     try:
         main(args)
         status = 0
-    except ToolException as e:
+    except PygcamException as e:
         print "%s: %s" % (PROGRAM, e)
 
     sys.exit(status)

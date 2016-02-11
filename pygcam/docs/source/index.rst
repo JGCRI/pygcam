@@ -21,6 +21,8 @@ Contents
 
    rst/intro
    rst/common
+   rst/error
+   rst/config
    rst/query
    rst/project
    rst/landProtection

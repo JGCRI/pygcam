@@ -1,10 +1,15 @@
 """
-  .. Created on 2/10/16
+.. Support for querying GCAM's XML database and processing results.
 
-  .. codeauthor:: Rich Plevin <rich@plevin.com>
+.. codeauthor:: Rich Plevin <rich@plevin.com>
 
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 """
-from pygcam.common import ToolException, getTempFile
+from .common import getTempFile
+from .config import readConfigFiles, getParam
+from .error import PygcamException
+
 
 # TBD: have a library version more like the original, and build the class on that,
 # TBD: so users can have it either way? Or, try to rewrite utils using this (and similar)
@@ -44,8 +49,8 @@ def computeDifference(df1, df2):
     df2 = df2.dropExtraCols(inplace=False)
 
     if set(df1.columns) != set(df2.columns):
-        raise ToolException("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
-                            % (df1.columns, df2.columns))
+        raise PygcamException("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
+                              % (df1.columns, df2.columns))
 
     yearCols = filter(str.isdigit, df1.columns)
     nonYearCols = list(set(df1.columns) - set(yearCols))

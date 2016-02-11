@@ -1,14 +1,14 @@
 '''
-Created on 1/21/16
-@author: Richard Plevin
+.. codeauthor:: Richard Plevin
 
-Copyright (c) 2016 Richard Plevin
-See the https://opensource.org/licenses/MIT for license details.
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
 import io
 import platform
 from ConfigParser import SafeConfigParser
+from .error import ConfigFileError
 
 DEFAULT_SECTION = 'DEFAULT'
 GCAM_SECTION    = 'GCAM'
@@ -51,6 +51,10 @@ GCAM.Workspace = %(GCAM.Current)s/Main_User_Workspace
 
 # The location of the ModelInterface to use.
 GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
+
+# The location of GCAM source code (for the purpose of reading
+# the .csv file that defines the current regional aggregation.
+GCAM.SourceWorkspace =
 
 # The location of the default input file for runProject.py
 GCAM.ProjectXmlFile = %(Home)/gcam_project.xml
@@ -109,7 +113,27 @@ GCAM.TempDir = /tmp
 
 _ConfigParser = None
 
+def getConfig():
+    """
+    Return the configuration object. If one has been created already via
+    `readConfigFiles`, it is returned; otherwise a new one is created and
+    the configuration files are read.
+
+    :return: a `SafeConfigParser` instance.
+    """
+    if _ConfigParser:
+        return _ConfigParser
+
+    return readConfigFiles()
+
 def readConfigFiles():
+    """
+    Read the pygcam configuration file, ``~/.pygcam.cfg``. "Sensible" default values are
+    established first, which overwritten by values found in the user's configuration
+    file.
+
+    :return: a populated SafeConfigParser instance
+    """
     global _ConfigParser
 
     home = os.getenv('HOME')
@@ -146,18 +170,67 @@ def readConfigFiles():
 
     return _ConfigParser
 
-def getParam(varName):
-    return _ConfigParser.get(GCAM_SECTION, varName)
+def getParam(name):
+    """
+    Get the value of the configuration parameter `name`. Calls
+    :py:func:`getConfig` if needed.
 
-def getParamAsBoolean(varName):
-    value = getParam(varName)
-    return value and str(value).lower() in ('true', 'yes', 'on', '1') # added str() to avoid spurious error message
+    :param name: (str) the name of a configuration parameters. Note
+       that variable names are case-insensitive.
+    :return: (str) the value of the variable
+    """
+    if not _ConfigParser:
+        getConfig()
 
-def getParamAsInt(varName):
-    value = getParam(varName)
+    return _ConfigParser.get(GCAM_SECTION, name)
+
+def getParamAsBoolean(name):
+    """
+    Get the value of the configuration parameter `name`, coerced
+    into a boolean value, where any (case-insensitive) value in the
+    set ``{'true','yes','on','1'}`` are converted to ``True``, and
+    any value in the set ``{'false','no','off','0'}`` is converted to
+    ``False``. Any other value raises an exception.
+    Calls :py:func:`getConfig` if needed.
+
+    :param name: (str) the name of a configuration parameters.
+    :return: (bool) the value of the variable
+    :raises: :py:exc:`pygcam.error.ConfigFileError`
+    """
+    true = ('true', 'yes', 'on', '1')
+    false = ('false', 'no', 'off', '0')
+
+    value = getParam(name)
+    value = str(value).lower()
+
+    if value in true:
+        return True
+
+    if value in false:
+        return False
+
+    raise ConfigFileError("The value of variable '%s' could not converted to boolean." % name)
+
+
+def getParamAsInt(name):
+    """
+    Get the value of the configuration parameter `name`, coerced
+    to an integer. Calls :py:func:`getConfig` if needed.
+
+    :param name: (str) the name of a configuration parameters.
+    :return: (int) the value of the variable
+    """
+    value = getParam(name)
     return int(value)
 
-def getParamAsFloat(varName):
-    value = getParam(varName)
+def getParamAsFloat(name):
+    """
+    Get the value of the configuration parameter `name` as a
+    float. Calls :py:func:`getConfig` if needed.
+
+    :param name: (str) the name of a configuration parameters.
+    :return: (float) the value of the variable
+    """
+    value = getParam(name)
     return float(value)
 

@@ -4,46 +4,14 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
+.. Copyright (c) 2015-2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 '''
-
-# Copyright (c) 2015, Richard Plevin.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the
-#    distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 from itertools import chain
 import subprocess
-from .config import getParam
-
-class ToolException(Exception):
-    pass
+from pygcam.config import getParam
+from pygcam.error import PygcamException
 
 GCAM_32_REGIONS = [
     'Africa_Eastern',
@@ -82,7 +50,7 @@ GCAM_32_REGIONS = [
 
 def shellCommand(command, shell=True, raiseError=True):
     """
-    Run a shell command and optionally raise ToolException error.
+    Run a shell command and optionally raise PygcamException error.
 
     :param command: the command to run, with arguments. This can be expressed
       either as a string or as a list of strings.
@@ -94,7 +62,7 @@ def shellCommand(command, shell=True, raiseError=True):
     exitStatus = subprocess.call(command, shell=shell)
     if exitStatus <> 0:
         if raiseError:
-            raise ToolException("\n*** Command failed: %s\n*** Command exited with status %s\n" % (command, exitStatus))
+            raise PygcamException("\n*** Command failed: %s\n*** Command exited with status %s\n" % (command, exitStatus))
 
     return exitStatus
 
@@ -139,24 +107,34 @@ def readCsv(filename, skiprows=1):
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
 
     except Exception, e:
-        raise ToolException("*** Reading file '%s' failed: %s\n" % (filename, e))
+        raise PygcamException("*** Reading file '%s' failed: %s\n" % (filename, e))
 
     return df
 
 # For testing, workspace = '/Users/rjp/bitbucket/gcam-core'
 
-def readRegionList(workspace):
+def getRegionList(workspace=None):
     """
-    Read the region names from the gcam-data-system input in the `workspace`.
+    Get a list of the defined region names.
 
-    :param workspace: the path a Main_User_Workspace that has the file
-      `input/gcam-data-system/_common/mappings/GCAM_region_names.csv`
-
-    :return: a list of strings representing the defined regions
+    :param workspace: the path to a ``Main_User_Workspace`` directory that
+      has the file
+      ``input/gcam-data-system/_common/mappings/GCAM_region_names.csv``,
+      or ``None``, in which case the value of config variable
+      ``GCAM.SourceWorkspace`` (if defined) is used. If `workspace` is
+      empty or ``None``, and the config variable ``GCAM.SourceWorkspace`` is
+      empty (the default value), the built-in default 32-region list is returned.
+    :return: a list of strings with the names of the defined regions
     """
     relpath = 'input/gcam-data-system/_common/mappings/GCAM_region_names.csv'
+
+    workspace = workspace or getParam('GCAM.SourceWorkspace')
+    if not workspace:
+        return GCAM_32_REGIONS
+
     path = os.path.join(workspace, relpath)
 
+    print "Reading", path
     df = readCsv(path, skiprows=3)  # this is a gcam-data-system input file (different format)
     regions = list(df.region)
     return regions
@@ -175,6 +153,7 @@ def getTempFile(suffix, text=True, tmpDir=None):
     from tempfile import mkstemp
 
     tmpDir = tmpDir or getParam('GCAM.TempDir') or "/tmp"
+
     mkdirs(tmpDir)
     fd, tmpFile = mkstemp(suffix=suffix, dir=tmpDir, text=text)
     os.close(fd)    # we don't need this
@@ -259,3 +238,11 @@ def fuelDensityMjPerGal(fuelname):
     :return: energy density (MJ/gal)
     '''
     return FuelDensity[fuelname.lower()]
+
+
+if __name__ == '__main__':
+    l = getRegionList()
+    print "(%d) %s" % (len(l), l)
+    print
+    l = getRegionList('/Users/rjp/bitbucket/gcam-core')
+    print "(%d) %s" % (len(l), l)

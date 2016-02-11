@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
+.. Support for running a sequence of operations for a GCAM project
+   that is described in an XML file.
+
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-
-   Support for running a sequence of operations for a GCAM project
-   that is described in an XML file.
 """
 import os
 import sys
@@ -14,7 +14,8 @@ import argparse
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
-from .common import getTempFile, flatten, shellCommand, ToolException
+from .common import getTempFile, flatten, shellCommand
+from .error import PygcamException
 
 PROGRAM = 'runProject.py'
 VERSION = "0.1"
@@ -29,7 +30,7 @@ def getBaseline(scenarios):
     if len(baselines) == 1:
         return baselines[0]
 
-    raise ToolException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+    raise PygcamException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
 
 def getDefaultGroup(groups):
     '''
@@ -43,7 +44,7 @@ def getDefaultGroup(groups):
     if len(defaults) == 1:
         return defaults[0]
 
-    raise ToolException('Exactly one active default scenario group must be defined; found %d' % len(defaults))
+    raise PygcamException('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
 
 class TmpFile(object):
@@ -62,7 +63,7 @@ class TmpFile(object):
         # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
         name = node.get('varName')
         if not name:
-            raise ToolException("tmpFile element is missing its required 'name' attribute")
+            raise PygcamException("tmpFile element is missing its required 'name' attribute")
 
         self.delete  = int(node.get('delete',  '1'))
         self.replace = int(node.get('replace', '0'))
@@ -156,7 +157,7 @@ class Step(object):
         self.command = node.text
 
         if not self.command:
-            raise ToolException("<step name='%s'> is missing command text" % self.name)
+            raise PygcamException("<step name='%s'> is missing command text" % self.name)
 
     def __str__(self):
         return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
@@ -178,7 +179,7 @@ class Step(object):
         try:
             command = self.command.format(**argDict)    # replace vars in template
         except KeyError as e:
-            raise ToolException("%s -- No such variable exists in the project XML file" % e)
+            raise PygcamException("%s -- No such variable exists in the project XML file" % e)
 
         print "[%s, %s, %s] %s" % (scenario.name, self.seq, self.name, command)
 
@@ -248,10 +249,10 @@ class Project(object):
         projectNodes = tree.findall('project[@name="%s"]' % projectName)
 
         if len(projectNodes) == 0:
-            raise ToolException("Project '%s' is not defined" % projectName)
+            raise PygcamException("Project '%s' is not defined" % projectName)
 
         if len(projectNodes) > 1:
-            raise ToolException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
+            raise PygcamException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
 
         projectNode = projectNodes[0]
 
@@ -266,7 +267,7 @@ class Project(object):
             groupName = defaultGroup.name
 
         if groupName not in groupDict:
-            raise ToolException("Group '%s' is not defined for project '%s'" % (groupName, projectName))
+            raise PygcamException("Group '%s' is not defined for project '%s'" % (groupName, projectName))
 
         self.scenarioGroupName = groupName
         self.scenarioGroup = scenarioGroup = groupDict[groupName]
@@ -318,7 +319,7 @@ class Project(object):
         given = set(Variable.definedVars())
         missing = required - given
         if missing:
-            raise ToolException("Missing required variables: %s" % missing)
+            raise PygcamException("Missing required variables: %s" % missing)
 
     def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
         '''
@@ -393,14 +394,14 @@ class Project(object):
         :param knownArgs: a list of known elements of the given type
         :param argName: the tag of the XML element
         :return: nothing
-        :raises: ToolException if the elements requested by the user are not defined in
+        :raises: PygcamException if the elements requested by the user are not defined in
           the current (project, scenario) context
         """
         unknownArgs = set(userArgs) - set(knownArgs)
         if unknownArgs:
             s = ' '.join(unknownArgs)
-            raise ToolException("Requested %s do not exist in project '%s', group '%s': %s" % \
-                                   (argName, self.projectName, self.scenarioGroupName, s))
+            raise PygcamException("Requested %s do not exist in project '%s', group '%s': %s" % \
+                                  (argName, self.projectName, self.scenarioGroupName, s))
 
     def run(self, scenarios, steps, args):
         """
@@ -466,7 +467,7 @@ class Project(object):
                     if step.name in steps:
                         argDict['step'] = step.name
                         step.run(self, baseline, scenario, argDict, args, noRun=args.noRun)
-            except ToolException as e:
+            except PygcamException as e:
                 if quitProgram:
                     raise
                 print e
