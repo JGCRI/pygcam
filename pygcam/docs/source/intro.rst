@@ -37,3 +37,76 @@ The main components include:
   ..
 
   * **Installer scripts** to simplify installation of tools on users’ computers.
+
+
+Managing Scenarios
+===================
+
+In GCAM, a *scenario* is just a name assigned within a configuration
+file to distinguish runs of GCAM. The scenario name is set in GCAM's
+configuration.xml and appears in the upper-left panel of the ModelInterface
+application.
+
+In ``pygcam``, the *scenario* concept is made more helpful by implementing
+a few simple conventions regarding directory structure and filenames. Using
+a consistent structure simplifies use of the library and tools since more
+information can be conveyed through the scenario name. The "setup tools" (to
+be documented) follow these conventions when generating modified XML, allowing
+the other workflow scripts to find the resulting files.
+
+Scenario conventions
+--------------------
+
+We extend the definition of *scenario* to identify a set of XML files that
+are used together. In this approach, "scenario" refers to both the name
+assigned in a configuration.xml file and a corresponding directory holding
+customized XML files, and a configuration file called ``config.xml```.
+
+
+Managing multiple workspaces
+=============================
+
+The tools are most convenient to use if you follow the file layout created by
+the "setup tools". It is not required to use these tools or this file structure,
+but everything is designed to simplify coordination between the programs.
+Many of these (absolute and relative) directory locations can be modified to
+suit your preferences via the ``pygcam`` configuration file.
+
+This file layout assumes you have multiple projects, and each project involves
+multiple baseline and policy scenarios. These project files can all be stored in
+a central GCAM work area, which each project folder holding all scenarios for a
+project. Consider the following directory structure:
+
+  * ~/workspaces
+
+    * project1
+
+      * scenario.a
+
+        * <custom XML files>
+        * config.xml
+
+      * scenario.b
+
+        * <custom XML files>
+        * config.xml
+
+    * project2
+
+      * myScenario
+
+        * <custom XML files>
+        * config.xml
+
+      * yourScenario
+
+        * <custom XML files>
+        * config.xml
+
+
+With this approach, the script ``queueGCAM.py`` can get the main workspace
+location from the variable ``GCAM.WorkspaceRoot`` from the configuration file
+``~.pygcam.cfg`` (which, in this approach can be set once for all projects)
+and you need only pass the scenario name and project name, allowing the path
+to the configuration XML file to computed as
+``{GCAM.WorkspaceRoot}/{project}/{scenario}/config.xml``.

@@ -25,7 +25,8 @@ Contents
    config
    query
    project
+   setup
    landProtection
    runProject
    protectLand
-
+   designNotes
