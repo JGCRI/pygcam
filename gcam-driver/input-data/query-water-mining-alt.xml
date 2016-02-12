@@ -1,0 +1,12 @@
+<queries>
+    <aQuery>
+      <all-regions/>
+      <supplyDemandQuery title="Water Withdrawals (Resource Extraction)">
+         <axis1 name="sector">sector</axis1>
+         <axis2 name="Year">demand-physical[@vintage]</axis2>
+         <xPath buildList="true" dataName="input" group="false" sumAll="true">*[@type='sector' and (contains(@name, 'regional coal') or contains(@name, 'nuclearFuelGenIII') or contains(@name, 'regional natural gas') or contains(@name, 'unconventional oil production') or contains(@name, 'regional oil') or contains(@name, 'nuclearFuelGenII'))]//*[@type='input' and (@name='water withdrawals')]/demand-physical/node()</xPath>
+         <comments>Supply sectors only.</comments>
+      </supplyDemandQuery>
+    </aQuery>
+</queries>
+

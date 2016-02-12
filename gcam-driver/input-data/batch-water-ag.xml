@@ -1,0 +1,13 @@
+<ModelInterfaceBatch>
+    <class name="ModelInterface.ModelGUI2.DbViewer">
+        <command name="XMLDB Batch File">
+            <queryFile>/lustre/data/rpl/gcam-driver/input-data/query-water-ag.xml</queryFile>
+            <outFile>/lustre/data/rpl/gcam-driver/output/water-ag.csv</outFile>
+            <xmldbLocation>/lustre/data/rpl/gcam-newlogit/output/database.dbxml</xmldbLocation>
+            <batchQueryResultsInDifferentSheets>false</batchQueryResultsInDifferentSheets>
+            <batchQueryIncludeCharts>false</batchQueryIncludeCharts>
+            <batchQuerySplitRunsInDifferentSheets>false</batchQuerySplitRunsInDifferentSheets>
+            <batchQueryReplaceResults>true</batchQueryReplaceResults>
+        </command>
+    </class>
+</ModelInterfaceBatch>

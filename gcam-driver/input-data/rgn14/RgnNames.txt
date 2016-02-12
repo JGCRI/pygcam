@@ -1,0 +1,15 @@
+region, region_id
+USA,		     1
+Canada,	 	     2
+Western Europe,      3
+Japan,		     4
+Australia_NZ,	     5
+Former Soviet Union, 6
+China, 	      	     7
+Middle East,	     8
+Africa,		     9
+Latin America,	     10
+Southeast Asia,	     11
+Eastern Europe,	     12
+Korea,		     13
+India,		     14

@@ -1,0 +1,346 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+
+\title{{GCAM} Automation System Users' Guide}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+The GCAM automation system is intended to provide a way to run all the
+steps of a GCAM analysis using a single command.  Such an analysis
+might include several data preprocessing steps, a run of the GCAM core
+model, and several data postprocessing steps.  The steps (called
+``modules'' throughout this documentation) to be performed are laid
+out in a configuration file, the format of which is designed to be
+easily edited by hand or by an automated process (such as a graphical
+front end).  The system deduces dependencies between modules based on
+patterns of data use, and modules are run concurrently where possible.
+
+
+\section{Installation and Setup}
+\subsection{System Requirements}
+
+The GCAM automation system has been developed and tested on the Linux
+operating system .  The code is written portably in Python, so any
+Linux version
+from the past few years should work.  The code
+requires Python~2.7.  Due to backward incompatibilities in Python~3.X,
+later versions of the Python interpreter will \emph{not} work.
+
+Output in NetCDF format requires the NetCDF-3 libraries.  These
+libraries are available from Unidata (\texttt{unidata.ucar.edu}).
+
+The modules that run GCAM analyses are distributed separately in their
+own repositories.  In addition to run them you will need to install
+the code for all of the modules you wish to run.  The FY-15 demos use
+the GCAM core model and the hydrology and water downscaling code.
+Both of these are distributed by PNNL.  The GCAM core model is a
+stand-alone program, while the hydrology and water downscaling code
+requires a copy of Matlab.
+
+\subsection{How to install}
+
+The GCAM automation system is hosted on GitHub and can be downloaded
+from:\\
+\texttt{https://github.com/JGCRI/gcam-driver}\\
+The release used for FY15 runs for the Foresight project is
+version~0.2.  To install the code download this release and unpack it
+in the directory of your choice.  If you wish to produce netCDF
+outputs, make sure the netCDF-3 libraries are installed, and set the
+\texttt{NETCDF\_INCDIR} environment variable to the location of the
+netCDF include files, and the \texttt{NETCDF\_LIBDIR} to the location
+of the netCDF libraries.  Then, from the \texttt{src/C} subdirectory
+of the release, run \texttt{make mat2nc} to build the netCDF
+converter.
+
+\section{How to run}
+
+In order to run a GCAM calculation using the automation system, you
+must first prepare a configuration file describing the GCAM modules to
+include.  The configuration file is divided into sections, with each
+section corresponding to a module.  The section begins with the name
+of the module enclosed in square brackets and consists of a series of
+parameter-value pairs separated by an $=$ sign.  Parameters may be
+listed in any order.  Each module has its own set of parameter
+options, which are explained below.  An example configuration file is
+included with the code in the \texttt{example-chn.cfg} file.
+
+The code instantiates modules as it finds them in the configuration
+file.  Because of this, a module can be excluded from a run merely by
+not mentioning it in the configuration file.  Most of the modules are
+independent of one another, but some of them use output from other
+modules.  Trying to run a configuration that omits a module that
+produces data used by another module that is included in the
+configuration will cause an error.  The individual module descriptions
+below note when a module has dependencies.
+
+Once the configuration file has been prepared, the program can be run
+from the command line by changing to the 
+top-level gcam-driver directory and running:\\
+\texttt{./gcam-driver <configfile>}\\ 
+
+
+\subsection{The Global Module}
+The Global module provides parameter values that will be used by multiple
+other modules.  Most of these values are related to the locations of
+files used to access GCAM data.  The name of this module is
+\texttt{[Global]}.
+\begin{description}
+\item[ModelInterface] The location of the \texttt{ModelInterface.jar}
+  Java file.  This will have been installed along with the GCAM core
+  model.
+\item[DBXMLlib] The location of the DBXML libraries.  These will also
+  have been
+  installed with the GCAM core model.
+\item[inputdir] The location of the gcam-driver input data.  For now,
+  this is always \texttt{./input-data}.  It is included as a settable
+  parameter to allow for future expansion.
+\item[rgnconfig] The directory containing the files that describe how
+  the world is divided up into regions.  This directory path is
+  relative to the directory specified for \texttt{inputdir}.  There
+  are currently three to choose from:  \texttt{rgn14}, \texttt{rgn32},
+  and \texttt{rgnchn}.
+\end{description}
+
+
+\subsection{The Hydrology Module}
+The Hydrology module runs the hydrology for the future scenario and
+makes the results available to other modules.  The name of the module
+in the config file is \texttt{[HydroModule]}.
+
+This module requires the Historical Hydrology module.
+
+\begin{description}
+\item[workdir] The working directory for the hydrology calculation.
+  Generally, this is the location where the gcam-hydro code is
+  installed.
+\item[inputdir] Location of the CMIP5 model output used as input by the
+  hydrology calculation.
+\item[outputdir] Directory into which to write the module's output
+  data.
+\item[init-storage-file] File giving the initial condition for the
+  water stored in the soil column.  This file is included with the
+  gcam-hydro distribution, but it can be replaced if something better
+  is available.
+\item[logfile] File into which to write screen output from the matlab
+  code.  This is mostly intended for debugging problems with the
+  matlab calculation.
+\item[gcm] The name of the earth system model to run the hydrology
+  on.  This will be used to construct the name of both the input and
+  output files.
+\item[scenario] The RCP scenario to use for the calculation.  This
+  will also be a component in the input and output file names.
+\item[runid] The ensemble ID and start and end months for the input
+  CMIP5 data.  This will be used to identify the correct input files
+  in the CMIP5 data directory.
+\end{description}
+
+\subsection{The Historical Hydrology Module}
+The Historical Hydrology module runs the hydrology for the historical
+period.  This calculation is similar to the future hydrology described
+above, but just different enough to require its own module.  The
+historical input data is the same for all future scenarios, but it is
+different for each ESM, as it is obtained by running the ESM over the
+historical period.  The name of this module in the config file is
+\texttt{[HistoricalHydroModule]}.
+
+\begin{description}
+\item[workdir] The working directory for the hydrology calculation.
+  Generally, this is the location where the gcam-hydro code is
+  installed.
+\item[inputdir] Location of the CMIP5 model output used as input by
+  the hydrology calculation.
+\item[outputdir] Directory into which to write the module's output.
+\item[logfile] File into which to write screen output from the
+  matlab historical hydrology code.
+\item[gcm] Name of the earth system model to use as input.  This
+  name will be used both to locate the input data and to construct
+  the file names for the output data.
+\item[runid] The ensemble ID and start and end months for the input
+  CMIP5 data.  This will be used to identify the correct input files
+  in the CMIP5 data directory.
+\end{description}
+
+\subsection{The {GCAM} Module}
+The GCAM module runs a GCAM scenario.  The name of the module in the
+config file is \texttt[GcamModule] (note the lack of capitalization in
+``Gcam'').
+
+\begin{description}
+\item[exe] Location of the \texttt{gcam.exe} executable.
+\item[config] Location of the GCAM configuration file.  This is the
+  primary input to GCAM that defines the GCAM scenario to be run.
+\item[logconfig] Location of the GCAM log configuration file.  This
+  file specifies the names of various GCAM log files and the logging
+  level for each log.  If the log files are not needed, then it is
+  safe to use the same log configuration for multiple runs.
+\item[logfile] File into which to redirect the output that GCAM would
+  normally send to the screen.  This output is generally intended to
+  keep users running GCAM interactively apprised of the program's
+  progress and can usually be discarded.
+\end{description}
+
+\subsection{The Water Disaggregation Module}
+
+This module disaggregates the GCAM regional water demand outputs to a
+half-degree grid.  It also uses the gridded result to reaggregate to
+basin and regional scale (in the latter case, possibly using a
+different set of region definitions than GCAM did for its output).
+The module can be run using the output of the GCAM module described
+above, or it can be given the name of a preexisting GCAM output
+(DBXML) file.  In the latter case the GCAM module should be omitted
+from the configuration.
+
+This module requires the Hydrology module.  If the GCAM module is
+included, then this module will use the output from that one.  If the
+GCAM module is not included, then the location of a GCAM output file
+must be supplied through the \texttt{dbxml} parameter.  In the
+configuration file this model is referred to as
+\texttt{[WaterDisaggregationModule]}.
+
+\begin{description}
+\item[workdir] Working directory for the water disaggregation code.
+  Generally this will be the directory where the gcam-hydro code is
+  installed.
+\item[tempdir] Directory to use for temporary files generated by the
+  module.
+\item[outputdir] Directory to use for the module's final outputs.
+\item[scenario] Used to name the outputs.  For consistency this should
+  be the same as the scenario used in the Hydrology module, but it
+  isn't required.
+\item[logfile] File in which to write the screen output of the matlab
+  water disaggregation code.  This information is useful only for
+  debugging problems with the calculation.
+\item[water-transfer] \emph{(OPTIONAL)} True/False flag indicating
+  whether a basin-level water transfer should be applied.  If not
+  supplied, the default is False.
+\item[transfer-file] \emph{(OPTIONAL)} Name of the file specifying the
+  details of the basin-level water transfer (see description below).
+  This parameter is ignored (and can be omitted) if
+  \texttt{water-transfer} is False; otherwise, it must be specified.
+\item[dbxml] \emph{(OPTIONAL)} Name of a GCAM output file to use in
+  for input.  This parameter is ignored if there is a GCAM module
+  present in the configuration.  If there is not a GCAM module in the
+  configuration, then this parameter must be specified.
+\item[power-plant-data] \emph{(OPTIONAL)} Name of the input file
+  containing the power plant data described in
+  section~\ref{sec:pplant}.  If not specified, then the power plant
+  data will not be used, and water usage from electrical generation
+  will be disaggregated using population as a proxy (as in previous
+  versions of the disaggregation calculation).
+\end{description}
+
+\subsection{The netCDF Demo Module}
+The netCDF Demo module packages the output of the Hydrology and Water
+Disaggregation modules into a netCDF file suitable for display in the
+decision theater viewer.  This module requires both the Hydrology and
+Water Disaggregation modules to be present.  In the configuration file
+the module is referred to as \texttt{[NetcdfDemoModule]}.  Note that
+netCDF is not capitalized in the usual way.
+
+\begin{description}
+\item[mat2nc] The location of the mat2nc program.  A copy of the C
+  source for this program is included with the distribution in the
+  \texttt{src/C} subdirectory.
+\item[outfile] Name of the intended netCDF output file.
+\item[rcp] The RCP forcing level for the GCAM scenario.  This is
+  written into the global attributes for the output file to identify
+  the scenario being depicted.  It does not affect the output in any
+  other way.
+\item[pop] The 2050 global population for the GCAM scenario.  This is
+  also written into the global attributes for the output file.
+\end{description}
+
+\subsection{The ``clobber'' parameter}
+In addition to the parameters described in their individual sections
+above, most modules can take a parameter called ``clobber'', which
+must be set to either ``True'' or ``False''.  If False, then the code
+will check to see whether the anticipated results already exist.  If
+they do, and if none of the upstream modules used by the module have
+produced new data, then the modules calculation will not run; the
+preexisting results will be used instead.  If the ``clobber''
+parameter is set to True, then the module will run normally, with the
+new results overwriting the preexisting results, if any.
+
+\section{Using power plant location data}
+\label{sec:pplant}
+The GCAM water demand disaggregation can use data on power plant
+location and type as a proxy for disaggregating water demand from
+electrical generation.  Using this data is optional.  If it is not
+supplied, then population will be used as the proxy for water demand
+from electrical generation, as in previous versions of the
+calculation.
+
+The power plant data should be supplied as a geoJSON feature
+collection.  Each power station should be a single point feature in
+the list.  Each station should have a ``properties'' member, with a
+value that is itself a JSON object.  The ``properties'' object must
+have the following members:
+\begin{description}
+\item[fuel] String giving the fuel type.  Three types are currently
+  recognized:  ``Coal'', ``Nuclear'', and ``Gas''.
+\item[capacity] String giving the nameplate capacity of the plant in
+  MWe.  The unit ``MWe'' may be included in the string or omitted.
+\end{description}
+Object attributes beyond the required ones are permitted, and will be
+ignored by the disaggregation code.  An example set of inputs is
+provided in the input directory in the file
+\texttt{power-plants.geojson}.
+
+If the power plant data is provided, then water withdrawals will be
+computed for each plant by multiplying the nameplate capacity by a
+fuel-specific water intensity factor.  The water intensity was chosen
+by selecting the generation and cooling technologies representative of
+the type of plants expected to be built over the next few decades:
+\begin{center}
+\begin{tabular}{|l|l|r|}
+  \hline
+  fuel & assumed type & water intensity (m$^3$/MWh) \\\hline
+  Coal & steam, recirculating &  3.80  \\
+  Gas  & combined-cycle, recirculating &  0.96 \\
+  Nuclear & steam, recirculating &  4.17 \\\hline
+\end{tabular}
+\end{center}
+This procedure could readily be extended to factor in explicitly the
+generation and cooling technologies, if a data set including that
+information were available.
+
+These values are converted to a grid by summing the water withdrawals
+of the plants in each grid cell.  This grid will form the
+disaggregation proxy for the water calculation.  In practice, there
+are usually a few regions that no power plants within their borders.
+This typically happens with in sub-national regions, which are often
+part of a larger electrical grid and therefore may supply their power
+from generating capacity located outside their borders.  In these
+cases we revert to the population-proxy to allocate water withdrawals
+within the affected regions.
+
+The power plant proxy is asumed to be constant over the course of the
+simulation.  This has the effect of causing new capacity produced in
+GCAM simulations to be allocated to locations with existing capacity,
+and in fixed proportions.  Modeling the siting and size distribution
+of new power stations is beyond GCAM's scope; however, if a model for
+those properties were available, GCAM could be coupled to it to
+produce more realistic spatial distributions in the future.
+
+\appendix
+\section{Technical Reference}
+Technical details for the python modules that make up the GCAM
+automation system can be obtained by using the \texttt{pydoc} command
+included with most python distributions.  For this to work the
+PYTHONPATH environment variable must include the \texttt{src}
+directory of the \texttt{gcam-driver} installation.  For csh-type
+command shells this can be accomplished by running:\\ 
+\texttt{setenv PYTHONPATH /path/to/gcam-driver/src}\\
+For bourne-type shells the command is:\\
+\texttt{export PYTHONPATH=/path/to/gcam-driver/src}.
+
+The information given in the pydoc documentation pertains mostly to
+the internals of the GCAM automation system, including function
+arguments and return values and descriptions of internal data
+structures.  It will therefore be useful primarily to users interested
+in extending the system.
+
+\end{document}
