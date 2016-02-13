@@ -1,0 +1,65 @@
+region,		pop2000 // unassigned = 1.8452e+08
+USA,                                  2.5862e+08
+Africa_Eastern,                       1.8112e+08
+Africa_Northern,                      1.4177e+08
+Africa_Southern,                      9.999e+07
+Africa_Western,                       3.265e+08
+Australia_NZ,                         2.2238e+07
+Brazil,                               1.6376e+08
+Canada,                               2.9634e+07
+Central America and Caribbean,        6.1675e+07
+Central Asia,                         7.8434e+07
+China,                                1.2521e+09
+EU-12,                                1.0543e+08
+EU-15,                                3.5784e+08
+Europe_Eastern,                       6.581e+07
+Europe_Non_EU,                        9.1321e+07
+European Free Trade Association,      9.9491e+06
+India,                                9.9047e+08
+Indonesia,                            1.864e+08
+Japan,                                1.1435e+08
+Mexico,                               9.6457e+07
+Middle East,                          1.7617e+08
+Pakistan,                             1.5643e+08
+Russia,                               1.4879e+08
+South Africa,                         4.6202e+07
+South America_Northern,               2.5261e+07
+South America_Southern,               6.9467e+07
+South Asia,                           1.8178e+08
+South Korea,                          4.4838e+07
+Southeast Asia,                       3.119e+08
+Taiwan,                               1.7225e+07
+Argentina,                            3.7683e+07
+Colombia,                             3.8113e+07
+Beijing,                        1.5748e+07
+Tianjin,                        1.4377e+07
+Hebei,                          4.228e+07
+Shanxi,                         4.4296e+07
+Inner Mongolia,                 1.0098e+08
+Liaoning,                       6.5235e+07
+Jilin,                          4.8769e+07
+Heilongjiang,                   6.5334e+07
+Shanghai,                       1.3601e+07
+Jiangsu,                        2.0316e+07
+Zhejiang,                       2.5714e+07
+Anhui,                          2.4051e+07
+Fujian,                         3.5201e+07
+Jiangxi,                        3.341e+07
+Shandong,                       4.7495e+07
+Henan,                          3.572e+07
+Hubei,                          3.5176e+07
+Hunan,                          3.6908e+07
+Guangdong,                      6.8563e+07
+Guangxi,                        4.7839e+07
+Hainan,                         1.2143e+07
+Chongqing,                      4.4848e+06
+Sichuan,                        7.8512e+07
+Guizhou,                        2.1286e+07
+Yunnan,                         5.8147e+07
+Tibet,                          4.8647e+07
+Shaanxi,                        3.7492e+07
+Gansu,                          4.0543e+07
+Qinghai,                        4.9762e+07
+Ningxia,                        9.427e+06
+Xinjiang,                       7.065e+07
+Hong Kong,                      0

@@ -1,0 +1,12 @@
+<queries>
+    <aQuery>
+      <all-regions/>
+      <demographicsQuery title="Population by region">
+         <axis1 name="region">region</axis1>
+         <axis2 name="Year">populationMiniCAM</axis2>
+         <xPath buildList="true" dataName="total-population" group="false" sumAll="false">demographics/populationMiniCAM/total-population/node()</xPath>
+         <comments/>
+      </demographicsQuery>
+    </aQuery>
+</queries>
+

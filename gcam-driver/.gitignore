@@ -1,0 +1,58 @@
+# Compiled Object files
+*.o
+
+# python compiled files
+*.pyc
+
+# make dependency files
+*.d
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.a
+
+# Executables
+mat2nc
+*.exe
+*.out
+*.app
+
+
+# OS-specific files
+.DS_Store
+# History files
+.Rhistory
+
+# R data files from past sessions
+.Rdata
+
+# TeX intermediate files
+doc/*.aux
+doc/*.log
+
+# Emacs backup files
+*~
+
+# Emacs autosave files
+.[#]*
+[#]*[#]
+
+# LibreOffice lock files
+.~lock*
+
+# Output 
+*.nc
+output/
+batch-out/
+model_interface.properties
+
+# Configurations for runs
+runconfig/
+lamp-inputs/
+batchfiles/
+
+
+# original query file
+Main_queries_water.xml
