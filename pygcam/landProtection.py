@@ -337,9 +337,9 @@ def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, reg
 
 DefaultTemplate = 'prot_{fraction}_{filename}'
 
-def argParser():
+def argParser(program, version):
     parser = argparse.ArgumentParser(
-        prog=PROGRAM,
+        prog=program,
         description='''Generate versions of GCAM's land_input XML files that protect a
 given fraction of land of the given land types in the given regions. The script can be
 run multiple times on the same file to apply different percentage protection to
@@ -398,7 +398,7 @@ already-protected land class and region combinations, as this fails in GCAM.''')
 
     parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
 
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version)
 
     parser.add_argument('-w', '--workspace', type=str, default=None,
                         help='''Specify the path to the GCAM workspace to use. If input files are not identified
@@ -407,18 +407,21 @@ already-protected land class and region combinations, as this fails in GCAM.''')
 
     return parser
 
-def parseArgs(args=None):
+def parseArgs(program, version, args=None):
     """
-    Allows calling the arg parser programatically.
+    Allows calling the arg parser programmatically.
+
     :param args: The parameter list to parse.
     :return: populated Namespace instance
     """
-    parser = argParser()
+    parser = argParser(program, version)
     args = parser.parse_args(args=args)
     return args
 
 
-def main(args):
+def main(program, version):
+    args = parseArgs(program, version)
+
     readConfigFiles()
 
     global Verbose

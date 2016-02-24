@@ -180,6 +180,7 @@ class ConfigEditor(object):
     generate and/or copy the required XML files into the XML output dir.
     '''
     def __init__(self, name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=""):
+
         self.name = name
         self.parent = parent
         self.workspaceDir = workspaceDir
@@ -219,37 +220,14 @@ class ConfigEditor(object):
         self.modeltime_dir_rel      = pathjoin(prefix_rel, 'modeltime-xml')
         self.socioeconomics_dir_rel = pathjoin(prefix_rel, 'socioeconomics-xml')
 
-        # TBD: move these to a subclass or mixin?
-        cornEthanolUsaFile = 'cornEthanolUSA.xml'
-        self.cornEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile)
-        self.cornEthanolUsaRel = pathjoin(self.scenario_dir_rel, cornEthanolUsaFile)
-
-        cornEthanolUsaFile2 = 'cornEthanolUSA2.xml'
-        self.cornEthanolUsaAbs2 = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile2)
-        self.cornEthanolUsaRel2 = pathjoin(self.scenario_dir_rel, cornEthanolUsaFile2)
-
-        cellEthanolUsaFile = 'cellEthanolUSA.xml'
-        self.cellEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cellEthanolUsaFile)
-        self.cellEthanolUsaRel = pathjoin(self.scenario_dir_rel, cellEthanolUsaFile)
-
-        ftBiofuelsUsaFile = 'ftBiofuelsUSA.xml'
-        self.ftBiofuelsUsaAbs = pathjoin(self.scenario_dir_abs, ftBiofuelsUsaFile)
-        self.ftBiofuelsUsaRel = pathjoin(self.scenario_dir_rel, ftBiofuelsUsaFile)
-
-        # A US subsidy works without having to change prices, so no need to extract this
-        # biodieselUsaFile = 'biodieselUSA.xml'
-        # self.biodieselUsaAbs = pathjoin(self.scenario_dir_abs, biodieselUsaFile)
-        # self.biodieselUsaRel = pathjoin(self.scenario_dir_rel, biodieselUsaFile)
-        #
-        # biodieselUsaFile2 = 'biodieselUSA2.xml'
-        # self.biodieselUsaAbs2 = pathjoin(self.scenario_dir_abs, biodieselUsaFile2)
-        # self.biodieselUsaRel2 = pathjoin(self.scenario_dir_rel, biodieselUsaFile2)
-
         self.solution_prefix_abs = pathjoin(workspaceDir, "input", "solution")
         self.solution_prefix_rel = pathjoin("..", "input", "solution")
 
+        # do this last so mixins can access the instance variables set above
+        super(ConfigEditor, self).__init__()
+
     def setup(self, stopPeriod=None, dynamic=False, writeDebugFile=None,
-              writePrices=None, writeOutputCsv=None):
+              writePrices=None, writeOutputCsv=None, writeXmlOutputFile=None):
         '''
         Set-up a scenario based on a "parent" scenario, e.g., the "new-reference" scenario
         or a locally-defined reference case. Final arg is where to place the generated files.
@@ -298,10 +276,12 @@ class ConfigEditor(object):
 
         if writeDebugFile is not None:
             self.updateConfigComponent('Files', 'xmlDebugFileName', value=None, writeOutput=writeDebugFile)
-            # self.updateConfigComponent('Bools', 'print-debug-file', int(writeDebugFile))
 
         if writePrices is not None:
             self.updateConfigComponent('Bools', 'PrintPrices', int(writePrices))
+
+        if writeXmlOutputFile is not None:
+            self.updateConfigComponent('Files', 'xmlOutputFileName', value=None, writeOutput=writeXmlOutputFile)
 
         # According to Pralit, outFile.csv isn't maintained and isn't reliable. We set the
         # output filename to /dev/null to avoid wasting space (and some time) writing it.
@@ -820,18 +800,22 @@ class ConfigEditor(object):
                 '-u', "//Files/Value[@name='xmlInputFileName']",
                 '-v', modeltimeFileRel)
 
-    def parseArgs(self, baseline=None, scenario=None):
-        self.parser = argparse.ArgumentParser(description='MAIN DESCRIPTION')
+    parser = None
 
-        self.addArgs()      # allow subclasses to modify parser; they must call super!
+    @classmethod
+    def parseArgs(cls, baseline=None, scenario=None):
+        cls.parser = argparse.ArgumentParser(description='MAIN DESCRIPTION')
 
-        args = self.parser.parse_args()
+        cls.addArgs()      # allow subclasses to modify parser; they must call super!
+        ns = argparse.Namespace(baseline=baseline, scenario=scenario)
+        args = cls.parser.parse_args(namespace=ns)
         setVerbosity(args.verbosity)
         return args
 
-    def addArgs(self, baseline=None, scenario=None):
+    @classmethod
+    def addArgs(cls, baseline=None, scenario=None):
         defaultYears = '2015-2100'
-        parser = self.parser
+        parser = cls.parser
 
         parser.add_argument('-b', '--baseline', default=baseline,
                             help='Identify the baseline the selected scenario is based on')

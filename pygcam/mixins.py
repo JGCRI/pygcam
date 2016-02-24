@@ -6,9 +6,8 @@ class RefiningMixin(object):
     """
     RefiningMixin add methods that deal with the refinery sector.
     """
-
-    def __init__(self):
-        super(RefiningMixin, self).__init()
+    def __init__(self, *args, **kwargs):
+        super(RefiningMixin, self).__init__(*args, **kwargs)
 
     # TBD: redefine this as follows, or just call setGlobalTechShutdownRate directly?
     def _setRefinedFuelShutdownRate(self, fuel, year, rate):
@@ -26,7 +25,7 @@ class RefiningMixin(object):
                 '-v', rate)
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
-    # class RefiningMixin
+
     def setRefiningNonEnergyCostByYear(self, fuel, pairs):
         '''
         Set the non-energy cost of a refining technology, give a list of pairs of (year, price),
@@ -81,8 +80,34 @@ class BioenergyMixin(object):
     """
     BioenergyMixin adds knowledge of biomass and biofuels.
     """
-    def __init__(self):
-        super(BioenergyMixin, self).__init()
+    def __init__(self, *args, **kwargs):
+        super(BioenergyMixin, self).__init__(*args, **kwargs)
+
+        # cornEthanolUsaFile = 'cornEthanolUSA.xml'
+        # self.cornEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile)
+        # self.cornEthanolUsaRel = pathjoin(self.scenario_dir_rel, cornEthanolUsaFile)
+        #
+        # cornEthanolUsaFile2 = 'cornEthanolUSA2.xml'
+        # self.cornEthanolUsaAbs2 = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile2)
+        # self.cornEthanolUsaRel2 = pathjoin(self.scenario_dir_rel, cornEthanolUsaFile2)
+        #
+        # cellEthanolUsaFile = 'cellEthanolUSA.xml'
+        # self.cellEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cellEthanolUsaFile)
+        # self.cellEthanolUsaRel = pathjoin(self.scenario_dir_rel, cellEthanolUsaFile)
+        #
+        # ftBiofuelsUsaFile = 'ftBiofuelsUSA.xml'
+        # self.ftBiofuelsUsaAbs = pathjoin(self.scenario_dir_abs, ftBiofuelsUsaFile)
+        # self.ftBiofuelsUsaRel = pathjoin(self.scenario_dir_rel, ftBiofuelsUsaFile)
+        #
+        # A US subsidy works without having to change prices, so no need to extract this
+        # biodieselUsaFile = 'biodieselUSA.xml'
+        # self.biodieselUsaAbs = pathjoin(self.scenario_dir_abs, biodieselUsaFile)
+        # self.biodieselUsaRel = pathjoin(self.scenario_dir_rel, biodieselUsaFile)
+        #
+        # biodieselUsaFile2 = 'biodieselUSA2.xml'
+        # self.biodieselUsaAbs2 = pathjoin(self.scenario_dir_abs, biodieselUsaFile2)
+        # self.biodieselUsaRel2 = pathjoin(self.scenario_dir_rel, biodieselUsaFile2)
+
 
     def adjustResidueSupply(self, loTarget, loPrice, loFract, hiTarget, hiPrice, hiFract, target):
         """

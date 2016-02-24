@@ -14,11 +14,9 @@ import argparse
 from os.path import join
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
-from .common import getTempFile, flatten, shellCommand
+from .common import getTempFile, flatten, shellCommand, getBooleanXML
 from .error import PygcamException
 
-PROGRAM = 'runProject.py'
-VERSION = "0.1"
 Verbose = False
 
 DefaultProjectFile = './project.xml'
@@ -61,13 +59,11 @@ class TmpFile(object):
         replaced by the list defined here.
         """
         # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
-        name = node.get('varName')
-        if not name:
-            raise PygcamException("tmpFile element is missing its required 'name' attribute")
+        name = node.get('varName')  # required by schema
 
-        self.delete  = int(node.get('delete',  '1'))
-        self.replace = int(node.get('replace', '0'))
-        self.eval    = int(node.get('eval',    '1'))    # convert {args} before writing file
+        self.delete  = getBooleanXML(node.get('delete',  '1'))
+        self.replace = getBooleanXML(node.get('replace', '0'))
+        self.eval    = getBooleanXML(node.get('eval',    '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
         self.varName = name
 
@@ -125,7 +121,7 @@ class ScenarioGroup(object):
     """
     def __init__(self, node):
         self.name = node.get('name')
-        self.isDefault = node.get('default',   default='0') == '1'
+        self.isDefault = getBooleanXML(node.get('default', default='0'))
 
         scenarioNodes = node.findall('scenario')
         scenarios = map(Scenario, scenarioNodes)
@@ -141,8 +137,8 @@ class Scenario(object):
     """
     def __init__(self, node):
         self.name = node.get('name')
-        self.isActive   = node.get('active',   default='1') == '1'
-        self.isBaseline = node.get('baseline', default='0') == '1'
+        self.isActive   = getBooleanXML(node.get('active',   default='1'))
+        self.isBaseline = getBooleanXML(node.get('baseline', default='0'))
         self.subdir = node.get('subdir', default=self.name)
 
 
@@ -196,7 +192,7 @@ class Variable(object):
         self.name = node.get('name')
         self.configVar = configVar = node.get('configVar')
         self.value = getParam(configVar) if configVar else node.text
-        self.eval = int(node.get('eval', 0))
+        self.eval = getBooleanXML(node.get('eval', 0))
 
         self.Instances[self.name] = self
 
@@ -299,6 +295,7 @@ class Project(object):
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
+    # TBD: refactor into common function that takes optional 'verbose' arg to display errors
     @staticmethod
     def validateXML(doc, raiseError=True):
         '''
@@ -486,9 +483,9 @@ class Project(object):
         for t in self.tmpFiles:
             print "  ", t.varName
 
-def argParser():
+def argParser(program, version):
     parser = argparse.ArgumentParser(
-        prog=PROGRAM,
+        prog=program,
         description='''Perform a series of steps typical for a GCAM-based analysis.
 This script reads instructions from the file project.xml, the
 location of which is taken from the user's ~/.pygcam.cfg file.''')
@@ -538,23 +535,26 @@ location of which is taken from the user's ~/.pygcam.cfg file.''')
 
     parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
 
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version)
 
     return parser
 
 
-def parseArgs(args=None):
+def parseArgs(program, version, args=None):
     """
     Allows calling the arg parser programmatically.
 
     :param args: The parameter list to parse.
     :return: populated Namespace instance
     """
-    parser = argParser()
+    parser = argParser(program, version)
     args = parser.parse_args(args=args)
     return args
 
-def main(args):
+
+def main(program, version):
+    args = parseArgs(program, version)
+
     readConfigFiles()
 
     global Verbose

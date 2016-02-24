@@ -10,7 +10,7 @@
 '''
 import sys
 from os.path import basename
-from pygcam.project import main
+from pygcam.constraints import bioMain
 from pygcam.error import PygcamException
 
 VERSION = "0.1"
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     program = basename(sys.argv[0])
 
     try:
-        main(program, VERSION)
+        bioMain(program, VERSION)
         status = 0
     except PygcamException as e:
         print "\n****%s: %s" % (program, e)

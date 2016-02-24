@@ -8,17 +8,20 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import sys
-from pygcam.landProtection import main, parseArgs, PROGRAM
+from os.path import basename
+from pygcam.landProtection import main
 from pygcam.error import PygcamException
 
+VERSION = "0.1"
+
 if __name__ == '__main__':
-    args = parseArgs()
     status = -1
+    program = basename(sys.argv[0])
 
     try:
-        main(args)
+        main(program, VERSION)
         status = 0
     except PygcamException as e:
-        print "%s: %s" % (PROGRAM, e)
+        print "%s: %s" % (program, e)
 
     sys.exit(status)

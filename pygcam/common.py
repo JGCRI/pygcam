@@ -13,6 +13,16 @@ import subprocess
 from pygcam.config import getParam
 from pygcam.error import PygcamException
 
+def getBooleanXML(value):
+    false = ["false", "0"]
+    true  = ["true", "1"]
+
+    val = value.strip()
+    if val not in true + false:
+        raise PygcamException("Can't convert '%s' to boolean; must be in {false,no,0,true,yes,1} (case sensitive)." % value)
+
+    return (val in True)
+
 def shellCommand(command, shell=True, raiseError=True):
     """
     Run a shell command and optionally raise PygcamException error.
@@ -62,6 +72,53 @@ def ensureExtension(filename, ext):
 
     return filename
 
+def getYearCols(years, timestep=5):
+    """
+    Generate a list of names of year columns in GCAM result files from a
+    string indicating a year range.
+    :param years: a string of the form "2020-2050"
+    :param timestep: the number of years between timesteps
+    :return: the names of the corresponding columns
+    """
+    try:
+        yearRange = map(int, years.split('-'))
+        if not len(yearRange) == 2:
+            raise Exception
+    except:
+        raise Exception('Years must be specified as two years separated by a hyphen, as in "2020-2050"')
+
+    cols = map(str, range(yearRange[0], yearRange[1]+1, timestep))
+    return cols
+
+def readGcamCsv(filename, skiprows=1):
+    '''
+    Syntactic sugar: just adds comma separator and no index to create DF
+    '''
+    import pandas as pd # don't import this big package unless needed
+
+    print "    Reading", filename
+    try:
+        df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
+        return df
+    except IOError, e:
+        print "    ERROR: failed to read " + filename
+        raise
+
+def readQueryResult(batchDir, baseline, queryName):
+    '''
+    Compose the name of the 'standard' result file, read it into a DF and return the DF.
+    '''
+    pathname = os.path.join(batchDir, '%s-%s.csv' % (queryName, baseline))
+    df= readGcamCsv(pathname)
+    return df
+
+def saveToFile(txt, dirname, filename):
+    mkdirs(dirname)
+    pathname = os.path.join(dirname, filename)
+    print "    Generating file:", pathname
+    with open(pathname, 'w') as f:
+        f.write(txt)
+
 def getTempFile(suffix, text=True, tmpDir=None):
     """
     Construct the name of a temporary file.
@@ -82,6 +139,11 @@ def getTempFile(suffix, text=True, tmpDir=None):
     os.close(fd)    # we don't need this
     os.unlink(tmpFile)
     return tmpFile
+
+def getBatchDir(baseline, resultsDir, fromMCS=False):
+    leafDir = 'queryResults' if fromMCS else 'batch-{baseline}'.format(baseline=baseline)
+    pathname = '{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
+    return pathname
 
 def mkdirs(newdir):
     """

@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+    
+	<xs:simpleType name="runForType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="baseline"/>
+			<xs:enumeration value="policy"/>
+			<xs:enumeration value="all"/>
+        </xs:restriction>
+	</xs:simpleType>    
+    
     <xs:element name='projects'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
@@ -8,6 +17,7 @@
             </xs:choice>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='defaults'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
@@ -17,6 +27,7 @@
             </xs:choice>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='project'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
@@ -25,26 +36,30 @@
                 <xs:element ref='vars'/>
                 <xs:element ref='scenarioGroup'/>
             </xs:choice>
-            <xs:attribute name='name' use='required' type='xs:NCName'/>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='subdir' type='xs:string'/>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='scenarioGroup'>
         <xs:complexType>
             <xs:sequence>
                 <xs:element maxOccurs='unbounded' ref='scenario'/>
             </xs:sequence>
-            <xs:attribute name='default' type='xs:integer'/>
-            <xs:attribute name='name' use='required' type='xs:NCName'/>
+            <xs:attribute name='default' type='xs:boolean' default='false'/>
+            <xs:attribute name='name' use='required' type='xs:string'/>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='scenario'>
         <xs:complexType>
-            <xs:attribute name='active' type='xs:integer'/>
-            <xs:attribute name='baseline' type='xs:integer'/>
-            <xs:attribute name='name' use='required' type='xs:NCName'/>
-            <xs:attribute name='subdir' type='xs:NCName'/>
+            <xs:attribute name='active' type='xs:boolean' default='true'/>
+            <xs:attribute name='baseline' type='xs:boolean' default='false'/>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='subdir' type='xs:string'/>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='steps'>
         <xs:complexType>
             <xs:sequence>
@@ -52,13 +67,19 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='step'>
-        <xs:complexType mixed='true'>
-            <xs:attribute name='name' use='required' type='xs:NCName'/>
-            <xs:attribute name='runFor' type='xs:NCName'/>
-            <xs:attribute name='seq' use='required' type='xs:integer'/>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='runFor' type='runForType' default='all'/>
+                    <xs:attribute name='seq' type='xs:integer' default='0'/>
+                </xs:extension>
+            </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='vars'>
         <xs:complexType>
             <xs:sequence>
@@ -66,27 +87,40 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='var'>
-        <xs:complexType mixed='true'>
-            <xs:attribute name='configVar' type='xs:NCName'/>
-            <xs:attribute name='eval' type='xs:integer'/>
-            <xs:attribute name='name' use='required' type='xs:NCName'/>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='configVar' type='xs:string'/>
+                    <xs:attribute name='eval' type='xs:boolean' default='false'/>
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>    
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='tmpFile'>
         <xs:complexType>
             <xs:sequence>
                 <xs:element maxOccurs='unbounded' ref='text'/>
             </xs:sequence>
-            <xs:attribute name='delete' type='xs:integer'/>
-            <xs:attribute name='eval' type='xs:integer'/>
-            <xs:attribute name='replace' type='xs:integer'/>
-            <xs:attribute name='varName' use='required' type='xs:NCName'/>
+            <xs:attribute name='delete' type='xs:boolean' default="true"/>
+            <xs:attribute name='eval' type='xs:boolean' default="true"/>
+            <xs:attribute name='replace' type='xs:boolean' default="false"/>
+            <xs:attribute name='varName' use='required' type='xs:string'/>
+            <xs:attribute name='dir' type='xs:string'/>
         </xs:complexType>
     </xs:element>
+    
     <xs:element name='text'>
-        <xs:complexType mixed='true'>
-            <xs:attribute name='tag' type='xs:NCName'/>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='tag' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    
 </xs:schema>

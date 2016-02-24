@@ -5,7 +5,8 @@ The file is used by Xmplify.app to derive a corresponding XMLSchema file (protec
 which is used to validate the user's protection XML file.
 -->
 
-<landProtection>
+<landProtection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="../../etc/protection-schema.xsd">
     <!--
     <group> assigns to a set of regions a name that can be used in protection scenarios.
 
