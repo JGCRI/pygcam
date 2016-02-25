@@ -23,3 +23,9 @@ class ConfigFileError(FileFormatError):
     Raised when an error is found in the configuration file ``~/.pygcam.cfg``.
     """
     pass
+
+class SetupException(Exception):
+    """
+    Raised from the setup sub-system.
+    """
+    pass

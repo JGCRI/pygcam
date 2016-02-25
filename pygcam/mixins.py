@@ -1,24 +1,27 @@
 from os.path import join as pathjoin
-from .setup import _echo, xmlEdit, extractStubTechnology, expandYearRanges
+from .setup import _echo, ConfigEditor, xmlEdit, extractStubTechnology, expandYearRanges
 
+REFINING_SECTOR = 'refining'
+BIOMASS_LIQUIDS = 'biomass liquids'
 
-class RefiningMixin(object):
+class RefiningEditor(ConfigEditor):
     """
-    RefiningMixin add methods that deal with the refinery sector.
+    RefiningEditor add methods that deal with the refinery sector.
     """
-    def __init__(self, *args, **kwargs):
-        super(RefiningMixin, self).__init__(*args, **kwargs)
+    def __init__(self, name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=""):
+        super(RefiningEditor, self).__init__(name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=subdir)
 
     # TBD: redefine this as follows, or just call setGlobalTechShutdownRate directly?
     def _setRefinedFuelShutdownRate(self, fuel, year, rate):
-        self.setGlobalTechShutdownRate(self, 'refining', 'biomass liquids', fuel, year, rate)
+        self.setGlobalTechShutdownRate(self, REFINING_SECTOR, BIOMASS_LIQUIDS, fuel, year, rate)
 
     def setRefinedFuelShutdownRate(self, fuel, year, rate):
         _echo("Set %s shutdown rate to %s for %s in %s" % (fuel, rate, self.name, year))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
-        prefix = "//global-technology-database/location-info[@sector-name='refining' and @subsector-name='biomass liquids']/technology[@name='%s']" % fuel
+        prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
+                 (REFINING_SECTOR, BIOMASS_LIQUIDS, fuel)
 
         xmlEdit(enTransFileAbs,
                 '-u', prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
@@ -37,7 +40,8 @@ class RefiningMixin(object):
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
-        prefix = "//global-technology-database/location-info[@sector-name='refining']/technology[@name='%s']" % fuel
+        prefix = "//global-technology-database/location-info[@sector-name='%s']/technology[@name='%s']" % \
+                 (REFINING_SECTOR, fuel)
         suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
 
         args = [enTransFileAbs]
@@ -50,38 +54,26 @@ class RefiningMixin(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    # Redefine the following in terms of the above, and then split out general from sectoral
-    # versions and organize sectoral ones like:
-    #    import pygcam.sector.refining as R
-    def _setRefinedLiquidShareWeight(self, fuel, year, shareweight):
-        self.setGlobalTechShareWeight('refining', fuel, year, shareweight)
-
-    def setRefinedLiquidShareWeight(self, fuel, year, shareweight):
-        '''
+    # TBD: Not really useful rewrite to not use this then delete.
+    def setRefinedLiquidShareWeight(self, fuel, values):
+        """
         Create modified version of en_transformation.xml with the given share-weight
-        for the given fuel in the given year. (Generalized from allowFT2015...)
-        '''
-        _echo("Set share-weight to %s for %s in %s for %s" % (shareweight, fuel, year, self.name))
+        for the given refined liquid fuel in the given year.
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
-
-        yearConstraint = ">= 2015" if year == 'all' else ("=" + year)
-
-        prefix = "//global-technology-database/location-info[@sector-name='refining']/technology[@name='%s']" % fuel
-
-        xmlEdit(enTransFileAbs,
-                '-u', "%s/period[@year%s]/share-weight" % (prefix, yearConstraint),
-                '-v', shareweight)
-
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
+        :param fuel: (str) the name of a fuel in the 'refining' sector
+        :param values: (dict-like) keys are string versions of years; values are share-weights,
+            which must be coercabel to float.
+        :return: none
+        """
+        self.setGlobalTechShareWeight(REFINING_SECTOR, fuel, values)
 
 
-class BioenergyMixin(object):
+class BioenergyEditor(RefiningEditor):
     """
-    BioenergyMixin adds knowledge of biomass and biofuels.
+    BioenergyEditor adds knowledge of biomass and biofuels.
     """
-    def __init__(self, *args, **kwargs):
-        super(BioenergyMixin, self).__init__(*args, **kwargs)
+    def __init__(self, name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=""):
+        super(BioenergyEditor, self).__init__(name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=subdir)
 
         # cornEthanolUsaFile = 'cornEthanolUSA.xml'
         # self.cornEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile)
@@ -230,7 +222,8 @@ class BioenergyMixin(object):
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
-        prefix = "//global-technology-database/location-info[@subsector-name='biomass liquids']/technology[@name='%s']" % fuelName
+        prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
+                 (BIOMASS_LIQUIDS, fuelName)
         suffix = "minicam-energy-input[@name='regional biomass']/coefficient"
 
         args = [enTransFileAbs]
@@ -332,8 +325,8 @@ class BioenergyMixin(object):
         _echo("Add corn ethanol stub technology in USA")
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
-        extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs,  'refining', 'biomass liquids', 'corn ethanol')
-        extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs2, 'refining', 'biomass liquids', 'corn ethanol', fromRegion=True)
+        extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol')
+        extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs2, REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol', fromRegion=True)
 
         # Insert "2" right after energy_transformation, then "1" right after energy_transformation,
         # so they end up in order "1" then "2".
@@ -347,7 +340,7 @@ class BioenergyMixin(object):
         _echo("Add cellulosic ethanol stub-technology in USA")
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
-        extractStubTechnology('USA', enTransFileAbs, self.cellEthanolUsaAbs,  'refining', 'biomass liquids', 'cellulosic ethanol')
+        extractStubTechnology('USA', enTransFileAbs, self.cellEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'cellulosic ethanol')
 
         self.insertScenarioComponent('cell-etoh-USA', self.cellEthanolUsaRel, 'energy_transformation')
 
@@ -358,7 +351,7 @@ class BioenergyMixin(object):
         _echo("Add FT biofuels stub-technology in USA")
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
-        extractStubTechnology('USA', enTransFileAbs, self.ftBiofuelsUsaAbs,  'refining', 'biomass liquids', 'FT biofuels')
+        extractStubTechnology('USA', enTransFileAbs, self.ftBiofuelsUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'FT biofuels')
 
         self.insertScenarioComponent('FT-biofuels-USA', self.ftBiofuelsUsaRel, 'energy_transformation')
 

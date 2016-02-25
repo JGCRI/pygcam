@@ -7,7 +7,7 @@ XmlSourceDir = dirname(realpath(sys.argv[0]))
 sys.path.insert(0, dirname(dirname(dirname(XmlSourceDir))))
 
 from pygcam.setup import ConfigEditor
-from pygcam.mixins import RefiningMixin, BioenergyMixin
+from pygcam.mixins import RefiningEditor, BioenergyEditor
 
 # Paper1.scenarios import (BiofuelShock, ResultsDir, XmlOutputRoot,
 #                                  cornName, cornTag, cellName, cellTag,
@@ -39,7 +39,7 @@ bdTag   = 'biodiesel'
 
 UseDynXml = False
 
-class BiofuelShock(ConfigEditor, RefiningMixin, BioenergyMixin):
+class BiofuelShock(ConfigEditor, RefiningEditor, BioenergyEditor):
     def __init__(self, *args, **kwargs):
         super(BiofuelShock, self).__init__(*args, **kwargs)
 

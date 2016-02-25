@@ -7,11 +7,16 @@
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import sys
 import os
 from itertools import chain
 import subprocess
 from pygcam.config import getParam
 from pygcam.error import PygcamException
+
+# Function to return current function name, or the caller, and so on up
+# the stack, based on value of n.
+getFuncName = lambda n=0: sys._getframe(n + 1).f_code.co_name
 
 def getBooleanXML(value):
     false = ["false", "0"]
@@ -22,6 +27,22 @@ def getBooleanXML(value):
         raise PygcamException("Can't convert '%s' to boolean; must be in {false,no,0,true,yes,1} (case sensitive)." % value)
 
     return (val in True)
+
+def coercible(value, type):
+    """
+    Attempt to coerce a value to `type` and raise an error on failure.
+
+    :param value: any value coercible to `type`
+    :return: (`type`) the coerced value
+    :raises: PygcamException
+    """
+    try:
+        value = type(value)
+    except ValueError as e:
+        raise PygcamException("%s: %r is not coercible to %s" % (getFuncName(1), value, type.__name__))
+
+    return value
+
 
 def shellCommand(command, shell=True, raiseError=True):
     """
