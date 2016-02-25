@@ -25,8 +25,8 @@ import subprocess
 import glob
 import argparse
 import re
-from pygcam.error import SetupException
-from pygcam.common import coercible
+from .error import SetupException
+from .common import coercible
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
 
