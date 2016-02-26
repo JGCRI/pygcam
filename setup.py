@@ -2,6 +2,7 @@ from distutils.core import setup
 from glob import glob
 
 requirements = ['lxml',
+                'numpy',
                 'pandas']
 
 scripts = glob('bin/*.py')
