@@ -22,11 +22,11 @@ def getBooleanXML(value):
     false = ["false", "0"]
     true  = ["true", "1"]
 
-    val = value.strip()
+    val = str(value).strip()
     if val not in true + false:
         raise PygcamException("Can't convert '%s' to boolean; must be in {false,no,0,true,yes,1} (case sensitive)." % value)
 
-    return (val in True)
+    return (val in true)
 
 def coercible(value, type):
     """
