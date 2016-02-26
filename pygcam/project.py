@@ -13,7 +13,7 @@ import sys
 import argparse
 from os.path import join
 from lxml import etree as ET
-from .config import readConfigFiles, getParam
+from .config import readConfigFiles, getParam, DEFAULT_SECTION
 from .common import getTempFile, flatten, shellCommand, getBooleanXML
 from .error import PygcamException
 
@@ -483,7 +483,7 @@ class Project(object):
         for t in self.tmpFiles:
             print "  ", t.varName
 
-def argParser(program, version):
+def argParser(program='', version=''):
     parser = argparse.ArgumentParser(
         prog=program,
         description='''Perform a series of steps typical for a GCAM-based analysis.
@@ -511,9 +511,10 @@ location of which is taken from the user's ~/.pygcam.cfg file.''')
                         help='''Display the commands that would be run, but don't run them.''')
 
     parser.add_argument('-p', '--projectFile', default=None,
-                        help='''The directory into which to write the modified files.
-                        Default is taken from config file variable GCAM.ProjectXmlFile,
-                        if defined, otherwise the default is './project.xml'.''')
+                        help='''The XML file describing the project. If set, command-line
+                        argument takes precedence. Otherwise, value is taken from config file
+                        variable GCAM.ProjectXmlFile, if defined, otherwise the default
+                        is './project.xml'.''')
 
     parser.add_argument('-q', '--quit', action='store_true',
                         help='''Quit if an error occurs when processing a scenario. By default, the
@@ -555,14 +556,14 @@ def parseArgs(program, version, args=None):
 def main(program, version):
     args = parseArgs(program, version)
 
-    readConfigFiles()
+    readConfigFiles(args.project)
 
     global Verbose
     Verbose = args.verbose
 
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
-    projectFile = getParam('GCAM.ProjectXmlFile') or args.projectFile or DefaultProjectFile
+    projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
     parser  = ET.XMLParser(remove_blank_text=True)
     tree    = ET.parse(projectFile, parser)
