@@ -14,7 +14,7 @@ import argparse
 
 from .common import mkdirs, flatten
 from .query import GCAM_32_REGIONS
-from .config import readConfigFiles, getParam
+from .config import readConfigFiles, getParam, DEFAULT_SECTION
 from .error import PygcamException
 
 ThisModule = sys.modules[__name__]
@@ -337,7 +337,7 @@ def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, reg
 
 DefaultTemplate = 'prot_{fraction}_{filename}'
 
-def argParser(program, version):
+def argParser(program='', version=''):
     parser = argparse.ArgumentParser(
         prog=program,
         description='''Generate versions of GCAM's land_input XML files that protect a
@@ -349,6 +349,10 @@ already-protected land class and region combinations, as this fails in GCAM.''')
     parser.add_argument('-b', '--backup', action='store_true',
                         help='''Make a copy of the output file, if it exists (with an added ~ after
                         filename) before writing new output.''')
+
+    parser.add_argument('-c', '--configSection', type=str, default=DEFAULT_SECTION,
+                        help='''The name of the section in the config file to read from.
+                        Defaults to %s''' % DEFAULT_SECTION)
 
     parser.add_argument('-f', '--fraction', type=float, default=None,
                         help='''The fraction of land in the given land classes to protect. (Required)''')
@@ -422,7 +426,7 @@ def parseArgs(program, version, args=None):
 def main(program, version):
     args = parseArgs(program, version)
 
-    readConfigFiles()
+    readConfigFiles(args.configSection)
 
     global Verbose
     Verbose = args.verbose

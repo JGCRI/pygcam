@@ -103,23 +103,28 @@ def parseStringPairs(argString, datatype=float):
     return coefficients
 
 def printSeries(series, label):
-    df = pd.DataFrame(series)  # DF is more convenient for printing
+    df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
     df.columns = [label]
     pd.set_option('precision', 5)
     print df.T
 
 
-def bioArgParser(program, version):
+def bioArgParser(program='', version=''):
     parser = argparse.ArgumentParser(description='Bioenergy constraint generator', prog=program)
 
-    parser.add_argument('-R', '--resultsDir', default=None,
-                        help='The parent directory holding the GCAM output workspaces')
+    parser.add_argument('-b', '--biomassPolicyType', default='tax',
+                         help='Regional biomass policy type: must be one of {subs, tax}')
 
     parser.add_argument('-B', '--baseline', default=None,
                         help='The baseline on which the policy scenario is based')
 
-    parser.add_argument('-P', '--policy', default=None,
-                        help='The policy scenario name')
+    parser.add_argument('-c', '--coefficients', type=str, default=None,
+                        help='''A comma-separated string of year:coefficient pairs. This
+                        sets the cellulosic ethanol conversion coefficients. Defaults to
+                        standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
+
+    parser.add_argument('-e', '--cellEtohPolicyType', default='tax',
+                         help='Cellulosic ethanol policy type: must be one of {subs, tax}')
 
     parser.add_argument('-l', '--defaultLevel', type=float, default=0.0,
                         help='''Target cellulosic biofuel level (EJ). All or individual years
@@ -134,19 +139,14 @@ def bioArgParser(program, version):
     parser.add_argument('-m', '--fromMCS', action='store_true',
                          help="Used when calling from gcammcs so correct pathnames are computed.")
 
-    parser.add_argument('-c', '--coefficients', type=str, default=None,
-                        help='''A comma-separated string of year:coefficient pairs. This
-                        sets the cellulosic ethanol conversion coefficients. Defaults to
-                        standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
-
-    parser.add_argument('-b', '--biomassPolicyType', default='tax',
-                         help='Regional biomass policy type: must be one of {subs, tax}')
-
-    parser.add_argument('-e', '--cellEtohPolicyType', default='tax',
-                         help='Cellulosic ethanol policy type: must be one of {subs, tax}')
-
     parser.add_argument('-p', '--purposeGrownPolicyType', default='subs',
                          help='Purpose-grown biomass policy type: must be one of {subs, tax}')
+
+    parser.add_argument('-P', '--policy', default=None,
+                        help='The policy scenario name')
+
+    parser.add_argument('-R', '--resultsDir', default=None,
+                        help='The parent directory holding the GCAM output workspaces')
 
     parser.add_argument('-s', '--switchgrass', action='store_true',
                          help="Generate constraints for switchgrass")
@@ -345,7 +345,7 @@ DefaultTag   = 'cell-etoh'
 
 PolicyChoices = ['tax', 'subsidy']
 
-def deltaArgParser(program, version):
+def deltaArgParser(program='', version=''):
     parser = argparse.ArgumentParser(prog=program,
                                      description='''Specify incremental values to add to the
                                                     production of a given fuel, by year, and
@@ -362,15 +362,12 @@ def deltaArgParser(program, version):
     parser.add_argument('-B', '--baseline', required=True,
                         help='The baseline on which the policy scenario is based')
 
-    parser.add_argument('-P', '--policy', required=True,
-                        help='The policy scenario name')
+    parser.add_argument('-f', '--fuelName', default=DefaultName,
+                         help="The fuel to generate constraints for. Default is %s" % DefaultName)
 
     parser.add_argument('-l', '--defaultDelta', type=float, default=0.0,
                         help='''Default increment to add to each year (EJ). All or individual
                         years values can be set (overriding -l flag values) using the -L flag.''')
-
-    parser.add_argument('-m', '--fromMCS', action='store_true',
-                         help="Used when calling from gcammcs so correct pathnames are computed.")
 
     parser.add_argument('-L', '--annualDeltas', default='',
                         help='''Optional production increments by year. Value must be a
@@ -378,14 +375,14 @@ def deltaArgParser(program, version):
                         If -l is not used to set default for all years, you must specify
                         values for all years using this option.''')
 
-    parser.add_argument('-P', '--purposeGrownPolicyType', choices=PolicyChoices, default='subsidy',
+    parser.add_argument('-m', '--fromMCS', action='store_true',
+                         help="Used when calling from gcammcs so correct pathnames are computed.")
+
+    parser.add_argument('-p', '--purposeGrownPolicyType', choices=PolicyChoices, default='subsidy',
                          help='Purpose-grown biomass policy type. Default is subsidy.')
 
-    parser.add_argument('-p', '--policyType', choices=PolicyChoices, default='tax',
-                         help='Type of policy to use for the fuel. Default is tax.')
-
-    parser.add_argument('-f', '--fuelName', default=DefaultName,
-                         help="The fuel to generate constraints for. Default is %s" % DefaultName)
+    parser.add_argument('-P', '--policy', required=True,
+                        help='The policy scenario name')
 
     parser.add_argument('-R', '--resultsDir', default='.',
                         help='The parent directory holding the GCAM output workspaces')
@@ -395,6 +392,9 @@ def deltaArgParser(program, version):
 
     parser.add_argument('-t', '--fuelTag', default=DefaultTag,
                          help="The fuel tag to generate constraints for. Default is %s" % DefaultTag)
+
+    parser.add_argument('-T', '--policyType', choices=PolicyChoices, default='tax',
+                         help='Type of policy to use for the fuel. Default is tax.')
 
     parser.add_argument('-v', '--verbose', action='store_true',
                          help="Show diagnostic messages")
