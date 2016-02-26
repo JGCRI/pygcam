@@ -7,7 +7,7 @@ XmlSourceDir = dirname(realpath(sys.argv[0]))
 sys.path.insert(0, dirname(dirname(dirname(XmlSourceDir))))
 
 from pygcam.setup import ConfigEditor
-from pygcam.mixins import RefiningEditor, BioenergyEditor
+from pygcam.sectorEditors import RefiningEditor, BioenergyEditor
 
 # Paper1.scenarios import (BiofuelShock, ResultsDir, XmlOutputRoot,
 #                                  cornName, cornTag, cellName, cellTag,
