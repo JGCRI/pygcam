@@ -1,0 +1,18 @@
+# Compiled Object files
+*.o
+
+# python compiled files
+*.pyc
+
+# OS-specific files
+.DS_Store
+
+# Emacs backup files
+*~
+
+# Emacs autosave files
+.[#]*
+[#]*[#]
+
+# Output 
+build
