@@ -25,6 +25,7 @@ import subprocess
 import glob
 import argparse
 import re
+import collections
 from .error import SetupException
 from .common import coercible
 
@@ -176,26 +177,34 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     status = subprocess.call(cmd, shell=True)
     return status == 0
 
+# TBD: make this handle dict-like objects (including Series) as well.
 def expandYearRanges(seq):
-    '''
-    Expand a sequence of (year, value) tuples where the year argument
-    may be a string containing identifying range of values with an
-    optional "step" value (default step is 5) e.g., "2015-2030", which
-    means (2015, 2020, 2025, 2030), or "2015-2020:1", which means
-    (2015, 2016, 2017, 2018, 2019, 2020). When a range is given, the
-    tuple is replaced with a sequence of tuples naming each years
-    explicitly.
+    """
+    Expand a sequence of (year, value) tuples, or a dict keyed by
+    year, where the year argument may be a string containing identifying
+    range of values with an optional "step" value (default step is 5)
+    e.g., "2015-2030", which means (2015, 2020, 2025, 2030), or
+    "2015-2020:1", which means (2015, 2016, 2017, 2018, 2019, 2020).
+    When a range is given, the tuple is replaced with a sequence of
+    tuples naming each years explicitly.
 
-    :param seq:
-        The sequence of tuples to expand.
+    :param seq_or_dict:
+        The sequence of tuples or dict of {year: value} elements
+        to expand.
     :return:
-        The expanded sequence.
-    '''
+        The a list of tuples holding the expanded sequence.
+    """
     result = []
+    try:
+        seq = list(seq.iteritems())     # convert dict or Series to list of pairs
+    except:                             # of quietly fail, and just use 'seq' as is
+        pass
+
     for year, value in seq:
         if isinstance(year, basestring) and '-' in year:
             m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
-            assert m, 'Unrecognized year range specification: %s' % year
+            if not m:
+                raise SetupException('Unrecognized year range specification: %s' % year)
 
             startYear = int(m.group(1))
             endYear   = int(m.group(2))
@@ -715,7 +724,7 @@ class ConfigEditor(object):
         self.updateConfigComponent('Ints', 'stop-period', stopPeriod)
 
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
-                                 funcName, applyTo='share-weight'):
+                                 funcName, applyTo='share-weight', stubTechnology=None):
         """
         Set the interpolation function for the share-weight of the `subsector`
         of `supplysector` to `funcName` between years `fromYear` to `toYear`
@@ -734,8 +743,11 @@ class ConfigEditor(object):
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
-        prefix = '//region[@name="%s"]/supplysector[@name="%s"]/subsector[@name="%s"]/interpolation-rule[@apply-to="%s"]' % \
-                 (region, supplysector, subsector, applyTo)
+        # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
+        prefix = '//region[@name="%s"]/supplysector[@name="%s"]/subsector[@name="%s"]%s/interpolation-rule[@apply-to="%s"]' % \
+                 (region, supplysector, subsector,
+                  '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '',
+                  applyTo)
 
         xmlEdit(enTransFileAbs,
                 '-u', prefix + '/@from-year',
@@ -765,6 +777,46 @@ class ConfigEditor(object):
         self.delScenarioComponent("protected_land_2")
         self.delScenarioComponent("protected_land_3")
 
+    # TBD: normalize so that all (year, value) args behave like the pairs, in all fns?
+    # TBD: or handle both dict-like vs 'list of pairs' cases? If it has iteritems, then
+    # TBD: it's dict-like enough for our purposes. Else, it should be [(year, val), (year, val)]
+    #
+    # TBD: have this and related functions handle both regional and GTDB cases?
+    # TBD: test
+    def setGlobalTechNonEnergyCost(self, sector, subsector, technology, values):
+        """
+        Set the non-energy cost of for technology in the global-technology-database,
+        given a list of values of (year, price). The price is applied to all years
+        indicated by the range.
+
+        :param sector: (str) the name of a GCAM sector
+        :param subsector: (str) the name of a GCAM subsector within `sector`
+        :param technology: (str) the name of a GCAM technology in `subsector`
+        :param values: (dict-like or iterable of tuples of (year, price)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.iteritems() after
+            which the rest of the explanation above applies. The `price` can be
+            anything coercible to float.
+        """
+        _echo("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
+
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
+
+        prefix = "//global-technology-database/location-info[@sector-name='%s' and subsector[@name='%s']/technology[@name='%s']" % \
+                 (sector, subsector, technology)
+        suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
+
+        args = [enTransFileAbs]
+        for year, price in expandYearRanges(values):
+            args += ['-u',
+                     prefix + ("/period[@year='%s']" % year) + suffix,
+                     '-v', str(price)]
+
+        xmlEdit(*args)
+
+        self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
     # TBD: Test
     def setGlobalTechShutdownRate(self, sector, subsector, technology, values):
@@ -773,9 +825,15 @@ class ConfigEditor(object):
         rates for `technology` in `sector` based on the data in `values`.
 
         :param sector: (str) the name of a GCAM sector
-        :param technology: (str) the name of a GCAM technology in `sector`
-        :param values: (dict-like) keys should be string representation of years;
-            values the shutdown rates, which can be anything coercible to float.
+        :param subsector: (str) the name of a GCAM subsector within `sector`
+        :param technology: (str) the name of a GCAM technology in `subsector`
+        :param values: (dict-like or iterable of tuples of (year, shutdownRate)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.iteritems() after
+            which the rest of the explanation above applies. The `shutdownRate` can be
+            anything coercible to float.
         :param xmlBasename: (str) the name of an xml file in the energy-xml folder to edit.
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This must match `xmlBasename`.
@@ -790,13 +848,63 @@ class ConfigEditor(object):
 
         args = [enTransFileAbs]
 
-        for year, value in values.iteritems():
+        for year, value in expandYearRanges(values):
             args += ['-u', prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
                      '-v', coercible(value, float)]
 
         xmlEdit(*args)
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
+
+    def setRegionalShareWeights(self, region, sector, subsector, values,
+                               stubTechnology=None,
+                               xmlBasename='en_transformation.xml',
+                               configFileTag='energy_transformation'):
+        """
+        Create a modified version of en_transformation.xml with the given share-weights
+        for `technology` in `sector` based on the data in `values`.
+
+        :param region: if not None, changes are made in a specific region, otherwise they're
+            made in the global-technology-database.
+        :param sector: (str) the name of a GCAM sector
+        :param technology: (str) the name of a GCAM technology in `sector`
+        :param values: (dict-like or iterable of tuples of (year, shareWeight)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.iteritems() after
+            which the rest of the explanation above applies. The `shareWeight` can be
+            anything coercible to float.
+        :param xmlBasename: (str) the name of an xml file in the energy-xml folder to edit.
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. This must match `xmlBasename`.
+        :return: none
+        """
+        if Verbosity:
+            from .constraints import printSeries
+
+            _echo("Set share-weights for (%s, %s, %s) for %s" % \
+                  (region, sector, stubTechnology, self.name))
+            printSeries(values, 'share-weights')
+
+        if not xmlBasename.endswith('.xml'):
+            xmlBasename += '.xml'
+
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, xmlBasename))
+
+        prefix = "//region[@name='%s']/supplysector[@name='%s']/subsector[@name='%s']" % (region, sector, subsector)
+
+        shareWeight = '/stub-technology[@name="{technology}"]/period[@year="{year}"]/share-weight' \
+                      if stubTechnology else '/share-weight[@year="{year}"]'
+
+        args = [enTransFileAbs]
+        for year, value in expandYearRanges(values):
+            args += ['-u', prefix + shareWeight.format(technology=stubTechnology, year=year),
+                     '-v', coercible(value, float)]
+
+        xmlEdit(*args)
+
+        self.updateScenarioComponent(configFileTag, enTransFileRel)
 
     # TBD: Test
     def setGlobalTechShareWeight(self, sector, subsector, technology, values,
@@ -808,8 +916,13 @@ class ConfigEditor(object):
 
         :param sector: (str) the name of a GCAM sector
         :param technology: (str) the name of a GCAM technology in `sector`
-        :param values: (dict-like) keys should be string representation of years;
-            values are the share-weights, which can be anything coercible to float.
+        :param values: (dict-like or iterable of tuples of (year, shareWeight)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.iteritems() after
+            which the rest of the explanation above applies. The `shareWeight` can be
+            anything coercible to float.
         :param xmlBasename: (str) the name of an xml file in the energy-xml folder to edit.
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This must match `xmlBasename`.
@@ -826,7 +939,7 @@ class ConfigEditor(object):
                  (sector, subsector, technology)
 
         args = [enTransFileAbs]
-        for year, value in values.iteritems():
+        for year, value in expandYearRanges(values):
             args += ['-u', prefix + "/period[@year=%s]/share-weight" % year,
                      '-v', coercible(value, float)]
 
@@ -906,6 +1019,10 @@ class ConfigEditor(object):
 
         parser.add_argument('-b', '--baseline', default=baseline,
                             help='Identify the baseline the selected scenario is based on')
+
+        # parser.add_argument('-c', '--configSection', type=str, default=DEFAULT_SECTION,
+        #                     help='''The name of the section in the config file to read from.
+        #                     Defaults to %s''' % DEFAULT_SECTION)
 
         parser.add_argument('-g', '--group', default=None,
                             help='The scenario group to process. Defaults to the group labeled default="1".')
