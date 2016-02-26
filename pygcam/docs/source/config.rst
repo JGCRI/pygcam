@@ -22,7 +22,7 @@ environment variables are converted to config variables for easy reference (e.g.
 When de-referencing a config variable in the config file, beware the trailing 's'
 after the closing parenthesis, which is necessary or an exception will be thrown.
 
-  .. code-block:: INI
+  .. code-block:: cfg
 
       [GCAM]
       # Sets the folder holding the symlink "current" which refers

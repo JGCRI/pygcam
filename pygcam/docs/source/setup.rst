@@ -22,11 +22,10 @@ API
    :members:
 
 
-Mixins
-------
+Sector-specific config editors
+-------------------------------
 
-These classes can be "mixed in" to a subclass of ConfigEditor to
-create custom setup functionality.
+These classes subclass ConfigEditor to create sector-specific setup functionality.
 
-.. automodule:: pygcam.mixins
+.. automodule:: pygcam.sectorEditors
    :members:

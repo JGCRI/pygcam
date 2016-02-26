@@ -21,12 +21,14 @@ Contents
 
    intro
    common
-   error
    config
-   query
-   project
-   setup
-   landProtection
-   runProject
-   protectLand
    designNotes
+   error
+   genConstraints
+   genDeltaConstraints
+   landProtection
+   project
+   protectLand
+   query
+   runProject
+   setup
