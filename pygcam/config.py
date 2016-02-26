@@ -8,10 +8,9 @@ import os
 import io
 import platform
 from ConfigParser import SafeConfigParser
-from .error import ConfigFileError
+from .error import ConfigFileError, PygcamException
 
 DEFAULT_SECTION = 'DEFAULT'
-GCAM_SECTION    = 'GCAM'
 USR_CONFIG_FILE = '.pygcam.cfg'
 CONFIG_VAR_NAME = 'QUEUE_GCAM_CONFIG_FILE'
 WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
@@ -20,7 +19,7 @@ NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
 # Stub ~/.gcam.cfg file which user can edit
 _UserDefaults = \
 """
-[GCAM]
+[DEFAULT]
 # Add customizations here, e.g., set GCAM.Root to another directory
 """
 
@@ -35,7 +34,7 @@ _UserDefaults = \
 
 _SystemDefaults = \
 """
-[GCAM]
+[DEFAULT]
 # Sets the folder holding the symlink "current" which refers
 # to a folder holding Main_User_Workspace and ModelInterface.
 # (This is one way of setting up the code, but not required.)
@@ -66,6 +65,9 @@ GCAM.JavaLibPath = %(GCAM.Workspace)s/libs/dbxml/lib
 # Arguments to java to ensure that ModelInterface has enough
 # heap space.
 GCAM.JavaArgs = -Xms512m -Xmx2g
+
+# The name of the database file (or directory, for BaseX)
+GCAM.DbFile	  = database_basexdb
 
 # A string with one or more colon-delimited elements that identify
 # directories or XML files in which to find batch query definitions.
@@ -116,7 +118,10 @@ GCAM.TempDir = /tmp
 
 _ConfigParser = None
 
-def getConfig():
+# This is set in readConfigFiles
+_ProjectSection = None
+
+def getConfig(section=DEFAULT_SECTION):
     """
     Return the configuration object. If one has been created already via
     `readConfigFiles`, it is returned; otherwise a new one is created and
@@ -127,17 +132,20 @@ def getConfig():
     if _ConfigParser:
         return _ConfigParser
 
-    return readConfigFiles()
+    return readConfigFiles(section=section)
 
-def readConfigFiles():
+def readConfigFiles(section):
     """
     Read the pygcam configuration file, ``~/.pygcam.cfg``. "Sensible" default values are
     established first, which overwritten by values found in the user's configuration
     file.
 
+    :param section: (str) the name of the config file section to read from.
     :return: a populated SafeConfigParser instance
     """
-    global _ConfigParser
+    global _ConfigParser, _ProjectSection
+
+    _ProjectSection = section
 
     home = os.getenv('HOME')
     platformName = platform.system()
@@ -156,10 +164,10 @@ def readConfigFiles():
     # Initialize config parser with default values
     _ConfigParser = SafeConfigParser()
     _ConfigParser.readfp(io.BytesIO(_SystemDefaults))
-    _ConfigParser.set(GCAM_SECTION, 'Home', home)
-    _ConfigParser.set(GCAM_SECTION, 'GCAM.Executable', exeFile)
-    _ConfigParser.set(GCAM_SECTION, 'GCAM.JarFile', jarFile)
-    _ConfigParser.set(GCAM_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
+    _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
+    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
+    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.JarFile', jarFile)
+    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
@@ -168,26 +176,34 @@ def readConfigFiles():
     else:
         # create an empty file with the [GCAM] section if no file exists
         with open(usrConfigPath, 'w') as fp:
-            fp.write("[%s]\n" % GCAM_SECTION)
+            fp.write("[%s]\n" % DEFAULT_SECTION)
             fp.write(_UserDefaults)
 
     return _ConfigParser
 
-def getParam(name):
+def getParam(name, section=None):
     """
     Get the value of the configuration parameter `name`. Calls
     :py:func:`getConfig` if needed.
 
     :param name: (str) the name of a configuration parameters. Note
        that variable names are case-insensitive.
+    :param section: (str) the name of the section to read from, which
+      defaults to the value used in the first call to ``getConfig``,
+      ``readConfigFiles``, or any of the ``getParam`` variants.
     :return: (str) the value of the variable
     """
+    section = section or _ProjectSection
+
+    if not section:
+        raise PygcamException('getParam was called without setting "section"')
+
     if not _ConfigParser:
-        getConfig()
+        getConfig(section)
 
-    return _ConfigParser.get(GCAM_SECTION, name)
+    return _ConfigParser.get(section, name)
 
-def getParamAsBoolean(name):
+def getParamAsBoolean(name, section=None):
     """
     Get the value of the configuration parameter `name`, coerced
     into a boolean value, where any (case-insensitive) value in the
@@ -197,13 +213,16 @@ def getParamAsBoolean(name):
     Calls :py:func:`getConfig` if needed.
 
     :param name: (str) the name of a configuration parameters.
+    :param section: (str) the name of the section to read from, which
+      defaults to the value used in the first call to ``getConfig``,
+      ``readConfigFiles``, or any of the ``getParam`` variants.
     :return: (bool) the value of the variable
     :raises: :py:exc:`pygcam.error.ConfigFileError`
     """
     true = ('true', 'yes', 'on', '1')
     false = ('false', 'no', 'off', '0')
 
-    value = getParam(name)
+    value = getParam(name, section=section)
     value = str(value).lower()
 
     if value in true:
@@ -215,25 +234,31 @@ def getParamAsBoolean(name):
     raise ConfigFileError("The value of variable '%s' could not converted to boolean." % name)
 
 
-def getParamAsInt(name):
+def getParamAsInt(name, section=None):
     """
     Get the value of the configuration parameter `name`, coerced
     to an integer. Calls :py:func:`getConfig` if needed.
 
     :param name: (str) the name of a configuration parameters.
+    :param section: (str) the name of the section to read from, which
+      defaults to the value used in the first call to ``getConfig``,
+      ``readConfigFiles``, or any of the ``getParam`` variants.
     :return: (int) the value of the variable
     """
-    value = getParam(name)
+    value = getParam(name, section=section)
     return int(value)
 
-def getParamAsFloat(name):
+def getParamAsFloat(name, section=None):
     """
     Get the value of the configuration parameter `name` as a
     float. Calls :py:func:`getConfig` if needed.
 
     :param name: (str) the name of a configuration parameters.
+    :param section: (str) the name of the section to read from, which
+      defaults to the value used in the first call to ``getConfig``,
+      ``readConfigFiles``, or any of the ``getParam`` variants.
     :return: (float) the value of the variable
     """
-    value = getParam(name)
+    value = getParam(name, section=section)
     return float(value)
 
