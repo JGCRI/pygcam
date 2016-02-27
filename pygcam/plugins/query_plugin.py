@@ -6,27 +6,32 @@ class QueryCommand(PluginBase):
     def __init__(self, subparsers):
         kwargs = {'fromfile_prefix_chars' : '@',      # use "@" before value to substitute contents of file as arguments
 
-                       'help' : '''Run one or more GCAM database queries by generating and running the
-                       named XML queries. The results are placed in a file in the specified
-                       output directory with a name composed of the basename of the
-                       XML query file plus the scenario name. For example,
-                       "gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region"
-                       would generate query results into the files ./liquids-by-region-MyReference.csv
-                       and ./liquids-by-region-MyPolicyCase.csv.
+                  'help' : '''Run one or more GCAM database queries by generating and running the
+                  named XML queries. The results are placed in a file in the specified
+                  output directory with a name composed of the basename of the
+                  XML query file plus the scenario name.''',
 
-                       The named queries are located using the value of config variable GCAM.QueryPath,
-                       which can be overridden with the -Q argument. The QueryPath consists of one or
-                       more colon-delimited elements that can identify directories or XML files. The
-                       elements of QueryPath are searched in order until the named query is found. If
-                       a path element is a directory, the filename composed of the query + '.xml' is
-                       sought in that directory. If the path element is an XML file, a query with a
-                       title matching the query name (first literally, then by replacing '_' and '-'
-                       characters with spaces) is sought. Note that query names are case-sensitive.
+                  'description' : '''Run one or more GCAM database queries by generating and running the
+                  named XML queries. The results are placed in a file in the specified
+                  output directory with a name composed of the basename of the
+                  XML query file plus the scenario name. For example,
+                  "gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region"
+                  would generate query results into the files ./liquids-by-region-MyReference.csv
+                  and ./liquids-by-region-MyPolicyCase.csv.
 
-                       This script populates an initial configuration file in ~/.pygcam.cfg when
-                       first run. The config file should be customized as needed, e.g., to set "GcamRoot"
-                       to the directory holding your Main_User_Workspace unless it happens to live in
-                       ~/GCAM, which is the default value.'''}
+                  The named queries are located using the value of config variable GCAM.QueryPath,
+                  which can be overridden with the -Q argument. The QueryPath consists of one or
+                  more colon-delimited elements that can identify directories or XML files. The
+                  elements of QueryPath are searched in order until the named query is found. If
+                  a path element is a directory, the filename composed of the query + '.xml' is
+                  sought in that directory. If the path element is an XML file, a query with a
+                  title matching the query name (first literally, then by replacing '_' and '-'
+                  characters with spaces) is sought. Note that query names are case-sensitive.
+
+                  This script populates an initial configuration file in ~/.pygcam.cfg when
+                  first run. The config file should be customized as needed, e.g., to set "GcamRoot"
+                  to the directory holding your Main_User_Workspace unless it happens to live in
+                  ~/GCAM, which is the default value.'''}
 
         super(QueryCommand, self).__init__('query', kwargs, subparsers)
 

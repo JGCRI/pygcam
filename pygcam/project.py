@@ -553,11 +553,7 @@ def parseArgs(program, version, args=None):
     return args
 
 
-def main(program, version):
-    args = parseArgs(program, version)
-
-    readConfigFiles(args.project)
-
+def driver(args):
     global Verbose
     Verbose = args.verbose
 
@@ -576,3 +572,9 @@ def main(program, version):
         project.run(scenarios, steps, args)
     finally:
         TmpFile.deleteFiles()
+
+
+def main(program, version):
+    args = parseArgs(program, version)
+    readConfigFiles(args.project)
+    driver(args)

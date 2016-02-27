@@ -49,7 +49,12 @@ class GcamTool(object):
                             choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
                             help='Sets the log level of the program.')
 
-        parser.add_argument('--version', action='version', version=VERSION)
+        # TBD: add a 'main' argument for config section to use, default to [DEFAULT]?
+
+        # TBD: make verbose a main argument, passed to all sub-commands
+        parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
+
+        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                                      description='''For help on subcommands, use the "-h"

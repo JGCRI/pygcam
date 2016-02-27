@@ -423,10 +423,7 @@ def parseArgs(program, version, args=None):
     return args
 
 
-def main(program, version):
-    args = parseArgs(program, version)
-
-    readConfigFiles(args.configSection)
+def driver(args):
 
     global Verbose
     Verbose = args.verbose
@@ -496,3 +493,9 @@ def main(program, version):
         if Verbose:
             print "protectLand(%s, %s, %0.2f, %s, %s)" % (path, outFile, fraction, landClasses, regions)
         protectLand(path, outPath, fraction, landClasses=landClasses, regions=regions) #, template=template)
+
+
+def main(program, version):
+    args = parseArgs(program, version)
+    readConfigFiles(args.configSection)
+    driver(args)
