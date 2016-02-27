@@ -73,6 +73,10 @@ GCAM.DbFile	  = database_basexdb
 # directories or XML files in which to find batch query definitions.
 GCAM.QueryPath = .
 
+# Where to find plug-ins. Internal plugin directory is added automatically.
+# Use this to add custom plug-ins outside the pygcam source tree.
+GCAM.PluginPath =
+
 # Columns to drop when processing results of XML batch queries
 GCAM.ColumnsToDrop = scenario,Notes,Date
 

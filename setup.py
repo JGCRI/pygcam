@@ -3,7 +3,8 @@ from glob import glob
 
 requirements = ['lxml',
                 'numpy',
-                'pandas']
+                'pandas',
+                ]
 
 scripts = glob('bin/*.py')
 

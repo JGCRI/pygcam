@@ -181,6 +181,73 @@ def mkdirs(newdir):
         if e.errno != EEXIST:
             raise
 
+def loadModuleFromPath(modulePath):
+    '''
+    The load a module from a '.py' or '.pyc' file from a path that ends in the
+    module name, i.e., from "foo/bar/Baz.py", the module name is 'Baz'.
+    '''
+    from imp import load_source, load_compiled  # lazy import to speed startup
+
+    # Extract the module name from the module path
+    base       = os.path.basename(modulePath)
+    moduleName = base.split('.')[0]
+
+    #logger.info('loading module %s' % base)
+
+    # Load the compiled code if it's a '.pyc', otherwise load the source code
+    module = None
+    try:
+        if base.endswith('.py'):
+            module = load_source(moduleName, modulePath)
+        elif base.endswith('.pyc'):
+            module = load_compiled(moduleName, modulePath)
+        else:
+            raise Exception('Unknown module type (%s): file must must be .py or .pyc' % modulePath)
+
+    except Exception, e:
+        errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
+        #logger.error(errorString)
+        raise PygcamException(errorString)
+
+    return module
+
+def loadObjectFromPath(objName, modulePath, required=True):
+    '''
+    Load a module and return a reference to a named object in that module.
+    If 'required' and the object is not found, an error is raised, otherwise,
+    None is returned if the object is not found.
+    '''
+    module = loadModuleFromPath(modulePath)
+    obj    = getattr(module, objName, None)
+
+    if obj or not required:
+        return obj
+
+    raise Exception("Module '%s' has no object named '%s'" % (modulePath, objName))
+
+# def importFrom(modname, objname):
+#     """
+#     Import `modname` and return reference to ``modname.objname``
+#     """
+#     from importlib import import_module
+#
+#     module = import_module(modname, package=None)
+#     return getattr(module, objname)
+#
+# def importFromDotSpec(spec):
+#     '''
+#     Import object x from arbitrary dotted sequence of packages, e.g.,
+#     "a.b.c.x" by splitting this into "a.b.c" and "x" and calling importFrom.
+#     '''
+#     modname, objname = spec.rsplit('.', 1)
+#
+#     try:
+#         return importFrom(modname, objname)
+#
+#     except ImportError:
+#         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
+
+
 FT_DIESEL_MJ_PER_GAL   = 130.4
 FAME_MJ_PER_GAL        = 126.0
 ETOH_MJ_PER_GAL        = 81.3
