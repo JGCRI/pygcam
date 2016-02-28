@@ -230,11 +230,3 @@ scenario named ``scen1``. See the in-line comments for more details.
            </protectedRegion>
        </scenario>
     </landProtection>
-
-
-Usage
------
-.. argparse::
-   :module: pygcam.landProtection
-   :func: argParser
-   :prog: protectLand.py
