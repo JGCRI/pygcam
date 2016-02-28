@@ -26,6 +26,8 @@ Contents
    config
    error
    landProtection
+   log
+   plugin
    project
    query
    setup

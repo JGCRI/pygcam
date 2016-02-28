@@ -14,8 +14,16 @@ from pygcam.error import PygcamException
 
 class PluginBase(object):
     """
-    Abstract base class for sub-commands. Defines the protocol expected by gcamtool
-    for defining sub-commands.
+    Abstract base class for sub-commands. Defines the protocol expected by ``gcamtool``
+    for defining sub-commands. Plugin files should be named ``'*_plugin.py'`` and must
+    define a subclass of ``PluginBase``. To allow the class to be identified, it can be
+    named ``Plugin`` or the global variable ``PluginClass`` can identify the class.
+
+    :param name: (str) the name of the sub-command
+    :param kwargs: (dict) keywords to pass to the the call to argparse's
+       ``subparsers.add_parser(name, **kwargs)``, e.g., to pass `help` or
+       `documentation` strings.
+    :param subparsers: an object returned by argparse's ``parser.add_subparsers()``
     """
     __metaclass__ = ABCMeta
 
@@ -38,7 +46,9 @@ class PluginBase(object):
     @abstractmethod
     def run(self, args):
         """
-        This is the function invoked by this SubCommand instance.
+        Perform the function intented by the ``PluginBase`` subclass. This function
+        is invoked by ``gcamtool`` on the ``PluginBase`` instance whose name matches the
+        given sub-command.
 
         :param args: the argument dictionary
         :return: nothing
@@ -47,6 +57,16 @@ class PluginBase(object):
 
 
 class PluginManager(object):
+    """
+    Finds and loads Plugins.
+
+    :param dirs: (sequence of str) directories to search for files
+       whose names match the pattern ``'*_plugin.py'``. All such
+       files are loaded.
+    :param path: (str) a semi-colon-delimited string where each element
+       identifies a directory which is then treated as described above
+       for the `dirs` argument.
+    """
     def __init__(self, dirs=[], path=None):
         items = path.split(';') if path else []
 
@@ -60,7 +80,8 @@ class PluginManager(object):
         """
         Load the plugin at `path`.
 
-        :return: the PluginBase subclass defined in `path`
+        :param path: (str) the pathname of a plugin file.
+        :return: the ``PluginBase`` subclass defined in `path`
         """
         def getModObj(mod, name):
             return getattr(mod, name) if name in mod.__dict__ else None
@@ -74,9 +95,10 @@ class PluginManager(object):
 
     def loadPlugins(self):
         """
-        Load plugins from the list of directories calculated in ``__init__``.
+        Load plugins from the list of directories calculated in
+        ``PluginBase.__init__()``.
 
-        :return: a list of loaded (but not instantiated) BasePlugin subclasses
+        :return: a list of loaded (but not instantiated) ``BasePlugin`` subclasses
         """
         plugins = []
         for d in self.pluginDirs:

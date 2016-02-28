@@ -122,7 +122,10 @@ def configure():
 
 def setLevel(level):
     '''
-    Set the logging level for all defined loggers
+    Set the logging level for all defined loggers.
+
+    :param level: (str) one of ``{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'}``
+    :return: none
     '''
     global _logLevel
     _logLevel = level.upper()
@@ -131,7 +134,7 @@ def setLevel(level):
         logger.setLevel(_logLevel)
 
 
-def resetLevel(cfg):
+def resetLevel():
     '''
     Set the log level to the current value of Core.LogLevel, which may be
     different once the default app name has been set. (Just a corner-case
