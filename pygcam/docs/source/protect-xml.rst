@@ -1,28 +1,21 @@
-protectLand.py
-==============
-
-protectLand.py is script for GCAM that "protects" land by removing it from
-consideration by the model as a productive land are. It reads a
-single XML input file that defines one or protection scenarios, which can
-specify the fraction the original land area in any combination of {Shrubland,
-Grassland, UnmanagedPasture, UnmanagedForest}, by region or groups of regions.
-
-Command-line usage and the ``landProtection.xml`` file elements are described
-below.
-
-Examples
---------
-
-Protect land according to the definition of scenario ``Foo`` in the file
-``landScenarios.xml``.:
-
-::
-
-    protectLand.py -S landScenarios.xmxl -s Foo
+.. _protect-xml:
 
 
-XML elements used to describe land protection scenarios
-----------------------------------------------------------------------------
+``landProtection.xml``
+==========================
+
+The `protect` sub-command of the :doc:`gcamtool` script generates XML
+input files for GCAM that "protect" land by removing it from consideration
+by the model as a productive land area. It reads a single XML input file that
+defines one or protection scenarios, which can specify the fraction the original land
+area in any combination of `{Shrubland, Grassland, UnmanagedPasture, UnmanagedForest}`,
+by region or groups of regions.
+
+Command-line usage is documented on the :ref:`gcamtool protect <protect-label>` page.
+The ``landProtection.xml`` file elements are described below.
+
+XML elements
+------------
 
 The elements that comprise the project.xml file are described below.
 

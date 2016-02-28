@@ -1,56 +1,23 @@
-runProject.py
-=============
+.. _project-xml:
 
-runProject.py is a workflow management script for GCAM. It reads a
-single XML input file that defines one or more projects, one or more
-groups of scenarios, one or more scenarios, and one or more workflow
+
+``project.xml``
+===============
+
+The runProject sub-command is a workflow management script for GCAM. It
+reads a single XML input file that defines one or more projects, one or
+more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
 in the order defined. The script was developed for use with the
 `gcam-utils <https://bitbucket.org/plevin/gcam-utils/wiki/Home>`__
 scripts, however any scripts or programs can be called in workflow
 'steps'.
 
-Command-line usage and the ``project.xml`` file elements are described
-below.
+Command-line usage is describe on the :ref:`gcamtool runProj<runProj-label>` page.
+The ``project.xml`` file elements are described below.
 
-Examples
---------
-
-Run all steps for the default scenario group for project 'Foo':
-
-::
-
-    runProject.py Foo
-
-Run all steps for scenario group 'test' for project 'Foo', but only for
-scenarios 'baseline' and 'policy-1':
-
-::
-
-    runProject Foo -g test -S baseline,policy1
-
-or, equivalently:
-
-::
-
-    runProject Foo --group test --scenario baseline --step policy1
-
-Run only the 'setup' and 'gcam' steps for scenario 'baseline' in the
-default scenario group:
-
-::
-
-    runProject Foo -s setup,gcam -S baseline,policy-1
-
-Show the commands that would be executed for the above command, but
-don't run them:
-
-::
-
-    runProject Foo -s setup,gcam -S baseline,policy-1 -n
-
-XML elements used to describe projects (project.xml)
-----------------------------------------------------
+XML elements
+------------
 
 The elements that comprise the project.xml file are described below.
 
@@ -485,13 +452,3 @@ Example project.xml file
           <scenarioGroup>
       </project>
     </projects>
-
-Usage
------
-.. argparse::
-   :module: pygcam.project
-   :func: argParser
-   :prog: runProject.py
-
-..   project : @after
-       This should be after project positional arg.

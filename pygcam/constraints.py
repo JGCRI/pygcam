@@ -7,7 +7,11 @@ Created on 4/26/15
 import argparse
 import os
 import pandas as pd
-from pygcam.common import mkdirs, getBatchDir, readGcamCsv, getYearCols, readQueryResult
+from pygcam.common import mkdirs, getBatchDir, getYearCols
+from pygcam.query import readQueryResult, readCsv
+from pygcam.log import getLogger
+
+_logger = getLogger(__name__)
 
 DefaultYears = '2020-2050'
 DefaultCellulosicCoefficients = "2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914"
@@ -72,7 +76,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
     mkdirs(dirname)
 
     pathname = os.path.join(dirname, constraintFile)
-    print "    Generating constraint file", pathname
+    _logger.debug("    Generating constraint file", pathname)
     with open(pathname, 'w') as f:
         f.write(xml)
 
@@ -86,7 +90,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
     source   = os.path.join(localxml, subdir, scenario, policyFile)
     linkname = os.path.join(dirname, policyFile)
 
-    print "    Linking to", source
+    _logger.debug("    Linking to:", source)
     if os.path.lexists(linkname):
         os.remove(linkname)
     os.symlink(source, linkname)
@@ -267,43 +271,35 @@ def genBioConstraints(**kwargs):
     refinedLiquidsFile = os.path.join(batchDir, 'refined-liquids-prod-by-tech-USA-%s.csv' % baseline)
     purposeGrownFile   = os.path.join(batchDir, 'Purpose-grown_biomass_production-%s.csv' % baseline)
 
-    totalBiomassDF   = readGcamCsv(totalBiomassFile)
-    refinedLiquidsDF = readGcamCsv(refinedLiquidsFile)
+    totalBiomassDF   = readCsv(totalBiomassFile)
+    refinedLiquidsDF = readCsv(refinedLiquidsFile)
 
     yearCols = getYearCols(kwargs['years'])
 
     totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
-    if verbose:
-        print 'totalBiomassUSA:\n', totalBiomassUSA
+    _logger.debug('totalBiomassUSA:\n', totalBiomassUSA)
 
     cellulosicEtOH  = refinedLiquidsDF.query('technology == "cellulosic ethanol"')[yearCols]
     if cellulosicEtOH.shape[0] == 0:
         cellulosicEtOH = 0
 
-    if verbose:
-        print 'cellulosicEtOH:\n', cellulosicEtOH
-
-    if verbose:
-        print "Target cellulosic biofuel level %.2f EJ" % defaultLevel
+    _logger.debug('cellulosicEtOH:\n', cellulosicEtOH)
+    _logger.debug("Target cellulosic biofuel level %.2f EJ" % defaultLevel)
 
     desiredCellEtoh = pd.Series(data={year: defaultLevel for year in yearCols})
     if annualLevels:
         annuals = parseStringPairs(annualLevels)
         desiredCellEtoh[annuals.index] = annuals    # override any default values
-        if verbose:
-            print "Annual levels set to", annualLevels
+        _logger.debug("Annual levels set to:", annualLevels)
 
-    if verbose:
-        print "Cell EtOH coefficients:\n", coefficients
+    _logger.debug("Cell EtOH coefficients:\n", coefficients)
 
     # Calculate biomass required to meet required level
     deltaCellulose = (desiredCellEtoh - cellulosicEtOH) * coefficients
-    if verbose:
-        print 'deltaCellulose:\n', deltaCellulose
+    _logger.debug('deltaCellulose:\n', deltaCellulose)
 
     biomassConstraint = totalBiomassUSA.iloc[0] + deltaCellulose.iloc[0]
-    if verbose:
-        print 'biomassConstraint:\n', biomassConstraint
+    _logger.debug('biomassConstraint:\n', biomassConstraint)
 
     xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint, biomassPolicyType,
                                 summary='Regional biomass constraint.')
@@ -312,7 +308,7 @@ def genBioConstraints(**kwargs):
 
     # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
     # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
-    purposeGrownDF   = readGcamCsv(purposeGrownFile)
+    purposeGrownDF   = readCsv(purposeGrownFile)
     purposeGrownUSA  = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
 
     if kwargs.get('switchgrass', False):
@@ -486,9 +482,8 @@ def genDeltaConstraints(**kwargs):
 
     # Calculate fuel target after applying deltas
     fuelTargets = fuelBaseline.iloc[0] + deltas
-    if verbose:
-        print '\nfuelTargets:'
-        printSeries(fuelTargets, fuelTag)
+    _logger.debug('\nfuelTargets:')
+    printSeries(fuelTargets, fuelTag)
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>
     yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.iteritems()]
@@ -507,9 +502,8 @@ def genDeltaConstraints(**kwargs):
         # Calculate additional biomass required to meet required delta
         deltaCellulose = deltas * coefficients[yearCols]
 
-        if verbose:
-            print '\ndeltaCellulose:'
-            printSeries(deltaCellulose, 'cellulose')
+        _logger.debug('\ndeltaCellulose:')
+        printSeries(deltaCellulose, 'cellulose')
 
         totalBiomassDF = readQueryResult(batchDir, baseline, 'Total_biomass_consumption')
         totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]

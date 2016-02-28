@@ -12,6 +12,9 @@ API
    :members:
 
 
+.. _pygcam-cfg:
+
+
 Default values
 --------------
 The following config file is read (from the string ``pygcam.config._SystemDefaults``)
@@ -45,6 +48,10 @@ after the closing parenthesis, which is necessary or an exception will be thrown
       # The location of the ModelInterface to use.
       GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 
+      # Location of folders used by setup scripts
+      GCAM.LocalXml = %(GCAM.Workspace)s/local-xml
+      GCAM.DynXml   = %(GCAM.Workspace)s/dyn-xml
+
       # The location of the default input file for runProject.py
       GCAM.ProjectXmlFile = %(Home)/gcam_project.xml
 
@@ -56,12 +63,25 @@ after the closing parenthesis, which is necessary or an exception will be thrown
       # heap space.
       GCAM.JavaArgs = -Xms512m -Xmx2g
 
+      # The name of the database file (or directory, for BaseX)
+      GCAM.DbFile	  = database_basexdb
+
       # A string with one or more colon-delimited elements that identify
       # directories or XML files in which to find batch query definitions.
       GCAM.QueryPath = .
 
+      # Where to find plug-ins. Internal plugin directory is added automatically.
+      # Use this to add custom plug-ins outside the pygcam source tree.
+      GCAM.PluginPath =
+
       # Columns to drop when processing results of XML batch queries
       GCAM.ColumnsToDrop = scenario,Notes,Date
+
+      # Control of logging facilities. Level must be one of
+      # {DEBUG, INFO, WARNING, ERROR, FATAL}
+      GCAM.LogLevel   = WARNING
+      GCAM.LogFile    =
+      GCAM.LogConsole = True
 
       # The name of the queue used for submitting batch jobs on a cluster.
       GCAM.DefaultQueue = standard

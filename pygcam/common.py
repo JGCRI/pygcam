@@ -7,12 +7,15 @@
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-import sys
 import os
-from itertools import chain
 import subprocess
+import sys
+from itertools import chain
 from pygcam.config import getParam
 from pygcam.error import PygcamException
+from pygcam.log import getLogger
+
+_logger = getLogger(__name__)
 
 # Function to return current function name, or the caller, and so on up
 # the stack, based on value of n.
@@ -111,32 +114,13 @@ def getYearCols(years, timestep=5):
     cols = map(str, range(yearRange[0], yearRange[1]+1, timestep))
     return cols
 
-def readGcamCsv(filename, skiprows=1):
-    '''
-    Syntactic sugar: just adds comma separator and no index to create DF
-    '''
-    import pandas as pd # don't import this big package unless needed
+# Consolidate with fn in query.py
 
-    print "    Reading", filename
-    try:
-        df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
-        return df
-    except IOError, e:
-        print "    ERROR: failed to read " + filename
-        raise
-
-def readQueryResult(batchDir, baseline, queryName):
-    '''
-    Compose the name of the 'standard' result file, read it into a DF and return the DF.
-    '''
-    pathname = os.path.join(batchDir, '%s-%s.csv' % (queryName, baseline))
-    df= readGcamCsv(pathname)
-    return df
 
 def saveToFile(txt, dirname, filename):
     mkdirs(dirname)
     pathname = os.path.join(dirname, filename)
-    print "    Generating file:", pathname
+    _logger.debug("    Generating file:", pathname)
     with open(pathname, 'w') as f:
         f.write(txt)
 
@@ -166,7 +150,7 @@ def getBatchDir(baseline, resultsDir, fromMCS=False):
     pathname = '{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
     return pathname
 
-def mkdirs(newdir):
+def mkdirs(newdir, mode=0o770):
     """
     Try to create the full path `newdir` and ignore the error if it already exists.
 
@@ -176,7 +160,7 @@ def mkdirs(newdir):
     from errno import EEXIST
 
     try:
-        os.makedirs(newdir, 0777)
+        os.makedirs(newdir, mode)
     except OSError, e:
         if e.errno != EEXIST:
             raise

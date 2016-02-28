@@ -55,6 +55,10 @@ GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 # the .csv file that defines the current regional aggregation.
 GCAM.SourceWorkspace =
 
+# Location of folders used by setup scripts
+GCAM.LocalXml = %(GCAM.Workspace)s/local-xml
+GCAM.DynXml   = %(GCAM.Workspace)s/dyn-xml
+
 # The location of the default input file for runProject.py
 GCAM.ProjectXmlFile = %(Home)/gcam_project.xml
 
@@ -79,6 +83,10 @@ GCAM.PluginPath =
 
 # Columns to drop when processing results of XML batch queries
 GCAM.ColumnsToDrop = scenario,Notes,Date
+
+GCAM.LogLevel   = WARNING
+GCAM.LogFile    =
+GCAM.LogConsole = True
 
 # The name of the queue used for submitting batch jobs on a cluster.
 GCAM.DefaultQueue = standard
@@ -124,6 +132,9 @@ _ConfigParser = None
 
 # This is set in readConfigFiles
 _ProjectSection = None
+
+def configLoaded():
+    return bool(_ConfigParser)
 
 def getConfig(section=DEFAULT_SECTION):
     """

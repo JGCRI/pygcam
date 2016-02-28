@@ -13,11 +13,12 @@ import sys
 import argparse
 from os.path import join
 from lxml import etree as ET
-from .config import readConfigFiles, getParam, DEFAULT_SECTION
+from .config import readConfigFiles, getParam
 from .common import getTempFile, flatten, shellCommand, getBooleanXML
 from .error import PygcamException
+from .log import getLogger
 
-Verbose = False
+_logger = getLogger(__name__)
 
 DefaultProjectFile = './project.xml'
 
@@ -92,7 +93,7 @@ class TmpFile(object):
             try:
                 os.unlink(path)
             except:
-                print "WARNING: Failed to delete file '%s" % path
+                _logger.warn("Failed to delete file '%s", path)
 
     @classmethod
     def writeFiles(cls, argDict):
@@ -177,7 +178,7 @@ class Step(object):
         except KeyError as e:
             raise PygcamException("%s -- No such variable exists in the project XML file" % e)
 
-        print "[%s, %s, %s] %s" % (scenario.name, self.seq, self.name, command)
+        _logger.info("[%s, %s, %s] %s", scenario.name, self.seq, self.name, command)
 
         if not noRun:
             shellCommand(command)
@@ -295,7 +296,6 @@ class Project(object):
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
-    # TBD: refactor into common function that takes optional 'verbose' arg to display errors
     @staticmethod
     def validateXML(doc, raiseError=True):
         '''
@@ -439,7 +439,7 @@ class Project(object):
             scenario = self.scenarioDict[scenarioName]
 
             if not scenario.isActive:
-                print '  Skipping inactive scenario: %s' % scenarioName
+                _logger.debug("  Skipping inactive scenario: %s", scenarioName)
                 continue
 
             # These get reset as each scenario is processed
@@ -467,7 +467,7 @@ class Project(object):
             except PygcamException as e:
                 if quitProgram:
                     raise
-                print e
+                _logger.error(e)
 
 
     def dump(self, steps, scenarios):
@@ -491,6 +491,9 @@ This script reads instructions from the file project.xml, the
 location of which is taken from the user's ~/.pygcam.cfg file.''')
 
     parser.add_argument('project', help='''The name of the project to run.''')
+
+    parser.add_argument('-d', '--dump', action='store_true',
+                        help='''List contents of project file''')
 
     parser.add_argument('-g', '--group', type=str, default=None,
                         help='''The name of the scenario group to process. If not specified,
@@ -534,8 +537,6 @@ location of which is taken from the user's ~/.pygcam.cfg file.''')
 
     parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
 
-    parser.add_argument('-v', '--verbose', action='store_true', help='''Show diagnostic output''')
-
     parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version)
 
     return parser
@@ -554,9 +555,6 @@ def parseArgs(program, version, args=None):
 
 
 def driver(args):
-    global Verbose
-    Verbose = args.verbose
-
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
@@ -565,7 +563,7 @@ def driver(args):
     tree    = ET.parse(projectFile, parser)
     project = Project(tree, args.project, args.group)
 
-    if args.verbose:
+    if args.dump:
         project.dump(steps, scenarios)
 
     try:

@@ -1,14 +1,19 @@
 from pygcam.plugin import PluginBase
 from pygcam.project import driver
+# from pygcam.log import getLogger
+# _logger = getLogger(__name__)
+
+VERSION = '0.2'
 
 class ProjectCommand(PluginBase):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run the steps for a project defined in a project.xml file''',
-                  'description' : '''Perform a series of steps typical for a GCAM-based analysis.
-                                     This script reads instructions from the file project.xml, the
-                                     location of which is taken from the user's ~/.pygcam.cfg file.'''}
+                  'description' : '''This sub-command reads a single XML input file
+                        that defines one or more projects, one or more groups of scenarios, one
+                        or more scenarios, and one or more workflow steps. The workflow steps
+                        for the chosen project and scenario(s) are run in the order defined.'''}
 
-        super(ProjectCommand, self).__init__('project', kwargs, subparsers)
+        super(ProjectCommand, self).__init__('runProj', kwargs, subparsers)
 
     def addArgs(self):
         parser = self.parser
@@ -55,7 +60,11 @@ class ProjectCommand(PluginBase):
                             argument, or the -S flag can be repeated to indicate additional steps.
                             By default, all active scenarios are run.''')
 
+        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+
         parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
+
+        return parser   # for auto-doc generation
 
 
     def run(self, args):

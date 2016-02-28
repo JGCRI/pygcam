@@ -1,16 +1,21 @@
 from pygcam.config import DEFAULT_SECTION
 from pygcam.landProtection import UnmanagedLandClasses, DefaultTemplate, driver
 from pygcam.plugin import PluginBase
+from pygcam.log import getLogger
+
+_logger = getLogger(__name__)
+
+VERSION = '0.2'
 
 class Plugin(PluginBase):
     def __init__(self, subparsers):
         helptext = '''Generate versions of GCAM's land_input XML files that protect a
-                      given fraction of land of the given land types in the given regions. The script can be
-                      run multiple times on the same file to apply different percentage protection to
-                      distinct regions or land classes. The script detects if you attempt to protect
-                      already-protected land class and region combinations, as this fails in GCAM.'''
+                      given fraction of land of the given land types in the given regions.'''
 
-        description = helptext + ' ' + '''[Add more details]'''
+        description = helptext + ' ' + '''The script can be run multiple times on the same file
+                      to apply different percentage protection to distinct regions or land classes.
+                      The script detects if you attempt to protect already-protected land class
+                      and region combinations, as this fails in GCAM.'''
 
         kwargs = {'help' : helptext, 'description' : description}
         super(Plugin, self).__init__('protect', kwargs, subparsers)
@@ -72,10 +77,15 @@ class Plugin(PluginBase):
                             help='''An XML file defining land-protection scenarios. Default is the value
                             of configuration file parameter GCAM.LandProtectionXmlFile.''')
 
+        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+
         parser.add_argument('-w', '--workspace', type=str, default=None,
                             help='''Specify the path to the GCAM workspace to use. If input files are not identified
                             explicitly, the files in {workspace}/input/gcam-data-system/xml/aglu-xml/land_input_{2,3}.xml
                             are used as inputs. Default is value of configuration parameter GCAM.ReferenceWorkspace.''')
+
+        return parser   # for auto-doc generation
+
 
     def run(self, args):
         driver(args)

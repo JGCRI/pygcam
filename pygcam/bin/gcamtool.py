@@ -12,7 +12,10 @@ import argparse
 from pygcam.config import DEFAULT_SECTION, getConfig, getParam
 from pygcam.plugin import PluginManager
 
+# from pygcam.log import getLogger
+# _logger = getLogger(__name__)
 
+PROGRAM = 'gcamtool'
 VERSION = '0.1'
 
 BuiltinSubCommands = []
@@ -21,10 +24,13 @@ BuiltinSubCommands = []
 
 class GcamTool(object):
 
+    verbose = 0
+
     def __init__(self):
         self.parser = None
         self.subparsers = None  # set by setupMainParser()
         self.subcommands = {}   # subcommand (plugin) instances keyed by sub-command name
+        self.logger = None      # TBD
 
         self.setupMainParser()
 
@@ -38,7 +44,7 @@ class GcamTool(object):
             self.subcommands[obj.name] = obj
 
     def setupMainParser(self):
-        self.parser = argparse.ArgumentParser()
+        self.parser = argparse.ArgumentParser(prog=PROGRAM)
         parser = self.parser
 
         # Note that the "main_" prefix is significant; see _is_main_arg() above
@@ -70,14 +76,32 @@ class GcamTool(object):
         args = self.parser.parse_args()
         cmd = args.subcommand
 
+        self.verbose = args.verbose
+
+        # TBD: set up log
+
         # Remove so sub-command doesn't see this
         del args.subcommand
 
         # Run the sub-command
         obj = self.subcommands[cmd]
-        obj.run(args)
+        obj.run(args)                   # TBD: pass 'self' to plugins so they can access logger and any other centralized features
+
+
+def _getMainParser():
+    '''Used to generate documentation by sphinx' argparse'''
+    getConfig(DEFAULT_SECTION)
+    return GcamTool().parser
 
 
 if __name__ == '__main__':
-    getConfig(DEFAULT_SECTION)
-    GcamTool().run()
+    import sys
+    getConfig(DEFAULT_SECTION)      # TBD: use project as config section
+
+    try:
+        GcamTool().run()
+
+    except Exception, e:
+        print "%s failed: %s" % (PROGRAM, e)
+        sys.exit(1)
+

@@ -1045,3 +1045,5 @@ class ConfigEditor(object):
         parser.add_argument('-y', '--years', default=defaultYears,
                             help='''Years to generate constraints for. Must be of the form
                             XXXX-YYYY. Default is "%s"''' % defaultYears)
+
+        return parser   # for auto-doc generation

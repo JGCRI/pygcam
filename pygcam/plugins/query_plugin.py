@@ -1,15 +1,17 @@
 from pygcam.plugin import PluginBase
 import pygcam.query
 from pygcam.config import DEFAULT_SECTION
+from pygcam.log import getLogger
+_logger = getLogger(__name__)
+
+VERSION = '0.2'
 
 class QueryCommand(PluginBase):
     def __init__(self, subparsers):
         kwargs = {'fromfile_prefix_chars' : '@',      # use "@" before value to substitute contents of file as arguments
 
                   'help' : '''Run one or more GCAM database queries by generating and running the
-                  named XML queries. The results are placed in a file in the specified
-                  output directory with a name composed of the basename of the
-                  XML query file plus the scenario name.''',
+                  named XML queries.''',
 
                   'description' : '''Run one or more GCAM database queries by generating and running the
                   named XML queries. The results are placed in a file in the specified
@@ -52,7 +54,7 @@ class QueryCommand(PluginBase):
                              help='''The XML database to query (default is value of GCAM.DbFile, in the GCAM.Workspace's
                              "output" directory. Overrides the -w flag.''')
 
-        parser.add_argument('-D', '--dontDelete', action="store_true",
+        parser.add_argument('-D', '--noDelete', action="store_true",
                             help='''Don't delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.''')
 
@@ -80,13 +82,14 @@ class QueryCommand(PluginBase):
                             help='''A comma-separated list of scenarios to run the query/queries for (default is "Reference")
                                     Note that these refer to a scenarios in the XML database.''')
 
-        parser.add_argument('-v', '--verbose', action='count',
-                            help="Show command being executed.")
+        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
         parser.add_argument('-w', '--workspace', type=str, default='',
                             help='''The workspace directory in which to find the XML database.
                                     Defaults to value of config file parameter GCAM.Workspace.
                                     Overridden by the -d flag.''')
+
+        return parser
 
     def run(self, args):
         pygcam.query.main(args)
