@@ -10,7 +10,9 @@ The ``pygcam`` package comprises a set of Python modules and a main driver scrip
 to facilitate working with the `Global Change Assessment Model <http://www.globalchange.umd.edu/models/gcam>`_
 (GCAM).
 
-The main driver (`gcamtool`) uses a plug-ins architecture to simplify customization.
+The main script (:doc:`gcamtool`) uses a :doc:`plug-in <plugin>` architecture to simplify customization.
+The core functionality provided by the plug-ins is implemented pygcam modules to facilitate development of
+new plug-ins.
 
 *This package is currently under development.*
 

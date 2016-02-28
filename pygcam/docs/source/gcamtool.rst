@@ -2,7 +2,7 @@
 ===============
 
 The gcamtool.py script organizes GCAM workflow functionality into a single
-script with sub-commands. The sub-commands are implemented via plug-ins,
+script with sub-commands. The sub-commands are implemented via :doc:`plug-ins <plugin>`,
 so new sub-commands are easily added.
 
 Command-line usage is described below.
