@@ -1,4 +1,4 @@
-# pygcam #
+# pygcam
 
 The **pygcam** package is currently under initial development. It is a Python package 
 that will provide a classes, functions, and scripts for working with GCAM. 

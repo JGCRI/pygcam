@@ -1,0 +1,13 @@
+include README.md
+include pygcam/docs/source/*.rst
+recursive-include pygcam/test *.xml *.py
+include pygcam/test/testall
+include pygcam/docs/[mM]ake*
+include setup.py
+include pygcam/bin/gcamtool.py
+include pygcam/bin/gt
+include pygcam/*.py
+include pygcam/plugins/*.py
+include pygcam/etc/*
+include pygcam/test/*
+global-exclude .DS_Store *.pyc

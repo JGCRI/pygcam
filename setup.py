@@ -1,12 +1,11 @@
 from distutils.core import setup
-from glob import glob
 
 requirements = ['lxml',
                 'numpy',
                 'pandas',
                 ]
 
-scripts = glob('bin/*.py')
+scripts = ['bin/gcamtool.py', 'bin/gt']
 
 setup(
     name='pygcam',
