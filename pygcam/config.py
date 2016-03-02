@@ -75,7 +75,7 @@ GCAM.DbFile	  = database_basexdb
 
 # A string with one or more colon-delimited elements that identify
 # directories or XML files in which to find batch query definitions.
-GCAM.QueryPath = .
+GCAM.QueryPath = %(GCAM.Workspace)s/output/Main_Queries.xml
 
 # Where to find plug-ins. Internal plugin directory is added automatically.
 # Use this to add custom plug-ins outside the pygcam source tree.
@@ -91,12 +91,24 @@ GCAM.LogConsole = True
 # The name of the queue used for submitting batch jobs on a cluster.
 GCAM.DefaultQueue = standard
 
-GCAM.QsubCommand = qsub -q {queueName} -N {jobName} -l walltime={walltime} -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
+GCAM.QsubCommand = qsub -q {queueName} -N {jobName} -l walltime={walltime} \
+  -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s \
+  QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
 
 # --signal=USR1@15 => send SIGUSR1 15s before walltime expires
-GCAM.SlurmCommand = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} -D {exeDir} --get-user-env=L -s --mem=6000 --tmp=6000 --export=QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
+GCAM.SlurmCommand = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \
+  -D {exeDir} --get-user-env=L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \
+  --export=QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
 
-GCAM.BatchCommand = %(GCAM.QsubCommand)s
+# Arbitrary arguments to add to the selected batch command
+GCAM.OtherBatchArgs =
+
+GCAM.BatchCommand = %(GCAM.SlurmCommand)s
+
+# Set this to a command to run when the -l flag is passed to gcamtool's
+# "run" sub-command. The same options are available for substitution as
+# for the GCAM.BatchCommand.
+GCAM.LocalCommand =
 
 # Arguments to qsub's "-l" flag that define required resources
 GCAM.QsubResources = pvmem=6GB
@@ -191,7 +203,6 @@ def readConfigFiles(section):
     else:
         # create an empty file with the [GCAM] section if no file exists
         with open(usrConfigPath, 'w') as fp:
-            fp.write("[%s]\n" % DEFAULT_SECTION)
             fp.write(_UserDefaults)
 
     return _ConfigParser
