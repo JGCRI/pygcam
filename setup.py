@@ -3,6 +3,7 @@ from setuptools import setup
 requirements = ['lxml',
                 'numpy',
                 'pandas',
+                'seaborn',
                 ]
 
 scripts = ['bin/gcamtool.py', 'bin/gt']
