@@ -1,11 +1,11 @@
 '''
   .. Stuff specific to MS Windows
 '''
-import platform
+import os, platform
 
 if platform.system() == 'Windows':
 
-    import os, ctypes
+    import ctypes
 
     def islink(path):
         FILE_ATTRIBUTE_REPARSE_POINT = 0x0400
