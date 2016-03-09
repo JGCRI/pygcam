@@ -205,7 +205,7 @@ def readConfigFiles(section):
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = './gcam.exe'
         useXvfb = 'True'
-    elif platformName.startswith('CYGWIN'):
+    elif platformName.startswith('CYGWIN') or platformName in ['Windows']:
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = './gcam.exe'
         useXvfb = 'False'
