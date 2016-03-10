@@ -147,7 +147,8 @@ def getTempFile(suffix, text=True, tmpDir=None):
 
 def getBatchDir(baseline, resultsDir, fromMCS=False):
     leafDir = 'queryResults' if fromMCS else 'batch-{baseline}'.format(baseline=baseline)
-    pathname = '{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
+    pathname = os.path.join(resultsDir, baseline, leafDir)
+    # '{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
     return pathname
 
 def mkdirs(newdir, mode=0o770):

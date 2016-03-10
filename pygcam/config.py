@@ -62,7 +62,7 @@ GCAM.LocalXml = %(GCAM.Workspace)s/local-xml
 GCAM.DynXml   = %(GCAM.Workspace)s/dyn-xml
 
 # The location of the default input file for runProject.py
-GCAM.ProjectXmlFile = %(Home)/gcam_project.xml
+GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
 
 # The location of the libraries needed by ModelInterface.
 # (Not needed if using GCAM with BaseX rather than dbxml.)
@@ -196,8 +196,6 @@ def readConfigFiles(section):
     home = os.getenv('HOME') or os.getenv('HOMEPATH')
     platformName = platform.system()
 
-    #assert platformName in ('Darwin', 'Linux'), "Only Darwin (OS X) and Linux are supported currently"
-
     if platformName == 'Darwin':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
         exeFile = 'Release/objects'
@@ -208,9 +206,13 @@ def readConfigFiles(section):
         useXvfb = 'True'
     elif platformName == 'Windows':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
+        exeFile = './Objects-Main.exe'
+        useXvfb = 'False'
+    else:
+        # unknown what this might be, but just in case
+        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = './gcam.exe'
         useXvfb = 'False'
-
 
     # Initialize config parser with default values
     _ConfigParser = SafeConfigParser()

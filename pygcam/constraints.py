@@ -266,7 +266,8 @@ def genBioConstraints(**kwargs):
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
     leafDir = 'queryResults' if fromMCS else 'batch-{baseline}'.format(baseline=baseline)
-    batchDir = '{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
+    batchDir = os.path.join(resultsDir, baseline, leafDir)
+    #'{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
     totalBiomassFile   = os.path.join(batchDir, 'Total_biomass_consumption-%s.csv' % baseline)
     refinedLiquidsFile = os.path.join(batchDir, 'refined-liquids-prod-by-tech-USA-%s.csv' % baseline)
     purposeGrownFile   = os.path.join(batchDir, 'Purpose-grown_biomass_production-%s.csv' % baseline)
