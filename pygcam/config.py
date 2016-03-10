@@ -192,7 +192,8 @@ def readConfigFiles(section):
 
     _ProjectSection = section
 
-    home = os.getenv('HOME')
+    # $HOME exists on all Unix-lik systems, otherwise assume Windows
+    home = os.getenv('HOME') or os.getenv('HOMEPATH')
     platformName = platform.system()
 
     #assert platformName in ('Darwin', 'Linux'), "Only Darwin (OS X) and Linux are supported currently"
