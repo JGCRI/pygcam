@@ -62,7 +62,7 @@ GCAM.LocalXml = %(GCAM.Workspace)s/local-xml
 GCAM.DynXml   = %(GCAM.Workspace)s/dyn-xml
 
 # The location of the default input file for runProject.py
-GCAM.ProjectXmlFile = %(Home)/gcam_project.xml
+GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
 
 # The location of the libraries needed by ModelInterface.
 # (Not needed if using GCAM with BaseX rather than dbxml.)

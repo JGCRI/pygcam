@@ -192,8 +192,12 @@ class Variable(object):
     def __init__(self, node):
         self.name = node.get('name')
         self.configVar = configVar = node.get('configVar')
-        self.value = getParam(configVar) if configVar else node.text
         self.eval = getBooleanXML(node.get('eval', 0))
+
+        try:
+            self.value = getParam(configVar) if configVar else node.text
+        except Exception as e:
+            raise PygcamException("Failed to get value for configVar '%s': %s" % (configVar, e))
 
         self.Instances[self.name] = self
 
