@@ -8,20 +8,26 @@ To use pygcam and use it in development as well:
 - Install git or a GUI version like Tortoise.
 - Make a directory to hold your git repository:
 
-    mkdir bitbucket         # or any name you choose
+    mkdir repo         # the name and location are up to you
 
-- Change into that directory and clone the pygcam repository:
 
-    cd bitbucket
+- Change into the directory you made and clone the pygcam repository:
+
+    cd {REPO}
     git clone git@bitbucket.org:plevin/pygcam.git
 
-- Add file to /Users/{username}/AppData/Roaming/Python/Python27/site-packages/pygcam.pth
-  (or any file name as long as it has a .pth extension), and add this line:
+- Create a file called:
+  /Users/{username}/AppData/Roaming/Python/Python27/site-packages/pygcam.pth
+  (it can have name as long as it has a .pth extension and is in the site-packages
+  folder), and add this line:
 
-    /Users/{username}/bitbucket/pygcam
+    {REPO}/pygcam
 
-  with the value in brackets replaced with your username.
+  with the value {REPO} replaced with the directory you created and into which
+  you "cloned" pygcam.
 
+=====
+Then need to edit the a
 =====
 
 Had to add these for runProj
