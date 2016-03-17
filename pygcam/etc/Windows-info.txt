@@ -1,0 +1,33 @@
+- Install Anaconda with python 2.7
+
+To use pygcam, just run the installer:
+
+    python setup.exe install
+
+To use pygcam and use it in development as well:
+- Install git or a GUI version like Tortoise.
+- Make a directory to hold your git repository:
+
+    mkdir bitbucket         # or any name you choose
+
+- Change into that directory and clone the pygcam repository:
+
+    cd bitbucket
+    git clone git@bitbucket.org:plevin/pygcam.git
+
+- Add file to /Users/{username}/AppData/Roaming/Python/Python27/site-packages/pygcam.pth
+  (or any file name as long as it has a .pth extension), and add this line:
+
+    /Users/{username}/bitbucket/pygcam
+
+  with the value in brackets replaced with your username.
+
+=====
+
+Had to add these for runProj
+
+# For runProj
+GCAM.WorkspaceRoot = %(Home)s/ws
+GCAM.XmlSrc   = %(User.RepoRoot)s/xmlsrc
+GCAM.LocalXml = %(User.RepoRoot)s/local-xml
+
