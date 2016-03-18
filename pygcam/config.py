@@ -48,7 +48,10 @@ GCAM.Current = %(GCAM.Root)s/current
 
 # The location of the Main_User_Workspace to use. This can refer
 # to any folder; GCAM.Current is just an optional convention.
-GCAM.Workspace = %(GCAM.Current)s/Main_User_Workspace
+GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
+
+# The default location in which to create run workspaces
+GCAM.RunWorkspaceRoot = %(GCAM.Root)/ws
 
 # The location of the ModelInterface to use.
 GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
@@ -58,8 +61,8 @@ GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 GCAM.SourceWorkspace =
 
 # Location of folders used by setup scripts
-GCAM.LocalXml = %(GCAM.Workspace)s/local-xml
-GCAM.DynXml   = %(GCAM.Workspace)s/dyn-xml
+GCAM.LocalXml = %(GCAM.RefWorkspace)s/local-xml
+GCAM.DynXml   = %(GCAM.RefWorkspace)s/dyn-xml
 
 # The location of the default input file for runProject.py
 GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
@@ -198,10 +201,11 @@ def readConfigFiles(section):
     global _ConfigParser, _ProjectSection
 
     _ProjectSection = section
+    platformName = platform.system()
 
     # $HOME exists on all Unix-lik systems, otherwise assume Windows
-    home = os.getenv('HOME') or os.getenv('HOMEPATH')
-    platformName = platform.system()
+    varName = 'HOMEPATH' if platformName == 'Windows' else 'HOME'
+    home = os.getenv(varName)
 
     if platformName == 'Darwin':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
@@ -231,9 +235,13 @@ def readConfigFiles(section):
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
-    if os.path.exists(usrConfigPath):
-        _ConfigParser.readfp(open(usrConfigPath))
-    else:
+
+    # os.path.exists doesn't always work on Windows, so just try opening it.
+    try:
+        fp = open(usrConfigPath)
+        _ConfigParser.readfp(fp)
+        fp.close()
+    except IOError as e:
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as fp:
             commented = getCommentedDefaults()

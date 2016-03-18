@@ -50,9 +50,10 @@ class GcamCommand(PluginBase):
         parser.add_argument('-j', '--jobName', type=str, default='queueGCAM',
                             help='''Specify a name for the queued job. Default is "queueGCAM".''')
 
-        parser.add_argument('-l', '--runLocal', action='store_true', default=(PlatformName == 'Darwin'),
+        parser.add_argument('-l', '--runLocal', action='store_true', default=(PlatformName in ['Darwin', 'Windows']),
                             help='''Run GCAM locally on current host, not via qsub. (It's not necessary
-                                    to specify this flag on OS X since only local execution is supported.)''')
+                                    to specify this flag on OS X and Windows since only local execution
+                                    is supported.)''')
 
         parser.add_argument('-m', '--minutes', type=float,
                             help='''Set the number of minutes to allocate for each job submitted.
