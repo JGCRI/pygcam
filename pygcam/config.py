@@ -156,7 +156,14 @@ def getCommentedDefaults():
 
     p = re.compile('^(GCAM\.\S+\s*=)', re.MULTILINE)
     result = p.sub(comment, _SystemDefaults)
-    return result
+
+    # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
+    dynamic  = "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
+    dynamic += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
+    dynamic += "# Location of ModelInterface jar file\n# GCAM.JarFile = %s\n\n" % getParam('GCAM.JarFile', raw=True)
+    dynamic += "# Whether to use a virtual display when running ModelInterface\n# GCAM.UseVirtualBuffer = %s\n\n" % getParam('GCAM.UseVirtualBuffer', raw=True)
+
+    return result + dynamic
 
 _ConfigParser = None
 
@@ -234,7 +241,7 @@ def readConfigFiles(section):
 
     return _ConfigParser
 
-def getParam(name, section=None):
+def getParam(name, section=None, raw=False):
     """
     Get the value of the configuration parameter `name`. Calls
     :py:func:`getConfig` if needed.
@@ -254,7 +261,7 @@ def getParam(name, section=None):
     if not _ConfigParser:
         getConfig(section)
 
-    return _ConfigParser.get(section, name)
+    return _ConfigParser.get(section, name, raw=raw)
 
 def getParamAsBoolean(name, section=None):
     """
