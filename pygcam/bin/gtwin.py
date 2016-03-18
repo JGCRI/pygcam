@@ -10,6 +10,10 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import sys
+
+# Defines os.symlink and fixes os.path.islink for Windows
+import pygcam.windows
+
 import pygcam.bin.gcamtool as gt
 from pygcam.config import DEFAULT_SECTION, getConfig
 
