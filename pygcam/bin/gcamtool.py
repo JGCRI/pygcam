@@ -12,6 +12,9 @@ import argparse
 from pygcam.config import DEFAULT_SECTION, getConfig, getParam
 from pygcam.plugin import PluginManager
 
+# Ensure that this is loaded so os.symlink is defined
+import pygcam.windows
+
 # from pygcam.log import getLogger
 # _logger = getLogger(__name__)
 
