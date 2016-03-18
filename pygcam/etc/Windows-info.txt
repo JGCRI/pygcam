@@ -27,13 +27,130 @@ To use pygcam and use it in development as well:
   you "cloned" pygcam.
 
 =====
-Then need to edit the a
+Run gcamtool.py once, then edit the ~/.pygcam.cfg file it created.
 =====
 
-Had to add these for runProj
+    [DEFAULT]
+    # Change this if desired
+    GCAM.LogLevel = INFO
 
-# For runProj
-GCAM.WorkspaceRoot = %(Home)s/ws
-GCAM.XmlSrc   = %(User.RepoRoot)s/xmlsrc
-GCAM.LocalXml = %(User.RepoRoot)s/local-xml
+    # For our convenience
+    User.RepoRoot = %(Home)s/bitbucket
+    User.OtaqRoot = %(User.RepoRoot)s/otaq2016
+    User.QueryDir = %(User.OtaqRoot)s/queries
 
+    # For query command
+    GCAM.QueryPath = %(User.QueryDir)s:%(User.QueryDir)s/Main_Queries_Customized.xml
+    GCAM.RegionMapFile = %(User.OtaqRoot)s/etc/Regions.txt
+
+    # For runProject command
+    GCAM.ProjectXmlFile = %(User.OtaqRoot)s/etc/project.xml
+    GCAM.WorkspaceRoot = %(Home)s/ws
+    GCAM.XmlSrc   = %(User.RepoRoot)s/xmlsrc
+    GCAM.LocalXml = %(User.RepoRoot)s/local-xml
+
+
+======
+To use with Windows command window:
+
+To run a python script without typing the .py:
+
+Modify the PATHEXT variable to include Python scripts, e.g.:
+
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY
+
+# Do these to cause .py files to be run by python
+assoc .py=Python.File
+ftype Python.File=c:\Users\{USER}\Anaconda2\python.exe "%1" %*
+
+Add your {REPO}/pygcam/bin; to front of PATH environment variable
+(Start menu -> right click on Computer -> Properties -> Advanced)
+
+======
+The pygcam scripts are run from the command-line, and the command-line tools in Windows suck. I highly
+recommend installing the (free, open-source) Cygwin package, which is a set of libraries and programs
+that provides a Linux-like experience under Windows. Running my scripts under the “bash” shell will be
+much more convenient and it will get you up the learning curve to use the Monte Carlo scripts, which
+run only on a Linux cluster.
+
+Cygwin provides an installer GUI that lets you select which packages to install. There is a huge set
+of packages, and you certainly don’t want all of it.
+
+Download the appropriate setup.exe version (probably 64-bit). Run it and accept all the defaults.
+You might choose a server at some east coast university for better performance.
+
+I recommend installing just these for now (easy to add more later):
+
+under “Devel”
+- git (select “git: Distributed version control system” and all the required libraries will be installed, too.)
+
+under “Editors”
+- nano (a very simple text editor useful for modifying config files and such)
+
+other options that are popular but more involved are emacs and vim. If you’re familiar with one of these, get that, too.
+
+Under “shells”:
+- bash: The GNU Bourne Again Shell (this is the terminal program)
+- bash-completion (very handy; I’ll explain later)
+- mintty (possibly also useful)
+
+Under “Utils”:
+- bzip2 (file compression like zip)
+- which (shows path of executable programs)
+
+Don’t install python since we’re using Anaconda. Installing another python just confuses things.
+
+=====
+Link notes
+
+Symbolic links
+
+- Creating a file link via 'mklink linkname targetname' works fine.
+- For symlinks to files, use "del"; for symlinks to dirs, use "rmdir"
+
+- Restricted to a single volume, but can refer to junction points and mounted folders in path
+
+- Creating a dir link via 'mklink /D linkname targetname' works fine
+
+- OJO!! Using 'del' on the link offers to delete the contents in the directory (!?!)
+
+- Links across devices and network, and through other symlinks works
+
+- Links to paths relative to curdir are replaced with absolute paths.
+
+  os.path.isdir(symlink-to-dir)   -> True
+  os.path.isfile(symlink-to-file) -> True
+  os.path.isfile(symlink-to-dir)  -> False
+  os.path.lexists(symlink, junction, dir)-> True
+
+*** These seem the way to go. ***
+
+Junctions
+
+- Junctions (created with "mklink /J") can be deleted using RMDIR without removing file content.
+  Deleting it as a file deletes the contents. (Principle of least astonishment, anyone?)
+
+  os.path.isdir(junction) returns True
+  os.path.exists and lexists are the same on Windows
+
+  os.unlink fails on a junction
+  os.rmdir succeeds on a junction
+
+- Junction to another drive works, but only on the same computer.
+- Junction to a file rather than dir can be created, but not deleted!
+
+Hard Links
+
+- Hardlinks are allowed only on files, not dirs. Must be on same drive, as in Unix.
+
+Compare to Unix, in which symlinks are simply files (deleted via "rm"), can
+point to dirs or files, can refer to files on any drive, including network disk,
+and there are no restrictions about whether the target has other links in it. In
+otherwords, far simpler and entirely flexible. Just one symlink for all occasions.
+
+Windows is a total mess, comparatively.
+
+=======
+How to deal with this??
+
+- Have a config variable that says whether to use links or copy files and directories.
