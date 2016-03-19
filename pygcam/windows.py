@@ -21,30 +21,61 @@ if platform.system() == 'Windows':
     import win32file
 
     def get_read_handle(filename):
-      if os.path.isdir(filename):
-        dwFlagsAndAttributes = win32file.FILE_FLAG_BACKUP_SEMANTICS
-      else:
-        dwFlagsAndAttributes = 0
+        if os.path.isdir(filename):
+            dwFlagsAndAttributes = win32file.FILE_FLAG_BACKUP_SEMANTICS
+        else:
+            dwFlagsAndAttributes = 0
 
-      return win32file.CreateFile(filename,
-                win32file.GENERIC_READ, win32file.FILE_SHARE_READ, None,
-                win32file.OPEN_EXISTING, dwFlagsAndAttributes, None)
+        # CreateFile(fileName, desiredAccess, shareMode, attributes,
+        #            CreationDisposition, flagsAndAttributes, hTemplateFile)
+        try:
+            handle = win32file.CreateFileW(filename,  # with 'W' accepts unicode
+                         win32file.GENERIC_READ, win32file.FILE_SHARE_READ, None,
+                         win32file.OPEN_EXISTING, dwFlagsAndAttributes, None)
+            return handle
+        except Exception as e:
+            raise PygcamException("get_read_handle(%s) failed: %s" % (filename, e))
 
     def get_unique_id (hFile):
-      (attributes, created_at, accessed_at, written_at,
-       volume, file_hi, file_lo, n_links,
-       index_hi, index_lo) = win32file.GetFileInformationByHandle(hFile)
-      return volume, index_hi, index_lo
+        (attributes, created_at, accessed_at, written_at,
+         volume, file_hi, file_lo, n_links,
+         index_hi, index_lo) = win32file.GetFileInformationByHandle(hFile)
+        return volume, index_hi, index_lo
 
     def samefileWindows(filename1, filename2):
-      hFile1 = get_read_handle(filename1)
-      hFile2 = get_read_handle(filename2)
-      are_equal = (get_unique_id(hFile1) == get_unique_id(hFile2))
-      hFile2.Close()
-      hFile1.Close()
-      return are_equal
+        # If either of the files does not exist, create it and close
+        # it to use get_read_handle(), then remove the files we created.
+        # Yes, there's a race condition here, but Windows is lame...
+        try:
+            f1 = f2 = None
+            hFile1 = hFile2 = None
 
-    # From http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
+            if not os.path.lexists(filename1):
+                f1 = open(filename1, 'w')
+                f1.close()
+
+            if not os.path.lexists(filename2):
+                f2 = open(filename2, 'w')
+                f2.close()
+
+            hFile1 = get_read_handle(filename1)
+            hFile2 = get_read_handle(filename2)
+            are_equal = (get_unique_id(hFile1) == get_unique_id(hFile2))
+
+        finally:
+            if hFile1:
+                hFile1.Close()
+            if hFile2:
+                hFile2.Close()
+            if f1:
+                os.unlink(filename1)
+            if f2:
+                os.unlink(filename2)
+
+        return are_equal
+
+    # Adapted from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
+    # NOTE: Requires SeCreateSymbolicLink priv.
     def symlinkWindows(src, dst):
         if samefileWindows(src, dst):
             raise PygcamException("Attempted to create symlink loop from '%s' to '%s' (same file)" % (dst, src))

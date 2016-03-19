@@ -61,8 +61,8 @@ GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 GCAM.SourceWorkspace =
 
 # Location of folders used by setup scripts
-GCAM.LocalXml = %(GCAM.RefWorkspace)s/local-xml
-GCAM.DynXml   = %(GCAM.RefWorkspace)s/dyn-xml
+GCAM.LocalXml = %(GCAM.RunWorkspaceRoot)s/local-xml
+GCAM.DynXml   = %(GCAM.RunWorkspaceRoot)s/dyn-xml
 
 # The location of the default input file for runProject.py
 GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
@@ -203,9 +203,11 @@ def readConfigFiles(section):
     _ProjectSection = section
     platformName = platform.system()
 
-    # $HOME exists on all Unix-lik systems, otherwise assume Windows
-    varName = 'HOMEPATH' if platformName == 'Windows' else 'HOME'
-    home = os.getenv(varName)
+    # HOME exists on all Unix-like systems; for Windows it's HOMEPATH
+    if platformName == 'Windows':
+        home = os.path.realpath(os.getenv('HOMEPATH')) # adds home drive
+    else:
+        home = os.getenv('HOME')
 
     if platformName == 'Darwin':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
@@ -213,16 +215,16 @@ def readConfigFiles(section):
         useXvfb = 'False'
     elif platformName == 'Linux':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = './gcam.exe'
+        exeFile = 'gcam.exe'
         useXvfb = 'True'
     elif platformName == 'Windows':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = './Objects-Main.exe'
+        exeFile = 'Objects-Main.exe'
         useXvfb = 'False'
     else:
         # unknown what this might be, but just in case
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = './gcam.exe'
+        exeFile = 'gcam.exe'
         useXvfb = 'False'
 
     # Initialize config parser with default values

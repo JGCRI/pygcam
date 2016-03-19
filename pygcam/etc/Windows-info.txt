@@ -31,6 +31,7 @@ Run gcamtool.py once, then edit the ~/.pygcam.cfg file it created.
 =====
 
     [DEFAULT]
+
     # Change this if desired
     GCAM.LogLevel = INFO
 
@@ -44,11 +45,14 @@ Run gcamtool.py once, then edit the ~/.pygcam.cfg file it created.
     GCAM.RegionMapFile = %(User.OtaqRoot)s/etc/Regions.txt
 
     # For runProject command
-    GCAM.ProjectXmlFile = %(User.OtaqRoot)s/etc/project.xml
-    GCAM.WorkspaceRoot = %(Home)s/ws
-    GCAM.XmlSrc   = %(User.RepoRoot)s/xmlsrc
-    GCAM.LocalXml = %(User.RepoRoot)s/local-xml
+    # For runProj
+    GCAM.RunWorkspaceRoot = %(Home)s/ws
+    GCAM.XmlSrc   = %(GCAM.RunWorkspaceRoot)s/xmlsrc
+    GCAM.LocalXml = %(GCAM.RunWorkspaceRoot)s/local-xml
 
+======
+When unzipping GCAM for windows, it creates two folders with the same
+name. Change outer to 'x', move the inner up one level, and delete 'x'.
 
 ======
 To use with Windows command window:
@@ -122,6 +126,8 @@ Symbolic links
   os.path.isfile(symlink-to-file) -> True
   os.path.isfile(symlink-to-dir)  -> False
   os.path.lexists(symlink, junction, dir)-> True
+
+- Only works on NTFS, so fails on my external Mac disk.
 
 *** These seem the way to go. ***
 
