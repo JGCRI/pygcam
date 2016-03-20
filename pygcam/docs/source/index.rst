@@ -34,6 +34,7 @@ Contents
    query
    setup
    gcamtool
+   windows
 
 XML input file formats for sub-commands
 ---------------------------------------

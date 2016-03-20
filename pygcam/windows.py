@@ -100,6 +100,19 @@ if platform.system() == 'Windows':
     os.path.samefile = samefileWindows
 
 
+    def setPathForJava():
+        '''
+        Update the PATH to be able to find the Java dlls.
+        Modeled on run-gcam.bat in the GCAM distribution.
+        '''
+        if os.environ['JAVA_HOME']:
+            path = os.environ['PATH']
+            javaHome = os.environ['JAVA_HOME']
+
+            # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
+            os.environ['PATH'] = path + ';' + javaHome + r'\bin;' + javaHome + r'\bin\server'
+
+
 if __name__ == '__main__':
     #
     # This bit of the example will only work on Win2k+; it

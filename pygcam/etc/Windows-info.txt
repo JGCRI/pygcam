@@ -129,6 +129,15 @@ Symbolic links
 
 - Only works on NTFS, so fails on my external Mac disk.
 
+
+Windows 7
+----------
+Use gpedit.msc to add a user to have permission to create symlinks.
+See http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
+
+Well, apparently this works for non-Administrators, but not for Administrators!!! WTF?
+
+
 *** These seem the way to go. ***
 
 Junctions
