@@ -51,7 +51,7 @@ GCAM.Current = %(GCAM.Root)s/current
 GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
 
 # The default location in which to create run workspaces
-GCAM.RunWorkspaceRoot = %(GCAM.Root)/ws
+GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
 
 # The location of the ModelInterface to use.
 GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
