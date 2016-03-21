@@ -71,7 +71,7 @@ class QueryCommand(PluginBase):
                              help='Where to output the result (default taken from config parameter "GCAM.OutputDir")')
 
         parser.add_argument('-Q', '--queryPath', type=str, default=None,
-                            help='''A colon-delimited list of directories or filenames to look in to find query files.
+                            help='''A semicolon-delimited list of directories or filenames to look in to find query files.
                                     Defaults to value of config parameter GCAM.QueryPath''')
 
         parser.add_argument('-r', '--regions', type=str, default=None,

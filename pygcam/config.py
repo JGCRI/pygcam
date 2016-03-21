@@ -56,6 +56,8 @@ GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
 # The location of the ModelInterface to use.
 GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 
+GCAM.ModelInterfaceLogFile = %(GCAM.TempDir)s/mi.log
+
 # The location of GCAM source code (for the purpose of reading
 # the .csv file that defines the current regional aggregation.
 GCAM.SourceWorkspace =
@@ -67,9 +69,8 @@ GCAM.DynXml   = %(GCAM.RunWorkspaceRoot)s/dyn-xml
 # The location of the default input file for runProject.py
 GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
 
-# The location of the libraries needed by ModelInterface.
-# (Not needed if using GCAM with BaseX rather than dbxml.)
-GCAM.JavaLibPath = %(GCAM.Workspace)s/libs/dbxml/lib
+# The location of the libraries needed by ModelInterface
+GCAM.JavaLibPath = %(GCAM.RefWorkspace)s/libs/basex
 
 # Arguments to java to ensure that ModelInterface has enough
 # heap space.
@@ -80,7 +81,7 @@ GCAM.DbFile	  = database_basexdb
 
 # A string with one or more colon-delimited elements that identify
 # directories or XML files in which to find batch query definitions.
-GCAM.QueryPath = %(GCAM.Workspace)s/output/Main_Queries.xml
+GCAM.QueryPath = %(GCAM.RefWorkspace)s/output/queries/Main_Queries.xml
 
 # Where to find plug-ins. Internal plugin directory is added automatically.
 # Use this to add custom plug-ins outside the pygcam source tree.

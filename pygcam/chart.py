@@ -421,8 +421,13 @@ def chartGCAM(args, num=None, negate=False, fuelEJ=None):
 
         if args.open:
             from subprocess import call
-            # "-g" => don't bring app to the foreground
-            call(['open', '-g', outFile], shell=False)
+            import platform
+
+            if platform.system() == 'Windows':
+                call(['start', os.path.abspath(outFile)], shell=True)
+            else:
+                # "-g" => don't bring app to the foreground
+                call(['open', '-g', outFile], shell=False)
 
 def getFuelEJ(fuelFile):
     fuelEJ = 0
