@@ -1,13 +1,12 @@
 '''
   .. Stuff specific to MS Windows
 '''
-import os
-import sys
 import platform
-from pygcam.error import PygcamException
 
 if platform.system() == 'Windows':
-
+    import os
+    import sys
+    from pygcam.error import PygcamException
     import ctypes
 
     def islinkWindows(path):
@@ -17,7 +16,6 @@ if platform.system() == 'Windows':
             (ctypes.windll.kernel32.GetFileAttributesW(unicode(path)) & FILE_ATTRIBUTE_REPARSE_POINT))
 
     # Adapted from http://timgolden.me.uk/python/win32_how_do_i/see_if_two_files_are_the_same_file.html
-    import tempfile
     import win32file
 
     def get_read_handle(filename):
@@ -93,12 +91,6 @@ if platform.system() == 'Windows':
             raise PygcamException("Failed to create symlink '%s' to '%s': %s" % (dst, src, e))
             pass
 
-    # Replace broken functions with those defined above.
-    # (In python 2.7.11 os.path.islink() indeed failed to detect link made with mklink)
-    os.symlink = symlinkWindows
-    os.path.islink = islinkWindows
-    os.path.samefile = samefileWindows
-
 
     def setJavaPath():
         '''
@@ -142,6 +134,14 @@ if platform.system() == 'Windows':
             return False
 
         return None
+
+    # Replace broken functions with those defined above.
+    # (In python 2.7.11 os.path.islink() indeed failed to detect link made with mklink)
+    os.symlink = symlinkWindows
+    os.path.islink = islinkWindows
+    os.path.samefile = samefileWindows
+
+    setJavaPath()
 
 
 if __name__ == '__main__':
