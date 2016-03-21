@@ -330,7 +330,7 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None):
     found in an XML query file, extract it to generate a batch query file and
     apply it to the given regions.
     '''
-    items = queryPath.split(':')
+    items = queryPath.split(';')
     for item in items:
         if os.path.isdir(item):
             pathname = os.path.join(item, title + '.xml')
@@ -397,10 +397,10 @@ BatchQueryTemplate = """<?xml version="1.0"?>
 <ModelInterfaceBatch>
     <class name="ModelInterface.ModelGUI2.DbViewer">
         <command name="XMLDB Batch File">
-            <scenario name="${scenario}"/>
-            <queryFile>${queryFile}</queryFile>
-            <outFile>${csvFile}</outFile>
-            <xmldbLocation>${xmldb}</xmldbLocation>
+            <scenario name="{scenario}"/>
+            <queryFile>{queryFile}</queryFile>
+            <outFile>{csvFile}</outFile>
+            <xmldbLocation>{xmldb}</xmldbLocation>
             <batchQueryResultsInDifferentSheets>false</batchQueryResultsInDifferentSheets>
             <batchQueryIncludeCharts>false</batchQueryIncludeCharts>
             <batchQuerySplitRunsInDifferentSheets>false</batchQuerySplitRunsInDifferentSheets>
@@ -460,20 +460,30 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
 
     redirect = ">> %s 2>&1" % miLogFile if miLogFile else ''
 
+    def copyToLogFile(logFile, filename, msg=''):
+        with open(logFile, 'a') as m:
+            with open(filename, 'r') as f:
+                m.write(msg)
+                map(m.write, f.readlines())
+
     if miLogFile:
-        subprocess.call("(echo Query file: '%s'; cat %s) %s" % (filename,  filename,  redirect), shell=True)
-        subprocess.call("(echo Batch file: '%s'; cat %s) %s" % (batchFile, batchFile, redirect), shell=True)
+        copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
+        copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
 
-    jarFile     = getParam('GCAM.JarFile')
-    javaLibPath = getParam('GCAM.JavaLibPath')
+    jarFile     = os.path.normpath(getParam('GCAM.JarFile'))
     javaArgs    = getParam('GCAM.JavaArgs')
+    javaLibPath = getParam('GCAM.JavaLibPath')
+    if javaLibPath:
+        javaLibPath = os.path.normpath(javaLibPath) # do this separately to avoid turning "" into "."
 
-    javaLibPathArg = "-Djava.library.path='%s'" % javaLibPath if javaLibPath else ""
+    javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
 
-    command = "java %s %s -jar '%s' -b '%s' %s" % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
+    command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
 
     if noRun:
         print command
+    else:
+        _logger.debug(command)
 
     if not noRun:
 
@@ -490,10 +500,24 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
             # The java program always exits with 0 status, but when the query fails,
             # it writes an error message to the CSV file. If this occurs, we delete
             # the file.
-            testCommand = "head -1 '%s' | grep -q 'java.lang.Exception:'" % csvPath
-            if subprocess.call(testCommand, shell=True) == 0:
-                _logger.error("Query '%s' failed.\nDeleting '%s'", queryName, csvPath)
-                os.remove(csvPath)
+            csvExists = False
+
+            if os.path.exists(csvPath):
+                csvExists = True
+                with open(csvPath, 'r') as f:
+                    line = f.readline()
+
+            if not csvExists or line.find('java.land.Exception') >= 0:
+                _logger.error("Query '%s' failed.", queryName)
+                if csvExists:
+                    _logger.debug("Deleting '%s'", csvPath)
+                    os.remove(csvPath)
+
+            # Deprecated -- fails on Windows
+            # testCommand = "head -1 '%s' | grep -q 'java.lang.Exception:'" % csvPath
+            # if subprocess.call(testCommand, shell=True) == 0:
+            #     _logger.error("Query '%s' failed.\nDeleting '%s'", queryName, csvPath)
+            #     os.remove(csvPath)
 
         except:
             raise
@@ -765,7 +789,7 @@ def main(args):
 
     miLogFile   = getParam('GCAM.ModelInterfaceLogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
-    workspace   = args.workspace or getParam('GCAM.Workspace')
+    workspace   = args.workspace or getParam('GCAM.RunWorkspaceRoot')
     xmldb       = args.xmldb     or os.path.join(workspace, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
@@ -797,8 +821,8 @@ def main(args):
             if not queryName or queryName[0] == '#':    # allow blank lines and comments
                 continue
 
-            if args.verbose:
-                _logger.info("Processing query '%s'", queryName)
-                runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
-                              miLogFile=miLogFile, regions=regions, regionMap=regionMap,
-                              noRun=args.noRun, noDelete=args.noDelete)
+            _logger.debug("Processing query '%s'", queryName)
+
+            runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
+                          miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                          noRun=args.noRun, noDelete=args.noDelete)
