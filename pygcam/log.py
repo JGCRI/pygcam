@@ -117,6 +117,8 @@ def configure():
 
     _configured = True
 
+def getLevel():
+    return _logLevel
 
 def setLevel(level):
     '''
