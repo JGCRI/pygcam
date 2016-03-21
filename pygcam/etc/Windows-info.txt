@@ -71,6 +71,10 @@ Add your {REPO}/pygcam/bin; to front of PATH environment variable
 (Start menu -> right click on Computer -> Properties -> Advanced)
 
 ======
+To make it convenient on windows, the command gt.cmd is provided.
+You need the pygcam/bin directory in your path to complete this.
+
+======
 The pygcam scripts are run from the command-line, and the command-line tools in Windows suck. I highly
 recommend installing the (free, open-source) Cygwin package, which is a set of libraries and programs
 that provides a Linux-like experience under Windows. Running my scripts under the “bash” shell will be
