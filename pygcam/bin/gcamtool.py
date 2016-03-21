@@ -12,8 +12,8 @@ import argparse
 from pygcam.config import DEFAULT_SECTION, getConfig, getParam
 from pygcam.plugin import PluginManager
 
-# from pygcam.log import getLogger
-# _logger = getLogger(__name__)
+from pygcam.log import getLogger, getLevel
+_logger = getLogger(__name__)
 
 PROGRAM = 'gcamtool'
 VERSION = '0.1'
@@ -30,7 +30,6 @@ class GcamTool(object):
         self.parser = None
         self.subparsers = None  # set by setupMainParser()
         self.subcommands = {}   # subcommand (plugin) instances keyed by sub-command name
-        self.logger = None      # TBD
 
         self.setupMainParser()
 
@@ -103,5 +102,10 @@ if __name__ == '__main__':
 
     except Exception, e:
         print "%s failed: %s" % (PROGRAM, e)
+
+        if getLogger() == 'DEBUG':
+            import traceback
+            traceback.print_exc()
+
         sys.exit(1)
 
