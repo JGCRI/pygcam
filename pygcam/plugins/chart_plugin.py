@@ -119,7 +119,7 @@ class ChartCommand(PluginBase):
                             substituting ".png" for ".csv"''')
 
         parser.add_argument('-O', '--open', action="store_true",
-                            help="Open the plot file after generating it. (Works on Mac, maybe on other platforms.)")
+                            help="Open the plot file after generating it.")
 
         parser.add_argument('-p',  '--palette', default=None, # "hls",
                             help='''The name of a color palette to use. Some good options include hls, husl, and Paired.
