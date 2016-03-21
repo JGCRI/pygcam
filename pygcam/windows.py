@@ -100,27 +100,57 @@ if platform.system() == 'Windows':
     os.path.samefile = samefileWindows
 
 
-    def setPathForJava():
+    def setJavaPath():
         '''
         Update the PATH to be able to find the Java dlls.
         Modeled on run-gcam.bat in the GCAM distribution.
         '''
-        if os.environ['JAVA_HOME']:
+        javaHome = os.environ.get('JAVA_HOME', None)
+        if javaHome:
             path = os.environ['PATH']
-            javaHome = os.environ['JAVA_HOME']
-
             # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
             os.environ['PATH'] = path + ';' + javaHome + r'\bin;' + javaHome + r'\bin\server'
 
 
+    # Adapted from
+    # http://stackoverflow.com/questions/19672352/how-to-run-python-script-with-elevated-privilege-on-windows
+    def runAsAdmin(argv=None, debug=False):
+        shell32 = ctypes.windll.shell32
+
+        if argv is None and shell32.IsUserAnAdmin():
+            return True
+
+        if argv is None:
+            argv = sys.argv
+
+        if hasattr(sys, '_MEIPASS'):
+            # Support pyinstaller wrapped program.
+            arguments = map(unicode, argv[1:])
+        else:
+            arguments = map(unicode, argv)
+
+        argumentLine = u' '.join(arguments)
+        executable = unicode(sys.executable)
+
+        if debug:
+            print 'Command line: ', executable, argumentLine
+
+        lpDirectory = None
+        SHOW_NORMAL = 1
+        ret = shell32.ShellExecuteW(None, u"runas", executable, argumentLine, lpDirectory, SHOW_NORMAL)
+        if int(ret) <= 32:
+            return False
+
+        return None
+
+
 if __name__ == '__main__':
-    #
-    # This bit of the example will only work on Win2k+; it
-    # was the only way I could reasonably produce two different
-    # files which were the same file, without knowing anything
-    # about your drives, network etc.
-    #
-    filename1 = sys.executable
-    filename2 = tempfile.mktemp(".exe")
-    win32file.CreateHardLink(filename2, filename1, None)
-    print filename1, filename2, samefileWindows(filename1, filename2)
+    ret = runAsAdmin()
+    if ret is True:
+        print 'I have admin privilege.'
+        raw_input('Press ENTER to exit.')
+    elif ret is None:
+        print 'I am elevating to admin privilege.'
+        raw_input('Press ENTER to exit.')
+    else:
+        print 'Error(ret=%d): cannot elevate privilege.' % (ret, )

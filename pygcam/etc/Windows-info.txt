@@ -109,6 +109,8 @@ Link notes
 
 Symbolic links
 
+*** These are clearly the way to go. ***
+
 - Creating a file link via 'mklink linkname targetname' works fine.
 - For symlinks to files, use "del"; for symlinks to dirs, use "rmdir"
 
@@ -128,6 +130,10 @@ Symbolic links
   os.path.lexists(symlink, junction, dir)-> True
 
 - Only works on NTFS, so fails on my external Mac disk.
+  You can create a symlink to a non NTFS system, just not on one,
+  so the "output" directory can be a symlink to the external disk.
+  (For me, run with workspace on the VM's disk and copy to external
+  upon completion.)
 
 
 Windows 7
@@ -137,8 +143,21 @@ See http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
 
 Well, apparently this works for non-Administrators, but not for Administrators!!! WTF?
 
+It is possible to run a bash shell from an elevated Windows command window:
 
-*** These seem the way to go. ***
+   c:\cygwin64\bin\mintty.exe c:\cygwin\bin\bash.exe
+
+But still, if the user is an admin, the symlink rights are not given. For cryin' out loud!
+And the path, and environment, etc. are all the Admins, so it's like "su" on Unix. The
+solution may be to work as a non-admin, but use "elevated" command windows when necessary,
+presumably using admin credentials.
+
+**** TEST THIS ****
+- Create a non-admin account and see what happens when trying to elevate a cmd shell.
+- If this works, create a password for the admin, or at least create a "root" account
+  a password (same?) and remove admin privs from "rjp".
+*******************
+
 
 Junctions
 

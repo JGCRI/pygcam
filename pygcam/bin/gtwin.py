@@ -14,7 +14,7 @@ import sys
 # Defines os.symlink and fixes os.path.islink for Windows
 import pygcam.windows as w
 
-w.setPathForJava()
+w.setJavaPath()
 
 import pygcam.bin.gcamtool as gt
 from pygcam.config import DEFAULT_SECTION, getConfig
