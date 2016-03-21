@@ -19,10 +19,6 @@ from collections import defaultdict
 from .config import getParam, getParamAsBoolean, configLoaded
 from .error import PygcamException
 
-LOG_LEVEL_OPT   = 'GCAM.LogLevel'
-LOG_FILE_OPT    = 'GCAM.LogFile'
-LOG_CONSOLE_OPT = 'GCAM.LogConsole'
-
 _formatter  = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 _configured = False
 _loggers  = defaultdict(lambda: None)
@@ -47,7 +43,7 @@ def _configureLogger(logger):
     if _logLevel:
         logger.setLevel(_logLevel)
 
-    logConsole = getParamAsBoolean(LOG_CONSOLE_OPT)
+    logConsole = getParamAsBoolean('GCAM.LogConsole')
     loggerName = logger.name
 
     if logConsole:
@@ -62,7 +58,7 @@ def _configureLogger(logger):
     else:
         _debug("Console logging is disabled")
 
-    logFile = getParam(LOG_FILE_OPT)
+    logFile = getParam('GCAM.LogFile')
     if logFile:
         _debug("Configuring file logger for %s" % loggerName)
         handler = logging.FileHandler(logFile, mode='a')
@@ -112,7 +108,9 @@ def configure():
     if _configured:
         return
 
-    _logLevel = _logLevel or getParam(LOG_LEVEL_OPT, default='ERROR').upper()
+    _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
+
+    _debug("Configuring all loggers from config")
 
     for logger in _loggers.values():
         _configureLogger(logger)
@@ -141,5 +139,5 @@ def resetLevel():
     in the "new" sub-command which calls configure before setting the new
     app name.)
     '''
-    level = getParam(LOG_LEVEL_OPT, default='ERROR').upper()
+    level = getParam('GCAM.LogLevel', default='ERROR').upper()
     setLevel(level)
