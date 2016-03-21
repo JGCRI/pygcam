@@ -96,7 +96,10 @@ def _getMainParser():
 
 if __name__ == '__main__':
     import sys
+    import pygcam.log
+
     getConfig(DEFAULT_SECTION)      # TBD: use project as config section
+    pygcam.log.configure()
 
     try:
         GcamTool().run()
