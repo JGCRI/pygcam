@@ -423,6 +423,8 @@ class Project(object):
         argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
         argDict['scenarioGroup'] = self.scenarioGroupName
 
+        argDict['SEP'] = os.path.sep    # '/' on Unix and '\\' on Windows
+
         knownGroups    = self.getKnownGroups()
         knownScenarios = self.getKnownScenarios()
         knownSteps     = self.getKnownSteps()
