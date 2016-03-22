@@ -25,9 +25,8 @@ import subprocess
 import glob
 import argparse
 import re
-import collections
 from .error import SetupException
-from .common import coercible
+from .common import coercible, mkdirs
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
 
@@ -295,20 +294,36 @@ class ConfigEditor(object):
         # Delete old generated files in case the baseline we're working from has changed
         scenDir = self.scenario_dir_abs
         dynDir  = self.scenario_dyn_dir_abs
-        cmd = "rm -rf %s/* %s/*" % (scenDir, dynDir)
-        _echo(cmd)
-        status = subprocess.call(cmd, shell=True)
-        assert status == 0, 'Command failed with status %d: %s' % (status, cmd)
+        shutil.rmtree(scenDir)
+        shutil.rmtree(dynDir)
+
+        # Not available on Windows
+        # cmd = "rm -rf %s/* %s/*" % (scenDir, dynDir)
+        # _echo(cmd)
+        # status = subprocess.call(cmd, shell=True)
+        # assert status == 0, 'Command failed with status %d: %s' % (status, cmd)
 
         xmlSubdir = pathjoin(self.xmlSourceDir, 'xml')
         xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
             _echo("Copy static XML files to %s" % scenDir)
-            subprocess.call("cp -p %s/*.xml %s" % (xmlSubdir, scenDir), shell=True)
+            mkdirs(scenDir)
+            for src in xmlFiles:
+                # dst = os.path.join(scenDir, os.path.basename(src))
+                shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
+
+            # not available on Windows
+            # subprocess.call("cp -p %s/*.xml %s" % (xmlSubdir, scenDir), shell=True)
 
             if dynamic:
-                subprocess.call("ln -s %s/*.xml %s" % (scenDir, dynDir), shell=True)
+                mkdirs(dynDir)
+                for src in xmlFiles:
+                    dst = os.path.join(dynDir, os.path.basename(src))
+                    os.symlink(src, dst)
+
+                # Not available on Windows
+                # subprocess.call("ln -s %s/*.xml %s" % (scenDir, dynDir), shell=True)
 
         configPath = self.cfgPath()
 
@@ -535,6 +550,7 @@ class ConfigEditor(object):
         :param xmlfile: the location of the XML file, relative to the `exe` directory
         :return: none
         """
+        xmlfile = xmlfile.replace('\\', '/')
         _echo("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 
@@ -562,6 +578,7 @@ class ConfigEditor(object):
         :param after: the name of the element after which to insert the new component
         :return: none
         """
+        xmlfile = xmlfile.replace('\\', '/')
         _echo("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
         cfg = self.cfgPath()
 
@@ -588,6 +605,7 @@ class ConfigEditor(object):
            should replace the existing value
         :return: none
         """
+        xmlfile = xmlfile.replace('\\', '/')
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
         # _echo("Update ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
@@ -620,6 +638,7 @@ class ConfigEditor(object):
         :param xmlfile: the XML file path used to locate the scenario component
         :return: none
         """
+        xmlfile = xmlfile.replace('\\', '/')
         _echo("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 

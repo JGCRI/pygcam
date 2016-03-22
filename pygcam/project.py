@@ -11,7 +11,7 @@
 import os
 import sys
 import argparse
-from os.path import join
+from os.path import join, normpath
 from lxml import etree as ET
 from .config import readConfigFiles, getParam
 from .common import getTempFile, flatten, shellCommand, getBooleanXML
@@ -413,7 +413,7 @@ class Project(object):
         # Get the text values for all variables
         self.argDict = argDict = Variable.getDict()
 
-        xmlSrc = argDict['xmlsrc']
+        xmlSrc = normpath(argDict['xmlsrc'])
         argDict['project']       = self.projectName
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['projectSrcDir'] = projectSrcDir = join(xmlSrc, subdir)
@@ -567,8 +567,8 @@ def driver(args):
     tree    = ET.parse(projectFile, parser)
     project = Project(tree, args.project, args.group)
 
-    if args.dump:
-        project.dump(steps, scenarios)
+    # if args.dump:
+    #     project.dump(steps, scenarios)
 
     try:
         project.run(scenarios, steps, args)

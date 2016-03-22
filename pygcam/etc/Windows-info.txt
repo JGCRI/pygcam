@@ -192,3 +192,11 @@ Windows is a total mess, comparatively.
 How to deal with this??
 
 - Have a config variable that says whether to use links or copy files and directories.
+
+==========
+
+XML Starlet
+-----------
+Download from https://sourceforge.net/projects/xmlstar/files/xmlstarlet
+Copy the xml.exe file to a directory on your path, or create a new directory
+and put that directory on your path.

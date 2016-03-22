@@ -4,9 +4,12 @@
 import platform
 
 if platform.system() == 'Windows':
+    print "Loading Windows support functions..."
+
     import os
     import sys
-    from pygcam.error import PygcamException
+    from .common import mkdirs
+    from .error import PygcamException
     import ctypes
 
     def islinkWindows(path):
@@ -44,15 +47,19 @@ if platform.system() == 'Windows':
         # If either of the files does not exist, create it and close
         # it to use get_read_handle(), then remove the files we created.
         # Yes, there's a race condition here, but Windows is lame...
+        # And yes, this has the side-effect of possibly creating directories
+        # that aren't deleted.
         try:
             f1 = f2 = None
             hFile1 = hFile2 = None
 
             if not os.path.lexists(filename1):
+                mkdirs(os.path.dirname(filename1))
                 f1 = open(filename1, 'w')
                 f1.close()
 
             if not os.path.lexists(filename2):
+                mkdirs(os.path.dirname(filename2))
                 f2 = open(filename2, 'w')
                 f2.close()
 

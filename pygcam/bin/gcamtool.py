@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 '''
 .. Main driver for pygcam tools, which are accessed as sub-commands.
@@ -9,10 +9,11 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import argparse
+import pygcam.windows
 from pygcam.config import DEFAULT_SECTION, getConfig, getParam
 from pygcam.plugin import PluginManager
-
 from pygcam.log import getLogger, getLevel
+
 _logger = getLogger(__name__)
 
 PROGRAM = 'gcamtool'
@@ -106,9 +107,8 @@ if __name__ == '__main__':
     except Exception, e:
         print "%s failed: %s" % (PROGRAM, e)
 
-        if getLogger() == 'DEBUG':
+        if getLevel() == 'DEBUG':
             import traceback
             traceback.print_exc()
 
         sys.exit(1)
-
