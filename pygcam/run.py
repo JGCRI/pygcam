@@ -12,6 +12,7 @@ from lxml import etree as ET
 from pygcam.common import mkdirs
 from pygcam.log import getLogger
 from pygcam.config import getConfig, getParam
+from pygcam.windows import setJavaPath, removeSymlink
 
 _logger = getLogger(__name__)
 
@@ -73,14 +74,12 @@ def setupWorkspace(runWorkspace):
         dst = os.path.join(runWorkspace, xmlDir)
 
         if os.path.lexists(dst):
-            os.remove(dst)
+            removeSymlink(dst)
 
         os.symlink(src, dst)
 
-    # TBD: decide whether these are needed. Should be up to the user
-    # whether their Main_User_Workspace has links to these directories.
-    # xmlLink('GCAM.LocalXML', 'local-xml')
-    # xmlLink('GCAM.DynXML',   'dyn-xml')
+    xmlLink('GCAM.LocalXML', 'local-xml')
+    xmlLink('GCAM.DynXML',   'dyn-xml')
 
 
 CONFIG_FILE_DELIM = ':'
@@ -114,6 +113,8 @@ def driver(args):
     postProcessor = not args.noPostProcessor and (args.postProcessor or getParam('GCAM.PostProcessor'))
 
     exeDir = os.path.join(workspace, 'exe')
+
+    setJavaPath(exeDir)     # required for Windows; a no-op otherwise
 
     if not isQueued:
         if scenarios:
@@ -164,6 +165,7 @@ def driver(args):
         gcamPath = getParam('GCAM.Executable')
         print "cd", exeDir
         os.chdir(exeDir)        # if isQsubbed, this is redundant but harmless
+
 
         exitStatus = 0
 

@@ -3,24 +3,37 @@
 '''
 import platform
 
-if platform.system() == 'Windows':
+IsWindows = platform.system() == 'Windows'
+
+if IsWindows:
     print "Loading Windows support functions..."
 
     import os
-    import sys
+    import ctypes
+    import win32file
     from .common import mkdirs
     from .error import PygcamException
-    import ctypes
+    from .log import getLogger
 
-    def islinkWindows(path):
-        FILE_ATTRIBUTE_REPARSE_POINT = 0x0400
+    _logger = getLogger(__name__)
 
+    # Adapted from http://stackoverflow.com/questions/1447575/symlinks-on-windows
+    # Win32file is missing this attribute.
+    FILE_ATTRIBUTE_REPARSE_POINT = 0x0400
+
+    REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
+
+    def islinkWindows1(path):
+        """ Windows islink implementation. """
+        return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
+
+    # From http://tomjbward.co.uk/detect-symlink-using-python-2-x-on-windows/
+    def islinkWindows2(path):
         return bool(os.path.isdir(path) and \
-            (ctypes.windll.kernel32.GetFileAttributesW(unicode(path)) & FILE_ATTRIBUTE_REPARSE_POINT))
+            (win32file.GetFileAttributesW(unicode(path)) & FILE_ATTRIBUTE_REPARSE_POINT))
+
 
     # Adapted from http://timgolden.me.uk/python/win32_how_do_i/see_if_two_files_are_the_same_file.html
-    import win32file
-
     def get_read_handle(filename):
         if os.path.isdir(filename):
             dwFlagsAndAttributes = win32file.FILE_FLAG_BACKUP_SEMANTICS
@@ -46,9 +59,9 @@ if platform.system() == 'Windows':
     def samefileWindows(filename1, filename2):
         # If either of the files does not exist, create it and close
         # it to use get_read_handle(), then remove the files we created.
-        # Yes, there's a race condition here, but Windows is lame...
-        # And yes, this has the side-effect of possibly creating directories
-        # that aren't deleted.
+        # Yes, there's a race condition here, and this has the side-effect
+        # of possibly creating directories that aren't deleted, but
+        # Windows is lame, so we do what we can.
         try:
             f1 = f2 = None
             hFile1 = hFile2 = None
@@ -82,13 +95,17 @@ if platform.system() == 'Windows':
     # Adapted from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
     # NOTE: Requires SeCreateSymbolicLink priv.
     def symlinkWindows(src, dst):
+        src = src.replace('/', '\\')
+        dst = dst.replace('/', '\\')
+
         if samefileWindows(src, dst):
             raise PygcamException("Attempted to create symlink loop from '%s' to '%s' (same file)" % (dst, src))
 
         csl = ctypes.windll.kernel32.CreateSymbolicLinkW
         csl.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
         csl.restype = ctypes.c_ubyte
-        src = src.replace('/', '\\')
+
+        # links to files and dir differ in Windows
         flags = 1 if os.path.isdir(src) else 0
 
         try:
@@ -96,68 +113,83 @@ if platform.system() == 'Windows':
                 raise ctypes.WinError()
         except Exception as e:
             raise PygcamException("Failed to create symlink '%s' to '%s': %s" % (dst, src, e))
-            pass
-
-
-    def setJavaPath():
-        '''
-        Update the PATH to be able to find the Java dlls.
-        Modeled on run-gcam.bat in the GCAM distribution.
-        '''
-        javaHome = os.environ.get('JAVA_HOME', None)
-        if javaHome:
-            path = os.environ['PATH']
-            # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
-            os.environ['PATH'] = path + ';' + javaHome + r'\bin;' + javaHome + r'\bin\server'
-
-
-    # Adapted from
-    # http://stackoverflow.com/questions/19672352/how-to-run-python-script-with-elevated-privilege-on-windows
-    def runAsAdmin(argv=None, debug=False):
-        shell32 = ctypes.windll.shell32
-
-        if argv is None and shell32.IsUserAnAdmin():
-            return True
-
-        if argv is None:
-            argv = sys.argv
-
-        if hasattr(sys, '_MEIPASS'):
-            # Support pyinstaller wrapped program.
-            arguments = map(unicode, argv[1:])
-        else:
-            arguments = map(unicode, argv)
-
-        argumentLine = u' '.join(arguments)
-        executable = unicode(sys.executable)
-
-        if debug:
-            print 'Command line: ', executable, argumentLine
-
-        lpDirectory = None
-        SHOW_NORMAL = 1
-        ret = shell32.ShellExecuteW(None, u"runas", executable, argumentLine, lpDirectory, SHOW_NORMAL)
-        if int(ret) <= 32:
-            return False
-
-        return None
 
     # Replace broken functions with those defined above.
     # (In python 2.7.11 os.path.islink() indeed failed to detect link made with mklink)
     os.symlink = symlinkWindows
-    os.path.islink = islinkWindows
+    os.path.islink = islinkWindows1
     os.path.samefile = samefileWindows
 
-    setJavaPath()
 
 
-if __name__ == '__main__':
-    ret = runAsAdmin()
-    if ret is True:
-        print 'I have admin privilege.'
-        raw_input('Press ENTER to exit.')
-    elif ret is None:
-        print 'I am elevating to admin privilege.'
-        raw_input('Press ENTER to exit.')
+def setJavaPath(exeDir):
+    '''
+    Update the PATH to be able to find the Java dlls.
+    Modeled on run-gcam.bat in the GCAM distribution.
+    '''
+    if not IsWindows:
+        return
+
+    javaHome = os.environ.get('JAVA_HOME', None)
+    # Attempt to use WriteLocalBaseXDB which will print the java.home property of the Java
+    # Runtime used to run it.  Note if the runtime is not 64-bit it will only print an error.
+    from subprocess import check_output
+
+    if not javaHome:
+        curdir = os.getcwd()
+        os.chdir(exeDir)
+        # For some reason, this doesn't work with a path to WriteLocalBaseXDB
+        # so we chdir to the directory and run java there.
+        output = check_output('java WriteLocalBaseXDB', shell=True)
+        javaHome = output and output.strip()
+        os.chdir(curdir)
+
+    if javaHome and os.path.isdir(javaHome):
+        path = os.environ['PATH']
+        # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
+        os.environ['PATH'] = path + ';' + javaHome + r'\bin;' + javaHome + r'\bin\server'
+        _logger.debug("Setting PATH to %s", os.environ['PATH'])
+
+def removeSymlink(path):
+    """
+    On Windows, symlinks to directories  must be removed with os.rmdir(),
+    while symlinks to files must be removed with os.remove()
+    """
+    if not os.path.islink(path):
+        raise PygcamException("removeSymlink: path '%s' is not a symlink" % path)
+
+    if IsWindows and os.path.isdir(path):
+        os.rmdir(path)
     else:
-        print 'Error(ret=%d): cannot elevate privilege.' % (ret, )
+        os.remove(path)
+
+    # Adapted from
+    # http://stackoverflow.com/questions/19672352/how-to-run-python-script-with-elevated-privilege-on-windows
+    # def runAsAdmin(argv=None, debug=False):
+    #     shell32 = ctypes.windll.shell32
+    #
+    #     if argv is None and shell32.IsUserAnAdmin():
+    #         return True
+    #
+    #     if argv is None:
+    #         argv = sys.argv
+    #
+    #     if hasattr(sys, '_MEIPASS'):
+    #         # Support pyinstaller wrapped program.
+    #         arguments = map(unicode, argv[1:])
+    #     else:
+    #         arguments = map(unicode, argv)
+    #
+    #     argumentLine = u' '.join(arguments)
+    #     executable = unicode(sys.executable)
+    #
+    #     if debug:
+    #         print 'Command line: ', executable, argumentLine
+    #
+    #     lpDirectory = None
+    #     SHOW_NORMAL = 1
+    #     ret = shell32.ShellExecuteW(None, u"runas", executable, argumentLine, lpDirectory, SHOW_NORMAL)
+    #     if int(ret) <= 32:
+    #         return False
+    #
+    #     return None

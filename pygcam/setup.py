@@ -26,7 +26,7 @@ import glob
 import argparse
 import re
 from .error import SetupException
-from .common import coercible, mkdirs
+from .common import coercible, mkdirs, unixPath
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
 
@@ -550,7 +550,7 @@ class ConfigEditor(object):
         :param xmlfile: the location of the XML file, relative to the `exe` directory
         :return: none
         """
-        xmlfile = xmlfile.replace('\\', '/')
+        xmlfile = unixPath(xmlfile)
         _echo("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 
@@ -578,7 +578,7 @@ class ConfigEditor(object):
         :param after: the name of the element after which to insert the new component
         :return: none
         """
-        xmlfile = xmlfile.replace('\\', '/')
+        xmlfile = unixPath(xmlfile)
         _echo("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
         cfg = self.cfgPath()
 
@@ -605,7 +605,7 @@ class ConfigEditor(object):
            should replace the existing value
         :return: none
         """
-        xmlfile = xmlfile.replace('\\', '/')
+        xmlfile = unixPath(xmlfile)
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
         # _echo("Update ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
@@ -638,7 +638,7 @@ class ConfigEditor(object):
         :param xmlfile: the XML file path used to locate the scenario component
         :return: none
         """
-        xmlfile = xmlfile.replace('\\', '/')
+        xmlfile = unixPath(xmlfile)
         _echo("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 

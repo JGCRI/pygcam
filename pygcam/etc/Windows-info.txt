@@ -10,7 +10,6 @@ To use pygcam and use it in development as well:
 
     mkdir repo         # the name and location are up to you
 
-
 - Change into the directory you made and clone the pygcam repository:
 
     cd {REPO}
@@ -61,9 +60,19 @@ To run a python script without typing the .py:
 
 Modify the PATHEXT variable to include Python scripts, e.g.:
 
-PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY
 
-# Do these to cause .py files to be run by python
+- Open Start Menu
+- Right click on Computer -> Properties
+- In the window that opens, select 'Advance system settings'
+- Authenticate as administrator if necessary
+- In the System Properties window that opens, click the "Environment Variables" button
+- In the lower pane (System variables), scroll to PATHEXT, select it, and click "Edit"
+- Add to the end:  ;.PY
+- It should look like this:
+
+    .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY
+
+# Do these to cause .py files to be run by python (must be administrator)
 assoc .py=Python.File
 ftype Python.File=c:\Users\{USER}\Anaconda2\python.exe "%1" %*
 

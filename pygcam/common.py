@@ -46,6 +46,8 @@ def coercible(value, type):
 
     return value
 
+def unixPath(path):
+    return path.replace('\\', '/')
 
 def shellCommand(command, shell=True, raiseError=True):
     """
