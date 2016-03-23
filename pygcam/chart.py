@@ -8,12 +8,11 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-import sys
 import argparse
 import numpy as np
 from .log import getLogger
+from .error import PygcamException
 from .query import readConfigFiles, dropExtraCols, readCsv
-from .config import DEFAULT_SECTION
 
 #%matplotlib inline
 
@@ -142,7 +141,6 @@ def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=
 
     sns.axlabel(xlabel, ylabel)
     legendY = -0.6 if legendY is None else legendY
-    #print "1. legendY is %f" % legendY
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
 
     plt.xticks(rotation=rotation)
@@ -325,8 +323,7 @@ def chartGCAM(args, num=None, negate=False, fuelEJ=None):
 
         outFile = os.path.join(outputDir, imgFile)
 
-    if verbose:
-        print "Generating", os.path.abspath(outFile)
+    _logger.debug("Generating %s", os.path.abspath(outFile))
 
     if args.years:
         yearStrs = args.years.split('-')
@@ -346,7 +343,7 @@ def chartGCAM(args, num=None, negate=False, fuelEJ=None):
     yearCols = filter(str.isdigit, df.columns)
 
     if multiplier:
-        #print "Multiplying all values by %.3f for %s" % (multiplier, os.path.basename(csvFile))
+        _logger.debug("Multiplying all values by %.3f for %s", multiplier, os.path.basename(csvFile))
         df[yearCols] *= multiplier
 
     # TBD: this is application specific. Move it where?
@@ -437,7 +434,7 @@ def getFuelEJ(fuelFile):
 
     return fuelEJ
 
-def driver(mainArgs):
+def driver(mainArgs, tool, parser):
     # Do these slow imports after parseArgs so "-h" responds quickly
     import matplotlib.pyplot as plt
     import matplotlib.ticker as tkr
@@ -448,8 +445,7 @@ def driver(mainArgs):
     readConfigFiles(mainArgs.configSection)
 
     if not mainArgs.fromFile and mainArgs.csvFile == '*null*':
-        print "Must specify a CSV file or use -f flag to read arguments from a file"
-        sys.exit(-1)
+        raise PygcamException("Must specify a CSV file or use -f flag to read arguments from a file")
 
     os.chdir(mainArgs.workingDir)
 
@@ -492,15 +488,13 @@ def driver(mainArgs):
                     return
 
                 line = line.format(**substDict)
-                # if mainArgs.verbose:
-                #     print line
                 fileArgs = shlex.split(line)
 
                 argsNS = argparse.Namespace()
                 for key, value in argDict.iteritems():
                     setattr(argsNS, key, value)
 
-                allArgs = parseArgs(args=fileArgs, namespace=argsNS)            # TBD...
+                allArgs = parser.parse_args(args=fileArgs, namespace=argsNS)
                 fuelEJ = getFuelEJ(allArgs.fuelFile)
 
                 # do this in addition to standard figure. Don't *also* negate since fuelEJ may be + or -.
