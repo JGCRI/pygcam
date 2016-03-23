@@ -177,15 +177,17 @@ _ProjectSection = None
 def configLoaded():
     return bool(_ConfigParser)
 
-def getConfig(section=DEFAULT_SECTION):
+def getConfig(section=DEFAULT_SECTION, reload=False):
     """
     Return the configuration object. If one has been created already via
-    `readConfigFiles`, it is returned; otherwise a new one is created and
-    the configuration files are read.
+    `readConfigFiles`, it is returned, unless force == True; otherwise
+    a new one is created and the configuration files are read.
 
+    :param section: (str) the name of a section to read from
+    :param reload: (bool) if True, re-read the config section
     :return: a `SafeConfigParser` instance.
     """
-    if _ConfigParser:
+    if not reload and _ConfigParser:
         return _ConfigParser
 
     return readConfigFiles(section=section)
