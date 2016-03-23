@@ -96,16 +96,18 @@ def getLogger(name):
     return logger
 
 
-def configure():
+def configure(force=False):
     '''
     Do basicConfig setup and configure all known loggers based on the information
-    in the config instance given.
+    in the config instance given. If already configured, just return, unless
+    force == True.
 
+    :param force: (bool) if True, reconfigure the logs even if already configured.
     :return: none
     '''
     global _configured, _logLevel
 
-    if _configured:
+    if not force and _configured:
         return
 
     _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
