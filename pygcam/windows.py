@@ -6,7 +6,7 @@ import platform
 IsWindows = platform.system() == 'Windows'
 
 if IsWindows:
-    print "Loading Windows support functions..."
+    # print "Loading Windows support functions..."
 
     import os
     import ctypes
