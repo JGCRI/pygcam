@@ -130,7 +130,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     """
     import pandas as pd
 
-    _logger.debug("    Reading", filename)
+    _logger.debug("    Reading %s", filename)
     try:
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
     except IOError, e:
