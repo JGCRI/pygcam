@@ -35,7 +35,7 @@ class Plugin(PluginBase):
 
     # TODO: TEST
 
-    def run(self, args):
+    def run(self, args, tool):
         #getConfig(DEFAULT_SECTION)
 
         # If not passed on command-line, read from config file
@@ -71,6 +71,6 @@ class Plugin(PluginBase):
 
         # TBD: Need to make PluginManager command instances available by name
 
-        self.chartParser = PluginBase.getInstance('chart')
+        self.chartParser = PluginBase.getParser('chart')
         chartArgs = self.chartParser.parse_args(namespace=Namespace(**argDict))
         self.chartCmd.run(chartArgs)

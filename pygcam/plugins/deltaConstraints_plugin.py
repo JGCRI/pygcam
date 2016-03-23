@@ -83,7 +83,7 @@ class Plugin(PluginBase):
         return parser
 
 
-    def run(self, args):
+    def run(self, args, tool):
         genDeltaConstraints(**vars(args))
 
 # Alternative to naming class 'Plugin':

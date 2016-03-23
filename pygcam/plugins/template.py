@@ -22,7 +22,7 @@ class Plugin(PluginBase):
         return parser
 
 
-    def run(self, args):
+    def run(self, args, tool):
         pass
 
 # Alternative to naming class 'Plugin':

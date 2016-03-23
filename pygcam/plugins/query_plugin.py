@@ -91,7 +91,7 @@ class QueryCommand(PluginBase):
 
         return parser
 
-    def run(self, args):
+    def run(self, args, tool):
         pygcam.query.main(args)
 
 

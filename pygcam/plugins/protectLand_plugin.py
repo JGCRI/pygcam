@@ -87,7 +87,7 @@ class Plugin(PluginBase):
         return parser   # for auto-doc generation
 
 
-    def run(self, args):
+    def run(self, args, tool):
         driver(args)
 
 

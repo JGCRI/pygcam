@@ -219,8 +219,8 @@ class ChartCommand(PluginBase):
         return parser
 
 
-    def run(self, args):
-        driver(args)
+    def run(self, args, tool):
+        driver(args, tool, self.parser)
 
 
 PluginClass = ChartCommand

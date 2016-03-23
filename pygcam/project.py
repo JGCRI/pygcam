@@ -11,10 +11,11 @@
 import os
 import sys
 import argparse
+import shlex
 from os.path import join, normpath
 from lxml import etree as ET
-from .config import readConfigFiles, getParam
-from .common import getTempFile, flatten, shellCommand, getBooleanXML
+from .config import getParam
+from .common import getTempFile, flatten, shellCommand, getBooleanXML, unixPath
 from .error import PygcamException
 from .log import getLogger
 
@@ -103,6 +104,7 @@ class TmpFile(object):
 
     def write(self, argDict):
         path = getTempFile('.txt', tmpDir=self.dir)
+        path = unixPath(path)
         if self.delete:
             self.FilesToDelete.append(path)
 
@@ -160,7 +162,7 @@ class Step(object):
         return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
                (self.name, self.seq, self.runFor, self.command)
 
-    def run(self, project, baseline, scenario, argDict, args, noRun=False):
+    def run(self, project, baseline, scenario, argDict, tool, noRun=False):
         runFor = self.runFor
         isBaseline = (baseline == scenario.name)
         isPolicy = not isBaseline
@@ -181,7 +183,11 @@ class Step(object):
         _logger.info("[%s, %s, %s] %s", scenario.name, self.seq, self.name, command)
 
         if not noRun:
-            shellCommand(command)
+            if command[0] == '@':       # run internally in gcamtool
+                argList = shlex.split(command[1:])
+                tool.run(argList=argList)
+            else:
+                shellCommand(command)
 
 class Variable(object):
     """
@@ -404,7 +410,7 @@ class Project(object):
             raise PygcamException("Requested %s do not exist in project '%s', group '%s': %s" % \
                                   (argName, self.projectName, self.scenarioGroupName, s))
 
-    def run(self, scenarios, steps, args):
+    def run(self, scenarios, steps, args, tool):
         """
         Command templates can include keywords curly braces that are substituted
         to create the command to execute in the shell. Variables are defined in
@@ -413,12 +419,12 @@ class Project(object):
         # Get the text values for all variables
         self.argDict = argDict = Variable.getDict()
 
-        xmlSrc = normpath(argDict['xmlsrc'])
+        xmlSrc = argDict['xmlsrc']
         argDict['project']       = self.projectName
         argDict['projectSubdir'] = subdir = self.subdir
-        argDict['projectSrcDir'] = projectSrcDir = join(xmlSrc, subdir)
-        argDict['projectWsDir']  = projectWsDir  = join(argDict['workspaceRoot'], subdir)
-        argDict['projectXmlDir'] = projectXmlDir = join(argDict['localXml'], subdir)
+        argDict['projectSrcDir'] = projectSrcDir = unixPath(join(xmlSrc, subdir))
+        argDict['projectWsDir']  = projectWsDir  = unixPath(join(argDict['workspaceRoot'], subdir))
+        argDict['projectXmlDir'] = projectXmlDir = unixPath(join(argDict['localXml'], subdir))
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
         argDict['scenarioGroup'] = self.scenarioGroupName
@@ -451,11 +457,11 @@ class Project(object):
             # These get reset as each scenario is processed
             argDict['scenario'] = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir
-            argDict['scenarioSrcDir'] = join(projectSrcDir, scenario.subdir)
-            argDict['scenarioXmlDir'] = join(projectXmlDir, scenarioName)
-            argDict['scenarioWsDir'] = scenarioWsDir = join(projectWsDir, scenarioName)
-            argDict['diffsDir'] = join(scenarioWsDir, 'diffs')
-            argDict['batchDir'] = join(scenarioWsDir, 'batch-' + scenarioName)
+            argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir))
+            argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
+            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(projectWsDir, scenarioName))
+            argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
+            argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
             # variables indicated in <tmpFile>. This is in the scenario loop so run-time
@@ -469,7 +475,7 @@ class Project(object):
                 for step in self.sortedSteps:
                     if step.name in steps:
                         argDict['step'] = step.name
-                        step.run(self, baseline, scenario, argDict, args, noRun=args.noRun)
+                        step.run(self, baseline, scenario, argDict, tool, noRun=args.noRun)
             except PygcamException as e:
                 if quitProgram:
                     raise
@@ -560,7 +566,7 @@ def parseArgs(program, version, args=None):
     return args
 
 
-def driver(args):
+def driver(args, tool):
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
@@ -573,12 +579,12 @@ def driver(args):
     #     project.dump(steps, scenarios)
 
     try:
-        project.run(scenarios, steps, args)
+        project.run(scenarios, steps, args, tool)
     finally:
         TmpFile.deleteFiles()
 
 
-def main(program, version):
-    args = parseArgs(program, version)
-    readConfigFiles(args.project)
-    driver(args)
+# def main(program, version):
+#     args = parseArgs(program, version)
+#     readConfigFiles(args.project)
+#     driver(args)

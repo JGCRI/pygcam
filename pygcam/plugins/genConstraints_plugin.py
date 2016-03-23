@@ -78,7 +78,7 @@ class Plugin(PluginBase):
         return parser
 
 
-    def run(self, args):
+    def run(self, args, tool):
         genBioConstraints(**vars(args))
 
 

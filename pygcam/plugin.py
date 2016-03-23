@@ -12,6 +12,8 @@ from abc import ABCMeta, abstractmethod
 from pygcam.common import loadModuleFromPath
 from pygcam.error import PygcamException
 
+BuiltinSubCommands = []
+
 class PluginBase(object):
     """
     Abstract base class for sub-commands. Defines the protocol expected by ``gcamtool``
@@ -27,16 +29,16 @@ class PluginBase(object):
     """
     __metaclass__ = ABCMeta
 
-    Instances = {}
+    Parsers = {}
 
     @classmethod
-    def getInstance(cls, name):
-        return cls.Instances[name]
+    def getParser(cls, name):
+        return cls.Parsers[name]
 
     def __init__(self, name, kwargs, subparsers):
         self.name = name
         self.parser = subparsers.add_parser(self.name, **kwargs)
-        self.Instances[self.name] = self.parser
+        self.Parsers[self.name] = self.parser
         self.addArgs()
 
     @abstractmethod
@@ -44,13 +46,14 @@ class PluginBase(object):
         pass
 
     @abstractmethod
-    def run(self, args):
+    def run(self, args, tool):
         """
         Perform the function intented by the ``PluginBase`` subclass. This function
         is invoked by ``gcamtool`` on the ``PluginBase`` instance whose name matches the
         given sub-command.
 
         :param args: the argument dictionary
+        :param tool: the instantiated pygcam.gcamtool.GcamTool
         :return: nothing
         """
         pass
@@ -67,8 +70,14 @@ class PluginManager(object):
        identifies a directory which is then treated as described above
        for the `dirs` argument.
     """
+    Instances = {}          # Deprecated?
+
+    @classmethod
+    def getPlugin(cls, name):
+        return cls.Instances.get(name, None)
+
     def __init__(self, dirs=[], path=None):
-        items = path.split(';') if path else []
+        items = path.split(';') if path else []     # TBD: document use of ';' rather than ':'
 
         moduleDir = os.path.dirname(os.path.abspath(__file__))
         pluginDir = os.path.join(moduleDir, 'plugins')
@@ -76,12 +85,13 @@ class PluginManager(object):
         self.pluginDirs = dirs + items + [pluginDir]
         self.plugins = None
 
-    def loadPlugin(self, path):
+    def loadPlugin(self, path, subparsers):
         """
         Load the plugin at `path`.
 
         :param path: (str) the pathname of a plugin file.
-        :return: the ``PluginBase`` subclass defined in `path`
+        :param subparsers: instance of argparse.parser.add_subparsers
+        :return: an instance of the ``PluginBase`` subclass defined in `path`
         """
         def getModObj(mod, name):
             return getattr(mod, name) if name in mod.__dict__ else None
@@ -91,29 +101,19 @@ class PluginManager(object):
         if not pluginClass:
             raise PygcamException('Neither PluginClass nor class Plugin are defined in %s' % path)
 
-        return pluginClass
+        plugin = pluginClass(subparsers)
+        self.Instances[plugin.name] = plugin
 
-    def loadPlugins(self):
+    def loadPlugins(self, subparsers):
         """
         Load plugins from the list of directories calculated in
-        ``PluginBase.__init__()``.
+        ``PluginBase.__init__()`` and instantiate them.
 
-        :return: a list of loaded (but not instantiated) ``BasePlugin`` subclasses
+        :return: None
         """
         plugins = []
         for d in self.pluginDirs:
             pattern = os.path.join(d, '*_plugin.py')
-            plugins += map(self.loadPlugin, glob(pattern))
+            plugins += map(lambda path: self.loadPlugin(path, subparsers), glob(pattern))
 
         self.plugins = plugins
-        return plugins
-
-
-if __name__ == '__main__':
-    from pygcam.config import getParam, getConfig
-    getConfig('DEFAULT')
-
-    pluginPath = getParam('GCAM.PluginPath')
-    mgr = PluginManager(path=pluginPath)
-    classes = mgr.loadPlugins()
-    print("Plugin classes: %s" % classes)

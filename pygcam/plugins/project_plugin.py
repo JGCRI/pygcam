@@ -67,7 +67,7 @@ class ProjectCommand(PluginBase):
         return parser   # for auto-doc generation
 
 
-    def run(self, args):
-        driver(args)
+    def run(self, args, tool):
+        driver(args, tool)
 
 PluginClass = ProjectCommand
