@@ -1,6 +1,7 @@
 '''
   .. Stuff specific to MS Windows
 '''
+import os
 import platform
 
 IsWindows = platform.system() == 'Windows'
@@ -8,7 +9,6 @@ IsWindows = platform.system() == 'Windows'
 if IsWindows:
     # print "Loading Windows support functions..."
 
-    import os
     import ctypes
     import win32file
     from .common import mkdirs

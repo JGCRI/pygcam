@@ -96,7 +96,7 @@ def getLogger(name):
     return logger
 
 
-def configure(force=False):
+def configureLogs(force=False):
     '''
     Do basicConfig setup and configure all known loggers based on the information
     in the config instance given. If already configured, just return, unless
@@ -126,7 +126,7 @@ def setLevel(level):
     '''
     Set the logging level for all defined loggers.
 
-    :param level: (str) one of ``{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'}``
+    :param level: (str) one of ``{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'}`` (case insensitive)
     :return: none
     '''
     global _logLevel
@@ -138,10 +138,10 @@ def setLevel(level):
 
 def resetLevel():
     '''
-    Set the log level to the current value of Core.LogLevel, which may be
-    different once the default app name has been set. (Just a corner-case
-    in the "new" sub-command which calls configure before setting the new
-    app name.)
+    Set the log level to the current value of GCAM.LogLevel, which may be
+    different once the default project name has been set.
+
+    :return: none
     '''
     level = getParam('GCAM.LogLevel', default='ERROR').upper()
     setLevel(level)

@@ -900,7 +900,7 @@ class ConfigEditor(object):
         :return: none
         """
         if Verbosity:
-            from .constraints import printSeries
+            from .common import printSeries
 
             _echo("Set share-weights for (%s, %s, %s) for %s" % \
                   (region, sector, stubTechnology, self.name))

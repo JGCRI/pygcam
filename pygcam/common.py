@@ -11,9 +11,9 @@ import os
 import subprocess
 import sys
 from itertools import chain
-from pygcam.config import getParam
-from pygcam.error import PygcamException
-from pygcam.log import getLogger
+from .config import getParam
+from .error import PygcamException
+from .log import getLogger, getLevel
 
 _logger = getLogger(__name__)
 
@@ -234,6 +234,16 @@ def loadObjectFromPath(objName, modulePath, required=True):
 #
 #     except ImportError:
 #         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
+
+
+def printSeries(series, label):
+    if getLevel() == 'DEBUG':
+        import pandas as pd
+
+        df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
+        df.columns = [label]
+        pd.set_option('precision', 5)
+        print df.T
 
 
 FT_DIESEL_MJ_PER_GAL   = 130.4
