@@ -1,12 +1,12 @@
-from pygcam.plugin import PluginBase
-import pygcam.query
-from pygcam.config import DEFAULT_SECTION
+from pygcam.subcommand import SubcommandABC
+from pygcam.query import main as queryMain
 from pygcam.log import getLogger
+
 _logger = getLogger(__name__)
 
 VERSION = '0.2'
 
-class QueryCommand(PluginBase):
+class QueryCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'fromfile_prefix_chars' : '@',      # use "@" before value to substitute contents of file as arguments
 
@@ -35,22 +35,16 @@ class QueryCommand(PluginBase):
                   to the directory holding your Main_User_Workspace unless it happens to live in
                   ~/GCAM, which is the default value.'''}
 
-        super(QueryCommand, self).__init__('query', kwargs, subparsers)
+        super(QueryCommand, self).__init__('query', subparsers, kwargs)
 
-    def addArgs(self):
-        parser = self.parser
-
-        parser.add_argument('queryName', type=str, nargs='*',
+    def addArgs(self, parser):
+        parser.add_argument('queryName', nargs='*',
                             help='''A file or files, each holding an XML query to run. (The ".xml" suffix will be added if needed.)
                                     If an argument is preceded by the "@" sign, it is read and its contents substituted as the
                                     values for this argument. That means you can store queries to run in a file (one per line) and
                                     just reference the file by preceding the filename argument with "@".''')
 
-        parser.add_argument('-c', '--configSection', type=str, default=DEFAULT_SECTION,
-                            help='''The name of the section in the config file to read from.
-                            Defaults to %s''' % DEFAULT_SECTION)
-
-        parser.add_argument('-d', '--xmldb', type=str,
+        parser.add_argument('-d', '--xmldb',
                              help='''The XML database to query (default is value of GCAM.DbFile, in the GCAM.Workspace's
                              "output" directory. Overrides the -w flag.''')
 
@@ -58,7 +52,7 @@ class QueryCommand(PluginBase):
                             help='''Don't delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.''')
 
-        parser.add_argument('-R', '--regionMap', type=str,
+        parser.add_argument('-R', '--regionMap',
                             help='''A file containing tab-separated pairs of names, the first being a GCAM region
                                     and the second being the name to map this region to. Lines starting with "#" are
                                     treated as comments. Lines without a tab character are also ignored. This arg
@@ -67,24 +61,24 @@ class QueryCommand(PluginBase):
         parser.add_argument('-n', '--noRun', action="store_true",
                             help="Show the command to be run, but don't run it")
 
-        parser.add_argument('-o', '--outputDir', type=str,
+        parser.add_argument('-o', '--outputDir',
                              help='Where to output the result (default taken from config parameter "GCAM.OutputDir")')
 
-        parser.add_argument('-Q', '--queryPath', type=str, default=None,
+        parser.add_argument('-Q', '--queryPath',
                             help='''A semicolon-delimited list of directories or filenames to look in to find query files.
                                     Defaults to value of config parameter GCAM.QueryPath''')
 
-        parser.add_argument('-r', '--regions', type=str, default=None,
+        parser.add_argument('-r', '--regions',
                             help='''A comma-separated list of regions on which to run queries found in query files structured
                                     like Main_Queries.xml. If not specified, defaults to querying all 32 regions.''')
 
-        parser.add_argument('-s', '--scenario', type=str, default='Reference',
+        parser.add_argument('-s', '--scenario', default='Reference',
                             help='''A comma-separated list of scenarios to run the query/queries for (default is "Reference")
                                     Note that these refer to a scenarios in the XML database.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
-        parser.add_argument('-w', '--workspace', type=str, default='',
+        parser.add_argument('-w', '--workspace', default='',
                             help='''The workspace directory in which to find the XML database.
                                     Defaults to value of config file parameter GCAM.Workspace.
                                     Overridden by the -d flag.''')
@@ -92,7 +86,7 @@ class QueryCommand(PluginBase):
         return parser
 
     def run(self, args, tool):
-        pygcam.query.main(args)
+        queryMain(args)
 
 
 PluginClass = QueryCommand

@@ -1,33 +1,26 @@
-from pygcam.plugin import PluginBase
-from pygcam.config import DEFAULT_SECTION
-from pygcam.log import getLogger
+from pygcam.subcommand import SubcommandABC
 from pygcam.constraints import genBioConstraints, DefaultCellulosicCoefficients, DefaultYears
 
-_logger = getLogger(__name__)
+#from pygcam.log import getLogger
+#_logger = getLogger(__name__)
 
 VERSION = "0.1"
 
-class Plugin(PluginBase):
+class GenConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Bioenergy constraint generator''',
                   'description' : '''Longer description for sub-command'''}
 
-        super(Plugin, self).__init__('bioConstraint', kwargs, subparsers)
+        super(GenConstraintsCommand, self).__init__('bioConstraint', subparsers, kwargs)
 
-    def addArgs(self):
-        parser = self.parser
-
-        parser.add_argument('-a', '--configSection', type=str, default=DEFAULT_SECTION,
-                            help='''The name of the section in the config file to read from.
-                            Defaults to %s''' % DEFAULT_SECTION)
-
+    def addArgs(self, parser):
         parser.add_argument('-b', '--biomassPolicyType', default='tax',
                              help='Regional biomass policy type: must be one of {subs, tax}')
 
         parser.add_argument('-B', '--baseline', default=None,
                             help='The baseline on which the policy scenario is based')
 
-        parser.add_argument('-c', '--coefficients', type=str, default=None,
+        parser.add_argument('-c', '--coefficients',
                             help='''A comma-separated string of year:coefficient pairs. This
                             sets the cellulosic ethanol conversion coefficients. Defaults to
                             standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
@@ -51,10 +44,10 @@ class Plugin(PluginBase):
         parser.add_argument('-p', '--purposeGrownPolicyType', default='subs',
                              help='Purpose-grown biomass policy type: must be one of {subs, tax}')
 
-        parser.add_argument('-P', '--policy', default=None,
+        parser.add_argument('-P', '--policy',
                             help='The policy scenario name')
 
-        parser.add_argument('-R', '--resultsDir', default=None,
+        parser.add_argument('-R', '--resultsDir',
                             help='The parent directory holding the GCAM output workspaces')
 
         parser.add_argument('-s', '--switchgrass', action='store_true',
@@ -63,12 +56,9 @@ class Plugin(PluginBase):
         parser.add_argument('-S', '--subdir', default='',
                              help='Sub-directory for local-xml files, if any')
 
-        parser.add_argument('-v', '--verbose', action='store_true',
-                             help="Show diagnostic messages")
-
         parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
 
-        parser.add_argument('-x', '--xmlOutputDir', default=None,
+        parser.add_argument('-x', '--xmlOutputDir',
                              help='''The directory into which to generate XML files. Defaults to
                              policy name in the current directory.''')
 
@@ -82,4 +72,4 @@ class Plugin(PluginBase):
         genBioConstraints(**vars(args))
 
 
-# PluginClass = MyPluginClassName
+PluginClass = GenConstraintsCommand

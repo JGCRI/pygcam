@@ -1,29 +1,26 @@
-from pygcam.plugin import PluginBase
-from pygcam.config import DEFAULT_SECTION
-from pygcam.log import getLogger
-from pygcam.constraints import (DefaultCellulosicCoefficients, DefaultName, PolicyChoices,
-                                DefaultTag, DefaultYears, genDeltaConstraints)
+from pygcam.subcommand import SubcommandABC
+from pygcam.constraints import (DefaultCellulosicCoefficients, DefaultYears, genDeltaConstraints)
 
-_logger = getLogger(__name__)
+#from pygcam.log import getLogger
+#_logger = getLogger(__name__)
 
 VERSION = "0.1"
 
-class Plugin(PluginBase):
+DefaultName  = 'cellulosic ethanol'
+DefaultTag   = 'cell-etoh'
+PolicyChoices = ['tax', 'subsidy']
+
+
+class DeltaConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Specify incremental values to add to the production of a given fuel,
                               by year, and generate the corresponding constraint file.''',
                   'description' : '''Longer description for sub-command'''}
 
-        super(Plugin, self).__init__('deltaConstraint', kwargs, subparsers)
+        super(DeltaConstraintsCommand, self).__init__('deltaConstraint', subparsers, kwargs)
 
-    def addArgs(self):
-        parser = self.parser
-
-        parser.add_argument('-a', '--configSection', type=str, default=DEFAULT_SECTION,
-                            help='''The name of the section in the config file to read from.
-                            Defaults to %s''' % DEFAULT_SECTION)
-
-        parser.add_argument('-c', '--coefficients', type=str, default=None,
+    def addArgs(self, parser):
+        parser.add_argument('-c', '--coefficients',
                             help='''A comma-separated string of year:coefficient pairs. This
                             sets the cellulosic ethanol conversion coefficients. Defaults to
                             standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
@@ -68,12 +65,9 @@ class Plugin(PluginBase):
         parser.add_argument('-T', '--policyType', choices=PolicyChoices, default='tax',
                              help='Type of policy to use for the fuel. Default is tax.')
 
-        parser.add_argument('-v', '--verbose', action='store_true',
-                             help="Show diagnostic messages")
-
         parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
 
-        parser.add_argument('-x', '--xmlOutputDir', default=None,
+        parser.add_argument('-x', '--xmlOutputDir',
                              help='''The directory into which to generate XML files.
                              Defaults to policy name in the current directory.''')
 
@@ -86,5 +80,5 @@ class Plugin(PluginBase):
     def run(self, args, tool):
         genDeltaConstraints(**vars(args))
 
-# Alternative to naming class 'Plugin':
-# PluginClass = MyPluginClassName
+
+PluginClass = DeltaConstraintsCommand
