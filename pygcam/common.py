@@ -168,7 +168,7 @@ def mkdirs(newdir, mode=0o770):
         if e.errno != EEXIST:
             raise
 
-def loadModuleFromPath(modulePath):
+def loadModuleFromPath(modulePath, raiseOnError=True):
     '''
     The load a module from a '.py' or '.pyc' file from a path that ends in the
     module name, i.e., from "foo/bar/Baz.py", the module name is 'Baz'.
@@ -179,7 +179,7 @@ def loadModuleFromPath(modulePath):
     base       = os.path.basename(modulePath)
     moduleName = base.split('.')[0]
 
-    #logger.info('loading module %s' % base)
+    _logger.debug('loading module %s' % base)
 
     # Load the compiled code if it's a '.pyc', otherwise load the source code
     module = None
@@ -192,9 +192,10 @@ def loadModuleFromPath(modulePath):
             raise Exception('Unknown module type (%s): file must must be .py or .pyc' % modulePath)
 
     except Exception, e:
-        errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
-        #logger.error(errorString)
-        raise PygcamException(errorString)
+        if raiseOnError:
+            #logger.error(errorString)
+            errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
+            raise PygcamException(errorString)
 
     return module
 
