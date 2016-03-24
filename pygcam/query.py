@@ -444,6 +444,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
                 map(m.write, f.readlines())
 
     if miLogFile:
+        mkdirs(os.path.dirname(miLogFile))
         copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
         copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
 
