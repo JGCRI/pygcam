@@ -66,6 +66,9 @@ GCAM.SourceWorkspace =
 GCAM.LocalXml = %(GCAM.RunWorkspaceRoot)s/local-xml
 GCAM.DynXml   = %(GCAM.RunWorkspaceRoot)s/dyn-xml
 
+# This project is used if '-p' flag not given to gcamtool
+GCAM.DefaultProject =
+
 # The location of the default input file for runProject.py
 GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
 
@@ -84,7 +87,9 @@ GCAM.DbFile	  = database_basexdb
 GCAM.QueryPath = %(GCAM.RefWorkspace)s/output/queries/Main_Queries.xml
 
 # Where to find plug-ins. Internal plugin directory is added automatically.
-# Use this to add custom plug-ins outside the pygcam source tree.
+# Use this to add custom plug-ins outside the pygcam source tree. The value
+# is a semicolon (';') delimited string of directories to search for files
+# matching the pattern '*_plugin.py'
 GCAM.PluginPath =
 
 # Columns to drop when processing results of XML batch queries
