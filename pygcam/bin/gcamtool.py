@@ -11,13 +11,13 @@
 
 import sys
 from pygcam.config import getConfig
-from pygcam.log import getLogger, setLevel, configureLogs
+from pygcam.log import getLogger, configureLogs
 from pygcam.tool import GcamTool, PROGRAM
 
 _logger = getLogger(__name__)
 
 def main():
-    # Use default section to read plugin path initially.
+    # Use default section initially, to read plugin path.
     # It's a chicken-and-egg problem since we can't parse args
     # until we've loaded all the plugins. Thus we can't use
     # the 'project' arg until we've already loaded them.
@@ -26,12 +26,6 @@ def main():
 
     tool = GcamTool()
     args = tool.parser.parse_args()
-
-    if args.configSection:
-        getConfig(section=args.configSection, reload=True)
-        if args.logLevel:
-            setLevel(args.logLevel)
-        configureLogs(force=True)
 
     tool.run(args=args)
 

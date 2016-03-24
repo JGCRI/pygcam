@@ -179,6 +179,9 @@ _ConfigParser = None
 # This is set in readConfigFiles
 _ProjectSection = None
 
+def getSection():
+    return _ProjectSection
+
 def configLoaded():
     return bool(_ConfigParser)
 

@@ -20,7 +20,7 @@ from .project import ProjectCommand
 from .query import QueryCommand
 from .run import GcamCommand
 from .config import DEFAULT_SECTION, getConfig, getParam
-from .log import getLogger
+from .log import getLogger, setLevel, configureLogs
 
 _logger = getLogger(__name__)
 
@@ -140,14 +140,18 @@ class GcamTool(object):
             args = self.parser.parse_args(args=argList)
         else:
             # top-level call
-            self.section  = args.configSection or getParam('GCAM.DefaultProject')
-            self.logLevel = args.logLevel
 
-        cmd = args.subcommand
-        del args.subcommand
+            if args.configSection:
+                getConfig(section=args.configSection, reload=True)
 
-        # Run the sub-command
-        obj = self.getPlugin(cmd)
+            logLevel = args.logLevel or getParam('GCAM.LogLevel')
+            if logLevel:
+                setLevel(logLevel)
+
+            configureLogs(force=True)
+
+        # Get the sub-command and run it with the given args
+        obj = self.getPlugin(args.subcommand)
         obj.run(args, self)
 
 
