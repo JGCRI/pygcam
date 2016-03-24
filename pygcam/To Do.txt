@@ -1,29 +1,19 @@
 Test
 ----
-- logging
 - write unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
 - Changes to setup.py and related bits
-- Charting -- figure out what to do with calling parseArgs inside loop
-- Test scripts on Windows
 
 Cleanup
 -------
-- Remove args parsing from pygcam modules in favor of having it in plugins
-- BatchQuery class deprecated?
 - Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
 - chart.py has some app-specific code. refactor it.
 - Learn how to insert documentation amidst argparse-generated docs.
     - Link to XML documentation for project, landProtection, etc.
-    - Put all XML doc in one file?
 
 Features
 --------
-- Load only required plugins?
-    - Have filename be name of command, e.g., "query" => query_plugin.py; load first one found
-    - Only load all plugins if the main help command is run (?)
-
 - Flag to XML-based commands to just validate input file without other action
 
 - Generalize as many of the Bioenergy and Refining methods as possible
@@ -37,8 +27,23 @@ Document
 - Plugin protocol
     - class 'Plugin' or variable PluginClass which identifies classname
     - addArgs()
-    - run(args)
+    - run(args, tool)
     - when it gets loaded and run
     - plugins should use logging
 
 - Assumptions behind setup code
+
+==============
+- Test diff cmd
+- Test constraint cmds
+- Test land protection cmd
+    - Simplify to eliminate complicated cmdline opts?
+- Should constraint commands remain plugins?
+    - They're for use by biofuel studies only?
+    - If so, setup.py can call these by importing them directly.
+    - Perhaps split out generic function from domain-specific
+- Elim. builtin plugins dir?
+- Update documentation
+    - Write up rest of Windows notes
+- Update project.xml in gcam-proj
+- Test everything again on Windows

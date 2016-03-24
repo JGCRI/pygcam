@@ -10,7 +10,7 @@ Command-line usage is described below.
 Usage
 -----
 .. argparse::
-   :module: pygcam.bin.gcamtool
+   :module: pygcam.tool
    :func: _getMainParser
    :prog: gcamtool.py
 
