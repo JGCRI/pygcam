@@ -10,14 +10,16 @@
 import os
 import re
 import subprocess
-
-from .log import getLogger
 from .common import getTempFile, mkdirs, ensureExtension
-from .Xvfb import Xvfb
-from .config import getParam, getParamAsBoolean, readConfigFiles
 from .error import PygcamException, ConfigFileError, FileFormatError
+from .log import getLogger
+from .Xvfb import Xvfb
+from .config import getParam, getParamAsBoolean
+from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
+
+VERSION = '0.2'
 
 GCAM_32_REGIONS = [
     'Africa_Eastern',
@@ -130,7 +132,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     """
     import pandas as pd
 
-    _logger.debug("    Reading %s", filename)
+    _logger.debug("Reading %s", filename)
     try:
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
     except IOError, e:
@@ -247,32 +249,6 @@ def dropExtraCols(df, inplace=True):
     resultDF = df.drop(dropCols, axis=1, inplace=inplace)
     return resultDF
 
-def computeDifference(df1, df2):
-    """
-    Compute the difference between two `DataFrames`_.
-
-    :param df1: a `DataFrame`_ instance
-    :param obj2: a `DataFrame`_ instance
-    :return: a `DataFrame`_ with the difference in all the year columns, computed
-      as (df2 - df1).
-    """
-    df1 = df1.dropExtraCols(inplace=False)
-    df2 = df2.dropExtraCols(inplace=False)
-
-    if set(df1.columns) != set(df2.columns):
-        raise PygcamException("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
-                              % (df1.columns, df2.columns))
-
-    yearCols = filter(str.isdigit, df1.columns)
-    nonYearCols = list(set(df1.columns) - set(yearCols))
-
-    df1.set_index(nonYearCols, inplace=True)
-    df2.set_index(nonYearCols, inplace=True)
-
-    # Compute difference for timeseries values
-    diff = df2 - df1
-    return diff
-
 # def batchQueryToFile(scenario, database, queryName, outfile, queryPath=None):
 #     """
 #     Run a query against GCAM's XML database, and save the results
@@ -330,7 +306,8 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None):
     found in an XML query file, extract it to generate a batch query file and
     apply it to the given regions.
     '''
-    items = queryPath.split(';')
+    sep = os.path.pathsep           # ';' on Windows, ':' on Unix
+    items = queryPath.split(sep)
     for item in items:
         if os.path.isdir(item):
             pathname = os.path.join(item, title + '.xml')
@@ -542,20 +519,20 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
 def ensureCSV(file):
     return ensureExtension(file, '.csv')
 
-# def sumYears(files, skiprows=1, interpolate=False):
-#     csvFiles = map(ensureCSV, files)
-#     dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate), csvFiles)
-#
-#     # TBD: preserve columns that have a single value only? Maybe this collapses into sumYearsByGroup()?
-#     for df, fname in zip(dframes, csvFiles):
-#         root, ext = os.path.splitext(fname)
-#         outFile = root + '-sum' + ext
-#         yearCols = filter(str.isdigit, df.columns)
-#
-#         with open(outFile, 'w') as f:
-#             sums = df[yearCols].sum()
-#             csvText = sums.to_csv(None)
-#             f.write("%s\n%s\n" % (label, csvText))
+def sumYears(files, skiprows=1, interpolate=False):
+    csvFiles = map(ensureCSV, files)
+    dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate), csvFiles)
+
+    # TBD: preserve columns that have a single value only? Maybe this collapses into sumYearsByGroup()?
+    for df, fname in zip(dframes, csvFiles):
+        root, ext = os.path.splitext(fname)
+        outFile = root + '-sum' + ext
+        yearCols = filter(str.isdigit, df.columns)
+
+        with open(outFile, 'w') as f:
+            sums = df[yearCols].sum()
+            csvText = sums.to_csv(None)
+            f.write("%s\n%s\n" % (outFile, csvText))
 
 # TBD: pass an output directory?
 def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
@@ -620,173 +597,7 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False):
             worksheet.write_url(1, 0, "internal:index!A1", linkFmt, "Back to index")
 
 
-def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False, percentage=False):
-    refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate)
-
-    with open(outFile, 'w') as f:
-        for otherFile in otherFiles:
-            otherFile = ensureCSV(otherFile)   # add csv extension if needed
-            otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate)
-
-            diff = computeDifference(refDF, otherDF, percentage=percentage)
-
-            csvText = diff.to_csv(None)
-            label = "[%s] minus [%s]" % (otherFile, referenceFile)
-            if percentage:
-                label = "(%s)/%s" % (label, referenceFile)
-            f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
-
-
-def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1,
-                     interpolate=False, percentage=False):
-    import pandas as pd
-
-    with pd.ExcelWriter(outFile, engine='xlsxwriter') as writer:
-        sheetNum = 1
-        _logger.debug("Reading reference file:", referenceFile)
-        refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate)
-
-        for otherFile in otherFiles:
-            otherFile = ensureCSV(otherFile)   # add csv extension if needed
-            _logger.debug("Reading other file:", otherFile)
-            otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate)
-
-            sheetName = 'Diff%d' % sheetNum
-            sheetNum += 1
-
-            diff = computeDifference(refDF, otherDF, percentage=percentage)
-
-            diff.reset_index(inplace=True)      # convert multi-index into regular column values
-            diff.to_excel(writer, index=None, sheet_name=sheetName, startrow=2, startcol=0)
-
-            #workbook  = writer.book
-            #worksheet = workbook.add_worksheet(sheetName)
-            worksheet = writer.sheets[sheetName]
-            label     = "[%s] minus [%s]" % (otherFile, referenceFile)
-            if percentage:
-                label = "(%s)/%s" % (label, referenceFile)
-            worksheet.write_string(0, 0, label)
-
-            startRow = diff.shape[0] + 4
-            worksheet.write_string(startRow, 0, otherFile)
-            startRow += 2
-            otherDF.reset_index(inplace=True)
-            otherDF.to_excel(writer, index=None, sheet_name=sheetName, startrow=startRow, startcol=0)
-
-        dropExtraCols(refDF, inplace=True)
-        _logger.debug("writing DF to excel file", outFile)
-        refDF.to_excel(writer, index=None, sheet_name='Reference', startrow=0, startcol=0)
-
-
-def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv',
-                     skiprows=1, interpolate=False, percentage=False):
-    if ext == '.csv':
-        writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=skiprows,
-                        interpolate=interpolate, percentage=percentage)
-    else:
-        writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=skiprows,
-                         interpolate=interpolate, percentage=percentage)
-
-# TBD: either use this internally or, if no advantage, drop it as unnecessary
-class GcamResult(object):
-#     """
-#     Holds the result of a batch query against GCAM's XML database and provides access
-#     to various methods to manipulate these results. (This class is a object wrapper
-#     around the functions defined in this module.)
-#
-#     :param filename: the path to a .csv file in the usual GCAM format.
-#     :interpolate: if ``True`` annual values are interpolated.
-#     :param years: a sequence of two years (str or int); only in this range (inclusive)
-#       are kept. Data for other years is dropped.
-#     :param interpolate: if ``True``, annual values are linearly interpolated between
-#       timesteps.
-#     :param startYear: If non-zero, begin interpolation at this year, which
-#       must be the name of a column in the `DataFrame`.
-#     :param exitOnError: if ``False``, we trap the error and exit, otherwise we pass
-#           it on.
-#     """
-#     def __init__(self, filename, years=None, interpolate=False, startYear=0):
-#         self.filename = filename
-#         self.df = self.readCsv(filename, years=years, interpolate=interpolate,
-#                                startYear=startYear)
-#
-#     def limitYears(self, years):
-#         """
-#         Modify self.df to drop all years outside the range given by `years`.
-#
-#         :param years: a sequence of two years (str or int); only in this range (inclusive)
-#           are kept. Data for other years is dropped.
-#         :return: none; ``self.df`` is modified in place.
-#         """
-#         limitYears(self.df, years)
-#
-#     def interpolateYears(self, startYear=0, inplace=False):
-#         """
-#         Interpolate linearly between each pair of years in the GCAM output. The
-#         timestep is calculated from the numerical (string) column headings given
-#         in the `DataFrame`_ `df`, which are assumed to represent years in the time-series.
-#         The years to interpolate between are read from `df`, so there's no dependency
-#         on any particular time-step, or even on the time-step being constant.
-#
-#         :param df: a `DataFrame`_ holding data of the format returned by batch queries
-#           on the GCAM XML database
-#         :param startYear: If non-zero, begin interpolation at this year.
-#         :param inplace: If True, modify `self.df` in place; otherwise modify a copy.
-#         :return: if `inplace` is True, `self.df` is returned; otherwise a copy
-#           of `self.df` with interpolated values is returned.
-#         """
-#         return interpolateYears(self.df, startYear=startYear, inplace=inplace)
-#
-#     def readCsv(self, filename, years=years,
-#                 interpolate=interpolate, startYear=startYear):
-#         """
-#         Read a .csv file of the form generated by batch queries on the GCAM
-#         XML database. Basically this is a generic .csv file with an extra
-#         header row. Based on the function :py:func:`readCsv`.
-#
-#         :param filename: the .csv file to read
-#         :param years: a sequence of two years (str or int); only in this range (inclusive)
-#           are kept. Data for other years is dropped.
-#         :param interpolate: if ``True``, annual values are linearly interpolated between
-#           timesteps.
-#         :param startYear: If non-zero, begin interpolation at this year, which
-#           must be the name of a column in the `DataFrame`.
-#         :return: a `DataFrame` containing the data from the .csv file, which is also
-#           stored in `self.df`.
-#         """
-#         self.df = readCsv(filename, years=years, interpolate=interpolate, startYear=startYear)
-#         return self.df
-#
-#     @classmethod
-#     def computeDifference(cls, obj1, obj2):
-#         """
-#         Compute the difference between the `DataFrames`_ in two GcamResult instances.
-#
-#         :param obj1: a `GcamResult` instance
-#         :param obj2: a `GcamResult` instance
-#         :return: a `DataFrame`_ with the difference in all the year columns, computed
-#           as (obj2.df - obj1.df).
-#         """
-#         diff = computeDifference(obj1.df, obj2.df)
-#         return diff
-#
-#     def dropExtraCols(self, inplace=True):
-#         """
-#         Drop some columns that GCAM queries sometimes return, but which we
-#         generally don't need. The columns dropped are ['scenario', 'Notes', 'Date'].
-#         Based on the function :py:func:`dropExtraCols`.
-#
-#         :param inplace: if True, modify `df` in-place; otherwise return a modified copy.
-#         :return: the original `df` (if inplace=True) or the modified copy.
-#         """
-#         df = dropExtraCols(self.df, inplace=inplace)
-#         return df
-    pass
-
-
 def main(args):
-    readConfigFiles(args.configSection)
-
     miLogFile   = getParam('GCAM.ModelInterfaceLogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
     workspace   = args.workspace or getParam('GCAM.RunWorkspaceRoot')
@@ -826,3 +637,86 @@ def main(args):
             runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
                           miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                           noRun=args.noRun, noDelete=args.noDelete)
+
+
+class QueryCommand(SubcommandABC):
+    def __init__(self, subparsers):
+        kwargs = {'fromfile_prefix_chars' : '@',      # use "@" before value to substitute contents of file as arguments
+
+                  'help' : '''Run one or more GCAM database queries by generating and running the
+                  named XML queries.''',
+
+                  'description' : '''Run one or more GCAM database queries by generating and running the
+                  named XML queries. The results are placed in a file in the specified
+                  output directory with a name composed of the basename of the
+                  XML query file plus the scenario name. For example,
+                  "gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region"
+                  would generate query results into the files ./liquids-by-region-MyReference.csv
+                  and ./liquids-by-region-MyPolicyCase.csv.
+
+                  The named queries are located using the value of config variable GCAM.QueryPath,
+                  which can be overridden with the -Q argument. The QueryPath consists of one or
+                  more colon-delimited elements that can identify directories or XML files. The
+                  elements of QueryPath are searched in order until the named query is found. If
+                  a path element is a directory, the filename composed of the query + '.xml' is
+                  sought in that directory. If the path element is an XML file, a query with a
+                  title matching the query name (first literally, then by replacing '_' and '-'
+                  characters with spaces) is sought. Note that query names are case-sensitive.
+
+                  This script populates an initial configuration file in ~/.pygcam.cfg when
+                  first run. The config file should be customized as needed, e.g., to set "GcamRoot"
+                  to the directory holding your Main_User_Workspace unless it happens to live in
+                  ~/GCAM, which is the default value.'''}
+
+        super(QueryCommand, self).__init__('query', subparsers, kwargs)
+
+    def addArgs(self, parser):
+        parser.add_argument('queryName', nargs='*',
+                            help='''A file or files, each holding an XML query to run. (The ".xml" suffix will be added if needed.)
+                                    If an argument is preceded by the "@" sign, it is read and its contents substituted as the
+                                    values for this argument. That means you can store queries to run in a file (one per line) and
+                                    just reference the file by preceding the filename argument with "@".''')
+
+        parser.add_argument('-d', '--xmldb',
+                             help='''The XML database to query (default is value of GCAM.DbFile, in the GCAM.Workspace's
+                             "output" directory. Overrides the -w flag.''')
+
+        parser.add_argument('-D', '--noDelete', action="store_true",
+                            help='''Don't delete any temporary file created by extracting a query from a query file. Used
+                                    mainly for debugging.''')
+
+        parser.add_argument('-R', '--regionMap',
+                            help='''A file containing tab-separated pairs of names, the first being a GCAM region
+                                    and the second being the name to map this region to. Lines starting with "#" are
+                                    treated as comments. Lines without a tab character are also ignored. This arg
+                                    overrides the value of config variable GCAM.RegionMapFile.''')
+
+        parser.add_argument('-n', '--noRun', action="store_true",
+                            help="Show the command to be run, but don't run it")
+
+        parser.add_argument('-o', '--outputDir',
+                             help='Where to output the result (default taken from config parameter "GCAM.OutputDir")')
+
+        parser.add_argument('-Q', '--queryPath',
+                            help='''A semicolon-delimited list of directories or filenames to look in to find query files.
+                                    Defaults to value of config parameter GCAM.QueryPath''')
+
+        parser.add_argument('-r', '--regions',
+                            help='''A comma-separated list of regions on which to run queries found in query files structured
+                                    like Main_Queries.xml. If not specified, defaults to querying all 32 regions.''')
+
+        parser.add_argument('-s', '--scenario', default='Reference',
+                            help='''A comma-separated list of scenarios to run the query/queries for (default is "Reference")
+                                    Note that these refer to a scenarios in the XML database.''')
+
+        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+
+        parser.add_argument('-w', '--workspace', default='',
+                            help='''The workspace directory in which to find the XML database.
+                                    Defaults to value of config file parameter GCAM.Workspace.
+                                    Overridden by the -d flag.''')
+
+        return parser
+
+    def run(self, args, tool):
+        main(args)

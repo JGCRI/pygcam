@@ -10,11 +10,11 @@
 import os
 import argparse
 import numpy as np
-from .log import getLogger
 from .error import PygcamException
-from .query import readConfigFiles, dropExtraCols, readCsv
+from .log import getLogger
+from .config import DEFAULT_SECTION, readConfigFiles
 from .subcommand import SubcommandABC
-from .config import DEFAULT_SECTION
+from .query import dropExtraCols, readCsv
 
 _logger = getLogger(__name__)
 
@@ -438,7 +438,7 @@ def getFuelEJ(fuelFile):
 
     return fuelEJ
 
-def driver(mainArgs, tool, parser):
+def main(mainArgs, tool, parser):
     # Do these slow imports after parseArgs so "-h" responds quickly
     import matplotlib.pyplot as plt
     import matplotlib.ticker as tkr
@@ -721,4 +721,4 @@ class ChartCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        driver(args, tool, self.parser)
+        main(args, tool, self.parser)

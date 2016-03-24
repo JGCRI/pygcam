@@ -13,8 +13,11 @@ import os
 from glob import glob
 from .common import loadModuleFromPath
 from .error import PygcamException
-from .project import ProjectCommand
 from .chart import ChartCommand
+from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
+from .diff import DiffCommand
+from .project import ProjectCommand
+from .query import QueryCommand
 from .run import GcamCommand
 from .config import DEFAULT_SECTION, getConfig, getParam
 from .log import getLogger
@@ -24,8 +27,9 @@ _logger = getLogger(__name__)
 PROGRAM = 'gcamtool'
 VERSION = '0.1'
 
-BuiltinSubcommands = [ChartCommand, GcamCommand, ProjectCommand]
-
+BuiltinSubcommands = [ChartCommand, DiffCommand,
+                      DeltaConstraintsCommand, GenConstraintsCommand,
+                      GcamCommand, ProjectCommand, QueryCommand]
 
 class GcamTool(object):
 
@@ -75,7 +79,8 @@ class GcamTool(object):
 
         pluginPath = getParam('GCAM.PluginPath')
         if pluginPath:
-            items = pluginPath.split(';')
+            sep = os.path.pathsep           # ';' on Windows, ':' on Unix
+            items = pluginPath.split(sep)
             self.loadPlugins(items)
 
         # moduleDir = os.path.dirname(os.path.abspath(__file__))

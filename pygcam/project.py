@@ -10,14 +10,14 @@
 """
 import os
 import sys
-import argparse
 import shlex
-from os.path import join, normpath
+from os.path import join
 from lxml import etree as ET
 from .config import getParam
 from .common import getTempFile, flatten, shellCommand, getBooleanXML, unixPath
 from .error import PygcamException
 from .log import getLogger
+from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -451,7 +451,7 @@ class Project(object):
             scenario = self.scenarioDict[scenarioName]
 
             if not scenario.isActive:
-                _logger.debug("  Skipping inactive scenario: %s", scenarioName)
+                _logger.debug("Skipping inactive scenario: %s", scenarioName)
                 continue
 
             # These get reset as each scenario is processed
@@ -495,78 +495,14 @@ class Project(object):
         for t in self.tmpFiles:
             print "  ", t.varName
 
-def argParser(program='', version=''):
-    parser = argparse.ArgumentParser(
-        prog=program,
-        description='''Perform a series of steps typical for a GCAM-based analysis.
-This script reads instructions from the file project.xml, the
-location of which is taken from the user's ~/.pygcam.cfg file.''')
-
-    parser.add_argument('project', help='''The name of the project to run.''')
-
-    parser.add_argument('-d', '--dump', action='store_true',
-                        help='''List contents of project file''')
-
-    parser.add_argument('-g', '--group', type=str, default=None,
-                        help='''The name of the scenario group to process. If not specified,
-                        the group with attribute default="1" is processed.''')
-
-    parser.add_argument('-G', '--listGroups', action='store_true',
-                        help='''List the scenario groups defined in the project file and exit.''')
-
-    parser.add_argument('-l', '--listSteps', action='store_true', default=False,
-                        help='''List the steps defined for the given project and exit.
-                        Dynamic variables (created at run-time) are not displayed.''')
-
-    parser.add_argument('-L', '--listScenarios', action='store_true', default=False,
-                        help='''List the scenarios defined for the given project and exit.
-                        Dynamic variables (created at run-time) are not displayed.''')
-
-    parser.add_argument('-n', '--noRun', action='store_true', default=False,
-                        help='''Display the commands that would be run, but don't run them.''')
-
-    parser.add_argument('-p', '--projectFile', default=None,
-                        help='''The XML file describing the project. If set, command-line
-                        argument takes precedence. Otherwise, value is taken from config file
-                        variable GCAM.ProjectXmlFile, if defined, otherwise the default
-                        is './project.xml'.''')
-
-    parser.add_argument('-q', '--quit', action='store_true',
-                        help='''Quit if an error occurs when processing a scenario. By default, the
-                        next scenario (if any) is run when an error occurs in a scenario.''')
-
-    parser.add_argument('-s', '--step', dest='steps', action='append',
-                        help='''The steps to run. These must be names of steps defined in the
-                        project.xml file. Multiple steps can be given in a single (comma-delimited)
-                        argument, or the -s flag can be repeated to indicate additional steps.
-                        By default, all steps are run.''')
-
-    parser.add_argument('-S', '--scenario', dest='scenarios', action='append',
-                        help='''Which of the scenarios defined for the given project should
-                        be run. Multiple scenarios can be given in a single (comma-delimited)
-                        argument, or the -S flag can be repeated to indicate additional steps.
-                        By default, all active scenarios are run.''')
-
-    parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
-
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version)
-
-    return parser
-
-
-def parseArgs(program, version, args=None):
-    """
-    Allows calling the arg parser programmatically.
-
-    :param args: The parameter list to parse.
-    :return: populated Namespace instance
-    """
-    parser = argParser(program, version)
-    args = parser.parse_args(args=args)
-    return args
-
 
 def driver(args, tool):
+    if not args.project:
+        args.project = getParam('GCAM.DefaultProject')
+
+    if not args.project:
+        raise PygcamException("runProj: must specify project name")
+
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
@@ -584,7 +520,67 @@ def driver(args, tool):
         TmpFile.deleteFiles()
 
 
-# def main(program, version):
-#     args = parseArgs(program, version)
-#     readConfigFiles(args.project)
-#     driver(args)
+class ProjectCommand(SubcommandABC):
+    VERSION = '0.2'
+
+    def __init__(self, subparsers):
+        kwargs = {'help' : '''Run the steps for a project defined in a project.xml file''',
+                  'description' : '''This sub-command reads a single XML input file
+                        that defines one or more projects, one or more groups of scenarios, one
+                        or more scenarios, and one or more workflow steps. The workflow steps
+                        for the chosen project and scenario(s) are run in the order defined.'''}
+
+        super(ProjectCommand, self).__init__('runProj', subparsers, kwargs)
+
+    def addArgs(self, parser):
+        parser.add_argument('-f', '--projectFile',
+                            help='''The XML file describing the project. If set, command-line
+                            argument takes precedence. Otherwise, value is taken from config file
+                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
+                            is './project.xml'.''')
+
+        parser.add_argument('-g', '--group',
+                            help='''The name of the scenario group to process. If not specified,
+                            the group with attribute default="1" is processed.''')
+
+        parser.add_argument('-G', '--listGroups', action='store_true',
+                            help='''List the scenario groups defined in the project file and exit.''')
+
+        parser.add_argument('-l', '--listSteps', action='store_true', default=False,
+                            help='''List the steps defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.''')
+
+        parser.add_argument('-L', '--listScenarios', action='store_true', default=False,
+                            help='''List the scenarios defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.''')
+
+        parser.add_argument('-n', '--noRun', action='store_true', default=False,
+                            help='''Display the commands that would be run, but don't run them.''')
+
+        parser.add_argument('-p', '--project', help='''The name of the project to run.''')
+
+        parser.add_argument('-q', '--quit', action='store_true',
+                            help='''Quit if an error occurs when processing a scenario. By default, the
+                            next scenario (if any) is run when an error occurs in a scenario.''')
+
+        parser.add_argument('-s', '--step', dest='steps', action='append',
+                            help='''The steps to run. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -s flag can be repeated to indicate additional steps.
+                            By default, all steps are run.''')
+
+        parser.add_argument('-S', '--scenario', dest='scenarios', action='append',
+                            help='''Which of the scenarios defined for the given project should
+                            be run. Multiple scenarios can be given in a single (comma-delimited)
+                            argument, or the -S flag can be repeated to indicate additional steps.
+                            By default, all active scenarios are run.''')
+
+        parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
+
+        parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
+
+        return parser   # for auto-doc generation
+
+
+    def run(self, args, tool):
+        driver(args, tool)
