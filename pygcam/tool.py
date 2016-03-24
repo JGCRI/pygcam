@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+
+'''
+.. The "gcamtool" commandline program
+
+.. codeauthor:: Rich Plevin <rich@plevin.com>
+
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+'''
+import argparse
+import os
+from glob import glob
+from .common import loadModuleFromPath
+from .error import PygcamException
+from .project import ProjectCommand
+from .chart import ChartCommand
+from .run import GcamCommand
+from .config import DEFAULT_SECTION, getConfig, getParam
+from .log import getLogger
+
+_logger = getLogger(__name__)
+
+PROGRAM = 'gcamtool'
+VERSION = '0.1'
+
+BuiltinSubcommands = [ChartCommand, GcamCommand, ProjectCommand]
+
+
+class GcamTool(object):
+
+    # _instance = None
+    #
+    # @classmethod
+    # def getTool(cls):
+    #     '''
+    #     Return the single instance of GcamTool
+    #     '''
+    #     if not cls._instance:
+    #         cls._instance = cls()
+    #
+    #     return cls._instance
+
+    _plugins = {}
+
+    @classmethod
+    def getPlugin(cls, name):
+        return cls._plugins.get(name, None)
+
+    @classmethod
+    def addPlugin(cls, plugin):
+        cls._plugins[plugin.name] = plugin
+
+    def __init__(self):
+        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
+
+        # Note that the "main_" prefix is significant; see _is_main_arg() above
+        # parser.add_argument('-V', '--main_verbose', action='store_true', default=False,
+        #                     help='Causes log messages to be printed to console.')
+
+        parser.add_argument('-l', '--logLevel',
+                            choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
+                            help='Sets the log level of the program.')
+
+        parser.add_argument('-s', '--configSection',
+                            help='''The name of the config file section to read from.''')
+
+        parser.add_argument('-v', '--verbose', action='store_true',
+                            help='''Show diagnostic output''')
+
+        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+
+        self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
+                               description='''For help on subcommands, use the "-h" flag after the subcommand name''')
+
+        pluginPath = getParam('GCAM.PluginPath')
+        if pluginPath:
+            items = pluginPath.split(';')
+            self.loadPlugins(items)
+
+        # moduleDir = os.path.dirname(os.path.abspath(__file__))
+        # pluginDir = os.path.join(moduleDir, 'plugins')
+        # self.loadPlugins([pluginDir] + items)
+
+    def instantiatePlugin(self, pluginClass):
+        plugin = pluginClass(self.subparsers)
+        self.addPlugin(plugin)
+
+    def loadPlugin(self, path):
+        """
+        Load the plugin at `path`.
+
+        :param path: (str) the pathname of a plugin file.
+        :param subparsers: instance of argparse.parser.add_subparsers
+        :return: an instance of the ``SubcommandABC`` subclass defined in `path`
+        """
+        def getModObj(mod, name):
+            return getattr(mod, name) if name in mod.__dict__ else None
+
+        mod = loadModuleFromPath(path)
+
+        pluginClass = getModObj(mod, 'PluginClass') or getModObj(mod, 'Plugin')
+        if not pluginClass:
+            raise PygcamException('Neither PluginClass nor class Plugin are defined in %s' % path)
+
+        self.instantiatePlugin(pluginClass)
+
+    def loadPlugins(self, pluginDirs):
+        """
+        Load plugins from the list of directories calculated in
+        ``SubcommandABC.__init__()`` and instantiate them.
+
+        :return: None
+        """
+        map(self.instantiatePlugin, BuiltinSubcommands)
+
+        for d in pluginDirs:
+            pattern = os.path.join(d, '*_plugin.py')
+            for path in glob(pattern):
+                self.loadPlugin(path)
+
+    def run(self, args=None, argList=None):
+        """
+        Parse the script's arguments and invoke the run() method of the
+        designated sub-command.
+
+        :param args: an argparse.Namespace of parsed arguments
+        :param recursive: (bool) True when called recursively (e.g., from project.py)
+        :return: none
+        """
+        assert args or argList, "gcamtool.run requires either args or argList"
+
+        if argList:
+            # called recursively
+            args = self.parser.parse_args(args=argList)
+        else:
+            # top-level call
+            self.section  = args.configSection or getParam('GCAM.DefaultProject')
+            self.logLevel = args.logLevel
+
+        cmd = args.subcommand
+        del args.subcommand
+
+        # Run the sub-command
+        obj = self.getPlugin(cmd)
+        obj.run(args, self)
+
+
+def _getMainParser():
+    '''
+    Used only to generate documentation by sphinx' argparse
+    '''
+    getConfig(DEFAULT_SECTION)
+    return GcamTool().parser
