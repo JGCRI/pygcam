@@ -141,8 +141,9 @@ class GcamTool(object):
         else:
             # top-level call
 
-            if args.configSection:
-                getConfig(section=args.configSection, reload=True)
+            section = args.configSection or getParam('GCAM.DefaultProject')
+            if section:
+                getConfig(section=section, reload=True)
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:
