@@ -136,7 +136,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     try:
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
     except IOError, e:
-        raise PygcamException("*** Reading file '%s' failed: %s\n" % (filename, e))
+        raise PygcamException("Reading file '%s' failed: %s\n" % (os.path.abspath(filename), e))
 
     if years:
         limitYears(df, years)

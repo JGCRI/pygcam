@@ -446,7 +446,7 @@ def main(mainArgs, tool, parser):
     import seaborn as sns
     global plt, pd, sns, tkr
 
-    readConfigFiles(mainArgs.configSection)
+    #readConfigFiles(mainArgs.configSection)
 
     if not mainArgs.fromFile and mainArgs.csvFile == '*null*':
         raise PygcamException("Must specify a CSV file or use -f flag to read arguments from a file")
@@ -530,10 +530,6 @@ class ChartCommand(SubcommandABC):
     def addArgs(self, parser):
         parser.add_argument('csvFile', nargs='?',
                             help='''The file containing the data to plot.''')
-
-        parser.add_argument('-a', '--configSection', default=DEFAULT_SECTION,
-                            help='''The name of the section in the config file to read from.
-                            Defaults to %s''' % DEFAULT_SECTION)
 
         parser.add_argument('-b', '--box', action="store_true",
                             help='''Draw a box around the plot. Default is no box.''')

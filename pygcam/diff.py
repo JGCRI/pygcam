@@ -19,8 +19,8 @@ def computeDifference(df1, df2):
     :return: a pandas DataFrame with the difference in all the year columns, computed
       as (df2 - df1).
     """
-    df1 = df1.dropExtraCols(inplace=False)
-    df2 = df2.dropExtraCols(inplace=False)
+    df1 = dropExtraCols(df1, inplace=False)
+    df2 = dropExtraCols(df2, inplace=False)
 
     if set(df1.columns) != set(df2.columns):
         raise PygcamException("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
@@ -45,7 +45,7 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
             otherFile = ensureCSV(otherFile)   # add csv extension if needed
             otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate)
 
-            diff = computeDifference(refDF, otherDF, percentage=percentage)
+            diff = computeDifference(refDF, otherDF)
 
             csvText = diff.to_csv(None)
             label = "[%s] minus [%s]" % (otherFile, referenceFile)

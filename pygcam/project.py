@@ -498,7 +498,7 @@ class Project(object):
 
 def driver(args, tool):
     if not args.project:
-        args.project = getParam('GCAM.DefaultProject')
+        args.project = args.configSection or getParam('GCAM.DefaultProject')
 
     if not args.project:
         raise PygcamException("runProj: must specify project name")
