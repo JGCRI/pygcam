@@ -35,7 +35,7 @@ Document
 
 - Adding otaq2016.pth and pygcam.pth (or one file with both)
 
-==============
+Tasks
 - Test diff cmd
 - Test constraint cmds
 - Test land protection cmd
@@ -46,6 +46,5 @@ Document
     - Perhaps split out generic function from domain-specific
 - Elim. builtin plugins dir?
 - Update documentation
-    - Write up rest of Windows notes
 - Update project.xml in gcam-proj
 - Test everything again on Windows

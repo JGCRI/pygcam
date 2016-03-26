@@ -37,6 +37,17 @@ _SystemDefaults = \
 # the corresponding values are read from the config file.
 #
 [DEFAULT]
+# This project is used if '-p' flag not given to gcamtool
+GCAM.DefaultProject =
+
+# Where to find plug-ins. Internal plugin directory is added
+# automatically. Use this to add custom plug-ins outside the pygcam
+# source tree. The value is a semicolon-delimited (on Windows) or
+# colon-delimited (on Unix) string of directories to search for files
+# matching the pattern '*_plugin.py' NOTE: This must be set in the
+# DEFAULT section.
+GCAM.PluginPath =
+
 # Sets the folder holding the symlink "current" which refers
 # to a folder holding Main_User_Workspace and ModelInterface.
 # (This is one way of setting up the code, but not required.)
@@ -46,31 +57,46 @@ GCAM.Root = %(Home)s/GCAM
 # you want to use. It is convenient to make this a symbolic link.
 GCAM.Current = %(GCAM.Root)s/current
 
+# The default location in which to find or create GCAM workspaces
+GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
+
 # The location of the Main_User_Workspace to use. This can refer
 # to any folder; GCAM.Current is just an optional convention.
 GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
 
-# The default location in which to create run workspaces
-GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
+GCAM.RefQueryDir = %(GCAM.RefWorkspace)s/output/queries
 
 # The location of the ModelInterface to use.
 GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 
 GCAM.ModelInterfaceLogFile = %(GCAM.TempDir)s/mi.log
 
+# QueryPath is string with one or more colon-delimited elements that
+# identify directories or XML files in which to find batch query
+# definitions.
+GCAM.QueryDir    = %(GCAM.RefQueryDir)s
+GCAM.QueryPath   = %(GCAM.QueryDir)s/Main_Queries.xml
+
 # The location of GCAM source code (for the purpose of reading
 # the .csv file that defines the current regional aggregation.
 GCAM.SourceWorkspace =
 
-# Location of folders used by setup scripts
-GCAM.LocalXml = %(GCAM.RunWorkspaceRoot)s/local-xml
-GCAM.DynXml   = %(GCAM.RunWorkspaceRoot)s/dyn-xml
+# Root directory for where the user keeps project folders
+GCAM.ProjectRoot    = %(GCAM.GcamRoot)s/projects
 
-# This project is used if '-p' flag not given to gcamtool
-GCAM.DefaultProject =
+# If using the XML "setup" system, this is the root folder for
+# setup source files
+GCAM.XmlSrc         = %(GCAM.ProjectRoot)s/xmlsrc
 
-# The location of the default input file for runProject.py
-GCAM.ProjectXmlFile = %(Home)s/gcam_project.xml
+# The folders for setup-generated XML files.
+GCAM.LocalXml       = %(GCAM.ProjectRoot)s/local-xml
+GCAM.DynXml         = %(GCAM.ProjectRoot)s/dyn-xml
+
+# The default input file for the runProj sub-command
+GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
+
+# Default location in which to look for scenario directories
+GCAM.ScenariosDir =
 
 # The location of the libraries needed by ModelInterface
 GCAM.JavaLibPath = %(GCAM.RefWorkspace)s/libs/basex
@@ -82,21 +108,20 @@ GCAM.JavaArgs = -Xms512m -Xmx2g
 # The name of the database file (or directory, for BaseX)
 GCAM.DbFile	  = database_basexdb
 
-# A string with one or more colon-delimited elements that identify
-# directories or XML files in which to find batch query definitions.
-GCAM.QueryPath = %(GCAM.RefWorkspace)s/output/queries/Main_Queries.xml
-
-# Where to find plug-ins. Internal plugin directory is added automatically.
-# Use this to add custom plug-ins outside the pygcam source tree. The value
-# is a semicolon (';') delimited string of directories to search for files
-# matching the pattern '*_plugin.py'
-GCAM.PluginPath =
-
 # Columns to drop when processing results of XML batch queries
 GCAM.ColumnsToDrop = scenario,Notes,Date
 
+# Change this if desired to increase or decrease diagnostic messages.
+# A default value can be set here, and a project-specific value can
+# be set in the project's config file section.
+# Possible values (from most to least verbose) are:
+# DEBUG, INFO, WARNING, ERROR, CRITICAL
 GCAM.LogLevel   = WARNING
+
+# Save log messages in the indicated file
 GCAM.LogFile    =
+
+# Show log messages on the console (terminal)
 GCAM.LogConsole = True
 
 # The name of the queue used for submitting batch jobs on a cluster.
@@ -126,9 +151,6 @@ GCAM.QsubResources = pvmem=6GB
 
 # Environment variables to pass to qsub. (Not needed by most users.)
 GCAM.QsubEnviroVars =
-
-# Default location in which to look for scenario directories
-GCAM.ScenariosDir = %(GCAM.Root)s/scenarios
 
 # For qsub, the default number of minutes to allocate per task.
 GCAM.Minutes = 20
@@ -216,7 +238,8 @@ def readConfigFiles(section):
 
     # HOME exists on all Unix-like systems; for Windows it's HOMEPATH
     if platformName == 'Windows':
-        home = os.path.realpath(os.getenv('HOMEPATH')) # adds home drive
+        home = os.path.realpath(os.getenv('HOMEPATH'))  # adds home drive
+        home = home.replace('\\', '/')                  # avoids '\' quoting issues
     else:
         home = os.getenv('HOME')
 
@@ -342,4 +365,3 @@ def getParamAsFloat(name, section=None):
     """
     value = getParam(name, section=section)
     return float(value)
-

@@ -132,9 +132,21 @@ sections) are sorted by sequence number before execution. By definition,
 steps with the same sequence number are order independent; they can run
 in any order.
 
-Steps are generalized by using variable definitions, some of which are
-set directly by the user and other which are set by the runProject.py
-script at run-time. Variables are described below.
+The text value of a step can be any command you want to run. Many of the
+common workflow steps are built into ``gcamtool.py`` and these can be
+invoked by using the name of a gcamtool sub-command *preceded by the @ symbol*
+and following it with any desired parameters accepted by that sub-command.
+For example, a step that runs GCAM might look like this:
+
+  .. code-block:: xml
+
+     <step seq="1" name="gcam"  runFor="baseline">@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+
+
+Steps can be generalized by using variable definitions, as shown in
+the example above. Several variables are set by the ``runProj``
+sub-command at run-time;  these are are described below. The user
+can also define variables, as described in the next section.
 
 By default all steps are run. If the user specifies steps to run on the
 command-line, then only those steps are run. If the attribute
@@ -143,33 +155,29 @@ baseline scenario. If ``runFor="policy"`` is set, the step is run only
 or *non*-baseline strategies. By default steps are run for both baseline
 and policy scenarios.
 
-For example,
-
-  .. code-block:: xml
-
-    <step seq="10" name="gcam" runFor="baseline">
-
-defines a step with named "gcam", with sequence number "10", that is run
-only for the baseline scenario.
-
 For example, the block:
 
   .. code-block:: xml
 
-    <steps>
-        <step seq="05" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
-        <step seq="10" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
-        <step seq="15" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-        <step seq="20" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
-        <step seq="25" name="gcam"  runFor="policy">queueGCAM.py -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
-        <step seq="30" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
-        <step seq="45" name="diff" runFor="policy">computeDiffs.sh {baseline} {scenario}</step>
-        <step seq="50" name="plotDiffs" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {plotDiffsFile}</step>
-    </steps>
+     <steps>
+        <step seq="1" name="setup" runFor="baseline">python {scenarioSrcDir}/{setup} -v -b {baseline} -g {scenarioGroup} -y {shockYear}-{endYear}</step>
+        <step seq="2" name="gcam"  runFor="baseline">@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+        <step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+        <step seq="4" name="setup" runFor="policy">python {scenarioSrcDir}/{setup} -b {baseline} -s {scenario} -y {shockYear}-{endYear}</step>
+        <step seq="5" name="gcam"  runFor="policy">@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+        <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
+        <step seq="7" name="plotScen">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+        <step seq="8" name="diff" runFor="policy">@diff -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+        <step seq="9" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+        <step seq="10" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/}*.csv</step>
+        <step seq="11" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+     </steps>
 
 defines a series of steps that calls setup scripts, runs GCAM, runs a
 set of XML batch queries, computes differences between policy and
-baseline scenarios, and plots the differences.
+baseline scenarios, plots the individual scenarios and the differences,
+and generates .XLSX files with the differences--one with the values
+directly from GCAM, the other with annually-interpolated values.
 
 Steps can be defined in the ``<defaults>`` section, in which case they
 apply to all projects. Projects, however, can add, delete, or redefine
@@ -274,19 +282,19 @@ accessible in the commands for any . These included:
 -  ``{baseline}`` : the name of the scenario with baseline="1"
 -  ``{reference}`` : a synonym for baseline
 -  ``{step}`` : the name of the currently running step
--  ``{years}`` : {startYear}-{endYear}
+-  ``{years}`` : ``{startYear}-{endYear}``
 -  ``{projectSubdir}`` : subdir defined in the ; defaults to project
    name.
--  ``{projectSrcDir}`` : {xmlSrc}/{projectSubdir}
--  ``{projectWsDir}`` : {wsRoot}/{projectSubdir}
--  ``{projectXmlDir}`` : {local-xml}/{projectSubdir}
+-  ``{projectSrcDir}`` : ``{xmlSrc}/{projectSubdir}``
+-  ``{projectWsDir}`` : ``{wsRoot}/{projectSubdir}``
+-  ``{projectXmlDir}`` : ``{local-xml}/{projectSubdir}``
 -  ``{scenarioSubdir}`` : subdir for the current scenario; default is
    scenario name
--  ``{scenarioSrcDir}`` : {projectSrcDir}/scenarioSubdir}
--  ``{scenarioXmlDir}`` : {projectXmlDir/scenarioSubdir}
--  ``{scenarioWsDir}`` : {projectWsDir}/{scenario}
--  ``{diffsDir}`` : {scenarioWsDir}/diffs
--  ``{batchDir}`` : {scenarioWsDir}/batch-{scenarioName}
+-  ``{scenarioSrcDir}`` : ``{projectSrcDir}/scenarioSubdir}``
+-  ``{scenarioXmlDir}`` : ``{projectXmlDir/scenarioSubdir}``
+-  ``{scenarioWsDir}`` : ``{projectWsDir}/{scenario}``
+-  ``{diffsDir}`` : ``{scenarioWsDir}/diffs``
+-  ``{batchDir}`` : ``{scenarioWsDir}/batch-{scenarioName}``
 
 <tmpFile>
 ^^^^^^^^^
@@ -407,17 +415,19 @@ Example project.xml file
             <var name="queryPath" configVar="GCAM.QueryPath"></var>
         </vars>
         <steps>
-            <step seq="1" name="setup" runFor="baseline">{scenarioSrcDir}/{setup}</step>
-            <step seq="2" name="gcam"  runFor="baseline">queueGCAM.py -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
-            <step seq="3" name="query" runFor="baseline">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-            <step seq="4" name="setup" runFor="policy">{scenarioSrcDir}/{setup}</step>
-            <step seq="5" name="gcam"  runFor="policy">queueGCAM.py -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
-            <step seq="6" name="query" runFor="policy">batchQuery.py -v -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
-            <step seq="7" name="plotScen">chartGCAM.py {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-            <step seq="7" name="diff"  runFor="policy">csvDiff.py -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-            <step seq="8" name="plotDiff" runFor="policy">chartGCAM.py {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-            <step seq="9" name="xlsx"  runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx *.csv</step>
-            <step seq="9" name="xlsx"  runFor="policy">csvDiff.py -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i *.csv</step>
+            <!-- Note: inserting 'python' before the setup script may be necessary on Windows
+                 or if the script does not have execute permission set. -->
+            <step seq="1" name="setup" runFor="baseline">python {scenarioSrcDir}/{setup} -v -b {baseline} -g {scenarioGroup} -y {shockYear}-{endYear}</step>
+            <step seq="2" name="gcam"  runFor="baseline">@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+            <step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+            <step seq="4" name="setup" runFor="policy">python {scenarioSrcDir}/{setup} -b {baseline} -s {scenario} -y {shockYear}-{endYear}</step>
+            <step seq="5" name="gcam"  runFor="policy">@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+            <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
+            <step seq="7" name="plotScen">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+            <step seq="8" name="diff" runFor="policy">@diff -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+            <step seq="9" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+            <step seq="10" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/}*.csv</step>
+            <step seq="11" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
         </steps>
 
         <tmpFile varName="queryFile" evaluate="0">
