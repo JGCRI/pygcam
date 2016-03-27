@@ -125,7 +125,7 @@ do the following.
 
     .. code-block:: bash
 
-    python -c 'import site; site._script()' --user-site
+       python -c 'import site; site._script()' --user-site
 
   - Create a file in  the "user site" directory called ``pygcam.pth``. The line should
     contain a single line with the full pathname to the location to the top-level
@@ -139,7 +139,6 @@ do the following.
 
        cd *user-site-path*
        echo "pygcam-source-path" > /pygcam.cfg
-
 
 Unix-like platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

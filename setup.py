@@ -6,7 +6,11 @@ requirements = ['lxml',
                 'seaborn',
                 ]
 
-scripts = ['bin/gcamtool.py', 'bin/gt']
+# Apparently 'bin' should be in pygcam/bin, not pygcam/pygcam/bin
+# "When we install the package, setuptools will copy the script to
+# our PATH and make it available for general use."
+
+scripts = ['bin/gcamtool.py', 'bin/gt.cmd']
 
 setup(
     name='pygcam',
