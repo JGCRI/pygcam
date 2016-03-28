@@ -62,7 +62,7 @@ class GcamTool(object):
         # parser.add_argument('-V', '--main_verbose', action='store_true', default=False,
         #                     help='Causes log messages to be printed to console.')
 
-        parser.add_argument('-l', '--logLevel',
+        parser.add_argument('-l', '--logLevel', type=str.lower,
                             choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
                             help='Sets the log level of the program.')
 
