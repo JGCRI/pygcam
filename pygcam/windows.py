@@ -23,14 +23,14 @@ if IsWindows:
 
     REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
 
-    def islinkWindows1(path):
+    def islinkWindows(path):
         """ Windows islink implementation. """
         return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
 
     # From http://tomjbward.co.uk/detect-symlink-using-python-2-x-on-windows/
-    def islinkWindows2(path):
-        return bool(os.path.isdir(path) and \
-            (win32file.GetFileAttributesW(unicode(path)) & FILE_ATTRIBUTE_REPARSE_POINT))
+    # def islinkWindows2(path):
+    #     return bool(os.path.isdir(path) and \
+    #         (win32file.GetFileAttributesW(unicode(path)) & FILE_ATTRIBUTE_REPARSE_POINT))
 
 
     # Adapted from http://timgolden.me.uk/python/win32_how_do_i/see_if_two_files_are_the_same_file.html
@@ -67,12 +67,12 @@ if IsWindows:
             hFile1 = hFile2 = None
 
             if not os.path.lexists(filename1):
-                mkdirs(os.path.dirname(filename1))
+                mkdirs(os.path.dirname(os.path.abspath(filename1)))
                 f1 = open(filename1, 'w')
                 f1.close()
 
             if not os.path.lexists(filename2):
-                mkdirs(os.path.dirname(filename2))
+                mkdirs(os.path.dirname(os.path.abspath(filename2)))
                 f2 = open(filename2, 'w')
                 f2.close()
 
@@ -117,7 +117,7 @@ if IsWindows:
     # Replace broken functions with those defined above.
     # (In python 2.7.11 os.path.islink() indeed failed to detect link made with mklink)
     os.symlink = symlinkWindows
-    os.path.islink = islinkWindows1
+    os.path.islink = islinkWindows
     os.path.samefile = samefileWindows
 
 
