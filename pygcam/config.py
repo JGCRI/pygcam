@@ -82,7 +82,7 @@ GCAM.QueryPath   = %(GCAM.QueryDir)s/Main_Queries.xml
 GCAM.SourceWorkspace =
 
 # Root directory for where the user keeps project folders
-GCAM.ProjectRoot    = %(GCAM.GcamRoot)s/projects
+GCAM.ProjectRoot    = %(Home)s/projects
 
 # If using the XML "setup" system, this is the root folder for
 # setup source files
@@ -263,6 +263,9 @@ def readConfigFiles(section):
 
     # Initialize config parser with default values
     _ConfigParser = SafeConfigParser()
+
+    _ConfigParser.optionxform = str     # don't force all names to lower-case
+
     _ConfigParser.readfp(io.BytesIO(_SystemDefaults))
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
@@ -284,6 +287,20 @@ def readConfigFiles(section):
             fp.write(commented)
 
     return _ConfigParser
+
+def getConfigDict(section, raw=False):
+    """
+    Return all variables defined in `section` as a dictionary.
+
+    :param section: (str) the name of a section in the config file
+    :return: (dict) all variables defined in the section (which includes
+       those defined in DEFAULT.)
+    """
+    if not _ConfigParser.has_section(section):
+        section = DEFAULT_SECTION
+
+    d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
+    return d
 
 def getParam(name, section=None, raw=False):
     """
