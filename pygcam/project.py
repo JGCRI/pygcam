@@ -13,8 +13,8 @@ import sys
 import shlex
 from os.path import join
 from lxml import etree as ET
-from .config import getParam
-from .common import getTempFile, flatten, shellCommand, getBooleanXML, unixPath
+from .config import getParam, getConfigDict
+from .common import getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat
 from .error import PygcamException
 from .log import getLogger
 from .subcommand import SubcommandABC
@@ -111,7 +111,8 @@ class TmpFile(object):
         with open(path, 'w') as f:
             text = '\n'.join(map(lambda x: x.text or '', self.textNodes)) + '\n'
             if text and self.eval:
-                text = text.format(**argDict)
+                #text = text.format(**argDict)
+                text = simpleFormat(text, argDict)
             f.write(text)
 
         self.path = path
@@ -176,7 +177,8 @@ class Step(object):
             return
 
         try:
-            command = self.command.format(**argDict)    # replace vars in template
+            # command = self.command.format(**argDict)    # replace vars in template
+            command = simpleFormat(self.command, argDict)    # replace vars in template
         except KeyError as e:
             raise PygcamException("%s -- No such variable exists in the project XML file" % e)
 
@@ -189,23 +191,29 @@ class Step(object):
             else:
                 shellCommand(command)
 
-class Variable(object):
+
+class SimpleVariable(object):
     """
-    Represents the ``<var>`` element in the projects.xml file.
+    Simple variable of name and value to allow loading config file
+    variables alongside variables defined in the project XML file.
     """
     Instances = {}
 
-    def __init__(self, node):
-        self.name = node.get('name')
-        self.configVar = configVar = node.get('configVar')
-        self.eval = getBooleanXML(node.get('eval', 0))
+    def __init__(self, name, value, configVar=None, evaluate=False):
+        self.name      = name
+        self.value     = value
+        self.configVar = configVar
+        self.eval      = evaluate
+        self.Instances[name] = self
 
-        try:
-            self.value = getParam(configVar) if configVar else node.text
-        except Exception as e:
-            raise PygcamException("Failed to get value for configVar '%s': %s" % (configVar, e))
+    def getValue(self):
+        return self.value
 
-        self.Instances[self.name] = self
+    def setValue(self, value):
+        self.value = value
+
+    def evaluate(self, argDict):
+        return self.getValue()
 
     @classmethod
     def instances(cls):
@@ -214,6 +222,7 @@ class Variable(object):
     @classmethod
     def definedVars(cls):
         return cls.Instances.keys()
+
 
     @classmethod
     def setFromDefault(cls, varName, defaultName):
@@ -226,6 +235,23 @@ class Variable(object):
         argDict = {name: var.value for name, var in cls.Instances.iteritems()}
         return argDict
 
+
+class Variable(SimpleVariable):
+    """
+    Represents the ``<var>`` element in the projects.xml file.
+    """
+    def __init__(self, node):
+        name      = node.get('name')
+        configVar = node.get('configVar')
+        evaluate  = getBooleanXML(node.get('eval', 0))
+
+        try:
+            value = getParam(configVar) if configVar else node.text
+        except Exception as e:
+            raise PygcamException("Failed to get value for configVar '%s': %s" % (configVar, e))
+
+        super(Variable, self).__init__(name, value, configVar=configVar, evaluate=evaluate)
+
     @classmethod
     def evaluateVars(cls, argDict):
         '''Evaluate vars and store results in argDict'''
@@ -235,14 +261,9 @@ class Variable(object):
 
     def evaluate(self, argDict):
         value = self.getValue()
-        result = value.format(**argDict) if value and self.eval else value
+        # result = value.format(**argDict) if value and self.eval else value
+        result = simpleFormat(value, argDict) if value and self.eval else value
         return result
-
-    def getValue(self):
-        return self.value
-
-    def setValue(self, value):
-        self.value = value
 
 
 class Project(object):
@@ -263,7 +284,7 @@ class Project(object):
 
         projectNode = projectNodes[0]
 
-        self.subdir = projectNode.get('subdir', projectName)        # subdir defaults to project name
+        self.subdir = projectNode.get('subdir', '')
 
         defaultsNode = tree.find('defaults')   # returns 1st match
 
@@ -300,7 +321,7 @@ class Project(object):
         Variable.setFromDefault('shockYear', 'startYear')    # set defaults from other vars
         Variable.setFromDefault('analysisEndYear', 'endYear')
 
-        self.checkRequiredVars()
+        #self.checkRequiredVars()
 
         dfltTmpFileNodes = defaultsNode.findall('tmpFile')
         projTmpFileNodes = projectNode.findall('tmpFile')
@@ -320,6 +341,7 @@ class Project(object):
         else:
             return schema.validate(doc)
 
+    # deprecated
     def checkRequiredVars(self):
         '''Ensure that the required vars are set to non-empty strings'''
         required = {'xmlsrc', 'workspaceRoot', 'localXml'}
@@ -410,24 +432,30 @@ class Project(object):
             raise PygcamException("Requested %s do not exist in project '%s', group '%s': %s" % \
                                   (argName, self.projectName, self.scenarioGroupName, s))
 
-    def run(self, scenarios, steps, args, tool):
+    def run(self, scenarios, steps, skips, args, tool):
         """
         Command templates can include keywords curly braces that are substituted
         to create the command to execute in the shell. Variables are defined in
         the <vars> section of the project XML file.
         """
-        # Get the text values for all variables
+        # Get the text values for all config variables, allowing variables
+        # defined in the project to override them.
+        cfgDict = getConfigDict(self.projectName)
+        for name, value in cfgDict.iteritems():
+            SimpleVariable(name, value)
+
         self.argDict = argDict = Variable.getDict()
 
-        xmlSrc = argDict['xmlsrc']
+        # Add standard variables from project XML file itself
         argDict['project']       = self.projectName
         argDict['projectSubdir'] = subdir = self.subdir
-        argDict['projectSrcDir'] = projectSrcDir = unixPath(join(xmlSrc, subdir))
-        argDict['projectWsDir']  = projectWsDir  = unixPath(join(argDict['workspaceRoot'], subdir))
-        argDict['projectXmlDir'] = projectXmlDir = unixPath(join(argDict['localXml'], subdir))
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
-        argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
-        argDict['scenarioGroup'] = self.scenarioGroupName
+        argDict['scenarioGroup'] = self.scenarioGroupName        # argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
+
+        # TBD: rethink use of subdir. Simpler to have user add subdir as needed in project.xml
+        argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], subdir), rmFinalSlash=True)
+        argDict['projectWsDir']  = projectWsDir  = unixPath(join(argDict['GCAM.RunWorkspaceRoot'], subdir), rmFinalSlash=True)
+        argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], subdir), rmFinalSlash=True)
 
         argDict['SEP'] = os.path.sep    # '/' on Unix and '\\' on Windows
 
@@ -438,7 +466,7 @@ class Project(object):
         self.maybeListProjectArgs(args, knownGroups, knownScenarios, knownSteps)
 
         # Set steps / scenarios to all known values if user doesn't specify any
-        steps = steps or knownSteps
+        steps = set(steps or knownSteps) - set(skips or [])
         scenarios = scenarios or knownScenarios
 
         # Check that the requested scenarios and steps are defined
@@ -457,9 +485,10 @@ class Project(object):
             # These get reset as each scenario is processed
             argDict['scenario'] = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir
-            argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir))
-            argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
-            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(projectWsDir, scenarioName))
+            #argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir), rmFinalSlash=True)
+            #argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
+            runWsRoot = getParam('GCAM.RunWorkspaceRoot')
+            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(runWsRoot, scenarioName))
             argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
             argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
 
@@ -504,6 +533,7 @@ def driver(args, tool):
         raise PygcamException("runProj: must specify project name")
 
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
+    skips = flatten(map(lambda s: s.split(','), args.skipSteps)) if args.skipSteps else None
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
@@ -515,7 +545,7 @@ def driver(args, tool):
     #     project.dump(steps, scenarios)
 
     try:
-        project.run(scenarios, steps, args, tool)
+        project.run(scenarios, steps, skips, args, tool)
     finally:
         TmpFile.deleteFiles()
 
@@ -545,6 +575,12 @@ class ProjectCommand(SubcommandABC):
 
         parser.add_argument('-G', '--listGroups', action='store_true',
                             help='''List the scenario groups defined in the project file and exit.''')
+
+        parser.add_argument('-k', '--skipStep', dest='skipSteps', action='append',
+                            help='''Steps NOT to run. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -k flag can be repeated to indicate additional steps.
+                            By default, all steps are run.''')
 
         parser.add_argument('-l', '--listSteps', action='store_true', default=False,
                             help='''List the steps defined for the given project and exit.
