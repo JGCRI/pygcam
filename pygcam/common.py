@@ -8,8 +8,9 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-import subprocess
 import sys
+import re
+import subprocess
 from itertools import chain
 from .config import getParam
 from .error import PygcamException
@@ -20,6 +21,25 @@ _logger = getLogger(__name__)
 # Function to return current function name, or the caller, and so on up
 # the stack, based on value of n.
 getFuncName = lambda n=0: sys._getframe(n + 1).f_code.co_name
+
+pat = re.compile('(\{[^\}]+\})')
+
+def simpleFormat(s, varDict):
+    """
+    Simple version of str.format that does not treat '.' as
+    an attribute reference.
+
+    :param s: (str) string with args in curly braces
+    :param varDict: (dict) dictionary of var names and values
+    :return: (str) formatted string
+    """
+    def lookup(m):
+        match = m.group(0)
+        key = match[1:-1]   # strip off curly braces
+        return str(varDict[key])
+
+    result = re.sub(pat, lookup, s)
+    return result
 
 def getBooleanXML(value):
     false = ["false", "0"]
@@ -46,8 +66,12 @@ def coercible(value, type):
 
     return value
 
-def unixPath(path):
-    return path.replace('\\', '/')
+def unixPath(path, rmFinalSlash=False):
+    path = path.replace('\\', '/')
+    if rmFinalSlash and path[-1] == '/':
+        path = path[0:-1]
+
+    return path
 
 def shellCommand(command, shell=True, raiseError=True):
     """
