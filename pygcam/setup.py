@@ -26,18 +26,18 @@ import glob
 import argparse
 import re
 from .error import SetupException
+from .config import getConfig, getParam, DEFAULT_SECTION
 from .common import coercible, mkdirs, unixPath
+from .log import getLogger, setLevel, configureLogs
+
+_logger = getLogger(__name__)
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
 
 LOCAL_XML_NAME = "local-xml"
 DYN_XML_NAME   = "dyn-xml"
 
-Verbosity = 0
-
-def _echo(s):
-    if Verbosity:
-        print "   ", s
+_echo = _logger.info
 
 def makeDirPath(elements, require=False, create=False, mode=0o775):
     """
@@ -94,8 +94,7 @@ def xmlStarlet(*args):
     :return: True if exit status was 0, else False
     """
     args = map(str, args)
-    if Verbosity > 1:
-        _echo(' '.join(args))
+    _logger.debug(' '.join(args))
 
     return subprocess.call(args, shell=False) == 0
 
@@ -171,8 +170,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
 
     # Redirect output to the destination file
     cmd = "%s | %s > %s" % (cmd1, cmd2, dstFile)
-    if Verbosity:
-        _echo(cmd)
+    _logger.debug(cmd)
     status = subprocess.call(cmd, shell=True)
     return status == 0
 
@@ -224,7 +222,6 @@ class ConfigEditor(object):
     generate and/or copy the required XML files into the XML output dir.
     '''
     def __init__(self, name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=""):
-
         self.name = name
         self.parent = parent
         self.workspaceDir = workspaceDir
@@ -296,6 +293,8 @@ class ConfigEditor(object):
         dynDir  = self.scenario_dyn_dir_abs
         shutil.rmtree(scenDir)
         shutil.rmtree(dynDir)
+        mkdirs(scenDir)
+        mkdirs(dynDir)
 
         # Not available on Windows
         # cmd = "rm -rf %s/* %s/*" % (scenDir, dynDir)
@@ -308,7 +307,7 @@ class ConfigEditor(object):
 
         if xmlFiles:
             _echo("Copy static XML files to %s" % scenDir)
-            mkdirs(scenDir)
+            #mkdirs(scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
@@ -317,7 +316,7 @@ class ConfigEditor(object):
             # subprocess.call("cp -p %s/*.xml %s" % (xmlSubdir, scenDir), shell=True)
 
             if dynamic:
-                mkdirs(dynDir)
+                #mkdirs(dynDir)
                 for src in xmlFiles:
                     dst = os.path.join(dynDir, os.path.basename(src))
                     os.symlink(src, dst)
@@ -823,7 +822,7 @@ class ConfigEditor(object):
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
-        prefix = "//global-technology-database/location-info[@sector-name='%s' and subsector[@name='%s']/technology[@name='%s']" % \
+        prefix = "//global-technology-database/location-info[@sector-name='%s' and subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
         suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
 
@@ -899,7 +898,7 @@ class ConfigEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        if Verbosity:
+        if True: # Verbosity:
             from .common import printSeries
 
             _echo("Set share-weights for (%s, %s, %s) for %s" % \
@@ -954,7 +953,7 @@ class ConfigEditor(object):
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, xmlBasename))
 
-        prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s]/technology[@name='%s']" % \
+        prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
 
         args = [enTransFileAbs]
@@ -1021,13 +1020,21 @@ class ConfigEditor(object):
     @classmethod
     def parseArgs(cls, baseline=None, scenario=None):
         cls.parser = argparse.ArgumentParser(description='')
-
         cls.addArgs()      # allow subclasses to modify parser; they must call super
         ns = argparse.Namespace(baseline=baseline, scenario=scenario)
         args = cls.parser.parse_args(namespace=ns)
 
-        global Verbosity
-        Verbosity = args.verbosity
+        # Read [DEFAULT] to see if a default section is named
+        getConfig(DEFAULT_SECTION)
+        section = args.configSection or getParam('GCAM.DefaultProject')
+        if section:
+            getConfig(section=section, reload=True)
+
+        logLevel = args.logLevel or getParam('GCAM.LogLevel')
+        if logLevel:
+            setLevel(logLevel)
+
+        configureLogs(force=True)
 
         return args
 
@@ -1039,9 +1046,8 @@ class ConfigEditor(object):
         parser.add_argument('-b', '--baseline', default=baseline,
                             help='Identify the baseline the selected scenario is based on')
 
-        # parser.add_argument('-c', '--configSection', type=str, default=DEFAULT_SECTION,
-        #                     help='''The name of the section in the config file to read from.
-        #                     Defaults to %s''' % DEFAULT_SECTION)
+        parser.add_argument('-c', '--configSection',
+                            help='''The name of the section in the config file to read from.''')
 
         parser.add_argument('-g', '--group', default=None,
                             help='The scenario group to process. Defaults to the group labeled default="1".')
@@ -1055,8 +1061,9 @@ class ConfigEditor(object):
         parser.add_argument('-s', '--scenario', default=scenario,
                             help='Identify the scenario to run (N.B. The name is hardwired in some scripts)')
 
-        parser.add_argument('-v', '--verbosity', action='count',
-                            help='Set the diagnostic level. Use multiple -v flags to increase verbosity')
+        parser.add_argument('-l', '--logLevel', type=str.lower,
+                            choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
+                            help='Sets the log level of the program.')
 
         # parser.add_argument('-x', '--xmlOutputRoot', default=None,
         #                      help='''The root directory into which to generate XML files.''')
