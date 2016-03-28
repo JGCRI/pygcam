@@ -112,6 +112,15 @@ if IsWindows:
             if csl(dst, src, flags) == 0:
                 raise ctypes.WinError()
         except Exception as e:
+            _logger.error('''
+  ============================================================================================================
+  To use pygcam either (i) ask Administrator to give you permission to Create Symbol Links (using gpedit.msc)
+  or (ii) edit your ~/.pygcam.cfg file to include the line: "GCAM.CopyAllFiles = True" (without the quotes),
+  which tells pygcam to copy files rather than attempting to use symbolic links. This uses much more file
+  space than using symlinks, but it works.
+  See http://superuser.com/questions/104845/permission-to-make-symbolic-links-in-windows-7 for more info.
+  ============================================================================================================
+  ''')
             raise PygcamException("Failed to create symlink '%s' to '%s': %s" % (dst, src, e))
 
     # Replace broken functions with those defined above.
@@ -119,7 +128,6 @@ if IsWindows:
     os.symlink = symlinkWindows
     os.path.islink = islinkWindows
     os.path.samefile = samefileWindows
-
 
 
 def setJavaPath(exeDir):
