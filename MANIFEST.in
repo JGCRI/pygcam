@@ -1,13 +1,17 @@
 include README.md
-include pygcam/docs/source/*.rst
+include LICENSE.txt
+include setup.py
+include bin/gcamtool.py
+recursive-include pygcam/docs/source *
 recursive-include pygcam/test *.xml *.py
+include pygcam/docs/[Mm]ake*
 include pygcam/test/testall
 include pygcam/docs/[mM]ake*
-include setup.py
-include pygcam/bin/gcamtool.py
-include pygcam/bin/gt
 include pygcam/*.py
-include pygcam/plugins/*.py
 include pygcam/etc/*
 include pygcam/test/*
-global-exclude .DS_Store *.pyc
+global-exclude .DS_Store .gitignore *.pyc
+
+# In case we need these
+#include pygcam/plugins/*.py
+#global-exclude .gitignore

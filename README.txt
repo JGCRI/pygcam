@@ -15,7 +15,9 @@ Intended functionality
 
 How do I get set up?
 
-* A setup script is currently under development
+* Run this command on the included setup.py file:
+
+    python setup.py install
 
 Who do I talk to?
 

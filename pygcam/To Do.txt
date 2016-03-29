@@ -1,41 +1,52 @@
 Test
 ----
+- setup.py installer
 - write unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
 - Changes to setup.py and related bits
+- Test "GCAM.CopyRefWorkspace = True" option to handle symlink failure.
 
 Cleanup
 -------
 - Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
-- chart.py has some app-specific code. refactor it.
+- Relocate app-specific code currently in chart.py.
 - Learn how to insert documentation amidst argparse-generated docs.
-    - Link to XML documentation for project, landProtection, etc.
+- Deprecate configVar option to <var> all config vars are now read.
 
 Features
 --------
-- Flag to XML-based commands to just validate input file without other action
+- Add a flag to XML-based commands to just validate input file
 
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
 
-- Integrate gcam-driver stuff from Robert
+- Integrate gcam-driver code / ideas
     - Consider re-implementing using jug
+
+- Make seq="x" optional in project <step> definitions; use order as defined.
+  If user is not overriding any steps (most common use case), explicit seq
+  nums are not needed.
+  - Another option is to have an explicit <step after="stepname">, to create
+    dependence DAG, which leads toward gcam-driver type of functionality.
 
 Document
 --------
-- Plugin protocol
+- Document the Subcommand (plugin) protocol
     - class 'Plugin' or variable PluginClass which identifies classname
     - addArgs()
     - run(args, tool)
     - when it gets loaded and run
-    - plugins should use logging
+    - other suggestions, e.g., plugins should use logging
 
 - Assumptions behind setup code
 
-- Adding otaq2016.pth and pygcam.pth (or one file with both)
+- Adding otaq2016.pth where needed (based on
+
+- Document runProj -k to skip steps (e.g., setup is a good candidate)
 
 Tasks
+-----
 - Test diff cmd
 - Test constraint cmds
 - Test land protection cmd

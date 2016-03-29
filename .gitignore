@@ -17,6 +17,9 @@
 .[#]*
 [#]*[#]
 
-# Output 
+# Setuptools distribution folder
+/dist/
+
+# Output
 build
 pygcam.egg-info
