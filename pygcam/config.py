@@ -171,6 +171,9 @@ GCAM.RegionMapFile =
 
 # Where to create temporary files
 GCAM.TempDir = /tmp
+
+# For Windows users without permission to create symlinks
+GCAM.CopyAllFiles = False
 """
 
 def getCommentedDefaults():
