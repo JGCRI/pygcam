@@ -18,7 +18,7 @@ from .query import dropExtraCols, readCsv
 _logger = getLogger(__name__)
 
 TIMESTEP = 5            # 5 year time-step
-VERSION  = "0.3"
+__version__  = "0.3"
 
 #%matplotlib inline
 
@@ -696,7 +696,7 @@ class ChartCommand(SubcommandABC):
                             help='''Set the scale of a figure by indicating the value (given as abs(value),
                             but used as -value) to show as the minimum Y value''')
 
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-z', '--zeroLine', action="store_true",
                                 help='''Whether to show a line at Y=0''')

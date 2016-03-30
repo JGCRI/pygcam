@@ -7,7 +7,7 @@ from .query import readCsv, ensureCSV, dropExtraCols, csv2xlsx, sumYears, sumYea
 
 _logger = getLogger(__name__)
 
-VERSION = "0.2"
+__version__ = "0.2"
 
 
 def computeDifference(df1, df2):
@@ -273,7 +273,7 @@ class DiffCommand(SubcommandABC):
                             help='''The number of rows to skip. Default is 1, which works for GCAM batch query output.
                             Use -s0 for outFile.csv''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-y', '--years', default="",
                             help='''Takes a parameter of the form XXXX-YYYY, indicating start and end years of interest.

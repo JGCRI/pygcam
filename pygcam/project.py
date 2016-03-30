@@ -551,7 +551,7 @@ def driver(args, tool):
 
 
 class ProjectCommand(SubcommandABC):
-    VERSION = '0.2'
+    __version__ = '0.2'
 
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run the steps for a project defined in a project.xml file''',
@@ -611,7 +611,7 @@ class ProjectCommand(SubcommandABC):
                             argument, or the -S flag can be repeated to indicate additional steps.
                             By default, all active scenarios are run.''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
+        parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
 
         parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
 

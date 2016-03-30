@@ -19,7 +19,7 @@ from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
-VERSION = '0.2'
+__version__ = '0.2'
 
 GCAM_32_REGIONS = [
     'Africa_Eastern',
@@ -708,7 +708,7 @@ class QueryCommand(SubcommandABC):
                             help='''A comma-separated list of scenarios to run the query/queries for (default is "Reference")
                                     Note that these refer to a scenarios in the XML database.''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-w', '--workspace', default='',
                             help='''The workspace directory in which to find the XML database.

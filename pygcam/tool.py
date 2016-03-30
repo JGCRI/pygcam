@@ -26,7 +26,7 @@ from .log import getLogger, setLevel, configureLogs
 _logger = getLogger(__name__)
 
 PROGRAM = 'gcamtool'
-VERSION = '0.1'
+__version__ = '0.1'
 
 BuiltinSubcommands = [ChartCommand, DiffCommand,
                       DeltaConstraintsCommand, GenConstraintsCommand,
@@ -62,7 +62,7 @@ class GcamTool(object):
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')

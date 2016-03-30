@@ -13,7 +13,7 @@ from .query import readQueryResult, readCsv
 
 _logger = getLogger(__name__)
 
-VERSION = "0.1"
+__version__ = "0.1"
 
 DefaultYears = '2020-2050'
 DefaultCellulosicCoefficients = "2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914"
@@ -432,7 +432,7 @@ class GenConstraintsCommand(SubcommandABC):
         parser.add_argument('-S', '--subdir', default='',
                              help='Sub-directory for local-xml files, if any')
 
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-x', '--xmlOutputDir',
                              help='''The directory into which to generate XML files. Defaults to
@@ -508,7 +508,7 @@ class DeltaConstraintsCommand(SubcommandABC):
         parser.add_argument('-T', '--policyType', choices=PolicyChoices, default='tax',
                              help='Type of policy to use for the fuel. Default is tax.')
 
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-x', '--xmlOutputDir',
                              help='''The directory into which to generate XML files.

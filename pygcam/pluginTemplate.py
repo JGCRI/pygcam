@@ -3,7 +3,7 @@ from pygcam.log import getLogger
 
 _logger = getLogger(__name__)
 
-VERSION = "0.0"
+__version__ = "0.0"
 
 class MyNewCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -20,7 +20,7 @@ class MyNewCommand(SubcommandABC):
         parser.add_argument('-n', '--number', type=int, default=0,
                             help='''A number to demonstrate a command line arg''')
 
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         return parser
 

@@ -20,7 +20,7 @@ from pygcam.subcommand import SubcommandABC
 _logger = getLogger(__name__)
 
 PROGRAM = os.path.basename(__file__)
-VERSION = "0.2"
+__version__ = "0.2"
 
 PlatformName = platform.system()
 
@@ -301,7 +301,7 @@ class GcamCommand(SubcommandABC):
                             help='''Specify the directory holding scenarios. Default is the value of config file param
                             GCAM.ScenariosDir, if set, otherwise ".".''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-w', '--workspace',
                             help='''Specify the path to the GCAM workspace to use. If it doesn't exist, the named workspace
