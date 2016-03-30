@@ -15,7 +15,7 @@ from os.path import join
 from lxml import etree as ET
 from .config import getParam, getConfigDict
 from .common import getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat
-from .error import PygcamException
+from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .subcommand import SubcommandABC
 
@@ -30,7 +30,7 @@ def getBaseline(scenarios):
     if len(baselines) == 1:
         return baselines[0]
 
-    raise PygcamException('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+    raise FileFormatError('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
 
 def getDefaultGroup(groups):
     '''
@@ -44,7 +44,7 @@ def getDefaultGroup(groups):
     if len(defaults) == 1:
         return defaults[0]
 
-    raise PygcamException('Exactly one active default scenario group must be defined; found %d' % len(defaults))
+    raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
 
 class TmpFile(object):
@@ -157,7 +157,7 @@ class Step(object):
         self.command = node.text
 
         if not self.command:
-            raise PygcamException("<step name='%s'> is missing command text" % self.name)
+            raise FileFormatError("<step name='%s'> is missing command text" % self.name)
 
     def __str__(self):
         return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
@@ -180,7 +180,7 @@ class Step(object):
             # command = self.command.format(**argDict)    # replace vars in template
             command = simpleFormat(self.command, argDict)    # replace vars in template
         except KeyError as e:
-            raise PygcamException("%s -- No such variable exists in the project XML file" % e)
+            raise FileFormatError("%s -- No such variable exists in the project XML file" % e)
 
         _logger.info("[%s, %s, %s] %s", scenario.name, self.seq, self.name, command)
 
@@ -242,13 +242,13 @@ class Variable(SimpleVariable):
     """
     def __init__(self, node):
         name      = node.get('name')
-        configVar = node.get('configVar')
+        configVar = node.get('configVar') # deprecated
         evaluate  = getBooleanXML(node.get('eval', 0))
 
         try:
             value = getParam(configVar) if configVar else node.text
         except Exception as e:
-            raise PygcamException("Failed to get value for configVar '%s': %s" % (configVar, e))
+            raise FileFormatError("Failed to get value for configVar '%s': %s" % (configVar, e))
 
         super(Variable, self).__init__(name, value, configVar=configVar, evaluate=evaluate)
 
@@ -277,10 +277,10 @@ class Project(object):
         projectNodes = tree.findall('project[@name="%s"]' % projectName)
 
         if len(projectNodes) == 0:
-            raise PygcamException("Project '%s' is not defined" % projectName)
+            raise FileFormatError("Project '%s' is not defined" % projectName)
 
         if len(projectNodes) > 1:
-            raise PygcamException("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
+            raise FileFormatError("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
 
         projectNode = projectNodes[0]
 
@@ -295,7 +295,7 @@ class Project(object):
             groupName = defaultGroup.name
 
         if groupName not in groupDict:
-            raise PygcamException("Group '%s' is not defined for project '%s'" % (groupName, projectName))
+            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, projectName))
 
         self.scenarioGroupName = groupName
         self.scenarioGroup = scenarioGroup = groupDict[groupName]
@@ -348,7 +348,7 @@ class Project(object):
         given = set(Variable.definedVars())
         missing = required - given
         if missing:
-            raise PygcamException("Missing required variables: %s" % missing)
+            raise FileFormatError("Missing required variables: %s" % missing)
 
     def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
         '''
@@ -423,13 +423,13 @@ class Project(object):
         :param knownArgs: a list of known elements of the given type
         :param argName: the tag of the XML element
         :return: nothing
-        :raises: PygcamException if the elements requested by the user are not defined in
+        :raises: CommandlineError if the elements requested by the user are not defined in
           the current (project, scenario) context
         """
         unknownArgs = set(userArgs) - set(knownArgs)
         if unknownArgs:
             s = ' '.join(unknownArgs)
-            raise PygcamException("Requested %s do not exist in project '%s', group '%s': %s" % \
+            raise CommandlineError("Requested %s do not exist in project '%s', group '%s': %s" % \
                                   (argName, self.projectName, self.scenarioGroupName, s))
 
     def run(self, scenarios, steps, skips, args, tool):
@@ -530,7 +530,7 @@ def driver(args, tool):
         args.project = args.configSection or getParam('GCAM.DefaultProject')
 
     if not args.project:
-        raise PygcamException("runProj: must specify project name")
+        raise CommandlineError("runProj: must specify project name")
 
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     skips = flatten(map(lambda s: s.split(','), args.skipSteps)) if args.skipSteps else None

@@ -29,16 +29,26 @@ class SubcommandABC(object):
 
     @abstractmethod
     def addArgs(self, parser):
+        """
+        Add command-line arguments to the given `parser`. (This is an
+        abstract method that must be implemented in the subclass.)
+
+        :param parser: the sub-parser associated with this sub-command.
+
+        :return: the populated parser
+        """
         pass
 
     @abstractmethod
-    def run(self, args):
+    def run(self, args, tool):
         """
         Perform the function intended by the ``SubcommandABC`` subclass. This function
-        is invoked by ``gcamtool`` on the ``SubcommandABC`` instance whose name matches the
-        given sub-command.
+        is invoked by ``gcamtool`` on the ``SubcommandABC`` instance whose name matches
+        the given sub-command. (This is an  abstract method that must be implemented in
+        the subclass.)
 
         :param args: the argument dictionary
+        :param tool: the GcamTool instance for the main command
         :return: nothing
         """
         pass

@@ -10,9 +10,8 @@
 import os
 import argparse
 import numpy as np
-from .error import PygcamException
+from .error import CommandlineError
 from .log import getLogger
-from .config import DEFAULT_SECTION, readConfigFiles
 from .subcommand import SubcommandABC
 from .query import dropExtraCols, readCsv
 
@@ -449,7 +448,7 @@ def main(mainArgs, tool, parser):
     #readConfigFiles(mainArgs.configSection)
 
     if not mainArgs.fromFile and mainArgs.csvFile == '*null*':
-        raise PygcamException("Must specify a CSV file or use -f flag to read arguments from a file")
+        raise CommandlineError("Must specify a CSV file or use -f flag to read arguments from a file")
 
     os.chdir(mainArgs.workingDir)
 

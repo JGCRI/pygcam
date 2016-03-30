@@ -120,13 +120,18 @@ def configureLogs(force=False):
     _configured = True
 
 def getLevel():
+    """
+    Get the currently set LogLevel.
+
+    :return: (str) one of ``'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'``
+    """
     return _logLevel
 
 def setLevel(level):
     '''
     Set the logging level for all defined loggers.
 
-    :param level: (str) one of ``{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'}`` (case insensitive)
+    :param level: (str) one of ``'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'`` (case insensitive)
     :return: none
     '''
     global _logLevel

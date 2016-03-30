@@ -42,6 +42,15 @@ def simpleFormat(s, varDict):
     return result
 
 def getBooleanXML(value):
+    """
+    Get a value from an XML file and convert it into a boolean True or False.
+
+    :param value: any value (it's first converted to a string)
+    :return: True of the value is in ['true', '1'], False if the value
+             is in ['false', '0']. An exception is raised if any other
+             value is passed.
+    :raises: PygcamException
+    """
     false = ["false", "0"]
     true  = ["true", "1"]
 
@@ -67,6 +76,15 @@ def coercible(value, type):
     return value
 
 def unixPath(path, rmFinalSlash=False):
+    """
+    Convert a path to use Unix-style slashes, optionally
+    removing the final slash, if present.
+
+    :param path: (str) a pathname
+    :param rmFinalSlash: (bool) True if a final slash should
+           be removed, if present.
+    :return: (str) the modified pathname
+    """
     path = path.replace('\\', '/')
     if rmFinalSlash and path[-1] == '/':
         path = path[0:-1]
@@ -126,9 +144,10 @@ def getYearCols(years, timestep=5):
     """
     Generate a list of names of year columns in GCAM result files from a
     string indicating a year range.
-    :param years: a string of the form "2020-2050"
-    :param timestep: the number of years between timesteps
-    :return: the names of the corresponding columns
+
+    :param years: (str) a string of the form "2020-2050"
+    :param timestep: (int) the number of years between timesteps
+    :return: (list of strings) the names of the corresponding columns
     """
     try:
         yearRange = map(int, years.split('-'))
@@ -143,9 +162,21 @@ def getYearCols(years, timestep=5):
 # Consolidate with fn in query.py
 
 
-def saveToFile(txt, dirname, filename):
-    mkdirs(dirname)
+def saveToFile(txt, dirname='', filename=''):
+    """
+    Save the given text to a file in the given directory.
+
+    :param txt: (str) the text to save
+    :param dirname: (str) path to a directory
+    :param filename: (str) the name of the file to create
+
+    :return: none
+    """
+    if dirname:
+        mkdirs(dirname)
+
     pathname = os.path.join(dirname, filename)
+
     _logger.debug("    Generating file:", pathname)
     with open(pathname, 'w') as f:
         f.write(txt)
@@ -171,10 +202,20 @@ def getTempFile(suffix, text=True, tmpDir=None):
     os.unlink(tmpFile)
     return tmpFile
 
-def getBatchDir(baseline, resultsDir, fromMCS=False):
-    leafDir = 'queryResults' if fromMCS else 'batch-{baseline}'.format(baseline=baseline)
-    pathname = os.path.join(resultsDir, baseline, leafDir)
-    # '{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
+def getBatchDir(scenario, resultsDir, fromMCS=False):
+    """
+    Get the name of the directory holding batch query results. This differs
+    when running in pygcam's gcamtool.py or when running in GCAM-MCS.
+
+    :param scenario: (str) the name of a scenario
+    :param resultsDir: (str) the directory in which the batch results directory
+           should be created
+    :param fromMCS: (bool) True if being called from GCAM-MCS
+    :return: (str) the pathname to the batch results directory
+    """
+    leafDir = 'queryResults' if fromMCS else 'batch-{scenario}'.format(baseline=scenario)
+    pathname = os.path.join(resultsDir, scenario, leafDir)
+    # '{resultsDir}/{scenario}/{leafDir}'.format(resultsDir=resultsDir, scenario=scenario, leafDir=leafDir)
     return pathname
 
 def mkdirs(newdir, mode=0o770):
@@ -193,10 +234,16 @@ def mkdirs(newdir, mode=0o770):
             raise
 
 def loadModuleFromPath(modulePath, raiseOnError=True):
-    '''
-    The load a module from a '.py' or '.pyc' file from a path that ends in the
+    """
+    Load a module from a '.py' or '.pyc' file from a path that ends in the
     module name, i.e., from "foo/bar/Baz.py", the module name is 'Baz'.
-    '''
+
+    :param modulePath: (str) the pathname of a python module (.py or .pyc)
+    :param raiseOnError: (bool) if True, raise an error if the module cannot
+       be loaded
+    :return: (module) a reference to the loaded module, if loaded, else None.
+    :raises: PygcamException
+    """
     from imp import load_source, load_compiled  # lazy import to speed startup
 
     # Extract the module name from the module path
@@ -216,26 +263,36 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
             raise Exception('Unknown module type (%s): file must must be .py or .pyc' % modulePath)
 
     except Exception, e:
+        errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
         if raiseOnError:
             #logger.error(errorString)
-            errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
             raise PygcamException(errorString)
+
+        _logger.error(errorString)
 
     return module
 
 def loadObjectFromPath(objName, modulePath, required=True):
-    '''
+    """
     Load a module and return a reference to a named object in that module.
     If 'required' and the object is not found, an error is raised, otherwise,
     None is returned if the object is not found.
-    '''
+
+    :param objName: (str) the name of an object to find in the `modulePath`
+    :param modulePath: (str) the path to a python module to load
+    :param required: (bool) if True and the object cannot be loaded, raise
+      an error.
+    :return: a reference to the loaded object, if loaded. If not loaded and
+       `required` is False, return None.
+    :raises: PygcamException
+    """
     module = loadModuleFromPath(modulePath)
     obj    = getattr(module, objName, None)
 
     if obj or not required:
         return obj
 
-    raise Exception("Module '%s' has no object named '%s'" % (modulePath, objName))
+    raise PygcamException("Module '%s' has no object named '%s'" % (modulePath, objName))
 
 # def importFrom(modname, objname):
 #     """
@@ -261,6 +318,13 @@ def loadObjectFromPath(objName, modulePath, required=True):
 
 
 def printSeries(series, label):
+    """
+    Print a `series` of values, with a give `label`.
+
+    :param series: (convertible to pandas Series) the values
+    :param label: (str) a label to print for the data
+    :return: none
+    """
     if getLevel() == 'DEBUG':
         import pandas as pd
 

@@ -1,6 +1,6 @@
 import os
 from .log import getLogger
-from .error import PygcamException
+from .error import CommandlineError, FileFormatError
 from .common import mkdirs
 from .subcommand import SubcommandABC
 from .query import readCsv, ensureCSV, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
@@ -23,7 +23,7 @@ def computeDifference(df1, df2):
     df2 = dropExtraCols(df2, inplace=False)
 
     if set(df1.columns) != set(df2.columns):
-        raise PygcamException("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
+        raise FileFormatError("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
                               % (df1.columns, df2.columns))
 
     yearCols = filter(str.isdigit, df1.columns)
@@ -37,7 +37,22 @@ def computeDifference(df1, df2):
     return diff
 
 
-def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False, percentage=False):
+def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False):
+    """
+    Compute the differences between the data in a reference .CSV file and one or more other
+    .CSV files as (other - reference), optionally interpolating annual values between
+    timesteps, storing the results in a single .CSV file.
+    See also :py:func:`writeDiffsToXLSX` and :py:func:`writeDiffsToFile`
+
+    :param outFile: (str) the name of the .CSV file to create
+    :param referenceFile: (str) the name of a .CSV file containing reference results
+    :param otherFiles: (list of str) the names of other .CSV file for which to
+       compute differences.
+    :param skiprows: (int) should be 1 for GCAM files, to skip header info before column names
+    :param interpolate: (bool) if True, linearly interpolate annual values between timesteps
+       in all data files and compute the differences for all resulting years.
+    :return: none
+    """
     refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate)
 
     with open(outFile, 'w') as f:
@@ -49,13 +64,26 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
 
             csvText = diff.to_csv(None)
             label = "[%s] minus [%s]" % (otherFile, referenceFile)
-            if percentage:
-                label = "(%s)/%s" % (label, referenceFile)
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
 
 
-def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1,
-                     interpolate=False, percentage=False):
+def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False):
+    """
+    Compute the differences between the data in a reference .CSV file and one or more other
+    .CSV files as (other - reference), optionally interpolating annual values between
+    timesteps, storing the results in a single .XLSX file with each difference matrix
+    on a separate worksheet, and with an index worksheet with links to the other worksheets.
+    See also :py:func:`writeDiffsToCSV` and :py:func:`writeDiffsToFile`.
+
+    :param outFile: (str) the name of the .XLSX file to create
+    :param referenceFile: (str) the name of a .CSV file containing reference results
+    :param otherFiles: (list of str) the names of other .CSV file for which to
+       compute differences.
+    :param skiprows: (int) should be 1 for GCAM files, to skip header info before column names
+    :param interpolate: (bool) if True, linearly interpolate annual values between timesteps
+       in all data files and compute the differences for all resulting years.
+    :return: none
+    """
     import pandas as pd
 
     with pd.ExcelWriter(outFile, engine='xlsxwriter') as writer:
@@ -71,17 +99,13 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1,
             sheetName = 'Diff%d' % sheetNum
             sheetNum += 1
 
-            diff = computeDifference(refDF, otherDF, percentage=percentage)
+            diff = computeDifference(refDF, otherDF)
 
             diff.reset_index(inplace=True)      # convert multi-index into regular column values
             diff.to_excel(writer, index=None, sheet_name=sheetName, startrow=2, startcol=0)
 
-            #workbook  = writer.book
-            #worksheet = workbook.add_worksheet(sheetName)
             worksheet = writer.sheets[sheetName]
             label     = "[%s] minus [%s]" % (otherFile, referenceFile)
-            if percentage:
-                label = "(%s)/%s" % (label, referenceFile)
             worksheet.write_string(0, 0, label)
 
             startRow = diff.shape[0] + 4
@@ -96,13 +120,30 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1,
 
 
 def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv',
-                     skiprows=1, interpolate=False, percentage=False):
+                     skiprows=1, interpolate=False):
+    """
+    Compute the differences between the data in a reference .CSV file and one or more other
+    .CSV files as (other - reference), optionally interpolating annual values between
+    timesteps, storing the results in a single .CSV or .XLSX file. See :py:func:`writeDiffsToCSV`
+    and :py:func:`writeDiffsToXLSX` for more details.
+
+    :param outFile: (str) the name of the file to create
+    :param referenceFile: (str) the name of a .CSV file containing reference results
+    :param otherFiles: (list of str) the names of other .CSV file for which to
+       compute differences.
+    :param ext: (str) if '.csv', results are written to a single .CSV file, otherwise, they
+       are written to an .XLSX file.
+    :param skiprows: (int) should be 1 for GCAM files, to skip header info before column names
+    :param interpolate: (bool) if True, linearly interpolate annual values between timesteps
+       in all data files and compute the differences for all resulting years.
+    :return: none
+    """
     if ext == '.csv':
         writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=skiprows,
-                        interpolate=interpolate, percentage=percentage)
+                        interpolate=interpolate)
     else:
         writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=skiprows,
-                         interpolate=interpolate, percentage=percentage)
+                         interpolate=interpolate)
 
 def main(args):
     mkdirs(args.workingDir)
@@ -110,7 +151,6 @@ def main(args):
 
     _logger.debug('Working dir: %s', args.workingDir)
 
-    percentage  = args.percentage
     convertOnly = args.convertOnly
     skiprows    = args.skiprows
     interpolate = args.interpolate
@@ -148,7 +188,7 @@ def main(args):
             _logger.debug("Writing %s", outFile)
 
             writeDiffsToFile(outFile, baselineFile, [policyFile], ext='.csv', skiprows=skiprows,
-                             interpolate=interpolate, percentage=percentage)
+                             interpolate=interpolate)
     else:
         csvFiles = map(ensureCSV, args.csvFiles)
         referenceFile = csvFiles[0]
@@ -162,7 +202,7 @@ def main(args):
 
         extensions = ('.csv', '.xlsx')
         if ext not in extensions:
-            raise PygcamException("Output file extension must be one of %s", extensions)
+            raise CommandlineError("Output file extension must be one of %s", extensions)
 
         if convertOnly or groupSum or sum:
             if convertOnly:
@@ -174,7 +214,7 @@ def main(args):
             return
 
         writeDiffsToFile(outFile, referenceFile, otherFiles, ext=ext, skiprows=skiprows,
-                         interpolate=interpolate, percentage=percentage)
+                         interpolate=interpolate)
 
 
 
@@ -220,10 +260,6 @@ class DiffCommand(SubcommandABC):
 
         parser.add_argument('-c', '--convertOnly', default=False, action="store_true",
                             help='''Convert the given CSV files into an Excel workbook, one sheet per CSV file.''')
-
-        parser.add_argument('-p', '--percentage', default=False, action="store_true",
-                            help='''Compute the difference on a percentage basis, i.e.,
-                                    (X minus reference)/reference.''')
 
         parser.add_argument('-q', '--queryFile', default='',
                             help='''A file from which to take the names of queries to process. When --queryFile
