@@ -17,6 +17,7 @@ from .chart import ChartCommand
 from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
 from .project import ProjectCommand
+from .landProtection import ProtectLandCommand
 from .query import QueryCommand
 from .run import GcamCommand
 from .config import DEFAULT_SECTION, getConfig, getParam
@@ -29,21 +30,10 @@ VERSION = '0.1'
 
 BuiltinSubcommands = [ChartCommand, DiffCommand,
                       DeltaConstraintsCommand, GenConstraintsCommand,
-                      GcamCommand, ProjectCommand, QueryCommand]
+                      GcamCommand, ProjectCommand, ProtectLandCommand,
+                      QueryCommand]
 
 class GcamTool(object):
-
-    # _instance = None
-    #
-    # @classmethod
-    # def getTool(cls):
-    #     '''
-    #     Return the single instance of GcamTool
-    #     '''
-    #     if not cls._instance:
-    #         cls._instance = cls()
-    #
-    #     return cls._instance
 
     _plugins = {}
 
@@ -55,7 +45,7 @@ class GcamTool(object):
     def addPlugin(cls, plugin):
         cls._plugins[plugin.name] = plugin
 
-    def __init__(self):
+    def __init__(self, loadPlugins=True):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
 
         # Note that the "main_" prefix is significant; see _is_main_arg() above
@@ -77,11 +67,15 @@ class GcamTool(object):
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
 
-        pluginPath = getParam('GCAM.PluginPath')
-        if pluginPath:
-            sep = os.path.pathsep           # ';' on Windows, ':' on Unix
-            items = pluginPath.split(sep)
-            self.loadPlugins(items)
+
+        map(self.instantiatePlugin, BuiltinSubcommands)
+
+        if loadPlugins:
+            pluginPath = getParam('GCAM.PluginPath')
+            if pluginPath:
+                sep = os.path.pathsep           # ';' on Windows, ':' on Unix
+                items = pluginPath.split(sep)
+                self.loadPlugins(items)
 
         # moduleDir = os.path.dirname(os.path.abspath(__file__))
         # pluginDir = os.path.join(moduleDir, 'plugins')
@@ -117,8 +111,6 @@ class GcamTool(object):
 
         :return: None
         """
-        map(self.instantiatePlugin, BuiltinSubcommands)
-
         for d in pluginDirs:
             pattern = os.path.join(d, '*_plugin.py')
             for path in glob(pattern):
@@ -158,7 +150,9 @@ class GcamTool(object):
 
 def _getMainParser():
     '''
-    Used only to generate documentation by sphinx' argparse
+    Used only to generate documentation by sphinx' argparse, in which case
+    we don't generate documentation for project-specific plugins.
     '''
     getConfig(DEFAULT_SECTION)
-    return GcamTool().parser
+    tool = GcamTool(loadPlugins=False)
+    return tool.parser
