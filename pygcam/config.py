@@ -95,6 +95,9 @@ GCAM.DynXml         = %(GCAM.ProjectRoot)s/dyn-xml
 # The default input file for the runProj sub-command
 GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
 
+# Path to an XML file describing land protection scenarios
+GCAM.LandProtectionXmlFile =
+
 # Default location in which to look for scenario directories
 GCAM.ScenariosDir =
 
@@ -176,7 +179,7 @@ GCAM.TempDir = /tmp
 GCAM.CopyAllFiles = False
 """
 
-def getCommentedDefaults():
+def _getCommentedDefaults():
     '''
     Returns a copy of the _SystemDefault string with all variable
     assignments commented out. This allows the user to see what's
@@ -286,7 +289,7 @@ def readConfigFiles(section):
     except IOError as e:
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as fp:
-            commented = getCommentedDefaults()
+            commented = _getCommentedDefaults()
             fp.write(commented)
 
     return _ConfigParser
