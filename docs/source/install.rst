@@ -107,7 +107,7 @@ if you change a variable with "descendants", you affect the definition of
 everything below it in the figure. See the generated ``~/.pygcam.cfg`` for
 further information.
 
-  .. image:: images/ConfigVarStructure.png
+  .. image:: images/ConfigVarStructure.jpg
 
 
 Working with the pygcam source code

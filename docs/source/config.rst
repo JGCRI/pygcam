@@ -86,6 +86,9 @@ after the closing parenthesis, which is necessary or an exception will be thrown
         # The default input file for the runProj sub-command
         GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
 
+        # Path to an XML file describing land protection scenarios
+        GCAM.LandProtectionXmlFile =
+
         # Default location in which to look for scenario directories
         GCAM.ScenariosDir =
 

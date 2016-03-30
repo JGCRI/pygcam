@@ -4,7 +4,7 @@
 ``landProtection.xml``
 ==========================
 
-The `protect` sub-command of the :doc:`gcamtool` script generates XML
+The :ref:`protect <protect-label>` sub-command of :doc:`gcamtool` generates XML
 input files for GCAM that "protect" land by removing it from consideration
 by the model as a productive land area. It reads a single XML input file that
 defines one or protection scenarios, which can specify the fraction the original land

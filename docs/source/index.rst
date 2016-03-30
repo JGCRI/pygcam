@@ -178,4 +178,4 @@ XML input file formats for sub-commands
    :maxdepth: 1
 
    project-xml
-   protect-xml
+   landProtection-xml
