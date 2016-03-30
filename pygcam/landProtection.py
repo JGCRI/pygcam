@@ -11,7 +11,7 @@ import os
 from lxml import etree as ET
 import copy
 
-from .common import mkdirs, flatten
+from .utils import mkdirs, flatten, XMLFile
 from .query import GCAM_32_REGIONS
 from .config import getParam
 from .error import FileFormatError, CommandlineError, PygcamException
@@ -48,7 +48,7 @@ def _makeLandClassXpath(landClasses, protected=False):
     xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
     return xpath
 
-def findChildren(node, tag, cls=None):
+def _findChildren(node, tag, cls=None):
     """
     Find all the children beneath `node` with the given `tag`, and
     return an instance of the class `cls` representing that node.
@@ -76,40 +76,6 @@ def findChildren(node, tag, cls=None):
 
     return children
 
-# TBD: move to common once debugged; use it in project.py as well.
-class XMLFile(object):
-    """
-    Represents an XML file, which is parsed by lxml.etree and stored internally.
-
-    :param xmlFile: pathname of the XML file
-    :param schemaFile: optional XMLSchema file to use for validation
-    :param raiseError: if True, raise an error if validation fails
-    :param rootClass: optional root class, which is instantiated for the parsed
-      tree and stored internally
-    :raises: FileFormatError
-    """
-    def __init__(self, xmlFile, schemaFile=None, raiseError=True, rootClass=None):
-        parser = ET.XMLParser(remove_blank_text=True)
-        self.tree = ET.parse(xmlFile, parser)
-
-        if not schemaFile:
-            return
-
-        schemaDoc = ET.parse(schemaFile)
-        schema = ET.XMLSchema(schemaDoc)
-
-        if raiseError:
-            try:
-                schema.assertValid(self.tree)
-            except ET.DocumentInvalid as e:
-                raise FileFormatError("Validation of '%s'\n  using schema '%s' failed:\n  %s" % (xmlFile, schemaFile, e))
-        else:
-            return schema.validate(self.tree)
-
-        self.root = rootClass(self.tree)
-
-    def getRoot(self):
-        return self.root
 
 class LandProtection(object):
     """
@@ -119,8 +85,8 @@ class LandProtection(object):
     :param node: an ``lxml.etree.Element`` representing the top-level ``<landProtection>`` node
     """
     def __init__(self, node):
-        self.groups    = findChildren(node, 'group')
-        self.scenarios = findChildren(node, 'scenario')
+        self.groups    = _findChildren(node, 'group')
+        self.scenarios = _findChildren(node, 'scenario')
 
     def getScenario(self, name):
         return Scenario.getScenario(name)
@@ -149,7 +115,7 @@ class LandProtection(object):
         for protReg in scenario.protRegDict.values():
             regions = [protReg.name]
             for prot in protReg.protections:
-                createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
+                _createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
 
         if backup:
             try:
@@ -167,7 +133,7 @@ class Group(object):
     Instances = {}
 
     def __init__(self, node):
-        self.regions = findChildren(node, 'region', cls=str)
+        self.regions = _findChildren(node, 'region', cls=str)
         self.Instances[node.get('name')] = self
 
     @classmethod
@@ -218,7 +184,7 @@ class Group(object):
 class ProtectedRegion(object):
     def __init__(self, node):
         self.name = node.get('name')
-        self.protections = findChildren(node, 'protection')
+        self.protections = _findChildren(node, 'protection')
 
     def expandNames(self):
         names = []
@@ -230,7 +196,7 @@ class Scenario(object):
 
     def __init__(self, node):
         self.name = node.get('name')
-        self.protRegs = findChildren(node, 'protectedRegion')
+        self.protRegs = _findChildren(node, 'protectedRegion')
         self.Instances[self.name] = self
         self.protRegDict = protRegDict = {}       # allows regions to override groups
 
@@ -248,12 +214,13 @@ class Scenario(object):
     def getScenario(cls, name):
         return cls.Instances.get(name)
 
-class Protection(object):
-    def __init__(self, node):
-        self.landClasses = findChildren(node, 'landClass', cls=str)
-        self.fraction = float(node.get('fraction'))
+# deprecated
+# class Protection(object):
+#     def __init__(self, node):
+#         self.landClasses = _findChildren(node, 'landClass', cls=str)
+#         self.fraction = float(node.get('fraction'))
 
-def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=None):
+def _createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=None):
     """
     Modify an lxml tree representing a GCAM input file to protect a `fraction`
     of `landClasses` in `regions`.
@@ -321,7 +288,7 @@ def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, reg
     parser = ET.XMLParser(remove_blank_text=True)
     tree = ET.parse(infile, parser)
 
-    createProtected(tree, fraction, landClasses=landClasses, regions=regions)
+    _createProtected(tree, fraction, landClasses=landClasses, regions=regions)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
 

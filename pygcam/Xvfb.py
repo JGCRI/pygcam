@@ -92,15 +92,3 @@ class Xvfb(object):
             raise XvfbException("Xvfb failed: %s" % errmsgs)
 
         raise XvfbException("Failed to open any display using Xvfb")
-
-
-# if __name__ == '__main__':
-#     from coremcs.util import setRunningPackage
-#     from gcammcs.Package import GcamPackage
-#
-#     pkg = GcamPackage()
-#     setRunningPackage(pkg)
-#
-#     with Xvfb(delay=0.2):
-#         print "Do stuff requiring virtual display"
-#         time.sleep(1)
