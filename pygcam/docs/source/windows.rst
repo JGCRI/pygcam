@@ -1,5 +1,10 @@
-Using pygcam under Microsoft Windows
+Using pygcam under Windows
 ====================================
+
+The ``pygcam`` package was developed on Unix-like systems (Mac OS, Linux) and
+subsequently ported to Microsoft Windows. This page provides Windows-specific
+information.
+
 
 Enable symbolic links
 ----------------------

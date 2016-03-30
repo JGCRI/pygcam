@@ -1,4 +1,4 @@
-The ``pygcam.diff`` module
+``pygcam.diff``
 ============================
 
 Functions for computing differences between CSV files and for generating CSV and XLSX

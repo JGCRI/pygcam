@@ -1,4 +1,4 @@
-The ``pygcam.landProtection`` module
+``pygcam.landProtection``
 =====================================
 
 This module implements the :doc:`gcamtool` sub-command `protectLand`. It is

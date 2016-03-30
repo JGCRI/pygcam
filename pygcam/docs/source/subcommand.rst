@@ -1,4 +1,4 @@
-The ``pygcam.subcommand`` module
+``pygcam.subcommand``
 ================================
 
 The ``subcommand`` module provides the interface for subcommand plug-ins.

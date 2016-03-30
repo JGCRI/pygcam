@@ -1,4 +1,4 @@
-The ``pygcam.project`` module
+``pygcam.project``
 =============================
 
 This module provides all the functionality that is exposed through the command-line

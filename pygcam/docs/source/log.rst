@@ -1,4 +1,4 @@
-The ``pygcam.log`` module
+``pygcam.log``
 ============================
 
 This module allows modules to register themselves for logging which is

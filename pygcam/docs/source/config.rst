@@ -1,4 +1,4 @@
-The ``pygcam.config`` module
+``pygcam.config``
 =============================
 
 This module provides access to configuration parameters. The parameters listed below

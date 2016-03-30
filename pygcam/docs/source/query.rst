@@ -1,4 +1,4 @@
-The ``pygcam.query`` module
+``pygcam.query``
 ============================
 
 This module contains classes that allow you to run batch queries against

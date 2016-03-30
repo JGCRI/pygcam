@@ -1,4 +1,4 @@
-The ``pygcam.common`` module
+``pygcam.common``
 ============================
 
 This module contains constants, functions, and classes that are used by various

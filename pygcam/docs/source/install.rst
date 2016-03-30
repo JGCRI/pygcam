@@ -1,5 +1,5 @@
 Installation
-======================
+==================
 To run ``pygcam``, you need a Python 2.7 environment, Java, and GCAM.
 Follow the steps below to install these. More information is available
 :doc:`windows` for Windows users.

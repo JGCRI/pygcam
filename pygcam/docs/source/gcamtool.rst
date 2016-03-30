@@ -1,5 +1,5 @@
 ``gcamtool.py``
-===============
+================
 
 The gcamtool.py script organizes GCAM workflow functionality into a single
 script with sub-commands. The sub-commands are implemented via
