@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from .log import getLogger
 from .subcommand import SubcommandABC
-from .common import mkdirs, getBatchDir, getYearCols, printSeries
+from .utils import mkdirs, getBatchDir, getYearCols, printSeries
 from .query import readQueryResult, readCsv
 
 _logger = getLogger(__name__)

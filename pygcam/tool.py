@@ -11,7 +11,7 @@
 import argparse
 import os
 from glob import glob
-from .common import loadModuleFromPath
+from .utils import loadModuleFromPath
 from .error import PygcamException
 from .chart import ChartCommand
 from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
@@ -21,7 +21,7 @@ from .landProtection import ProtectLandCommand
 from .query import QueryCommand
 from .run import GcamCommand
 from .config import DEFAULT_SECTION, getConfig, getParam
-from .log import getLogger, setLevel, configureLogs
+from .log import getLogger, setLogLevel, configureLogs
 
 _logger = getLogger(__name__)
 
@@ -139,7 +139,7 @@ class GcamTool(object):
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:
-                setLevel(logLevel)
+                setLogLevel(logLevel)
 
             configureLogs(force=True)
 

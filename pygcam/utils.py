@@ -13,8 +13,8 @@ import re
 import subprocess
 from itertools import chain
 from .config import getParam
-from .error import PygcamException
-from .log import getLogger, getLevel
+from .error import PygcamException, FileFormatError
+from .log import getLogger, getLogLevel
 
 _logger = getLogger(__name__)
 
@@ -177,7 +177,7 @@ def saveToFile(txt, dirname='', filename=''):
 
     pathname = os.path.join(dirname, filename)
 
-    _logger.debug("    Generating file:", pathname)
+    _logger.debug("Generating file: %s", pathname)
     with open(pathname, 'w') as f:
         f.write(txt)
 
@@ -316,6 +316,43 @@ def loadObjectFromPath(objName, modulePath, required=True):
 #     except ImportError:
 #         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
 
+# TBD: move to common once debugged; use it in project.py as well.
+class XMLFile(object):
+    """
+    Represents an XML file, which is parsed by lxml.etree and stored internally.
+
+    :param xmlFile: pathname of the XML file
+    :param schemaFile: optional XMLSchema file to use for validation
+    :param raiseError: if True, raise an error if validation fails
+    :param rootClass: optional root class, which is instantiated for the parsed
+      tree and stored internally
+    :raises: FileFormatError
+    """
+    def __init__(self, xmlFile, schemaFile=None, raiseError=True, rootClass=None):
+        from lxml import etree as ET
+
+        parser = ET.XMLParser(remove_blank_text=True)
+        self.tree = ET.parse(xmlFile, parser)
+
+        if not schemaFile:
+            return
+
+        schemaDoc = ET.parse(schemaFile)
+        schema = ET.XMLSchema(schemaDoc)
+
+        if raiseError:
+            try:
+                schema.assertValid(self.tree)
+            except ET.DocumentInvalid as e:
+                raise FileFormatError("Validation of '%s'\n  using schema '%s' failed:\n  %s" % (xmlFile, schemaFile, e))
+        else:
+            return schema.validate(self.tree)
+
+        self.root = rootClass(self.tree)
+
+    def getRoot(self):
+        return self.root
+
 
 def printSeries(series, label):
     """
@@ -325,7 +362,7 @@ def printSeries(series, label):
     :param label: (str) a label to print for the data
     :return: none
     """
-    if getLevel() == 'DEBUG':
+    if getLogLevel() == 'DEBUG':
         import pandas as pd
 
         df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing

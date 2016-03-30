@@ -27,8 +27,8 @@ import argparse
 import re
 from .error import SetupException
 from .config import getConfig, getParam, DEFAULT_SECTION
-from .common import coercible, mkdirs, unixPath
-from .log import getLogger, setLevel, configureLogs
+from .utils import coercible, mkdirs, unixPath
+from .log import getLogger, setLogLevel, configureLogs
 
 _logger = getLogger(__name__)
 
@@ -36,8 +36,6 @@ pathjoin = os.path.join     # "alias" this since it's used frequently
 
 LOCAL_XML_NAME = "local-xml"
 DYN_XML_NAME   = "dyn-xml"
-
-_echo = _logger.info
 
 def makeDirPath(elements, require=False, create=False, mode=0o775):
     """
@@ -77,10 +75,10 @@ def copyIfMissing(src, dst, makedirs=False):
     if not os.path.lexists(dst):
         parentDir = os.path.dirname(dst)
         if makedirs and not os.path.isdir(parentDir):
-            _echo("mkdir %s" % parentDir)
+            _logger.debug("mkdir %s" % parentDir)
             os.makedirs(parentDir, 0o755)
 
-        _echo("Copy %s\n      to %s" % (src, dst))
+        _logger.info("Copy %s\n      to %s" % (src, dst))
         shutil.copy(src, dst)
         os.chmod(dst, 0o644)
 
@@ -144,7 +142,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     :return: True on success, else False
     """
 
-    _echo("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
+    _logger.info("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
 
     def attr(element, value): # Simple helper function
         return '-i "//%s" -t attr -n name -v "%s" ' % (element, value)
@@ -286,7 +284,7 @@ class ConfigEditor(object):
           large XML file with the combined data from all input files.
         :return: none
         """
-        _echo("\nGenerating scenario %s" % self.name)
+        _logger.info("Generating scenario %s" % self.name)
 
         # Delete old generated files in case the baseline we're working from has changed
         scenDir = self.scenario_dir_abs
@@ -298,7 +296,7 @@ class ConfigEditor(object):
 
         # Not available on Windows
         # cmd = "rm -rf %s/* %s/*" % (scenDir, dynDir)
-        # _echo(cmd)
+        # _logger.info(cmd)
         # status = subprocess.call(cmd, shell=True)
         # assert status == 0, 'Command failed with status %d: %s' % (status, cmd)
 
@@ -306,7 +304,7 @@ class ConfigEditor(object):
         xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
-            _echo("Copy static XML files to %s" % scenDir)
+            _logger.info("Copy static XML files to %s" % scenDir)
             #mkdirs(scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
@@ -329,7 +327,7 @@ class ConfigEditor(object):
         parent = self.parent
         parentConfigPath = parent.cfgPath() if parent else pathjoin(self.workspaceDir, 'exe', 'configuration_ref.xml')
 
-        _echo("Copy %s\n      to %s" % (parentConfigPath, configPath))
+        _logger.info("Copy %s\n      to %s" % (parentConfigPath, configPath))
         shutil.copy(parentConfigPath, configPath)
         os.chmod(configPath, 0o664)
 
@@ -508,7 +506,7 @@ class ConfigEditor(object):
         if appendScenarioName is not None:
             textArgs += " append-scenario-name='%d'" % (int(appendScenarioName))
 
-        _echo("Update <%s><Value %s>%s</Value>" % (group, textArgs, '...' if value is None else value))
+        _logger.debug("Update <%s><Value %s>%s</Value>" % (group, textArgs, '...' if value is None else value))
 
         cfg = self.cfgPath()
 
@@ -550,7 +548,7 @@ class ConfigEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
-        _echo("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
+        _logger.info("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 
         xmlEdit(cfg,
@@ -578,7 +576,7 @@ class ConfigEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
-        _echo("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
+        _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
         cfg = self.cfgPath()
 
         xmlEdit(cfg,
@@ -607,13 +605,6 @@ class ConfigEditor(object):
         xmlfile = unixPath(xmlfile)
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
-        # _echo("Update ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
-        # cfg = self.cfgPath()
-        #
-        # xmlEdit(cfg,
-        #         '-u', "//ScenarioComponents/Value[@name='%s']" % name,
-        #         '-v', xmlfile)
-
     def delScenarioComponent(self, name):
         """
         Delete a ``<ScenarioComponent>`` identified by the ``<Value>`` element name.
@@ -621,7 +612,7 @@ class ConfigEditor(object):
         :param name: the name of the component to delete
         :return: none
         """
-        _echo("Delete ScenarioComponent name='%s' for scenario" % name)
+        _logger.info("Delete ScenarioComponent name='%s' for scenario" % name)
         cfg = self.cfgPath()
 
         xmlEdit(cfg, '-d', "//ScenarioComponents/Value[@name='%s']" % name)
@@ -638,7 +629,7 @@ class ConfigEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
-        _echo("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
+        _logger.debug("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 
         xmlEdit(cfg,
@@ -657,7 +648,7 @@ class ConfigEditor(object):
            rather than ``local-xml``
         :return: none
         """
-        _echo("Add market constraint: %s %s for %s" % (target, policy, self.name))
+        _logger.info("Add market constraint: %s %s for %s" % (target, policy, self.name))
 
         cfg = self.cfgPath()
 
@@ -697,7 +688,7 @@ class ConfigEditor(object):
         :param policy: one of ``subsidy`` or ``tax``
         :return: none
         """
-        _echo("Delete market constraint: %s %s for %s" % (target, policy, self.name))
+        _logger.info("Delete market constraint: %s %s for %s" % (target, policy, self.name))
         cfg = self.cfgPath()
 
         # if policy == "subsidy":
@@ -757,7 +748,7 @@ class ConfigEditor(object):
         :param applyTo: what the interpolation function is applied to
         :return: none
         """
-        _echo("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
+        _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
@@ -785,7 +776,7 @@ class ConfigEditor(object):
         :param tolerance: (coercible to float) the value to set
         :return: none
         """
-        _echo("Set solution tolerance to %s" % tolerance)
+        _logger.info("Set solution tolerance to %s" % tolerance)
 
         value = coercible(tolerance, float)
         self.updateConfigComponent('Doubles', 'SolutionTolerance', value)
@@ -818,7 +809,7 @@ class ConfigEditor(object):
             which the rest of the explanation above applies. The `price` can be
             anything coercible to float.
         """
-        _echo("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
+        _logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
@@ -857,7 +848,7 @@ class ConfigEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        _echo("Set shutdown rate for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
+        _logger.info("Set shutdown rate for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
@@ -899,9 +890,9 @@ class ConfigEditor(object):
         :return: none
         """
         if True: # Verbosity:
-            from .common import printSeries
+            from .utils import printSeries
 
-            _echo("Set share-weights for (%s, %s, %s) for %s" % \
+            _logger.info("Set share-weights for (%s, %s, %s) for %s" % \
                   (region, sector, stubTechnology, self.name))
             printSeries(values, 'share-weights')
 
@@ -946,7 +937,7 @@ class ConfigEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        _echo("Set share-weights for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
+        _logger.info("Set share-weights for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
 
         if not xmlBasename.endswith('.xml'):
             xmlBasename += '.xml'
@@ -968,7 +959,7 @@ class ConfigEditor(object):
     # TBD -- test this!
     def _addTimeStepYear(self, year, timestep=5):
 
-        _echo("Add timestep year %s" % year)
+        _logger.info("Add timestep year %s" % year)
 
         year = int(year)
         modeltimeFileRel, modeltimeFileAbs = self.getLocalCopy(pathjoin(self.modeltime_dir_rel, "modeltime.xml"))
@@ -1032,7 +1023,7 @@ class ConfigEditor(object):
 
         logLevel = args.logLevel or getParam('GCAM.LogLevel')
         if logLevel:
-            setLevel(logLevel)
+            setLogLevel(logLevel)
 
         configureLogs(force=True)
 

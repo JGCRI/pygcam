@@ -11,7 +11,7 @@ if IsWindows:
 
     import ctypes
     import win32file
-    from .common import mkdirs
+    from .utils import mkdirs
     from .error import PygcamException
     from .log import getLogger
 
@@ -170,34 +170,3 @@ def removeSymlink(path):
         os.rmdir(path)
     else:
         os.remove(path)
-
-    # Adapted from
-    # http://stackoverflow.com/questions/19672352/how-to-run-python-script-with-elevated-privilege-on-windows
-    # def runAsAdmin(argv=None, debug=False):
-    #     shell32 = ctypes.windll.shell32
-    #
-    #     if argv is None and shell32.IsUserAnAdmin():
-    #         return True
-    #
-    #     if argv is None:
-    #         argv = sys.argv
-    #
-    #     if hasattr(sys, '_MEIPASS'):
-    #         # Support pyinstaller wrapped program.
-    #         arguments = map(unicode, argv[1:])
-    #     else:
-    #         arguments = map(unicode, argv)
-    #
-    #     argumentLine = u' '.join(arguments)
-    #     executable = unicode(sys.executable)
-    #
-    #     if debug:
-    #         print 'Command line: ', executable, argumentLine
-    #
-    #     lpDirectory = None
-    #     SHOW_NORMAL = 1
-    #     ret = shell32.ShellExecuteW(None, u"runas", executable, argumentLine, lpDirectory, SHOW_NORMAL)
-    #     if int(ret) <= 32:
-    #         return False
-    #
-    #     return None

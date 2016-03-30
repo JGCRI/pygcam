@@ -11,10 +11,10 @@ import subprocess
 import platform
 import shutil
 from lxml import etree as ET
-from pygcam.common import mkdirs
+from pygcam.utils import mkdirs
 from pygcam.config import getConfig, getParam, getParamAsBoolean
 from pygcam.log import getLogger
-from pygcam.windows import IsWindows, setJavaPath, removeSymlink
+from pygcam.windows import setJavaPath, removeSymlink
 from pygcam.subcommand import SubcommandABC
 
 _logger = getLogger(__name__)

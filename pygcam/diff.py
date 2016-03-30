@@ -1,7 +1,7 @@
 import os
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .common import mkdirs
+from .utils import mkdirs
 from .subcommand import SubcommandABC
 from .query import readCsv, ensureCSV, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
 
