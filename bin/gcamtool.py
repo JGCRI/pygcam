@@ -36,7 +36,7 @@ if __name__ == '__main__':
     except Exception, e:
         print "%s failed: %s" % (PROGRAM, e)
 
-        if True: # getLevel() == 'DEBUG':
+        if True: # getLogLevel() == 'DEBUG':
             import traceback
             traceback.print_exc()
 

@@ -119,7 +119,7 @@ def configureLogs(force=False):
 
     _configured = True
 
-def getLevel():
+def getLogLevel():
     """
     Get the currently set LogLevel.
 
@@ -127,7 +127,7 @@ def getLevel():
     """
     return _logLevel
 
-def setLevel(level):
+def setLogLevel(level):
     '''
     Set the logging level for all defined loggers.
 
@@ -141,7 +141,7 @@ def setLevel(level):
         logger.setLevel(_logLevel)
 
 
-def resetLevel():
+def resetLogLevel():
     '''
     Set the log level to the current value of GCAM.LogLevel, which may be
     different once the default project name has been set.
@@ -149,4 +149,4 @@ def resetLevel():
     :return: none
     '''
     level = getParam('GCAM.LogLevel', default='ERROR').upper()
-    setLevel(level)
+    setLogLevel(level)
