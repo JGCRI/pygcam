@@ -1,17 +1,21 @@
 include README.md
 include LICENSE.txt
 include setup.py
-include bin/gcamtool.py
-recursive-include pygcam/docs/source *
-recursive-include pygcam/test *.xml *.py
-include pygcam/docs/[Mm]ake*
-include pygcam/test/testall
-include pygcam/docs/[mM]ake*
-include pygcam/*.py
-include pygcam/etc/*
-include pygcam/test/*
-global-exclude .DS_Store .gitignore *.pyc
 
-# In case we need these
-#include pygcam/plugins/*.py
-#global-exclude .gitignore
+# Source code
+include bin/gcamtool.py
+include pygcam/*.py
+
+# Documentation source as well as generated html and PDF
+graft docs/source
+graft docs/build/html
+include docs/build/latex/pygcam.pdf
+include docs/[mM]ake*
+
+# Test code
+graft pygcam/test
+
+# Assorted data files
+graft pygcam/etc
+
+global-exclude .DS_Store .gitignore *.pyc
