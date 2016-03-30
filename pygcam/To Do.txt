@@ -7,6 +7,8 @@ Test
 - Changes to setup.py and related bits
 - Test "GCAM.CopyRefWorkspace = True" option to handle symlink failure.
 
+- land protection
+
 Cleanup
 -------
 - Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
@@ -29,6 +31,10 @@ Features
   nums are not needed.
   - Another option is to have an explicit <step after="stepname">, to create
     dependence DAG, which leads toward gcam-driver type of functionality.
+
+- Get "runProj" working on cluster.
+    - Initially, migrate job-related options now on "gcam" subcommand to
+      the "runProj" subcommand?
 
 Document
 --------

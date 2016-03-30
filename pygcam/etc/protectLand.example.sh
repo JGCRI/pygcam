@@ -14,7 +14,9 @@ CLASSES=UnmanagedForest,UnmanagedPasture
 
 REGS_HIGH='Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA'
 REGS_MED='Argentina,Brazil,Europe_Eastern,Europe_Non_EU,European Free Trade Association,South Korea'
-REGS_LOW='Africa_Eastern,Africa_Northern,Africa_Southern,Africa_Western,Central America and Caribbean,Central Asia,China,Colombia,India,Indonesia,Mexico,Pakistan,Russia,South Africa,South America_Northern,South America_Southern,South Asia,Southeast Asia'
+REGS_LOW='Africa_Eastern,Africa_Northern,Africa_Southern,Africa_Western,Central America and Caribbean,\
+Central Asia,China,Colombia,India,Indonesia,Mexico,Pakistan,Russia,South Africa,South America_Northern,\
+South America_Southern,South Asia,Southeast Asia'
 
 INFILES='-i land_input_2.xml -i land_input_3.xml'
 PROT_INFILES='-i prot_land_input_2.xml -i prot_land_input_3.xml'
