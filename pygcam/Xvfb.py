@@ -38,6 +38,12 @@ class Xvfb(object):
         self.oldDisplay = os.environ.get("DISPLAY")
         os.environ["DISPLAY"] = ":%d.0" % self.displayNum
 
+    # Defining __enter__ and __exit__ enables use of "with Xvfb(): context manager
+    def __enter__(self):
+        return None
+
+    def __exit__(self):
+        self.terminate()
 
     def terminate(self):
         if self.proc and self.proc.poll() is None:
@@ -88,23 +94,13 @@ class Xvfb(object):
         raise XvfbException("Failed to open any display using Xvfb")
 
 
-if __name__ == '__main__':
-    from coremcs.util import setRunningPackage
-    from gcammcs.Package import GcamPackage
-
-    pkg = GcamPackage()
-    setRunningPackage(pkg)
-
-    xvfb = None
-    try:
-        xvfb = Xvfb(delay=0.2)
-
-        print "Do stuff requiring virtual display"
-        time.sleep(1)
-
-    except Exception, e:
-        print e
-
-    finally:
-        if xvfb:
-            xvfb.terminate()
+# if __name__ == '__main__':
+#     from coremcs.util import setRunningPackage
+#     from gcammcs.Package import GcamPackage
+#
+#     pkg = GcamPackage()
+#     setRunningPackage(pkg)
+#
+#     with Xvfb(delay=0.2):
+#         print "Do stuff requiring virtual display"
+#         time.sleep(1)
