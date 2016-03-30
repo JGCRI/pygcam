@@ -160,7 +160,7 @@ Contents
    install
    windows
    gcamtool
-   common
+   utils
    config
    diff
    error
