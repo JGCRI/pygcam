@@ -27,101 +27,140 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 
   .. code-block:: cfg
 
-      [GCAM]
-      # Sets the folder holding the symlink "current" which refers
-      # to a folder holding Main_User_Workspace and ModelInterface.
-      # (This is one way of setting up the code, but not required.)
-      GCAM.Root = %(Home)s/GCAM
+        [DEFAULT]
+        # This project is used if '-s' flag not given to gcamtool
+        GCAM.DefaultProject =
 
-      # Refers to the GCAM folder holding the version of the model
-      # you want to use. It is convenient to make this a symbolic link.
-      GCAM.Current = %(GCAM.Root)s/current
+        # Where to find plug-ins. Internal plugin directory is added
+        # automatically. Use this to add custom plug-ins outside the pygcam
+        # source tree. The value is a semicolon-delimited (on Windows) or
+        # colon-delimited (on Unix) string of directories to search for files
+        # matching the pattern '*_plugin.py' NOTE: This must be set in the
+        # DEFAULT section.
+        GCAM.PluginPath =
 
-      # The location of the Main_User_Workspace to use. This can refer
-      # to any folder; GCAM.Current is just an optional convention.
-      GCAM.Workspace = %(GCAM.Current)s/Main_User_Workspace
+        # Sets the folder holding the symlink "current" which refers
+        # to a folder holding Main_User_Workspace and ModelInterface.
+        # (This is one way of setting up the code, but not required.)
+        GCAM.Root = %(Home)s/GCAM
 
-      # The location of GCAM source code (for the purpose of reading
-      # the .csv file that defines the current regional aggregation.
-      GCAM.SourceWorkspace =
+        # Refers to the GCAM folder holding the version of the model
+        # you want to use. It is convenient to make this a symbolic link.
+        GCAM.Current = %(GCAM.Root)s/current
 
-      # The location of the ModelInterface to use.
-      GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
+        # The default location in which to find or create GCAM workspaces
+        GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
 
-      # Location of folders used by setup scripts
-      GCAM.LocalXml = %(GCAM.Workspace)s/local-xml
-      GCAM.DynXml   = %(GCAM.Workspace)s/dyn-xml
+        # The location of the Main_User_Workspace to use. This can refer
+        # to any folder; GCAM.Current is just an optional convention.
+        GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
 
-      # The location of the default input file for runProject.py
-      GCAM.ProjectXmlFile = %(Home)/gcam_project.xml
+        GCAM.RefQueryDir = %(GCAM.RefWorkspace)s/output/queries
 
-      # The location of the libraries needed by ModelInterface.
-      # (Not needed if using GCAM with BaseX rather than dbxml.)
-      GCAM.JavaLibPath = %(GCAM.Workspace)s/libs/dbxml/lib
+        # The location of the ModelInterface to use.
+        GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
 
-      # Arguments to java to ensure that ModelInterface has enough
-      # heap space.
-      GCAM.JavaArgs = -Xms512m -Xmx2g
+        GCAM.ModelInterfaceLogFile = %(GCAM.TempDir)s/mi.log
 
-      # The name of the database file (or directory, for BaseX)
-      GCAM.DbFile	  = database_basexdb
+        # QueryPath is string with one or more colon-delimited elements that
+        # identify directories or XML files in which to find batch query
+        # definitions.
+        GCAM.QueryDir    = %(GCAM.RefQueryDir)s
+        GCAM.QueryPath   = %(GCAM.QueryDir)s/Main_Queries.xml
 
-      # A string with one or more colon-delimited elements that identify
-      # directories or XML files in which to find batch query definitions.
-      GCAM.QueryPath = .
+        # The location of GCAM source code (for the purpose of reading
+        # the .csv file that defines the current regional aggregation.
+        GCAM.SourceWorkspace =
 
-      # Where to find plug-ins. Internal plugin directory is added automatically.
-      # Use this to add custom plug-ins outside the pygcam source tree.
-      GCAM.PluginPath =
+        # Root directory for where the user keeps project folders
+        GCAM.ProjectRoot    = %(Home)s/projects
 
-      # Columns to drop when processing results of XML batch queries
-      GCAM.ColumnsToDrop = scenario,Notes,Date
+        # If using the XML "setup" system, this is the root folder for
+        # setup source files
+        GCAM.XmlSrc         = %(GCAM.ProjectRoot)s/xmlsrc
 
-      # Control of logging facilities. Level must be one of
-      # {DEBUG, INFO, WARNING, ERROR, FATAL}
-      GCAM.LogLevel   = WARNING
-      GCAM.LogFile    =
-      GCAM.LogConsole = True
+        # The folders for setup-generated XML files.
+        GCAM.LocalXml       = %(GCAM.ProjectRoot)s/local-xml
+        GCAM.DynXml         = %(GCAM.ProjectRoot)s/dyn-xml
 
-      # The name of the queue used for submitting batch jobs on a cluster.
-      GCAM.DefaultQueue = standard
+        # The default input file for the runProj sub-command
+        GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
 
-      GCAM.QsubCommand = qsub -q {queueName} -N {jobName} -l walltime={walltime} \
-         -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB \
-         -v QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
+        # Default location in which to look for scenario directories
+        GCAM.ScenariosDir =
 
-      # Note: --signal=USR1@15 => send SIGUSR1 15s before walltime expires
-      GCAM.SlurmCommand = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \
-         -D {exeDir} --get-user-env=L -s --mem=6000 --tmp=6000 \
-         --export=QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
+        # The location of the libraries needed by ModelInterface
+        GCAM.JavaLibPath = %(GCAM.RefWorkspace)s/libs/basex
 
-      GCAM.BatchCommand = %(GCAM.QsubCommand)s
+        # Arguments to java to ensure that ModelInterface has enough
+        # heap space.
+        GCAM.JavaArgs = -Xms512m -Xmx2g
 
-      # Arguments to qsub's "-l" flag that define required resources
-      GCAM.QsubResources = pvmem=6GB
+        # The name of the database file (or directory, for BaseX)
+        GCAM.DbFile	  = database_basexdb
 
-      # Environment variables to pass to qsub. (Not needed by most users.)
-      GCAM.QsubEnviroVars =
+        # Columns to drop when processing results of XML batch queries
+        GCAM.ColumnsToDrop = scenario,Notes,Date
 
-      # Default location in which to look for scenario directories
-      GCAM.ScenariosDir = %(GCAM.Root)s/scenarios
+        # Change this if desired to increase or decrease diagnostic messages.
+        # A default value can be set here, and a project-specific value can
+        # be set in the project's config file section. Possible values (from most
+        # to least verbose) are: DEBUG, INFO, WARNING, ERROR, CRITICAL
+        GCAM.LogLevel   = WARNING
 
-      # For qsub, the default number of minutes to allocate per task.
-      GCAM.Minutes = 20
+        # Save log messages in the indicated file
+        GCAM.LogFile    =
 
-      # Whether to use the "virtual buffer", allowing ModelInterface to
-      # run without generating pop-up windows on Linux.
-      GCAM.UseVirtualBuffer = yes
+        # Show log messages on the console (terminal)
+        GCAM.LogConsole = True
 
-      # A script to run by queueGCAM after GCAM completes. The script is
-      # called with 3 arguments: workspace directory, XML configuration
-      # file, and scenario name.
-      GCAM.PostProcessor =
+        # The name of the queue used for submitting batch jobs on a cluster.
+        GCAM.DefaultQueue = standard
 
-      # A file that maps GCAM regions to rename them or to aggregate
-      # them. Each line consists of a GCAM region name, some number of
-      # tabs, and the name to map the region to.
-      GCAM.RegionMapFile =
+        GCAM.QsubCommand = qsub -q {queueName} -N {jobName} -l walltime={walltime} \
+          -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s \
+          QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
 
-      # Where to create temporary files
-      GCAM.TempDir = /tmp
+        # --signal=USR1@15 => send SIGUSR1 15s before walltime expires
+        GCAM.SlurmCommand = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \
+          -D {exeDir} --get-user-env=L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \
+          --export=QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
+
+        # Arbitrary arguments to add to the selected batch command
+        GCAM.OtherBatchArgs =
+
+        GCAM.BatchCommand = %(GCAM.SlurmCommand)s
+
+        # Set this to a command to run when the -l flag is passed to gcamtool's
+        # "run" sub-command. The same options are available for substitution as
+        # for the GCAM.BatchCommand.
+        GCAM.LocalCommand =
+
+        # Arguments to qsub's "-l" flag that define required resources
+        GCAM.QsubResources = pvmem=6GB
+
+        # Environment variables to pass to qsub. (Not needed by most users.)
+        GCAM.QsubEnviroVars =
+
+        # For qsub, the default number of minutes to allocate per task.
+        GCAM.Minutes = 20
+
+        # Whether to use the "virtual buffer", allowing ModelInterface to
+        # run without generating pop-up windows on Linux.
+        GCAM.UseVirtualBuffer = yes
+
+        # A script to run by queueGCAM after GCAM completes. The script is
+        # called with 3 arguments: workspace directory, XML configuration
+        # file, and scenario name.
+        GCAM.PostProcessor =
+
+        # A file that maps GCAM regions to rename them or to aggregate
+        # them. Each line consists of a GCAM region name, some number of
+        # tabs, and the name to map the region to.
+        GCAM.RegionMapFile =
+
+        # Where to create temporary files
+        GCAM.TempDir = /tmp
+
+        # For Windows users without permission to create symlinks
+        GCAM.CopyAllFiles = False

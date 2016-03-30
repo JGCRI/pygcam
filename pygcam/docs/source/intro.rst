@@ -60,7 +60,7 @@ Scenario conventions
 We extend the definition of *scenario* to identify a set of XML files that
 are used together. In this approach, "scenario" refers to both the name
 assigned in a configuration.xml file and a corresponding directory holding
-customized XML files, and a configuration file called ``config.xml```.
+customized XML files, and a configuration file called ``config.xml``.
 
 
 Managing multiple workspaces
@@ -115,10 +115,10 @@ to the configuration XML file to computed as
 XML Setup Tools
 ---------------
 
-The R-based gcam-data-system (GDS) is an excellent method for managing
-the core GCAM input files. It is an essential tool for changing global
-parameters such as GDP and population whose influence spans multiple
-values across XML files.
+The R-based gcam-data-system (GDS) that comes with GCAM is an excellent
+method for managing the core GCAM input files. It is an essential tool for
+changing global parameters such as GDP and population whose influence spans
+multiple values across XML files.
 
 The GDS, however, is relatively "heavy-weight". Modifying input files
 is accomplished most safely by copying the entire ``gcam-data-system``
@@ -167,12 +167,13 @@ Core functionality
 The setup module provides functions that automate the manipulation of XML files, including:
 
   * Creation of a ``local-xml`` folder in a user-specified location, and per-project folders
-    within local-xml to organize files used for different analyses.
+    within ``local-xml`` to organize files used for different analyses.
 
   * Programmatically editing input XML files by copying the designated
     files from the "parent" scenario and creating scenario-specific
     versions within the local-xml project folder. Editing is performed
-    using the "xmlstarlet" command-line program. (See http://xmlstar.sourceforge.net)
+    using the ``xmlstarlet`` command-line program.
+    (See http://xmlstar.sourceforge.net)
 
   * Likewise, the parent scenario's ``config.xml`` file is copied
     and modified as indicated by the scenario setup script.

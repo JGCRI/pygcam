@@ -115,31 +115,6 @@ Working with the pygcam source code
 To examine or modify the ``pygcam`` Python code, you need to download
 the code using ``git``.
 
-Tell python where ``pygcam`` is installed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To configure Anaconda to know where the source code version of pygcam is installed,
-do the following.
-
-  - Run the following command to have Python print out the location of the "user site"
-    directory, i.e., where we will create a ".pth" file:
-
-    .. code-block:: bash
-
-       python -c 'import site; site._script()' --user-site
-
-  - Create a file in  the "user site" directory called ``pygcam.pth``. The line should
-    contain a single line with the full pathname to the location to the top-level
-    folder of the ``pygcam`` source code. (The file can be called anything as long as
-    it ends in ``.pth``.) You can do this with a text editor, or with the following
-    commands, however be sure to replace *pygcam-source-path* with the path to
-    the ``pygcam`` source, and *user-site-path* with the path displayed by the
-    command above.
-
-    .. code-block:: bash
-
-       cd *user-site-path*
-       echo "pygcam-source-path" > /pygcam.cfg
-
 Unix-like platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You probably have ``git`` already. Otherwise, find
@@ -186,3 +161,30 @@ on the :doc:`windows` page of this documentation. Follow the following steps:
        cd ~/bb
        git clone git@bitbucket.org:plevin/pygcam.git
 
+Tell python where ``pygcam`` is installed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To configure Anaconda to know where the source code version of pygcam is installed,
+do the following.
+
+  - Run the following command to have Python print out the location of the "user site"
+    directory, i.e., where we will create a ".pth" file:
+
+    .. code-block:: bash
+
+       python -c 'import site; site._script()' --user-site
+
+  - Create a file in  the "user site" directory called ``pygcam.pth``. The line should
+    contain a single line with the full pathname to the location to the top-level
+    folder of the ``pygcam`` source code. (The file can be called anything as long as
+    it ends in ``.pth``.) You can do this with a text editor, or with the following
+    commands, however be sure to replace *pygcam-source-path* with the path to
+    the ``pygcam`` source, and *user-site-path* with the path displayed by the
+    command above.
+
+    .. code-block:: bash
+
+       # For this example, we assume that the user site (printed by the
+       # command above) is /Users/rjp/.local/lib/python2.7/site-packages,
+       # and we have cloned pygcam into the folder /Users/rjp/bb/pygcam:
+
+       echo /Users/rjp/bb/pygcam > /Users/rjp/.local/lib/python2.7/site-packages/pygcam.cfg

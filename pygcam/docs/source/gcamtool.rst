@@ -2,8 +2,9 @@
 ===============
 
 The gcamtool.py script organizes GCAM workflow functionality into a single
-script with sub-commands. The sub-commands are implemented via :doc:`plug-ins <plugin>`,
-so new sub-commands are easily added.
+script with sub-commands. The sub-commands are implemented via
+:ref:`plugins <plugins-label>`, so new (and project-specific) sub-commands
+are easily added.
 
 Command-line usage is described below.
 
@@ -20,7 +21,7 @@ Usage
       [Note: This script reads instructions from the file :ref:`project.xml <project-xml>`, the
       location of which is taken from the user's :ref:`~/.pygcam.cfg <pygcam-cfg>` file. The
       :ref:`gcamtool runProj <runProj-label>` sub-command was developed for use with the
-      `gcam-utils <https://bitbucket.org/plevin/gcam-utils/wiki/Home>`__
+      `gcam-utils <https://bitbucket.org/plevin/gcam-utils/wiki/Home>`_
       scripts, however any scripts or programs can be called in workflow 'steps'.]
 
       Examples:
@@ -63,3 +64,10 @@ Usage
       .. _protect-label:
 
       [N.B. The :ref:`project.xml <protect-xml>` page describes the XML input file to this sub-command.]
+
+
+Extending gcamtool using plug-ins
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  .. _plugins-label:
+
+TBD.

@@ -206,8 +206,6 @@ no attributes.
 +=============+============+===========+===================================+
 | name        | yes        | (none)    | text                              |
 +-------------+------------+-----------+-----------------------------------+
-| configVar   | no         | (none)    | name of a variable in ~/.pygcam   |
-+-------------+------------+-----------+-----------------------------------+
 | eval        | no         | "0"       | {"0", "1"}                        |
 +-------------+------------+-----------+-----------------------------------+
 
@@ -218,8 +216,7 @@ project.
 
 Variables can be defined in the ``<defaults>`` section, in which case
 they can be accessed by all projects. Variable can be added or redefined
-in ``<project>`` definitions. Two special types of variables (config
-file variables and automatic variables) are described further below.
+in ``<project>`` definitions. (Automatic variables are described further below.)
 
 The ``<vars>`` element contains a series of ``<var>`` declarations.
 Values can be assigned directly to variable names, as in:
@@ -241,17 +238,10 @@ set the attribute ``eval="1"``. Default is ``eval="0"``.
 Config file variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-Any ``<var>`` can take its value from the value of a configuration file
-(``~/.config/pygcam.cfg``) variable by specifying the attribute
-``configVar="XXX"``, where *XXX* is the name of the config file variable
-to copy. For example:
+Value for the current project are loaded from the configuration file
+(``~/.config/pygcam.cfg``) automatically. Note that the names are
+case sensitive. See :doc:`config` for a list of defined variables.
 
-  .. code-block:: xml
-
-    <var name="queryFile" configVar="GCAM.QueryFile"/>
-
-assigns to the variable ``queryFile`` the value from the configuration
-file variable named ``GCAM.QueryFile``.
 
 Required variables
 ~~~~~~~~~~~~~~~~~~
