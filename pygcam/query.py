@@ -10,7 +10,7 @@
 import os
 import re
 import subprocess
-from .common import getTempFile, mkdirs, ensureExtension, saveToFile
+from .utils import getTempFile, mkdirs, ensureExtension, saveToFile
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
 from .Xvfb import Xvfb
@@ -406,6 +406,11 @@ def _copyToLogFile(logFile, filename, msg=''):
             m.write(msg)
             map(m.write, f.readlines())
 
+def _deleteFile(filename):
+    try:
+        os.remove(filename)
+    except:
+        pass
 
 def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
                   csvFile=None, miLogFile=None, regions=None,
@@ -498,7 +503,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
             finally:
                 if failed:
                     _logger.error("Query '%s' failed. Deleting '%s'", queryName, csvPath)
-                    os.remove(csvPath)
+                    _deleteFile(csvPath)
         except:
             raise
 
@@ -507,7 +512,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
                 deleting = 'Not deleting' if noDelete else 'Deleting'
                 _logger.debug("% tmp batch file '%s'", deleting, filename)
                 if not noDelete:
-                    os.remove(batchFile)
+                    _deleteFile(batchFile)
 
             _maybeDelete(batchFile)
             if isTempFile:
@@ -630,7 +635,7 @@ def main(args):
             if not queryName or queryName[0] == '#':    # allow blank lines and comments
                 continue
 
-            _logger.debug("Processing query '%s'", queryName)
+            _logger.info("Processing query '%s'", queryName)
 
             runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
                           miLogFile=miLogFile, regions=regions, regionMap=regionMap,

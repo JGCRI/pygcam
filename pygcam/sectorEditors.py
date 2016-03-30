@@ -1,5 +1,8 @@
 from os.path import join as pathjoin
-from .setup import _echo, ConfigEditor, xmlEdit, extractStubTechnology, expandYearRanges
+from .log import getLogger
+from .setup import ConfigEditor, xmlEdit, extractStubTechnology
+
+_logger = getLogger(__name__)
 
 REFINING_SECTOR = 'refining'
 BIOMASS_LIQUIDS = 'biomass liquids'
@@ -15,8 +18,16 @@ class RefiningEditor(ConfigEditor):
     def _setRefinedFuelShutdownRate(self, fuel, year, rate):
         self.setGlobalTechShutdownRate(self, REFINING_SECTOR, BIOMASS_LIQUIDS, fuel, year, rate)
 
+    # def setup(self, stopPeriod=None, dynamic=False, writeDebugFile=None,
+    #           writePrices=None, writeOutputCsv=None, writeXmlOutputFile=None):
+    #     super(RefiningEditor, self).setup(stopPeriod=stopPeriod, dynamic=dynamic,
+    #                                       writeDebugFile=writeDebugFile,
+    #                                       writePrices=writePrices,
+    #                                       writeOutputCsv=writeOutputCsv,
+    #                                       writeXmlOutputFile=writeXmlOutputFile)
+
     def setRefinedFuelShutdownRate(self, fuel, year, rate):
-        _echo("Set %s shutdown rate to %s for %s in %s" % (fuel, rate, self.name, year))
+        _logger.info("Set %s shutdown rate to %s for %s in %s" % (fuel, rate, self.name, year))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
@@ -29,6 +40,7 @@ class RefiningEditor(ConfigEditor):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
+
     # Deprecated
     # def setRefiningNonEnergyCostByYear(self, fuel, pairs):
     #     '''
@@ -37,7 +49,7 @@ class RefiningEditor(ConfigEditor):
     #     of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s", which provides
     #     an alternative timestep. The price is applied to all years indicated by the range.
     #     '''
-    #     _echo("Set non-energy-cost of %s for %s to %s" % (fuel, self.name, pairs))
+    #     _logger.info("Set non-energy-cost of %s for %s to %s" % (fuel, self.name, pairs))
     #
     #     enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
     #
@@ -111,7 +123,7 @@ class BioenergyEditor(RefiningEditor):
         Note that the standard reference supply curve for residue is:
         0% at 1975$0; 25% at $1.2; 65% at $1.5; 100% at $10.
         """
-        _echo("Adjust residue supply curves for %s (%s, %s:%s@%s, %s:%s@%s)" % \
+        _logger.info("Adjust residue supply curves for %s (%s, %s:%s@%s, %s:%s@%s)" % \
              (self.name, target, loTarget, loFract, loPrice, hiTarget, hiFract, hiPrice))
 
         # Create modified version of resbio_input.xml and modify config to use it
@@ -154,7 +166,7 @@ class BioenergyEditor(RefiningEditor):
         self.updateScenarioComponent("resources", resourcesFileRel)
 
     def regionalizeBiomassMarket(self, region):
-        _echo("Regionalize %s biomass market for %s" % (region, self.name))
+        _logger.info("Regionalize %s biomass market for %s" % (region, self.name))
 
         resourcesFileRel, resourcesFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "resources.xml"))
 
@@ -178,7 +190,7 @@ class BioenergyEditor(RefiningEditor):
         electricity required per GJ of ethanol. These appear in two files, so we edit
         them both.
         '''
-        _echo("Set global corn ethanol coefficients: corn=%s, gas=%s, elec=%s" % \
+        _logger.info("Set global corn ethanol coefficients: corn=%s, gas=%s, elec=%s" % \
              (cornCoef, gasCoef, elecCoef))
 
         # XPath applies to file energy-xml/en_supply.xml
@@ -219,7 +231,7 @@ class BioenergyEditor(RefiningEditor):
         :return:
             nothing
         '''
-        _echo("Set global biomass coefficients for %s: %s" % (fuelName, pairs))
+        _logger.info("Set global biomass coefficients for %s: %s" % (fuelName, pairs))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
@@ -243,7 +255,7 @@ class BioenergyEditor(RefiningEditor):
         purpose-grown biomass. The line(s) we need to edit in land_input_3.xml is:
         <isNewTechnology fillout="1" year="2020">1</isNewTechnology>
         '''
-        _echo("Turn off purpose-grown biomass technology in %s for %s" % (region, self.name))
+        _logger.info("Turn off purpose-grown biomass technology in %s for %s" % (region, self.name))
 
         landInput3Rel, landInput3Abs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, "land_input_3.xml"))
 
@@ -265,7 +277,7 @@ class BioenergyEditor(RefiningEditor):
         are the new prices to set; loFract and hiFract are the new fractions to assign
         to these prices.
         '''
-        _echo("Adjust forest residue supply curves for %s" % self.name)
+        _logger.info("Adjust forest residue supply curves for %s" % self.name)
 
         # Create modified version of resbio_input.xml and modify config to use it
         resbioFileRel, resbioFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, "resbio_input.xml"))
@@ -308,7 +320,7 @@ class BioenergyEditor(RefiningEditor):
         Create modified version of cellEthanolUSA.xml with the given share-weight
         for the given fuel in the given year.
         '''
-        _echo("Set US share-weight to %s for cellulosic ethanol in %s for %s" % (shareweight, year, self.name))
+        _logger.info("Set US share-weight to %s for cellulosic ethanol in %s for %s" % (shareweight, year, self.name))
 
         yearConstraint = ">= 2015" if year == 'all' else ("=" + year)
 
@@ -323,7 +335,7 @@ class BioenergyEditor(RefiningEditor):
         Copy the stub-technology for corn ethanol to CornEthanolUSA.xml and CornEthanolUSA2.xml
         so they can be manipulated in the US only.
         '''
-        _echo("Add corn ethanol stub technology in USA")
+        _logger.info("Add corn ethanol stub technology in USA")
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
         extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol')
@@ -338,7 +350,7 @@ class BioenergyEditor(RefiningEditor):
         '''
         Same as corn ethanol above, but for cellulosic ethanol
         '''
-        _echo("Add cellulosic ethanol stub-technology in USA")
+        _logger.info("Add cellulosic ethanol stub-technology in USA")
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
         extractStubTechnology('USA', enTransFileAbs, self.cellEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'cellulosic ethanol')
@@ -349,7 +361,7 @@ class BioenergyEditor(RefiningEditor):
         '''
         Same as cellulosic ethanol above
         '''
-        _echo("Add FT biofuels stub-technology in USA")
+        _logger.info("Add FT biofuels stub-technology in USA")
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
         extractStubTechnology('USA', enTransFileAbs, self.ftBiofuelsUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'FT biofuels')
@@ -368,7 +380,7 @@ class BioenergyEditor(RefiningEditor):
 
         assert fuel in fuels, 'setBiofuelRefiningNonEnergyCostUSA: Fuel must be one of %s' % fuels
 
-        _echo("Set US %s non-energy-cost to %s" % (fuel, pairs))
+        _logger.info("Set US %s non-energy-cost to %s" % (fuel, pairs))
 
         prefix = "//stub-technology[@name='%s']" % fuel
         suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
@@ -376,7 +388,7 @@ class BioenergyEditor(RefiningEditor):
         abspath = pathMap[fuel]
         args = [abspath]
         for year, price in pairs:
-            args += ['-u',
+           args += ['-u',
                      prefix + ("/period[@year='%s']" % year) + suffix,
                      '-v', price]
         xmlEdit(*args)
@@ -387,7 +399,7 @@ class BioenergyEditor(RefiningEditor):
         required per GJ of ethanol. Modified from superclass version to operate on
         biofuelTechUSA.xml.
         '''
-        _echo("Set US corn ethanol coefficients for %s (corn=%s, gas=%s, elec=%s)" % \
+        _logger.info("Set US corn ethanol coefficients for %s (corn=%s, gas=%s, elec=%s)" % \
              (self.name, cornCoef, gasCoef, elecCoef))
 
         # Corn input is in elements extracted from global-technology-database in energy-xml/en_supply.xml
@@ -410,7 +422,7 @@ class BioenergyEditor(RefiningEditor):
 
     def setCellEthanolBiomassCoefficientsUSA(self, tuples):
 
-        _echo("Set US cellulosic ethanol biomass coefficients for %s" % self.name)
+        _logger.info("Set US cellulosic ethanol biomass coefficients for %s" % self.name)
 
         prefix = "//stub-technology[@name='cellulosic ethanol']"
         suffix = "minicam-energy-input[@name='regional biomass']/coefficient"
