@@ -10,8 +10,8 @@
 import os
 import re
 import subprocess
-from .common import getTempFile, mkdirs, ensureExtension
-from .error import PygcamException, ConfigFileError, FileFormatError
+from .common import getTempFile, mkdirs, ensureExtension, saveToFile
+from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean
@@ -387,29 +387,55 @@ BatchQueryTemplate = """<?xml version="1.0"?>
 </ModelInterfaceBatch>
 """
 
+
+def _createJavaCommand(batchFile, redirect):
+    jarFile = os.path.normpath(getParam('GCAM.JarFile'))
+    javaArgs = getParam('GCAM.JavaArgs')
+    javaLibPath = getParam('GCAM.JavaLibPath')
+    if javaLibPath:
+        javaLibPath = os.path.normpath(javaLibPath) # do this separately to avoid turning "" into "."
+
+    javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
+
+    command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
+    return command
+
+def _copyToLogFile(logFile, filename, msg=''):
+    with open(logFile, 'a') as m:
+        with open(filename, 'r') as f:
+            m.write(msg)
+            map(m.write, f.readlines())
+
+
 def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
-                  csvFile=None, miLogFile=None, regions=GCAM_32_REGIONS,
+                  csvFile=None, miLogFile=None, regions=None,
                   regionMap=None, noRun=False, noDelete=False):
     """
     Run a query against GCAM's XML database given by `xmldb` (or computed
-    from other parameters), optionally save the results into `outfile`,
-    and return the data in a pandas `DataFrame`.
+    from other parameters), optionally saving the results into `outfile`.
+    Return the data in a pandas `DataFrame`.
 
     :param scenario: (str) the name of the scenario to perform the query on
     :param queryName: (str) the name of a query to execute
-    :param queryPath:
-    :param outputDir:
+    :param queryPath: (str) a list of directories or XML filenames, separated
+        by a colon (on Unix) or a semi-colon (on Windows)
+    :param outputDir: (str) the directory in which to write the .CSV
+        with query results
     :param xmldb: (str) the pathname to the XML database to query
     :param csvFile: if None, query results are written to a computed filename.
-    :param miLogFile:
-    :param regions:
-    :param regionMap:
-    :param noRun:
-    :param noDelete:
-    :return:
+    :param miLogFile: (str) optional name of a log file to write ModelInterface output to.
+    :param regions: (iterable of str) the regions you want to include in the query
+    :param regionMap: (dict-like) keys are the names of regions that should be mapped; the
+        value is the name of the aggregate region to map into.
+    :param noRun: (bool) if True, the command is printed but not executed
+    :param noDelete: (bool) if True, temporary files created by this function are
+        not deleted (use for debugging)
+    :return: (str) the absolute path to the generated .CSV file, or None
     """
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
+
+    regions = regions or GCAM_32_REGIONS # set default here so it doesn't mess up doc for this method
 
     # Look for both the literal name as given as well as the name with underscores replaced with spaces
     filename, isTempFile = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap)
@@ -429,34 +455,18 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
     batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=filename, csvFile=csvPath, xmldb=xmldb)
 
     _logger.debug("Creating temporary batch file '%s'", batchFile)
+    saveToFile(batchFileText, filename=batchFile)
 
-    with open(batchFile, "w") as fp:
-        fp.write(batchFileText)
-
-    _logger.debug("Generating %s", csvPath)
+    _logger.debug("Writing results to: %s", csvPath)
 
     redirect = ">> %s 2>&1" % miLogFile if miLogFile else ''
 
-    def copyToLogFile(logFile, filename, msg=''):
-        with open(logFile, 'a') as m:
-            with open(filename, 'r') as f:
-                m.write(msg)
-                map(m.write, f.readlines())
-
     if miLogFile:
         mkdirs(os.path.dirname(miLogFile))
-        copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
-        copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
+        _copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
+        _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
 
-    jarFile     = os.path.normpath(getParam('GCAM.JarFile'))
-    javaArgs    = getParam('GCAM.JavaArgs')
-    javaLibPath = getParam('GCAM.JavaLibPath')
-    if javaLibPath:
-        javaLibPath = os.path.normpath(javaLibPath) # do this separately to avoid turning "" into "."
-
-    javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
-
-    command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
+    command = _createJavaCommand(batchFile, redirect)
 
     if noRun:
         print command
@@ -464,58 +474,45 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
         _logger.debug(command)
 
     if not noRun:
-
-        # TBD: this will be unnecessary with the next release of ModelInterface
-        useVirtualBuffer = getParamAsBoolean('GCAM.UseVirtualBuffer')
-
         try:
-            xvfb = None
-            if useVirtualBuffer:
-                xvfb = Xvfb()      # run the X virtual buffer to suppress popup windows
-
-            subprocess.call(command, shell=True)
+            if getParamAsBoolean('GCAM.UseVirtualBuffer'):
+                with Xvfb():
+                    subprocess.call(command, shell=True)
+            else:
+                subprocess.call(command, shell=True)
 
             # The java program always exits with 0 status, but when the query fails,
             # it writes an error message to the CSV file. If this occurs, we delete
             # the file.
-            csvExists = False
-
-            if os.path.exists(csvPath):
-                csvExists = True
+            try:
+                failed = False
                 with open(csvPath, 'r') as f:
                     line = f.readline()
 
-            if not csvExists or line.find('java.land.Exception') >= 0:
-                _logger.error("Query '%s' failed.", queryName)
-                if csvExists:
-                    _logger.debug("Deleting '%s'", csvPath)
+                if re.search('java.*Exception', line, flags=re.IGNORECASE):
+                    failed = True
+
+            except Exception:
+                failed = True
+
+            finally:
+                if failed:
+                    _logger.error("Query '%s' failed. Deleting '%s'", queryName, csvPath)
                     os.remove(csvPath)
-
-            # Deprecated -- fails on Windows
-            # testCommand = "head -1 '%s' | grep -q 'java.lang.Exception:'" % csvPath
-            # if subprocess.call(testCommand, shell=True) == 0:
-            #     _logger.error("Query '%s' failed.\nDeleting '%s'", queryName, csvPath)
-            #     os.remove(csvPath)
-
         except:
             raise
 
         finally:        # caller (runGCAM function) traps exceptions, so we just re-raise
-            if noDelete:
-                _logger.debug("Not deleting tmp batch file '%s'", batchFile)
-            else:
-                _logger.debug("Deleting tmp batch file '%s'", batchFile)
-                os.remove(batchFile)
+            def _maybeDelete(filename):
+                deleting = 'Not deleting' if noDelete else 'Deleting'
+                _logger.debug("% tmp batch file '%s'", deleting, filename)
+                if not noDelete:
+                    os.remove(batchFile)
 
-            if xvfb:
-                xvfb.terminate()
-
+            _maybeDelete(batchFile)
             if isTempFile:
-                if noDelete:
-                    _logger.debug("Not deleting tmp file '%s'", filename)
-                else:
-                    _logger.debug("Deleting tmp file '%s'", filename)
-                    os.remove(filename)
+                _maybeDelete(filename)
+
 
 def ensureCSV(file):
     return ensureExtension(file, '.csv')
@@ -612,7 +609,7 @@ def main(args):
     _logger.debug("Query names: '%s'", queryNames)
 
     if not queryNames:
-        raise PygcamException("Error: At least one query name must be specified")
+        raise CommandlineError("Error: At least one query name must be specified")
 
     mkdirs(outputDir)
 
@@ -657,7 +654,8 @@ class QueryCommand(SubcommandABC):
 
                   The named queries are located using the value of config variable GCAM.QueryPath,
                   which can be overridden with the -Q argument. The QueryPath consists of one or
-                  more colon-delimited elements that can identify directories or XML files. The
+                  more colon-delimited (on Unix) or semicolon-delimited (on Windows)
+                  elements that can identify directories or XML files. The
                   elements of QueryPath are searched in order until the named query is found. If
                   a path element is a directory, the filename composed of the query + '.xml' is
                   sought in that directory. If the path element is an XML file, a query with a
