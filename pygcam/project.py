@@ -11,10 +11,11 @@
 import os
 import sys
 import shlex
+import re
 from os.path import join
 from lxml import etree as ET
 from .config import getParam, getConfigDict
-from .common import getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat
+from .utils import getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .subcommand import SubcommandABC
@@ -47,7 +48,7 @@ def getDefaultGroup(groups):
     raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
 
-class TmpFile(object):
+class _TmpFile(object):
     """
     Represents the ``<tmpFile>`` element in the projects.xml file.
     """
@@ -56,7 +57,7 @@ class TmpFile(object):
 
     def __init__(self, node):
         """
-        defaults is an optional TmpFile instance from which to
+        defaults is an optional _TmpFile instance from which to
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
@@ -68,6 +69,7 @@ class TmpFile(object):
         self.eval    = getBooleanXML(node.get('eval',    '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
         self.varName = name
+        self.path    = None
 
         default = self.Instances.get(name)  # save default node of the same name, if any
         self.Instances[name] = self         # replace default with our own definition
@@ -95,6 +97,8 @@ class TmpFile(object):
                 os.unlink(path)
             except:
                 _logger.warn("Failed to delete file '%s", path)
+
+        cls.FilesToDelete = []
 
     @classmethod
     def writeFiles(cls, argDict):
@@ -259,11 +263,15 @@ class Variable(SimpleVariable):
             # TBD: might only do this if var.evaluate is set
             argDict[name] = var.evaluate(argDict)
 
-    def evaluate(self, argDict):
-        value = self.getValue()
+    def evaluate(self, argDict, value=None):
+        # optional arg lets us call it recursively
+        value = value or self.getValue()
+
         # result = value.format(**argDict) if value and self.eval else value
         result = simpleFormat(value, argDict) if value and self.eval else value
-        return result
+
+        # recurse in case there are vars whose values are variable references
+        return self.evaluate(argDict, value=result) if re.search('\{[^\}]+\}', result) else result
 
 
 class Project(object):
@@ -325,7 +333,7 @@ class Project(object):
 
         dfltTmpFileNodes = defaultsNode.findall('tmpFile')
         projTmpFileNodes = projectNode.findall('tmpFile')
-        self.tmpFiles = map(TmpFile, dfltTmpFileNodes + projTmpFileNodes)
+        self.tmpFiles = map(_TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
     @staticmethod
     def validateXML(doc, raiseError=True):
@@ -497,7 +505,7 @@ class Project(object):
             # variables are handled correctly, though it does result in the files being
             # written multiple times (though with different values.)
             Variable.evaluateVars(argDict)
-            TmpFile.writeFiles(argDict)
+            _TmpFile.writeFiles(argDict)
 
             try:
                 # Loop over all steps and run those that user has requested
@@ -547,7 +555,7 @@ def driver(args, tool):
     try:
         project.run(scenarios, steps, skips, args, tool)
     finally:
-        TmpFile.deleteFiles()
+        _TmpFile.deleteFiles()
 
 
 class ProjectCommand(SubcommandABC):
