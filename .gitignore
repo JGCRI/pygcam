@@ -24,3 +24,5 @@
 build
 pygcam.egg-info
 pygcam/archive
+*.orig
+pygcam-saved.tgz
