@@ -159,7 +159,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
 
     # Insert attribute names to the new hierarchy and rename technology => stub-technology (for global-tech-db case)
     cmd2 = "xml ed " + attr("region", region) + attr(sectorElement, sector) + attr("subsector", subsector) + \
-           '''-r "//technology[@name='%s']" -v 'stub-technology' ''' % technology
+           '''-r "//technology[@name='%s']" -v stub-technology ''' % technology
 
     # Workaround for parsing error: explicitly name shutdown deciders
     for name in ['phased-shutdown-decider', 'profit-shutdown-decider']:
