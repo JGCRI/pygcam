@@ -510,7 +510,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
         finally:        # caller (runGCAM function) traps exceptions, so we just re-raise
             def _maybeDelete(filename):
                 deleting = 'Not deleting' if noDelete else 'Deleting'
-                _logger.debug("% tmp batch file '%s'", deleting, filename)
+                _logger.debug("%s tmp batch file '%s'", deleting, filename)
                 if not noDelete:
                     _deleteFile(batchFile)
 
