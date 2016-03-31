@@ -286,7 +286,7 @@ class ConfigEditor(object):
         """
         _logger.info("Generating scenario %s" % self.name)
 
-        # Delete old generated files in case the baseline we're working from has changed
+        # Delete old generated scenario files
         scenDir = self.scenario_dir_abs
         dynDir  = self.scenario_dyn_dir_abs
         shutil.rmtree(scenDir)
@@ -305,7 +305,6 @@ class ConfigEditor(object):
 
         if xmlFiles:
             _logger.info("Copy static XML files to %s" % scenDir)
-            #mkdirs(scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
@@ -314,7 +313,6 @@ class ConfigEditor(object):
             # subprocess.call("cp -p %s/*.xml %s" % (xmlSubdir, scenDir), shell=True)
 
             if dynamic:
-                #mkdirs(dynDir)
                 for src in xmlFiles:
                     dst = os.path.join(dynDir, os.path.basename(src))
                     os.symlink(src, dst)
