@@ -177,6 +177,9 @@ GCAM.TempDir = /tmp
 
 # For Windows users without permission to create symlinks
 GCAM.CopyAllFiles = False
+
+# For debugging purposes: gcamtool.py can show a stack trace on error
+GCAM.ShowStackTrace = False
 """
 
 def _getCommentedDefaults():

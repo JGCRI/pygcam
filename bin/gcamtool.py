@@ -10,7 +10,7 @@
 '''
 
 import sys
-from pygcam.config import getConfig
+from pygcam.config import getConfig, getParamAsBoolean
 from pygcam.log import getLogger, configureLogs
 from pygcam.tool import GcamTool, PROGRAM
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     except Exception, e:
         print "%s failed: %s" % (PROGRAM, e)
 
-        if True: # getLogLevel() == 'DEBUG':
+        if getParamAsBoolean('GCAM.ShowStackTrace'):
             import traceback
             traceback.print_exc()
 
