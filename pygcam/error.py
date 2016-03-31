@@ -31,6 +31,14 @@ class CommandlineError(Exception):
     """
     pass
 
+class ProgramExecutionError(PygcamException):
+    def __init__(self, command, exitCode):
+        self.command = command
+        self.exitCode = exitCode
+
+    def __str__(self):
+        return "Command '%s' failed with exit code %s" % (self.command, self.exitCode)
+
 class SetupException(Exception):
     """
     Raised from the setup sub-system.

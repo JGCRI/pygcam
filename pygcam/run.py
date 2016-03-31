@@ -11,11 +11,12 @@ import subprocess
 import platform
 import shutil
 from lxml import etree as ET
-from pygcam.utils import mkdirs
-from pygcam.config import getConfig, getParam, getParamAsBoolean
-from pygcam.log import getLogger
-from pygcam.windows import setJavaPath, removeSymlink
-from pygcam.subcommand import SubcommandABC
+from .error import ConfigFileError, ProgramExecutionError
+from .utils import mkdirs
+from .config import getConfig, getParam, getParamAsBoolean
+from .log import getLogger
+from .windows import setJavaPath, removeSymlink
+from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -118,7 +119,7 @@ def setupWorkspace(runWorkspace):
 
 CONFIG_FILE_DELIM = ':'
 
-def driver(args):
+def runGCAM(args):
     getConfig(args.configSection)
     from .config import CONFIG_VAR_NAME, WORKSPACE_VAR_NAME, NO_RUN_GCAM_VAR_NAME
 
@@ -149,6 +150,16 @@ def driver(args):
     exeDir = os.path.join(workspace, 'exe')
 
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
+
+    def runCommand(command, args=None, shell=False):
+        '''
+        Run the command given by the args list (if given) or the command
+        string and raise the ProgramExecutionError exception if it fails.
+        '''
+        _logger.info('Running: %s', command)
+        exitCode = subprocess.call(args or command, shell=shell)
+        if exitCode != 0:
+            raise ProgramExecutionError(command, exitCode)
 
     if not isQueued:
         if scenarios:
@@ -184,24 +195,17 @@ def driver(args):
 
         try:
             command = batchCmd.format(**batchArgs)
-            print command
         except KeyError as e:
-            print 'Badly formatted batch command string in config file: %s.\nValid keywords are %s' % (e, batchArgs.keys())
-            exit -1
+            raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 
         if not showCommandsOnly:
-            exitStatus = subprocess.call(command, shell=True)
-            return exitStatus
-
+            runCommand(command, shell=True)
     else:
         # Run locally, which might mean on a desktop machine, interactively on a
         # compute node (via "qsub -I", or in batch mode on a compute node.
         gcamPath = getParam('GCAM.Executable')
-        print "cd", exeDir
+        _logger.debug("cd %s", exeDir)
         os.chdir(exeDir)        # if isQsubbed, this is redundant but harmless
-
-
-        exitStatus = 0
 
         for configFile in configFiles:
             gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
@@ -218,22 +222,10 @@ def driver(args):
                 continue
 
             if not postProcessOnly:
-                print gcamCmd
-                exitStatus = subprocess.call(gcamArgs, shell=False)
-                if exitStatus <> 0:
-                    print "GCAM failed with command: %s" % gcamCmd
-                    return exitStatus
+                runCommand(gcamCmd, args=gcamArgs)
 
             if postProcessor:
-                print postProcCmd
-                exitStatus = subprocess.call(postProcArgs, shell=False)
-                if exitStatus <> 0:
-                    print "Post-processor '%s' failed for workspace '%s', configuration file '%s, scenario '%s'" % \
-                          (postProcessor, workspace, configFile, scenarioName)
-                    return exitStatus
-
-        return exitStatus
-
+                runCommand(postProcCmd, args=postProcArgs)
 
 class GcamCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -311,4 +303,4 @@ class GcamCommand(SubcommandABC):
         return parser
 
     def run(self, args, tool):
-        driver(args)
+        runGCAM(args)
