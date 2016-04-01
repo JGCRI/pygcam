@@ -122,7 +122,7 @@ class GcamTool(object):
         designated sub-command.
 
         :param args: an argparse.Namespace of parsed arguments
-        :param recursive: (bool) True when called recursively (e.g., from project.py)
+        :param argList: (list of str) argument list to parse (when called recursively)
         :return: none
         """
         assert args or argList, "gcamtool.run requires either args or argList"

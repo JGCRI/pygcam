@@ -213,7 +213,7 @@ def getBatchDir(scenario, resultsDir, fromMCS=False):
     :param fromMCS: (bool) True if being called from GCAM-MCS
     :return: (str) the pathname to the batch results directory
     """
-    leafDir = 'queryResults' if fromMCS else 'batch-{scenario}'.format(baseline=scenario)
+    leafDir = 'queryResults' if fromMCS else 'batch-{scenario}'.format(scenario=scenario)
     pathname = os.path.join(resultsDir, scenario, leafDir)
     # '{resultsDir}/{scenario}/{leafDir}'.format(resultsDir=resultsDir, scenario=scenario, leafDir=leafDir)
     return pathname

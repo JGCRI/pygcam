@@ -78,7 +78,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
     mkdirs(dirname)
 
     pathname = os.path.join(dirname, constraintFile)
-    _logger.debug("    Generating constraint file", pathname)
+    _logger.debug("Generating constraint file: %s", pathname)
     with open(pathname, 'w') as f:
         f.write(xml)
 
@@ -92,7 +92,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
     source   = os.path.join(localxml, subdir, scenario, policyFile)
     linkname = os.path.join(dirname, policyFile)
 
-    _logger.debug("    Linking to:", source)
+    _logger.debug("Linking to: %s", source)
     if os.path.lexists(linkname):
         os.remove(linkname)
     os.symlink(source, linkname)
