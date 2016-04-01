@@ -12,6 +12,7 @@ import os
 import sys
 import shlex
 import re
+import glob
 from os.path import join
 from lxml import etree as ET
 from .config import getParam, getConfigDict
@@ -191,9 +192,10 @@ class Step(object):
         if not noRun:
             if command[0] == '@':       # run internally in gcamtool
                 argList = shlex.split(command[1:])
+                argList = flatten(map(lambda s: glob.glob(s) or [s], argList))  # expand shell wildcards
                 tool.run(argList=argList)
             else:
-                shellCommand(command)
+                shellCommand(command, shell=True)   # shell=True to expand shell wildcards and so on
 
 
 class SimpleVariable(object):
