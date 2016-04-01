@@ -68,7 +68,7 @@ def setupWorkspace(runWorkspace):
                 # for Windows users without symlink permission
                 _logger.warn('Copying %s to %s' % (srcPath, dstPath))
                 if os.path.isdir(srcPath):
-                    shutil.copytree(srcPath, os.path.dirname(dstPath))
+                    shutil.copytree(srcPath, dstPath)
                 else:
                     shutil.copy2(srcPath, dstPath)
             else:
@@ -109,7 +109,7 @@ def setupWorkspace(runWorkspace):
         if copyAllFiles:
             # for Windows users without symlink permission
             _logger.warn('Copying %s to %s' % (src, dst))
-            shutil.copytree(src, os.path.dirname(dst))
+            shutil.copytree(src, dst)
         else:
             os.symlink(src, dst)
 
