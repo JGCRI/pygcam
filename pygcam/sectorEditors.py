@@ -7,6 +7,14 @@ _logger = getLogger(__name__)
 REFINING_SECTOR = 'refining'
 BIOMASS_LIQUIDS = 'biomass liquids'
 
+# Technology names
+TECH_CORN_ETHANOL       = 'corn ethanol'
+TECH_CELLULOSIC_ETHANOL = 'cellulosic ethanol'
+TECH_FT_BIOFUELS        = 'FT biofuels'
+TECH_BIODIESEL          = 'biodiesel'
+TECH_GTL                = 'gas to liquids'
+TECH_CTL                = 'coal to liquids'
+
 class RefiningEditor(ConfigEditor):
     """
     RefiningEditor add methods that deal with the refinery sector.
