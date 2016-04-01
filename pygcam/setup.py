@@ -37,6 +37,15 @@ pathjoin = os.path.join     # "alias" this since it's used frequently
 LOCAL_XML_NAME = "local-xml"
 DYN_XML_NAME   = "dyn-xml"
 
+# Convenience function for use in setup scripts
+# N.B. Must be called after config is setup (e.g.,
+# after calling ConfigEditor.parseArgs)
+def getSetupDirs():
+    workspace     = getParam('GCAM.RefWorkspace')
+    xmlOutputRoot = getParam('GCAM.ProjectRoot')
+    resultsDir    = getParam('GCAM.RunWorkspaceRoot')
+    return workspace, xmlOutputRoot, resultsDir
+
 def makeDirPath(elements, require=False, create=False, mode=0o775):
     """
     Join the tuple of elements to create a path to a directory,
