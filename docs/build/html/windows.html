@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Using pygcam under Windows &mdash; pygcam 0.1a1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
+        <link rel="next" title="gcamtool.py" href="gcamtool.html"/>
+        <link rel="prev" title="Installation" href="install.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pygcam
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pygcam</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Using pygcam under Windows</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/windows.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="using-pygcam-under-windows">
+<h1>Using pygcam under Windows<a class="headerlink" href="#using-pygcam-under-windows" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal"><span class="pre">pygcam</span></code> package was developed on Unix-like systems (Mac OS, Linux) and
+subsequently ported to Microsoft Windows. This page provides Windows-specific
+information.</p>
+<div class="section" id="enable-symbolic-links">
+<h2>Enable symbolic links<a class="headerlink" href="#enable-symbolic-links" title="Permalink to this headline">¶</a></h2>
+<p>In Unix-like systems, &#8220;symbolic links&#8221; (symlinks) are frequently used to provide shortcuts
+or aliases to files and directories. The pygcam scripts use symlinks to create GCAM workspaces
+without having to lots of large, read-only files. Rather, it creates workspaces with writable
+directories where GCAM will create files at run-time, and it uses symlinks to the read-only
+files (e.g., the GCAM executable) and folders (e.g., the <code class="docutils literal"><span class="pre">input</span></code> directory holding GCAM&#8217;s
+XML input files.</p>
+<p>Windows (Vista and onward) also have symlinks, but only administrators can create symlinks
+<strong>unless specific permission has been granted</strong> to a user. To grant this permission, run the
+Windows program <code class="docutils literal"><span class="pre">gpedit.msc</span></code> and select the option shown in the figure below. Edit the option
+and add the desired user name to the list.</p>
+<p><strong>Note, however, that the user cannot also be in the Administrator
+group or the permission is &#8220;filtered&#8221; out.</strong> (This seems to be a flaw in the design of the
+permission system since one would expect rights to be the union of those for the groups one&#8217;s
+account is in.)</p>
+<blockquote>
+<div><img alt="_images/symlinkPermission.jpg" src="_images/symlinkPermission.jpg" />
+</div></blockquote>
+<dl class="docutils">
+<dt>Also, note the following:</dt>
+<dd><ul class="first last">
+<li><p class="first">To remove a symlink to a file, use the <code class="docutils literal"><span class="pre">del</span></code> command</p>
+</li>
+<li><p class="first">To remove a symlink to a folder, use <code class="docutils literal"><span class="pre">rmdir</span></code> (or <code class="docutils literal"><span class="pre">rd</span></code> for short).</p>
+<p><strong>Using &#8220;del&#8221; on a symlink to a folder will offer to delete not just symlink,
+but also the files in the folder pointed to by the symlink.</strong> (An unfortunate
+violation of the
+<a class="reference external" href="https://en.wikipedia.org/wiki/Principle_of_least_astonishment">principle of least astonishment</a>.)</p>
+</li>
+<li><p class="first">Either type of symlink can be removed using the file Explorer as well.</p>
+</li>
+<li><p class="first">Symlinks work across devices and network, and through other symlinks, however, if you
+are working across multiple drives, be sure that you specify the drive letter (e.g., <code class="docutils literal"><span class="pre">C:</span></code>)
+in the link target or the path will be interpreted relative to the current drive.</p>
+</li>
+<li><p class="first"><strong>Symlinks can be created only on the NT File System (NTFS), not on FAT or FAT32, or
+network-mounted drives in other formats (e.g., Mac OS).</strong> This can be an issue if, for example,
+you want to keep your GCAM workspaces on an external drive. Pygcam will fail when trying to
+create symbolic links in those workspaces.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<div class="section" id="running-python-scripts">
+<h3>Running python scripts<a class="headerlink" href="#running-python-scripts" title="Permalink to this headline">¶</a></h3>
+<p>To run python scripts directly, i.e., with having to run python on the script,
+modify the <code class="docutils literal"><span class="pre">PATH</span></code> environment variable to include the location of the
+<code class="docutils literal"><span class="pre">pygcam/bin</span></code> folder, which holds the scripts.</p>
+<p>To do this: Start menu -&gt; right click on Computer -&gt; Properties -&gt; Advanced,
+then edit the PATH by inserting the full path to your pygcam/bin folder,
+with a semi-colon (;) separating path entries.</p>
+</div>
+<div class="section" id="running-scripts-without-typing-the-py-extension">
+<h3>Running scripts without typing the <code class="docutils literal"><span class="pre">.py</span></code> extension<a class="headerlink" href="#running-scripts-without-typing-the-py-extension" title="Permalink to this headline">¶</a></h3>
+<p>Note that this works when using a cmd.com or PowerShell, but does not work
+under a Cygwin <code class="docutils literal"><span class="pre">bash</span></code> shell.</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Modify the <code class="docutils literal"><span class="pre">PATHEXT</span></code> variable to include Python scripts, e.g.:</p>
+<p><code class="docutils literal"><span class="pre">PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY</span></code></p>
+</li>
+<li><p class="first">In a command window, type the following commands. The first associates
+<code class="docutils literal"><span class="pre">.py</span></code> files with a file type <code class="docutils literal"><span class="pre">Python.File</span></code>. The second specifies
+the command to run to execute files of the type <code class="docutils literal"><span class="pre">Python.File</span></code>.</p>
+</li>
+</ol>
+<blockquote>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span class="na">assoc .py</span><span class="o">=</span><span class="s">Python.File</span>
+<span class="na">ftype Python.File</span><span class="o">=</span><span class="s">c:\Users\{insert your user name}\Anaconda2\python.exe &quot;%1&quot; %*</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<p><em>Note: The path after ``Python.File=`` should be the path to your python executable.</em></p>
+</div>
+</div>
+<div class="section" id="using-cygwin">
+<h2>Using Cygwin<a class="headerlink" href="#using-cygwin" title="Permalink to this headline">¶</a></h2>
+<p>Windows&#8217; native command-line tools are fairly primitive. For folks new to running
+commmand-line programs, I recommend installing the
+(free, open-source) <a class="reference external" href="https://www.cygwin.com/">Cygwin</a> package, which is a set of
+libraries and programs that provides a Linux-like experience under Windows.</p>
+<p>Using <code class="docutils literal"><span class="pre">bash</span></code> will start you up the learning curve to use the GCAM Monte Carlo framework,
+which currently runs only on Linux systems.
+The <code class="docutils literal"><span class="pre">bash</span></code> shell (or your favorite alternative) offers numerous nice features. Exploring
+those is left as an exercise for the reader.</p>
+<p>Cygwin provides an installer GUI that lets you select which packages to install. There is
+a huge set of packages, and you almost certainly won’t want all of it.</p>
+<p>Download the appropriate setup.exe version (probably 64-bit). Run it and, for most people, you&#8217;ll
+just accept all the defaults. You might choose a nearby server for faster downloads.</p>
+<p>I recommend installing just these for now (easy to add more later):</p>
+<blockquote>
+<div><ul>
+<li><p class="first">under <em>Editors</em></p>
+<ul class="simple">
+<li><strong>nano</strong> (a very simple text editor useful for modifying config files and such)</li>
+</ul>
+<p>Editors popular with programmers include <code class="docutils literal"><span class="pre">emacs</span></code> and <code class="docutils literal"><span class="pre">vim</span></code>, though these have a steeper
+learning curve than <code class="docutils literal"><span class="pre">nano</span></code>.</p>
+</li>
+<li><p class="first">Under <em>shells</em>:</p>
+<ul class="simple">
+<li><strong>bash</strong> (The GNU Bourne Again Shell &#8211; this is the terminal program)</li>
+<li><strong>bash-completion</strong> (saves a lot of typing)</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<p>Don’t install python since we’re using Anaconda. Installing another python just confuses things.</p>
+<p>Optionally, if you plan to work with the code in the <code class="docutils literal"><span class="pre">git</span></code> repository, download <code class="docutils literal"><span class="pre">git</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>under <em>Devel</em><ul>
+<li><strong>git</strong> (select “git: Distributed version control system” and all the required libraries will be installed, too.)</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gcamtool.html" class="btn btn-neutral float-right" title="gcamtool.py" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Plevin.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

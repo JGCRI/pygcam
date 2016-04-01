@@ -1,0 +1,575 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pygcam.common &mdash; pygcam 0.1a1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
+        <link rel="next" title="pygcam.config" href="config.html"/>
+        <link rel="prev" title="gcamtool.py" href="gcamtool.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pygcam
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pygcam</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">pygcam.common</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/utils.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pygcam-common">
+<h1><code class="docutils literal"><span class="pre">pygcam.common</span></code><a class="headerlink" href="#pygcam-common" title="Permalink to this headline">¶</a></h1>
+<p>This module contains constants, functions, and classes that are used by various
+other modules of the pygcam toolkit.</p>
+<div class="section" id="module-pygcam.common">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.common" title="Permalink to this headline">¶</a></h2>
+<p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
+<dl class="function">
+<dt id="pygcam.common.coercible">
+<code class="descclassname">pygcam.common.</code><code class="descname">coercible</code><span class="sig-paren">(</span><em>value</em>, <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.coercible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to coerce a value to <cite>type</cite> and raise an error on failure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; any value coercible to <cite>type</cite></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(<cite>type</cite>) the coerced value</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">PygcamException</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.ensureExtension">
+<code class="descclassname">pygcam.common.</code><code class="descname">ensureExtension</code><span class="sig-paren">(</span><em>filename</em>, <em>ext</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.ensureExtension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force a filename to have the given extension, <cite>ext</cite>, adding it to
+any other extension, if present. That is, if <cite>filename</cite> is <code class="docutils literal"><span class="pre">foo.bar</span></code>,
+and <cite>ext</cite> is <code class="docutils literal"><span class="pre">baz</span></code>, the result will be <code class="docutils literal"><span class="pre">foo.bar.baz</span></code>.
+If <cite>ext</cite> doesn&#8217;t start with a &#8221;.&#8221;, one is added.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; filename</li>
+<li><strong>ext</strong> &#8211; the desired filename extension</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">filename with extension <cite>ext</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.flatten">
+<code class="descclassname">pygcam.common.</code><code class="descname">flatten</code><span class="sig-paren">(</span><em>listOfLists</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten one level of nesting given a list of lists. That is, convert
+[[1, 2, 3], [4, 5, 6]] to [1, 2, 3, 4, 5, 6].</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>listOfLists</strong> &#8211; a list of lists, obviously</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the flattened list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.fuelDensityMjPerGal">
+<code class="descclassname">pygcam.common.</code><code class="descname">fuelDensityMjPerGal</code><span class="sig-paren">(</span><em>fuelname</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.fuelDensityMjPerGal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the fuel energy density of the named fuel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fuelname</strong> &#8211; the name of a fuel, which must be one of:
+<code class="docutils literal"><span class="pre">{fame,</span> <span class="pre">bd,</span> <span class="pre">biodiesel,</span> <span class="pre">ethanol,</span> <span class="pre">etoh,</span> <span class="pre">corn</span> <span class="pre">ethanol,</span> <span class="pre">cellulosic</span> <span class="pre">ethanol,</span> <span class="pre">sugar</span> <span class="pre">cane</span> <span class="pre">ethanol,</span> <span class="pre">ft,</span> <span class="pre">FT</span> <span class="pre">biofuels,</span> <span class="pre">biogasoline,</span> <span class="pre">bio-gasoline}</span></code>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">energy density (MJ/gal)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.getBatchDir">
+<code class="descclassname">pygcam.common.</code><code class="descname">getBatchDir</code><span class="sig-paren">(</span><em>scenario</em>, <em>resultsDir</em>, <em>fromMCS=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getBatchDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of the directory holding batch query results. This differs
+when running in pygcam&#8217;s gcamtool.py or when running in GCAM-MCS.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scenario</strong> &#8211; (str) the name of a scenario</li>
+<li><strong>resultsDir</strong> &#8211; (str) the directory in which the batch results directory
+should be created</li>
+<li><strong>fromMCS</strong> &#8211; (bool) True if being called from GCAM-MCS</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the pathname to the batch results directory</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.getBooleanXML">
+<code class="descclassname">pygcam.common.</code><code class="descname">getBooleanXML</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getBooleanXML" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a value from an XML file and convert it into a boolean True or False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; any value (it&#8217;s first converted to a string)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True of the value is in [&#8216;true&#8217;, &#8216;1&#8217;], False if the value
+is in [&#8216;false&#8217;, &#8216;0&#8217;]. An exception is raised if any other
+value is passed.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">PygcamException</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.getTempFile">
+<code class="descclassname">pygcam.common.</code><code class="descname">getTempFile</code><span class="sig-paren">(</span><em>suffix</em>, <em>text=True</em>, <em>tmpDir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getTempFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the name of a temporary file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>suffix</strong> &#8211; the extension to give the temporary file</li>
+<li><strong>text</strong> &#8211; True if this will be a text file</li>
+<li><strong>tmpDir</strong> &#8211; the directory in which to create the (defaults to
+the value of configuration file variable &#8216;GCAM.TempDir&#8217;, or &#8216;/tmp&#8217;
+if the variable is not found.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the name of the temporary file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.getYearCols">
+<code class="descclassname">pygcam.common.</code><code class="descname">getYearCols</code><span class="sig-paren">(</span><em>years</em>, <em>timestep=5</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getYearCols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a list of names of year columns in GCAM result files from a
+string indicating a year range.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>years</strong> &#8211; (str) a string of the form &#8220;2020-2050&#8221;</li>
+<li><strong>timestep</strong> &#8211; (int) the number of years between timesteps</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(list of strings) the names of the corresponding columns</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.loadModuleFromPath">
+<code class="descclassname">pygcam.common.</code><code class="descname">loadModuleFromPath</code><span class="sig-paren">(</span><em>modulePath</em>, <em>raiseOnError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.loadModuleFromPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a module from a &#8216;.py&#8217; or &#8216;.pyc&#8217; file from a path that ends in the
+module name, i.e., from &#8220;foo/bar/Baz.py&#8221;, the module name is &#8216;Baz&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>modulePath</strong> &#8211; (str) the pathname of a python module (.py or .pyc)</li>
+<li><strong>raiseOnError</strong> &#8211; (bool) if True, raise an error if the module cannot
+be loaded</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(module) a reference to the loaded module, if loaded, else None.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">PygcamException</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.loadObjectFromPath">
+<code class="descclassname">pygcam.common.</code><code class="descname">loadObjectFromPath</code><span class="sig-paren">(</span><em>objName</em>, <em>modulePath</em>, <em>required=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.loadObjectFromPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a module and return a reference to a named object in that module.
+If &#8216;required&#8217; and the object is not found, an error is raised, otherwise,
+None is returned if the object is not found.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>objName</strong> &#8211; (str) the name of an object to find in the <cite>modulePath</cite></li>
+<li><strong>modulePath</strong> &#8211; (str) the path to a python module to load</li>
+<li><strong>required</strong> &#8211; (bool) if True and the object cannot be loaded, raise
+an error.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a reference to the loaded object, if loaded. If not loaded and
+<cite>required</cite> is False, return None.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">PygcamException</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.mkdirs">
+<code class="descclassname">pygcam.common.</code><code class="descname">mkdirs</code><span class="sig-paren">(</span><em>newdir</em>, <em>mode=504</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.mkdirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to create the full path <cite>newdir</cite> and ignore the error if it already exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>newdir</strong> &#8211; the directory to create (along with any needed parent directories)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.printSeries">
+<code class="descclassname">pygcam.common.</code><code class="descname">printSeries</code><span class="sig-paren">(</span><em>series</em>, <em>label</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.printSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a <cite>series</cite> of values, with a give <cite>label</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>series</strong> &#8211; (convertible to pandas Series) the values</li>
+<li><strong>label</strong> &#8211; (str) a label to print for the data</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.saveToFile">
+<code class="descclassname">pygcam.common.</code><code class="descname">saveToFile</code><span class="sig-paren">(</span><em>txt</em>, <em>dirname=''</em>, <em>filename=''</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.saveToFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the given text to a file in the given directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>txt</strong> &#8211; (str) the text to save</li>
+<li><strong>dirname</strong> &#8211; (str) path to a directory</li>
+<li><strong>filename</strong> &#8211; (str) the name of the file to create</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.shellCommand">
+<code class="descclassname">pygcam.common.</code><code class="descname">shellCommand</code><span class="sig-paren">(</span><em>command</em>, <em>shell=True</em>, <em>raiseError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.shellCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a shell command and optionally raise PygcamException error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>command</strong> &#8211; the command to run, with arguments. This can be expressed
+either as a string or as a list of strings.</li>
+<li><strong>shell</strong> &#8211; if True, run <cite>command</cite> in a shell, otherwise run it directly.</li>
+<li><strong>raiseError</strong> &#8211; if True, raise <cite>ToolError</cite> on command failure.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">exit status of executed command</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">ToolError</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.simpleFormat">
+<code class="descclassname">pygcam.common.</code><code class="descname">simpleFormat</code><span class="sig-paren">(</span><em>s</em>, <em>varDict</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.simpleFormat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple version of str.format that does not treat &#8216;.&#8217; as
+an attribute reference.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s</strong> &#8211; (str) string with args in curly braces</li>
+<li><strong>varDict</strong> &#8211; (dict) dictionary of var names and values</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) formatted string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.common.unixPath">
+<code class="descclassname">pygcam.common.</code><code class="descname">unixPath</code><span class="sig-paren">(</span><em>path</em>, <em>rmFinalSlash=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.unixPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a path to use Unix-style slashes, optionally
+removing the final slash, if present.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> &#8211; (str) a pathname</li>
+<li><strong>rmFinalSlash</strong> &#8211; (bool) True if a final slash should
+be removed, if present.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the modified pathname</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="config.html" class="btn btn-neutral float-right" title="pygcam.config" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gcamtool.html" class="btn btn-neutral" title="gcamtool.py" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Plevin.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -21,7 +21,13 @@
 /dist/
 
 # Output
-build
+docs/build/.doctrees
+docs/build/doctrees
+docs/build/latex
+docs/build/.buildinfo
+build/lib
+build/scripts-2.7
+
 pygcam.egg-info
 pygcam/archive
 *.orig

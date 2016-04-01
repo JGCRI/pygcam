@@ -1,0 +1,424 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pygcam.query &mdash; pygcam 0.1a1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
+        <link rel="next" title="pygcam.setup" href="setup.html"/>
+        <link rel="prev" title="pygcam.project" href="project.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pygcam
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pygcam</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">pygcam.query</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/query.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pygcam-query">
+<h1><code class="docutils literal"><span class="pre">pygcam.query</span></code><a class="headerlink" href="#pygcam-query" title="Permalink to this headline">¶</a></h1>
+<p>This module contains classes that allow you to run batch queries against
+GCAM&#8217;s XML database and perform various common operations on the resulting
+.csv files. This module relies heavily on the pandas <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html">DataFrame</a> class.</p>
+<div class="section" id="module-pygcam.query">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.query" title="Permalink to this headline">¶</a></h2>
+<p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
+<dl class="function">
+<dt id="pygcam.query.dropExtraCols">
+<code class="descclassname">pygcam.query.</code><code class="descname">dropExtraCols</code><span class="sig-paren">(</span><em>df</em>, <em>inplace=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.dropExtraCols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop some columns that GCAM queries sometimes return, but which we generally don&#8217;t need.
+The columns to drop are taken from from the configuration file variable <code class="docutils literal"><span class="pre">GCAM.ColumnsToDrop</span></code>,
+which should be a comma-delimited string. The default value is <code class="docutils literal"><span class="pre">scenario,Notes,Date</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>df</strong> &#8211; a <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html">DataFrame</a> hold the results of a GCAM query.</li>
+<li><strong>inplace</strong> &#8211; if True, modify <cite>df</cite> in-place; otherwise return a modified copy.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the original <cite>df</cite> (if inplace=True) or the modified copy.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.getRegionList">
+<code class="descclassname">pygcam.query.</code><code class="descname">getRegionList</code><span class="sig-paren">(</span><em>workspace=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.getRegionList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of the defined region names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>workspace</strong> &#8211; the path to a <code class="docutils literal"><span class="pre">Main_User_Workspace</span></code> directory that
+has the file
+<code class="docutils literal"><span class="pre">input/gcam-data-system/_common/mappings/GCAM_region_names.csv</span></code>,
+or <code class="docutils literal"><span class="pre">None</span></code>, in which case the value of config variable
+<code class="docutils literal"><span class="pre">GCAM.SourceWorkspace</span></code> (if defined) is used. If <cite>workspace</cite> is
+empty or <code class="docutils literal"><span class="pre">None</span></code>, and the config variable <code class="docutils literal"><span class="pre">GCAM.SourceWorkspace</span></code> is
+empty (the default value), the built-in default 32-region list is returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list of strings with the names of the defined regions</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.interpolateYears">
+<code class="descclassname">pygcam.query.</code><code class="descname">interpolateYears</code><span class="sig-paren">(</span><em>df</em>, <em>startYear=0</em>, <em>inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.interpolateYears" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate linearly between each pair of years in the GCAM output. The
+timestep is calculated from the numerical (string) column headings given
+in the <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html">DataFrame</a> <cite>df</cite>, which are assumed to represent years in the time-series.
+The years to interpolate between are read from <cite>df</cite>, so there&#8217;s no dependency
+on any particular time-step, or even on the time-step being constant.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>df</strong> &#8211; (DataFrame) Data of the format returned by batch queries
+on the GCAM XML database</li>
+<li><strong>startYear</strong> &#8211; If non-zero, begin interpolation at this year.</li>
+<li><strong>inplace</strong> &#8211; If True, modify <cite>df</cite> in place; otherwise modify a copy.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">if <cite>inplace</cite> is True, <cite>df</cite> is returned; otherwise a copy
+of <cite>df</cite> with interpolated values is returned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.limitYears">
+<code class="descclassname">pygcam.query.</code><code class="descname">limitYears</code><span class="sig-paren">(</span><em>df</em>, <em>years</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.limitYears" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify df to drop all years outside the range given by <cite>years</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>years</strong> &#8211; a sequence of two years (str or int); only values in this
+range (inclusive) are kept. Data for other years is dropped.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(DataFrame) df, modified in place.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.readCsv">
+<code class="descclassname">pygcam.query.</code><code class="descname">readCsv</code><span class="sig-paren">(</span><em>filename</em>, <em>skiprows=1</em>, <em>years=None</em>, <em>interpolate=False</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.readCsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a CSV file of the form generated by GCAM batch queries, i.e., skip on
+row and then read column headings and data. Optionally drop all years outside
+the <cite>years</cite> given. Optionally linearly interpolate annual values between
+timesteps.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; (str) the path to a CSV file</li>
+<li><strong>skiprows</strong> &#8211; (int) the number of rows to skip before reading the data matrix</li>
+<li><strong>years</strong> &#8211; (iterable of two values coercible to int) the year columns to keep; others are dropped</li>
+<li><strong>interpolate</strong> &#8211; (bool) If True, interpolate annual values between timesteps</li>
+<li><strong>startYear</strong> &#8211; (int) If interpolating, the year to begin interpolation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(DataFrame) the data read in, optionally processed as per arguments</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.readQueryResult">
+<code class="descclassname">pygcam.query.</code><code class="descname">readQueryResult</code><span class="sig-paren">(</span><em>batchDir</em>, <em>baseline</em>, <em>queryName</em>, <em>years=None</em>, <em>interpolate=False</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.readQueryResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compose the name of the &#8216;standard&#8217; result file, read it into a DataFrame and
+return the DataFrame. Data is read from the computed filename
+&#8220;{batchDir}/{queryName}-{baseline}.csv&#8221;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>batchDir</strong> &#8211; (str) a directory in which the data file resides</li>
+<li><strong>baseline</strong> &#8211; (str) the name of a baseline scenario</li>
+<li><strong>queryName</strong> &#8211; (str) the name of a batch query.</li>
+<li><strong>years</strong> &#8211; (iterable of two values coercible to int) the year columnss to keep; others are dropped</li>
+<li><strong>interpolate</strong> &#8211; (bool) If True, interpolate annual values between timesteps</li>
+<li><strong>startYear</strong> &#8211; (int) If interpolating, the year to begin interpolation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(DataFrame) the data in the computed filename.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.readRegionMap">
+<code class="descclassname">pygcam.query.</code><code class="descname">readRegionMap</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.readRegionMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a region map file containing one or more tab-delimited lines of the form
+<code class="docutils literal"><span class="pre">key</span></code> &lt;tab&gt; <code class="docutils literal"><span class="pre">value</span></code>, where <cite>key</cite> should be a standard GCAM region and
+<cite>value</cite> the name of the region to map the original to, which can be an
+existing GCAM region or a new name defined by the user.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; the name of a file containing region mappings</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a dictionary holding the mappings read from <cite>filename</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.runBatchQuery">
+<code class="descclassname">pygcam.query.</code><code class="descname">runBatchQuery</code><span class="sig-paren">(</span><em>scenario</em>, <em>queryName</em>, <em>queryPath</em>, <em>outputDir</em>, <em>xmldb=None</em>, <em>csvFile=None</em>, <em>miLogFile=None</em>, <em>regions=None</em>, <em>regionMap=None</em>, <em>noRun=False</em>, <em>noDelete=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.runBatchQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a query against GCAM&#8217;s XML database given by <cite>xmldb</cite> (or computed
+from other parameters), optionally saving the results into <cite>outfile</cite>.
+Return the data in a pandas <cite>DataFrame</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scenario</strong> &#8211; (str) the name of the scenario to perform the query on</li>
+<li><strong>queryName</strong> &#8211; (str) the name of a query to execute</li>
+<li><strong>queryPath</strong> &#8211; (str) a list of directories or XML filenames, separated
+by a colon (on Unix) or a semi-colon (on Windows)</li>
+<li><strong>outputDir</strong> &#8211; (str) the directory in which to write the .CSV
+with query results</li>
+<li><strong>xmldb</strong> &#8211; (str) the pathname to the XML database to query</li>
+<li><strong>csvFile</strong> &#8211; if None, query results are written to a computed filename.</li>
+<li><strong>miLogFile</strong> &#8211; (str) optional name of a log file to write ModelInterface output to.</li>
+<li><strong>regions</strong> &#8211; (iterable of str) the regions you want to include in the query</li>
+<li><strong>regionMap</strong> &#8211; (dict-like) keys are the names of regions that should be mapped; the
+value is the name of the aggregate region to map into.</li>
+<li><strong>noRun</strong> &#8211; (bool) if True, the command is printed but not executed</li>
+<li><strong>noDelete</strong> &#8211; (bool) if True, temporary files created by this function are
+not deleted (use for debugging)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the absolute path to the generated .CSV file, or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="setup.html" class="btn btn-neutral float-right" title="pygcam.setup" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="project.html" class="btn btn-neutral" title="pygcam.project" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Plevin.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

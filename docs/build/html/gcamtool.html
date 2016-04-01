@@ -1,0 +1,1226 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gcamtool.py &mdash; pygcam 0.1a1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
+        <link rel="next" title="pygcam.common" href="utils.html"/>
+        <link rel="prev" title="Using pygcam under Windows" href="windows.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pygcam
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pygcam</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">gcamtool.py</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/gcamtool.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gcamtool-py">
+<h1><code class="docutils literal"><span class="pre">gcamtool.py</span></code><a class="headerlink" href="#gcamtool-py" title="Permalink to this headline">¶</a></h1>
+<p>The gcamtool.py script organizes GCAM workflow functionality into a single
+script with sub-commands. The sub-commands are implemented via
+<a class="reference internal" href="#plugins-label"><em>plugins</em></a>, so new (and project-specific) sub-commands
+are easily added.</p>
+<p>Command-line usage is described below.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<pre class="literal-block">
+usage: gcamtool.py [-h] [-l {notset,debug,info,warning,error,critical}]
+                   [-s CONFIGSECTION] [-v] [--version]
+                   {chart,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query}
+                   ...
+</pre>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-l</span>, <span class="option">--logLevel</span></kbd></td>
+<td><p class="first">Sets the log level of the program.</p>
+<p class="last">Possible choices: notset, debug, info, warning, error, critical</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s</span>, <span class="option">--configSection</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The name of the config file section to read from.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-v=False</span>, <span class="option">--verbose=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show diagnostic output</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Sub-commands:</dt>
+<dd><dl class="first last docutils">
+<dt><strong>chart</strong></dt>
+<dd><p class="first">Generate charts from CSV files generated by GCAM batch queries</p>
+<p>Generate plots from GCAM-style &#8221;.csv&#8221; files.
+                   Two types of plots are currently supported: (i) stacked bar plots based on summing values
+                   over all years (with optional interpolation of annual values), by the given &#8216;indexCol&#8217;
+                   (default is &#8216;region&#8217;), and (ii) stacked bar plots by year for some data column, where the data
+                   are grouped by and summed across elements with the indicated &#8216;indexCol&#8217;. The first option is
+                   indicated by using the &#8216;-S&#8217; (&#8216;&#8211;sumYears&#8217;) option. Numerous options allow the appearance to
+                   be customized.</p>
+<pre class="literal-block">
+usage: gcamtool.py chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT]
+                         [-d OUTPUTDIR] [-D WORKINGDIR] [-e] [-f FROMFILE]
+                         [-F FUELFILE] [--format FORMAT] [-g] [-i]
+                         [-I INDEXCOL] [-k] [-l] [-L LABELCOLOR]
+                         [-m MULTIPLIER] [-n NCOL] [-N SCENARIO] [--negate]
+                         [-o OUTFILE] [-O] [-p PALETTE] [-r ROTATION]
+                         [-R REFERENCE] [-s SKIPROWS] [-S] [-t YEARSTEP]
+                         [-T TITLE] [--timeseries] [--transparent]
+                         [-u UNSTACKED] [-v VALUECOL] [-x SUFFIX] [-X XLABEL]
+                         [-Y YLABEL] [-y YEARS] [--ymax YMAX] [--ymin YMIN]
+                         [-V] [-z] [--legendY LEGENDY] [--barWidth BARWIDTH]
+                         [csvFile]
+</pre>
+<dl class="last docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>csvFile</kbd></td>
+<td>The file containing the data to plot.</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-b=False</span>, <span class="option">--box=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Draw a box around the plot. Default is no box.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-B=False</span>, <span class="option">--byRegion=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Generate one plot per region. Region names are read from the CSV file,
+                            so they reflect any regional aggregation produced by the query.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c=output</span>, <span class="option">--columns=output</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the column whose values identify the segments in the stacked
+                            bar chart. (These appear in the legend.)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-C</span>, <span class="option">--constraint</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Apply a constraint to limit the rows of data to plot. The constraint
+                            can be any constraint string that is valid for the DataFrame.query() method,
+                            e.g., -C &#8216;input == &#8220;biomass&#8221;&#8217;
+                            </td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-d=.</span>, <span class="option">--outputDir=.</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory into which to write image files. Default is &#8221;.&#8221;</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-D=.</span>, <span class="option">--workingDir=.</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory to change to before performing any operations</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-e=False</span>, <span class="option">--enumerate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Prefix image filenames with sequential number for easy reference.
+                            Used only with &#8211;fromFile</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-f</span>, <span class="option">--fromFile</span></kbd></td>
+<td>A file from which to read argument strings, one per line.
+                            These are read as if chartGCAM.py were called on each line individually,
+                            but avoiding the ~2 sec startup time for the bigger python packages.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-F</span>, <span class="option">--fuelFile</span></kbd></td>
+<td>A file containing the number of EJ of fuel that constitute the shock
+                            the differences represent. If provided, the difference values are divided by
+                            the quantity given.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--format</span></kbd></td>
+<td>Specify a format for the Y-axis. Possible values are &#8216;.&#8217; for float,
+                            &#8216;,&#8217; for int with commas, or any format recognized by print, e.g., &#8220;%%.2f&#8221; to
+                            Y values as floats with 2 decimal places.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=False</span>, <span class="option">--ygrid=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show light grey horizontal lines at the major Y-axis ticks. Default is no grid.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-i=False</span>, <span class="option">--interpolate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Interpolate (linearly) annual values between timesteps.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-I=region</span>, <span class="option">--indexCol=region</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A column to use as the index column, or blank for None. Default is &#8220;region&#8221;.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-k=False</span>, <span class="option">--yticks=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show tick marks on Y-axis. Default is no tick marks.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=False</span>, <span class="option">--label=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Add text along the right side of the figure showing the filename.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L</span>, <span class="option">--labelColor</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Color for the text label, which defaults to lightgrey. Some users may
+                            prefer &#8220;black&#8221;, for example. (Implies -l)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m</span>, <span class="option">--multiplier</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A value to multiply results by before generating the plot.
+                            This is useful for unit conversions, e.g., &#8220;-m 3.667&#8221; converts Tg C to Tg CO2.
+                            Be sure to set Y axis label.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-n=5</span>, <span class="option">--ncol=5</span></kbd></td>
+<td>The number of columns with which to display the legend. Default is 5.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-N=</span>, <span class="option">--scenario=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>When using the &#8216;&#8211;fromFile&#8217; option, this argument is used to specify one
+                            or more scenario names (delimited by commas if more than one). These are substituted
+                            into each line read from the file as the value for &#8220;{scenario}&#8221; wherever it appears
+                            on each line read from the &#8216;fromFile&#8217;.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--negate=False</span></kbd></td>
+<td>Multiply data by -1 before plotting, which can make interpretation
+                            of some figures more intuitive. The string &#8220;-negated&#8221; is added to the file
+                            label, displayed if the &#8220;-l&#8221; or &#8220;-L&#8221; flag is specified.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-o=</span>, <span class="option">--outFile=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The name of the image file to create. Format is determined from
+                            filename extension. All common formats are allowed, e.g., png, pdf, tif,
+                            and gif. Try it; it probably works. Default is the name of the data file
+                            substituting &#8221;.png&#8221; for &#8221;.csv&#8221;</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-O=False</span>, <span class="option">--open=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Open the plot file after generating it.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p</span>, <span class="option">--palette</span></kbd></td>
+<td>The name of a color palette to use. Some good options include hls, husl, and Paired.
+                            See http://stanford.edu/~mwaskom/software/seaborn/tutorial/color_palettes.html</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-r=90</span>, <span class="option">--rotation=90</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Set the rotation angle for X-axis labels. Defaults to 90 degrees (vertical).
+                            Use 0 for horizontal labels.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R=reference</span>, <span class="option">--reference=reference</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>When using the &#8216;&#8211;fromFile&#8217; option, this argument is used to specify the
+                            name of the reference scenario. The &#8220;other&#8221; scenario is given using the &#8220;-N&#8221; option.
+                            These are substituted into each line read from the file as the value for &#8220;{scenario}&#8221;
+                            and &#8220;{reference}&#8221; (without the quotes) wherever they appear on each line read
+                            from the &#8216;fromFile&#8217;. Defaults to &#8220;reference&#8221;</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=1</span>, <span class="option">--skiprows=1</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The number of rows of the CSV file to skip before reading the data (starting
+                            with a header row with column names.) Default is 1, which works for GCAM batch
+                            query output.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-S=False</span>, <span class="option">--sumYears=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Sum across the time horizon, typically by region. This results
+                            in a stacked bar plot. When not summed over years (the default) a stacked area
+                            plot is generated showing values grouped and summed by indexCol (-I) and
+                            presented by year.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t=5</span>, <span class="option">--yearStep=5</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The spacing of year labels on X-axis for time-series plots.
+                            Defaults to 5.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-T=</span>, <span class="option">--title=</span></kbd></td>
+<td>Adds a title to the plot. Default is no title. The string can have
+                            LaTeX math language in it, e.g., &#8216;CO$_2$&#8217; causes the 2 to be subscripted, and
+                            &#8216;MJ$^{-1}$&#8217; results in &#8220;MJ&#8221; with a superscripted exponent of -1. The string
+                            &#8216;$\Delta$&#8217; results in a capital Greek delta. See LaTeX documentation for more
+                            options. Be sure to enclose the title in single quotes so the &#8220;$&#8221; is not
+                            (mis)interpreted by the shell.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--timeseries=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Plot the data as a time series.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--transparent=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Save the plot with a transparent background. (Default is white.)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-u</span>, <span class="option">--unstacked</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Draw an unstacked bar plot for the column given as an argument to this
+                            option, showing three groups of bars: the region, all other regions, and the total.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-v</span>, <span class="option">--valueCol</span></kbd></td>
+<td>Identify a column to plot for unstacked bar plots. If not specified,
+                            values are summed across years.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-x</span>, <span class="option">--suffix</span></kbd></td>
+<td>A suffix to append to the basename of the input csv file to create the
+                            name for the output file. For example, if processing my_data.csv, indicating
+                            -x &#8216;-by-region.pdf&#8217; results in an output file named my_data-by-region.pdf.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-X=</span>, <span class="option">--xlabel=</span></kbd></td>
+<td>Defines a label for the X-axis; defaults to blank. LaTeX math language
+                            is supported. (See the -T flag for more info.)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-Y=EJ</span>, <span class="option">--ylabel=EJ</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Label for the Y-axis; defaults to &#8220;EJ&#8221;. LaTeX math language
+                            is supported. (See the -T flag for more info.)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-y=</span>, <span class="option">--years=</span></kbd></td>
+<td>Takes a parameter of the form XXXX-YYYY, indicating start and end
+                            years of interest. Data for all other years are dropped.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--ymax</span></kbd></td>
+<td>Set the scale of a figure by indicating the value to show as the
+                            maximum Y value. (By default, scale is set according to the data.)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--ymin</span></kbd></td>
+<td>Set the scale of a figure by indicating the value (given as abs(value),
+                            but used as -value) to show as the minimum Y value</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-z=False</span>, <span class="option">--zeroLine=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Whether to show a line at Y=0</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--legendY</span></kbd></td>
+<td>The Y position of the legend. Useful for fixing poorly formatted figures.
+                            Note that to pass a negative value, use the syntax &#8211;legendY=&#8221;-xxx.xxx&#8221;, otherwise
+                            the hyphen is interpreted as indicating a command-line argument.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--barWidth=0.5</span></kbd></td>
+<td>The relative width of bars. Helpful when plotting only 1 or 2 bar, so they
+                            aren&#8217;t obnoxiously wide. Default is 0.5</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>diff</strong></dt>
+<dd><p class="first">Compute differences between CSV files generated by GCAM batch queries.</p>
+<p>
+            The csvDiff.py script computes the differences between results from two or
+            more CSV files generated from batch queries run on a GCAM database, saving
+            the results in either a CSV or XLSX file, according to the extension given to
+            the output file. If not provided, the output filename defaults to differences.csv.
+            If multiple otherFiles are given (i.e., the referenceFile plus 2 or more other
+            files named on the command-line), the resulting CSV file will contain one difference
+            matrix for each otherFile, with a label indicating which pair of files were used
+            to produce each result. When the output file is in XLSX format, each result is
+            written to a separate worksheet. If the -c flag is specified, no differences are
+            computed; rather, the .csv file contents are combined into a single .xlsx file.
+            </p>
+<pre class="literal-block">
+usage: gcamtool.py diff [-h] [-D WORKINGDIR] [-g GROUPSUM] [-i] [-o OUTFILE]
+                        [-c] [-q QUERYFILE] [-S] [-s SKIPROWS] [--version]
+                        [-y YEARS] [-Y STARTYEAR]
+                        csvFiles [csvFiles ...]
+</pre>
+<dl class="last docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>csvFiles</kbd></td>
+<td>The files to process. For difference operations, the first file is treated
+                    as the reference file whose time-series data is subtracted from that of each other
+                    file. If missing, &#8221;.csv&#8221; suffixes are added to all arguments (the &#8221;.csv&#8221; is optional).</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-D=.</span>, <span class="option">--workingDir=.</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory to change to before performing any operations</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=</span>, <span class="option">--groupSum=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Group data for each timestep (or interpolated annual values) by the
+                            given column, and sum all members of each group to produce a timeseries for
+                            each group. Takes precedence over the simpler &#8220;-S&#8221; (&#8220;&#8211;sum&#8221;) option.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-i=False</span>, <span class="option">--interpolate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Interpolate (linearly) annual values between timesteps.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-o=differences.csv</span>, <span class="option">--outFile=differences.csv</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The name of the &#8221;.csv&#8221; or &#8221;.xlsx&#8221; file containing the differences
+                            between each scenario and the reference. Default is &#8220;differences.csv&#8221;.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c=False</span>, <span class="option">--convertOnly=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Convert the given CSV files into an Excel workbook, one sheet per CSV file.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-q=</span>, <span class="option">--queryFile=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A file from which to take the names of queries to process. When &#8211;queryFile
+                            is specified, the two positional arguments are the names of the baseline and policy
+                            scenarios, in that order.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-S=False</span>, <span class="option">--sum=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Sum all timestep (or interpolated annual values) to produce a single time-series.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=1</span>, <span class="option">--skiprows=1</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The number of rows to skip. Default is 1, which works for GCAM batch query output.
+                            Use -s0 for outFile.csv</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-y=</span>, <span class="option">--years=</span></kbd></td>
+<td>Takes a parameter of the form XXXX-YYYY, indicating start and end years of interest.
+                            Other years are dropped (except for annual outputs.)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-Y=0</span>, <span class="option">--startYear=0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The year at which to begin interpolation</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>deltaConstraint</strong></dt>
+<dd><p class="first">Specify incremental values to add to the production of a given fuel,
+                              by year, and generate the corresponding constraint file.</p>
+<p>Longer description for sub-command</p>
+<pre class="literal-block">
+usage: gcamtool.py deltaConstraint [-h] [-c COEFFICIENTS] [-b {tax,subsidy}]
+                                   -B BASELINE [-f FUELNAME] [-l DEFAULTDELTA]
+                                   [-L ANNUALDELTAS] [-m] [-p {tax,subsidy}]
+                                   -P POLICY [-R RESULTSDIR] [-S SUBDIR]
+                                   [-t FUELTAG] [-T {tax,subsidy}] [-V]
+                                   [-x XMLOUTPUTDIR] [-y YEARS]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
+                            sets the cellulosic ethanol conversion coefficients. Defaults to
+                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-b=subsidy</span>, <span class="option">--biomassPolicyType=subsidy</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type. Default is subsidy.</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-B</span>, <span class="option">--baseline</span></kbd></td>
+<td>The baseline on which the policy scenario is based</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f=cellulosic ethanol</span>, <span class="option">--fuelName=cellulosic ethanol</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The fuel to generate constraints for. Default is cellulosic ethanol</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultDelta=0.0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Default increment to add to each year (EJ). All or individual
+                            years values can be set (overriding -l flag values) using the -L flag.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L=</span>, <span class="option">--annualDeltas=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Optional production increments by year. Value must be a
+                            comma-delimited string of year:level pairs, where level in is EJ.
+                            If -l is not used to set default for all years, you must specify
+                            values for all years using this option.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type. Default is subsidy.</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-P</span>, <span class="option">--policy</span></kbd></td>
+<td>The policy scenario name</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R=.</span>, <span class="option">--resultsDir=.</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
+<td>Sub-directory for local-xml files, if any</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t=cell-etoh</span>, <span class="option">--fuelTag=cell-etoh</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The fuel tag to generate constraints for. Default is cell-etoh</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-T=tax</span>, <span class="option">--policyType=tax</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Type of policy to use for the fuel. Default is tax.</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory into which to generate XML files.
+                             Defaults to policy name in the current directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
+                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>bioConstraint</strong></dt>
+<dd><p class="first">Bioenergy constraint generator</p>
+<p>Longer description for sub-command</p>
+<pre class="literal-block">
+usage: gcamtool.py bioConstraint [-h] [-b BIOMASSPOLICYTYPE] [-B BASELINE]
+                                 [-c COEFFICIENTS] [-e CELLETOHPOLICYTYPE]
+                                 [-l DEFAULTLEVEL] [-L ANNUALLEVELS] [-m]
+                                 [-p PURPOSEGROWNPOLICYTYPE] [-P POLICY]
+                                 [-R RESULTSDIR] [-s] [-S SUBDIR] [-V]
+                                 [-x XMLOUTPUTDIR] [-y YEARS]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-b=tax</span>, <span class="option">--biomassPolicyType=tax</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Regional biomass policy type: must be one of {subs, tax}</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-B</span>, <span class="option">--baseline</span></kbd></td>
+<td>The baseline on which the policy scenario is based</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
+                            sets the cellulosic ethanol conversion coefficients. Defaults to
+                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-e=tax</span>, <span class="option">--cellEtohPolicyType=tax</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Cellulosic ethanol policy type: must be one of {subs, tax}</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultLevel=0.0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Target cellulosic biofuel level (EJ). All or individual years
+                            values can be set (overriding -l flag values) using the -L flag.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L</span>, <span class="option">--annualLevels</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Optional cellulosic biofuel production levels by year. Value
+                            must be a comma-delimited string of year:level pairs, where level is
+                            given in EJ. If -l is not used to set default for all years, you must
+                            specify values for all years using this option.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=subs</span>, <span class="option">--purposeGrownPolicyType=subs</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Purpose-grown biomass policy type: must be one of {subs, tax}</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-P</span>, <span class="option">--policy</span></kbd></td>
+<td>The policy scenario name</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R</span>, <span class="option">--resultsDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=False</span>, <span class="option">--switchgrass=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Generate constraints for switchgrass</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
+<td>Sub-directory for local-xml files, if any</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory into which to generate XML files. Defaults to
+                             policy name in the current directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
+                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>gcam</strong></dt>
+<dd><p class="first">Run the GCAM executable</p>
+<p>Queue a GCAM job on a Linux cluster or run the job
+                  locally (via &#8220;-l&#8221; flag). (On OS X, the &#8220;-l&#8221; flag is not needed; only
+                  local running is supported.)</p>
+<pre class="literal-block">
+usage: gcamtool.py gcam [-h] [-C CONFIGFILE] [-E ENVIROVARS] [-j JOBNAME] [-l]
+                        [-m MINUTES] [-n] [-N] [-r RESOURCES]
+                        [-p POSTPROCESSOR] [-P] [-Q QUEUENAME] [-s SCENARIO]
+                        [-S SCENARIOSDIR] [--version] [-w WORKSPACE]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-C</span>, <span class="option">--configFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the one or more GCAM configuration filenames, separated commas.
+                                    If multiple configuration files are given, the are run in succession in
+                                    the same &#8220;job&#8221; on the cluster.
+                                    N.B. This argument is ignored if scenarios are named via the -s flag.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-E</span>, <span class="option">--enviroVars</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Comma-delimited list of environment variable assignments to pass
+                                    to qsub, e.g., -E &#8220;FOO=1,BAR=2&#8221;.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-j=queueGCAM</span>, <span class="option">--jobName=queueGCAM</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify a name for the queued job. Default is &#8220;queueGCAM&#8221;.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=True</span>, <span class="option">--runLocal=True</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Run GCAM locally on current host, not via qsub. (It&#8217;s not necessary
+                                    to specify this flag on OS X and Windows since only local execution
+                                    is supported.)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-m</span>, <span class="option">--minutes</span></kbd></td>
+<td>Set the number of minutes to allocate for each job submitted.
+                                    Overrides config parameter GCAM.Minutes.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show the &#8216;qsub&#8217; command to be run, but don&#8217;t run it</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-N=False</span>, <span class="option">--noRunGCAM=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Don&#8217;t run GCAM, just run the post-processing script on existing results.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-r=</span>, <span class="option">--resources=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify resources for the qsub command. Can be a comma-delimited list of
+                                    assignments NAME=value, e.g., -r pvmem=6GB.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=</span>, <span class="option">--postProcessor=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the path to a script to run after GCAM completes. It should accept three
+                                    command-line arguments, the first being the path to the workspace in which GCAM
+                                    was executed, the second being the name of the configuration file used, and the
+                                    third being the scenario name of interest. Defaults to value of configuration
+                                    parameter GCAM.PostProcessor.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-P=False</span>, <span class="option">--noPostProcessor=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Don&#8217;t run the post-processor script. (Use this to skip post-processing when a script
+                                    is named in the ~/.gcam.cfg configuration file.)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-Q</span>, <span class="option">--queueName</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify a queue name for qsub. Default is given by config file
+                                    param GCAM.DefaultQueue.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the scenario(s) to run. Can be a comma-delimited list of scenario names.
+                                    The scenarios will be run serially in a single batch job, with an allocated
+                                    time = GCAM.Minutes * {the number of scenarios}.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-S=</span>, <span class="option">--scenariosDir=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the directory holding scenarios. Default is the value of config file param
+                            GCAM.ScenariosDir, if set, otherwise &#8221;.&#8221;.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-w</span>, <span class="option">--workspace</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the path to the GCAM workspace to use. If it doesn&#8217;t exist, the named workspace
+                                    will be created. If not specified on the command-line, the value of config file parameter
+                                    GCAM.Workspace is used, i.e., the &#8220;standard&#8221; workspace.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>runProj</strong></dt>
+<dd><p class="first" id="runproj-label">This sub-command reads instructions from the file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a>, the
+location of which is taken from the user&#8217;s <a class="reference internal" href="config.html#pygcam-cfg"><em>~/.pygcam.cfg</em></a> file.
+The workflow steps indicated in the XML file and command-line determine which
+commands to run.</p>
+<p>Examples:</p>
+<p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>runProject.py Foo
+</pre></div>
+</div>
+<p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
+scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>runProject Foo -g test -S baseline,policy1
+</pre></div>
+</div>
+<p>or, equivalently:</p>
+<div class="highlight-python"><div class="highlight"><pre>runProject Foo --group test --scenario baseline --step policy1
+</pre></div>
+</div>
+<p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
+default scenario group:</p>
+<div class="highlight-python"><div class="highlight"><pre>runProject Foo -s setup,gcam -S baseline,policy-1
+</pre></div>
+</div>
+<p>Show the commands that would be executed for the above command, but
+don&#8217;t run them:</p>
+<div class="highlight-python"><div class="highlight"><pre>runProject Foo -s setup,gcam -S baseline,policy-1 -n
+</pre></div>
+</div>
+<p>This sub-command reads a single XML input file
+                        that defines one or more projects, one or more groups of scenarios, one
+                        or more scenarios, and one or more workflow steps. The workflow steps
+                        for the chosen project and scenario(s) are run in the order defined.</p>
+<pre class="literal-block">
+usage: gcamtool.py runProj [-h] [-f PROJECTFILE] [-g GROUP] [-G]
+                           [-k SKIPSTEPS] [-l] [-L] [-n] [-p PROJECT] [-q]
+                           [-s STEPS] [-S SCENARIOS] [--version] [--vars]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f</span>, <span class="option">--projectFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The XML file describing the project. If set, command-line
+                            argument takes precedence. Otherwise, value is taken from config file
+                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
+                            is &#8216;./project.xml&#8217;.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
+<td>The name of the scenario group to process. If not specified,
+                            the group with attribute default=&#8221;1&#8221; is processed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-G=False</span>, <span class="option">--listGroups=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the scenario groups defined in the project file and exit.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-k</span>, <span class="option">--skipStep</span></kbd></td>
+<td>Steps NOT to run. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -k flag can be repeated to indicate additional steps.
+                            By default, all steps are run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=False</span>, <span class="option">--listSteps=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the steps defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L=False</span>, <span class="option">--listScenarios=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the scenarios defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Display the commands that would be run, but don&#8217;t run them.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p</span>, <span class="option">--project</span></kbd></td>
+<td>The name of the project to run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-q=False</span>, <span class="option">--quit=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Quit if an error occurs when processing a scenario. By default, the
+                            next scenario (if any) is run when an error occurs in a scenario.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--step</span></kbd></td>
+<td>The steps to run. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -s flag can be repeated to indicate additional steps.
+                            By default, all steps are run.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S</span>, <span class="option">--scenario</span></kbd></td>
+<td>Which of the scenarios defined for the given project should
+                            be run. Multiple scenarios can be given in a single (comma-delimited)
+                            argument, or the -S flag can be repeated to indicate additional steps.
+                            By default, all active scenarios are run.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--vars=False</span></kbd></td>
+<td>List variables and their values</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>protect</strong></dt>
+<dd><p class="first" id="protect-label">Generate versions of GCAM&#8217;s land_input XML files that protect a given fraction of
+land of the given land types in the given regions by subtracting the required land
+area from the &#8220;managed&#8221; land classes, thereby removing them from consideration in
+land allocations.</p>
+<p>Simple protection scenarios can be specified on the command-line. More complex
+scenarios can be specified in an XML file, <a class="reference internal" href="landProtection-xml.html#protect-xml"><em>landProtection.xml</em></a>.</p>
+<p>Examples:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Create and modify copies of the reference land files, renaming them with</span>
+<span class="c"># &quot;prot\_&quot; prefix. Protect 80% of the &quot;UnmanagedForest&quot; and &quot;UnmanagedPasture&quot;</span>
+<span class="c"># land classes in the specified regions only.</span>
+
+<span class="nv">CLASSES</span><span class="o">=</span>UnmanagedForest,UnmanagedPasture
+<span class="nv">REGIONS</span><span class="o">=</span><span class="s1">&#39;Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA&#39;</span>
+<span class="nv">OUTDIR</span><span class="o">=</span><span class="s2">&quot;$HOME/tmp/xml&quot;</span>
+
+gcamtool.py protect -f 0.8 <span class="s2">&quot;$INFILES&quot;</span> -l <span class="s2">&quot;$CLASSES&quot;</span> -r <span class="s2">&quot;$REGIONS&quot;</span> -o <span class="s2">&quot;$OUTDIR&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Run the land protection scenario &quot;s1&quot;, described in the file ``$HOME/protect.xml``,</span>
+<span class="c"># placing the results in the directory ``$HOME/ws/workspace1``</span>
+
+gcamtool.py protect -s s1 -S <span class="s2">&quot;$HOME/protect.xml&quot;</span> -w <span class="s2">&quot;$HOME/ws/workspace1&quot;</span>
+</pre></div>
+</div>
+<pre class="literal-block">
+usage: gcamtool.py protect [-h] [-b] [-f FRACTION] [--inPlace]
+                           [-l LANDCLASSES] [-m] [-o OUTDIR] [-t TEMPLATE]
+                           [-r REGIONS] [-s SCENARIO] [-S SCENARIOFILE] [-V]
+                           [-w WORKSPACE]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-b=False</span>, <span class="option">--backup=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Make a copy of the output file, if it exists (with an added ~ after
+                            filename) before writing new output. This option is ignored if a scenario
+                            file is specified.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-f</span>, <span class="option">--fraction</span></kbd></td>
+<td>The fraction of land in the given land classes to protect. (Required,
+                            unless a scenario file is specified, in which case this option is ignored.)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--inPlace=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Edit the file in place. This must be given explicitly, to avoid overwriting
+                            files by mistake.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l</span>, <span class="option">--landClasses</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The land class or classes to protect in the given regions. Multiple,
+                            comma-delimited land types can be given in a single argument, or the -l flag can
+                            be repeated to indicate additional land classes. By default, all unmanaged land
+                            classes are protected. Allowed land classes are [&#8216;UnmanagedPasture&#8217;, &#8216;UnmanagedForest&#8217;, &#8216;Shrubland&#8217;, &#8216;Grassland&#8217;].
+                            This option is ignored if a scenario file is specified. </td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m=False</span>, <span class="option">--mkdir=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Make the output dir if necessary.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-o=.</span>, <span class="option">--outDir=.</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory into which to write the modified files.
+                                    Default is current directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t=prot_{fraction}_{filename}</span>, <span class="option">--template=prot_{fraction}_{filename}</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify a template to use for output filenames. The keywords {fraction}, {filename},
+                            {regions}, and {classes} (with surrounding curly braces) are replaced by the following values
+                            and used to form the name of the output files, written to the given output directory.
+                            fraction: 100 times the given fraction (i.e., int(fraction * 100));
+                            filename: the name of the input file being processed (e.g., land_input_2.xml or land_input_3.xml);
+                            basename: the portion of the input filename prior to the extension (i.e., before &#8216;.xml&#8217;);
+                            regions: the given regions, separated by &#8216;-&#8216;, or the word &#8216;global&#8217; if no regions are specified;
+                            classes: the given land classes, separated by &#8216;-&#8216;, or the word &#8216;unmanaged&#8217; if no land classes
+                            are specified. The default pattern is &#8220;prot_{fraction}_{filename}&#8221;.
+                            This option is ignored if a scenario file is specified.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span>, <span class="option">--regions</span></kbd></td>
+<td>The region or regions for which to protect land. Multiple, comma-delimited
+                            regions can be given in a single argument, or the -r flag can be repeated to indicate
+                            additional regions. By default, all regions are protected.
+                            This option is ignored if a scenario file is specified.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--scenario</span></kbd></td>
+<td>The name of a land-protection scenario defined in the file given by the &#8211;scenarioFile
+                            argument or it&#8217;s default value.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-S</span>, <span class="option">--scenarioFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>An XML file defining land-protection scenarios. Default is the value
+                            of configuration file parameter GCAM.LandProtectionXmlFile.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-w</span>, <span class="option">--workspace</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Specify the path to the GCAM workspace to use. The files in
+                            {workspace}/input/gcam-data-system/xml/aglu-xml/land_input_{2,3}.xml
+                            are used as inputs. Default is value of configuration parameter
+                            GCAM.RefWorkspace.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>query</strong></dt>
+<dd><p class="first">Run one or more GCAM database queries by generating and running the
+                  named XML queries.</p>
+<p>Run one or more GCAM database queries by generating and running the
+                  named XML queries. The results are placed in a file in the specified
+                  output directory with a name composed of the basename of the
+                  XML query file plus the scenario name. For example,
+                  &#8220;gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region&#8221;
+                  would generate query results into the files ./liquids-by-region-MyReference.csv
+                  and ./liquids-by-region-MyPolicyCase.csv.
+
+                  The named queries are located using the value of config variable GCAM.QueryPath,
+                  which can be overridden with the -Q argument. The QueryPath consists of one or
+                  more colon-delimited (on Unix) or semicolon-delimited (on Windows)
+                  elements that can identify directories or XML files. The
+                  elements of QueryPath are searched in order until the named query is found. If
+                  a path element is a directory, the filename composed of the query + &#8216;.xml&#8217; is
+                  sought in that directory. If the path element is an XML file, a query with a
+                  title matching the query name (first literally, then by replacing &#8216;_&#8217; and &#8216;-&#8216;
+                  characters with spaces) is sought. Note that query names are case-sensitive.
+
+                  This script populates an initial configuration file in ~/.pygcam.cfg when
+                  first run. The config file should be customized as needed, e.g., to set &#8220;GcamRoot&#8221;
+                  to the directory holding your Main_User_Workspace unless it happens to live in
+                  ~/GCAM, which is the default value.</p>
+<pre class="literal-block">
+usage: gcamtool.py query [-h] [-d XMLDB] [-D] [-R REGIONMAP] [-n]
+                         [-o OUTPUTDIR] [-Q QUERYPATH] [-r REGIONS]
+                         [-s SCENARIO] [--version] [-w WORKSPACE]
+                         [queryName [queryName ...]]
+</pre>
+<dl class="last docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>queryName</kbd></td>
+<td>A file or files, each holding an XML query to run. (The &#8221;.xml&#8221; suffix will be added if needed.)
+                                    If an argument is preceded by the &#8220;&#64;&#8221; sign, it is read and its contents substituted as the
+                                    values for this argument. That means you can store queries to run in a file (one per line) and
+                                    just reference the file by preceding the filename argument with &#8220;&#64;&#8221;.</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-d</span>, <span class="option">--xmldb</span></kbd></td>
+<td>The XML database to query (default is value of GCAM.DbFile, in the GCAM.Workspace&#8217;s
+                             &#8220;output&#8221; directory. Overrides the -w flag.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-D=False</span>, <span class="option">--noDelete=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Don&#8217;t delete any temporary file created by extracting a query from a query file. Used
+                                    mainly for debugging.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R</span>, <span class="option">--regionMap</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A file containing tab-separated pairs of names, the first being a GCAM region
+                                    and the second being the name to map this region to. Lines starting with &#8220;#&#8221; are
+                                    treated as comments. Lines without a tab character are also ignored. This arg
+                                    overrides the value of config variable GCAM.RegionMapFile.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show the command to be run, but don&#8217;t run it</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-o</span>, <span class="option">--outputDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Where to output the result (default taken from config parameter &#8220;GCAM.OutputDir&#8221;)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-Q</span>, <span class="option">--queryPath</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A semicolon-delimited list of directories or filenames to look in to find query files.
+                                    Defaults to value of config parameter GCAM.QueryPath</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span>, <span class="option">--regions</span></kbd></td>
+<td>A comma-separated list of regions on which to run queries found in query files structured
+                                    like Main_Queries.xml. If not specified, defaults to querying all 32 regions.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=Reference</span>, <span class="option">--scenario=Reference</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A comma-separated list of scenarios to run the query/queries for (default is &#8220;Reference&#8221;)
+                                    Note that these refer to a scenarios in the XML database.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-w=</span>, <span class="option">--workspace=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The workspace directory in which to find the XML database.
+                                    Defaults to value of config file parameter GCAM.Workspace.
+                                    Overridden by the -d flag.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="section" id="extending-gcamtool-using-plug-ins">
+<h3>Extending gcamtool using plug-ins<a class="headerlink" href="#extending-gcamtool-using-plug-ins" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div></div></blockquote>
+<p id="plugins-label">The <a class="reference internal" href=""><em>gcamtool.py</em></a> script will load any python files whose name ends in
+<code class="docutils literal"><span class="pre">_plugin.py</span></code>, found in any of the directores indicated in the config
+file variable <code class="docutils literal"><span class="pre">GCAM.PluginPath</span></code>. The value of <code class="docutils literal"><span class="pre">GCAM.PluginPath</span></code> must
+be a sequence of directory names separated by colons (<code class="docutils literal"><span class="pre">:</span></code>) on Unix-like
+systems or by semi-colons (<code class="docutils literal"><span class="pre">;</span></code>) on Windows. See <a class="reference internal" href="subcommand.html"><em>pygcam.subcommand</em></a> for
+documentation of the plug-in API.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="utils.html" class="btn btn-neutral float-right" title="pygcam.common" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="windows.html" class="btn btn-neutral" title="Using pygcam under Windows" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Plevin.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
