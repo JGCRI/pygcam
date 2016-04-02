@@ -20,6 +20,7 @@ from .project import ProjectCommand
 from .landProtection import ProtectLandCommand
 from .query import QueryCommand
 from .run import GcamCommand
+from .workspace import WorkspaceCommand
 from .config import DEFAULT_SECTION, getConfig, getParam
 from .log import getLogger, setLogLevel, configureLogs
 
@@ -31,7 +32,7 @@ __version__ = '0.1'
 BuiltinSubcommands = [ChartCommand, DiffCommand,
                       DeltaConstraintsCommand, GenConstraintsCommand,
                       GcamCommand, ProjectCommand, ProtectLandCommand,
-                      QueryCommand]
+                      QueryCommand, WorkspaceCommand]
 
 class GcamTool(object):
 
