@@ -155,7 +155,7 @@ are easily added.</p>
 <pre class="literal-block">
 usage: gcamtool.py [-h] [-l {notset,debug,info,warning,error,critical}]
                    [-s CONFIGSECTION] [-v] [--version]
-                   {chart,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query}
+                   {chart,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query,ws}
                    ...
 </pre>
 <dl class="docutils">
@@ -1133,6 +1133,50 @@ usage: gcamtool.py query [-h] [-d XMLDB] [-D] [-R REGIONMAP] [-n]
 <tr><td>&nbsp;</td><td>The workspace directory in which to find the XML database.
                                     Defaults to value of config file parameter GCAM.Workspace.
                                     Overridden by the -d flag.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>ws</strong></dt>
+<dd><p class="first">Perform operations on a workspace.</p>
+<p>Create, delete, show path of, or run a shell command in a workspace.</p>
+<pre class="literal-block">
+usage: gcamtool.py ws [-h] [--create] [--delete] [-e EXTENSION] [-p] [-r RUN]
+                      [-s SCENARIO] [--version]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--create=False</span></kbd></td>
+<td>Create the identified workspace. If used with &#8211;delete,
+                            the deletion occurs first.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--delete=False</span></kbd></td>
+<td>Delete the identified workspace&#8217; If used with &#8211;create, the
+                            deletion occurs first.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-e=</span>, <span class="option">--extension=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Add this extension when computing the path of the workspace.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=False</span>, <span class="option">--path=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Print the absolute path to the identified workspace.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span>, <span class="option">--run</span></kbd></td>
+<td>Run the given command in the identified workspace.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The scenario for the computed workspace root.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
 </tbody>
 </table>
 </dd>

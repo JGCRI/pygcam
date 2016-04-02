@@ -55,7 +55,7 @@ class WorkspaceCommand(SubcommandABC):
 
     def __init__(self, subparsers):
         kwargs = {'help' : '''Perform operations on a workspace.''',
-                  'description' : '''Delete, recreate, rename, show path of a workspace.'''}
+                  'description' : '''Create, delete, show path of, or run a shell command in a workspace.'''}
 
         super(WorkspaceCommand, self).__init__('ws', subparsers, kwargs)
 
