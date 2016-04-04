@@ -95,10 +95,12 @@ class SetupCommand(SubcommandABC):
 
 
     def run(self, args, tool):
+        scenario = args.scenario or args.baseline
+
         # TBD: remove ability to override on cmdline if not useful
         args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectRoot')
-        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), args.scenario)
+        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), scenario)
 
         sys.path.insert(0, os.path.dirname(os.path.dirname(args.xmlSourceDir)))
 
@@ -109,15 +111,15 @@ class SetupCommand(SubcommandABC):
             # First look for a function called scenarioMapper
             scenarioMapper = getattr(module, 'scenarioMapper', None)
             if scenarioMapper:
-                scenClass = scenarioMapper(args.scenario or args.baseline)
+                scenClass = scenarioMapper(scenario)
 
             else:
                 # Look for 'ClassMap' in the specified module
                 classMap  = getattr(module, 'ClassMap')
-                scenClass = classMap[args.scenario]
+                scenClass = classMap[scenario]
 
         except KeyError:
-            raise SetupException('Failed to map scenario "%s" to a class in %s' % (args.scenario, module.__file__))
+            raise SetupException('Failed to map scenario "%s" to a class in %s' % (scenario, module.__file__))
 
         except Exception as e:
             raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (args.module, e))
