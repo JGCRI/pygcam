@@ -12,6 +12,18 @@ class PygcamException(Exception):
     """
     pass
 
+class FileMissingError(PygcamException):
+    """
+    Indicate that a required file was not found or not readable.
+    """
+
+    def __init__(self, filename, reason):
+        self.filename = filename
+        self.reason   = reason
+
+    def __str__(self):
+        return "%s" % self.reason
+
 class FileFormatError(PygcamException):
     """
     Indicate a syntax error in a user-managed file.

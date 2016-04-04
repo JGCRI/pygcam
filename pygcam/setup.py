@@ -9,10 +9,32 @@
 
 import sys
 import os
+from importlib import import_module
 from .error import SetupException
 from .config import getParam
 from .utils import importFrom
 from .subcommand import SubcommandABC
+
+# def (ns, argName, default=None, raiseError=False):
+#     """
+#     Return the value of parameter `argName` from the Namespace `ns`.
+#     If not found, raise a SetupException if `raiseError` is True,
+#     otherwise return the given `default`.
+#     :param ns: (argparse.Namespace) a namespace containing arguments to
+#       a call to the gcamtools.py setup sub-command
+#     :param argName: (str) the name of an argument
+#     :param default: the default value to return if the argument is missing.
+#     :param raiseError: (bool) whether to raise an error if the argument is missing.
+#     :return: the value of the parameter argName in the Namespace
+#     :raises: SetupError
+#     """
+#     if ns in argName:
+#         return ns[argName]
+#
+#     if raiseError:
+#         raise SetupException('Required argument "%s" is missing for setup step', argName)
+#
+#     return default
 
 
 class SetupCommand(SubcommandABC):
@@ -39,7 +61,9 @@ class SetupCommand(SubcommandABC):
 
         parser.add_argument('-m', '--module', default='xmlsrc.scenarios',
                             help='''The "dot spec" for the Python module holding the setup classes and
-                            a dictionary called 'ClassMap' which maps scenario names to classes.
+                            a function called 'scenarioClass' or a dictionary called 'ClassMap' which map
+                            scenario names to classes. If the function 'scenarioClass' exists, it is
+                            used. If not, the 'ClassMap' is used.
                             Default is "xmlsrc.scenarios" under the current Project Root.''')
 
         parser.add_argument('-p', '--stopPeriod', type=int,
@@ -49,7 +73,7 @@ class SetupCommand(SubcommandABC):
                             help='The parent directory holding the GCAM output workspaces')
 
         parser.add_argument('-s', '--scenario',
-                            help='Identify the scenario to run (N.B. The name is hardwired in some scripts).')
+                            help='Identify the scenario to run.')
 
         parser.add_argument('-S', '--subdir', default="",
                             help='A sub-directory to use beneath the computed scenario directory')
@@ -71,28 +95,32 @@ class SetupCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        # Allow baseline-only setups to specify only baseline name
-        if not args.scenario:
-            args.scenario = args.baseline
-
         # TBD: remove ability to override on cmdline if not useful
         args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectRoot')
         args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), args.scenario)
-        #resultsDir    = args.resultsDir    or getParam('GCAM.RunWorkspaceRoot')
 
         sys.path.insert(0, os.path.dirname(os.path.dirname(args.xmlSourceDir)))
 
         try:
-            # Look for 'ClassMap' in the specified module
-            module, classMap  = importFrom(args.module, 'ClassMap', asTuple=True)
-            scenClass = classMap[args.scenario]
+            # Try to load the user's module
+            module = import_module(args.module, package=None)
 
-        except KeyError as e:
+            # First look for a function called scenarioMapper
+            scenarioMapper = getattr(module, 'scenarioMapper', None)
+            if scenarioMapper:
+                scenClass = scenarioMapper(args.scenario or args.baseline)
+
+            else:
+                # Look for 'ClassMap' in the specified module
+                classMap  = getattr(module, 'ClassMap')
+                scenClass = classMap[args.scenario]
+
+        except KeyError:
             raise SetupException('Failed to map scenario "%s" to a class in %s' % (args.scenario, module.__file__))
 
         except Exception as e:
-            raise SetupException('Failed to load %s.ClassMap: %s' % (args.module, e))
+            raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (args.module, e))
 
         # TBD: Ensure that all setup classes conform to this protocol
         obj = scenClass(args.baseline, args.scenario, args.xmlOutputRoot,

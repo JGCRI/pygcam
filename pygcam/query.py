@@ -11,7 +11,7 @@ import os
 import re
 import subprocess
 from .utils import getTempFile, mkdirs, ensureExtension, saveToFile
-from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
+from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean
@@ -136,7 +136,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     try:
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
     except IOError, e:
-        raise PygcamException("Reading file '%s' failed: %s\n" % (os.path.abspath(filename), e))
+        raise FileMissingError(os.path.abspath(filename), e)
 
     if years:
         limitYears(df, years)

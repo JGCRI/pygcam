@@ -37,6 +37,7 @@ pathjoin = os.path.join     # "alias" this since it's used frequently
 LOCAL_XML_NAME = "local-xml"
 DYN_XML_NAME   = "dyn-xml"
 
+# Deprecated
 # Convenience function for use in setup scripts
 # N.B. Must be called after config is setup (e.g.,
 # after calling XMLEditor.parseArgs)
@@ -228,11 +229,12 @@ class XMLEditor(object):
     Represents the information required to setup a scenario, i.e., to
     generate and/or copy the required XML files into the XML output dir.
     '''
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir, parent=None):
-        self.name = name = scenario
+    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace, subdir, parent=None):
+        self.name = name = scenario or baseline # if no scenario stated, assume it's the baseline
         self.parent = parent
-        self.workspaceDir = workspaceDir
+        self.refWorkspace = refWorkspace
         self.xmlSourceDir = xmlSourceDir
+        self.configPath = None
 
         self.local_xml_abs = makeDirPath((xmlOutputRoot, LOCAL_XML_NAME), create=True)
         self.dyn_xml_abs   = makeDirPath((xmlOutputRoot, DYN_XML_NAME), create=True)
@@ -253,7 +255,7 @@ class XMLEditor(object):
 
         # Store commonly-used paths
         gcam_xml = "input/gcam-data-system/xml"
-        self.gcam_prefix_abs = prefix_abs = pathjoin(workspaceDir, gcam_xml)
+        self.gcam_prefix_abs = prefix_abs = pathjoin(refWorkspace, gcam_xml)
         self.gcam_prefix_rel = prefix_rel = pathjoin('../', gcam_xml)
 
         self.aglu_dir_abs           = pathjoin(prefix_abs, 'aglu-xml')
@@ -268,7 +270,7 @@ class XMLEditor(object):
         self.modeltime_dir_rel      = pathjoin(prefix_rel, 'modeltime-xml')
         self.socioeconomics_dir_rel = pathjoin(prefix_rel, 'socioeconomics-xml')
 
-        self.solution_prefix_abs = pathjoin(workspaceDir, "input", "solution")
+        self.solution_prefix_abs = pathjoin(refWorkspace, "input", "solution")
         self.solution_prefix_rel = pathjoin("..", "input", "solution")
 
         # do this last so mixins can access the instance variables set above
@@ -316,8 +318,10 @@ class XMLEditor(object):
             dynamic = 'dynamic' in args and args.dynamic
 
             if dynamic:
-                for src in xmlFiles:
-                    dst = os.path.join(dynDir, os.path.basename(src))
+                for xml in xmlFiles:
+                    base = os.path.basename(xml)
+                    dst = os.path.join(dynDir, base)
+                    src = os.path.join(scenDir, base)
                     os.symlink(src, dst)
 
                 # Not available on Windows
@@ -388,8 +392,11 @@ class XMLEditor(object):
 
         :return: (str) the pathname to the XML configuration file.
         """
-        path = os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml'))
-        return path
+        if not self.configPath:
+            # compute the first time, then cache it
+            self.configPath = os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml'))
+
+        return self.configPath
 
     def _splitPath(self, path):
         '''
