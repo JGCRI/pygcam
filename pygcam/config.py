@@ -64,6 +64,9 @@ GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
 # to any folder; GCAM.Current is just an optional convention.
 GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
 
+# The reference config file to use as a starting point for "setup"
+GCAM.RefConfigFile = %(GCAM.RefWorkspace)s/exe/configuration_ref.xml
+
 GCAM.RefQueryDir = %(GCAM.RefWorkspace)s/output/queries
 
 # The location of the ModelInterface to use.
@@ -94,6 +97,19 @@ GCAM.DynXml         = %(GCAM.ProjectRoot)s/dyn-xml
 
 # The default input file for the runProj sub-command
 GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
+
+# Whether GCAM should generate a debug file (no value => no change)
+GCAM.WriteDebugFile     =
+
+# Whether GCAM should generate a price file
+GCAM.WritePrices        =
+
+# Whether GCAM should generate the large XML file with the combined data
+# from all input files.
+GCAM.WriteXmlOutputFile =
+
+# Whether GCAM should generate outFile.csv
+GCAM.WriteOutputCsv     =
 
 # Path to an XML file describing land protection scenarios
 GCAM.LandProtectionXmlFile =
