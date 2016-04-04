@@ -4,7 +4,7 @@ Test
 - write unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
-- Changes to setup.py and related bits
+- Changes to xmlEditor.py and related bits
 - Test "GCAM.CopyRefWorkspace = True" option to handle symlink failure.
 
 - land protection
@@ -48,8 +48,6 @@ Document
 - Assumptions behind setup code
 
 - Adding otaq2016.pth where needed (based on
-
-- Document runProj -k to skip steps (e.g., setup is a good candidate)
 
 Tasks
 -----
