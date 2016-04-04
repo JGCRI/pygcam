@@ -6,7 +6,7 @@ from .error import PygcamException, SetupException, CommandlineError, ConfigFile
 from .project import ProjectCommand
 from .landProtection import ProtectLandCommand
 from .run import GcamCommand, setupWorkspace
-from .setup import xmlStarlet, xmlEdit, xmlSel, ConfigEditor
+from .xmlEditor import xmlStarlet, xmlEdit, xmlSel, XMLEditor
 
 from .diff import (DiffCommand, computeDifference, writeDiffsToCSV,
                    writeDiffsToXLSX, writeDiffsToFile)
