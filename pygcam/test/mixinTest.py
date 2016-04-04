@@ -2,9 +2,9 @@ class ConfigEditor(object):
     def __init__(self, foo=1, bar=2):
         self.foo = foo
         self.bar = bar
-        print "enter ConfigEditor"
+        print "enter XMLEditor"
         super(ConfigEditor, self).__init__()
-        print "exit ConfigEditor"
+        print "exit XMLEditor"
 
 class RefiningMixin(object):
     def __init__(self):

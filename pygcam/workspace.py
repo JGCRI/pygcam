@@ -30,24 +30,27 @@ def driver(args, tool):
 
     workspace = os.path.normpath(os.path.abspath(os.path.expanduser(workspace)))     # handle ~ in pathname
 
-    withExtension = workspace + args.extension
     if args.path:
-        print(withExtension)
+        print(workspace)
 
     if args.delete:
         _logger.info('removing ' + workspace)
         try:
-            shutil.rmtree(withExtension)
+            shutil.rmtree(workspace)
         except Exception as e:
-            _logger.warn("Can't remove '%s': %s" % (withExtension, e))
+            _logger.warn("Can't remove '%s': %s" % (workspace, e))
 
     if args.create:
-        setupWorkspace(withExtension)
+        setupWorkspace(workspace)
 
     if args.run:
-        _logger.info('cd ' + withExtension + '; ' + args.run)
-        os.chdir(withExtension)
-        subprocess.call(args.run, shell=True)
+        cmdStr = 'cd ' + workspace + '; ' + args.run
+        if args.noExecute:
+            print cmdStr
+        else:
+            _logger.info(cmdStr)
+            os.chdir(workspace)
+            subprocess.call(args.run, shell=True)
 
 
 class WorkspaceCommand(SubcommandABC):
@@ -55,7 +58,13 @@ class WorkspaceCommand(SubcommandABC):
 
     def __init__(self, subparsers):
         kwargs = {'help' : '''Perform operations on a workspace.''',
-                  'description' : '''Create, delete, show path of, or run a shell command in a workspace.'''}
+                  'description' : '''The ws sub-command allows you to create, delete, show the path of,
+                  or run a shell command in a workspace. If the --scenario argument is given, the
+                  operation is performed on a scenario-specific workspace within a project directory.
+                  If --scenario is not specified, the operation is performed on the project directory
+                  that contains individual scenario workspaces. You can run the --path command before
+                  performing any operations to be sure of the directory that will be operated on, or
+                  use the --noExecute option to show the command that would be executed by --run.'''}
 
         super(WorkspaceCommand, self).__init__('ws', subparsers, kwargs)
 
@@ -68,8 +77,9 @@ class WorkspaceCommand(SubcommandABC):
                             help='''Delete the identified workspace' If used with --create, the
                             deletion occurs first.''')
 
-        parser.add_argument('-e', '--extension', default="",
-                            help='''Add this extension when computing the path of the workspace.''')
+        parser.add_argument('-n', '--noExecute', action='store_true',
+                            help='''Print the command that would be executed by --run, but
+                            don't execute it.''')
 
         parser.add_argument('-p', '--path', action='store_true',
                             help='''Print the absolute path to the identified workspace.''')

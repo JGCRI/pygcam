@@ -294,27 +294,27 @@ def loadObjectFromPath(objName, modulePath, required=True):
 
     raise PygcamException("Module '%s' has no object named '%s'" % (modulePath, objName))
 
-# def importFrom(modname, objname):
-#     """
-#     Import `modname` and return reference to ``modname.objname``
-#     """
-#     from importlib import import_module
-#
-#     module = import_module(modname, package=None)
-#     return getattr(module, objname)
-#
-# def importFromDotSpec(spec):
-#     '''
-#     Import object x from arbitrary dotted sequence of packages, e.g.,
-#     "a.b.c.x" by splitting this into "a.b.c" and "x" and calling importFrom.
-#     '''
-#     modname, objname = spec.rsplit('.', 1)
-#
-#     try:
-#         return importFrom(modname, objname)
-#
-#     except ImportError:
-#         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
+def importFrom(modname, objname):
+    """
+    Import `modname` and return reference to ``modname.objname``
+    """
+    from importlib import import_module
+
+    module = import_module(modname, package=None)
+    return getattr(module, objname)
+
+def importFromDotSpec(spec):
+    '''
+    Import object x from arbitrary dotted sequence of packages, e.g.,
+    "a.b.c.x" by splitting this into "a.b.c" and "x" and calling importFrom.
+    '''
+    modname, objname = spec.rsplit('.', 1)
+
+    try:
+        return importFrom(modname, objname)
+
+    except ImportError:
+        raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
 
 # TBD: move to common once debugged; use it in project.py as well.
 class XMLFile(object):
