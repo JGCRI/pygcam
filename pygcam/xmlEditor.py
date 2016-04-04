@@ -313,8 +313,9 @@ class XMLEditor(object):
 
             # not available on Windows
             # subprocess.call("cp -p %s/*.xml %s" % (xmlSubdir, scenDir), shell=True)
+            dynamic = 'dynamic' in args and args.dynamic
 
-            if args.dynamic:
+            if dynamic:
                 for src in xmlFiles:
                     dst = os.path.join(dynDir, os.path.basename(src))
                     os.symlink(src, dst)

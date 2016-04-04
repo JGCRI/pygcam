@@ -71,8 +71,12 @@ class SetupCommand(SubcommandABC):
 
 
     def run(self, args, tool):
+        # Allow baseline-only setups to specify only baseline name
+        if not args.scenario:
+            args.scenario = args.baseline
+
         # TBD: remove ability to override on cmdline if not useful
-        args.workspace  = args.workspace     or getParam('GCAM.RefWorkspace')
+        args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectRoot')
         args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), args.scenario)
         #resultsDir    = args.resultsDir    or getParam('GCAM.RunWorkspaceRoot')
@@ -81,11 +85,11 @@ class SetupCommand(SubcommandABC):
 
         try:
             # Look for 'ClassMap' in the specified module
-            classMap  = importFrom(args.module, 'ClassMap')
+            module, classMap  = importFrom(args.module, 'ClassMap', asTuple=True)
             scenClass = classMap[args.scenario]
 
         except KeyError as e:
-            raise SetupException('Failed to map scenario "%s" to a class in %s: %s' % (args.scenario, args.module, e))
+            raise SetupException('Failed to map scenario "%s" to a class in %s' % (args.scenario, module.__file__))
 
         except Exception as e:
             raise SetupException('Failed to load %s.ClassMap: %s' % (args.module, e))

@@ -294,14 +294,15 @@ def loadObjectFromPath(objName, modulePath, required=True):
 
     raise PygcamException("Module '%s' has no object named '%s'" % (modulePath, objName))
 
-def importFrom(modname, objname):
+def importFrom(modname, objname, asTuple=False):
     """
     Import `modname` and return reference to ``modname.objname``
     """
     from importlib import import_module
 
     module = import_module(modname, package=None)
-    return getattr(module, objname)
+    obj    = getattr(module, objname)
+    return module, obj if asTuple else obj
 
 def importFromDotSpec(spec):
     '''
