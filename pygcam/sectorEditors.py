@@ -1,6 +1,6 @@
 from os.path import join as pathjoin
 from .log import getLogger
-from .setup import ConfigEditor, xmlEdit, extractStubTechnology
+from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology
 
 _logger = getLogger(__name__)
 
@@ -15,12 +15,17 @@ TECH_BIODIESEL          = 'biodiesel'
 TECH_GTL                = 'gas to liquids'
 TECH_CTL                = 'coal to liquids'
 
-class RefiningEditor(ConfigEditor):
+class RefiningEditor(XMLEditor):
     """
     RefiningEditor add methods that deal with the refinery sector.
     """
-    def __init__(self, name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=""):
-        super(RefiningEditor, self).__init__(name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=subdir)
+    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
+                 subdir, parent=None):
+        super(RefiningEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
+                                             refWorkspace, subdir, parent=parent)
+
+    def setup(self, args):
+        super(RefiningEditor, self).setup(args)
 
     # TBD: redefine this as follows, or just call setGlobalTechShutdownRate directly?
     def _setRefinedFuelShutdownRate(self, fuel, year, rate):
@@ -93,8 +98,10 @@ class BioenergyEditor(RefiningEditor):
     """
     BioenergyEditor adds knowledge of biomass and biofuels.
     """
-    def __init__(self, name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=""):
-        super(BioenergyEditor, self).__init__(name, parent, xmlOutputRoot, xmlSourceDir, workspaceDir, subdir=subdir)
+    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, workspaceDir,
+                 subdir, parent=None):
+        super(BioenergyEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
+                                              workspaceDir, subdir, parent=parent)
 
         cornEthanolUsaFile = 'cornEthanolUSA.xml'
         self.cornEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile)
@@ -121,6 +128,8 @@ class BioenergyEditor(RefiningEditor):
         self.biodieselUsaAbs2 = pathjoin(self.scenario_dir_abs, biodieselUsaFile2)
         self.biodieselUsaRel2 = pathjoin(self.scenario_dir_rel, biodieselUsaFile2)
 
+    def setup(self, args):
+        super(BioenergyEditor, self).setup(args)
 
     def adjustResidueSupply(self, loTarget, loPrice, loFract, hiTarget, hiPrice, hiFract, target):
         """
