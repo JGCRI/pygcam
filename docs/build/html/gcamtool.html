@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
-        <link rel="next" title="pygcam.common" href="utils.html"/>
+        <link rel="next" title="project.xml" href="project-xml.html"/>
         <link rel="prev" title="Using pygcam under Windows" href="windows.html"/> 
 
   
@@ -81,10 +81,20 @@
           
             
             
-                <ul class="current">
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+</ul>
+<ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
@@ -93,12 +103,8 @@
 <li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 
             
@@ -145,17 +151,43 @@
             
   <div class="section" id="gcamtool-py">
 <h1><code class="docutils literal"><span class="pre">gcamtool.py</span></code><a class="headerlink" href="#gcamtool-py" title="Permalink to this headline">¶</a></h1>
-<p>The gcamtool.py script organizes GCAM workflow functionality into a single
-script with sub-commands. The sub-commands are implemented via
-<a class="reference internal" href="#plugins-label"><em>plugins</em></a>, so new (and project-specific) sub-commands
-are easily added.</p>
+<p>The gcamtool.py script unifies GCAM workflow managment functionality into a
+single script with sub-commands. Most sub-commands are implemented directly
+by the pygcam library. Project-specific features can be added via
+<a class="reference internal" href="#plugins-label"><em>plugins</em></a>.</p>
+<p>The sub-commands support all the major workflow setups, including</p>
+<blockquote>
+<div><ul class="simple">
+<li>Modifying XML files and configuration.xml to set up a modeling experiment
+(See the <a class="reference internal" href="#setup-label"><em>setup</em></a> sub-command and <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> for more
+information.)</li>
+<li>Running GCAM in an automatically-created workspace, allowing multiple
+instances of GCAM to run simultaneously, e.g., on parallel computing systems
+(See the <a class="reference internal" href="#gcam-label"><em>gcam</em></a> sub-command.)</li>
+<li>Executing batch queries against the XML database to extract GCAM results,
+with on-the-fly regionalization based on a simple region-mapping file.
+(See the <a class="reference internal" href="#query-label"><em>query</em></a> sub-command.)</li>
+<li>Computing differences between policy and baseline scenarios, including
+linear annualization of values between time-steps, and
+(See the <a class="reference internal" href="#diff-label"><em>diff</em></a> sub-command.)</li>
+<li>Plotting results, with flexible control of figure features including
+title, axis labels, scale, and so on.
+(See the <a class="reference internal" href="#chart-label"><em>chart</em></a> sub-command.)</li>
+<li>Manage (create, delete, rename, run commands in) automatically-created workspaces.
+(See the <a class="reference internal" href="#ws-label"><em>ws</em></a> sub-command.)</li>
+</ul>
+</div></blockquote>
+<p>In addition, the <cite>runProj &lt;runProj-label&gt;</cite> sub-command allows workflow steps to be
+defined in an XML file so that individual or groups of steps can be executed for one
+or more scenarios. The <code class="docutils literal"><span class="pre">runProj</span></code> sub-command supports direct invocation of other
+workflow steps as well as running arbitrary programs of the user&#8217;s choosing.</p>
 <p>Command-line usage is described below.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <pre class="literal-block">
 usage: gcamtool.py [-h] [-l {notset,debug,info,warning,error,critical}]
                    [-s CONFIGSECTION] [-v] [--version]
-                   {chart,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query,ws}
+                   {chart,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query,setup,ws}
                    ...
 </pre>
 <dl class="docutils">
@@ -186,7 +218,7 @@ usage: gcamtool.py [-h] [-l {notset,debug,info,warning,error,critical}]
 <dt>Sub-commands:</dt>
 <dd><dl class="first last docutils">
 <dt><strong>chart</strong></dt>
-<dd><p class="first">Generate charts from CSV files generated by GCAM batch queries</p>
+<dd><p class="first" id="chart-label">Generate charts from CSV files generated by GCAM batch queries</p>
 <p>Generate plots from GCAM-style &#8221;.csv&#8221; files.
                    Two types of plots are currently supported: (i) stacked bar plots based on summing values
                    over all years (with optional interpolation of annual values), by the given &#8216;indexCol&#8217;
@@ -439,7 +471,7 @@ usage: gcamtool.py chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT]
 </dl>
 </dd>
 <dt><strong>diff</strong></dt>
-<dd><p class="first">Compute differences between CSV files generated by GCAM batch queries.</p>
+<dd><p class="first" id="diff-label">Compute differences between CSV files generated by GCAM batch queries.</p>
 <p>
             The csvDiff.py script computes the differences between results from two or
             more CSV files generated from batch queries run on a GCAM database, saving
@@ -715,7 +747,7 @@ usage: gcamtool.py bioConstraint [-h] [-b BIOMASSPOLICYTYPE] [-B BASELINE]
 </dl>
 </dd>
 <dt><strong>gcam</strong></dt>
-<dd><p class="first">Run the GCAM executable</p>
+<dd><p class="first" id="gcam-label">Run the GCAM executable</p>
 <p>Queue a GCAM job on a Linux cluster or run the job
                   locally (via &#8220;-l&#8221; flag). (On OS X, the &#8220;-l&#8221; flag is not needed; only
                   local running is supported.)</p>
@@ -1036,7 +1068,7 @@ usage: gcamtool.py protect [-h] [-b] [-f FRACTION] [--inPlace]
 </dl>
 </dd>
 <dt><strong>query</strong></dt>
-<dd><p class="first">Run one or more GCAM database queries by generating and running the
+<dd><p class="first" id="query-label">Run one or more GCAM database queries by generating and running the
                   named XML queries.</p>
 <p>Run one or more GCAM database queries by generating and running the
                   named XML queries. The results are placed in a file in the specified
@@ -1138,11 +1170,85 @@ usage: gcamtool.py query [-h] [-d XMLDB] [-D] [-R REGIONMAP] [-n]
 </dd>
 </dl>
 </dd>
-<dt><strong>ws</strong></dt>
-<dd><p class="first">Perform operations on a workspace.</p>
-<p>Create, delete, show path of, or run a shell command in a workspace.</p>
+<dt><strong>setup</strong></dt>
+<dd><p class="first" id="setup-label">Setup a scenario by creating modified XML input files.</p>
+<p>Automates modification to copies of GCAM&#8217;s input XML files,
+                   and construction of a corresponding configuration XML file.</p>
 <pre class="literal-block">
-usage: gcamtool.py ws [-h] [--create] [--delete] [-e EXTENSION] [-p] [-r RUN]
+usage: gcamtool.py setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
+                         [-p STOPPERIOD] [-R RESULTSDIR] [-s SCENARIO]
+                         [-S SUBDIR] [-x XMLSOURCEDIR] [-X XMLOUTPUTROOT]
+                         [-w WORKSPACE] [-y YEARS]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
+<td>Identify the baseline the selected scenario is based on.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
+<td>The scenario group to process. Defaults to the group labeled default=&#8221;1&#8221;.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-G=False</span>, <span class="option">--noGenerate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Do not generate constraints (useful before copying files for Monte Carlo simulation).</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m=xmlsrc.scenarios</span>, <span class="option">--module=xmlsrc.scenarios</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
+                            a dictionary called &#8216;ClassMap&#8217; which maps scenario names to classes.
+                            Default is &#8220;xmlsrc.scenarios&#8221; under the current Project Root.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p</span>, <span class="option">--stopPeriod</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The number of the GCAM period or the year to terminate after</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R</span>, <span class="option">--resultsDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--scenario</span></kbd></td>
+<td>Identify the scenario to run (N.B. The name is hardwired in some scripts).</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
+<td>A sub-directory to use beneath the computed scenario directory</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x</span>, <span class="option">--xmlSourceDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The location of the xmlsrc directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-X</span>, <span class="option">--xmlOutputRoot</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The root directory into which to generate XML files.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-w</span>, <span class="option">--workspace</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The pathname of the workspace to operate on.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-y=2015-2100</span>, <span class="option">--years=2015-2100</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
+                            XXXX-YYYY. Default is &#8220;2015-2100&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>ws</strong></dt>
+<dd><p class="first" id="ws-label">Perform operations on a workspace.</p>
+<p>The ws sub-command allows you to create, delete, show the path of,
+                  or run a shell command in a workspace. If the &#8211;scenario argument is given, the
+                  operation is performed on a scenario-specific workspace within a project directory.
+                  If &#8211;scenario is not specified, the operation is performed on the project directory
+                  that contains individual scenario workspaces. You can run the &#8211;path command before
+                  performing any operations to be sure of the directory that will be operated on, or
+                  use the &#8211;noExecute option to show the command that would be executed by &#8211;run.</p>
+<pre class="literal-block">
+usage: gcamtool.py ws [-h] [--create] [--delete] [-n] [-p] [-r RUN]
                       [-s SCENARIO] [--version]
 </pre>
 <dl class="last docutils">
@@ -1160,9 +1266,10 @@ usage: gcamtool.py ws [-h] [--create] [--delete] [-e EXTENSION] [-p] [-r RUN]
 <td>Delete the identified workspace&#8217; If used with &#8211;create, the
                             deletion occurs first.</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">-e=</span>, <span class="option">--extension=</span></kbd></td>
+<kbd><span class="option">-n=False</span>, <span class="option">--noExecute=False</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Add this extension when computing the path of the workspace.</td></tr>
+<tr><td>&nbsp;</td><td>Print the command that would be executed by &#8211;run, but
+                            don&#8217;t execute it.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-p=False</span>, <span class="option">--path=False</span></kbd></td>
 </tr>
@@ -1206,7 +1313,7 @@ documentation of the plug-in API.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="utils.html" class="btn btn-neutral float-right" title="pygcam.common" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="project-xml.html" class="btn btn-neutral float-right" title="project.xml" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="windows.html" class="btn btn-neutral" title="Using pygcam under Windows" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

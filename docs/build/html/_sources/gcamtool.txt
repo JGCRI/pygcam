@@ -1,10 +1,40 @@
 ``gcamtool.py``
 ================
 
-The gcamtool.py script organizes GCAM workflow functionality into a single
-script with sub-commands. The sub-commands are implemented via
-:ref:`plugins <plugins-label>`, so new (and project-specific) sub-commands
-are easily added.
+The gcamtool.py script unifies GCAM workflow managment functionality into a
+single script with sub-commands. Most sub-commands are implemented directly
+by the pygcam library. Project-specific features can be added via
+:ref:`plugins <plugins-label>`.
+
+The sub-commands support all the major workflow setups, including
+
+  * Modifying XML files and configuration.xml to set up a modeling experiment
+    (See the :ref:`setup <setup-label>` sub-command and :doc:`setup` for more
+    information.)
+
+  * Running GCAM in an automatically-created workspace, allowing multiple
+    instances of GCAM to run simultaneously, e.g., on parallel computing systems
+    (See the :ref:`gcam <gcam-label>` sub-command.)
+
+  * Executing batch queries against the XML database to extract GCAM results,
+    with on-the-fly regionalization based on a simple region-mapping file.
+    (See the :ref:`query <query-label>` sub-command.)
+
+  * Computing differences between policy and baseline scenarios, including
+    linear annualization of values between time-steps, and
+    (See the :ref:`diff <diff-label>` sub-command.)
+
+  * Plotting results, with flexible control of figure features including
+    title, axis labels, scale, and so on.
+    (See the :ref:`chart <chart-label>` sub-command.)
+
+  * Manage (create, delete, rename, run commands in) automatically-created workspaces.
+    (See the :ref:`ws <ws-label>` sub-command.)
+
+In addition, the `runProj <runProj-label>` sub-command allows workflow steps to be
+defined in an XML file so that individual or groups of steps can be executed for one
+or more scenarios. The ``runProj`` sub-command supports direct invocation of other
+workflow steps as well as running arbitrary programs of the user's choosing.
 
 Command-line usage is described below.
 
@@ -91,6 +121,30 @@ Usage
          # placing the results in the directory ``$HOME/ws/workspace1``
 
          gcamtool.py protect -s s1 -S "$HOME/protect.xml" -w "$HOME/ws/workspace1"
+
+
+   chart : @before
+      .. _chart-label:
+
+
+   diff : @before
+      .. _diff-label:
+
+
+   gcam : @before
+      .. _gcam-label:
+
+
+   query : @before
+      .. _query-label:
+
+
+   setup : @before
+      .. _setup-label:
+
+
+   ws : @before
+      .. _ws-label:
 
 
 Extending gcamtool using plug-ins

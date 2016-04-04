@@ -1,7 +1,7 @@
 .. _project-xml:
 
 
-``project.xml``
+project.xml
 ===============
 
 The runProject sub-command is a workflow management script for GCAM. It

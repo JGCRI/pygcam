@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The pygcam package &mdash; pygcam 0.1a1 documentation</title>
+  <title>Contents &mdash; pygcam 0.1a1 documentation</title>
   
 
   
@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="#"/>
-        <link rel="next" title="Installation" href="install.html"/> 
+        <link rel="next" title="Introduction to pygcam" href="intro.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,9 +81,19 @@
             
             
                 <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
@@ -92,12 +102,8 @@
 <li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 
             
@@ -128,7 +134,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="#">Docs</a> &raquo;</li>
       
-    <li>The <code class="docutils literal"><span class="pre">pygcam</span></code> package</li>
+    <li>Contents</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -142,144 +148,41 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-pygcam-package">
-<h1>The <code class="docutils literal"><span class="pre">pygcam</span></code> package<a class="headerlink" href="#the-pygcam-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
 <p><em>This package is currently under development.</em></p>
-<p>The <code class="docutils literal"><span class="pre">pygcam</span></code> package comprises a set of Python modules and a main driver script designed
-to facilitate a more efficient workflow using
-<a class="reference external" href="http://www.globalchange.umd.edu/models/gcam">Global Change Assessment Model</a> (GCAM).</p>
-<p>The tools are intended to meet the needs of different types of users, from basic users who just
-want to run the model, to &#8220;power&#8221; users interested in writing custom scripts, to software developers
-wanting to write new tools like graphical user interfaces for working with GCAM.</p>
-<p>The main components include:</p>
-<blockquote>
-<div><ul class="simple">
-<li><strong>Software libraries</strong> that simplify development of higher-level software tools (graphical interfaces, scripts)
-that interface with GCAM. The library will provide an Application Programming Interface (API) to the GCAM input
-and output data, and to running GCAM, querying results, and performing common processing tasks such as computing
-differences between policy and baseline scenarios and plotting results.</li>
-</ul>
-<ul class="simple">
-<li><strong>Command-line tools</strong> built upon the library described above to package commonly required functionality into a convenient
-form for direct use and to support development of higher-level, custom scripts.</li>
-</ul>
-<ul class="simple">
-<li><strong>A Monte Carlo Simulation framework</strong> using GCAM on high-performance computers, allowing users to explore
-uncertainty in model outputs resulting from uncertainty in model inputs, and to characterize the contribution of
-individual parameters to variance in output metrics.</li>
-</ul>
-<ul class="simple">
-<li><strong>User documentation</strong> for all of the above.</li>
-</ul>
-<ul class="simple">
-<li><strong>Cross-platform capability</strong> on Windows, Mac OS X, and Linux.</li>
-</ul>
-<ul class="simple">
-<li><strong>Installer scripts</strong> to simplify installation of tools on users’ computers.</li>
-</ul>
-</div></blockquote>
-<p>Users can control many aspects of <code class="docutils literal"><span class="pre">pygcam</span></code> through a <a class="reference internal" href="config.html"><em>configuration file</em></a>
-found in <code class="docutils literal"><span class="pre">${HOME}/.pygcam.cfg</span></code>. When <a class="reference internal" href="gcamtool.html"><em>gcamtool.py</em></a> is run the first time, a
-configuration file is created, with all configuration options commented out and
-showing their default values.</p>
-<p>The main script (<a class="reference internal" href="gcamtool.html"><em>gcamtool.py</em></a>) implements several &#8220;subcommands&#8221; that perform various
-steps in a typical GCAM analysis. The script implements a <a class="reference internal" href="subcommand.html"><em>plug-in</em></a>
-architecture allowing users to customize <a class="reference internal" href="gcamtool.html"><em>gcamtool</em></a> and avoid a proliferation of scripts.</p>
-<blockquote>
-<div><ul class="simple">
-<li>The <code class="docutils literal"><span class="pre">runProj</span></code> subcommand reads an XML input file and runs one or more steps of an analysis,
-and these steps can (typically will) invoke other subcommands as required.</li>
-<li>The <code class="docutils literal"><span class="pre">gcam</span></code> subcommand runs the GCAM model in any indicated directory. Links to a
-reference GCAM directory are used when possible to avoid needless file copying.</li>
-<li>The <code class="docutils literal"><span class="pre">query</span></code> subcommand executes named batch queries, and supports regional aggregation
-described in a region mapping file.</li>
-<li>The <code class="docutils literal"><span class="pre">diff</span></code> subcommand computes the differences between two sets of GCAM results found
-stored in .CSV files in the format generated by the <code class="docutils literal"><span class="pre">query</span></code> subcommand.</li>
-<li>The <code class="docutils literal"><span class="pre">chart</span></code> subcommand generates bar or line graphs, with a large number of command-line
-arguments to customize chart appearance.</li>
-<li>The <code class="docutils literal"><span class="pre">protect</span></code> subcommand generates XML input files that define custom land-protection scenarios.</li>
-</ul>
-</div></blockquote>
-<p>Also see the <a class="reference internal" href="setup.html"><em>pygcam.setup</em></a> documentation to for information on programmatically modifying
-copies of GCAM XML files. This &#8220;setup&#8221; step can be one of the commands called by <code class="docutils literal"><span class="pre">runProj</span></code>.</p>
-<div class="section" id="managing-scenarios">
-<h2>Managing Scenarios<a class="headerlink" href="#managing-scenarios" title="Permalink to this headline">¶</a></h2>
-<p>In GCAM, a <em>scenario</em> is just a name assigned within a configuration
-file to distinguish runs of GCAM. The scenario name is set in GCAM&#8217;s
-configuration.xml and appears in the upper-left panel of the ModelInterface
-application.</p>
-<p>In <code class="docutils literal"><span class="pre">pygcam</span></code>, the <em>scenario</em> concept is made more helpful by implementing
-a few simple conventions regarding directory structure and filenames. Using
-a consistent structure simplifies use of the library and tools since more
-information can be conveyed through the scenario name. The &#8220;setup tools&#8221; (to
-be documented) follow these conventions when generating modified XML, allowing
-the other workflow scripts to find the resulting files.</p>
-<div class="section" id="scenario-conventions">
-<h3>Scenario conventions<a class="headerlink" href="#scenario-conventions" title="Permalink to this headline">¶</a></h3>
-<p>We extend the definition of <em>scenario</em> to identify a set of XML files that
-are used together. In this approach, &#8220;scenario&#8221; refers to both the name
-assigned in a configuration.xml file and a corresponding directory holding
-customized XML files, and a configuration file called <code class="docutils literal"><span class="pre">config.xml</span></code>.</p>
-</div>
-</div>
-<div class="section" id="managing-multiple-workspaces">
-<h2>Managing multiple workspaces<a class="headerlink" href="#managing-multiple-workspaces" title="Permalink to this headline">¶</a></h2>
-<p>The tools are most convenient to use if you follow the file layout created by
-the &#8220;setup tools&#8221;. It is not required to use these tools or this file structure,
-but everything is designed to simplify coordination between the programs.
-Many of these (absolute and relative) directory locations can be modified to
-suit your preferences via the <code class="docutils literal"><span class="pre">pygcam</span></code> configuration file.</p>
-<p>This file layout assumes you have multiple projects, and each project involves
-multiple baseline and policy scenarios. These project files can all be stored in
-a central GCAM work area, which each project folder holding all scenarios for a
-project. Consider the following directory structure:</p>
-<blockquote>
-<div><ul class="simple">
-<li>~/workspaces<ul>
-<li>project1<ul>
-<li>scenario.a<ul>
-<li>&lt;custom XML files&gt;</li>
-<li>config.xml</li>
-</ul>
-</li>
-<li>scenario.b<ul>
-<li>&lt;custom XML files&gt;</li>
-<li>config.xml</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>project2<ul>
-<li>myScenario<ul>
-<li>&lt;custom XML files&gt;</li>
-<li>config.xml</li>
-</ul>
-</li>
-<li>yourScenario<ul>
-<li>&lt;custom XML files&gt;</li>
-<li>config.xml</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
-<p>With this approach, the script <code class="docutils literal"><span class="pre">queueGCAM.py</span></code> can get the main workspace
-location from the variable <code class="docutils literal"><span class="pre">GCAM.WorkspaceRoot</span></code> from the configuration file
-<code class="docutils literal"><span class="pre">~.pygcam.cfg</span></code> (which, in this approach can be set once for all projects)
-and you need only pass the scenario name and project name, allowing the path
-to the configuration XML file to computed as
-<code class="docutils literal"><span class="pre">{GCAM.WorkspaceRoot}/{project}/{scenario}/config.xml</span></code>.</p>
-</div>
-<div class="section" id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+</ul>
+</div>
+<div class="section" id="the-gcamtool-py-workflow-management-script">
+<h2>The <code class="docutils literal"><span class="pre">gcamtool.py</span></code> workflow management script<a class="headerlink" href="#the-gcamtool-py-workflow-management-script" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+</ul>
+</div>
+</div></blockquote>
+<div class="section" id="xml-input-file-formats-for-gcamtool-py-sub-commands">
+<h3>XML input file formats for <code class="docutils literal"><span class="pre">gcamtool.py</span></code> sub-commands<a class="headerlink" href="#xml-input-file-formats-for-gcamtool-py-sub-commands" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="application-programming-interface-api">
+<h2>Application Programming Interface (API)<a class="headerlink" href="#application-programming-interface-api" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
@@ -288,19 +191,11 @@ to the configuration XML file to computed as
 <li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 </div>
-</div>
-<div class="section" id="xml-input-file-formats-for-sub-commands">
-<h2>XML input file formats for sub-commands<a class="headerlink" href="#xml-input-file-formats-for-sub-commands" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html"><code class="docutils literal"><span class="pre">project.xml</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html"><code class="docutils literal"><span class="pre">landProtection.xml</span></code></a></li>
-</ul>
-</div>
+</div></blockquote>
 </div>
 </div>
 
@@ -311,7 +206,7 @@ to the configuration XML file to computed as
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="intro.html" class="btn btn-neutral float-right" title="Introduction to pygcam" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>

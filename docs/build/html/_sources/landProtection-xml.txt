@@ -1,8 +1,8 @@
 .. _protect-xml:
 
 
-``landProtection.xml``
-==========================
+landProtection.xml
+=======================
 
 The :ref:`protect <protect-label>` sub-command of :doc:`gcamtool` generates XML
 input files for GCAM that "protect" land by removing it from consideration
