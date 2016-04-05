@@ -9,6 +9,7 @@ BIOMASS_LIQUIDS = 'biomass liquids'
 
 # Technology names
 TECH_CORN_ETHANOL       = 'corn ethanol'
+TECH_SUGARCANE_ETHANOL  = 'sugar cane ethanol'
 TECH_CELLULOSIC_ETHANOL = 'cellulosic ethanol'
 TECH_FT_BIOFUELS        = 'FT biofuels'
 TECH_BIODIESEL          = 'biodiesel'

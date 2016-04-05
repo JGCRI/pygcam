@@ -6,7 +6,6 @@ Test
     - pygcam and also gcammcs (results, parameters, scenarios)
 - Changes to xmlEditor.py and related bits
 - Test "GCAM.CopyRefWorkspace = True" option to handle symlink failure.
-
 - land protection
 
 Cleanup
