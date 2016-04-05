@@ -603,7 +603,7 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False):
 def main(args):
     miLogFile   = getParam('GCAM.ModelInterfaceLogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
-    workspace   = args.workspace or getParam('GCAM.RunWorkspaceRoot')
+    workspace   = args.workspace or getParam('GCAM.SandboxRoot')
     xmldb       = args.xmldb     or os.path.join(workspace, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')

@@ -464,7 +464,7 @@ class Project(object):
 
         # TBD: rethink use of subdir. Simpler to have user add subdir as needed in project.xml
         argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], subdir), rmFinalSlash=True)
-        argDict['projectWsDir']  = projectWsDir  = unixPath(join(argDict['GCAM.RunWorkspaceRoot'], subdir), rmFinalSlash=True)
+        argDict['projectWsDir']  = projectWsDir  = unixPath(join(argDict['GCAM.SandboxRoot'], subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], subdir), rmFinalSlash=True)
 
         argDict['SEP'] = os.path.sep    # '/' on Unix and '\\' on Windows
@@ -497,8 +497,8 @@ class Project(object):
             argDict['scenarioSubdir'] = scenario.subdir
             #argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir), rmFinalSlash=True)
             #argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
-            runWsRoot = getParam('GCAM.RunWorkspaceRoot')
-            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(runWsRoot, scenarioName))
+            sandboxRoot = getParam('GCAM.SandboxRoot')
+            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxRoot, scenarioName))
             argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
             argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
 

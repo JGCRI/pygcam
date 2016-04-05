@@ -136,7 +136,7 @@ def runGCAM(args):
         runQsub    = not runLocal
         jobName    = args.jobName    # args default is "queueGCAM"
         queueName  = args.queueName  or getParam('GCAM.DefaultQueue')
-        workspace  = args.workspace  or getParam('GCAM.RunWorkspaceRoot')
+        workspace  = args.workspace  or getParam('GCAM.SandboxRoot')
         workspace  = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
         setupWorkspace(workspace)
 

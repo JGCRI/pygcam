@@ -57,8 +57,9 @@ GCAM.Root = %(Home)s/GCAM
 # you want to use. It is convenient to make this a symbolic link.
 GCAM.Current = %(GCAM.Root)s/current
 
-# The default location in which to find or create GCAM workspaces
-GCAM.RunWorkspaceRoot = %(GCAM.Root)s/ws
+# The default location in which to find or create GCAM runtime
+# sandboxes
+GCAM.SandboxRoot = %(GCAM.Root)s/ws
 
 # The location of the Main_User_Workspace to use. This can refer
 # to any folder; GCAM.Current is just an optional convention.

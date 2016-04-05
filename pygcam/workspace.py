@@ -24,7 +24,7 @@ def driver(args, tool):
     if not project:
         raise CommandlineError("ws: must specify project name")
 
-    workspace = getParam('GCAM.RunWorkspaceRoot')
+    workspace = getParam('GCAM.SandboxRoot')
     if args.scenario:
         workspace += '/' + args.scenario
 
