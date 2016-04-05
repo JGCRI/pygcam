@@ -92,6 +92,8 @@ def xmlStarlet(*args):
     :return: True if exit status was 0, else False
     """
     args = map(str, args)
+    args.insert(0, getParam('GCAM.XmlStarlet'))
+
     _logger.debug(' '.join(args))
 
     return subprocess.call(args, shell=False) == 0
@@ -104,7 +106,7 @@ def xmlEdit(filename, *rest):
     :param rest: (iterable) values to pass as arguments to xmlstarlet
     :return: True on success, else False
     """
-    args = ['xml', 'ed', '--inplace'] + list(rest) + [filename]
+    args = ['ed', '--inplace'] + list(rest) + [filename]
     return xmlStarlet(*args)
 
 def xmlSel(filename, *rest):
@@ -117,7 +119,7 @@ def xmlSel(filename, *rest):
     :param rest: (iterable) values to pass as arguments to xmlstarlet
     :return:
     """
-    args = ['xml', 'sel'] + list(rest) + [filename]
+    args = ['sel'] + list(rest) + [filename]
     return xmlStarlet(*args)
 
 def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technology,
@@ -141,7 +143,6 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
         rather than from the global-technology-database.
     :return: True on success, else False
     """
-
     _logger.info("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
 
     def attr(element, value): # Simple helper function
@@ -154,12 +155,15 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
         xpath = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                 (sector, subsector, technology)
 
+    exe = getParam('GCAM.XmlStarlet')
+
     # Surround the extracted XML with the necessary hierarchy
-    cmd1 = '''xml sel -t -e scenario -e world -e region -e %s -e subsector -c "%s" "%s"''' % (sectorElement, xpath, srcFile)
+    cmd1 = '''%s sel -t -e scenario -e world -e region -e %s -e subsector -c "%s" "%s"''' % \
+           (exe, sectorElement, xpath, srcFile)
 
     # Insert attribute names to the new hierarchy and rename technology => stub-technology (for global-tech-db case)
-    cmd2 = "xml ed " + attr("region", region) + attr(sectorElement, sector) + attr("subsector", subsector) + \
-           '''-r "//technology[@name='%s']" -v stub-technology ''' % technology
+    cmd2 = "%s ed " + attr("region", region) + attr(sectorElement, sector) + attr("subsector", subsector) + \
+           '''-r "//technology[@name='%s']" -v stub-technology ''' % (exe, technology)
 
     # Workaround for parsing error: explicitly name shutdown deciders
     for name in ['phased-shutdown-decider', 'profit-shutdown-decider']:
@@ -1031,43 +1035,3 @@ class XMLEditor(object):
         configureLogs(force=True)
 
         return args
-
-    # Deprecated
-    # @classmethod
-    # def addArgs(cls, baseline=None, scenario=None):
-    #
-    #     print "\nthe XMLEditor.addArgs method is deprecated. Use SetupCommand.\n"
-    #
-    #     defaultYears = '2015-2100'
-    #     parser = cls.parser
-    #
-    #     parser.add_argument('-b', '--baseline', default=baseline,
-    #                         help='Identify the baseline the selected scenario is based on')
-    #
-    #     parser.add_argument('-c', '--configSection',
-    #                         help='''The name of the section in the config file to read from.''')
-    #
-    #     parser.add_argument('-g', '--group', default=None,
-    #                         help='The scenario group to process. Defaults to the group labeled default="1".')
-    #
-    #     parser.add_argument('-G', '--noGenerate', action='store_true',
-    #                         help='Do not generate constraints (useful before copying files for Monte Carlo simulation)')
-    #
-    #     parser.add_argument('-R', '--resultsDir', default=None,
-    #                         help='The parent directory holding the GCAM output workspaces')
-    #
-    #     parser.add_argument('-s', '--scenario', default=scenario,
-    #                         help='Identify the scenario to run (N.B. The name is hardwired in some scripts)')
-    #
-    #     parser.add_argument('-l', '--logLevel', type=str.lower,
-    #                         choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
-    #                         help='Sets the log level of the program.')
-    #
-    #     # parser.add_argument('-x', '--xmlOutputRoot', default=None,
-    #     #                      help='''The root directory into which to generate XML files.''')
-    #
-    #     parser.add_argument('-y', '--years', default=defaultYears,
-    #                         help='''Years to generate constraints for. Must be of the form
-    #                         XXXX-YYYY. Default is "%s"''' % defaultYears)
-    #
-    #     return parser   # for auto-doc generation

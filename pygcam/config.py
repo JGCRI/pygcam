@@ -88,6 +88,10 @@ GCAM.SourceWorkspace =
 # Root directory for where the user keeps project folders
 GCAM.ProjectRoot    = %(Home)s/projects
 
+# The name of the XML Starlet program. Use full path if it's not
+# found on your usual PATH.
+GCAM.XmlStarlet     = xml
+
 # If using the XML "setup" system, this is the root folder for
 # setup source files
 GCAM.XmlSrc         = %(GCAM.ProjectRoot)s/xmlsrc
