@@ -239,9 +239,11 @@ class XMLEditor(object):
         # N.B. join helpfully drops out "" components
         self.scenario_dir_abs = makeDirPath((self.local_xml_abs, subdir, name), create=True)
         self.scenario_dir_rel = pathjoin(self.local_xml_rel, subdir, name)
+        self.baseline_dir_rel = pathjoin(self.local_xml_rel, subdir, self.parent.name) if self.parent else None
 
         self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, subdir, name), create=True)
         self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, subdir, name)
+
 
         # Store commonly-used paths
         gcam_xml = "input/gcam-data-system/xml"
