@@ -31,11 +31,11 @@ _MetaTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
     </output-meta-data>
     <world>
         <region name="{region}">
-            <{policy} name="{name}">
+            <{gcamPolicy} name="{name}">
                 <market>{market}</market>
                 {preConstraint}
 {constraints}
-           </{policy}>
+           </{gcamPolicy}>
         </region>
     </world>
 </scenario>
@@ -45,9 +45,9 @@ DEFAULT_POLICY = 'policy-portfolio-standard'
 DEFAULT_REGION = 'USA'
 DEFAULT_MARKET = 'USA'
 
-def generateConstraintXML(name, series, policy=DEFAULT_POLICY, policyType=None,
+def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=None,
                           region=DEFAULT_REGION, market=DEFAULT_MARKET,
-                          preConstraint=None, summary=''):
+                          preConstraint='', summary=''):
 
     def genConstraint(year):
         constraint = _ConstraintTemplate.format(year=year, value="{year%s}" % year)
@@ -60,8 +60,8 @@ def generateConstraintXML(name, series, policy=DEFAULT_POLICY, policyType=None,
     constraints = map(genConstraint, series.index)
     constraintText = '\n'.join(constraints)
 
-    template = _MetaTemplate.format(name=name, policy=policy, policyType=policyType, region=region,
-                                    market=market, summary=summary,
+    template = _MetaTemplate.format(name=name, gcamPolicy=gcamPolicy, policyType=policyType,
+                                    region=region, market=market, summary=summary,
                                     preConstraint=preConstraint, constraints=constraintText)
 
     args = {'year' + col: value for col, value in series.iteritems()}
@@ -225,8 +225,8 @@ def genBioConstraints(**kwargs):
     biomassConstraint = totalBiomassUSA.iloc[0] + deltaCellulose.iloc[0]
     _logger.debug('biomassConstraint:\n', biomassConstraint)
 
-    xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint, biomassPolicyType,
-                                summary='Regional biomass constraint.')
+    xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint,
+                                policyType=biomassPolicyType, summary='Regional biomass constraint.')
     saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
                        subdir=subdir, fromMCS=fromMCS)
 
@@ -240,7 +240,7 @@ def genBioConstraints(**kwargs):
     else:
         constraint = purposeGrownUSA.iloc[0]
 
-    xml = generateConstraintXML('purpose-grown-constraint', constraint, purposeGrownPolicyType,
+    xml = generateConstraintXML('purpose-grown-constraint', constraint, policyType=purposeGrownPolicyType,
                                 summary='Purpose-grown biomass constraint.')
     saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
                        subdir=subdir, fromMCS=fromMCS)
@@ -362,7 +362,7 @@ def genDeltaConstraints(**kwargs):
         purposeGrownDF.fillna(0, inplace=True)
         purposeGrownUSA  = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
 
-        xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint, biomassPolicyType,
+        xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint, policyType=biomassPolicyType,
                                     summary='Regional biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
@@ -370,7 +370,7 @@ def genDeltaConstraints(**kwargs):
 
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
 
-        xml = generateConstraintXML('purpose-grown-constraint', constraint, purposeGrownPolicyType,
+        xml = generateConstraintXML('purpose-grown-constraint', constraint,  policyType=purposeGrownPolicyType,
                                     summary='Purpose-grown biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
@@ -548,7 +548,7 @@ if __name__ == '__main__':
     xml = generateConstraintXML('ElecCO2',
                                 pd.Series({'2020':583, '2025':512, '2030':442, '2035':442,
                                            '2040':442, '2045':442, '2050':442,}),
-                                policy='ghgpolicy',
+                                gcamPolicy='ghgpolicy',
                                 region='USA',
                                 market='USA',
                                 preConstraint='<fixedTax year="2015">0</fixedTax>')

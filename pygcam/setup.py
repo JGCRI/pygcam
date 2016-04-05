@@ -12,7 +12,6 @@ import os
 from importlib import import_module
 from .error import SetupException
 from .config import getParam
-from .utils import importFrom
 from .subcommand import SubcommandABC
 
 # def (ns, argName, default=None, raiseError=False):
