@@ -180,10 +180,6 @@ GCAM.QsubEnviroVars =
 # For qsub, the default number of minutes to allocate per task.
 GCAM.Minutes = 20
 
-# Whether to use the "virtual buffer", allowing ModelInterface to
-# run without generating pop-up windows on Linux.
-GCAM.UseVirtualBuffer = yes
-
 # A script to run by queueGCAM after GCAM completes. The script is
 # called with 3 arguments: workspace directory, XML configuration
 # file, and scenario name.
