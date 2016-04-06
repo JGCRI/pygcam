@@ -248,7 +248,6 @@ class XMLEditor(object):
         self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, subdir, name), create=True)
         self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, subdir, name)
 
-
         # Store commonly-used paths
         gcam_xml = "input/gcam-data-system/xml"
         self.gcam_prefix_abs = prefix_abs = pathjoin(refWorkspace, gcam_xml)
