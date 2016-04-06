@@ -460,11 +460,11 @@ class Project(object):
         argDict['project']       = self.projectName
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
-        argDict['scenarioGroup'] = self.scenarioGroupName        # argDict['years']         = argDict['startYear'] + '-' + argDict['endYear']
+        argDict['scenarioGroup'] = self.scenarioGroupName
 
         # TBD: rethink use of subdir. Simpler to have user add subdir as needed in project.xml
         argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], subdir), rmFinalSlash=True)
-        argDict['projectWsDir']  = projectWsDir  = unixPath(join(argDict['GCAM.SandboxRoot'], subdir), rmFinalSlash=True)
+        argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxRoot'], subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], subdir), rmFinalSlash=True)
 
         argDict['SEP'] = os.path.sep    # '/' on Unix and '\\' on Windows
