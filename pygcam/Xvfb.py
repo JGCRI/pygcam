@@ -40,7 +40,7 @@ class Xvfb(object):
 
     # Defining __enter__ and __exit__ enables use of "with Xvfb(): context manager
     def __enter__(self):
-        return None
+        return self
 
     def __exit__(self, type, value, traceback):
         self.terminate()
