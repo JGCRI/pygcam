@@ -58,12 +58,13 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-G', '--noGenerate', action='store_true',
                             help='Do not generate constraints (useful before copying files for Monte Carlo simulation).')
 
-        parser.add_argument('-m', '--module', default='xmlsrc.scenarios',
+        parser.add_argument('-m', '--module',
                             help='''The "dot spec" for the Python module holding the setup classes and
                             a function called 'scenarioClass' or a dictionary called 'ClassMap' which map
                             scenario names to classes. If the function 'scenarioClass' exists, it is
-                            used. If not, the 'ClassMap' is used.
-                            Default is "xmlsrc.scenarios" under the current Project Root.''')
+                            used. If not, the 'ClassMap' is used. Default is "xmlsrc.subdir.scenarios" (if
+                            subdir is defined) or "xmlsrc.scenarios" (if subdir is undefined) under the
+                            current ProjectRoot.''')
 
         parser.add_argument('-p', '--stopPeriod', type=int,
                             help='The number of the GCAM period or the year to terminate after')
@@ -99,9 +100,12 @@ class SetupCommand(SubcommandABC):
         # TBD: remove ability to override on cmdline if not useful
         args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectRoot')
-        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), scenario)
+        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), args.subdir, scenario)
 
         sys.path.insert(0, os.path.dirname(os.path.dirname(args.xmlSourceDir)))
+
+        if not args.module:
+            args.module = 'xmlsrc.' + args.subdir + '.scenarios' if args.subdir else 'xmlsrc.scenarios'
 
         try:
             # Try to load the user's module
