@@ -1,4 +1,4 @@
-all: clean html pdf sdist wheel
+all: clean html sdist wheel
 
 html:
 	make -C docs html

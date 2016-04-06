@@ -8,7 +8,8 @@ import os
 import io
 import platform
 from ConfigParser import SafeConfigParser
-from .error import ConfigFileError, PygcamException
+from .error import ConfigFileError, PygcamException, CommandlineError
+from .subcommand import SubcommandABC
 
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
@@ -279,7 +280,7 @@ def readConfigFiles(section):
         useXvfb = 'False'
     elif platformName == 'Linux':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = 'gcam.exe'
+        exeFile = './gcam.exe'
         useXvfb = 'True'
     elif platformName == 'Windows':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
@@ -412,3 +413,44 @@ def getParamAsFloat(name, section=None):
     """
     value = getParam(name, section=section)
     return float(value)
+
+
+class ConfigCommand(SubcommandABC):
+    VERSION = '0.1'
+
+    def __init__(self, subparsers):
+        kwargs = {'help' : '''List the contents of the ~/.pygcam configuration file or
+                              the value of a single parameter.'''}
+
+        super(ConfigCommand, self).__init__('config', subparsers, kwargs)
+
+    def addArgs(self, parser):
+        parser.add_argument('-d', '--useDefault', action='store_true',
+                            help='''Indicates to operate on the DEFAULT
+                                    section rather than the project section.''')
+
+        parser.add_argument('-v', '--variable',
+                            help='''Show the value of a single configuration variable.
+                            The argument must be a variable name.''')
+
+        parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
+
+        return parser
+
+    def run(self, args, tool):
+        section = 'DEFAULT' if args.useDefault else args.configSection
+
+        if args.variable:
+            value = getParam(args.variable, section=section)
+            if value is not None:
+                print value
+        else:
+            if section == 'DEFAULT' or _ConfigParser.has_section(section):
+                print "[%s]" % section
+                for var, value in sorted(_ConfigParser.items(section)):
+                    print "%22s = %s" % (var, value)
+            else:
+                raise CommandlineError("Unknown configuration file section '%s'" % section)
+
+
+PluginClass = ConfigCommand

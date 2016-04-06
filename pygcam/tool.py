@@ -14,6 +14,7 @@ from glob import glob
 from .utils import loadModuleFromPath
 from .error import PygcamException
 from .chart import ChartCommand
+from .config import ConfigCommand
 from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
 from .project import ProjectCommand
@@ -30,7 +31,7 @@ _logger = getLogger(__name__)
 PROGRAM = 'gcamtool'
 __version__ = '0.1'
 
-BuiltinSubcommands = [ChartCommand, DiffCommand,
+BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
                       DeltaConstraintsCommand, GenConstraintsCommand,
                       GcamCommand, ProjectCommand, ProtectLandCommand,
                       QueryCommand, SetupCommand, WorkspaceCommand]

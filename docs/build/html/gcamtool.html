@@ -187,7 +187,7 @@ workflow steps as well as running arbitrary programs of the user&#8217;s choosin
 <pre class="literal-block">
 usage: gcamtool.py [-h] [-l {notset,debug,info,warning,error,critical}]
                    [-s CONFIGSECTION] [-v] [--version]
-                   {chart,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query,setup,ws}
+                   {chart,config,diff,deltaConstraint,bioConstraint,gcam,runProj,protect,query,setup,ws}
                    ...
 </pre>
 <dl class="docutils">
@@ -465,6 +465,35 @@ usage: gcamtool.py chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT]
 <kbd><span class="option">--barWidth=0.5</span></kbd></td>
 <td>The relative width of bars. Helpful when plotting only 1 or 2 bar, so they
                             aren&#8217;t obnoxiously wide. Default is 0.5</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>config</strong></dt>
+<dd><p class="first">List the contents of the ~/.pygcam configuration file or
+                              the value of a single parameter.</p>
+<pre class="literal-block">
+usage: gcamtool.py config [-h] [-d] [-v VARIABLE] [--version]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-d=False</span>, <span class="option">--useDefault=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Indicates to operate on the DEFAULT
+                                    section rather than the project section.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-v</span>, <span class="option">--variable</span></kbd></td>
+<td>Show the value of a single configuration variable.
+                            The argument must be a variable name.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1196,12 +1225,14 @@ usage: gcamtool.py setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
 <kbd><span class="option">-G=False</span>, <span class="option">--noGenerate=False</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Do not generate constraints (useful before copying files for Monte Carlo simulation).</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-m=xmlsrc.scenarios</span>, <span class="option">--module=xmlsrc.scenarios</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
-                            a dictionary called &#8216;ClassMap&#8217; which maps scenario names to classes.
-                            Default is &#8220;xmlsrc.scenarios&#8221; under the current Project Root.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-m</span>, <span class="option">--module</span></kbd></td>
+<td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
+                            a function called &#8216;scenarioClass&#8217; or a dictionary called &#8216;ClassMap&#8217; which map
+                            scenario names to classes. If the function &#8216;scenarioClass&#8217; exists, it is
+                            used. If not, the &#8216;ClassMap&#8217; is used. Default is &#8220;xmlsrc.subdir.scenarios&#8221; (if
+                            subdir is defined) or &#8220;xmlsrc.scenarios&#8221; (if subdir is undefined) under the
+                            current ProjectRoot.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-p</span>, <span class="option">--stopPeriod</span></kbd></td>
 </tr>
@@ -1212,7 +1243,7 @@ usage: gcamtool.py setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
 <tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-s</span>, <span class="option">--scenario</span></kbd></td>
-<td>Identify the scenario to run (N.B. The name is hardwired in some scripts).</td></tr>
+<td>Identify the scenario to run.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
 <td>A sub-directory to use beneath the computed scenario directory</td></tr>
