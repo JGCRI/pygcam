@@ -86,10 +86,13 @@ def setupWorkspace(runWorkspace):
     mkdirs(logPath)
 
     # Create link in the new workspace "exe" dir to the executable program and other required files/dirs
-    exePath = os.path.join('exe', getParam('GCAM.Executable'))      # expressed as relative to the exe dir
+    exeName = getParam('GCAM.Executable')
+    exeName = exeName[2:] if exeName[:2] == './' else exeName   # trim leading './' if present
+    exePath = os.path.join('exe', exeName)                      # expressed as relative to the exe dir
     workspaceSymlink(exePath)
-    workspaceSymlink(os.path.join('exe', 'configuration.xml'))      # link to default configuration file
-    workspaceSymlink(os.path.join('exe', 'log_conf.xml'))           # and log configuration file
+
+    workspaceSymlink(os.path.join('exe', 'configuration.xml'))  # link to default configuration file
+    workspaceSymlink(os.path.join('exe', 'log_conf.xml'))       # and log configuration file
     workspaceSymlink('input')
     workspaceSymlink('libs')
 
@@ -204,7 +207,7 @@ def runGCAM(args):
         # Run locally, which might mean on a desktop machine, interactively on a
         # compute node (via "qsub -I", or in batch mode on a compute node.
         gcamPath = getParam('GCAM.Executable')
-        _logger.debug("cd %s", exeDir)
+        _logger.info("cd %s", exeDir)
         os.chdir(exeDir)        # if isQsubbed, this is redundant but harmless
 
         for configFile in configFiles:
