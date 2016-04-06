@@ -620,7 +620,6 @@ def main(args):
 
     xmldb = os.path.abspath(xmldb)
 
-    _logger.info('region map file: %s', regionFile)
     regionMap = readRegionMap(regionFile) if regionFile else None
 
     if miLogFile:
