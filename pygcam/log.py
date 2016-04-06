@@ -14,6 +14,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 
 """
+import os
 import logging
 from collections import defaultdict
 from .config import getParam, getParamAsBoolean, configLoaded
@@ -29,6 +30,24 @@ _verbose  = False
 def _debug(msg):
     if _verbose:
         print msg
+
+#
+# Copied here from utils.py to avoid an "import loop"
+#
+def _mkdirs(newdir, mode=0o770):
+    """
+    Try to create the full path `newdir` and ignore the error if it already exists.
+
+    :param newdir: the directory to create (along with any needed parent directories)
+    :return: nothing
+    """
+    from errno import EEXIST
+
+    try:
+        os.makedirs(newdir, mode)
+    except OSError, e:
+        if e.errno != EEXIST:
+            raise
 
 def _configureLogger(logger):
     '''
@@ -61,6 +80,7 @@ def _configureLogger(logger):
     logFile = getParam('GCAM.LogFile')
     if logFile:
         _debug("Configuring file logger for %s" % loggerName)
+        _mkdirs(os.path.dirname(logFile))
         handler = logging.FileHandler(logFile, mode='a')
         handler.setFormatter(_formatter)
         logger.addHandler(handler)
