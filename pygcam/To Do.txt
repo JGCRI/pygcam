@@ -4,8 +4,6 @@ Test
 - write unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
-- Changes to xmlEditor.py and related bits
-- Test "GCAM.CopyRefWorkspace = True" option to handle symlink failure.
 - land protection
 
 Cleanup
@@ -60,5 +58,4 @@ Tasks
     - Perhaps split out generic function from domain-specific
 - Elim. builtin plugins dir?
 - Update documentation
-- Update project.xml in gcam-proj
 - Test everything again on Windows
