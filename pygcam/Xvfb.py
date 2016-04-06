@@ -42,7 +42,7 @@ class Xvfb(object):
     def __enter__(self):
         return None
 
-    def __exit__(self):
+    def __exit__(self, type, value, traceback):
         self.terminate()
 
     def terminate(self):
