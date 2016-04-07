@@ -351,6 +351,12 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None):
                     found = subtree.xpath('//labelRewriteList')
                     if len(found) == 1:
                         rewriteList = found[0]
+
+                        # If there was a hard-coded rewrite for regions, delete it
+                        # TBD: TEST THIS
+                        found = rewriteList.xpath("./level[@name='region']")
+                        for regionElt in found:
+                            rewriteList.remove(regionElt)
                     else:
                         # create and inject the element
                         rewriteList = ET.Element('labelRewriteList')
@@ -633,6 +639,10 @@ def main(args):
 
             if not queryName or queryName[0] == '#':    # allow blank lines and comments
                 continue
+
+            if queryName == 'exit':
+                _logger.warn('Found "exit"; exiting batch query processing')
+                return
 
             _logger.info("Processing query '%s'", queryName)
 
