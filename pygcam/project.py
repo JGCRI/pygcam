@@ -130,7 +130,8 @@ class ScenarioGroup(object):
     """
     def __init__(self, node):
         self.name = node.get('name')
-        self.isDefault = getBooleanXML(node.get('default', default='0'))
+        self.isDefault   = getBooleanXML(node.get('default', default='0'))
+        self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
 
         scenarioNodes = node.findall('scenario')
         scenarios = map(Scenario, scenarioNodes)
@@ -456,16 +457,17 @@ class Project(object):
 
         self.argDict = argDict = Variable.getDict()
 
+        groupDir = self.scenarioGroupName if self.scenarioGroup.useGroupDir else ''
+
         # Add standard variables from project XML file itself
         argDict['project']       = self.projectName
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = self.scenarioGroupName
 
-        # TBD: rethink use of subdir. Simpler to have user add subdir as needed in project.xml
-        argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], subdir), rmFinalSlash=True)
-        argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxRoot'], subdir), rmFinalSlash=True)
-        argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], subdir), rmFinalSlash=True)
+        argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
+        argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxRoot'], groupDir, subdir), rmFinalSlash=True)
+        argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
 
         argDict['SEP'] = os.path.sep    # '/' on Unix and '\\' on Windows
 
@@ -498,7 +500,7 @@ class Project(object):
             #argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir), rmFinalSlash=True)
             #argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
             sandboxRoot = getParam('GCAM.SandboxRoot')
-            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxRoot, scenario.subdir, scenarioName))
+            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxRoot, groupDir, scenarioName))
             argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
             argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
 
