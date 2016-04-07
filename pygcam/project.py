@@ -500,7 +500,8 @@ class Project(object):
             #argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir), rmFinalSlash=True)
             #argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
             sandboxRoot = getParam('GCAM.SandboxRoot')
-            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxRoot, groupDir, scenarioName))
+            argDict['sandboxDir'] = sandboxDir = unixPath(join(sandboxRoot, groupDir))
+            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxDir, scenarioName))
             argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
             argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
 
