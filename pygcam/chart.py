@@ -439,6 +439,8 @@ def getFuelEJ(fuelFile):
 
 def main(mainArgs, tool, parser):
     # Do these slow imports after parseArgs so "-h" responds quickly
+    import matplotlib as mpl
+    mpl.use('Agg')                      # avoid creating a DISPLAY
     import matplotlib.pyplot as plt
     import matplotlib.ticker as tkr
     import pandas as pd
