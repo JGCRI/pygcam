@@ -18,189 +18,7 @@ WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
 NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
 
 
-_SystemDefaults = \
-"""#
-# This file defines variables read by the pygcam package. It allows
-# you to customize many aspects of pygcam, such as file locations,
-# and arguments to various commands. See the documentation for the
-# config module for detailed explanations.
-#
-# The default configuration values are provided below. To modify a
-# value, remove the '#' comment character at the start of the line
-# and set the value as desired.
-#
-# To set a project-specific value to override the defaults for one
-# project, create a new section by indicating the project name in
-# square brackets. For example for the project GCAM, you would add
-# [GCAM]. All settings after this until the next section declaration
-# (or end of file) taken as values for "GCAM". The script gcamtool.py
-# allows you to identify the project you are operating on so that
-# the corresponding values are read from the config file.
-#
-[DEFAULT]
-# This project is used if '-p' flag not given to gcamtool
-GCAM.DefaultProject =
-
-# Where to find plug-ins. Internal plugin directory is added
-# automatically. Use this to add custom plug-ins outside the pygcam
-# source tree. The value is a semicolon-delimited (on Windows) or
-# colon-delimited (on Unix) string of directories to search for files
-# matching the pattern '*_plugin.py' NOTE: This must be set in the
-# DEFAULT section.
-GCAM.PluginPath =
-
-# Sets the folder holding the symlink "current" which refers
-# to a folder holding Main_User_Workspace and ModelInterface.
-# (This is one way of setting up the code, but not required.)
-GCAM.Root = %(Home)s/GCAM
-
-# Refers to the GCAM folder holding the version of the model
-# you want to use. It is convenient to make this a symbolic link.
-GCAM.Current = %(GCAM.Root)s/current
-
-# The default location in which to find or create GCAM runtime
-# sandboxes
-GCAM.SandboxRoot = %(GCAM.Root)s/ws
-
-# The location of the Main_User_Workspace to use. This can refer
-# to any folder; GCAM.Current is just an optional convention.
-GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
-
-# The reference config file to use as a starting point for "setup"
-GCAM.RefConfigFile = %(GCAM.RefWorkspace)s/exe/configuration_ref.xml
-
-GCAM.RefQueryDir = %(GCAM.RefWorkspace)s/output/queries
-
-# The location of the ModelInterface to use.
-GCAM.ModelInterface = %(GCAM.Current)s/ModelInterface
-
-GCAM.ModelInterfaceLogFile = %(GCAM.TempDir)s/mi.log
-
-# QueryPath is string with one or more colon-delimited elements that
-# identify directories or XML files in which to find batch query
-# definitions.
-GCAM.QueryDir    = %(GCAM.RefQueryDir)s
-GCAM.QueryPath   = %(GCAM.QueryDir)s/Main_Queries.xml
-
-# The location of GCAM source code (for the purpose of reading
-# the .csv file that defines the current regional aggregation.
-GCAM.SourceWorkspace =
-
-# Root directory for where the user keeps project folders
-GCAM.ProjectRoot    = %(Home)s/projects
-
-# The name of the XML Starlet program. Use full path if it's not
-# found on your usual PATH.
-GCAM.XmlStarlet     = xml
-
-# If using the XML "setup" system, this is the root folder for
-# setup source files
-GCAM.XmlSrc         = %(GCAM.ProjectRoot)s/xmlsrc
-
-# The folders for setup-generated XML files.
-GCAM.LocalXml       = %(GCAM.ProjectRoot)s/local-xml
-GCAM.DynXml         = %(GCAM.ProjectRoot)s/dyn-xml
-
-# The default input file for the runProj sub-command
-GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
-
-# Whether GCAM should generate a debug file (no value => no change)
-GCAM.WriteDebugFile     =
-
-# Whether GCAM should generate a price file
-GCAM.WritePrices        =
-
-# Whether GCAM should generate the large XML file with the combined data
-# from all input files.
-GCAM.WriteXmlOutputFile =
-
-# Whether GCAM should generate outFile.csv
-GCAM.WriteOutputCsv     =
-
-# Path to an XML file describing land protection scenarios
-GCAM.LandProtectionXmlFile =
-
-# Default location in which to look for scenario directories
-GCAM.ScenariosDir =
-
-# The location of the libraries needed by ModelInterface
-GCAM.JavaLibPath = %(GCAM.RefWorkspace)s/libs/basex
-
-# Arguments to java to ensure that ModelInterface has enough
-# heap space.
-GCAM.JavaArgs = -Xms512m -Xmx2g
-
-# The name of the database file (or directory, for BaseX)
-GCAM.DbFile	  = database_basexdb
-
-# Columns to drop when processing results of XML batch queries
-GCAM.ColumnsToDrop = scenario,Notes,Date
-
-# Change this if desired to increase or decrease diagnostic messages.
-# A default value can be set here, and a project-specific value can
-# be set in the project's config file section.
-# Possible values (from most to least verbose) are:
-# DEBUG, INFO, WARNING, ERROR, CRITICAL
-GCAM.LogLevel   = WARNING
-
-# Save log messages in the indicated file
-GCAM.LogFile    =
-
-# Show log messages on the console (terminal)
-GCAM.LogConsole = True
-
-# The name of the queue used for submitting batch jobs on a cluster.
-GCAM.DefaultQueue = standard
-
-GCAM.QsubCommand = qsub -q {queueName} -N {jobName} -l walltime={walltime} \
-  -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s \
-  QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
-
-# --signal=USR1@15 => send SIGUSR1 15s before walltime expires
-GCAM.SlurmCommand = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \
-  -D {exeDir} --get-user-env=L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \
-  --export=QUEUE_GCAM_CONFIG_FILE='{configs}',QUEUE_GCAM_WORKSPACE='{workspace}',QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}
-
-# Arbitrary arguments to add to the selected batch command
-GCAM.OtherBatchArgs =
-
-GCAM.BatchCommand = %(GCAM.SlurmCommand)s
-
-# Set this to a command to run when the -l flag is passed to gcamtool's
-# "run" sub-command. The same options are available for substitution as
-# for the GCAM.BatchCommand.
-GCAM.LocalCommand =
-
-# Arguments to qsub's "-l" flag that define required resources
-GCAM.QsubResources = pvmem=6GB
-
-# Environment variables to pass to qsub. (Not needed by most users.)
-GCAM.QsubEnviroVars =
-
-# For qsub, the default number of minutes to allocate per task.
-GCAM.Minutes = 20
-
-# A script to run by queueGCAM after GCAM completes. The script is
-# called with 3 arguments: workspace directory, XML configuration
-# file, and scenario name.
-GCAM.PostProcessor =
-
-# A file that maps GCAM regions to rename them or to aggregate
-# them. Each line consists of a GCAM region name, some number of
-# tabs, and the name to map the region to.
-GCAM.RegionMapFile =
-
-# Where to create temporary files
-GCAM.TempDir = /tmp
-
-# For Windows users without permission to create symlinks
-GCAM.CopyAllFiles = False
-
-# For debugging purposes: gcamtool.py can show a stack trace on error
-GCAM.ShowStackTrace = False
-"""
-
-def _getCommentedDefaults():
+def _getCommentedDefaults(systemDefaults):
     '''
     Returns a copy of the _SystemDefault string with all variable
     assignments commented out. This allows the user to see what's
@@ -213,7 +31,7 @@ def _getCommentedDefaults():
         return '# ' + match.group()
 
     p = re.compile('^(GCAM\.\S+\s*=)', re.MULTILINE)
-    result = p.sub(comment, _SystemDefaults)
+    result = p.sub(comment, systemDefaults)
 
     # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
     dynamic  = "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
@@ -293,24 +111,36 @@ def readConfigFiles(section):
 
     _ConfigParser.optionxform = str     # don't force all names to lower-case
 
-    _ConfigParser.readfp(io.BytesIO(_SystemDefaults))
+    systemConfig = os.path.join(os.path.dirname(__file__), 'etc', 'system.cfg')
+    siteConfig   = os.path.join(os.path.dirname(__file__), 'etc', 'site.cfg')
+
+    with open(systemConfig) as fp:
+        systemDefaults = fp.read()
+        _ConfigParser.readfp(io.BytesIO(systemDefaults))
+
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.JarFile', jarFile)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
+
+    try:
+        with open(siteConfig) as fp:
+            _ConfigParser.readfp(fp)
+    except IOError:
+        pass        # no error if it doesn't exist
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
 
     # os.path.exists doesn't always work on Windows, so just try opening it.
     try:
-        fp = open(usrConfigPath)
-        _ConfigParser.readfp(fp)
-        fp.close()
+        with open(usrConfigPath) as fp:
+           _ConfigParser.readfp(fp)
+
     except IOError as e:
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as fp:
-            commented = _getCommentedDefaults()
+            commented = _getCommentedDefaults(systemDefaults)
             fp.write(commented)
 
     return _ConfigParser
