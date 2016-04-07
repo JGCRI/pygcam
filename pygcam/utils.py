@@ -38,8 +38,11 @@ def simpleFormat(s, varDict):
         key = match[1:-1]   # strip off curly braces
         return str(varDict[key])
 
-    result = re.sub(pat, lookup, s)
-    return result
+    try:
+        result = re.sub(pat, lookup, s)
+        return result
+    except KeyError as e:
+        raise FileFormatError('Unknown parameter %s in project XML template' % e)
 
 def getBooleanXML(value):
     """
