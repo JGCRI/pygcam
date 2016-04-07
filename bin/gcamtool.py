@@ -26,7 +26,6 @@ def main():
 
     tool = GcamTool()
     args = tool.parser.parse_args()
-
     tool.run(args=args)
 
 
