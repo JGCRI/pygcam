@@ -160,6 +160,7 @@ class Step(object):
         self.seq     = int(node.get('seq', 0))
         self.name    = node.get('name')
         self.runFor  = node.get('runFor', 'all')
+        self.group   = node.get('group', None)
         self.command = node.text
 
         if not self.command:
@@ -457,7 +458,8 @@ class Project(object):
 
         self.argDict = argDict = Variable.getDict()
 
-        groupDir = self.scenarioGroupName if self.scenarioGroup.useGroupDir else ''
+        scenarioGroupName  = self.scenarioGroupName
+        groupDir = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
 
         # Add standard variables from project XML file itself
         argDict['project']       = self.projectName
@@ -515,7 +517,7 @@ class Project(object):
             try:
                 # Loop over all steps and run those that user has requested
                 for step in self.sortedSteps:
-                    if step.name in steps:
+                    if step.name in steps and (not step.group or step.group == scenarioGroupName):
                         argDict['step'] = step.name
                         step.run(self, baseline, scenario, argDict, tool, noRun=args.noRun)
             except PygcamException as e:

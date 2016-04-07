@@ -58,6 +58,8 @@ attributes.
 +=============+============+===========+==============+
 | name        | yes        | (none)    | text         |
 +-------------+------------+-----------+--------------+
+| useGroupDir | no         | "0"       | {"0", "1"}   |
++-------------+------------+-----------+--------------+
 | default     | no         | "0"       | {"0", "1"}   |
 +-------------+------------+-----------+--------------+
 
@@ -70,6 +72,11 @@ identify it as the default attribute, i.e., the one selected if no group
 is named on the command line. If there is only one ``<scenarioGroup>``
 defined for a project, it is treated as the default; in this case
 setting ``default="1"`` is redundant.
+
+If ``useGroupDir`` is set to "1", the name of the scenario group
+is inserted into the pathnames for the xmlsrc, sandbox,
+local-xml and dyn-xml folders, between the "root" of each of those
+folders and the scenario name as the final directory level.
 
 <scenario>
 ^^^^^^^^^^
@@ -125,6 +132,8 @@ takes no attributes. Multiple ``<steps>`` elements are allowed.
 +-------------+------------+-----------+---------------------------------+
 | runFor      | no         | "all"     | {"baseline", "policy", "all"}   |
 +-------------+------------+-----------+---------------------------------+
+| group       | no         | ""        | the name of a scenario group    |
++-------------+------------+-----------+---------------------------------+
 
 A ``<step>`` describes one step in the workflow. Each step has a name
 and an integer sequence number. Steps (from one or more ``<steps>``
@@ -154,6 +163,10 @@ command-line, then only those steps are run. If the attribute
 baseline scenario. If ``runFor="policy"`` is set, the step is run only
 or *non*-baseline strategies. By default steps are run for both baseline
 and policy scenarios.
+
+If the ``group`` attribute is set, the step is run only when processing
+the named scenario group. This allows you to define steps specific to
+different scenario groups.
 
 For example, the block:
 
