@@ -14,28 +14,6 @@ from .error import SetupException
 from .config import getParam
 from .subcommand import SubcommandABC
 
-# def (ns, argName, default=None, raiseError=False):
-#     """
-#     Return the value of parameter `argName` from the Namespace `ns`.
-#     If not found, raise a SetupException if `raiseError` is True,
-#     otherwise return the given `default`.
-#     :param ns: (argparse.Namespace) a namespace containing arguments to
-#       a call to the gcamtools.py setup sub-command
-#     :param argName: (str) the name of an argument
-#     :param default: the default value to return if the argument is missing.
-#     :param raiseError: (bool) whether to raise an error if the argument is missing.
-#     :return: the value of the parameter argName in the Namespace
-#     :raises: SetupError
-#     """
-#     if ns in argName:
-#         return ns[argName]
-#
-#     if raiseError:
-#         raise SetupException('Required argument "%s" is missing for setup step', argName)
-#
-#     return default
-
-
 class SetupCommand(SubcommandABC):
     __version__ = '0.1'
 

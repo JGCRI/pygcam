@@ -43,42 +43,44 @@ def _getCommentedDefaults(systemDefaults):
 
 _ConfigParser = None
 
-# This is set in readConfigFiles
 _ProjectSection = None
 
 def getSection():
     return _ProjectSection
 
+def setSection(section):
+    """
+    Set the name of the default config file section to read from.
+
+    :param section: (str) a config file section name.
+    :return: none
+    """
+    global _ProjectSection
+    _ProjectSection = section
+
 def configLoaded():
     return bool(_ConfigParser)
 
-def getConfig(section=DEFAULT_SECTION, reload=False):
+def getConfig():
     """
     Return the configuration object. If one has been created already via
-    `readConfigFiles`, it is returned, unless force == True; otherwise
-    a new one is created and the configuration files are read.
+    `readConfigFiles`, it is returned; otherwise a new one is created
+    and the configuration files are read.
 
-    :param section: (str) the name of a section to read from
-    :param reload: (bool) if True, re-read the config section
     :return: a `SafeConfigParser` instance.
     """
-    if not reload and _ConfigParser:
-        return _ConfigParser
+    return _ConfigParser or readConfigFiles()
 
-    return readConfigFiles(section=section)
-
-def readConfigFiles(section):
+def readConfigFiles():
     """
     Read the pygcam configuration file, ``~/.pygcam.cfg``. "Sensible" default values are
     established first, which overwritten by values found in the user's configuration
     file.
 
-    :param section: (str) the name of the config file section to read from.
     :return: a populated SafeConfigParser instance
     """
     global _ConfigParser, _ProjectSection
 
-    _ProjectSection = section
     platformName = platform.system()
 
     # HOME exists on all Unix-like systems; for Windows it's HOMEPATH
@@ -143,9 +145,13 @@ def readConfigFiles(section):
             commented = _getCommentedDefaults(systemDefaults)
             fp.write(commented)
 
+    projectName = getParam('GCAM.DefaultProject', section=DEFAULT_SECTION)
+    if projectName:
+        setSection(projectName)
+
     return _ConfigParser
 
-def getConfigDict(section, raw=False):
+def getConfigDict(section=DEFAULT_SECTION, raw=False):
     """
     Return all variables defined in `section` as a dictionary.
 
@@ -153,8 +159,8 @@ def getConfigDict(section, raw=False):
     :return: (dict) all variables defined in the section (which includes
        those defined in DEFAULT.)
     """
-    if not _ConfigParser.has_section(section):
-        section = DEFAULT_SECTION
+    # if not _ConfigParser.has_section(section):
+    #     section = DEFAULT_SECTION
 
     d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
     return d
@@ -177,7 +183,7 @@ def getParam(name, section=None, raw=False):
         raise PygcamException('getParam was called without setting "section"')
 
     if not _ConfigParser:
-        getConfig(section)
+        getConfig()
 
     return _ConfigParser.get(section, name, raw=raw)
 

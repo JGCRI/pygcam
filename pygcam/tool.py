@@ -14,7 +14,7 @@ from glob import glob
 from .utils import loadModuleFromPath
 from .error import PygcamException
 from .chart import ChartCommand
-from .config import ConfigCommand
+from .config import ConfigCommand, setSection
 from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
 from .project import ProjectCommand
@@ -130,15 +130,13 @@ class GcamTool(object):
         """
         assert args or argList, "gcamtool.run requires either args or argList"
 
-        if argList is None:         # might be called with empty list of subcmd args
+        if argList is not None:         # might be called with empty list of subcmd args
             # called recursively
             args = self.parser.parse_args(args=argList)
         else:
             # top-level call
-
-            section = args.configSection or getParam('GCAM.DefaultProject')
-            if section:
-                getConfig(section=section, reload=True)
+            if args.configSection:
+                 setSection(args.configSection)
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:
@@ -156,6 +154,6 @@ def _getMainParser():
     Used only to generate documentation by sphinx' argparse, in which case
     we don't generate documentation for project-specific plugins.
     '''
-    getConfig(DEFAULT_SECTION)
+    getConfig()
     tool = GcamTool(loadPlugins=False)
     return tool.parser

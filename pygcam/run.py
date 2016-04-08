@@ -13,7 +13,7 @@ import shutil
 from lxml import etree as ET
 from .error import ConfigFileError, ProgramExecutionError
 from .utils import mkdirs
-from .config import getConfig, getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean
 from .log import getLogger
 from .windows import setJavaPath, removeSymlink
 from .subcommand import SubcommandABC
@@ -123,7 +123,7 @@ def setupWorkspace(runWorkspace):
 CONFIG_FILE_DELIM = ':'
 
 def runGCAM(args):
-    getConfig(args.configSection)
+    # Deprecated: getConfig(args.configSection)
     from .config import CONFIG_VAR_NAME, WORKSPACE_VAR_NAME, NO_RUN_GCAM_VAR_NAME
 
     isQueued = (CONFIG_VAR_NAME in os.environ)     # see if this is a batch run on cluster

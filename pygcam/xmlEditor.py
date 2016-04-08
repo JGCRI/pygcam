@@ -26,7 +26,7 @@ import glob
 import argparse
 import re
 from .error import SetupException
-from .config import getConfig, getParam, getParamAsBoolean, DEFAULT_SECTION
+from .config import getConfig, getParam, getParamAsBoolean, setSection
 from .utils import coercible, mkdirs, unixPath
 from .log import getLogger, setLogLevel, configureLogs
 
@@ -1014,6 +1014,7 @@ class XMLEditor(object):
 
     parser = None
 
+    # Deprecated: needed only for setup.py called outside of gcamtool
     @classmethod
     def parseArgs(cls, baseline=None, scenario=None):
         cls.parser = argparse.ArgumentParser(description='')
@@ -1022,10 +1023,10 @@ class XMLEditor(object):
         args = cls.parser.parse_args(namespace=ns)
 
         # Read [DEFAULT] to see if a default section is named
-        getConfig(DEFAULT_SECTION)
-        section = args.configSection or getParam('GCAM.DefaultProject')
-        if section:
-            getConfig(section=section, reload=True)
+        getConfig()
+
+        if args.configSection:
+            setSection(args.configSection)
 
         logLevel = args.logLevel or getParam('GCAM.LogLevel')
         if logLevel:

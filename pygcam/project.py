@@ -452,7 +452,7 @@ class Project(object):
         """
         # Get the text values for all config variables, allowing variables
         # defined in the project to override them.
-        cfgDict = getConfigDict(self.projectName)
+        cfgDict = getConfigDict(section=self.projectName)
         for name, value in cfgDict.iteritems():
             SimpleVariable(name, value)
 
