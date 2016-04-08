@@ -37,6 +37,11 @@ Features
     - Initially, migrate job-related options now on "gcam" subcommand to
       the "runProj" subcommand?
 
+- pygcam/etc/site.cfg
+    - see what happens with this on installation via setup.py
+    - would be much better outside the installed module
+    - maybe have a setup arg that says where to symlink to for site.cfg
+
 Document
 --------
 - Document the Subcommand (plugin) protocol
