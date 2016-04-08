@@ -15,14 +15,14 @@ from .sectorEditors import (REFINING_SECTOR, BIOMASS_LIQUIDS,
                             RefiningEditor, BioenergyEditor)
 
 from .query import (QueryCommand, GCAM_32_REGIONS, ensureCSV, sumYears,
-                    sumYearsByGroup, csv2xlsx)
+                    sumYearsByGroup, csv2xlsx, readCsv, writeCsv)
 
 from .utils import (simpleFormat, getBooleanXML, unixPath, coercible, shellCommand,
                     flatten, ensureExtension, getYearCols, saveToFile, getTempFile,
                     getBatchDir, mkdirs, loadModuleFromPath, loadObjectFromPath,
                     printSeries, fuelDensityMjPerGal, XMLFile)
 
-from .config import (getSection, configLoaded, getConfig, readConfigFiles,
+from .config import (getSection, setSection, configLoaded, getConfig, readConfigFiles,
                      getConfigDict, getParam, getParamAsBoolean, getParamAsInt,
                      getParamAsFloat)
 
