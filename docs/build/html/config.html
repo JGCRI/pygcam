@@ -159,22 +159,15 @@ overriding any defaults. User values should be defined in a section called <code
 <p><em>Code author: Richard Plevin</em></p>
 <dl class="function">
 <dt id="pygcam.config.getConfig">
-<code class="descclassname">pygcam.config.</code><code class="descname">getConfig</code><span class="sig-paren">(</span><em>section='DEFAULT'</em>, <em>reload=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfig" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.config.</code><code class="descname">getConfig</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the configuration object. If one has been created already via
-<cite>readConfigFiles</cite>, it is returned, unless force == True; otherwise
-a new one is created and the configuration files are read.</p>
+<cite>readConfigFiles</cite>, it is returned; otherwise a new one is created
+and the configuration files are read.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>section</strong> &#8211; (str) the name of a section to read from</li>
-<li><strong>reload</strong> &#8211; (bool) if True, re-read the config section</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a <cite>SafeConfigParser</cite> instance.</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a <cite>SafeConfigParser</cite> instance.</td>
 </tr>
 </tbody>
 </table>
@@ -182,7 +175,7 @@ a new one is created and the configuration files are read.</p>
 
 <dl class="function">
 <dt id="pygcam.config.getConfigDict">
-<code class="descclassname">pygcam.config.</code><code class="descname">getConfigDict</code><span class="sig-paren">(</span><em>section</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfigDict" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.config.</code><code class="descname">getConfigDict</code><span class="sig-paren">(</span><em>section='DEFAULT'</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfigDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all variables defined in <cite>section</cite> as a dictionary.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -303,7 +296,7 @@ defaults to the value used in the first call to <code class="docutils literal"><
 
 <dl class="function">
 <dt id="pygcam.config.readConfigFiles">
-<code class="descclassname">pygcam.config.</code><code class="descname">readConfigFiles</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.readConfigFiles" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.config.</code><code class="descname">readConfigFiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.readConfigFiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the pygcam configuration file, <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>. &#8220;Sensible&#8221; default values are
 established first, which overwritten by values found in the user&#8217;s configuration
 file.</p>
@@ -311,9 +304,23 @@ file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> &#8211; (str) the name of the config file section to read from.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a populated SafeConfigParser instance</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a populated SafeConfigParser instance</td>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.setSection">
+<code class="descclassname">pygcam.config.</code><code class="descname">setSection</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.setSection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the name of the default config file section to read from.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> &#8211; (str) a config file section name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
 </tr>
 </tbody>
 </table>
@@ -322,15 +329,64 @@ file.</p>
 </div>
 <div class="section" id="default-values">
 <span id="pygcam-cfg"></span><h2>Default values<a class="headerlink" href="#default-values" title="Permalink to this headline">¶</a></h2>
-<p>The following config file is read (from the string <code class="docutils literal"><span class="pre">pygcam.config._SystemDefaults</span></code>)
-prior to reading the user&#8217;s configuration file (<code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>). In addition, all
-environment variables are converted to config variables for easy reference (e.g.,
-<code class="docutils literal"><span class="pre">%(Home)s</span></code>, the value of which is the user&#8217;s home directory).</p>
-<p>When de-referencing a config variable in the config file, beware the trailing &#8216;s&#8217;
-after the closing parenthesis, which is necessary or an exception will be thrown.</p>
+<p>The configuration system sets default value by first reading a file called
+<code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code> (listed below) which is included in the pygcam
+distribution. Then, if it exists, the file <code class="docutils literal"><span class="pre">pygcam/etc/site.cfg</span></code> is read.
+This file is intended to allow administrators to set configuration parameters
+for all users.</p>
+<p>Next, four values are set dynamically based on the operating system being
+used. Three are shown in the table below; <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code> is set to
+<code class="docutils literal"><span class="pre">%(GCAM.ModelInterface)s/ModelInterface.jar</span></code> except on Mac OS X where it is set to
+<code class="docutils literal"><span class="pre">%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</span></code>.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="31%" />
+<col width="16%" />
+<col width="23%" />
+<col width="16%" />
+<col width="14%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variable</th>
+<th class="head">Linux</th>
+<th class="head">Mac OS X</th>
+<th class="head">Windows</th>
+<th class="head">Other</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Home</td>
+<td>$(HOME)</td>
+<td>$(HOME)</td>
+<td>%HOMEPATH%</td>
+<td>$(HOME)</td>
+</tr>
+<tr class="row-odd"><td>GCAM.Executable</td>
+<td>./gcam.exe</td>
+<td>Release/objects</td>
+<td>gcam.exe</td>
+<td>gcam.exe</td>
+</tr>
+<tr class="row-even"><td>GCAM.UseVirtualBuffer</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, the user&#8217;s config file <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code> is read if it exists; otherwise
+the file is created by commenting out all settings found in the <code class="docutils literal"><span class="pre">system.cfg</span></code> file,
+which are provided for reference.</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
-<span class="c1"># This project is used if &#39;-s&#39; flag not given to gcamtool</span>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When de-referencing a variable in the config file, you must include the
+trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception will be raised.</p>
+</div>
+<div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
+
+<span class="c1"># This project is used if &#39;-p&#39; flag not given to gcamtool</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span>
 
 <span class="c1"># Where to find plug-ins. Internal plugin directory is added</span>
@@ -350,12 +406,16 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 <span class="c1"># you want to use. It is convenient to make this a symbolic link.</span>
 <span class="na">GCAM.Current</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/current</span>
 
-<span class="c1"># The default location in which to find or create GCAM workspaces</span>
-<span class="na">GCAM.RunWorkspaceRoot</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/ws</span>
+<span class="c1"># The default location in which to find or create GCAM runtime</span>
+<span class="c1"># sandboxes</span>
+<span class="na">GCAM.SandboxRoot</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/ws</span>
 
 <span class="c1"># The location of the Main_User_Workspace to use. This can refer</span>
 <span class="c1"># to any folder; GCAM.Current is just an optional convention.</span>
 <span class="na">GCAM.RefWorkspace</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/Main_User_Workspace</span>
+
+<span class="c1"># The reference config file to use as a starting point for &quot;setup&quot;</span>
+<span class="na">GCAM.RefConfigFile</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/exe/configuration_ref.xml</span>
 
 <span class="na">GCAM.RefQueryDir</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/output/queries</span>
 
@@ -377,6 +437,10 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 <span class="c1"># Root directory for where the user keeps project folders</span>
 <span class="na">GCAM.ProjectRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/projects</span>
 
+<span class="c1"># The name of the XML Starlet program. Use full path if it&#39;s not</span>
+<span class="c1"># found on your usual PATH.</span>
+<span class="na">GCAM.XmlStarlet</span>     <span class="o">=</span> <span class="s">xml</span>
+
 <span class="c1"># If using the XML &quot;setup&quot; system, this is the root folder for</span>
 <span class="c1"># setup source files</span>
 <span class="na">GCAM.XmlSrc</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/xmlsrc</span>
@@ -387,6 +451,19 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 
 <span class="c1"># The default input file for the runProj sub-command</span>
 <span class="na">GCAM.ProjectXmlFile</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/etc/project.xml</span>
+
+<span class="c1"># Whether GCAM should generate a debug file (no value =&gt; no change)</span>
+<span class="na">GCAM.WriteDebugFile</span>     <span class="o">=</span>
+
+<span class="c1"># Whether GCAM should generate a price file</span>
+<span class="na">GCAM.WritePrices</span>        <span class="o">=</span>
+
+<span class="c1"># Whether GCAM should generate the large XML file with the combined data</span>
+<span class="c1"># from all input files.</span>
+<span class="na">GCAM.WriteXmlOutputFile</span> <span class="o">=</span>
+
+<span class="c1"># Whether GCAM should generate outFile.csv</span>
+<span class="na">GCAM.WriteOutputCsv</span>     <span class="o">=</span>
 
 <span class="c1"># Path to an XML file describing land protection scenarios</span>
 <span class="na">GCAM.LandProtectionXmlFile</span> <span class="o">=</span>
@@ -402,15 +479,16 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 <span class="na">GCAM.JavaArgs</span> <span class="o">=</span> <span class="s">-Xms512m -Xmx2g</span>
 
 <span class="c1"># The name of the database file (or directory, for BaseX)</span>
-<span class="na">GCAM.DbFile</span>       <span class="o">=</span> <span class="s">database_basexdb</span>
+<span class="na">GCAM.DbFile</span>	  <span class="o">=</span> <span class="s">database_basexdb</span>
 
 <span class="c1"># Columns to drop when processing results of XML batch queries</span>
 <span class="na">GCAM.ColumnsToDrop</span> <span class="o">=</span> <span class="s">scenario,Notes,Date</span>
 
 <span class="c1"># Change this if desired to increase or decrease diagnostic messages.</span>
 <span class="c1"># A default value can be set here, and a project-specific value can</span>
-<span class="c1"># be set in the project&#39;s config file section. Possible values (from most</span>
-<span class="c1"># to least verbose) are: DEBUG, INFO, WARNING, ERROR, CRITICAL</span>
+<span class="c1"># be set in the project&#39;s config file section.</span>
+<span class="c1"># Possible values (from most to least verbose) are:</span>
+<span class="c1"># DEBUG, INFO, WARNING, ERROR, CRITICAL</span>
 <span class="na">GCAM.LogLevel</span>   <span class="o">=</span> <span class="s">WARNING</span>
 
 <span class="c1"># Save log messages in the indicated file</span>
@@ -449,10 +527,6 @@ after the closing parenthesis, which is necessary or an exception will be thrown
 
 <span class="c1"># For qsub, the default number of minutes to allocate per task.</span>
 <span class="na">GCAM.Minutes</span> <span class="o">=</span> <span class="s">20</span>
-
-<span class="c1"># Whether to use the &quot;virtual buffer&quot;, allowing ModelInterface to</span>
-<span class="c1"># run without generating pop-up windows on Linux.</span>
-<span class="na">GCAM.UseVirtualBuffer</span> <span class="o">=</span> <span class="s">yes</span>
 
 <span class="c1"># A script to run by queueGCAM after GCAM completes. The script is</span>
 <span class="c1"># called with 3 arguments: workspace directory, XML configuration</span>

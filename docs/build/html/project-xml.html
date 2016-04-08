@@ -228,7 +228,12 @@ attributes.</p>
 <td>(none)</td>
 <td>text</td>
 </tr>
-<tr class="row-odd"><td>default</td>
+<tr class="row-odd"><td>useGroupDir</td>
+<td>no</td>
+<td>&#8220;0&#8221;</td>
+<td>{&#8220;0&#8221;, &#8220;1&#8221;}</td>
+</tr>
+<tr class="row-even"><td>default</td>
 <td>no</td>
 <td>&#8220;0&#8221;</td>
 <td>{&#8220;0&#8221;, &#8220;1&#8221;}</td>
@@ -243,6 +248,10 @@ identify it as the default attribute, i.e., the one selected if no group
 is named on the command line. If there is only one <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code>
 defined for a project, it is treated as the default; in this case
 setting <code class="docutils literal"><span class="pre">default=&quot;1&quot;</span></code> is redundant.</p>
+<p>If <code class="docutils literal"><span class="pre">useGroupDir</span></code> is set to &#8220;1&#8221;, the name of the scenario group
+is inserted into the pathnames for the xmlsrc, sandbox,
+local-xml and dyn-xml folders, between the &#8220;root&#8221; of each of those
+folders and the scenario name as the final directory level.</p>
 </div>
 <div class="section" id="scenario">
 <h3>&lt;scenario&gt;<a class="headerlink" href="#scenario" title="Permalink to this headline">¶</a></h3>
@@ -335,6 +344,11 @@ takes no attributes. Multiple <code class="docutils literal"><span class="pre">&
 <td>&#8220;all&#8221;</td>
 <td>{&#8220;baseline&#8221;, &#8220;policy&#8221;, &#8220;all&#8221;}</td>
 </tr>
+<tr class="row-odd"><td>group</td>
+<td>no</td>
+<td>&#8220;&#8221;</td>
+<td>the name of a scenario group</td>
+</tr>
 </tbody>
 </table>
 <p>A <code class="docutils literal"><span class="pre">&lt;step&gt;</span></code> describes one step in the workflow. Each step has a name
@@ -362,6 +376,9 @@ command-line, then only those steps are run. If the attribute
 baseline scenario. If <code class="docutils literal"><span class="pre">runFor=&quot;policy&quot;</span></code> is set, the step is run only
 or <em>non</em>-baseline strategies. By default steps are run for both baseline
 and policy scenarios.</p>
+<p>If the <code class="docutils literal"><span class="pre">group</span></code> attribute is set, the step is run only when processing
+the named scenario group. This allows you to define steps specific to
+different scenario groups.</p>
 <p>For example, the block:</p>
 <blockquote>
 <div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;steps&gt;</span>

@@ -6,10 +6,9 @@ include setup.py
 include bin/gcamtool.py
 include pygcam/*.py
 
-# Documentation source as well as generated html and PDF
+# Documentation source as well as generated html
 graft docs/source
 graft docs/build/html
-include docs/build/latex/pygcam.pdf
 include docs/[mM]ake*
 
 # Test code

@@ -154,6 +154,30 @@
 <p>This module contains classes that allow you to run batch queries against
 GCAM&#8217;s XML database and perform various common operations on the resulting
 .csv files. This module relies heavily on the pandas <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html">DataFrame</a> class.</p>
+<p>The query module looks for queries by name in any of the directories or files listed in the
+configuration parameter <code class="docutils literal"><span class="pre">GCAM.QueryPath</span></code>. Elements are separated by &#8216;;&#8217; on Windows and by
+&#8216;:&#8217; otherwise. The elements can be:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>An XML file structured like the standard GCAM queries file, <code class="docutils literal"><span class="pre">Main_Queries.xml</span></code>,</li>
+<li>An XML file structured like a batch query file, or</li>
+<li>A directory holding XML files defining queries.</li>
+</ol>
+</div></blockquote>
+<p>To locate the query code, the given name and variations thereof are sought in each element
+of <code class="docutils literal"><span class="pre">GCAM.QueryPath</span></code>, in order. For path elements that
+are directories, a file with the query name and the <code class="docutils literal"><span class="pre">.xml</span></code> extension. For path elements
+that are XML batch query or &#8220;Main_Query&#8221; type files, a query with a <code class="docutils literal"><span class="pre">title</span></code> attribute
+matching the query name is sought.</p>
+<p>For each element of the path, the query name is checked first as given. If not found,
+variations of the name are checked in this order:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Original name, but with all &#8216;-&#8216; changed to spaces.</li>
+<li>Original name, but with all &#8216;_&#8217; changed to spaces.</li>
+<li>Original name, but with all &#8216;-&#8216; and &#8216;_&#8217; changed to spaces.</li>
+</ol>
+</div></blockquote>
 <div class="section" id="module-pygcam.query">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.query" title="Permalink to this headline">¶</a></h2>
 <p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
@@ -354,6 +378,12 @@ not deleted (use for debugging)</li>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.writeCsv">
+<code class="descclassname">pygcam.query.</code><code class="descname">writeCsv</code><span class="sig-paren">(</span><em>df</em>, <em>filename</em>, <em>header=''</em>, <em>float_format='%.4f'</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.writeCsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a file in &#8220;standard&#8221; GCAM csv format</p>
 </dd></dl>
 
 </div>
