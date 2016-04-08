@@ -53,8 +53,6 @@ Document
 
 - Assumptions behind setup code
 
-- Changes to QueryPath: now can use batch files or Main_Queries type file in path
-
 - Adding otaq2016.pth or other project-specific code
 
 Tasks
