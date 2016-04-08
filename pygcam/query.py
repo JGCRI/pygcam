@@ -146,6 +146,15 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
 
     return df
 
+def writeCsv(df, filename, header='', float_format="%.4f"):
+    'Write a file in "standard" GCAM csv format'
+    _logger.debug("Writing %s", filename)
+
+    txt = df.to_csv(None, float_format=float_format)
+    with open(filename, 'w') as f:
+        f.write("%s\n" % header)  # add a header line to match batch-query output format
+        f.write(txt)
+
 def readQueryResult(batchDir, baseline, queryName, years=None, interpolate=False, startYear=0):
     """
     Compose the name of the 'standard' result file, read it into a DataFrame and
