@@ -471,7 +471,8 @@ class Project(object):
         argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxRoot'], groupDir, subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
 
-        argDict['SEP'] = os.path.sep    # '/' on Unix and '\\' on Windows
+        argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
+        argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows
 
         knownGroups    = self.getKnownGroups()
         knownScenarios = self.getKnownScenarios()

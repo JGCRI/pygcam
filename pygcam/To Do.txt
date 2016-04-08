@@ -10,12 +10,16 @@ Cleanup
 -------
 - Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
 - Relocate app-specific code currently in chart.py.
-- Learn how to insert documentation amidst argparse-generated docs.
 - Deprecate configVar option to <var> all config vars are now read.
+- Handle deletion of temporary files better
+    - Have a class that generates and remembers the filenames and
+      can delete them all
+    - Call TempFile.removeFiles() in gcamtool in a "finally" clause
+- Consider whether QueryPath should be set in project file to avoid
+  having all users to set this in private .pygcam.cfg files
 
 Features
 --------
-- Add a flag to XML-based commands to just validate input file
 
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
@@ -44,10 +48,14 @@ Document
 
 - Assumptions behind setup code
 
-- Adding otaq2016.pth where needed (based on
+- Changes to QueryPath: now can use batch files or Main_Queries type file in path
+
+- Adding otaq2016.pth or other project-specific code
 
 Tasks
 -----
+- Modify CI command to use Marshall's query results
+- Have CI command take a flag to generate CI. Maybe this is redundant with fuelEJ.txt?
 - Test diff cmd
 - Test constraint cmds
 - Test land protection cmd
@@ -56,6 +64,5 @@ Tasks
     - They're for use by biofuel studies only?
     - If so, setup.py can call these by importing them directly.
     - Perhaps split out generic function from domain-specific
-- Elim. builtin plugins dir?
 - Update documentation
 - Test everything again on Windows
