@@ -19,8 +19,8 @@ _logger = getLogger(__name__)
 def main():
     # Use default section initially, to read plugin path.
     # It's a chicken-and-egg problem since we can't parse args
-    # until we've loaded all the plugins. Thus we can't use
-    # the 'project' arg until we've already loaded them.
+    # until we've loaded all the plugins, but the PluginPath is
+    # defined in the config file.
     getConfig()
     configureLogs()
 

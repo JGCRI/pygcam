@@ -130,7 +130,7 @@ class GcamTool(object):
         """
         assert args or argList, "gcamtool.run requires either args or argList"
 
-        if argList:
+        if argList is None:         # might be called with empty list of subcmd args
             # called recursively
             args = self.parser.parse_args(args=argList)
         else:
