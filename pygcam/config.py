@@ -17,6 +17,26 @@ CONFIG_VAR_NAME = 'QUEUE_GCAM_CONFIG_FILE'
 WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
 NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
 
+_instructions = '''#
+# This file defines variables read by the pygcam package. It allows
+# you to customize many aspects of pygcam, such as file locations,
+# and arguments to various commands. See the documentation for the
+# config module for detailed explanations.
+#
+# The default configuration values are provided below. To modify a
+# value, remove the '#' comment character at the start of the line
+# and set the value as desired.
+#
+# To set a project-specific value to override the defaults for one
+# project, create a new section by indicating the project name in
+# square brackets. For example for the project PROJECT0, you would
+# add [PROJECT0]. All settings after this until the next section
+# declaration (or end of file) taken as values for "PROJECT0". The
+# script gcamtool.py allows you to identify the project you are
+# operating on so that the corresponding values are read from the
+# config file.
+#
+'''
 
 def _getCommentedDefaults(systemDefaults):
     '''
@@ -43,7 +63,7 @@ def _getCommentedDefaults(systemDefaults):
 
 _ConfigParser = None
 
-_ProjectSection = None
+_ProjectSection = DEFAULT_SECTION
 
 def getSection():
     return _ProjectSection
@@ -79,7 +99,7 @@ def readConfigFiles():
 
     :return: a populated SafeConfigParser instance
     """
-    global _ConfigParser, _ProjectSection
+    global _ConfigParser
 
     platformName = platform.system()
 
@@ -143,6 +163,7 @@ def readConfigFiles():
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as fp:
             commented = _getCommentedDefaults(systemDefaults)
+            fp.write(_instructions)
             fp.write(commented)
 
     projectName = getParam('GCAM.DefaultProject', section=DEFAULT_SECTION)
