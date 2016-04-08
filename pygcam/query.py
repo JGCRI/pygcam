@@ -316,23 +316,29 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None):
         else:
             from lxml import etree as ET    # lazy import speeds startup
 
+            # Support both Main_Queries-type files and batch query files
+            xpathPattern = '/queries/queryGroup/*[@title="{title}"]|/queries/aQuery/*[@title="{title}"]'
+
             tree = ET.parse(item)
-            xpath = '/queries/queryGroup/*[@title="%s"]' % title
+            xpath = xpathPattern.format(title=title)
             elts = tree.xpath(xpath)  # returns empty list or list of elements found
 
             if elts is None or len(elts) == 0:
                 # if the literal search fails, repeat search with all "-" or "_" changed to " ".
-                xpath = '/queries/queryGroup/*[@title="%s"]' % re.sub('_', ' ', title)
+                altTitle = re.sub('_', ' ', title)
+                xpath = xpathPattern.format(title=altTitle)
                 elts = tree.xpath(xpath)
 
             if elts is None or len(elts) == 0:
                 # if the literal search fails, repeat search with all "-" or "_" changed to " ".
-                xpath = '/queries/queryGroup/*[@title="%s"]' % re.sub('-', ' ', title)
+                altTitle = re.sub('-', ' ', title)
+                xpath = xpathPattern.format(title=altTitle)
                 elts = tree.xpath(xpath)
 
             if elts is None or len(elts) == 0:
                 # if the literal search fails, repeat search with all "-" or "_" changed to " ".
-                xpath = '/queries/queryGroup/*[@title="%s"]' % re.sub('[-_]', ' ', title)
+                altTitle = re.sub('[-_]', ' ', title)
+                xpath = xpathPattern.format(title=altTitle)
                 elts = tree.xpath(xpath)
 
             if len(elts) == 1:
