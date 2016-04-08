@@ -333,13 +333,13 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None):
             elts = tree.xpath(xpath)  # returns empty list or list of elements found
 
             if elts is None or len(elts) == 0:
-                # if the literal search fails, repeat search with all "-" or "_" changed to " ".
+                # if the literal search fails, repeat search with all "-" changed to " ".
                 altTitle = re.sub('_', ' ', title)
                 xpath = xpathPattern.format(title=altTitle)
                 elts = tree.xpath(xpath)
 
             if elts is None or len(elts) == 0:
-                # if the literal search fails, repeat search with all "-" or "_" changed to " ".
+                # if the literal search fails, repeat search with all "_" changed to " ".
                 altTitle = re.sub('-', ' ', title)
                 xpath = xpathPattern.format(title=altTitle)
                 elts = tree.xpath(xpath)
