@@ -53,7 +53,6 @@ class _TmpFile(object):
     """
     Represents the ``<tmpFile>`` element in the projects.xml file.
     """
-    FilesToDelete = []
     Instances = {}  # keyed by name
 
     def __init__(self, node):
@@ -91,32 +90,24 @@ class _TmpFile(object):
 
         self.textNodes = defaults + textNodes
 
-    @classmethod
-    def deleteFiles(cls):
-        for path in cls.FilesToDelete:
-            try:
-                os.unlink(path)
-            except:
-                _logger.warn("Failed to delete file '%s", path)
-
-        cls.FilesToDelete = []
 
     @classmethod
     def writeFiles(cls, argDict):
+        """
+        Write the files and set the associated variables to the generated filenames.
+        """
         for tmpFile in cls.Instances.values():
             path = tmpFile.write(argDict)
             argDict[tmpFile.varName] = path
 
     def write(self, argDict):
-        path = getTempFile('.txt', tmpDir=self.dir)
+        # Note: TempFiles are deleted in the main driver (tool.py)
+        path = getTempFile('.txt', tmpDir=self.dir, delete=self.delete)
         path = unixPath(path)
-        if self.delete:
-            self.FilesToDelete.append(path)
 
         with open(path, 'w') as f:
             text = '\n'.join(map(lambda x: x.text or '', self.textNodes)) + '\n'
             if text and self.eval:
-                #text = text.format(**argDict)
                 text = simpleFormat(text, argDict)
             f.write(text)
 
@@ -557,13 +548,7 @@ def driver(args, tool):
     tree    = ET.parse(projectFile, parser)
     project = Project(tree, args.project, args.group)
 
-    # if args.dump:
-    #     project.dump(steps, scenarios)
-
-    try:
-        project.run(scenarios, steps, skips, args, tool)
-    finally:
-        _TmpFile.deleteFiles()
+    project.run(scenarios, steps, skips, args, tool)
 
 
 class ProjectCommand(SubcommandABC):

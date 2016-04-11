@@ -11,7 +11,9 @@ import os
 import sys
 import re
 import subprocess
+import shutil
 from itertools import chain
+from tempfile import mkstemp
 from .config import getParam
 from .error import PygcamException, FileFormatError
 from .log import getLogger, getLogLevel
@@ -162,9 +164,6 @@ def getYearCols(years, timestep=5):
     cols = map(str, range(yearRange[0], yearRange[1]+1, timestep))
     return cols
 
-# Consolidate with fn in query.py
-
-
 def saveToFile(txt, dirname='', filename=''):
     """
     Save the given text to a file in the given directory.
@@ -183,27 +182,6 @@ def saveToFile(txt, dirname='', filename=''):
     _logger.debug("Generating file: %s", pathname)
     with open(pathname, 'w') as f:
         f.write(txt)
-
-def getTempFile(suffix, text=True, tmpDir=None):
-    """
-    Construct the name of a temporary file.
-
-    :param suffix: the extension to give the temporary file
-    :param text: True if this will be a text file
-    :param tmpDir: the directory in which to create the (defaults to
-      the value of configuration file variable 'GCAM.TempDir', or '/tmp'
-      if the variable is not found.
-    :return: the name of the temporary file
-    """
-    from tempfile import mkstemp
-
-    tmpDir = tmpDir or getParam('GCAM.TempDir') or "/tmp"
-
-    mkdirs(tmpDir)
-    fd, tmpFile = mkstemp(suffix=suffix, dir=tmpDir, text=text)
-    os.close(fd)    # we don't need this
-    os.unlink(tmpFile)
-    return tmpFile
 
 def getBatchDir(scenario, resultsDir, fromMCS=False):
     """
@@ -374,50 +352,119 @@ def printSeries(series, label):
         pd.set_option('precision', 5)
         print df.T
 
+def getTempFile(suffix='', text=True, tmpDir=None, delete=True):
+    """
+    Convenience function for common use pattern, which is to get
+    the name of a temp file that needs to be deleted on app exit.
 
-FT_DIESEL_MJ_PER_GAL   = 130.4
-FAME_MJ_PER_GAL        = 126.0
-ETOH_MJ_PER_GAL        = 81.3
-BIOGASOLINE_MJ_PER_GAL = 122.3     # from GREET1_2011
+    :param suffix: (str) an extension to give the temporary file
+    :param text: True if this will be a text file
+    :param tmpDir: (str) the directory in which to create the (defaults to
+      the value of configuration file variable 'GCAM.TempDir', or '/tmp'
+      if the variable is not found.
+    :param noDelete: (bool) if True, don't delete the file on cleanup.
+       (This is useful for debugging.)
+    :return: (str) pathname of a new temporary file
+    """
+    obj = TempFile(suffix=suffix, text=text, tmpDir=tmpDir, delete=delete)
+    return obj.path
 
-FuelDensity = {
-    'fame'          : FAME_MJ_PER_GAL,
-    'bd'            : FAME_MJ_PER_GAL,
-    'biodiesel'     : FAME_MJ_PER_GAL,          # GCAM name
+class TempFile(object):
+    """
+    Class to create and track temporary files in one place
+    so they can be deleted before an application exits.
+    """
+    Instances = {}
 
-    'ethanol'            : ETOH_MJ_PER_GAL,
-    'etoh'               : ETOH_MJ_PER_GAL,
-    'corn ethanol'       : ETOH_MJ_PER_GAL,     # GCAM name
-    'cellulosic ethanol' : ETOH_MJ_PER_GAL,     # GCAM name
-    'sugar cane ethanol' : ETOH_MJ_PER_GAL,     # GCAM name
+    def __init__(self, path=None, suffix='', tmpDir=None, delete=True,
+                 openFile=False, text=True):
+        """
+        Construct the name of a temporary file.
 
-    'ft'            : FT_DIESEL_MJ_PER_GAL,
-    'FT biofuels'   : FT_DIESEL_MJ_PER_GAL,     # GCAM name
+        :param path: (str) a path to register for deletion. If given, all other args are
+          ignored.
+        :param suffix: (str) an extension to give the temporary file
+        :param tmpDir: (str) the directory in which to create the (defaults to
+          the value of configuration file variable 'GCAM.TempDir', or '/tmp'
+          if the variable is not found.
+        :param delete: (bool) whether to delete the file in deleteFile()
+        :param openFile: (bool) whether to leave the new file open
+        :param text: True if this will be a text file
+        :return: none
+        """
+        self.suffix = suffix
+        self.delete = delete
+        self.fd = None
 
-    'biogasoline'   : BIOGASOLINE_MJ_PER_GAL,
-    'bio-gasoline'  : BIOGASOLINE_MJ_PER_GAL
-}
+        if path:
+            # If we're called with a path, it's just to register a file for deletion.
+            # We ignore all other parameters.
+            self.path = path
+        else:
+            tmpDir = tmpDir or getParam('GCAM.TempDir') or "/tmp"
+            mkdirs(tmpDir)
+            fd, tmpFile = mkstemp(suffix=suffix, dir=tmpDir, text=text)
 
-def fuelDensityMjPerGal(fuelname):
-    '''
-    Return the fuel energy density of the named fuel.
+            self.path = tmpFile
+            if openFile:
+                self.fd = fd
+            else:
+                # the caller is just after a pathname, so close it here
+                os.close(fd)
+                os.unlink(tmpFile)
 
-    :param fuelname: the name of a fuel, which must be one of:
-      ``{fame, bd, biodiesel, ethanol, etoh, corn ethanol, cellulosic ethanol, sugar cane ethanol, ft, FT biofuels, biogasoline, bio-gasoline}``.
-    :return: energy density (MJ/gal)
-    '''
-    return FuelDensity[fuelname.lower()]
+        # save this instance by the unique path
+        self.Instances[self.path] = self
 
+    def deleteFile(self):
+        """
+        Remove the file for a TempFile instance if self.delete is True. In either
+        case, delete the instance from the class instance dict.
+
+        :return: none
+        :raises: PygcamException if the path is not related to a TempFile instance.
+        """
+        path = self.path
+
+        try:
+            del self.Instances[path]
+        except KeyError:
+            raise PygcamException('No TempFile instance with name "%s"' % path)
+
+        deleting = 'Deleting' if self.delete else 'Not deleting'
+        _logger.debug("%s TempFile file '%s'", deleting, path)
+
+        if self.delete:
+            try:
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                else:
+                    os.unlink(path)
+            except Exception as e:
+                _logger.debug('Failed to delete "%s": %s', path, e)
+
+    @classmethod
+    def deleteAll(cls):
+        for obj in cls.Instances.values():
+            obj.deleteFile()
+
+    @classmethod
+    def remove(cls, filename, raiseError=True):
+        """
+        Remove a temporary file and delete the TempFile instance from the dict.
+
+        :param filename: (str) the name of a temp file created by this class
+        :param raiseError (bool) if True, raise an exception if the filename is
+          not a known TempFile.
+        :return: none
+        :raises: PygcamException if the path is not related to a TempFile instance.
+        """
+        try:
+            obj = cls.Instances[filename]
+            obj.deleteFile()
+        except KeyError:
+            if raiseError:
+                raise PygcamException('No TempFile instance with name "%s"' % filename)
 
 if __name__ == '__main__':
-
-    # TBD: move to unittest
-    if False:
-        print ensureExtension('/a/b/c/foo', '.baz')
-        print ensureExtension('/a/b/c/foo.bar', 'baz')
-
-        l = getRegionList()
-        print "(%d) %s" % (len(l), l)
-        print
-        l = getRegionList('/Users/rjp/bitbucket/gcam-core')
-        print "(%d) %s" % (len(l), l)
+    pass

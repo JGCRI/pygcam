@@ -19,8 +19,8 @@ from .query import (QueryCommand, GCAM_32_REGIONS, ensureCSV, sumYears,
 
 from .utils import (simpleFormat, getBooleanXML, unixPath, coercible, shellCommand,
                     flatten, ensureExtension, getYearCols, saveToFile, getTempFile,
-                    getBatchDir, mkdirs, loadModuleFromPath, loadObjectFromPath,
-                    printSeries, fuelDensityMjPerGal, XMLFile)
+                    TempFile, getBatchDir, loadModuleFromPath, loadObjectFromPath,
+                    mkdirs, printSeries, XMLFile)
 
 from .config import (getSection, setSection, configLoaded, getConfig, readConfigFiles,
                      getConfigDict, getParam, getParamAsBoolean, getParamAsInt,

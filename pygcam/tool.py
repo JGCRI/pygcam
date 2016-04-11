@@ -11,7 +11,8 @@
 import argparse
 import os
 from glob import glob
-from .utils import loadModuleFromPath
+from signal import signal, SIGTERM, SIGQUIT
+from .utils import loadModuleFromPath, TempFile
 from .error import PygcamException
 from .chart import ChartCommand
 from .config import ConfigCommand, setSection
@@ -23,7 +24,7 @@ from .query import QueryCommand
 from .run import GcamCommand
 from .workspace import WorkspaceCommand
 from .setup import SetupCommand
-from .config import DEFAULT_SECTION, getConfig, getParam
+from .config import getConfig, getParam
 from .log import getLogger, setLogLevel, configureLogs
 
 _logger = getLogger(__name__)
@@ -146,7 +147,23 @@ class GcamTool(object):
 
         # Get the sub-command and run it with the given args
         obj = self.getPlugin(args.subcommand)
-        obj.run(args, self)
+
+        class SignalException(Exception):
+            pass
+
+        def sighandler(signum, _frame):
+            raise SignalException(signum)
+
+        # We catch these to cleanup TempFile instances, e.g., on ^C
+        signal(SIGTERM, sighandler)
+        signal(SIGQUIT, sighandler)
+
+        try:
+            obj.run(args, self)
+
+        finally:
+            # Delete any temporary files that were created
+            TempFile.deleteAll()
 
 
 def _getMainParser():
