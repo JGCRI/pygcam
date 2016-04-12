@@ -162,8 +162,10 @@ class GcamTool(object):
             obj.run(args, self)
 
         finally:
-            # Delete any temporary files that were created
-            TempFile.deleteAll()
+            # Delete any temporary files that were created, but only when
+            # after existing any recursive invocation.
+            if argList is None:
+                TempFile.deleteAll()
 
 
 def _getMainParser():
