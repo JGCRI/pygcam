@@ -37,7 +37,8 @@ def computeDifference(df1, df2):
     return diff
 
 
-def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False):
+def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False,
+                    years=None, startYear=0):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -53,12 +54,14 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
        in all data files and compute the differences for all resulting years.
     :return: none
     """
-    refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate)
+    refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate,
+                    years=years, startYear=startYear)
 
     with open(outFile, 'w') as f:
         for otherFile in otherFiles:
             otherFile = ensureCSV(otherFile)   # add csv extension if needed
-            otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate)
+            otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate,
+                                years=years, startYear=startYear)
 
             diff = computeDifference(refDF, otherDF)
 
@@ -67,7 +70,8 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
 
 
-def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False):
+def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False,
+                     years=None, startYear=0):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -89,12 +93,14 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
     with pd.ExcelWriter(outFile, engine='xlsxwriter') as writer:
         sheetNum = 1
         _logger.debug("Reading reference file:", referenceFile)
-        refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate)
+        refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate,
+                        years=years, startYear=startYear)
 
         for otherFile in otherFiles:
             otherFile = ensureCSV(otherFile)   # add csv extension if needed
             _logger.debug("Reading other file:", otherFile)
-            otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate)
+            otherDF = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate,
+                              years=years, startYear=startYear)
 
             sheetName = 'Diff%d' % sheetNum
             sheetNum += 1
@@ -119,8 +125,8 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
         refDF.to_excel(writer, index=None, sheet_name='Reference', startrow=0, startcol=0)
 
 
-def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv',
-                     skiprows=1, interpolate=False):
+def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, interpolate=False,
+                     years=None, startYear=0):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -138,12 +144,9 @@ def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv',
        in all data files and compute the differences for all resulting years.
     :return: none
     """
-    if ext == '.csv':
-        writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=skiprows,
-                        interpolate=interpolate)
-    else:
-        writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=skiprows,
-                         interpolate=interpolate)
+    writer = writeDiffsToCSV if ext == '.csv' else writeDiffsToXLSX
+    writer(outFile, referenceFile, otherFiles, skiprows=skiprows, interpolate=interpolate,
+           years=years, startYear=startYear)
 
 def main(args):
     mkdirs(args.workingDir)
@@ -159,9 +162,8 @@ def main(args):
 
     yearStrs = args.years.split('-')
     if len(yearStrs) == 2:
-        global Years, StartYear
-        Years = yearStrs
-        StartYear = args.startYear
+        years = yearStrs
+        startYear = args.startYear
 
     # If a queryFile is given, we loop over the query names, computing required arguments to performDiff().
     if args.queryFile:
@@ -188,7 +190,7 @@ def main(args):
             _logger.debug("Writing %s", outFile)
 
             writeDiffsToFile(outFile, baselineFile, [policyFile], ext='.csv', skiprows=skiprows,
-                             interpolate=interpolate)
+                             interpolate=interpolate, years=years, startYear=startYear)
     else:
         csvFiles = map(ensureCSV, args.csvFiles)
         referenceFile = csvFiles[0]
@@ -222,7 +224,7 @@ class DiffCommand(SubcommandABC):
     def __init__(self, subparsers):
         helptext = 'Compute differences between CSV files generated by GCAM batch queries.'
         desc = '''
-            The csvDiff.py script computes the differences between results from two or
+            The diff sub-command script computes the differences between results from two or
             more CSV files generated from batch queries run on a GCAM database, saving
             the results in either a CSV or XLSX file, according to the extension given to
             the output file. If not provided, the output filename defaults to differences.csv.
