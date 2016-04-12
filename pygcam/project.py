@@ -555,7 +555,8 @@ class ProjectCommand(SubcommandABC):
     __version__ = '0.2'
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Run the steps for a project defined in a project.xml file''',
+        kwargs = {'aliases' : ['run'],
+                  'help' : '''Run the steps for a project defined in a project.xml file''',
                   'description' : '''This sub-command reads a single XML input file
                         that defines one or more projects, one or more groups of scenarios, one
                         or more scenarios, and one or more workflow steps. The workflow steps

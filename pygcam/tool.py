@@ -43,6 +43,43 @@ BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
                       GcamCommand, ProjectCommand, ProtectLandCommand,
                       QueryCommand, SetupCommand, WorkspaceCommand]
 
+# From https://gist.github.com/sampsyo/471779
+class AliasedSubParsersAction(argparse._SubParsersAction):
+    """
+    Adds an "aliases" keyword when adding subparsers, allowing
+    sub-command aliases.
+    """
+    class _AliasedPseudoAction(argparse.Action):
+        def __init__(self, name, aliases, help):
+            dest = name
+            if aliases:
+                dest += ' (%s)' % ','.join(aliases)
+            sup = super(AliasedSubParsersAction._AliasedPseudoAction, self)
+            sup.__init__(option_strings=[], dest=dest, help=help)
+
+    def add_parser(self, name, **kwargs):
+        if 'aliases' in kwargs:
+            aliases = kwargs['aliases']
+            del kwargs['aliases']
+        else:
+            aliases = []
+
+        parser = super(AliasedSubParsersAction, self).add_parser(name, **kwargs)
+
+        # Make the aliases work.
+        for alias in aliases:
+            self._name_parser_map[alias] = parser
+        # Make the help text reflect them, first removing old help entry.
+        if 'help' in kwargs:
+            help = kwargs.pop('help')
+            self._choices_actions.pop()
+            pseudo_action = self._AliasedPseudoAction(name, aliases, help)
+            self._choices_actions.append(pseudo_action)
+
+        parser.aliases = aliases    # save these so we can find the plugin, too
+        return parser
+
+
 class GcamTool(object):
 
     _plugins = {}
@@ -54,9 +91,12 @@ class GcamTool(object):
     @classmethod
     def addPlugin(cls, plugin):
         cls._plugins[plugin.name] = plugin
+        for alias in plugin.parser.aliases:
+            cls._plugins[alias] = plugin
 
     def __init__(self, loadPlugins=True):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
+        self.parser.register('action', 'parsers', AliasedSubParsersAction)
 
         # Note that the "main_" prefix is significant; see _is_main_arg() above
         # parser.add_argument('-V', '--main_verbose', action='store_true', default=False,
@@ -76,7 +116,6 @@ class GcamTool(object):
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
-
 
         map(self.instantiatePlugin, BuiltinSubcommands)
 
@@ -142,8 +181,9 @@ class GcamTool(object):
             args = self.parser.parse_args(args=argList)
         else:
             # top-level call
-            if args.configSection:
-                 setSection(args.configSection)
+            args.configSection = section = args.configSection or getParam('GCAM.DefaultProject')
+            if section:
+                 setSection(section)
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:

@@ -23,9 +23,12 @@ class SubcommandABC(object):
 
     def __init__(self, name, subparsers, kwargs):
         self.name = name
-        self.parser = subparsers.add_parser(self.name, **kwargs)
-        self.Parsers[self.name] = self.parser
-        self.addArgs(self.parser)
+        self.parser = parser = subparsers.add_parser(self.name, **kwargs)
+        self.Parsers[self.name] = parser
+        for alias in parser.aliases:        # so we can look up the plug by alias, too
+            self.Parsers[alias] = parser
+
+        self.addArgs(parser)
 
     @abstractmethod
     def addArgs(self, parser):

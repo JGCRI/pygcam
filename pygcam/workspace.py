@@ -57,7 +57,8 @@ class WorkspaceCommand(SubcommandABC):
     __version__ = '0.2'
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Perform operations on a workspace.''',
+        kwargs = {'aliases' : ['ws'],
+                  'help' : '''Perform operations on a workspace.''',
                   'description' : '''The ws sub-command allows you to create, delete, show the path of,
                   or run a shell command in a workspace. If the --scenario argument is given, the
                   operation is performed on a scenario-specific workspace within a project directory.
@@ -66,7 +67,7 @@ class WorkspaceCommand(SubcommandABC):
                   performing any operations to be sure of the directory that will be operated on, or
                   use the --noExecute option to show the command that would be executed by --run.'''}
 
-        super(WorkspaceCommand, self).__init__('ws', subparsers, kwargs)
+        super(WorkspaceCommand, self).__init__('workspace', subparsers, kwargs)
 
     def addArgs(self, parser):
         parser.add_argument('--create', action='store_true',

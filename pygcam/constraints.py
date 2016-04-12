@@ -384,7 +384,8 @@ def genDeltaConstraints(**kwargs):
 
 class GenConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Bioenergy constraint generator''',
+        kwargs = {'aliases' : ['bio'],
+                  'help' : '''Bioenergy constraint generator''',
                   'description' : '''Longer description for sub-command'''}
 
         super(GenConstraintsCommand, self).__init__('bioConstraint', subparsers, kwargs)
@@ -456,7 +457,8 @@ PolicyChoices = ['tax', 'subsidy']
 
 class DeltaConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Specify incremental values to add to the production of a given fuel,
+        kwargs = {'aliases' : ['delta'],
+                  'help' : '''Specify incremental values to add to the production of a given fuel,
                               by year, and generate the corresponding constraint file.''',
                   'description' : '''Longer description for sub-command'''}
 
