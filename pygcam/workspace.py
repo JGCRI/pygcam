@@ -36,7 +36,13 @@ def driver(args, tool):
     if args.delete:
         _logger.info('removing ' + workspace)
         try:
-            shutil.rmtree(workspace)
+            if args.noExecute:
+                "Would remove:", workspace
+            else:
+                if os.path.islink(workspace):
+                    os.remove(workspace)
+                else:
+                    shutil.rmtree(workspace)
         except Exception as e:
             _logger.warn("Can't remove '%s': %s" % (workspace, e))
 
