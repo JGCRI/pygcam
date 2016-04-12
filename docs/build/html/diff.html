@@ -179,7 +179,7 @@ as (df2 - df1).</p>
 
 <dl class="function">
 <dt id="pygcam.diff.writeDiffsToCSV">
-<code class="descclassname">pygcam.diff.</code><code class="descname">writeDiffsToCSV</code><span class="sig-paren">(</span><em>outFile</em>, <em>referenceFile</em>, <em>otherFiles</em>, <em>skiprows=1</em>, <em>interpolate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.writeDiffsToCSV" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.diff.</code><code class="descname">writeDiffsToCSV</code><span class="sig-paren">(</span><em>outFile</em>, <em>referenceFile</em>, <em>otherFiles</em>, <em>skiprows=1</em>, <em>interpolate=False</em>, <em>years=None</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.writeDiffsToCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the differences between the data in a reference .CSV file and one or more other
 .CSV files as (other - reference), optionally interpolating annual values between
 timesteps, storing the results in a single .CSV file.
@@ -208,7 +208,7 @@ in all data files and compute the differences for all resulting years.</li>
 
 <dl class="function">
 <dt id="pygcam.diff.writeDiffsToFile">
-<code class="descclassname">pygcam.diff.</code><code class="descname">writeDiffsToFile</code><span class="sig-paren">(</span><em>outFile</em>, <em>referenceFile</em>, <em>otherFiles</em>, <em>ext='csv'</em>, <em>skiprows=1</em>, <em>interpolate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.writeDiffsToFile" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.diff.</code><code class="descname">writeDiffsToFile</code><span class="sig-paren">(</span><em>outFile</em>, <em>referenceFile</em>, <em>otherFiles</em>, <em>ext='csv'</em>, <em>skiprows=1</em>, <em>interpolate=False</em>, <em>years=None</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.writeDiffsToFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the differences between the data in a reference .CSV file and one or more other
 .CSV files as (other - reference), optionally interpolating annual values between
 timesteps, storing the results in a single .CSV or .XLSX file. See <a class="reference internal" href="#pygcam.diff.writeDiffsToCSV" title="pygcam.diff.writeDiffsToCSV"><code class="xref py py-func docutils literal"><span class="pre">writeDiffsToCSV()</span></code></a>
@@ -239,7 +239,7 @@ in all data files and compute the differences for all resulting years.</li>
 
 <dl class="function">
 <dt id="pygcam.diff.writeDiffsToXLSX">
-<code class="descclassname">pygcam.diff.</code><code class="descname">writeDiffsToXLSX</code><span class="sig-paren">(</span><em>outFile</em>, <em>referenceFile</em>, <em>otherFiles</em>, <em>skiprows=1</em>, <em>interpolate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.writeDiffsToXLSX" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.diff.</code><code class="descname">writeDiffsToXLSX</code><span class="sig-paren">(</span><em>outFile</em>, <em>referenceFile</em>, <em>otherFiles</em>, <em>skiprows=1</em>, <em>interpolate=False</em>, <em>years=None</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.writeDiffsToXLSX" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the differences between the data in a reference .CSV file and one or more other
 .CSV files as (other - reference), optionally interpolating annual values between
 timesteps, storing the results in a single .XLSX file with each difference matrix
