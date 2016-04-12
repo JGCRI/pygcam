@@ -49,7 +49,7 @@ def setupWorkspace(runWorkspace):
     def tryLink(src, dst):
         try:
             os.symlink(src, dst)
-        except Exception as e:
+        except Exception:
             pass
 
     def workspaceSymlink(src, isDir=False):
@@ -106,8 +106,11 @@ def setupWorkspace(runWorkspace):
         src = getParam(varName)
         dst = os.path.abspath(os.path.join(runWorkspace, xmlDir))
 
-        if os.path.lexists(dst) and os.path.islink(dst):
-            removeSymlink(dst)
+        if os.path.lexists(dst):
+            if os.path.islink(dst):
+                removeSymlink(dst)
+            else:
+                os.rmdir(dst)       # probably needs shutil.rmtree
 
         if copyAllFiles:
             # for Windows users without symlink permission

@@ -36,9 +36,7 @@ def driver(args, tool):
     if args.delete:
         _logger.info('removing ' + workspace)
         try:
-            if args.noExecute:
-                "Would remove:", workspace
-            else:
+            if not args.noExecute:
                 if os.path.islink(workspace):
                     os.remove(workspace)
                 else:
