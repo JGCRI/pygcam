@@ -529,40 +529,50 @@ def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
             label = outFile
             f.write("%s\n%s\n" % (label, csvText))
 
-def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False):
+def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startYear=0):
     import pandas as pd
 
     csvFiles = map(ensureCSV, inFiles)
     # TBD: catch exception on reading bad CSV file; save error and report at the end
-    dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate), csvFiles)
+    dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate,
+                                         years=years, startYear=startYear), csvFiles)
 
+    formatStr = getParam('GCAM.ExcelNumberFormat')
+
+    basenames = map(os.path.basename, csvFiles)
     sheetNum = 1
     outFile = ensureExtension(outFile, '.xlsx')
     with pd.ExcelWriter(outFile, engine='xlsxwriter') as writer:
         workbook = writer.book
-        linkFmt = workbook.add_format({'font_color': 'blue', 'underline': True})
+        numFormat = workbook.add_format({'num_format': formatStr}) if formatStr else None
+        linkFmt   = workbook.add_format({'font_color': 'blue', 'underline': True})
 
         # Create an index sheet
         indexSheet = workbook.add_worksheet('index')
         indexSheet.write_string(0, 1, 'Links to query results')
-        maxlen = max(map(len, csvFiles))
+        maxlen = max(map(len, basenames))
         indexSheet.set_column('B:B', maxlen)
-        for i, name in enumerate(csvFiles):
+
+        for i, name in enumerate(basenames):
             row = i+1
             indexSheet.write(row, 0, row)
             indexSheet.write_url(row, 1, "internal:%d!A1" % row, linkFmt, name)
-            #indexSheet.write(row, 1, '=hyperlink("#%d!A1", "%s")' % (row, name), linkFmt)
 
-        for df, fname in zip(dframes, csvFiles):
+        for df, fname in zip(dframes, basenames):
             sheetName = str(sheetNum)
             sheetNum += 1
             dropExtraCols(df, inplace=True)
             df.to_excel(writer, index=None, sheet_name=sheetName, startrow=3, startcol=0)
             worksheet = writer.sheets[sheetName]
+
+            if numFormat:
+                # get the numerical indices of all column names that are numeric (i.e., years)
+                yearIndices = map(lambda pair: pair[0], filter(lambda pair: str.isdigit(pair[1]), enumerate(df.columns)))
+                for idx in yearIndices:
+                    worksheet.set_column(idx, idx, None, numFormat)
+
             worksheet.write_string(0, 0, "Filename:")
             worksheet.write_string(0, 1, fname)
-            #  =HYPERLINK("#1!A1", "Joe")
-            #worksheet.write(1, 0, '=hyperlink("#index!A1", "Back to index")', linkFmt)
             worksheet.write_url(1, 0, "internal:index!A1", linkFmt, "Back to index")
 
 
