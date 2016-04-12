@@ -10,8 +10,8 @@
 '''
 import argparse
 import os
+import signal
 from glob import glob
-from signal import signal, SIGTERM, SIGQUIT
 from .utils import loadModuleFromPath, TempFile
 from .error import PygcamException
 from .chart import ChartCommand
@@ -26,6 +26,12 @@ from .workspace import WorkspaceCommand
 from .setup import SetupCommand
 from .config import getConfig, getParam
 from .log import getLogger, setLogLevel, configureLogs
+from .windows import IsWindows
+
+if IsWindows:
+    SignalsToCatch = [signal.SIGTERM, signal.SIGINT, signal.SIGABRT]
+else:
+    SignalsToCatch = [signal.SIGTERM, signal.SIGINT, signal.SIGQUIT]
 
 _logger = getLogger(__name__)
 
@@ -151,12 +157,12 @@ class GcamTool(object):
         class SignalException(Exception):
             pass
 
-        def sighandler(signum, _frame):
+        def sigHandler(signum, _frame):
             raise SignalException(signum)
 
         # We catch these to cleanup TempFile instances, e.g., on ^C
-        signal(SIGTERM, sighandler)
-        signal(SIGQUIT, sighandler)
+        for sig in SignalsToCatch:
+            signal.signal(sig, sigHandler)
 
         try:
             obj.run(args, self)
