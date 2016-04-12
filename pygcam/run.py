@@ -110,7 +110,7 @@ def setupWorkspace(runWorkspace):
             if os.path.islink(dst):
                 removeSymlink(dst)
             else:
-                os.rmdir(dst)       # probably needs shutil.rmtree
+                shutil.rmtree(dst)
 
         if copyAllFiles:
             # for Windows users without symlink permission
