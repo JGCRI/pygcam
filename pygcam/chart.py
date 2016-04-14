@@ -26,14 +26,13 @@ __version__  = "0.3"
 def setupPalette(count, pal=None):
     import seaborn as sns
 
-    # See http://xkcd.com/color/rgb/. These were chose mainly to be different "enough".
+    # See http://xkcd.com/color/rgb/. These were chosen to be different "enough".
     colors = ['grass green', 'canary yellow', 'dirty pink', 'azure', 'tangerine', 'strawberry',
               'yellowish green', 'gold', 'sea blue', 'lavender', 'orange brown', 'turquoise',
               'royal blue', 'cranberry', 'pea green', 'vermillion', 'sandy yellow', 'greyish brown',
               'magenta', 'silver', 'ivory', 'carolina blue', 'very light brown']
 
-    #palette = sns.color_palette(pal, count) if pal else sns.hls_palette(count, l=.5, s=.6)
-    palette = sns.color_palette(pal, count) if pal else sns.xkcd_palette(colors)
+    palette = sns.color_palette(palette=pal, n_colors=count) if pal else sns.xkcd_palette(colors)
     sns.set_palette(palette, n_colors=count)
 
 # For publications, call setupPlot("paper", font_scale=1.5)
@@ -412,7 +411,8 @@ def chartGCAM(args, num=None, negate=False, fuelEJ=None):
 
         # add the filename to the plot
         if args.label or args.labelColor:
-            fig.text(1, 0.5, imgFile, color=labelColor, weight='ultralight', fontsize='xx-small', va='center', ha='right', rotation=270)
+            fig.text(1, 0.5, imgFile, color=labelColor, weight='ultralight', fontsize=7,
+                     va='center', ha='right', rotation=270)
 
         if fig:
             fig.savefig(outFile, bbox_inches='tight', transparent=args.transparent)
@@ -446,8 +446,6 @@ def main(mainArgs, tool, parser):
     import pandas as pd
     import seaborn as sns
     global plt, pd, sns, tkr
-
-    #readConfigFiles(mainArgs.configSection)
 
     if not mainArgs.fromFile and mainArgs.csvFile == '*null*':
         raise CommandlineError("Must specify a CSV file or use -f flag to read arguments from a file")
