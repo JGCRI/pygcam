@@ -5,7 +5,7 @@ from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
 from .error import PygcamException, SetupException, CommandlineError, ConfigFileError
 from .project import ProjectCommand
 from .landProtection import ProtectLandCommand
-from .run import GcamCommand, setupWorkspace
+from .runGCAM import GcamCommand, setupWorkspace
 from .xmlEditor import xmlStarlet, xmlEdit, xmlSel, XMLEditor
 
 from .diff import (DiffCommand, computeDifference, writeDiffsToCSV,
