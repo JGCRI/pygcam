@@ -14,7 +14,7 @@ from .config import getParam
 from .error import CommandlineError
 from .subcommand import SubcommandABC
 from .log import getLogger
-from .run import setupWorkspace
+from .runGCAM import setupWorkspace
 
 _logger = getLogger(__name__)
 

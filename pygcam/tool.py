@@ -21,7 +21,7 @@ from .diff import DiffCommand
 from .project import ProjectCommand
 from .landProtection import ProtectLandCommand
 from .query import QueryCommand
-from .run import GcamCommand
+from .runGCAM import GcamCommand
 from .workspace import WorkspaceCommand
 from .setup import SetupCommand
 from .config import getConfig, getParam
