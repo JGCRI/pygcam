@@ -4,11 +4,12 @@ Test
 - write unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
-- land protection
+- land protection command
 
 Cleanup
 -------
 - Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
+  - May be used by gcammcs
 - Relocate app-specific code currently in chart.py.
 - Deprecate configVar option to <var> all config vars are now read.
 - Handle deletion of temporary files better
@@ -18,9 +19,12 @@ Cleanup
 - Consider whether QueryPath should be set in project file to avoid
   having all users to set this in private .pygcam.cfg files
 
+Bugs
+----
+-
+
 Features
 --------
-
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
 
@@ -41,6 +45,8 @@ Features
     - see what happens with this on installation via setup.py
     - would be much better outside the installed module
     - maybe have a setup arg that says where to symlink to for site.cfg
+
+- Add common "--commandArgs" to pass args to the sub-command
 
 Document
 --------
