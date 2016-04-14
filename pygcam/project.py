@@ -490,7 +490,7 @@ class Project(object):
 
             # These get reset as each scenario is processed
             argDict['scenario'] = scenarioName
-            argDict['scenarioSubdir'] = scenario.subdir
+            argDict['scenarioSubdir'] = scenario.subdir or scenarioName
             #argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir), rmFinalSlash=True)
             #argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
             sandboxRoot = getParam('GCAM.SandboxRoot')

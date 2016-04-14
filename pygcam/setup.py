@@ -54,7 +54,10 @@ class SetupCommand(SubcommandABC):
                             help='Identify the scenario to run.')
 
         parser.add_argument('-S', '--subdir', default="",
-                            help='A sub-directory to use beneath the computed scenario directory')
+                            help='A sub-directory to use instead of scenario name')
+
+        parser.add_argument('-u', '--useGroupDir', action='store_true',
+                            help='Use the group name as a subdir below xmlsrc, local-xml, and dyn-xml')
 
         parser.add_argument('-x', '--xmlSourceDir',
                             help='''The location of the xmlsrc directory.''')
@@ -78,12 +81,15 @@ class SetupCommand(SubcommandABC):
         # TBD: remove ability to override on cmdline if not useful
         args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectRoot')
-        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), args.subdir, scenario)
+        groupDir = args.group if args.useGroupDir else ''
+        subdir = args.subdir or scenario
+        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), groupDir, subdir)
 
         sys.path.insert(0, os.path.dirname(os.path.dirname(args.xmlSourceDir)))
 
+        # TBD: document this
         if not args.module:
-            args.module = 'xmlsrc.' + args.subdir + '.scenarios' if args.subdir else 'xmlsrc.scenarios'
+            args.module = 'xmlsrc.' + groupDir + '.scenarios' if args.useGroupDir else 'xmlsrc.scenarios'
 
         try:
             # Try to load the user's module
@@ -107,6 +113,6 @@ class SetupCommand(SubcommandABC):
 
         # TBD: Ensure that all setup classes conform to this protocol
         obj = scenClass(args.baseline, args.scenario, args.xmlOutputRoot,
-                        args.xmlSourceDir, args.workspace, args.subdir)
+                        args.xmlSourceDir, args.workspace, groupDir)
 
         obj.setup(args)
