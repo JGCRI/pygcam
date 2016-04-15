@@ -145,7 +145,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     """
     _logger.info("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
 
-    def attr(element, value): # Simple helper function
+    def _attr(element, value): # Simple helper function
         return '-i "//%s" -t attr -n name -v "%s" ' % (element, value)
 
     if fromRegion:
@@ -162,8 +162,8 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
            (exe, sectorElement, xpath, srcFile)
 
     # Insert attribute names to the new hierarchy and rename technology => stub-technology (for global-tech-db case)
-    cmd2 = "%s ed " + attr("region", region) + attr(sectorElement, sector) + attr("subsector", subsector) + \
-           '''-r "//technology[@name='%s']" -v stub-technology ''' % (exe, technology)
+    cmd2 = exe + " ed " + _attr("region", region) + _attr(sectorElement, sector) + _attr("subsector", subsector) + \
+           '''-r "//technology[@name='%s']" -v stub-technology ''' % technology
 
     # Workaround for parsing error: explicitly name shutdown deciders
     for name in ['phased-shutdown-decider', 'profit-shutdown-decider']:
@@ -176,7 +176,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     status = subprocess.call(cmd, shell=True)
     return status == 0
 
-# TBD: make this handle dict-like objects (including Series) as well.
+
 def expandYearRanges(seq):
     """
     Expand a sequence of (year, value) tuples, or a dict keyed by
