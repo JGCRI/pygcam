@@ -44,8 +44,8 @@ class SetupCommand(SubcommandABC):
                             subdir is defined) or "xmlsrc.scenarios" (if subdir is undefined) under the
                             current ProjectRoot.''')
 
-        parser.add_argument('-p', '--stopPeriod', type=int,
-                            help='The number of the GCAM period or the year to terminate after')
+        parser.add_argument('-p', '--stop', type=int,
+                            help='The number of the GCAM period or the year to stop after')
 
         parser.add_argument('-R', '--resultsDir',
                             help='The parent directory holding the GCAM output workspaces')

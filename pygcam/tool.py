@@ -102,12 +102,13 @@ class GcamTool(object):
         # parser.add_argument('-V', '--main_verbose', action='store_true', default=False,
         #                     help='Causes log messages to be printed to console.')
 
-        parser.add_argument('-l', '--logLevel', type=str.lower,
+        parser.add_argument('-l', '--logLevel', type=str.lower, metavar='level',
                             choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
                             help='Sets the log level of the program.')
 
-        parser.add_argument('-s', '--configSection',
-                            help='''The name of the config file section to read from.''')
+        parser.add_argument('-P', '--projectName', dest='configSection', metavar='name',
+                            help='''The project name (the config file section to read from),
+                            which defaults to the value of config variable GCAM.DefaultProject''')
 
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')

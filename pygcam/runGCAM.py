@@ -270,7 +270,7 @@ class GcamCommand(SubcommandABC):
         parser.add_argument('-n', '--noRun', action="store_true",
                             help="Show the 'qsub' command to be run, but don't run it")
 
-        parser.add_argument('-N', '--noRunGCAM', action="store_true",
+        parser.add_argument('-G', '--noRunGCAM', action="store_true",
                             help="Don't run GCAM, just run the post-processing script on existing results.")
 
         parser.add_argument('-r', '--resources', default='',

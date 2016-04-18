@@ -15,6 +15,7 @@ _logger = getLogger(__name__)
 
 __version__ = "0.1"
 
+PolicyChoices = ['tax', 'subsidy']
 DefaultYears = '2020-2050'
 DefaultCellulosicCoefficients = "2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914"
 
@@ -391,19 +392,19 @@ class GenConstraintsCommand(SubcommandABC):
         super(GenConstraintsCommand, self).__init__('bioConstraint', subparsers, kwargs)
 
     def addArgs(self, parser):
-        parser.add_argument('-b', '--biomassPolicyType', default='tax',
-                             help='Regional biomass policy type: must be one of {subs, tax}')
-
-        parser.add_argument('-B', '--baseline', default=None,
+        parser.add_argument('-b', '--baseline', default=None,
                             help='The baseline on which the policy scenario is based')
+
+        parser.add_argument('-B', '--biomassPolicyType', default='tax', choices=PolicyChoices,
+                             help='Regional biomass policy type')
 
         parser.add_argument('-c', '--coefficients',
                             help='''A comma-separated string of year:coefficient pairs. This
                             sets the cellulosic ethanol conversion coefficients. Defaults to
                             standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
 
-        parser.add_argument('-e', '--cellEtohPolicyType', default='tax',
-                             help='Cellulosic ethanol policy type: must be one of {subs, tax}')
+        parser.add_argument('-e', '--cellEtohPolicyType', default='tax', choices=PolicyChoices,
+                             help='Cellulosic ethanol policy type')
 
         parser.add_argument('-l', '--defaultLevel', type=float, default=0.0,
                             help='''Target cellulosic biofuel level (EJ). All or individual years
@@ -418,11 +419,11 @@ class GenConstraintsCommand(SubcommandABC):
         parser.add_argument('-m', '--fromMCS', action='store_true',
                              help="Used when calling from gcammcs so correct pathnames are computed.")
 
-        parser.add_argument('-p', '--purposeGrownPolicyType', default='subs',
-                             help='Purpose-grown biomass policy type: must be one of {subs, tax}')
-
-        parser.add_argument('-P', '--policy',
+        parser.add_argument('-p', '--policy',
                             help='The policy scenario name')
+
+        parser.add_argument('-P', '--purposeGrownPolicyType', default='subsidy', choices=PolicyChoices,
+                             help='Purpose-grown biomass policy type')
 
         parser.add_argument('-R', '--resultsDir',
                             help='The parent directory holding the GCAM output workspaces')
@@ -452,8 +453,6 @@ class GenConstraintsCommand(SubcommandABC):
 
 DefaultName  = 'cellulosic ethanol'
 DefaultTag   = 'cell-etoh'
-PolicyChoices = ['tax', 'subsidy']
-
 
 class DeltaConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -470,11 +469,11 @@ class DeltaConstraintsCommand(SubcommandABC):
                             sets the cellulosic ethanol conversion coefficients. Defaults to
                             standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
 
-        parser.add_argument('-b', '--biomassPolicyType', choices=PolicyChoices, default='subsidy',
-                            help='Regional biomass policy type. Default is subsidy.')
-
-        parser.add_argument('-B', '--baseline', required=True,
+        parser.add_argument('-b', '--baseline', required=True,
                             help='The baseline on which the policy scenario is based')
+
+        parser.add_argument('-B', '--biomassPolicyType', choices=PolicyChoices, default='subsidy',
+                            help='Regional biomass policy type. Default is subsidy.')
 
         parser.add_argument('-f', '--fuelName', default=DefaultName,
                             help="The fuel to generate constraints for. Default is %s" % DefaultName)
@@ -492,11 +491,11 @@ class DeltaConstraintsCommand(SubcommandABC):
         parser.add_argument('-m', '--fromMCS', action='store_true',
                              help="Used when calling from gcammcs so correct pathnames are computed.")
 
-        parser.add_argument('-p', '--purposeGrownPolicyType', choices=PolicyChoices, default='subsidy',
-                             help='Purpose-grown biomass policy type. Default is subsidy.')
-
-        parser.add_argument('-P', '--policy', required=True,
+        parser.add_argument('-p', '--policy', required=True,
                             help='The policy scenario name')
+
+        parser.add_argument('-P', '--purposeGrownPolicyType', choices=PolicyChoices, default='subsidy',
+                             help='Purpose-grown biomass policy type. Default is subsidy.')
 
         parser.add_argument('-R', '--resultsDir', default='.',
                             help='The parent directory holding the GCAM output workspaces')
