@@ -94,7 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html"><code class="docutils literal"><span class="pre">pygcam</span></code> Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -331,6 +331,29 @@ is checked, and if not present, and error is raised.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>relPath</strong> &#8211; (str) a relative pathname</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygcam.xmlEditor.XMLEditor.protectLand">
+<code class="descname">protectLand</code><span class="sig-paren">(</span><em>fraction, landClasses=['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland'], regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.protectLand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify land_input files to protect a constant fraction of unmanaged
+land of the given classes, in the given regions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fraction</strong> &#8211; (float) the fraction of land in the given land classes
+to protect</li>
+<li><strong>landClasses</strong> &#8211; a string or a list of strings, or None. If None, all
+unmanaged land classes are modified.</li>
+<li><strong>regions</strong> &#8211; a string or a list of strings, or None. If None, all
+regions are modified.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>

@@ -25,6 +25,29 @@ Bugs
 
 Features
 --------
+- Specify a simple project without writing custom python code.
+    - Create xmlsrc
+    - Use built-in scenarios.py that just needs scenario names,
+      called from runProj
+    - <scenario> has a <files> section similar to configuration.xml
+    - support a delete="true" attribute
+    - Use stopYear to limit run
+
+- A "simple" project either:
+    - Has manually creates sandboxes
+    - Has generated sandboxes, but the project only adds to and
+      removes from configuration.xml with references to local files.
+
+- Code doesn't use XmlEditor
+    - Already supported using scenarios.py
+
+- Advantages of this setup
+    - Standardized and documented format
+    - Easily transition to using additional pygcam features
+    - Simplifies sharing of experiments, e.g., via git
+
+Other
+
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
 
