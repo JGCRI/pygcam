@@ -31,6 +31,14 @@ XML input file formats for ``gcamtool.py`` sub-commands
    project-xml
    landProtection-xml
 
+Tutorial
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial
+
 
 Application Programming Interface (API)
 ----------------------------------------
