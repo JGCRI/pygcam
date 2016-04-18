@@ -26,6 +26,7 @@ import glob
 import argparse
 import re
 from .error import SetupException
+from .landProtection import protectLand, UnmanagedLandClasses
 from .config import getConfig, getParam, getParamAsBoolean, setSection
 from .utils import coercible, mkdirs, unixPath
 from .log import getLogger, setLogLevel, configureLogs
@@ -374,12 +375,9 @@ class XMLEditor(object):
         self.renameScenarioComponent("cement_1", pathjoin(self.energy_dir_rel, "cement.xml"))
         self.renameScenarioComponent("cement_2", pathjoin(self.energy_dir_rel, "cement_incelas_gcam3.xml"))
 
-        self.renameScenarioComponent("land_1", pathjoin(self.aglu_dir_rel, "land_input_1.xml"))
-        self.renameScenarioComponent("land_2", pathjoin(self.aglu_dir_rel, "land_input_2.xml"))
-        self.renameScenarioComponent("land_3", pathjoin(self.aglu_dir_rel, "land_input_3.xml"))
-
-        self.renameScenarioComponent("protected_land_2", pathjoin(self.aglu_dir_rel, "protected_land_input_2.xml"))
-        self.renameScenarioComponent("protected_land_3", pathjoin(self.aglu_dir_rel, "protected_land_input_3.xml"))
+        landFiles = ('land_input_1', 'land_input_2', 'land_input_3', 'protected_land_input_2', 'protected_land_input_3')
+        for landFile in landFiles:
+            self.renameScenarioComponent(landFile, pathjoin(self.aglu_dir_rel, landFile + '.xml'))
 
     def cfgPath(self):
         """
@@ -791,6 +789,30 @@ class XMLEditor(object):
     def dropLandProtection(self):
         self.delScenarioComponent("protected_land_2")
         self.delScenarioComponent("protected_land_3")
+
+    def protectLand(self, fraction, landClasses=UnmanagedLandClasses, regions=None):
+        """
+        Modify land_input files to protect a constant fraction of unmanaged
+        land of the given classes, in the given regions.
+
+        :param fraction: (float) the fraction of land in the given land classes
+               to protect
+        :param landClasses: a string or a list of strings, or None. If None, all
+               unmanaged land classes are modified.
+        :param regions: a string or a list of strings, or None. If None, all
+               regions are modified.
+        """
+        _logger.info("Protecting %d%% of land globally", int(fraction * 100))
+
+        # NB: this code depends on these being the tags assigned to the land files
+        # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
+        landFiles = ['land_input_2', 'land_input_3']
+        for landFile in landFiles:
+            filename = landFile + '.xml'
+            landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
+
+            protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses, regions=regions)
+            self.updateScenarioComponent(landFile, landFileRel)
 
     # TBD: normalize so that all (year, value) args behave like the pairs, in all fns?
     # TBD: or handle both dict-like vs 'list of pairs' cases? If it has iteritems, then
