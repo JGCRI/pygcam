@@ -91,7 +91,9 @@ def setupWorkspace(runWorkspace):
     exePath = os.path.join('exe', exeName)                      # expressed as relative to the exe dir
     workspaceSymlink(exePath)
 
-    workspaceSymlink(os.path.join('exe', 'configuration.xml'))  # link to default configuration file
+    # No need for this, and it's confusing...
+    # workspaceSymlink(os.path.join('exe', 'configuration.xml'))  # link to default configuration file
+
     workspaceSymlink(os.path.join('exe', 'log_conf.xml'))       # and log configuration file
     workspaceSymlink('input')
     workspaceSymlink('libs')
