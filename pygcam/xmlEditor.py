@@ -787,8 +787,8 @@ class XMLEditor(object):
 
 
     def dropLandProtection(self):
-        self.delScenarioComponent("protected_land_2")
-        self.delScenarioComponent("protected_land_3")
+        self.delScenarioComponent("protected_land_input_2")
+        self.delScenarioComponent("protected_land_input_3")
 
     def protectLand(self, fraction, landClasses=UnmanagedLandClasses, regions=None):
         """
