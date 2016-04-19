@@ -44,7 +44,7 @@ class SetupCommand(SubcommandABC):
                             subdir is defined) or "xmlsrc.scenarios" (if subdir is undefined) under the
                             current ProjectRoot.''')
 
-        parser.add_argument('-p', '--stop', type=int,
+        parser.add_argument('-p', '--stop', type=int, metavar='period-or-year', dest='stopPeriod',
                             help='The number of the GCAM period or the year to stop after')
 
         parser.add_argument('-R', '--resultsDir',
