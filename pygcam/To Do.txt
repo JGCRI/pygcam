@@ -1,3 +1,11 @@
+Bugs
+----
+
+Cleanup
+-------
+- Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
+  - May be used by gcammcs
+
 Test
 ----
 - setup.py installer
@@ -5,23 +13,6 @@ Test
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
 - land protection command
-
-Cleanup
--------
-- Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
-  - May be used by gcammcs
-- Relocate app-specific code currently in chart.py.
-- Deprecate configVar option to <var> all config vars are now read.
-- Handle deletion of temporary files better
-    - Have a class that generates and remembers the filenames and
-      can delete them all
-    - Call TempFile.removeFiles() in gcamtool in a "finally" clause
-- Consider whether QueryPath should be set in project file to avoid
-  having all users to set this in private .pygcam.cfg files
-
-Bugs
-----
--
 
 Features
 --------
@@ -96,7 +87,6 @@ Tasks
     - Simplify to eliminate complicated cmdline opts?
 - Should constraint commands remain plugins?
     - They're for use by biofuel studies only?
-    - If so, setup.py can call these by importing them directly.
     - Perhaps split out generic function from domain-specific
 - Update documentation
 - Test everything again on Windows
