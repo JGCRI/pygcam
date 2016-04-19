@@ -117,7 +117,7 @@ def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=
     the values. The argument 'ncol' specifies the number of columns with
     which to render the legend.
     '''
-    # TBD: this needs work to handle year values as columns to plot
+    # TBD: handle year values as columns to plot
     df2 = df[[indexCol, columns, values]].pivot(index=indexCol, columns=columns, values=values)
 
     setupPalette(len(df2.columns), pal=palette)
@@ -277,7 +277,7 @@ def amendFilename(filename, suffix):
     return base + '-' + suffix + ext
 
 
-def chartGCAM(args, num=None, negate=False, fuelEJ=None):
+def chartGCAM(args, num=None, negate=False, divisor=None):
     csvFile    = args.csvFile
     indexCol   = args.indexCol or None
     columns    = args.columns
@@ -348,9 +348,8 @@ def chartGCAM(args, num=None, negate=False, fuelEJ=None):
         _logger.debug("Multiplying all values by %.3f for %s", multiplier, os.path.basename(csvFile))
         df[yearCols] *= multiplier
 
-    # TBD: this is application specific. Move it where?
-    if fuelEJ:
-        df[yearCols] /= fuelEJ
+    if divisor:
+        df[yearCols] /= divisor
         sumYears = True         # dividing by total fuel makes sense only for totals
 
     if negate:
@@ -429,13 +428,13 @@ def chartGCAM(args, num=None, negate=False, fuelEJ=None):
                 # "-g" => don't bring app to the foreground
                 call(['open', '-g', outFile], shell=False)
 
-def getFuelEJ(fuelFile):
-    fuelEJ = 0
-    if fuelFile:
-        with open(fuelFile) as f:
-            fuelEJ = float(f.readline())
+def getDivisor(filename):
+    divisor = 0
+    if filename:
+        with open(filename) as f:
+            divisor = float(f.readline())
 
-    return fuelEJ
+    return divisor
 
 def main(mainArgs, tool, parser):
     # Do these slow imports after parseArgs so "-h" responds quickly
@@ -493,24 +492,21 @@ def main(mainArgs, tool, parser):
                 line = line.format(**substDict)
                 fileArgs = shlex.split(line)
 
-                argsNS = argparse.Namespace(**argDict)
-                # for key, value in argDict.iteritems():
-                #     setattr(argsNS, key, value)
-
+                argsNS  = argparse.Namespace(**argDict)
                 allArgs = parser.parse_args(args=fileArgs, namespace=argsNS)
-                fuelEJ = getFuelEJ(allArgs.fuelFile)
+                divisor = getDivisor(allArgs.divisorFile)
 
-                # do this in addition to standard figure. Don't *also* negate since fuelEJ may be + or -.
-                chartGCAM(allArgs, num=(num if enumerate else None), fuelEJ=fuelEJ)
+                # do this in addition to standard figure. Don't *also* negate since divisor may be + or -.
+                chartGCAM(allArgs, num=(num if enumerate else None), divisor=divisor)
 
                 if negate:
                     # do this in addition to standard figure
-                    chartGCAM(allArgs, num=(num if enumerate else None), fuelEJ=fuelEJ, negate=True)
+                    chartGCAM(allArgs, num=(num if enumerate else None), divisor=divisor, negate=True)
 
                 num += 1
     else:
-        fuelEJ = getFuelEJ(mainArgs.fuelFile)
-        chartGCAM(mainArgs, fuelEJ=fuelEJ)
+        divisor = getDivisor(mainArgs.divisorFile)
+        chartGCAM(mainArgs, divisor=divisor)
 
 
 class ChartCommand(SubcommandABC):
@@ -562,7 +558,7 @@ class ChartCommand(SubcommandABC):
                             These are read as if chartGCAM.py were called on each line individually,
                             but avoiding the ~2 sec startup time for the bigger python packages.''')
 
-        parser.add_argument('-F', '--fuelFile',
+        parser.add_argument('-F', '--divisorFile',
                             help='''A file containing the number of EJ of fuel that constitute the shock
                             the differences represent. If provided, the difference values are divided by
                             the quantity given.''')
