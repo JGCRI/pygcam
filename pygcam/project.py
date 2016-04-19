@@ -198,10 +198,9 @@ class SimpleVariable(object):
     """
     Instances = {}
 
-    def __init__(self, name, value, configVar=None, evaluate=False):
+    def __init__(self, name, value, evaluate=False):
         self.name      = name
         self.value     = value
-        self.configVar = configVar
         self.eval      = evaluate
         self.Instances[name] = self
 
@@ -240,22 +239,15 @@ class Variable(SimpleVariable):
     Represents the ``<var>`` element in the projects.xml file.
     """
     def __init__(self, node):
-        name      = node.get('name')
-        configVar = node.get('configVar') # deprecated
-        evaluate  = getBooleanXML(node.get('eval', 0))
+        name     = node.get('name')
+        evaluate = getBooleanXML(node.get('eval', 0))
 
-        try:
-            value = getParam(configVar) if configVar else node.text
-        except Exception as e:
-            raise FileFormatError("Failed to get value for configVar '%s': %s" % (configVar, e))
-
-        super(Variable, self).__init__(name, value, configVar=configVar, evaluate=evaluate)
+        super(Variable, self).__init__(name, node.text, evaluate=evaluate)
 
     @classmethod
     def evaluateVars(cls, argDict):
         '''Evaluate vars and store results in argDict'''
         for name, var in cls.Instances.iteritems():
-            # TBD: might only do this if var.evaluate is set
             argDict[name] = var.evaluate(argDict)
 
     def evaluate(self, argDict, value=None):
@@ -320,12 +312,6 @@ class Project(object):
         map(Variable, defaultsNode.findall('./vars/var'))
         map(Variable,  projectNode.findall('./vars/var'))
 
-        # Deprecated?
-        Variable.setFromDefault('shockYear', 'startYear')    # set defaults from other vars
-        Variable.setFromDefault('analysisEndYear', 'endYear')
-
-        #self.checkRequiredVars()
-
         dfltTmpFileNodes = defaultsNode.findall('tmpFile')
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(_TmpFile, dfltTmpFileNodes + projTmpFileNodes)
@@ -343,15 +329,6 @@ class Project(object):
             schema.assertValid(doc)
         else:
             return schema.validate(doc)
-
-    # deprecated
-    def checkRequiredVars(self):
-        '''Ensure that the required vars are set to non-empty strings'''
-        required = {'xmlsrc', 'workspaceRoot', 'localXml'}
-        given = set(Variable.definedVars())
-        missing = required - given
-        if missing:
-            raise FileFormatError("Missing required variables: %s" % missing)
 
     def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
         '''
