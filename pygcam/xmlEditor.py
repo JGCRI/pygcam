@@ -23,7 +23,6 @@ import os
 import shutil
 import subprocess
 import glob
-import argparse
 import re
 from .error import SetupException
 from .landProtection import protectLand, UnmanagedLandClasses
@@ -294,12 +293,6 @@ class XMLEditor(object):
         mkdirs(scenDir)
         mkdirs(dynDir)
 
-        # Not available on Windows
-        # cmd = "rm -rf %s/* %s/*" % (scenDir, dynDir)
-        # _logger.info(cmd)
-        # status = subprocess.call(cmd, shell=True)
-        # assert status == 0, 'Command failed with status %d: %s' % (status, cmd)
-
         xmlSubdir = pathjoin(self.xmlSourceDir, 'xml')
         xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
 
@@ -309,8 +302,6 @@ class XMLEditor(object):
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
 
-            # not available on Windows
-            # subprocess.call("cp -p %s/*.xml %s" % (xmlSubdir, scenDir), shell=True)
             dynamic = 'dynamic' in args and args.dynamic
 
             if dynamic:
@@ -319,9 +310,6 @@ class XMLEditor(object):
                     dst = os.path.join(dynDir, base)
                     src = os.path.join(scenDir, base)
                     os.symlink(src, dst)
-
-                # Not available on Windows
-                # subprocess.call("ln -s %s/*.xml %s" % (scenDir, dynDir), shell=True)
 
         configPath = self.cfgPath()
 
@@ -772,19 +760,28 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    # TBD: Test
-    def setSolutionTolerance(self, tolerance):
+    def setSolutionTolerance(self, tolerance, solverFile='cal_broyden_config.xml'):
         """
         Set the model solution tolerance to the given value.
 
         :param tolerance: (coercible to float) the value to set
+        :param solverFile: (str) the filename of the chosen solver file from
+          the GCAM "solution" directory.
         :return: none
         """
         _logger.info("Set solution tolerance to %s" % tolerance)
+        coercible(tolerance, float)
 
-        value = coercible(tolerance, float)
-        self.updateConfigComponent('Doubles', 'SolutionTolerance', value)
+        pathRel, pathAbs = self.getLocalCopy(pathjoin(self.solution_prefix_rel, solverFile))
 
+        xmlEdit(pathAbs,
+                '-u', "//scenario/user-configurable-solver/solution-tolerance",
+                '-v', str(tolerance))
+
+        self.updateScenarioComponent("solver", pathRel)
+
+        # This seems to no longer exist
+        # self.updateConfigComponent('Doubles', 'SolutionTolerance', value)
 
     def dropLandProtection(self):
         self.delScenarioComponent("protected_land_input_2")
@@ -917,7 +914,7 @@ class XMLEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        if True: # Verbosity:
+        if _logger.level.lower() in ['debug', 'info']:
             from .utils import printSeries
 
             _logger.info("Set share-weights for (%s, %s, %s) for %s" % \
@@ -1035,25 +1032,3 @@ class XMLEditor(object):
                 '-v', modeltimeFileRel)
 
     parser = None
-
-    # Deprecated: needed only for setup.py called outside of gcamtool
-    @classmethod
-    def parseArgs(cls, baseline=None, scenario=None):
-        cls.parser = argparse.ArgumentParser(description='')
-        cls.addArgs()      # allow subclasses to modify parser; they must call super
-        ns = argparse.Namespace(baseline=baseline, scenario=scenario)
-        args = cls.parser.parse_args(namespace=ns)
-
-        # Read [DEFAULT] to see if a default section is named
-        getConfig()
-
-        if args.configSection:
-            setSection(args.configSection)
-
-        logLevel = args.logLevel or getParam('GCAM.LogLevel')
-        if logLevel:
-            setLogLevel(logLevel)
-
-        configureLogs(force=True)
-
-        return args
