@@ -25,6 +25,8 @@ Bugs
 
 Features
 --------
+- If scenario has unique name among groups, run it even if group isn't specified
+
 - Specify a simple project without writing custom python code.
     - Create xmlsrc
     - Use built-in scenarios.py that just needs scenario names,
