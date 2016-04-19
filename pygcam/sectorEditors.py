@@ -55,46 +55,6 @@ class RefiningEditor(XMLEditor):
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
 
-    # Deprecated
-    # def setRefiningNonEnergyCostByYear(self, fuel, pairs):
-    #     '''
-    #     Set the non-energy cost of a refining technology, give a list of pairs of (year, price),
-    #     where year can be a single year (as string or int), or a string specifying a range of years,
-    #     of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s", which provides
-    #     an alternative timestep. The price is applied to all years indicated by the range.
-    #     '''
-    #     _logger.info("Set non-energy-cost of %s for %s to %s" % (fuel, self.name, pairs))
-    #
-    #     enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
-    #
-    #     prefix = "//global-technology-database/location-info[@sector-name='%s']/technology[@name='%s']" % \
-    #              (REFINING_SECTOR, fuel)
-    #     suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
-    #
-    #     args = [enTransFileAbs]
-    #     for year, price in expandYearRanges(pairs):
-    #         args += ['-u',
-    #                  prefix + ("/period[@year='%s']" % year) + suffix,
-    #                  '-v', str(price)]
-    #
-    #     xmlEdit(*args)
-    #
-    #     self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-    # Deprecated
-    # def setRefinedLiquidShareWeight(self, fuel, values):
-    #     """
-    #     Create modified version of en_transformation.xml with the given share-weight
-    #     for the given refined liquid fuel in the given year.
-    #
-    #     :param fuel: (str) the name of a fuel in the 'refining' sector
-    #     :param values: (dict-like) keys are string versions of years; values are share-weights,
-    #         which must be coercabel to float.
-    #     :return: none
-    #     """
-    #     self.setGlobalTechShareWeight(REFINING_SECTOR, fuel, values)
-
-
 class BioenergyEditor(RefiningEditor):
     """
     BioenergyEditor adds knowledge of biomass and biofuels.
@@ -236,6 +196,7 @@ class BioenergyEditor(RefiningEditor):
             xmlEdit(*args)
             self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
+    # TBD: generalize this
     def setBiofuelBiomassCoefficients(self, fuelName, pairs):
         '''
         Set new coefficients for biomass conversion for the given fuel
@@ -284,7 +245,7 @@ class BioenergyEditor(RefiningEditor):
                 '-u', "//region[@name='%s']//isNewTechnology[@year='2020']" % region,
                 '-v', "0")
 
-        self.updateScenarioComponent("land_3", landInput3Rel)
+        self.updateScenarioComponent("land_input_3", landInput3Rel)
 
     #
     # Various methods that operate on the USA specifically
@@ -333,6 +294,7 @@ class BioenergyEditor(RefiningEditor):
     #
     # Methods to operate in USA only on technologies extracted from global-technology-database
     #
+    # TBD: generalize this?
     def setCellEthanolShareWeightUSA(self, year, shareweight):
         '''
         Create modified version of cellEthanolUSA.xml with the given share-weight

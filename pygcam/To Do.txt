@@ -17,6 +17,9 @@ Test
 Features
 --------
 - If scenario has unique name among groups, run it even if group isn't specified
+    - requires restructuring since assumed to be one group name
+
+- Make project <defaults> optional.
 
 - Specify a simple project without writing custom python code.
     - Create xmlsrc
