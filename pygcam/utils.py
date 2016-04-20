@@ -13,7 +13,7 @@ import re
 import subprocess
 import shutil
 from itertools import chain
-from tempfile import mkstemp
+from tempfile import mkstemp, mkdtemp
 from .config import getParam
 from .error import PygcamException, FileFormatError
 from .log import getLogger, getLogLevel
@@ -352,22 +352,39 @@ def printSeries(series, label):
         pd.set_option('precision', 5)
         print df.T
 
-def getTempFile(suffix='', text=True, tmpDir=None, delete=True):
+def getTempFile(suffix='', tmpDir=None, text=True, delete=True):
     """
     Convenience function for common use pattern, which is to get
     the name of a temp file that needs to be deleted on app exit.
 
     :param suffix: (str) an extension to give the temporary file
+    :param tmpDir: (str) the directory in which to create the file.
+      (Defaults to the value of configuration file variable 'GCAM.TempDir',
+      or '/tmp' if the variable is not found.
     :param text: True if this will be a text file
-    :param tmpDir: (str) the directory in which to create the (defaults to
-      the value of configuration file variable 'GCAM.TempDir', or '/tmp'
-      if the variable is not found.
-    :param noDelete: (bool) if True, don't delete the file on cleanup.
+    :param delete: (bool) if False, don't delete the file on cleanup.
        (This is useful for debugging.)
     :return: (str) pathname of a new temporary file
     """
     obj = TempFile(suffix=suffix, text=text, tmpDir=tmpDir, delete=delete)
     return obj.path
+
+def getTempDir(suffix='', tmpDir=None, delete=True):
+    """
+    Convenience function for common use pattern, which is to get the
+    name of a temporary directory that needs to be deleted on app exit.
+
+    :param suffix: (str) an extension to give the temporary file
+    :param tmpDir: (str) the directory in which to create the new temporary
+        directory (Defaults to the value of configuration file variable
+        'GCAM.TempDir', or '/tmp' if the variable is not found.
+    :param delete: (bool) if False, don't delete the file on cleanup.
+       (This is useful for debugging.)
+    :return: (str) pathname of a new temporary directory
+    """
+    obj = TempFile(suffix=suffix, tmpDir=tmpDir, delete=delete, createDir=True)
+    return obj.path
+
 
 class TempFile(object):
     """
@@ -377,19 +394,23 @@ class TempFile(object):
     Instances = {}
 
     def __init__(self, path=None, suffix='', tmpDir=None, delete=True,
-                 openFile=False, text=True):
+                 openFile=False, text=True, createDir=False):
         """
         Construct the name of a temporary file.
 
-        :param path: (str) a path to register for deletion. If given, all other args are
-          ignored.
+        :param path: (str) a path to register for deletion. If given, all other
+            args are ignored.
         :param suffix: (str) an extension to give the temporary file
         :param tmpDir: (str) the directory in which to create the (defaults to
-          the value of configuration file variable 'GCAM.TempDir', or '/tmp'
-          if the variable is not found.
-        :param delete: (bool) whether to delete the file in deleteFile()
-        :param openFile: (bool) whether to leave the new file open
-        :param text: True if this will be a text file
+            the value of configuration file variable 'GCAM.TempDir', or '/tmp'
+            if the variable is not found.
+        :param delete: (bool) whether deleteFile() should delete the file when
+            called
+        :param openFile: (bool) whether to leave the new file open (ignored if
+            createDir is True)
+        :param text: (bool) Set to False if this will not be a text file
+        :param createDir: (bool) if True, a temporary directory will be created
+            rather than a temporary file.
         :return: none
         """
         self.suffix = suffix
@@ -403,15 +424,19 @@ class TempFile(object):
         else:
             tmpDir = tmpDir or getParam('GCAM.TempDir') or "/tmp"
             mkdirs(tmpDir)
-            fd, tmpFile = mkstemp(suffix=suffix, dir=tmpDir, text=text)
 
-            self.path = tmpFile
-            if openFile:
-                self.fd = fd
+            if createDir:
+                self.path = mkdtemp(suffix=suffix, dir=tmpDir)      # TODO: test this
             else:
-                # the caller is just after a pathname, so close it here
-                os.close(fd)
-                os.unlink(tmpFile)
+                fd, tmpFile = mkstemp(suffix=suffix, dir=tmpDir, text=text)
+
+                self.path = tmpFile
+                if openFile:
+                    self.fd = fd
+                else:
+                    # the caller is just after a pathname, so close it here
+                    os.close(fd)
+                    os.unlink(tmpFile)
 
         # save this instance by the unique path
         self.Instances[self.path] = self

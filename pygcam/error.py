@@ -36,7 +36,6 @@ class ConfigFileError(FileFormatError):
     """
     pass
 
-
 class CommandlineError(Exception):
     """
     Command-line arguments were missing or incorrectly specified.
