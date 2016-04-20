@@ -45,7 +45,7 @@ def main():
 
     # This parser handles only the "batch" flag, which means we
     # need to create a script and call the GCAM.BatchCommand on it.
-    parser = argparse.ArgumentParser(prog=PROGRAM)
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
     parser.add_argument('-b', '--batch', action='store_true')
 
     ns, otherArgs = parser.parse_known_args()
