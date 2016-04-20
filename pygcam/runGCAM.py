@@ -11,7 +11,7 @@ import subprocess
 import platform
 import shutil
 from lxml import etree as ET
-from .error import ConfigFileError, ProgramExecutionError
+from .error import ProgramExecutionError
 from .utils import mkdirs
 from .config import getParam, getParamAsBoolean
 from .log import getLogger
