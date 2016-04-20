@@ -760,28 +760,69 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    def setSolutionTolerance(self, tolerance, solverFile='cal_broyden_config.xml'):
+    def setupSolver(self, solutionTolerance=None, broydenTolerance=None,
+                    maxModelCalcs=None, maxIterations=None):
         """
-        Set the model solution tolerance to the given value.
+        Set the model solution tolerance to the given values for the solver
+        "driver" (`solutionTolerance`) and, optionally for the Broyden component
+        (`broydenTolerance`).
 
-        :param tolerance: (coercible to float) the value to set
-        :param solverFile: (str) the filename of the chosen solver file from
-          the GCAM "solution" directory.
+        :param solutionTolerance: (coercible to float, > 0.0) the value to set for the driver tolerance
+        :param broydenTolerance: (coercible to float, > 0.0) the value to set for the Broyden component
+            tolerance. (If both are provided, the function requires that
+            componentTolerance <= driverTolerance.)
+        :param maxModelCalcs: (coercible to int, > 0) maximum number of calculations to run in the driver
+        :param maxIterations: (coercible to int, > 0) maximum number of iterations to allow in the
+            Broyden component
         :return: none
         """
-        _logger.info("Set solution tolerance to %s" % tolerance)
-        coercible(tolerance, float)
+        def coercibleAndPositive(name, value, requiredType):
+            if value is None:
+                return None
 
-        pathRel, pathAbs = self.getLocalCopy(pathjoin(self.solution_prefix_rel, solverFile))
+            value = coercible(value, requiredType)
+            if value <= 0:
+                raise SetupException(name + ' must be greater than zero')
 
-        xmlEdit(pathAbs,
-                '-u', "//scenario/user-configurable-solver/solution-tolerance",
-                '-v', str(tolerance))
+            _logger.info("Set %s to %s", name, value)
+            return value
 
-        self.updateScenarioComponent("solver", pathRel)
+        solutionTol = coercibleAndPositive('Driver solution tolerance', solutionTolerance, float)
+        broydenTol  = coercibleAndPositive('Broyden component tolerance', broydenTolerance, float)
 
-        # This seems to no longer exist
-        # self.updateConfigComponent('Doubles', 'SolutionTolerance', value)
+        if solutionTol and broydenTol:
+            if broydenTol > solutionTol:
+                raise SetupException('Broyden component tolerance cannot be greater than driver solution tolerance')
+
+        maxModelCalcs = coercibleAndPositive('maxModelCalcs', maxModelCalcs, int)
+        maxIterations = coercibleAndPositive('maxIterations', maxIterations, int)
+
+        solverFile = 'cal_broyden_config.xml'
+        solverFileRel, solverFileAbs = self.getLocalCopy(pathjoin(self.solution_prefix_rel, solverFile))
+
+        prefix = "//scenario/user-configurable-solver[@year>=2010]/"
+        args = [solverFileAbs]
+
+        if solutionTolerance:
+            args += ['-u', prefix + 'solution-tolerance',
+                     '-v', str(solutionTolerance)]
+
+        if broydenTolerance:
+            args += ['-u', prefix + 'broyden-solver-component/ftol',
+                     '-v', str(broydenTolerance)]
+
+        if maxModelCalcs:
+            args += ['-u', prefix + 'max-model-calcs',
+                     '-v', str(maxModelCalcs)]
+
+        if maxIterations:
+            args += ['-u', prefix + 'broyden-solver-component/max-iterations',
+                     '-v', str(maxIterations)]
+
+        xmlEdit(*args)
+
+        self.updateScenarioComponent("solver", solverFileRel)
+
 
     def dropLandProtection(self):
         self.delScenarioComponent("protected_land_input_2")
