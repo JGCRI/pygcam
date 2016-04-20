@@ -49,12 +49,14 @@ def _writeScript(args):
     tmpDir = getParam('GCAM.UserTempDir')
     mkdirs(tmpDir)
 
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir)
+    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=False)
     _logger.info("Creating batch script '%s'", scriptFile)
 
     with open(scriptFile, 'w') as f:
         shellArgs = map(pipes.quote, args)
-        f.write("#!/bin/bash\ngcamtool.py %s\n" % ' '.join(shellArgs))
+        f.write("#!/bin/bash\n")
+        f.write("rm -f %s" % pipes.quote(scriptFile))       # file removes itself
+        f.write("gcamtool.py %s\n" % ' '.join(shellArgs))
 
     os.chmod(scriptFile, 0755)
     return scriptFile
@@ -250,10 +252,9 @@ class GcamTool(object):
         import platform
 
         system = platform.system()
-        if False and system in ['Windows', 'Darwin']:
-            if system == 'Darwin':
-                system = 'Mac OS X'
-            raise CommandlineError('Batch commands are not supported on this operating system (%s)' % system)
+        if system in ['Windows', 'Darwin']:
+            system = 'Mac OS X' if system == 'Darwin' else system
+            raise CommandlineError('Batch commands are not supported on %s' % system)
 
         scriptFile = _writeScript(shellArgs)
 

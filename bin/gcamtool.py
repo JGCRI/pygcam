@@ -47,8 +47,12 @@ def main():
     # need to create a script and call the GCAM.BatchCommand on it.
     parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
     parser.add_argument('-b', '--batch', action='store_true')
+    parser.add_argument('-B', '--noBatch', action="store_true")
 
     ns, otherArgs = parser.parse_known_args()
+
+    if ns.noBatch:          # --noBatch (don't run batch command) implies --batch
+        ns.batch = True
 
     # Catch these to allow cleanup of TempFile instances, e.g., on ^C
     for sig in SignalsToCatch:
