@@ -41,7 +41,7 @@ BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
 def _writeScript(args):
     """
     Create a shell script in a temporary file which calls gcamtool.py
-    with the give `args`. Uses
+    with the given `args`.
     :param args: (list of str) arguments to gcamtool.py to write into
         a script to be executed as a batch job
     :return: (str) the pathname of the script
@@ -55,7 +55,7 @@ def _writeScript(args):
     with open(scriptFile, 'w') as f:
         shellArgs = map(pipes.quote, args)
         f.write("#!/bin/bash\n")
-        f.write("rm -f %s" % pipes.quote(scriptFile))       # file removes itself
+        f.write("rm -f %s\n" % pipes.quote(scriptFile))       # file removes itself
         f.write("gcamtool.py %s\n" % ' '.join(shellArgs))
 
     os.chmod(scriptFile, 0755)

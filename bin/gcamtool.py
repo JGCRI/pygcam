@@ -53,6 +53,7 @@ def main():
 
     if ns.noBatch:          # --noBatch (don't run batch command) implies --batch
         ns.batch = True
+        otherArgs += '--noBatch'    # restore this so runBatch sees it
 
     # Catch these to allow cleanup of TempFile instances, e.g., on ^C
     for sig in SignalsToCatch:
