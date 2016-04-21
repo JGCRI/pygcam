@@ -12,6 +12,7 @@ import os
 import argparse
 import pipes
 import subprocess
+import time
 from glob import glob
 from .utils import loadModuleFromPath, getTempFile, mkdirs
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
@@ -62,6 +63,35 @@ def _writeScript(args, delete=False):
     os.chmod(scriptFile, 0755)
     return scriptFile
 
+# def _randomSleep(minSleep, maxSleep):
+#     '''
+#     Sleep for a random number of seconds between minSleep and maxSleep.
+#     '''
+#     import random
+#     import time
+#
+#     delay = minSleep + random.random() * (maxSleep - minSleep)
+#     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
+#     time.sleep(delay)
+#
+# def _waitForScript(scriptFile):
+#     """
+#     It can take a few moments for the script to be visible on a compute node.
+#     """
+#     maxTries = 4
+#     minSleep = 1
+#     maxSleep = 4
+#
+#     exists = False
+#     for i in range(maxTries):
+#         if os.path.exists(scriptFile):
+#             exists = True
+#             break
+#
+#         _randomSleep(minSleep, maxSleep)
+#
+#     if not exists:
+#         raise PygcamException("Failed to read args file after %d tries" % maxTries)
 
 # From https://gist.github.com/sampsyo/471779
 class AliasedSubParsersAction(argparse._SubParsersAction):
@@ -287,6 +317,7 @@ class GcamTool(object):
             return
 
         _logger.info('Running: %s', command)
+        time.sleep(3)   # script file isn't visible immediately on compute nodes...
         try:
             exitCode = subprocess.call(command)
             if exitCode != 0:
