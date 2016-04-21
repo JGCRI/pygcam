@@ -248,7 +248,7 @@ class GcamTool(object):
         obj = self.getPlugin(args.subcommand)
         obj.run(args, self)
 
-    def runBatch(self, shellArgs):
+    def runBatch(self, shellArgs, run=True):
         import platform
 
         system = platform.system()
@@ -256,7 +256,7 @@ class GcamTool(object):
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
-        scriptFile = _writeScript(shellArgs)
+        scriptFile = _writeScript(shellArgs, delete=not run)    # delete it if just showing cmd
 
         args = self.parser.parse_args(args=shellArgs)
         jobName   = args.jobName
@@ -281,7 +281,7 @@ class GcamTool(object):
         except KeyError as e:
             raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 
-        if args.noBatch:
+        if not run:
             print command
             return
 

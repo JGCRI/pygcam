@@ -53,7 +53,6 @@ def main():
 
     if ns.noBatch:          # --noBatch (don't run batch command) implies --batch
         ns.batch = True
-        otherArgs = ['--noBatch'] + otherArgs    # restore this so runBatch sees it
 
     # Catch these to allow cleanup of TempFile instances, e.g., on ^C
     for sig in SignalsToCatch:
@@ -61,7 +60,8 @@ def main():
 
     try:
         if ns.batch:
-            tool.runBatch(otherArgs)
+            run = not ns.noBatch
+            tool.runBatch(otherArgs, run=run)
         else:
             args = tool.parser.parse_args(args=otherArgs)
             tool.run(args=args)
