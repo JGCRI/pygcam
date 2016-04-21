@@ -318,10 +318,8 @@ class GcamTool(object):
             return
 
         _logger.info('Running: %s', command)
-        _waitForScript(scriptFile)
-
         try:
-            exitCode = subprocess.call(command)
+            exitCode = subprocess.call(command, shell=True)
             if exitCode != 0:
                 raise ProgramExecutionError("Non-zero exit status (%d) from '%s'" % (exitCode, command))
 
