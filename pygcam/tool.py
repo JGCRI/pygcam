@@ -38,18 +38,19 @@ BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
                       GcamCommand, ProjectCommand, ProtectLandCommand,
                       QueryCommand, SetupCommand, WorkspaceCommand]
 
-def _writeScript(args):
+def _writeScript(args, delete=False):
     """
     Create a shell script in a temporary file which calls gcamtool.py
     with the given `args`.
     :param args: (list of str) arguments to gcamtool.py to write into
         a script to be executed as a batch job
+    :param delete: (bool) if True, mark the tmp file for deletion.
     :return: (str) the pathname of the script
     """
     tmpDir = getParam('GCAM.UserTempDir')
     mkdirs(tmpDir)
 
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=False)
+    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
     _logger.info("Creating batch script '%s'", scriptFile)
 
     with open(scriptFile, 'w') as f:
