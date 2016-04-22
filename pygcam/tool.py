@@ -324,7 +324,7 @@ class GcamTool(object):
         try:
             exitCode = subprocess.call(command, shell=True)
             if exitCode != 0:
-                raise ProgramExecutionError("Non-zero exit status (%d) from '%s'" % (exitCode, command))
+                raise ProgramExecutionError(command, exitCode)
 
         except Exception as e:
             raise PygcamException("Error running command '%s': %s" % (command, e))
