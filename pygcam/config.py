@@ -283,15 +283,15 @@ class ConfigCommand(SubcommandABC):
                             help='''Indicates to operate on the DEFAULT
                                     section rather than the project section.''')
 
-        parser.add_argument('variable', nargs='?', default=None,
-                            help='''Show the value of a single configuration variable.
-                            The argument must be a variable name.''')
-
-        parser.add_argument('-f', '--find',
+        parser.add_argument('name', nargs='?', default='',
                             help='''Show the names and values of all parameters whose
-                            name contains the given string. The match is case-insensitive.
-                            If '-f' is used, any variable named in the positional argument
-                            is ignored.''')
+                            name contains the given value. The match is case-insensitive.
+                            If not specified, all variable values are shown.''')
+
+        parser.add_argument('-x', '--exact', action='store_true',
+                            help='''Treat the text not as a substring to match, but
+                            as the name of a specific variable. Match is case-sensitive.
+                            Prints only the value.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
 
@@ -303,23 +303,19 @@ class ConfigCommand(SubcommandABC):
         if section != 'DEFAULT' and not _ConfigParser.has_section(section):
             raise CommandlineError("Unknown configuration file section '%s'" % section)
 
-        def printVar(name, value):
-            print "%22s = %s" % (name, value)
-
-        if args.find:
-            pattern = re.compile('.*' + args.find + '.*', re.IGNORECASE)
-            for name, value in sorted(_ConfigParser.items(section)):
-                if pattern.match(name):
-                    printVar(name, value)
-
-        elif args.variable:
-            value = getParam(args.variable, section=section)
+        if args.name and args.exact:
+            value = getParam(args.name, section=section)
             if value is not None:
                 print value
+            return
 
-        else:
-            print "[%s]" % section
-            for name, value in sorted(_ConfigParser.items(section)):
-                printVar(name, value)
+        # if no name is given, the pattern matches all variables
+        pattern = re.compile('.*' + args.name + '.*', re.IGNORECASE)
+
+        print "[%s]" % section
+        for name, value in sorted(_ConfigParser.items(section)):
+            if pattern.match(name):
+                print "%22s = %s" % (name, value)
+
 
 PluginClass = ConfigCommand
