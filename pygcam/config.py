@@ -7,6 +7,7 @@
 import os
 import io
 import platform
+import re
 from ConfigParser import SafeConfigParser
 from .error import ConfigFileError, PygcamException, CommandlineError
 from .subcommand import SubcommandABC
@@ -286,6 +287,12 @@ class ConfigCommand(SubcommandABC):
                             help='''Show the value of a single configuration variable.
                             The argument must be a variable name.''')
 
+        parser.add_argument('-f', '--find',
+                            help='''Show the names and values of all parameters whose
+                            name contains the given string. The match is case-insensitive.
+                            If '-f' is used, any variable named in the positional argument
+                            is ignored.''')
+
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
 
         return parser
@@ -293,17 +300,26 @@ class ConfigCommand(SubcommandABC):
     def run(self, args, tool):
         section = 'DEFAULT' if args.useDefault else args.configSection
 
-        if args.variable:
+        if section != 'DEFAULT' and not _ConfigParser.has_section(section):
+            raise CommandlineError("Unknown configuration file section '%s'" % section)
+
+        def printVar(name, value):
+            print "%22s = %s" % (name, value)
+
+        if args.find:
+            pattern = re.compile('.*' + args.find + '.*', re.IGNORECASE)
+            for name, value in sorted(_ConfigParser.items(section)):
+                if pattern.match(name):
+                    printVar(name, value)
+
+        elif args.variable:
             value = getParam(args.variable, section=section)
             if value is not None:
                 print value
-        else:
-            if section == 'DEFAULT' or _ConfigParser.has_section(section):
-                print "[%s]" % section
-                for var, value in sorted(_ConfigParser.items(section)):
-                    print "%22s = %s" % (var, value)
-            else:
-                raise CommandlineError("Unknown configuration file section '%s'" % section)
 
+        else:
+            print "[%s]" % section
+            for name, value in sorted(_ConfigParser.items(section)):
+                printVar(name, value)
 
 PluginClass = ConfigCommand
