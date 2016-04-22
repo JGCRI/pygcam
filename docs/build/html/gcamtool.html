@@ -528,12 +528,32 @@ usage: gcamtool.py chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT]
 </dl>
 </dd>
 <dt><strong>config</strong></dt>
-<dd><p class="first">List the contents of the ~/.pygcam configuration file or
-                              the value of a single parameter.</p>
+<dd><p class="first" id="config-label">The config command list the values of configuration variables from ~/.pygcam.cfg.
+With no arguments, it displays the values of all variables for the default project.
+Use the <code class="docutils literal"><span class="pre">-d</span></code> flag to show only values from the <code class="docutils literal"><span class="pre">[DEFAULT]</span></code> section.</p>
+<p>If an argument <code class="docutils literal"><span class="pre">name</span></code> is provided, it is treated as a substring pattern, unless the
+<code class="docutils literal"><span class="pre">-x</span></code> flag is given (see below). All configuration variables containing the give name
+are displayed with their values. The match is case-insensitive.</p>
+<p>If the <code class="docutils literal"><span class="pre">-x</span></code> or <code class="docutils literal"><span class="pre">--exact</span></code> flag is specified, the argument is treated as an exact
+variable name (case-sensitive) and only the value is printed. This is useful mainly
+for scripting. For general use the substring matching is more convenient.</p>
 <pre class="literal-block">
-usage: gcamtool.py config [-h] [-d] [-v VARIABLE] [--version]
+usage: gcamtool.py config [-h] [-d] [-x] [--version] [name]
 </pre>
 <dl class="last docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>name</kbd></td>
+<td>Show the names and values of all parameters whose
+                            name contains the given value. The match is case-insensitive.
+                            If not specified, all variable values are shown.</td></tr>
+</tbody>
+</table>
+</dd>
 <dt>Options:</dt>
 <dd><table class="first last docutils option-list" frame="void" rules="none">
 <col class="option" />
@@ -544,10 +564,12 @@ usage: gcamtool.py config [-h] [-d] [-v VARIABLE] [--version]
 </tr>
 <tr><td>&nbsp;</td><td>Indicates to operate on the DEFAULT
                                     section rather than the project section.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-v</span>, <span class="option">--variable</span></kbd></td>
-<td>Show the value of a single configuration variable.
-                            The argument must be a variable name.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x=False</span>, <span class="option">--exact=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Treat the text not as a substring to match, but
+                            as the name of a specific variable. Match is case-sensitive.
+                            Prints only the value.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>

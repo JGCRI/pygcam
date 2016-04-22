@@ -509,12 +509,13 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 
 <span class="na">GCAM.QueuePBS</span> <span class="o">=</span> <span class="s">qsub -q {queueName} -N {jobName} -l walltime={walltime} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s</span>
 
-<span class="c1"># --signal=USR1@15 =&gt; send SIGUSR1 15s before walltime expires</span>
+<span class="c1"># N.B. --signal=USR1@15 =&gt; send SIGUSR1 15s before walltime expires</span>
+<span class="c1">#</span>
 <span class="c1">#GCAM.QueueSLURM = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \</span>
 <span class="c1">#  -D {exeDir} --get-user-env=10L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \</span>
 <span class="c1">#  --export=QUEUE_GCAM_CONFIG_FILE=&#39;{configs}&#39;,QUEUE_GCAM_WORKSPACE=&#39;{workspace}&#39;,QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}</span>
 
-<span class="na">GCAM.QueueSLURM</span> <span class="o">=</span> <span class="s">sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} --get-user-env=10L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s</span>
+<span class="na">GCAM.QueueSLURM</span> <span class="o">=</span> <span class="s">sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} --get-user-env=10L -s %(GCAM.OtherBatchArgs)s</span>
 
 <span class="c1"># Arbitrary arguments to add to the selected batch command</span>
 <span class="na">GCAM.OtherBatchArgs</span> <span class="o">=</span>

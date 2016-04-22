@@ -162,6 +162,23 @@ Usage
       indicated by using the '-S' ('--sumYears') option. Numerous options allow the appearance to
       be customized.
 
+
+   config : @replace
+      .. _config-label:
+
+      The config command list the values of configuration variables from ~/.pygcam.cfg.
+      With no arguments, it displays the values of all variables for the default project.
+      Use the ``-d`` flag to show only values from the ``[DEFAULT]`` section.
+
+      If an argument ``name`` is provided, it is treated as a substring pattern, unless the
+      ``-x`` flag is given (see below). All configuration variables containing the give name
+      are displayed with their values. The match is case-insensitive.
+
+      If the ``-x`` or ``--exact`` flag is specified, the argument is treated as an exact
+      variable name (case-sensitive) and only the value is printed. This is useful mainly
+      for scripting. For general use the substring matching is more convenient.
+
+
    diff : @replace
       .. _diff-label:
 

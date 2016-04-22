@@ -270,11 +270,11 @@ def getParamAsFloat(name, section=None):
 
 
 class ConfigCommand(SubcommandABC):
-    VERSION = '0.1'
+    VERSION = '0.2'
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '''List the contents of the ~/.pygcam configuration file or
-                              the value of a single parameter.'''}
+        kwargs = {'help' : '''List the values of configuration variables from
+                  ~/.pygcam.cfg configuration file.'''}
 
         super(ConfigCommand, self).__init__('config', subparsers, kwargs)
 
