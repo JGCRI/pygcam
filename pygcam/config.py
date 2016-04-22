@@ -272,8 +272,7 @@ class ConfigCommand(SubcommandABC):
     VERSION = '0.1'
 
     def __init__(self, subparsers):
-        kwargs = {#'aliases' : ['conf'],
-                  'help' : '''List the contents of the ~/.pygcam configuration file or
+        kwargs = {'help' : '''List the contents of the ~/.pygcam configuration file or
                               the value of a single parameter.'''}
 
         super(ConfigCommand, self).__init__('config', subparsers, kwargs)
@@ -283,7 +282,7 @@ class ConfigCommand(SubcommandABC):
                             help='''Indicates to operate on the DEFAULT
                                     section rather than the project section.''')
 
-        parser.add_argument('-v', '--variable',
+        parser.add_argument('variable', nargs='?', default=None,
                             help='''Show the value of a single configuration variable.
                             The argument must be a variable name.''')
 
