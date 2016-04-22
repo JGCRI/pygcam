@@ -18,9 +18,7 @@ class SetupCommand(SubcommandABC):
     __version__ = '0.1'
 
     def __init__(self, subparsers):
-        kwargs = {'help': '''Setup a scenario by creating modified XML input files.''',
-                  'description': '''Automates modification to copies of GCAM's input XML files,
-                   and construction of a corresponding configuration XML file.'''}
+        kwargs = {'help': '''Setup a scenario by creating modified XML input files.'''}
 
         super(SetupCommand, self).__init__('setup', subparsers, kwargs)
 

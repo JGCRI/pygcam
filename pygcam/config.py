@@ -272,7 +272,7 @@ class ConfigCommand(SubcommandABC):
     VERSION = '0.1'
 
     def __init__(self, subparsers):
-        kwargs = {'aliases' : ['conf'],
+        kwargs = {#'aliases' : ['conf'],
                   'help' : '''List the contents of the ~/.pygcam configuration file or
                               the value of a single parameter.'''}
 

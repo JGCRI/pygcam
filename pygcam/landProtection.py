@@ -362,12 +362,9 @@ def driver(args):
 
 class ProtectLandCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'aliases' : ['pro'],
+        kwargs = {#'aliases' : ['pro'],
                  'help': '''Generate versions of GCAM's land_input XML files that protect a
-                 given fraction of land of the given land types in the given regions. The script can
-                 be run multiple times on the same file to apply different percentage protection to
-                 distinct regions or land classes. The script detects if you attempt to protect
-                 already-protected land class and region combinations, as this fails in GCAM.'''}
+                 given fraction of land of the given land types in the given regions.'''}
 
         super(ProtectLandCommand, self).__init__('protect', subparsers, kwargs)
 

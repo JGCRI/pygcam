@@ -1,7 +1,7 @@
 __author__ = 'rjp'
 
 from .chart import ChartCommand
-from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
+from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
 from .error import PygcamException, SetupException, CommandlineError, ConfigFileError
 from .project import ProjectCommand
 from .landProtection import ProtectLandCommand

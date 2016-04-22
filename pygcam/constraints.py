@@ -383,13 +383,12 @@ def genDeltaConstraints(**kwargs):
 #     genDeltaConstraints(**vars(args))
 
 
-class GenConstraintsCommand(SubcommandABC):
+class BioConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'aliases' : ['bio'],
-                  'help' : '''Bioenergy constraint generator''',
-                  'description' : '''Longer description for sub-command'''}
+        kwargs = {#'aliases' : ['bio'],
+                  'help' : '''Bioenergy constraint generator'''}
 
-        super(GenConstraintsCommand, self).__init__('bioConstraint', subparsers, kwargs)
+        super(BioConstraintsCommand, self).__init__('bioConstraint', subparsers, kwargs)
 
     def addArgs(self, parser):
         parser.add_argument('-b', '--baseline', default=None,
@@ -456,10 +455,9 @@ DefaultTag   = 'cell-etoh'
 
 class DeltaConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'aliases' : ['delta'],
+        kwargs = {#'aliases' : ['delta'],
                   'help' : '''Specify incremental values to add to the production of a given fuel,
-                              by year, and generate the corresponding constraint file.''',
-                  'description' : '''Longer description for sub-command'''}
+                              by year, and generate the corresponding constraint file.'''}
 
         super(DeltaConstraintsCommand, self).__init__('deltaConstraint', subparsers, kwargs)
 

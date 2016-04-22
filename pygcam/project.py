@@ -533,14 +533,9 @@ def driver(args, tool):
 
 class ProjectCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'aliases' : ['run'],
-                  'help' : '''Run the steps for a project defined in a project.xml file''',
-                  'description' : '''This sub-command reads a single XML input file
-                        that defines one or more projects, one or more groups of scenarios, one
-                        or more scenarios, and one or more workflow steps. The workflow steps
-                        for the chosen project and scenario(s) are run in the order defined.'''}
-
-        super(ProjectCommand, self).__init__('runProj', subparsers, kwargs)
+        kwargs = {#'aliases' : ['run'],
+                  'help' : '''Run the steps for a project defined in a project.xml file'''}
+        super(ProjectCommand, self).__init__('run', subparsers, kwargs)
 
     def addArgs(self, parser):
 

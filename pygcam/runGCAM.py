@@ -163,33 +163,31 @@ def runGCAM(args):
 
 class GcamCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Run the GCAM executable''',
-                  'description' : 'Run GCAM for the indicated configFile, scenario, or workspace'}
-
+        kwargs = {'help' : '''Run GCAM for the indicated configFile, scenario, or workspace.'''}
         super(GcamCommand, self).__init__('gcam', subparsers, kwargs)
 
     def addArgs(self, parser):
         parser.add_argument('-C', '--configFile',
                             help='''Specify the one or more GCAM configuration filenames, separated commas.
-                                    If multiple configuration files are given, the are run in succession in
-                                    the same "job" on the cluster.
-                                    N.B. This argument is ignored if scenarios are named via the -s flag.''')
+                            If multiple configuration files are given, the are run in succession in the
+                            same "job" on the cluster.  N.B. This argument is ignored if scenarios are named
+                            via the -s flag.''')
 
         parser.add_argument('-s', '--scenario', default='',
-                            help='''Specify the scenario(s) to run. Can be a comma-delimited list of scenario names.
-                                    The scenarios will be run serially in a single batch job, with an allocated
-                                    time = GCAM.Minutes * {the number of scenarios}.''')
+                            help='''Specify the scenario(s) to run. Can be a comma-delimited list of scenario
+                            names. The scenarios will be run serially in a single batch job, with an allocated
+                            time = GCAM.Minutes * {the number of scenarios}.''')
 
         parser.add_argument('-S', '--scenariosDir', default='',
-                            help='''Specify the directory holding scenarios. Default is the value of config file param
-                            GCAM.ScenariosDir, if set, otherwise ".".''')
+                            help='''Specify the directory holding scenarios. Default is the value of config file
+                            param GCAM.ScenariosDir, if set, otherwise "." (i.e., the current directory).''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-w', '--workspace',
-                            help='''Specify the path to the GCAM workspace to use. If it doesn't exist, the named workspace
-                                    will be created. If not specified on the command-line, the value of config file parameter
-                                    GCAM.Workspace is used, i.e., the "standard" workspace.''')
+                            help='''Specify the path to the GCAM workspace to use. If it doesn't exist, the named
+                            workspace will be created. If not specified on the command-line, the value of config
+                            file parameter GCAM.Workspace is used, i.e., the "standard" workspace.''')
         return parser
 
     def run(self, args, tool):

@@ -18,7 +18,7 @@ from .utils import loadModuleFromPath, getTempFile, mkdirs
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .chart import ChartCommand
 from .config import ConfigCommand, setSection
-from .constraints import GenConstraintsCommand, DeltaConstraintsCommand
+from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
 from .project import ProjectCommand
 from .landProtection import ProtectLandCommand
@@ -35,9 +35,9 @@ PROGRAM = 'gcamtool'
 __version__ = '0.1'
 
 BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
-                      DeltaConstraintsCommand, GenConstraintsCommand,
-                      GcamCommand, ProjectCommand, ProtectLandCommand,
-                      QueryCommand, SetupCommand, WorkspaceCommand]
+                      GcamCommand, ProtectLandCommand, QueryCommand,
+                      ProjectCommand, SetupCommand, WorkspaceCommand,
+                      BioConstraintsCommand, DeltaConstraintsCommand]
 
 def _writeScript(args, delete=False):
     """
@@ -95,40 +95,43 @@ def _waitForScript(scriptFile):
         raise PygcamException("Failed to read args file after %d tries" % maxTries)
 
 # From https://gist.github.com/sampsyo/471779
-class AliasedSubParsersAction(argparse._SubParsersAction):
-    """
-    Adds an "aliases" keyword when adding subparsers, allowing
-    sub-command aliases.
-    """
-    class _AliasedPseudoAction(argparse.Action):
-        def __init__(self, name, aliases, help):
-            dest = name
-            if aliases:
-                dest += ' (%s)' % ','.join(aliases)
-            sup = super(AliasedSubParsersAction._AliasedPseudoAction, self)
-            sup.__init__(option_strings=[], dest=dest, help=help)
-
-    def add_parser(self, name, **kwargs):
-        if 'aliases' in kwargs:
-            aliases = kwargs['aliases']
-            del kwargs['aliases']
-        else:
-            aliases = []
-
-        parser = super(AliasedSubParsersAction, self).add_parser(name, **kwargs)
-
-        # Make the aliases work.
-        for alias in aliases:
-            self._name_parser_map[alias] = parser
-        # Make the help text reflect them, first removing old help entry.
-        if 'help' in kwargs:
-            help = kwargs.pop('help')
-            self._choices_actions.pop()
-            pseudo_action = self._AliasedPseudoAction(name, aliases, help)
-            self._choices_actions.append(pseudo_action)
-
-        parser.aliases = aliases    # save these so we can find the plugin, too
-        return parser
+#
+# Messed up the sphinx docs, so abandoned this for now
+#
+# class AliasedSubParsersAction(argparse._SubParsersAction):
+#     """
+#     Adds an "aliases" keyword when adding subparsers, allowing
+#     sub-command aliases.
+#     """
+#     class _AliasedPseudoAction(argparse.Action):
+#         def __init__(self, name, aliases, help):
+#             dest = name
+#             if aliases:
+#                 dest += ' (%s)' % ','.join(aliases)
+#             sup = super(AliasedSubParsersAction._AliasedPseudoAction, self)
+#             sup.__init__(option_strings=[], dest=dest, help=help)
+#
+#     def add_parser(self, name, **kwargs):
+#         if 'aliases' in kwargs:
+#             aliases = kwargs['aliases']
+#             del kwargs['aliases']
+#         else:
+#             aliases = []
+#
+#         parser = super(AliasedSubParsersAction, self).add_parser(name, **kwargs)
+#
+#         # Make the aliases work.
+#         for alias in aliases:
+#             self._name_parser_map[alias] = parser
+#         # Make the help text reflect them, first removing old help entry.
+#         if 'help' in kwargs:
+#             help = kwargs.pop('help')
+#             self._choices_actions.pop()
+#             pseudo_action = self._AliasedPseudoAction(name, aliases, help)
+#             self._choices_actions.append(pseudo_action)
+#
+#         parser.aliases = aliases    # save these so we can find the plugin, too
+#         return parser
 
 
 class GcamTool(object):
@@ -142,12 +145,12 @@ class GcamTool(object):
     @classmethod
     def addPlugin(cls, plugin):
         cls._plugins[plugin.name] = plugin
-        for alias in plugin.parser.aliases:
-            cls._plugins[alias] = plugin
+        # for alias in plugin.parser.aliases:
+        #     cls._plugins[alias] = plugin
 
     def __init__(self, loadPlugins=True):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
-        self.parser.register('action', 'parsers', AliasedSubParsersAction)
+        #self.parser.register('action', 'parsers', AliasedSubParsersAction)
 
         parser.add_argument('-b', '--batch', action='store_true',
                             help='''Run the commands by submitting a batch job using the command
