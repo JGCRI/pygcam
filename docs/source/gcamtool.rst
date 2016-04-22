@@ -178,6 +178,27 @@ Usage
       variable name (case-sensitive) and only the value is printed. This is useful mainly
       for scripting. For general use the substring matching is more convenient.
 
+      Examples:
+
+      .. code-block:: bash
+
+         $ gcamtool.py config project
+         [MyProject]
+         GCAM.DefaultProject = MyProject
+         GCAM.ProjectRoot = /Users/rjp/bitbucket/myProject
+         GCAM.ProjectXmlFile = /Users/rjp/bitbucket/myProject/etc/project.xml
+
+         $ gcamtool.py config -x GCAM.DefaultProject
+         MyProject
+
+         $ gcamtool.py config sand
+        [MyProject]
+              GCAM.SandboxRoot = /Users/rjp/ws/myProject
+
+         $ gcamtool.py config sand -d
+         [DEFAULT]
+              GCAM.SandboxRoot = /Users/rjp/ws
+
 
    diff : @replace
       .. _diff-label:

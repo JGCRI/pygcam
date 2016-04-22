@@ -537,6 +537,25 @@ are displayed with their values. The match is case-insensitive.</p>
 <p>If the <code class="docutils literal"><span class="pre">-x</span></code> or <code class="docutils literal"><span class="pre">--exact</span></code> flag is specified, the argument is treated as an exact
 variable name (case-sensitive) and only the value is printed. This is useful mainly
 for scripting. For general use the substring matching is more convenient.</p>
+<p>Examples:</p>
+<div class="highlight-bash"><div class="highlight"><pre> $ gcamtool.py config project
+ <span class="o">[</span>MyProject<span class="o">]</span>
+ GCAM.DefaultProject <span class="o">=</span> MyProject
+ GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket/myProject
+ GCAM.ProjectXmlFile <span class="o">=</span> /Users/rjp/bitbucket/myProject/etc/project.xml
+
+ $ gcamtool.py config -x GCAM.DefaultProject
+ MyProject
+
+ $ gcamtool.py config sand
+<span class="o">[</span>MyProject<span class="o">]</span>
+      GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws/myProject
+
+ $ gcamtool.py config sand -d
+ <span class="o">[</span>DEFAULT<span class="o">]</span>
+      GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws
+</pre></div>
+</div>
 <pre class="literal-block">
 usage: gcamtool.py config [-h] [-d] [-x] [--version] [name]
 </pre>
