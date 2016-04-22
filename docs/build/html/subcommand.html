@@ -95,7 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html"><code class="docutils literal"><span class="pre">pygcam</span></code> Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -170,33 +170,33 @@ configuration file.</p>
 <span class="kn">from</span> <span class="nn">pygcam.log</span> <span class="kn">import</span> <span class="n">getLogger</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
-<span class="n">VERSION</span> <span class="o">=</span> <span class="s2">&quot;0.0&quot;</span>
+<span class="n">VERSION</span> <span class="o">=</span> <span class="s">&quot;0.0&quot;</span>
 
 <span class="k">class</span> <span class="nc">MyNewCommand</span><span class="p">(</span><span class="n">SubcommandABC</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">):</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;help&#39;</span> <span class="p">:</span> <span class="s1">&#39;&#39;&#39;Short help text for main driver&#39;&#39;&#39;</span><span class="p">,</span>
-                  <span class="s1">&#39;description&#39;</span> <span class="p">:</span> <span class="s1">&#39;&#39;&#39;Longer description for sub-command&#39;&#39;&#39;</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;help&#39;</span> <span class="p">:</span> <span class="s">&#39;&#39;&#39;Short help text for main driver&#39;&#39;&#39;</span><span class="p">,</span>
+                  <span class="s">&#39;description&#39;</span> <span class="p">:</span> <span class="s">&#39;&#39;&#39;Longer description for sub-command&#39;&#39;&#39;</span><span class="p">}</span>
 
-        <span class="c1"># The first argument is the name of the new sub-command</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">MyNewCommand</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="s1">&#39;XXX&#39;</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="c"># The first argument is the name of the new sub-command</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyNewCommand</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="s">&#39;XXX&#39;</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="c1"># process command-line arguments for this sub-command</span>
+    <span class="c"># process command-line arguments for this sub-command</span>
     <span class="k">def</span> <span class="nf">addArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span>
 
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="s1">&#39;--number&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;A number to demonstrate a command line arg&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-n&#39;</span><span class="p">,</span> <span class="s">&#39;--number&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s">&#39;&#39;&#39;A number to demonstrate a command line arg&#39;&#39;&#39;</span><span class="p">)</span>
 
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-V&#39;</span><span class="p">,</span> <span class="s1">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span>
-                            <span class="n">version</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(prog)s</span><span class="s1"> &#39;</span> <span class="o">+</span> <span class="n">VERSION</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-V&#39;</span><span class="p">,</span> <span class="s">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;version&#39;</span><span class="p">,</span>
+                            <span class="n">version</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(prog)s</span><span class="s"> &#39;</span> <span class="o">+</span> <span class="n">VERSION</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">parser</span>
 
-    <span class="c1"># implement the sub-command</span>
+    <span class="c"># implement the sub-command</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">tool</span><span class="p">):</span>
         <span class="k">pass</span>
 
- <span class="c1"># An alternative to naming the class &#39;Plugin&#39; is to assign the class to PluginClass</span>
+ <span class="c"># An alternative to naming the class &#39;Plugin&#39; is to assign the class to PluginClass</span>
  <span class="n">PluginClass</span> <span class="o">=</span> <span class="n">MyNewCommand</span>
 </pre></div>
 </div>

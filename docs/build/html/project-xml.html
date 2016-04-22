@@ -95,7 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html"><code class="docutils literal"><span class="pre">pygcam</span></code> Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -154,7 +154,7 @@
             
   <div class="section" id="project-xml">
 <span id="id1"></span><h1>project.xml<a class="headerlink" href="#project-xml" title="Permalink to this headline">¶</a></h1>
-<p>The runProject sub-command is a workflow management script for GCAM. It
+<p>The <code class="docutils literal"><span class="pre">run</span></code> sub-command is a workflow management script for GCAM. It
 reads a single XML input file that defines one or more projects, one or
 more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
@@ -162,7 +162,7 @@ in the order defined. The script was developed for use with the
 <a class="reference external" href="https://bitbucket.org/plevin/gcam-utils/wiki/Home">gcam-utils</a>
 scripts, however any scripts or programs can be called in workflow
 &#8216;steps&#8217;.</p>
-<p>Command-line usage is describe on the <a class="reference internal" href="gcamtool.html#runproj-label"><em>gcamtool runProj</em></a> page.
+<p>Command-line usage is describe on the <a class="reference internal" href="gcamtool.html#run-label"><em>gcamtool run</em></a> page.
 The <code class="docutils literal"><span class="pre">project.xml</span></code> file elements are described below.</p>
 <div class="section" id="xml-elements">
 <h2>XML elements<a class="headerlink" href="#xml-elements" title="Permalink to this headline">¶</a></h2>
@@ -370,7 +370,7 @@ For example, a step that runs GCAM might look like this:</p>
 </div>
 </div></blockquote>
 <p>Steps can be generalized by using variable definitions, as shown in
-the example above. Several variables are set by the <code class="docutils literal"><span class="pre">runProj</span></code>
+the example above. Several variables are set by the <code class="docutils literal"><span class="pre">run</span></code>
 sub-command at run-time;  these are are described below. The user
 can also define variables, as described in the next section.</p>
 <p>By default all steps are run. If the user specifies steps to run on the
@@ -497,8 +497,8 @@ found at computed location {localXml}/{project}/{scenarioSubdir}</li>
 </div>
 <div class="section" id="automatic-variables">
 <h4>Automatic variables<a class="headerlink" href="#automatic-variables" title="Permalink to this headline">¶</a></h4>
-<p>runProject.py creates several convenience variables at run-time that are
-accessible in the commands for any . These included:</p>
+<p>The <code class="docutils literal"><span class="pre">run</span></code> sub-command creates several convenience variables at run-time
+that are accessible in the commands for any . These included:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">{project}</span></code> : the project name</li>
 <li><code class="docutils literal"><span class="pre">{scenarioGroup}</span></code> : the name of scenario group</li>
@@ -574,11 +574,11 @@ assigned to the given variable name.</p>
 <p>The <code class="docutils literal"><span class="pre">&lt;tmpFile&gt;</span></code> element defines several attributes:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">varName</span></code> (required) which will contain the pathname of the
-temporary file created by runProject.py</li>
+temporary file created by the <code class="docutils literal"><span class="pre">run</span></code> sub-command.</li>
 <li><code class="docutils literal"><span class="pre">dir</span></code> (optional) defines the directory in which to create the temp
 file Default is &#8220;/tmp&#8221;.</li>
 <li><code class="docutils literal"><span class="pre">delete</span></code> indicates whether to delete the temporary file when
-runProject exits. By default, <code class="docutils literal"><span class="pre">delete=&quot;1&quot;</span></code>, i.e., the temp files
+<code class="docutils literal"><span class="pre">run</span></code> exits. By default, <code class="docutils literal"><span class="pre">delete=&quot;1&quot;</span></code>, i.e., the temp files
 are deleted. The value <code class="docutils literal"><span class="pre">delete=&quot;0&quot;</span></code> may be useful for debugging.</li>
 <li><code class="docutils literal"><span class="pre">replace</span></code> indicates whether file contents defined in a project
 should be replace or append to the default value for this file

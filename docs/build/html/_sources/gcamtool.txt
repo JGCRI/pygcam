@@ -2,41 +2,62 @@
 ================
 
 The gcamtool.py script unifies GCAM workflow managment functionality into a
-single script with sub-commands. Most sub-commands are implemented directly
+single script with sub-commands. Generic sub-commands are implemented directly
 by the pygcam library. Project-specific features can be added via
 :ref:`plugins <plugins-label>`.
 
 The sub-commands support all the major workflow setups, including
 
-  * Modifying XML files and configuration.xml to set up a modeling experiment
+  * Modify XML files and configuration.xml to set up a modeling experiment
     (See the :ref:`setup <setup-label>` sub-command and :doc:`setup` for more
     information.)
 
-  * Running GCAM in an automatically-created workspace, allowing multiple
+  * Run GCAM in an automatically-created workspace, allowing multiple
     instances of GCAM to run simultaneously, e.g., on parallel computing systems
     (See the :ref:`gcam <gcam-label>` sub-command.)
 
-  * Executing batch queries against the XML database to extract GCAM results,
+  * Execute batch queries against the XML database to extract GCAM results,
     with on-the-fly regionalization based on a simple region-mapping file.
     (See the :ref:`query <query-label>` sub-command.)
 
-  * Computing differences between policy and baseline scenarios, including
+  * Compute differences between policy and baseline scenarios, including
     linear annualization of values between time-steps, and
     (See the :ref:`diff <diff-label>` sub-command.)
 
-  * Plotting results, with flexible control of figure features including
+  * Plot results, with flexible control of figure features including
     title, axis labels, scale, and so on.
     (See the :ref:`chart <chart-label>` sub-command.)
 
-  * Manage (create, delete, rename, run commands in) automatically-created workspaces.
-    (See the :ref:`ws <ws-label>` sub-command.)
+  * Manage (create, delete, rename, run commands in) automatically-created
+    workspaces. (See the :ref:`ws <ws-label>` sub-command.)
 
-In addition, the `runProj <runProj-label>` sub-command allows workflow steps to be
+In addition, the :ref:`run <run-label>` sub-command allows workflow steps to be
 defined in an XML file so that individual or groups of steps can be executed for one
-or more scenarios. The ``runProj`` sub-command supports direct invocation of other
+or more scenarios. The ``run`` sub-command supports direct invocation of other
 workflow steps as well as running arbitrary programs of the user's choosing.
 
-Command-line usage is described below.
+Finally, gcamtool.py allows all project steps to be run on a compute node in a
+High-Performance Computing environment by specifying '-b' or '--batch'' on the
+command-line. (Note that this is not available on Mac OS X or Windows.)
+
+For example, the command:
+
+.. code-block:: bash
+
+   gcamtool.py -b -P MyProject run -S MyScenario
+
+runs all steps for scenario ``MyScenario`` in the project ``MyProject`` by
+queuing a batch job on the default queue. Arguments to ``gcamtool.py`` allow
+the user to set various resource requirements and to select the queue to use.
+
+The command to run to queue the batch job is taken from the configuration
+file parameter ``GCAM.BatchCommand``. Example batch commands for the SLURM
+and PBS job management systems are provided in variables ``GCAM.QueueSLURM``
+and ``GCAM.QueuePBS``, respectively.
+
+Command-line usage is described below. Note that some command-line
+(e.g., batch-related) options must precede the sub-command, whereas
+sub-command specific options must follow it.
 
 Usage
 -----
@@ -45,8 +66,8 @@ Usage
    :func: _getMainParser
    :prog: gcamtool.py
 
-   runProj : @replace
-      .. _runProj-label:
+   run : @replace
+      .. _run-label:
 
       This sub-command reads instructions from the file :doc:`project-xml`, the
       location of which is taken from the user's :ref:`~/.pygcam.cfg <pygcam-cfg>` file.
@@ -59,34 +80,41 @@ Usage
 
       ::
 
-          runProject.py Foo
+          gcamtool.py -P Foo run
 
       Run all steps for scenario group 'test' for project 'Foo', but only for
       scenarios 'baseline' and 'policy-1':
 
       ::
 
-          runProject Foo -g test -S baseline,policy1
+          gcamtool.py -P Foo run -g test -S baseline,policy1
 
       or, equivalently:
 
       ::
 
-          runProject Foo --group test --scenario baseline --step policy1
+          gcamtool.py -P Foo run --group test --scenario baseline --step policy1
 
       Run only the 'setup' and 'gcam' steps for scenario 'baseline' in the
       default scenario group:
 
       ::
 
-          runProject Foo -s setup,gcam -S baseline,policy-1
+          gcamtool.py -P Foo run -s setup,gcam -S baseline,policy-1
+
+      Same as above, but queue a batch job to run these commands on the queue
+      'short':
+
+      ::
+
+          gcamtool.py -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
 
       Show the commands that would be executed for the above command, but
       don't run them:
 
       ::
 
-          runProject Foo -s setup,gcam -S baseline,policy-1 -n
+          gcamtool.py -P Foo run -s setup,gcam -S baseline,policy-1 -n
 
 
    protect : @replace
@@ -123,37 +151,118 @@ Usage
          gcamtool.py protect -s s1 -S "$HOME/protect.xml" -w "$HOME/ws/workspace1"
 
 
-   chart : @before
+   chart : @replace
       .. _chart-label:
 
+      The ``chart`` sub-command generates plots from GCAM-style ".csv" files.
+      Two types of plots are currently supported: (i) stacked bar plots based on summing values
+      over all years (with optional interpolation of annual values), by the given 'indexCol'
+      (default is 'region'), and (ii) stacked bar plots by year for some data column, where the data
+      are grouped by and summed across elements with the indicated 'indexCol'. The first option is
+      indicated by using the '-S' ('--sumYears') option. Numerous options allow the appearance to
+      be customized.
 
-   diff : @before
+   diff : @replace
       .. _diff-label:
 
+      The ``diff`` sub-command script computes the differences between results from two or
+      more CSV files generated from batch queries run on a GCAM database, saving
+      the results in either a CSV or XLSX file, according to the extension given to
+      the output file. If not provided, the output filename defaults to differences.csv.
 
-   gcam : @before
+      If multiple otherFiles are given (i.e., the referenceFile plus 2 or more other
+      files named on the command-line), the resulting CSV file will contain one difference
+      matrix for each otherFile, with a label indicating which pair of files were used
+      to produce each result.
+
+      When the output file is in XLSX format, each result is
+      written to a separate worksheet. If the -c flag is specified, no differences are
+      computed; rather, the .csv file contents are combined into a single .xlsx file.
+
+   gcam : @replace
       .. _gcam-label:
 
+      The ``gcam`` sub-command runs the GCAM executable on the designated configuration
+      file, scenario, or workspace. Typical use (e.g., from a ``project.xml`` file) would
+      be to run GCAM by referencing a directory named the same as a scenario, holding a
+      file called ``config.xml``, as is generated by the ``setup`` sub-command. (See
+      :doc:`setup`.)
 
-   query : @before
+      If the workspace doesn't exist, it is created based on the reference GCAM workspace,
+      defined by the configuration variable ``GCAM.RefWorkspace``. By default, read-only
+      directories (e.g., input and libs) are symbolically linked from the new workspace to
+      the reference one. Windows users without permission to create symlinks should set the
+      configuration variable ``GCAM.CopyAllFiles`` to ``True``, resulting in copies of the
+      reference files rather than symbolic links. Directories into which GCAM writes results
+      (e.g., output and exe) are created in the new workspace, but read-only files within exe
+      (e.g., the GCAM executable) are symbolically linked (with the same caveat for Windows
+      users.)
+
+      For example:
+
+      .. code-block:: bash
+
+         gcamtool.py gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
+
+      would run the scenario ``MyScenario`` in the newly created sandbox (workspace)
+      ``~/sandboxes/MyProject/MyScenario`` using the configuration file
+      ``~/MyProject/scenarios/MyScenario/config.xml``.
+
+   query : @replace
       .. _query-label:
 
+      Run one or more GCAM database queries by generating and running the
+      named XML queries. The results are placed in a file in the specified
+      output directory with a name composed of the basename of the
+      XML query file plus the scenario name. For example,
 
-   setup : @before
+      .. code-block:: bash
+
+         gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region
+
+      would run the ``liquids-by-region`` query on two scenarios, MyReference and
+      MyPolicyCase. Query results will be stored in the files
+      ``./liquids-by-region-MyReference.csv`` and ``./liquids-by-region-MyPolicyCase.csv``.
+
+      The named queries are located using the value of config variable ``GCAM.QueryPath``,
+      which can be overridden with the ``-Q`` argument. The QueryPath consists of one or
+      more colon-delimited (on Unix) or semicolon-delimited (on Windows) elements that
+      can identify directories or XML files. The elements of QueryPath are searched in
+      order until the named query is found. If a path element is a directory, the filename
+      composed of the query + '.xml' is sought in that directory. If the path element is
+      an XML file, a query with a title matching the query name (first literally, then by
+      replacing ``'_'`` and ``'-'`` characters with spaces) is sought. Note that query names are
+      case-sensitive.
+
+   setup : @replace
       .. _setup-label:
 
+      The ``setup`` sub-command automates modification to copies of GCAM's input XML
+      files and construction of a corresponding configuration XML file.
+      See :doc:`setup` for a detailed description.
 
-   ws : @before
+   ws : @replace
       .. _ws-label:
 
+      The ``ws`` sub-command allows you to create, delete, show the path of, or run a shell
+      command in a workspace. If the ``--scenario`` argument is given, the operation is
+      performed on a scenario-specific workspace within a project directory. If ``--scenario``
+      is not specified, the operation is performed on the project directory that contains
+      individual scenario workspaces. Note that the :ref:`gcam <gcam-label>` sub-command
+      automatically creates workspaces as needed.
+
+      N.B. You can run ``ws`` with the the ``--path`` option before performing any
+      operations to be sure of the directory that will be operated on, or use the
+      ``--noExecute`` option to show the command that would be executed by ``--run``.
 
 Extending gcamtool using plug-ins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   .. _plugins-label:
 
 The :doc:`gcamtool` script will load any python files whose name ends in
-``_plugin.py``, found in any of the directores indicated in the config
+``_plugin.py``, found in any of the directories indicated in the config
 file variable ``GCAM.PluginPath``. The value of ``GCAM.PluginPath`` must
 be a sequence of directory names separated by colons (``:``) on Unix-like
-systems or by semi-colons (``;``) on Windows. See :doc:`subcommand` for
-documentation of the plug-in API.
+systems or by semi-colons (``;``) on Windows.
+
+See :doc:`subcommand` for documentation of the plug-in API.

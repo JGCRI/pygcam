@@ -4,7 +4,7 @@
 project.xml
 ===============
 
-The runProject sub-command is a workflow management script for GCAM. It
+The ``run`` sub-command is a workflow management script for GCAM. It
 reads a single XML input file that defines one or more projects, one or
 more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
@@ -13,7 +13,7 @@ in the order defined. The script was developed for use with the
 scripts, however any scripts or programs can be called in workflow
 'steps'.
 
-Command-line usage is describe on the :ref:`gcamtool runProj<runProj-label>` page.
+Command-line usage is describe on the :ref:`gcamtool run<run-label>` page.
 The ``project.xml`` file elements are described below.
 
 XML elements
@@ -153,7 +153,7 @@ For example, a step that runs GCAM might look like this:
 
 
 Steps can be generalized by using variable definitions, as shown in
-the example above. Several variables are set by the ``runProj``
+the example above. Several variables are set by the ``run``
 sub-command at run-time;  these are are described below. The user
 can also define variables, as described in the next section.
 
@@ -276,8 +276,8 @@ There are three required variables:
 Automatic variables
 ~~~~~~~~~~~~~~~~~~~
 
-runProject.py creates several convenience variables at run-time that are
-accessible in the commands for any . These included:
+The ``run`` sub-command creates several convenience variables at run-time
+that are accessible in the commands for any . These included:
 
 -  ``{project}`` : the project name
 -  ``{scenarioGroup}`` : the name of scenario group
@@ -325,13 +325,13 @@ assigned to the given variable name.
 The ``<tmpFile>`` element defines several attributes:
 
 -  ``varName`` (required) which will contain the pathname of the
-   temporary file created by runProject.py
+   temporary file created by the ``run`` sub-command.
 
 -  ``dir`` (optional) defines the directory in which to create the temp
    file Default is "/tmp".
 
 -  ``delete`` indicates whether to delete the temporary file when
-   runProject exits. By default, ``delete="1"``, i.e., the temp files
+   ``run`` exits. By default, ``delete="1"``, i.e., the temp files
    are deleted. The value ``delete="0"`` may be useful for debugging.
 
 -  ``replace`` indicates whether file contents defined in a project

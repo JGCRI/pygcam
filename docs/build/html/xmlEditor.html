@@ -557,22 +557,6 @@ section of a config file. This must match <cite>xmlBasename</cite>.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="pygcam.xmlEditor.XMLEditor.setSolutionTolerance">
-<code class="descname">setSolutionTolerance</code><span class="sig-paren">(</span><em>tolerance</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setSolutionTolerance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the model solution tolerance to the given value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tolerance</strong> &#8211; (coercible to float) the value to set</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="pygcam.xmlEditor.XMLEditor.setStopPeriod">
 <code class="descname">setStopPeriod</code><span class="sig-paren">(</span><em>yearOrPeriod</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setStopPeriod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the model stop period. If <cite>stopPeriod</cite> is &lt;= 22, the stop period is set to
@@ -610,6 +594,34 @@ refer to them.</p>
 <li><strong>stopPeriod</strong> &#8211; (coercible to int) a period number or a year at which to stop
 running GCAM</li>
 <li><strong>args</strong> &#8211; (argparse.Namespace) arguments passed from the top-level call to setup</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygcam.xmlEditor.XMLEditor.setupSolver">
+<code class="descname">setupSolver</code><span class="sig-paren">(</span><em>solutionTolerance=None</em>, <em>broydenTolerance=None</em>, <em>maxModelCalcs=None</em>, <em>maxIterations=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setupSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the model solution tolerance to the given values for the solver
+&#8220;driver&#8221; (<cite>solutionTolerance</cite>) and, optionally for the Broyden component
+(<cite>broydenTolerance</cite>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>solutionTolerance</strong> &#8211; (coercible to float, &gt; 0.0) the value to set for the driver tolerance</li>
+<li><strong>broydenTolerance</strong> &#8211; (coercible to float, &gt; 0.0) the value to set for the Broyden component
+tolerance. (If both are provided, the function requires that
+componentTolerance &lt;= driverTolerance.)</li>
+<li><strong>maxModelCalcs</strong> &#8211; (coercible to int, &gt; 0) maximum number of calculations to run in the driver</li>
+<li><strong>maxIterations</strong> &#8211; (coercible to int, &gt; 0) maximum number of iterations to allow in the
+Broyden component</li>
 </ul>
 </td>
 </tr>

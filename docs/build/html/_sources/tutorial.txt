@@ -51,11 +51,10 @@ Run-time structure:
 
   * Use the ``run`` sub-command of :doc:`gcamtool`
 
-    * Use ``-l`` and ``-L`` to list steps
+    * Hint: use ``-l``, ``-L``, and ``-g`` to list steps, scenarios, and groups
 
-    * Choose steps to run or not run
-
-    * Choose groups and scenarios to operate on
+    * Choose steps, scenarios, groups to run using ``-s``, ``-S``, and ``-g`` flags,
+      and choose steps *not* to run using ``-k`` flag.
 
     * Setting defaults to simplify use
 

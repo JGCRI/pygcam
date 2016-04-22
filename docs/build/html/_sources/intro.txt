@@ -52,7 +52,7 @@ The main script (:doc:`gcamtool`) implements several "subcommands" that perform 
 steps in a typical GCAM analysis. The script implements a :doc:`plug-in <subcommand>`
 architecture allowing users to customize :doc:`gcamtool <gcamtool>` and avoid a proliferation of scripts.
 
-   * The ``runProj`` subcommand reads an XML input file and runs one or more steps of an analysis,
+   * The ``run`` subcommand reads an XML input file and runs one or more steps of an analysis,
      and these steps can (typically will) invoke other subcommands as required.
 
    * The ``gcam`` subcommand runs the GCAM model in any indicated directory. Links to a
@@ -70,7 +70,7 @@ architecture allowing users to customize :doc:`gcamtool <gcamtool>` and avoid a 
    * The ``protect`` subcommand generates XML input files that define custom land-protection scenarios.
 
 Also see the :doc:`setup` documentation to for information on programmatically modifying
-copies of GCAM XML files. This "setup" step can be one of the commands called by ``runProj``.
+copies of GCAM XML files. This "setup" step can be one of the commands called by ``run``.
 
 
 Managing Scenarios
@@ -138,7 +138,7 @@ project. Consider the following directory structure:
         * config.xml
 
 
-With this approach, the script ``queueGCAM.py`` can get the main workspace
+With this approach, the gcamtool.py script can get the main workspace
 location from the variable ``GCAM.WorkspaceRoot`` from the configuration file
 ``~.pygcam.cfg`` (which, in this approach can be set once for all projects)
 and you need only pass the scenario name and project name, allowing the path

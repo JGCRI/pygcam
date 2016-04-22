@@ -95,7 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html"><code class="docutils literal"><span class="pre">pygcam</span></code> Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -155,7 +155,7 @@
   <div class="section" id="pygcam-project">
 <h1><code class="docutils literal"><span class="pre">pygcam.project</span></code><a class="headerlink" href="#pygcam-project" title="Permalink to this headline">¶</a></h1>
 <p>This module provides all the functionality that is exposed through the command-line
-to the <a class="reference internal" href="gcamtool.html#runproj-label"><em>gcamtool runProj</em></a> sub-command. It is provided in library
+to the <a class="reference internal" href="gcamtool.html#run-label"><em>gcamtool run</em></a> sub-command. It is provided in library
 form so that it can be used from within other programs without having to execute the script.</p>
 <div class="section" id="module-pygcam.project">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.project" title="Permalink to this headline">¶</a></h2>
@@ -164,12 +164,6 @@ form so that it can be used from within other programs without having to execute
 <dt id="pygcam.project.Project">
 <em class="property">class </em><code class="descclassname">pygcam.project.</code><code class="descname">Project</code><span class="sig-paren">(</span><em>tree</em>, <em>projectName</em>, <em>groupName</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.Project" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents the <code class="docutils literal"><span class="pre">&lt;project&gt;</span></code> element in the projects.xml file.</p>
-<dl class="method">
-<dt id="pygcam.project.Project.checkRequiredVars">
-<code class="descname">checkRequiredVars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.Project.checkRequiredVars" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ensure that the required vars are set to non-empty strings</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="pygcam.project.Project.getKnownGroups">
 <code class="descname">getKnownGroups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.Project.getKnownGroups" title="Permalink to this definition">¶</a></dt>
@@ -251,7 +245,7 @@ the current (project, scenario) context</p>
 
 <dl class="class">
 <dt id="pygcam.project.SimpleVariable">
-<em class="property">class </em><code class="descclassname">pygcam.project.</code><code class="descname">SimpleVariable</code><span class="sig-paren">(</span><em>name</em>, <em>value</em>, <em>configVar=None</em>, <em>evaluate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.SimpleVariable" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">pygcam.project.</code><code class="descname">SimpleVariable</code><span class="sig-paren">(</span><em>name</em>, <em>value</em>, <em>evaluate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.SimpleVariable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple variable of name and value to allow loading config file
 variables alongside variables defined in the project XML file.</p>
 </dd></dl>

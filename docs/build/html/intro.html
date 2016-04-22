@@ -95,6 +95,9 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
@@ -194,7 +197,7 @@ steps in a typical GCAM analysis. The script implements a <a class="reference in
 architecture allowing users to customize <a class="reference internal" href="gcamtool.html"><em>gcamtool</em></a> and avoid a proliferation of scripts.</p>
 <blockquote>
 <div><ul class="simple">
-<li>The <code class="docutils literal"><span class="pre">runProj</span></code> subcommand reads an XML input file and runs one or more steps of an analysis,
+<li>The <code class="docutils literal"><span class="pre">run</span></code> subcommand reads an XML input file and runs one or more steps of an analysis,
 and these steps can (typically will) invoke other subcommands as required.</li>
 <li>The <code class="docutils literal"><span class="pre">gcam</span></code> subcommand runs the GCAM model in any indicated directory. Links to a
 reference GCAM directory are used when possible to avoid needless file copying.</li>
@@ -208,7 +211,7 @@ arguments to customize chart appearance.</li>
 </ul>
 </div></blockquote>
 <p>Also see the <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> documentation to for information on programmatically modifying
-copies of GCAM XML files. This &#8220;setup&#8221; step can be one of the commands called by <code class="docutils literal"><span class="pre">runProj</span></code>.</p>
+copies of GCAM XML files. This &#8220;setup&#8221; step can be one of the commands called by <code class="docutils literal"><span class="pre">run</span></code>.</p>
 <div class="section" id="managing-scenarios">
 <h2>Managing Scenarios<a class="headerlink" href="#managing-scenarios" title="Permalink to this headline">¶</a></h2>
 <p>In GCAM, a <em>scenario</em> is just a name assigned within a configuration
@@ -273,7 +276,7 @@ project. Consider the following directory structure:</p>
 </li>
 </ul>
 </div></blockquote>
-<p>With this approach, the script <code class="docutils literal"><span class="pre">queueGCAM.py</span></code> can get the main workspace
+<p>With this approach, the gcamtool.py script can get the main workspace
 location from the variable <code class="docutils literal"><span class="pre">GCAM.WorkspaceRoot</span></code> from the configuration file
 <code class="docutils literal"><span class="pre">~.pygcam.cfg</span></code> (which, in this approach can be set once for all projects)
 and you need only pass the scenario name and project name, allowing the path

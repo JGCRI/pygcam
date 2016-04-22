@@ -83,7 +83,7 @@ Below are some key parameters you may wish to modify in your
     # Root directory in which to find user's project folders
     GCAM.ProjectRoot    = %(Home)s/GCAM/XXX-dir
 
-    # The location of the default input file for runProject.py
+    # The location of the default input file for the "run" sub-command
     GCAM.ProjectXmlFile = %(GCAM.ProjectRoot)s/etc/project.xml
 
     # These are used by the "query" sub-command

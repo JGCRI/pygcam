@@ -95,7 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html"><code class="docutils literal"><span class="pre">pygcam</span></code> Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -501,21 +501,25 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="na">GCAM.LogConsole</span> <span class="o">=</span> <span class="s">True</span>
 
 <span class="c1"># The name of the queue used for submitting batch jobs on a cluster.</span>
-<span class="na">GCAM.DefaultQueue</span> <span class="o">=</span> <span class="s">standard</span>
+<span class="na">GCAM.DefaultQueue</span> <span class="o">=</span> <span class="s">slurm</span>
 
-<span class="na">GCAM.QsubCommand</span> <span class="o">=</span> <span class="s">qsub -q {queueName} -N {jobName} -l walltime={walltime} \</span>
-<span class="s">  -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s \</span>
-<span class="s">  QUEUE_GCAM_CONFIG_FILE=&#39;{configs}&#39;,QUEUE_GCAM_WORKSPACE=&#39;{workspace}&#39;,QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}</span>
+<span class="c1">#GCAM.QueuePBS = qsub -q {queueName} -N {jobName} -l walltime={walltime} \</span>
+<span class="c1">#  -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s \</span>
+<span class="c1">#  QUEUE_GCAM_CONFIG_FILE=&#39;{configs}&#39;,QUEUE_GCAM_WORKSPACE=&#39;{workspace}&#39;,QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}</span>
+
+<span class="na">GCAM.QueuePBS</span> <span class="o">=</span> <span class="s">qsub -q {queueName} -N {jobName} -l walltime={walltime} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s</span>
 
 <span class="c1"># --signal=USR1@15 =&gt; send SIGUSR1 15s before walltime expires</span>
-<span class="na">GCAM.SlurmCommand</span> <span class="o">=</span> <span class="s">sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \</span>
-<span class="s">  -D {exeDir} --get-user-env=L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \</span>
-<span class="s">  --export=QUEUE_GCAM_CONFIG_FILE=&#39;{configs}&#39;,QUEUE_GCAM_WORKSPACE=&#39;{workspace}&#39;,QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}</span>
+<span class="c1">#GCAM.QueueSLURM = sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} \</span>
+<span class="c1">#  -D {exeDir} --get-user-env=10L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \</span>
+<span class="c1">#  --export=QUEUE_GCAM_CONFIG_FILE=&#39;{configs}&#39;,QUEUE_GCAM_WORKSPACE=&#39;{workspace}&#39;,QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}</span>
+
+<span class="na">GCAM.QueueSLURM</span> <span class="o">=</span> <span class="s">sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} --get-user-env=10L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s</span>
 
 <span class="c1"># Arbitrary arguments to add to the selected batch command</span>
 <span class="na">GCAM.OtherBatchArgs</span> <span class="o">=</span>
 
-<span class="na">GCAM.BatchCommand</span> <span class="o">=</span> <span class="s">%(GCAM.SlurmCommand)s</span>
+<span class="na">GCAM.BatchCommand</span> <span class="o">=</span> <span class="s">%(GCAM.QueueSLURM)s</span>
 
 <span class="c1"># Set this to a command to run when the -l flag is passed to gcamtool&#39;s</span>
 <span class="c1"># &quot;run&quot; sub-command. The same options are available for substitution as</span>
@@ -543,6 +547,12 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 
 <span class="c1"># Where to create temporary files</span>
 <span class="na">GCAM.TempDir</span> <span class="o">=</span> <span class="s">/tmp</span>
+
+<span class="c1"># Where to create temporary batch scripts to run gcamtool.py on a</span>
+<span class="c1"># compute node. Note that this should not be set to a directory</span>
+<span class="c1"># that is machine-specific (such as &quot;/tmp&quot;), since the file needs</span>
+<span class="c1"># to be visible from compute nodes. The directory is created if needed.</span>
+<span class="na">GCAM.UserTempDir</span> <span class="o">=</span> <span class="s">%(Home)s/tmp</span>
 
 <span class="c1"># For Windows users without permission to create symlinks</span>
 <span class="na">GCAM.CopyAllFiles</span> <span class="o">=</span> <span class="s">False</span>
