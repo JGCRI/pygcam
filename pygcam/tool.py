@@ -12,7 +12,6 @@ import os
 import argparse
 import pipes
 import subprocess
-import time
 from glob import glob
 from .utils import loadModuleFromPath, getTempFile, mkdirs
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
@@ -89,49 +88,10 @@ def _waitForScript(scriptFile):
             exists = True
             break
 
-        _randomSleep(minSleep, maxSleep)
+        _randomSleep(minSleep, maxSleep)    # TBD: check if this is still necessary
 
     if not exists:
         raise PygcamException("Failed to read args file after %d tries" % maxTries)
-
-# From https://gist.github.com/sampsyo/471779
-#
-# Messed up the sphinx docs, so abandoned this for now
-#
-# class AliasedSubParsersAction(argparse._SubParsersAction):
-#     """
-#     Adds an "aliases" keyword when adding subparsers, allowing
-#     sub-command aliases.
-#     """
-#     class _AliasedPseudoAction(argparse.Action):
-#         def __init__(self, name, aliases, help):
-#             dest = name
-#             if aliases:
-#                 dest += ' (%s)' % ','.join(aliases)
-#             sup = super(AliasedSubParsersAction._AliasedPseudoAction, self)
-#             sup.__init__(option_strings=[], dest=dest, help=help)
-#
-#     def add_parser(self, name, **kwargs):
-#         if 'aliases' in kwargs:
-#             aliases = kwargs['aliases']
-#             del kwargs['aliases']
-#         else:
-#             aliases = []
-#
-#         parser = super(AliasedSubParsersAction, self).add_parser(name, **kwargs)
-#
-#         # Make the aliases work.
-#         for alias in aliases:
-#             self._name_parser_map[alias] = parser
-#         # Make the help text reflect them, first removing old help entry.
-#         if 'help' in kwargs:
-#             help = kwargs.pop('help')
-#             self._choices_actions.pop()
-#             pseudo_action = self._AliasedPseudoAction(name, aliases, help)
-#             self._choices_actions.append(pseudo_action)
-#
-#         parser.aliases = aliases    # save these so we can find the plugin, too
-#         return parser
 
 
 class GcamTool(object):
@@ -150,13 +110,13 @@ class GcamTool(object):
 
     def __init__(self, loadPlugins=True):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
-        #self.parser.register('action', 'parsers', AliasedSubParsersAction)
+                                                       # add_help=False)  # add help manually
 
         parser.add_argument('-b', '--batch', action='store_true',
                             help='''Run the commands by submitting a batch job using the command
                             given by config variable GCAM.BatchCommand. (Linux only)''')
 
-        parser.add_argument('-B', '--noBatch', action="store_true",
+        parser.add_argument('-B', '--showBatch', action="store_true",
                             help="Show the batch command to be run, but don't run it. (Linux only)")
 
         parser.add_argument('-e', '--enviroVars',
@@ -246,6 +206,13 @@ class GcamTool(object):
             for path in glob(pattern):
                 self.loadPlugin(path)
 
+    def help(self):
+        """
+        Load config and plugins, then print help and exit.
+        """
+        self.parser.print_help()
+        self.parser.exit()
+
     def run(self, args=None, argList=None):
         """
         Parse the script's arguments and invoke the run() method of the
@@ -266,7 +233,7 @@ class GcamTool(object):
                 args.batch = False
 
             # show batch command and exit
-            if args.noBatch:
+            if args.showBatch:
                 pass
 
             args.configSection = section = args.configSection or getParam('GCAM.DefaultProject')
@@ -285,6 +252,9 @@ class GcamTool(object):
 
     def runBatch(self, shellArgs, run=True):
         import platform
+
+        if shellArgs.help:
+            self.help()
 
         system = platform.system()
         if system in ['Windows', 'Darwin']:

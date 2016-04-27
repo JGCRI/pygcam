@@ -856,6 +856,9 @@ class XMLEditor(object):
     # TBD: or handle both dict-like vs 'list of pairs' cases? If it has iteritems, then
     # TBD: it's dict-like enough for our purposes. Else, it should be [(year, val), (year, val)]
     #
+    # TBD: optional arg to indicate delta rather than absolute value. More useful but will
+    # TBD: require lxml rather than xmlstarlet. See code for land protection.
+    #
     # TBD: have this and related functions handle both regional and GTDB cases?
     # TBD: test
     def setGlobalTechNonEnergyCost(self, sector, subsector, technology, values):

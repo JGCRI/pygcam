@@ -348,6 +348,7 @@ class BioenergyEditor(RefiningEditor):
 
         self.insertScenarioComponent('FT-biofuels-USA', self.ftBiofuelsUsaRel, 'energy_transformation')
 
+    # TBD: translate pairs to allow ranges to be specified
     def setBiofuelRefiningNonEnergyCostUSA(self, fuel, pairs):
         if not pairs:
             return

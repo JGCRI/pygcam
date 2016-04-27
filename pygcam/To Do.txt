@@ -16,6 +16,17 @@ Test
 
 Features
 --------
+- Don't load plugins until after reading config file for PluginPath, allowing
+  this to be set per project.
+  - The only downside is that the help message needs to be processed before
+    the project is determined.
+  - However, this may be able to be handled by "manually" processing the -h
+    option to:
+        - read the config file and determine plugin path
+        - load plugins
+        - then call the help option
+  - Subclass argparse.HelpFormatter to read config and load plugins first?
+
 - If scenario has unique name among groups, run it even if group isn't specified?
     - Will require restructuring since it's assumed there's one group name
 
