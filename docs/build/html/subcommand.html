@@ -174,8 +174,7 @@ configuration file.</p>
 
 <span class="k">class</span> <span class="nc">MyNewCommand</span><span class="p">(</span><span class="n">SubcommandABC</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">):</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;help&#39;</span> <span class="p">:</span> <span class="s">&#39;&#39;&#39;Short help text for main driver&#39;&#39;&#39;</span><span class="p">,</span>
-                  <span class="s">&#39;description&#39;</span> <span class="p">:</span> <span class="s">&#39;&#39;&#39;Longer description for sub-command&#39;&#39;&#39;</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;help&#39;</span> <span class="p">:</span> <span class="s">&#39;&#39;&#39;Short help text for main driver&#39;&#39;&#39;</span><span class="p">}</span>
 
         <span class="c"># The first argument is the name of the new sub-command</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MyNewCommand</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="s">&#39;XXX&#39;</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
@@ -192,8 +191,8 @@ configuration file.</p>
 
         <span class="k">return</span> <span class="n">parser</span>
 
-    <span class="c"># implement the sub-command</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">tool</span><span class="p">):</span>
+       <span class="c"># implement the sub-command here</span>
         <span class="k">pass</span>
 
  <span class="c"># An alternative to naming the class &#39;Plugin&#39; is to assign the class to PluginClass</span>

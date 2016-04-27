@@ -226,12 +226,9 @@ file is <code class="docutils literal"><span class="pre">.pygcam.cfg</span></cod
 <blockquote>
 <div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 
-<span class="c1"># Set a default project to be used if the &quot;-s&quot; flag is not passed to</span>
+<span class="c1"># Set a default project to be used if the &quot;-P&quot; flag is not passed to</span>
 <span class="c1"># gcamtool.py.</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">XXX</span>
-
-<span class="c1"># PluginPath must be specified in DEFAULT section</span>
-<span class="c1"># GCAM.PluginPath     =</span>
 
 <span class="c1">#</span>
 <span class="c1"># Define parameters specific to project &quot;XXX&quot;</span>
@@ -255,6 +252,10 @@ file is <code class="docutils literal"><span class="pre">.pygcam.cfg</span></cod
 <span class="c1"># Sets the directory under which the &quot;gcam&quot; sub-command should create GCAM</span>
 <span class="c1"># workspace directories before running GCAM</span>
 <span class="na">GCAM.RunWorkspaceRoot</span> <span class="o">=</span> <span class="s">%(Home)s/ws</span>
+
+<span class="c1"># Tells gcamtool.py where to look for plugins. Set to your project&#39;s plugin</span>
+<span class="c1"># directory if you have any plugins to load.</span>
+<span class="c1"># GCAM.PluginPath =</span>
 </pre></div>
 </div>
 </div></blockquote>

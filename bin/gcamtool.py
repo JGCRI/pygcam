@@ -8,11 +8,10 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-
 import sys
 import argparse
 import signal
-from pygcam.config import getConfig, getParamAsBoolean, getSection
+from pygcam.config import getConfig, getParam, getParamAsBoolean, getSection, setSection
 from pygcam.log import getLogger, configureLogs
 from pygcam.tool import GcamTool, PROGRAM
 from pygcam.utils import TempFile
@@ -34,33 +33,37 @@ def _sigHandler(signum, _frame):
 
 
 def main():
-    # Use default section initially, to read plugin path.
-    # It's a chicken-and-egg problem since we can't parse args
-    # until we've loaded all the plugins, but the PluginPath is
-    # defined in the config file.
     getConfig()
     configureLogs()
 
-    tool = GcamTool()
-
-    # This parser handles only the "batch" flag, which means we
-    # need to create a script and call the GCAM.BatchCommand on it.
+    # This parser handles only --batch, --showBatch, and --projectName args.
+    # If --batch is given, we need to create a script and call the GCAM.BatchCommand
+    # on it. We grab --projectName so we can set PluginPath by project
     parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+
     parser.add_argument('-b', '--batch', action='store_true')
-    parser.add_argument('-B', '--noBatch', action="store_true")
+    parser.add_argument('-B', '--showBatch', action="store_true")
+    parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
 
     ns, otherArgs = parser.parse_known_args()
 
-    if ns.noBatch:          # --noBatch (don't run batch command) implies --batch
+    if ns.configSection:
+        ns.configSection = section = ns.configSection or getParam('GCAM.DefaultProject')
+        if section:
+            setSection(section)
+
+    if ns.showBatch:          # don't run batch command); --showBatch implies --batch
         ns.batch = True
 
     # Catch these to allow cleanup of TempFile instances, e.g., on ^C
     for sig in SignalsToCatch:
         signal.signal(sig, _sigHandler)
 
+    tool = GcamTool()
+
     try:
         if ns.batch:
-            run = not ns.noBatch
+            run = not ns.showBatch
             tool.runBatch(otherArgs, run=run)
         else:
             args = tool.parser.parse_args(args=otherArgs)

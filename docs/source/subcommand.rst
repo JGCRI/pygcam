@@ -25,8 +25,7 @@ The following template can be used to create new sub-commands. (See also
 
      class MyNewCommand(SubcommandABC):
          def __init__(self, subparsers):
-             kwargs = {'help' : '''Short help text for main driver''',
-                       'description' : '''Longer description for sub-command'''}
+             kwargs = {'help' : '''Short help text for main driver'''}
 
              # The first argument is the name of the new sub-command
              super(MyNewCommand, self).__init__('XXX', subparsers, kwargs)
@@ -43,8 +42,8 @@ The following template can be used to create new sub-commands. (See also
 
              return parser
 
-         # implement the sub-command
          def run(self, args, tool):
+            # implement the sub-command here
              pass
 
       # An alternative to naming the class 'Plugin' is to assign the class to PluginClass

@@ -69,12 +69,9 @@ Below are some key parameters you may wish to modify in your
 
     [DEFAULT]
 
-    # Set a default project to be used if the "-s" flag is not passed to
+    # Set a default project to be used if the "-P" flag is not passed to
     # gcamtool.py.
     GCAM.DefaultProject = XXX
-
-    # PluginPath must be specified in DEFAULT section
-    # GCAM.PluginPath     =
 
     #
     # Define parameters specific to project "XXX"
@@ -98,6 +95,12 @@ Below are some key parameters you may wish to modify in your
     # Sets the directory under which the "gcam" sub-command should create GCAM
     # workspace directories before running GCAM
     GCAM.RunWorkspaceRoot = %(Home)s/ws
+
+    # Tells gcamtool.py where to look for plugins. Set to your project's plugin
+    # directory if you have any plugins to load.
+    # GCAM.PluginPath =
+
+
 
 Default configuration variable dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
