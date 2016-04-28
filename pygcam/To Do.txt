@@ -16,17 +16,6 @@ Test
 
 Features
 --------
-- Don't load plugins until after reading config file for PluginPath, allowing
-  this to be set per project.
-  - The only downside is that the help message needs to be processed before
-    the project is determined.
-  - However, this may be able to be handled by "manually" processing the -h
-    option to:
-        - read the config file and determine plugin path
-        - load plugins
-        - then call the help option
-  - Subclass argparse.HelpFormatter to read config and load plugins first?
-
 - If scenario has unique name among groups, run it even if group isn't specified?
     - Will require restructuring since it's assumed there's one group name
 
@@ -54,6 +43,7 @@ Features
     - Simplifies sharing of experiments, e.g., via git
 
 Other
+-----
 
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
@@ -67,16 +57,10 @@ Other
   - Another option is to have an explicit <step after="stepname">, to create
     dependence DAG, which leads toward gcam-driver type of functionality.
 
-- Get "runProj" working on cluster.
-    - Initially, migrate job-related options now on "gcam" subcommand to
-      the "runProj" subcommand?
-
 - pygcam/etc/site.cfg
     - see what happens with this on installation via setup.py
     - would be much better outside the installed module
     - maybe have a setup arg that says where to symlink to for site.cfg
-
-- Add common "--commandArgs" to pass args to the sub-command
 
 Document
 --------
@@ -90,6 +74,7 @@ Document
 - Assumptions behind setup code
 
 - Adding otaq2016.pth or other project-specific code
+  - Is this necessary now that there's just one scenarios.py, loaded by pathname?
 
 Tasks
 -----
@@ -104,3 +89,30 @@ Tasks
     - Perhaps split out generic function from domain-specific
 - Update documentation
 - Test everything again on Windows
+
+
+MCS Integration
+===============
+
+- Trial generation should be unaffected
+- Still needs either wrapper (runner.py) or jug-type master-slave approach
+
+- Using jug
+    - Slave asks for next task
+        - identified by path to .json file, which has all needed args
+    - Does stuff that runner.py does now
+        - signal handling
+        - sets per-task alarm
+        - database updates (unless jug results mgmt obviates this)
+        - returns status or tuple/dict with more info?
+
+GUI implementation
+==================
+- Focus on "project"
+- Create an edit project.xml
+- Run a project
+    - select groups, scenarios, and steps to run (checkboxes)
+    - select direct or batch mode
+        - if direct, show output in window
+    - have a 'kill' command for local or batch (sdel?)
+- View & update config file

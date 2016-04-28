@@ -11,7 +11,7 @@
 import sys
 import argparse
 import signal
-from pygcam.config import getConfig, getParam, getParamAsBoolean, getSection, setSection
+from pygcam.config import getConfig, getParam, getParamAsBoolean, setParam, getSection, setSection
 from pygcam.log import getLogger, configureLogs
 from pygcam.tool import GcamTool, PROGRAM
 from pygcam.utils import TempFile
@@ -48,9 +48,8 @@ def main():
     ns, otherArgs = parser.parse_known_args()
 
     if ns.configSection:
-        ns.configSection = section = ns.configSection or getParam('GCAM.DefaultProject')
-        if section:
-            setSection(section)
+        setParam('GCAM.DefaultProject', ns.configSection)
+        setSection(ns.configSection)
 
     if ns.showBatch:          # don't run batch command); --showBatch implies --batch
         ns.batch = True

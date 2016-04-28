@@ -248,6 +248,7 @@ class GcamTool(object):
 
         # Get the sub-command and run it with the given args
         obj = self.getPlugin(args.subcommand)
+
         obj.run(args, self)
 
     def runBatch(self, shellArgs, run=True):

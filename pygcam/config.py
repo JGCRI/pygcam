@@ -187,6 +187,19 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
     d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
     return d
 
+def setParam(name, value, section=DEFAULT_SECTION):
+    """
+    Set a configuration parameter in memory. The new value is not
+    written to the config file.
+
+    :param name: (str) parameter name
+    :param value: (any, coerced to str) parameter value
+    :param section: (str) if given, the name of the section in which to set the value.
+       If not given, the value is set in the DEFAULT section.
+    :return: none
+    """
+    _ConfigParser.set(section, name, value)
+
 def getParam(name, section=None, raw=False):
     """
     Get the value of the configuration parameter `name`. Calls
