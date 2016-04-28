@@ -232,10 +232,6 @@ class GcamTool(object):
             if args.batch:
                 args.batch = False
 
-            # show batch command and exit
-            if args.showBatch:
-                pass
-
             args.configSection = section = args.configSection or getParam('GCAM.DefaultProject')
             if section:
                  setSection(section)
@@ -253,9 +249,6 @@ class GcamTool(object):
 
     def runBatch(self, shellArgs, run=True):
         import platform
-
-        if shellArgs.help:
-            self.help()
 
         system = platform.system()
         if system in ['Windows', 'Darwin']:
