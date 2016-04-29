@@ -216,8 +216,7 @@ def main(args):
             return
 
         writeDiffsToFile(outFile, referenceFile, otherFiles, ext=ext, skiprows=skiprows,
-                         interpolate=interpolate)
-
+                         interpolate=interpolate, years=years, startYear=startYear)
 
 
 class DiffCommand(SubcommandABC):
