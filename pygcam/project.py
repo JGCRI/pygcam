@@ -10,7 +10,6 @@
 """
 import os
 import sys
-import platform
 import shlex
 import re
 import glob
