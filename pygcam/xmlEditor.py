@@ -882,14 +882,14 @@ class XMLEditor(object):
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
-        prefix = "//global-technology-database/location-info[@sector-name='%s' and subsector-name='%s']/technology[@name='%s']" % \
+        prefix = '//global-technology-database/location-info[@sector-name="%s" and @subsector-name="%s"]/technology[@name="%s"]' % \
                  (sector, subsector, technology)
-        suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
+        suffix = '/minicam-non-energy-input[@name="non-energy"]/input-cost'
 
         args = [enTransFileAbs]
         for year, price in expandYearRanges(values):
             args += ['-u',
-                     prefix + ("/period[@year='%s']" % year) + suffix,
+                     prefix + ('/period[@year="%s"]' % year) + suffix,
                      '-v', str(price)]
 
         xmlEdit(*args)
