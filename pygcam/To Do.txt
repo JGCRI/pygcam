@@ -1,5 +1,6 @@
 Bugs
 ----
+- Diff without -i is still interpolating.
 
 Cleanup
 -------
