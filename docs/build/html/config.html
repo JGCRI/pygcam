@@ -314,6 +314,30 @@ file.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pygcam.config.setParam">
+<code class="descclassname">pygcam.config.</code><code class="descname">setParam</code><span class="sig-paren">(</span><em>name</em>, <em>value</em>, <em>section='DEFAULT'</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.setParam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a configuration parameter in memory. The new value is not
+written to the config file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> &#8211; (str) parameter name</li>
+<li><strong>value</strong> &#8211; (any, coerced to str) parameter value</li>
+<li><strong>section</strong> &#8211; (str) if given, the name of the section in which to set the value.
+If not given, the value is set in the DEFAULT section.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pygcam.config.setSection">
 <code class="descclassname">pygcam.config.</code><code class="descname">setSection</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.setSection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the name of the default config file section to read from.</p>
@@ -535,11 +559,6 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 
 <span class="c1"># For qsub, the default number of minutes to allocate per task.</span>
 <span class="na">GCAM.Minutes</span> <span class="o">=</span> <span class="s">20</span>
-
-<span class="c1"># A script to run by queueGCAM after GCAM completes. The script is</span>
-<span class="c1"># called with 3 arguments: workspace directory, XML configuration</span>
-<span class="c1"># file, and scenario name.</span>
-<span class="na">GCAM.PostProcessor</span> <span class="o">=</span>
 
 <span class="c1"># A file that maps GCAM regions to rename them or to aggregate</span>
 <span class="c1"># them. Each line consists of a GCAM region name, some number of</span>

@@ -206,7 +206,7 @@ sub-command specific options must follow it.</p>
 <pre class="literal-block">
 usage: gcamtool.py [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level]
                    [-L LOGFILE] [-m MINUTES] [-P name] [-q QUEUENAME]
-                   [-r RESOURCES] [-v] [--version]
+                   [-r RESOURCES] [--set name=value] [-v] [--version]
                    {chart,config,diff,gcam,protect,query,run,setup,ws,bioConstraint,deltaConstraint}
                    ...
 </pre>
@@ -262,6 +262,13 @@ usage: gcamtool.py [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level]
 </tr>
 <tr><td>&nbsp;</td><td>Specify resources for the queued batch command. Can be a comma-delimited
                             list of assignments of the form NAME=value, e.g., -r &#8216;pvmem=6GB&#8217;. (Linux only)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--set=[]</span></kbd></td>
+<td>Assign a value to override a configuration file parameter. For example,
+                            to set batch commands to start after a prior job of the same name completes,
+                            use &#8211;set &#8220;GCAM.OtherBatchArgs=-d singleton&#8221;. Enclose the argument in quotes if
+                            it contains spaces or other characters that would confuse the shell.
+                            Use multiple &#8211;set flags and arguments to set multiple variables.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-v=False</span>, <span class="option">--verbose=False</span></kbd></td>
 </tr>

@@ -190,4 +190,4 @@ do the following.
        # command above) is /Users/rjp/.local/lib/python2.7/site-packages,
        # and we have cloned pygcam into the folder /Users/rjp/bb/pygcam:
 
-       echo /Users/rjp/bb/pygcam > /Users/rjp/.local/lib/python2.7/site-packages/pygcam.cfg
+       echo /Users/rjp/bb/pygcam > /Users/rjp/.local/lib/python2.7/site-packages/pygcam.pth
