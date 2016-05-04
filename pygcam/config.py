@@ -8,6 +8,7 @@ import os
 import io
 import platform
 import re
+from pkg_resources import resource_string
 from ConfigParser import SafeConfigParser
 from .error import ConfigFileError, PygcamException, CommandlineError
 from .subcommand import SubcommandABC
@@ -134,12 +135,12 @@ def readConfigFiles():
 
     _ConfigParser.optionxform = str     # don't force all names to lower-case
 
-    systemConfig = os.path.join(os.path.dirname(__file__), 'etc', 'system.cfg')
-    siteConfig   = os.path.join(os.path.dirname(__file__), 'etc', 'site.cfg')
+    def readConfigResourceFile(filename):
+        data = resource_string('pygcam', filename)
+        _ConfigParser.readfp(io.BytesIO(data))
+        return data
 
-    with open(systemConfig) as fp:
-        systemDefaults = fp.read()
-        _ConfigParser.readfp(io.BytesIO(systemDefaults))
+    systemDefaults = readConfigResourceFile('etc/system.cfg')
 
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
@@ -147,9 +148,8 @@ def readConfigFiles():
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
 
     try:
-        with open(siteConfig) as fp:
-            _ConfigParser.readfp(fp)
-    except IOError:
+        readConfigResourceFile('etc/site.cfg')
+    except:
         pass        # no error if it doesn't exist
 
     # Customizations are stored in ~/.pygcam.cfg

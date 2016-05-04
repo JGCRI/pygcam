@@ -13,6 +13,7 @@ import sys
 import shlex
 import re
 import glob
+from pkg_resources import resource_stream
 from os.path import join
 from lxml import etree as ET
 from .config import getParam, getConfigDict
@@ -323,8 +324,9 @@ class Project(object):
         '''
         Validate a parsed project.xml file
         '''
-        schemaFile = os.path.join(os.path.dirname(__file__), 'etc', 'project-schema.xsd')
-        schemaDoc = ET.parse(schemaFile)
+        schemaStream = resource_stream('pygcam', 'etc/project-schema.xsd')
+        schemaDoc = ET.parse(schemaStream)
+
         schema = ET.XMLSchema(schemaDoc)
 
         if raiseError:

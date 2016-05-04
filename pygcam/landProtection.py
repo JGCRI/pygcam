@@ -8,9 +8,9 @@
 """
 import sys
 import os
-from lxml import etree as ET
 import copy
-
+from lxml import etree as ET
+from pkg_resources import resource_stream
 from .utils import mkdirs, flatten, XMLFile
 from .query import GCAM_32_REGIONS
 from .config import getParam
@@ -326,8 +326,10 @@ def driver(args):
 
         _logger.debug("Land-protection scenario '%s'", scenarioName)
 
-        schemaFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pygcam', 'etc', 'protection-schema.xsd')
-        xmlFile = XMLFile(scenarioFile, schemaFile=schemaFile, rootClass=LandProtection)
+        schemaStream = resource_stream('pygcam', 'etc/protection-schema.xsd')
+        #schemaFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pygcam', 'etc', 'protection-schema.xsd')
+
+        xmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
         landProtection = xmlFile.getRoot()
         for inFile in inFiles:
             basename = os.path.basename(inFile)
