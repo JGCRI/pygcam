@@ -73,13 +73,15 @@ def main():
     try:
         if ns.batch:
             run = not ns.showBatch
+            if ns.configSection:        # add these back in for the batch script
+                otherArgs = ['-P', ns.configSection] + otherArgs
+
             tool.runBatch(otherArgs, run=run)
         else:
             args = tool.parser.parse_args(args=otherArgs)
             tool.run(args=args)
     finally:
-        # Delete any temporary files that were created, but only when
-        # after existing any recursive invocation.
+        # Delete any temporary files that were created
         TempFile.deleteAll()
 
 if __name__ == '__main__':
