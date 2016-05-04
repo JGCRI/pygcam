@@ -9,14 +9,15 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
+import signal
 import argparse
 import pipes
 import subprocess
 from glob import glob
-from .utils import loadModuleFromPath, getTempFile, mkdirs
+from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .chart import ChartCommand
-from .config import ConfigCommand, setSection
+from .config import ConfigCommand, getParam, getConfig, getParamAsBoolean, setParam, getSection, setSection
 from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
 from .project import ProjectCommand
@@ -25,8 +26,8 @@ from .query import QueryCommand
 from .runGCAM import GcamCommand
 from .workspace import WorkspaceCommand
 from .setup import SetupCommand
-from .config import getConfig, getParam
 from .log import getLogger, setLogLevel, configureLogs
+from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
@@ -309,3 +310,82 @@ def _getMainParser():
     getConfig()
     tool = GcamTool(loadPlugins=False)
     return tool.parser
+
+
+class SignalException(Exception):
+    pass
+
+def _sigHandler(signum, _frame):
+    raise SignalException(signum)
+
+def catchSignals():
+    signals = [signal.SIGTERM, signal.SIGINT]
+    signals.append(signal.SIGABRT if IsWindows else signal.SIGQUIT)
+
+    for sig in signals:
+        signal.signal(sig, _sigHandler)
+
+def _main():
+    getConfig()
+    configureLogs()
+
+    # This parser handles only --batch, --showBatch, and --projectName args.
+    # If --batch is given, we need to create a script and call the GCAM.BatchCommand
+    # on it. We grab --projectName so we can set PluginPath by project
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+
+    parser.add_argument('-b', '--batch', action='store_true')
+    parser.add_argument('-B', '--showBatch', action="store_true")
+    parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+    parser.add_argument('--set', dest='configVars', metavar='name=value', action='append', default=[])
+
+    ns, otherArgs = parser.parse_known_args()
+
+    if ns.configSection:
+        setParam('GCAM.DefaultProject', ns.configSection)
+        setSection(ns.configSection)
+
+    # Set specified config vars
+    for arg in ns.configVars:
+        if not '=' in arg:
+            raise CommandlineError('-S requires an argument of the form variable=value, got "%s"' % arg)
+
+        name, value = arg.split('=')
+        setParam(name, value)
+
+    if ns.showBatch:          # don't run batch command; --showBatch implies --batch
+        ns.batch = True
+
+    # Catch signals to allow cleanup of TempFile instances, e.g., on ^C
+    catchSignals()
+
+    tool = GcamTool()
+
+    try:
+        if ns.batch:
+            run = not ns.showBatch
+            if ns.configSection:        # add these back in for the batch script
+                otherArgs = ['-P', ns.configSection] + otherArgs
+
+            tool.runBatch(otherArgs, run=run)
+        else:
+            args = tool.parser.parse_args(args=otherArgs)
+            tool.run(args=args)
+    finally:
+        # Delete any temporary files that were created
+        TempFile.deleteAll()
+
+
+def main():
+    try:
+        _main()
+        return 0
+
+    except Exception as e:
+        print "%s failed: %s" % (PROGRAM, e)
+
+        if not getSection() or getParamAsBoolean('GCAM.ShowStackTrace'):
+            import traceback
+            traceback.print_exc()
+
+        return 1
