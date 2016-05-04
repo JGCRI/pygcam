@@ -150,6 +150,13 @@ class GcamTool(object):
                             help='''Specify resources for the queued batch command. Can be a comma-delimited
                             list of assignments of the form NAME=value, e.g., -r 'pvmem=6GB'. (Linux only)''')
 
+        parser.add_argument('--set', dest='configVars', metavar='name=value', action='append', default=[],
+                            help='''Assign a value to override a configuration file parameter. For example,
+                            to set batch commands to start after a prior job of the same name completes,
+                            use --set "GCAM.OtherBatchArgs=-d singleton". Enclose the argument in quotes if
+                            it contains spaces or other characters that would confuse the shell.
+                            Use multiple --set flags and arguments to set multiple variables.''')
+
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 

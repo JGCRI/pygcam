@@ -11,7 +11,8 @@
 import sys
 import argparse
 import signal
-from pygcam.config import getConfig, getParam, getParamAsBoolean, setParam, getSection, setSection
+from pygcam.error import CommandlineError
+from pygcam.config import getConfig, getParamAsBoolean, setParam, getSection, setSection
 from pygcam.log import getLogger, configureLogs
 from pygcam.tool import GcamTool, PROGRAM
 from pygcam.utils import TempFile
@@ -44,6 +45,7 @@ def main():
     parser.add_argument('-b', '--batch', action='store_true')
     parser.add_argument('-B', '--showBatch', action="store_true")
     parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+    parser.add_argument('--set', dest='configVars', metavar='name=value', action='append', default=[])
 
     ns, otherArgs = parser.parse_known_args()
 
@@ -51,7 +53,15 @@ def main():
         setParam('GCAM.DefaultProject', ns.configSection)
         setSection(ns.configSection)
 
-    if ns.showBatch:          # don't run batch command); --showBatch implies --batch
+    # Set specified config vars
+    for arg in ns.configVars:
+        if not '=' in arg:
+            raise CommandlineError('-S requires an argument of the form variable=value, got "%s"' % arg)
+
+        name, value = arg.split('=')
+        setParam(name, value)
+
+    if ns.showBatch:          # don't run batch command; --showBatch implies --batch
         ns.batch = True
 
     # Catch these to allow cleanup of TempFile instances, e.g., on ^C
