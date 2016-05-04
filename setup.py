@@ -12,8 +12,7 @@ requirements = ['lxml',
 # Apparently 'bin' should be in pygcam/bin, not pygcam/pygcam/bin
 # "When we install the package, setuptools will copy the script to
 # our PATH and make it available for general use."
-
-scripts = ['bin/gcamtool.py', 'bin/gt.cmd']
+# scripts = ['bin/gcamtool.py', 'bin/gt.cmd']
 
 setup(
     name='pygcam',
@@ -25,8 +24,8 @@ setup(
     install_requires=requirements,
     include_package_data = True,
 
-    # May be obviated by entry_points
-    scripts=scripts,
+    # Obviated by entry_points, which creates gt on Linux/Mac and gt.exe on Windows
+    # scripts=scripts,
 
     url='https://bitbucket.org/plevin/pygcam',
     download_url='ssh://git@bitbucket.org/plevin/pygcam.git',
