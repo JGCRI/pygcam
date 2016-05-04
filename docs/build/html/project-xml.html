@@ -32,7 +32,7 @@
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
         <link rel="next" title="landProtection.xml" href="landProtection-xml.html"/>
-        <link rel="prev" title="gcamtool.py" href="gcamtool.html"/> 
+        <link rel="prev" title="gt" href="gcamtool.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code></a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">project.xml</a></li>
@@ -162,7 +162,7 @@ in the order defined. The script was developed for use with the
 <a class="reference external" href="https://bitbucket.org/plevin/gcam-utils/wiki/Home">gcam-utils</a>
 scripts, however any scripts or programs can be called in workflow
 &#8216;steps&#8217;.</p>
-<p>Command-line usage is describe on the <a class="reference internal" href="gcamtool.html#run-label"><em>gcamtool run</em></a> page.
+<p>Command-line usage is describe on the <a class="reference internal" href="gcamtool.html#run-label"><em>gt run</em></a> page.
 The <code class="docutils literal"><span class="pre">project.xml</span></code> file elements are described below.</p>
 <div class="section" id="xml-elements">
 <h2>XML elements<a class="headerlink" href="#xml-elements" title="Permalink to this headline">¶</a></h2>
@@ -302,7 +302,7 @@ same as the scenario, but this can be defined separately using the
 <code class="docutils literal"><span class="pre">subdir=&quot;otherName&quot;</span></code> attribute.</p>
 <p>For example,</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -360,12 +360,12 @@ sections) are sorted by sequence number before execution. By definition,
 steps with the same sequence number are order independent; they can run
 in any order.</p>
 <p>The text value of a step can be any command you want to run. Many of the
-common workflow steps are built into <code class="docutils literal"><span class="pre">gcamtool.py</span></code> and these can be
-invoked by using the name of a gcamtool sub-command <em>preceded by the &#64; symbol</em>
+common workflow steps are built into <code class="docutils literal"><span class="pre">gt</span></code> and these can be
+invoked by using the name of a gt sub-command <em>preceded by the &#64; symbol</em>
 and following it with any desired parameters accepted by that sub-command.
 For example, a step that runs GCAM might look like this:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -384,18 +384,17 @@ the named scenario group. This allows you to define steps specific to
 different scenario groups.</p>
 <p>For example, the block:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;steps&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>python {scenarioSrcDir}/{setup} -v -b {baseline} -g {scenarioGroup} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;2&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;3&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>python {scenarioSrcDir}/{setup} -b {baseline} -s {scenario} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;5&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;6&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;7&quot;</span> <span class="na">name=</span><span class="s">&quot;plotScen&quot;</span><span class="nt">&gt;</span>@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;8&quot;</span> <span class="na">name=</span><span class="s">&quot;diff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;plotDiff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;10&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/}*.csv<span class="nt">&lt;/step&gt;</span>
-   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;11&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o &quot;{scenario}-annual.xlsx&quot; -i {diffsDir}/*.csv<span class="nt">&lt;/step&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;steps&gt;</span>
+   <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;2&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;3&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;5&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;6&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;7&quot;</span> <span class="na">name=</span><span class="s">&quot;plot&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;all&quot;</span><span class="nt">&gt;</span>@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;7&quot;</span> <span class="na">name=</span><span class="s">&quot;diff&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;8&quot;</span> <span class="na">name=</span><span class="s">&quot;plotDiff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}<span class="nt">&lt;/step&gt;</span>
+           <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o &quot;{scenario}-annual.xlsx&quot; -i {diffsDir}/*.csv<span class="nt">&lt;/step&gt;</span>
 <span class="nt">&lt;/steps&gt;</span>
 </pre></div>
 </div>
@@ -411,7 +410,7 @@ steps. To redefine a step, the project defines a <code class="docutils literal">
 same values for the attributes <code class="docutils literal"><span class="pre">name</span></code>, <code class="docutils literal"><span class="pre">seq</span></code>, and <code class="docutils literal"><span class="pre">runFor</span></code>. A
 default step can be deleted by redefining it with no text value, e.g.,</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;10&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">/&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">/&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -462,7 +461,7 @@ in <code class="docutils literal"><span class="pre">&lt;project&gt;</span></code
 <p>The <code class="docutils literal"><span class="pre">&lt;vars&gt;</span></code> element contains a series of <code class="docutils literal"><span class="pre">&lt;var&gt;</span></code> declarations.
 Values can be assigned directly to variable names, as in:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;myVar&quot;</span><span class="nt">&gt;</span>foo<span class="nt">&lt;/var&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;myVar&quot;</span><span class="nt">&gt;</span>foo<span class="nt">&lt;/var&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -480,46 +479,87 @@ set the attribute <code class="docutils literal"><span class="pre">eval=&quot;1&
 (<code class="docutils literal"><span class="pre">~/.config/pygcam.cfg</span></code>) automatically. Note that the names are
 case sensitive. See <a class="reference internal" href="config.html"><em>pygcam.config</em></a> for a list of defined variables.</p>
 </div>
-<div class="section" id="required-variables">
-<h4>Required variables<a class="headerlink" href="#required-variables" title="Permalink to this headline">¶</a></h4>
-<p>There are three required variables:</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">&lt;var</span> <span class="pre">name=&quot;wsRoot&quot;&gt;</span></code> &#8211; Set this to the top-level directory
-holding run-time workspaces. The GCAM workspace name is the computed
-value {wsRoot}/{project}/{scenario}.</li>
-<li><code class="docutils literal"><span class="pre">&lt;var</span> <span class="pre">name=&quot;xmlsrc&quot;&gt;</span></code> &#8211; Set this to the top-level directory
-holding source files for the setup tools. Scenario source files are
-in the computed value {xmlsrc}/{project}/{scenarioSubdir}.</li>
-<li><code class="docutils literal"><span class="pre">&lt;var</span> <span class="pre">name=&quot;localXml&quot;&gt;</span></code> &#8211; Set this to the top-level directory
-holding XML files generated by the setup tools. Scenario files are
-found at computed location {localXml}/{project}/{scenarioSubdir}</li>
-</ul>
-</div>
 <div class="section" id="automatic-variables">
 <h4>Automatic variables<a class="headerlink" href="#automatic-variables" title="Permalink to this headline">¶</a></h4>
 <p>The <code class="docutils literal"><span class="pre">run</span></code> sub-command creates several convenience variables at run-time
-that are accessible in the commands for any . These included:</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">{project}</span></code> : the project name</li>
-<li><code class="docutils literal"><span class="pre">{scenarioGroup}</span></code> : the name of scenario group</li>
-<li><code class="docutils literal"><span class="pre">{scenario}</span></code> : scenario name</li>
-<li><code class="docutils literal"><span class="pre">{baseline}</span></code> : the name of the scenario with baseline=&#8221;1&#8221;</li>
-<li><code class="docutils literal"><span class="pre">{reference}</span></code> : a synonym for baseline</li>
-<li><code class="docutils literal"><span class="pre">{step}</span></code> : the name of the currently running step</li>
-<li><code class="docutils literal"><span class="pre">{years}</span></code> : <code class="docutils literal"><span class="pre">{startYear}-{endYear}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{projectSubdir}</span></code> : subdir defined in the ; defaults to project
-name.</li>
-<li><code class="docutils literal"><span class="pre">{projectSrcDir}</span></code> : <code class="docutils literal"><span class="pre">{xmlSrc}/{projectSubdir}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{projectWsDir}</span></code> : <code class="docutils literal"><span class="pre">{wsRoot}/{projectSubdir}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{projectXmlDir}</span></code> : <code class="docutils literal"><span class="pre">{local-xml}/{projectSubdir}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{scenarioSubdir}</span></code> : subdir for the current scenario; default is
-scenario name</li>
-<li><code class="docutils literal"><span class="pre">{scenarioSrcDir}</span></code> : <code class="docutils literal"><span class="pre">{projectSrcDir}/scenarioSubdir}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{scenarioXmlDir}</span></code> : <code class="docutils literal"><span class="pre">{projectXmlDir/scenarioSubdir}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{scenarioWsDir}</span></code> : <code class="docutils literal"><span class="pre">{projectWsDir}/{scenario}</span></code></li>
-<li><code class="docutils literal"><span class="pre">{diffsDir}</span></code> : <code class="docutils literal"><span class="pre">{scenarioWsDir}/diffs</span></code></li>
-<li><code class="docutils literal"><span class="pre">{batchDir}</span></code> : <code class="docutils literal"><span class="pre">{scenarioWsDir}/batch-{scenarioName}</span></code></li>
-</ul>
+that are accessible in the command steps. These include:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="76%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Variable</td>
+<td>Value</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{baseline}</span></code></td>
+<td>the name of the scenario with baseline=&#8221;1&#8221;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{batchDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{scenarioWsDir}/batch-{scenarioName}</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{diffsDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{scenarioWsDir}/diffs</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{project}</span></code></td>
+<td>the project name</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{baseline}</span></code></td>
+<td>the name of the scenario with baseline=&#8221;1&#8221;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{batchDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{scenarioWsDir}/batch-{scenarioName}</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{diffsDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{scenarioWsDir}/diffs</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{project}</span></code></td>
+<td>the project name</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{projectSrcDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{xmlSrc}/{scenarioGroup}/{projectSubdir}</span></code> if
+<code class="docutils literal"><span class="pre">useGroupDir=1</span></code> is specified for scenarioGroup, else
+<code class="docutils literal"><span class="pre">{xmlSrc}/{projectSubdir}</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{projectSubdir}</span></code></td>
+<td>subdir defined in the ; defaults to project name.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{projectWsDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{wsRoot}/{scenarioGroup}/{projectSubdir}</span></code> if
+<code class="docutils literal"><span class="pre">useGroupDir=1</span></code> is specified for scenarioGroup, else
+<code class="docutils literal"><span class="pre">{wsRoot}/{projectSubdir}</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{projectXmlDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{local-xml}/{scenarioGroup}/{projectSubdir}</span></code> if
+<code class="docutils literal"><span class="pre">useGroupDir=1</span></code> is specified for scenarioGroup, else
+<code class="docutils literal"><span class="pre">{local-xml}/{projectSubdir}</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{reference}</span></code></td>
+<td>a synonym for <code class="docutils literal"><span class="pre">{baseline}</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{scenario}</span></code></td>
+<td>scenario name</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{scenarioGroup}</span></code></td>
+<td>the name of scenario group</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{scenarioSubdir}</span></code></td>
+<td>subdir for the current scenario; default is | scenario name</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{scenarioSrcDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{projectSrcDir}/scenarioSubdir}</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{scenarioXmlDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{projectXmlDir/scenario}</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">{scenarioWsDir}</span></code></td>
+<td><code class="docutils literal"><span class="pre">{GCAM.SandboxRoot}/{scenario}</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">{step}</span></code></td>
+<td>the name of the currently running step</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section" id="tmpfile">
@@ -593,7 +633,7 @@ part of your text might be confused for a variable reference.</li>
 </ul>
 <p>For example,</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;text&gt;</span>some text {scenario}<span class="nt">&lt;/text&gt;</span>
     <span class="nt">&lt;text&gt;</span>other text<span class="nt">&lt;/text&gt;</span>
 <span class="nt">&lt;/tmpFile&gt;</span>
@@ -638,7 +678,7 @@ selectively drop the line by redefining an a <code class="docutils literal"><spa
 same tag name. To delete a value, provide no value. For example, if the
 defaults section has this definition:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;text&gt;</span>line 1<span class="nt">&lt;/text&gt;</span>
     <span class="nt">&lt;text</span> <span class="na">tag=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>line 2<span class="nt">&lt;/text&gt;</span>
 <span class="nt">&lt;/tmpFile&gt;</span>
@@ -648,7 +688,7 @@ defaults section has this definition:</p>
 <p>a project can cause the second line to be dropped when writing the temp
 file, by specifying:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;text</span> <span class="na">tag=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
 <span class="nt">&lt;/tmpFile&gt;</span>
 </pre></div>
@@ -659,70 +699,63 @@ file, by specifying:</p>
 <div class="section" id="example-project-xml-file">
 <h2>Example project.xml file<a class="headerlink" href="#example-project-xml-file" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;projects&gt;</span>
-  <span class="nt">&lt;defaults&gt;</span>
-    <span class="nt">&lt;vars&gt;</span>
-        <span class="c">&lt;!-- Required variables --&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;workspaceRoot&quot;</span> <span class="na">configVar=</span><span class="s">&quot;GCAM.WorkspaceRoot&quot;</span><span class="nt">/&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;xmlsrc&quot;</span> <span class="na">configVar=</span><span class="s">&quot;GCAM.XmlSrc&quot;</span><span class="nt">/&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;localXml&quot;</span> <span class="na">configVar=</span><span class="s">&quot;GCAM.LocalXml&quot;</span><span class="nt">/&gt;</span>
-
-        <span class="c">&lt;!-- User variables, used only by defined steps --&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span><span class="nt">&gt;</span>setup.py<span class="nt">&lt;/var&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;startYear&quot;</span><span class="nt">&gt;</span>2015<span class="nt">&lt;/var&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;endYear&quot;</span><span class="nt">&gt;</span>2050<span class="nt">&lt;/var&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;shockYear&quot;</span><span class="nt">&gt;</span>2020<span class="nt">&lt;/var&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;queryDir&quot;</span> <span class="na">configVar=</span><span class="s">&quot;GCAM.QueryDir&quot;</span><span class="nt">/&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;repoBin&quot;</span> <span class="na">configVar=</span><span class="s">&quot;GCAM.RepoBin&quot;</span><span class="nt">/&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;queryPath&quot;</span> <span class="na">configVar=</span><span class="s">&quot;GCAM.QueryPath&quot;</span><span class="nt">&gt;&lt;/var&gt;</span>
-    <span class="nt">&lt;/vars&gt;</span>
-    <span class="nt">&lt;steps&gt;</span>
-        <span class="c">&lt;!-- Note: inserting &#39;python&#39; before the setup script may be necessary on Windows</span>
-<span class="c">             or if the script does not have execute permission set. --&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>python {scenarioSrcDir}/{setup} -v -b {baseline} -g {scenarioGroup} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;2&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;3&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>python {scenarioSrcDir}/{setup} -b {baseline} -s {scenario} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;5&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;6&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;7&quot;</span> <span class="na">name=</span><span class="s">&quot;plotScen&quot;</span><span class="nt">&gt;</span>@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;8&quot;</span> <span class="na">name=</span><span class="s">&quot;diff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;plotDiff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;10&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/}*.csv<span class="nt">&lt;/step&gt;</span>
-        <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;11&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o &quot;{scenario}-annual.xlsx&quot; -i {diffsDir}/*.csv<span class="nt">&lt;/step&gt;</span>
-    <span class="nt">&lt;/steps&gt;</span>
-
-    <span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryFile&quot;</span> <span class="na">evaluate=</span><span class="s">&quot;0&quot;</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Residue_biomass_production<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>refined-liquids-prod-by-tech<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Purpose-grown_biomass_production<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Kyoto_gas_forcing<span class="nt">&lt;/text&gt;</span>
-    <span class="nt">&lt;/tmpFile&gt;</span>
-
-    <span class="nt">&lt;vars&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;scenPlotArgs&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>--verbose -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate<span class="nt">&lt;/var&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;diffPlotArgs&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>-D {diffsDir} --outputDir figures --years {years}<span class="nt">&lt;/var&gt;</span>
-        <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;scenRefCsv&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>{scenario}-{reference}.csv<span class="nt">&lt;/var&gt;</span>
-    <span class="nt">&lt;/vars&gt;</span>
-
-    <span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;diffPlots&quot;</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Residue_biomass_production-{scenRefCsv} -Y &#39;EJ biomass&#39; -n 4 -T &#39;$\Delta$ Residue biomass production&#39; -x sector-by-year.png -I sector<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Residue_biomass_production-{scenRefCsv} -Y &#39;EJ biomass&#39; -n 4 -T &#39;$\Delta$ Residue biomass production&#39; -x region-by-year.png -I region<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>refined-liquids-prod-by-tech-{scenRefCsv} -I technology -T &#39;$\Delta$ Refined liquid fuels production&#39; -c region -n 3<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Purpose-grown_biomass_production-{scenRefCsv} -Y &quot;EJ biomass&quot; -n 4 -c output -I region -z -T &#39;$\Delta$ Purpose-grown biomass production&#39; -x by-region.png<span class="nt">&lt;/text&gt;</span>
-        <span class="nt">&lt;text&gt;</span>Kyoto_gas_forcing-{scenRefCsv} -Y &#39;W/m$^2$&#39; --timeseries -T &#39;$\Delta$ Kyoto Gas Forcing&#39;<span class="nt">&lt;/text&gt;</span>
-    <span class="nt">&lt;/tmpFile&gt;</span>
-  <span class="nt">&lt;/defaults&gt;</span>
-
-  <span class="nt">&lt;project</span> <span class="na">name=</span><span class="s">&quot;Paper1&quot;</span><span class="nt">&gt;</span>
-      <span class="nt">&lt;scenarioGroup</span> <span class="na">name=</span><span class="s">&quot;anything&quot;</span> <span class="na">default=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
-          <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;base-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;baseline&quot;</span> <span class="na">baseline=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
-          <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;corn-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;corn&quot;</span><span class="nt">/&gt;</span>
-          <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;stover-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;stover&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
-          <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;switchgrass-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;switchgrass&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
-          <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
-      <span class="nt">&lt;scenarioGroup&gt;</span>
-  <span class="nt">&lt;/project&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;projects&gt;</span>
+   <span class="nt">&lt;defaults&gt;</span>
+     <span class="nt">&lt;vars&gt;</span>
+       <span class="c">&lt;!-- User variables, used only by defined steps --&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;startYear&quot;</span><span class="nt">&gt;</span>2015<span class="nt">&lt;/var&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;endYear&quot;</span><span class="nt">&gt;</span>2050<span class="nt">&lt;/var&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;years&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>{startYear}-{endYear}<span class="nt">&lt;/var&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;shockYear&quot;</span><span class="nt">&gt;</span>2020<span class="nt">&lt;/var&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;queryPath&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>{GCAM.QueryDir}:{GCAM.QueryDir}/Main_queries_customized.xml<span class="nt">&lt;/var&gt;</span>
+     <span class="nt">&lt;/vars&gt;</span>
+     <span class="nt">&lt;steps&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;2&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;3&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;4&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;5&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;6&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;7&quot;</span> <span class="na">name=</span><span class="s">&quot;plot&quot;</span> <span class="na">runFor=</span><span class="s">&quot;all&quot;</span><span class="nt">&gt;</span>@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;7&quot;</span> <span class="na">name=</span><span class="s">&quot;diff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;8&quot;</span> <span class="na">name=</span><span class="s">&quot;plotDiff&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}<span class="nt">&lt;/step&gt;</span>
+       <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;policy&quot;</span><span class="nt">&gt;</span>@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o &quot;{scenario}-annual.xlsx&quot; -i {diffsDir}/*.csv<span class="nt">&lt;/step&gt;</span>
+     <span class="nt">&lt;/steps&gt;</span>
+     <span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryFile&quot;</span> <span class="na">eval=</span><span class="s">&quot;0&quot;</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Residue_biomass_production<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>refined-liquids-prod-by-tech<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Purpose-grown_biomass_production<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Kyoto_gas_forcing<span class="nt">&lt;/text&gt;</span>
+     <span class="nt">&lt;/tmpFile&gt;</span>
+     <span class="nt">&lt;vars&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;scenPlotArgs&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>--verbose -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate<span class="nt">&lt;/var&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;diffPlotArgs&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>-D {diffsDir} --outputDir figures --years {years}<span class="nt">&lt;/var&gt;</span>
+       <span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;scenRefCsv&quot;</span> <span class="na">eval=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>{scenario}-{reference}.csv<span class="nt">&lt;/var&gt;</span>
+     <span class="nt">&lt;/vars&gt;</span>
+     <span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;diffPlots&quot;</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Residue_biomass_production-{scenRefCsv} -Y &#39;EJ biomass&#39; -n 4 -T &#39;$\Delta$ Residue biomass production&#39; -x sector-by-year.png -I sector<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Residue_biomass_production-{scenRefCsv} -Y &#39;EJ biomass&#39; -n 4 -T &#39;$\Delta$ Residue biomass production&#39; -x region-by-year.png -I region<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>refined-liquids-prod-by-tech-{scenRefCsv} -I technology -T &#39;$\Delta$ Refined liquid fuels production&#39; -c region -n 3<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Purpose-grown_biomass_production-{scenRefCsv} -Y &quot;EJ biomass&quot; -n 4 -c output -I region -z -T &#39;$\Delta$ Purpose-grown biomass production&#39; -x by-region.png<span class="nt">&lt;/text&gt;</span>
+       <span class="nt">&lt;text&gt;</span>Kyoto_gas_forcing-{scenRefCsv} -Y &#39;W/m$^2$&#39; --timeseries -T &#39;$\Delta$ Kyoto Gas Forcing&#39;<span class="nt">&lt;/text&gt;</span>
+     <span class="nt">&lt;/tmpFile&gt;</span>
+   <span class="nt">&lt;/defaults&gt;</span>
+   <span class="nt">&lt;project</span> <span class="na">name=</span><span class="s">&quot;Paper1&quot;</span><span class="nt">&gt;</span>
+     <span class="nt">&lt;scenarioGroup</span> <span class="na">name=</span><span class="s">&quot;group1&quot;</span> <span class="na">default=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;base-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;baseline&quot;</span> <span class="na">baseline=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;corn-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;corn&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;stover-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;stover&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;switchgrass-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;switchgrass&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span><span class="nt">/&gt;</span>
+     <span class="nt">&lt;/scenarioGroup&gt;</span>
+     <span class="nt">&lt;scenarioGroup</span> <span class="na">name=</span><span class="s">&quot;group2&quot;</span> <span class="na">default=</span><span class="s">&quot;0&quot;</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;base-2&quot;</span> <span class="na">subdir=</span><span class="s">&quot;baseline&quot;</span> <span class="na">baseline=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;corn-2&quot;</span> <span class="na">subdir=</span><span class="s">&quot;corn&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;stover-2&quot;</span> <span class="na">subdir=</span><span class="s">&quot;stover&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;switchgrass-2&quot;</span> <span class="na">subdir=</span><span class="s">&quot;switchgrass&quot;</span><span class="nt">/&gt;</span>
+       <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-2&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span><span class="nt">/&gt;</span>
+     <span class="nt">&lt;/scenarioGroup&gt;</span>
+   <span class="nt">&lt;/project&gt;</span>
 <span class="nt">&lt;/projects&gt;</span>
 </pre></div>
 </div>
@@ -740,7 +773,7 @@ file, by specifying:</p>
         <a href="landProtection-xml.html" class="btn btn-neutral float-right" title="landProtection.xml" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gcamtool.html" class="btn btn-neutral" title="gcamtool.py" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="gcamtool.html" class="btn btn-neutral" title="gt" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

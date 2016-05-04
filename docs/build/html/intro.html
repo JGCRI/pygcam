@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -171,7 +171,7 @@ differences between policy and baseline scenarios and plotting results.</li>
 </ul>
 <ul class="simple">
 <li><strong>Command-line tools</strong> built upon the library described above to package commonly required functionality into a convenient
-form for direct use and to support development of higher-level, custom scripts. (See <a class="reference internal" href="gcamtool.html"><em>gcamtool.py</em></a> for details.)</li>
+form for direct use and to support development of higher-level, custom scripts. (See <a class="reference internal" href="gcamtool.html"><em>gt</em></a> for details.)</li>
 </ul>
 <ul class="simple">
 <li><strong>A Monte Carlo Simulation framework</strong> using GCAM on high-performance computers, allowing users to explore
@@ -189,12 +189,12 @@ individual parameters to variance in output metrics.</li>
 </ul>
 </div></blockquote>
 <p>Users can control many aspects of <code class="docutils literal"><span class="pre">pygcam</span></code> through a <a class="reference internal" href="config.html"><em>configuration file</em></a>
-found in <code class="docutils literal"><span class="pre">${HOME}/.pygcam.cfg</span></code>. When <a class="reference internal" href="gcamtool.html"><em>gcamtool.py</em></a> is run the first time, a
+found in <code class="docutils literal"><span class="pre">${HOME}/.pygcam.cfg</span></code>. When <a class="reference internal" href="gcamtool.html"><em>gt</em></a> is run the first time, a
 configuration file is created, with all configuration options commented out and
 showing their default values.</p>
-<p>The main script (<a class="reference internal" href="gcamtool.html"><em>gcamtool.py</em></a>) implements several &#8220;subcommands&#8221; that perform various
+<p>The main script (<a class="reference internal" href="gcamtool.html"><em>gt</em></a>) implements several &#8220;subcommands&#8221; that perform various
 steps in a typical GCAM analysis. The script implements a <a class="reference internal" href="subcommand.html"><em>plug-in</em></a>
-architecture allowing users to customize <a class="reference internal" href="gcamtool.html"><em>gcamtool</em></a> and avoid a proliferation of scripts.</p>
+architecture allowing users to customize <a class="reference internal" href="gcamtool.html"><em>gt</em></a> and avoid a proliferation of scripts.</p>
 <blockquote>
 <div><ul class="simple">
 <li>The <code class="docutils literal"><span class="pre">run</span></code> subcommand reads an XML input file and runs one or more steps of an analysis,
@@ -276,7 +276,7 @@ project. Consider the following directory structure:</p>
 </li>
 </ul>
 </div></blockquote>
-<p>With this approach, the gcamtool.py script can get the main workspace
+<p>With this approach, the <code class="docutils literal"><span class="pre">gt</span></code> script can get the main workspace
 location from the variable <code class="docutils literal"><span class="pre">GCAM.WorkspaceRoot</span></code> from the configuration file
 <code class="docutils literal"><span class="pre">~.pygcam.cfg</span></code> (which, in this approach can be set once for all projects)
 and you need only pass the scenario name and project name, allowing the path

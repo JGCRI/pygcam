@@ -18,6 +18,15 @@ Test
 
 Features
 --------
+- Have a flag for batch mode that runs the baseline, then batches
+  the policy scenarios with '-d singleton' to cause them to wait
+  for the baseline to complete.
+  - Maybe --split => split the scenario to run in own batch jobs
+    rather than running them all in one big job. If the scenarios
+    include baseline and at least one policy scenario, add args
+    "-d afterok:<jobid>" to existing value of GCAM.OtherBatchArgs,
+    where <jobid> is the id of the baseline job.
+
 - If scenario has unique name among groups, run it even if group isn't specified?
     - Will require restructuring since it's assumed there's one group name
 

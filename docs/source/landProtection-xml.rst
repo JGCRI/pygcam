@@ -11,7 +11,7 @@ defines one or protection scenarios, which can specify the fraction the original
 area in any combination of `{Shrubland, Grassland, UnmanagedPasture, UnmanagedForest}`,
 by region or groups of regions.
 
-Command-line usage is documented on the :ref:`gcamtool protect <protect-label>` page.
+Command-line usage is documented on the :ref:`gt protect <protect-label>` page.
 The ``landProtection.xml`` file elements are described below.
 
 XML elements

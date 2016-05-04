@@ -13,7 +13,7 @@ in the order defined. The script was developed for use with the
 scripts, however any scripts or programs can be called in workflow
 'steps'.
 
-Command-line usage is describe on the :ref:`gcamtool run<run-label>` page.
+Command-line usage is describe on the :ref:`gt run<run-label>` page.
 The ``project.xml`` file elements are described below.
 
 XML elements
@@ -142,8 +142,8 @@ steps with the same sequence number are order independent; they can run
 in any order.
 
 The text value of a step can be any command you want to run. Many of the
-common workflow steps are built into ``gcamtool.py`` and these can be
-invoked by using the name of a gcamtool sub-command *preceded by the @ symbol*
+common workflow steps are built into ``gt`` and these can be
+invoked by using the name of a gt sub-command *preceded by the @ symbol*
 and following it with any desired parameters accepted by that sub-command.
 For example, a step that runs GCAM might look like this:
 
@@ -173,17 +173,16 @@ For example, the block:
   .. code-block:: xml
 
      <steps>
-        <step seq="1" name="setup" runFor="baseline">python {scenarioSrcDir}/{setup} -v -b {baseline} -g {scenarioGroup} -y {shockYear}-{endYear}</step>
-        <step seq="2" name="gcam"  runFor="baseline">@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
-        <step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-        <step seq="4" name="setup" runFor="policy">python {scenarioSrcDir}/{setup} -b {baseline} -s {scenario} -y {shockYear}-{endYear}</step>
-        <step seq="5" name="gcam"  runFor="policy">@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
-        <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
-        <step seq="7" name="plotScen">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-        <step seq="8" name="diff" runFor="policy">@diff -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-        <step seq="9" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-        <step seq="10" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/}*.csv</step>
-        <step seq="11" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+        <step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+		<step seq="2" name="gcam"  runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
+		<step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+		<step seq="5" name="gcam"  runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
+		<step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step seq="7" name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+		<step seq="7" name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+		<step seq="8" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+		<step seq="9" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
      </steps>
 
 defines a series of steps that calls setup scripts, runs GCAM, runs a
@@ -200,7 +199,7 @@ default step can be deleted by redefining it with no text value, e.g.,
 
   .. code-block:: xml
 
-    <step seq="10" name="gcam" runFor="baseline"/>
+    <step seq="9" name="xlsx" runFor="baseline"/>
 
 Steps defined in projects that do not match default steps are added to
 the set in the order indicated by ``seq``.
@@ -256,48 +255,61 @@ Value for the current project are loaded from the configuration file
 case sensitive. See :doc:`config` for a list of defined variables.
 
 
-Required variables
-~~~~~~~~~~~~~~~~~~
-
-There are three required variables:
-
--  ``<var name="wsRoot">`` -- Set this to the top-level directory
-   holding run-time workspaces. The GCAM workspace name is the computed
-   value {wsRoot}/{project}/{scenario}.
-
--  ``<var name="xmlsrc">`` -- Set this to the top-level directory
-   holding source files for the setup tools. Scenario source files are
-   in the computed value {xmlsrc}/{project}/{scenarioSubdir}.
-
--  ``<var name="localXml">`` -- Set this to the top-level directory
-   holding XML files generated by the setup tools. Scenario files are
-   found at computed location {localXml}/{project}/{scenarioSubdir}
-
 Automatic variables
 ~~~~~~~~~~~~~~~~~~~
 
 The ``run`` sub-command creates several convenience variables at run-time
-that are accessible in the commands for any . These included:
+that are accessible in the command steps. These include:
 
--  ``{project}`` : the project name
--  ``{scenarioGroup}`` : the name of scenario group
--  ``{scenario}`` : scenario name
--  ``{baseline}`` : the name of the scenario with baseline="1"
--  ``{reference}`` : a synonym for baseline
--  ``{step}`` : the name of the currently running step
--  ``{years}`` : ``{startYear}-{endYear}``
--  ``{projectSubdir}`` : subdir defined in the ; defaults to project
-   name.
--  ``{projectSrcDir}`` : ``{xmlSrc}/{projectSubdir}``
--  ``{projectWsDir}`` : ``{wsRoot}/{projectSubdir}``
--  ``{projectXmlDir}`` : ``{local-xml}/{projectSubdir}``
--  ``{scenarioSubdir}`` : subdir for the current scenario; default is
-   scenario name
--  ``{scenarioSrcDir}`` : ``{projectSrcDir}/scenarioSubdir}``
--  ``{scenarioXmlDir}`` : ``{projectXmlDir/scenarioSubdir}``
--  ``{scenarioWsDir}`` : ``{projectWsDir}/{scenario}``
--  ``{diffsDir}`` : ``{scenarioWsDir}/diffs``
--  ``{batchDir}`` : ``{scenarioWsDir}/batch-{scenarioName}``
++--------------------+-----------------------------------------------------------------+
+| Variable           | Value                                                           |
++--------------------+-----------------------------------------------------------------+
+|``{baseline}``      | the name of the scenario with baseline="1"                      |
++--------------------+-----------------------------------------------------------------+
+|``{batchDir}``      | ``{scenarioWsDir}/batch-{scenarioName}``                        |
++--------------------+-----------------------------------------------------------------+
+|``{diffsDir}``      | ``{scenarioWsDir}/diffs``                                       |
++--------------------+-----------------------------------------------------------------+
+|``{project}``       | the project name                                                |
++--------------------+-----------------------------------------------------------------+
+|``{baseline}``      | the name of the scenario with baseline="1"                      |
++--------------------+-----------------------------------------------------------------+
+|``{batchDir}``      | ``{scenarioWsDir}/batch-{scenarioName}``                        |
++--------------------+-----------------------------------------------------------------+
+|``{diffsDir}``      | ``{scenarioWsDir}/diffs``                                       |
++--------------------+-----------------------------------------------------------------+
+|``{project}``       | the project name                                                |
++--------------------+-----------------------------------------------------------------+
+|``{projectSrcDir}`` | ``{xmlSrc}/{scenarioGroup}/{projectSubdir}`` if                 |
+|                    | ``useGroupDir=1`` is specified for scenarioGroup, else          |
+|                    | ``{xmlSrc}/{projectSubdir}``                                    |
++--------------------+-----------------------------------------------------------------+
+|``{projectSubdir}`` | subdir defined in the ; defaults to project name.               |
++--------------------+-----------------------------------------------------------------+
+|``{projectWsDir}``  | ``{wsRoot}/{scenarioGroup}/{projectSubdir}`` if                 |
+|                    | ``useGroupDir=1`` is specified for scenarioGroup, else          |
+|                    | ``{wsRoot}/{projectSubdir}``                                    |
++--------------------+-----------------------------------------------------------------+
+|``{projectXmlDir}`` | ``{local-xml}/{scenarioGroup}/{projectSubdir}`` if              |
+|                    | ``useGroupDir=1`` is specified for scenarioGroup, else          |
+|                    | ``{local-xml}/{projectSubdir}``                                 |
++--------------------+-----------------------------------------------------------------+
+|``{reference}``     | a synonym for ``{baseline}``                                    |
++--------------------+-----------------------------------------------------------------+
+|``{scenario}``      | scenario name                                                   |
++--------------------+-----------------------------------------------------------------+
+|``{scenarioGroup}`` | the name of scenario group                                      |
++--------------------+-----------------------------------------------------------------+
+|``{scenarioSubdir}``| subdir for the current scenario; default is | scenario name     |
++--------------------+-----------------------------------------------------------------+
+|``{scenarioSrcDir}``| ``{projectSrcDir}/scenarioSubdir}``                             |
++--------------------+-----------------------------------------------------------------+
+|``{scenarioXmlDir}``| ``{projectXmlDir/scenario}``                                    |
++--------------------+-----------------------------------------------------------------+
+|``{scenarioWsDir}`` | ``{GCAM.SandboxRoot}/{scenario}``                               |
++--------------------+-----------------------------------------------------------------+
+|``{step}``          | the name of the currently running step                          |
++--------------------+-----------------------------------------------------------------+
 
 <tmpFile>
 ^^^^^^^^^
@@ -400,68 +412,62 @@ Example project.xml file
 
   .. code-block:: xml
 
-    <projects>
-      <defaults>
-        <vars>
-            <!-- Required variables -->
-            <var name="workspaceRoot" configVar="GCAM.WorkspaceRoot"/>
-            <var name="xmlsrc" configVar="GCAM.XmlSrc"/>
-            <var name="localXml" configVar="GCAM.LocalXml"/>
-
+     <projects>
+        <defaults>
+          <vars>
             <!-- User variables, used only by defined steps -->
-            <var name="setup">setup.py</var>
             <var name="startYear">2015</var>
             <var name="endYear">2050</var>
+            <var name="years" eval="1">{startYear}-{endYear}</var>
             <var name="shockYear">2020</var>
-            <var name="queryDir" configVar="GCAM.QueryDir"/>
-            <var name="repoBin" configVar="GCAM.RepoBin"/>
-            <var name="queryPath" configVar="GCAM.QueryPath"></var>
-        </vars>
-        <steps>
-            <!-- Note: inserting 'python' before the setup script may be necessary on Windows
-                 or if the script does not have execute permission set. -->
-            <step seq="1" name="setup" runFor="baseline">python {scenarioSrcDir}/{setup} -v -b {baseline} -g {scenarioGroup} -y {shockYear}-{endYear}</step>
-            <step seq="2" name="gcam"  runFor="baseline">@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+            <var name="queryPath" eval="1">{GCAM.QueryDir}:{GCAM.QueryDir}/Main_queries_customized.xml</var>
+          </vars>
+          <steps>
+            <step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+            <step seq="2" name="gcam" runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
             <step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-            <step seq="4" name="setup" runFor="policy">python {scenarioSrcDir}/{setup} -b {baseline} -s {scenario} -y {shockYear}-{endYear}</step>
-            <step seq="5" name="gcam"  runFor="policy">@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
-            <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q {queryPath} "@{queryFile}"</step>
-            <step seq="7" name="plotScen">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-            <step seq="8" name="diff" runFor="policy">@diff -D {projectWsDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-            <step seq="9" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-            <step seq="10" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/}*.csv</step>
-            <step seq="11" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
-        </steps>
-
-        <tmpFile varName="queryFile" evaluate="0">
+            <step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+            <step seq="5" name="gcam" runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
+            <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+            <step seq="7" name="plot" runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+            <step seq="7" name="diff" runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+            <step seq="8" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+            <step seq="9" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+          </steps>
+          <tmpFile varName="queryFile" eval="0">
             <text>Residue_biomass_production</text>
             <text>refined-liquids-prod-by-tech</text>
             <text>Purpose-grown_biomass_production</text>
             <text>Kyoto_gas_forcing</text>
-        </tmpFile>
-
-        <vars>
+          </tmpFile>
+          <vars>
             <var name="scenPlotArgs" eval="1">--verbose -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
             <var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years}</var>
             <var name="scenRefCsv" eval="1">{scenario}-{reference}.csv</var>
-        </vars>
-
-        <tmpFile varName="diffPlots">
+          </vars>
+          <tmpFile varName="diffPlots">
             <text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
             <text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
             <text>refined-liquids-prod-by-tech-{scenRefCsv} -I technology -T '$\Delta$ Refined liquid fuels production' -c region -n 3</text>
             <text>Purpose-grown_biomass_production-{scenRefCsv} -Y "EJ biomass" -n 4 -c output -I region -z -T '$\Delta$ Purpose-grown biomass production' -x by-region.png</text>
             <text>Kyoto_gas_forcing-{scenRefCsv} -Y 'W/m$^2$' --timeseries -T '$\Delta$ Kyoto Gas Forcing'</text>
-        </tmpFile>
-      </defaults>
+          </tmpFile>
+        </defaults>
+        <project name="Paper1">
+          <scenarioGroup name="group1" default="1">
+            <scenario name="base-1" subdir="baseline" baseline="1"/>
+            <scenario name="corn-1" subdir="corn"/>
+            <scenario name="stover-1" subdir="stover" active="0"/>
+            <scenario name="switchgrass-1" subdir="switchgrass"/>
+            <scenario name="biodiesel-1" subdir="biodiesel"/>
+          </scenarioGroup>
+          <scenarioGroup name="group2" default="0">
+            <scenario name="base-2" subdir="baseline" baseline="1"/>
+            <scenario name="corn-2" subdir="corn"/>
+            <scenario name="stover-2" subdir="stover"/>
+            <scenario name="switchgrass-2" subdir="switchgrass"/>
+            <scenario name="biodiesel-2" subdir="biodiesel"/>
+          </scenarioGroup>
+        </project>
+     </projects>
 
-      <project name="Paper1">
-          <scenarioGroup name="anything" default="1">
-              <scenario name="base-1" subdir="baseline" baseline="1"/>
-              <scenario name="corn-1" subdir="corn"/>
-              <scenario name="stover-1" subdir="stover" active="0"/>
-              <scenario name="switchgrass-1" subdir="switchgrass" active="0"/>
-              <scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
-          <scenarioGroup>
-      </project>
-    </projects>

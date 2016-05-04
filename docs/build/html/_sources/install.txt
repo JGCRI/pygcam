@@ -56,9 +56,9 @@ Install ``pygcam``
 Initialize the configuration file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The first time ``gcamtool.py`` is run, it will create a default
+The first time ``gt`` is run, it will create a default
 configuration file with all options present but commented out.
-Running ``gcamtool.py -h``, will print a usage message and create
+Running ``gt -h``, will print a usage message and create
 the initial configuration file (unless one is already present). The
 file is ``.pygcam.cfg`` found in your home directory.
 
@@ -69,8 +69,7 @@ Below are some key parameters you may wish to modify in your
 
     [DEFAULT]
 
-    # Set a default project to be used if the "-P" flag is not passed to
-    # gcamtool.py.
+    # Set a default project to use if the "-P" flag is not specified to gt.
     GCAM.DefaultProject = XXX
 
     #
@@ -96,7 +95,7 @@ Below are some key parameters you may wish to modify in your
     # workspace directories before running GCAM
     GCAM.RunWorkspaceRoot = %(Home)s/ws
 
-    # Tells gcamtool.py where to look for plugins. Set to your project's plugin
+    # Tells gt where to look for plugins. Set to your project's plugin
     # directory if you have any plugins to load.
     # GCAM.PluginPath =
 

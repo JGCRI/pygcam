@@ -13,7 +13,7 @@ Contents
    windows
 
 
-The ``gcamtool.py`` workflow management script
+The ``gt`` workflow management script
 --------------------------------------------------
 
   .. toctree::
@@ -22,7 +22,7 @@ The ``gcamtool.py`` workflow management script
    gcamtool
 
 
-XML input file formats for ``gcamtool.py`` sub-commands
+XML input file formats for ``gt`` sub-commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::

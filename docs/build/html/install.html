@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -216,9 +216,9 @@ folder up one level. Delete the empty outer folder (&#8216;x&#8217;, or whatever
 </div></blockquote>
 <div class="section" id="initialize-the-configuration-file">
 <h3>Initialize the configuration file<a class="headerlink" href="#initialize-the-configuration-file" title="Permalink to this headline">¶</a></h3>
-<p>The first time <code class="docutils literal"><span class="pre">gcamtool.py</span></code> is run, it will create a default
+<p>The first time <code class="docutils literal"><span class="pre">gt</span></code> is run, it will create a default
 configuration file with all options present but commented out.
-Running <code class="docutils literal"><span class="pre">gcamtool.py</span> <span class="pre">-h</span></code>, will print a usage message and create
+Running <code class="docutils literal"><span class="pre">gt</span> <span class="pre">-h</span></code>, will print a usage message and create
 the initial configuration file (unless one is already present). The
 file is <code class="docutils literal"><span class="pre">.pygcam.cfg</span></code> found in your home directory.</p>
 <p>Below are some key parameters you may wish to modify in your
@@ -226,8 +226,7 @@ file is <code class="docutils literal"><span class="pre">.pygcam.cfg</span></cod
 <blockquote>
 <div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 
-<span class="c1"># Set a default project to be used if the &quot;-P&quot; flag is not passed to</span>
-<span class="c1"># gcamtool.py.</span>
+<span class="c1"># Set a default project to use if the &quot;-P&quot; flag is not specified to gt.</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">XXX</span>
 
 <span class="c1">#</span>
@@ -253,7 +252,7 @@ file is <code class="docutils literal"><span class="pre">.pygcam.cfg</span></cod
 <span class="c1"># workspace directories before running GCAM</span>
 <span class="na">GCAM.RunWorkspaceRoot</span> <span class="o">=</span> <span class="s">%(Home)s/ws</span>
 
-<span class="c1"># Tells gcamtool.py where to look for plugins. Set to your project&#39;s plugin</span>
+<span class="c1"># Tells gt where to look for plugins. Set to your project&#39;s plugin</span>
 <span class="c1"># directory if you have any plugins to load.</span>
 <span class="c1"># GCAM.PluginPath =</span>
 </pre></div>

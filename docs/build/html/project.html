@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -155,7 +155,7 @@
   <div class="section" id="pygcam-project">
 <h1><code class="docutils literal"><span class="pre">pygcam.project</span></code><a class="headerlink" href="#pygcam-project" title="Permalink to this headline">¶</a></h1>
 <p>This module provides all the functionality that is exposed through the command-line
-to the <a class="reference internal" href="gcamtool.html#run-label"><em>gcamtool run</em></a> sub-command. It is provided in library
+to the <a class="reference internal" href="gcamtool.html#run-label"><em>gt run</em></a> sub-command. It is provided in library
 form so that it can be used from within other programs without having to execute the script.</p>
 <div class="section" id="module-pygcam.project">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.project" title="Permalink to this headline">¶</a></h2>
@@ -190,7 +190,7 @@ form so that it can be used from within other programs without having to execute
 
 <dl class="method">
 <dt id="pygcam.project.Project.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>scenarios</em>, <em>steps</em>, <em>skips</em>, <em>args</em>, <em>tool</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.Project.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>scenarios</em>, <em>skipScenarios</em>, <em>steps</em>, <em>skipSteps</em>, <em>args</em>, <em>tool</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.Project.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Command templates can include keywords curly braces that are substituted
 to create the command to execute in the shell. Variables are defined in
 the &lt;vars&gt; section of the project XML file.</p>

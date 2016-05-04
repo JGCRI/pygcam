@@ -1,7 +1,7 @@
-``gcamtool.py``
+``gt``
 ================
 
-The gcamtool.py script unifies GCAM workflow managment functionality into a
+The gt script unifies GCAM workflow managment functionality into a
 single script with sub-commands. Generic sub-commands are implemented directly
 by the pygcam library. Project-specific features can be added via
 :ref:`plugins <plugins-label>`.
@@ -36,7 +36,7 @@ defined in an XML file so that individual or groups of steps can be executed for
 or more scenarios. The ``run`` sub-command supports direct invocation of other
 workflow steps as well as running arbitrary programs of the user's choosing.
 
-Finally, gcamtool.py allows all project steps to be run on a compute node in a
+Finally, gt allows all project steps to be run on a compute node in a
 High-Performance Computing environment by specifying '-b' or '--batch'' on the
 command-line. (Note that this is not available on Mac OS X or Windows.)
 
@@ -44,10 +44,10 @@ For example, the command:
 
 .. code-block:: bash
 
-   gcamtool.py -b -P MyProject run -S MyScenario
+   gt -b -P MyProject run -S MyScenario
 
 runs all steps for scenario ``MyScenario`` in the project ``MyProject`` by
-queuing a batch job on the default queue. Arguments to ``gcamtool.py`` allow
+queuing a batch job on the default queue. Arguments to ``gt`` allow
 the user to set various resource requirements and to select the queue to use.
 
 The command to run to queue the batch job is taken from the configuration
@@ -64,7 +64,7 @@ Usage
 .. argparse::
    :module: pygcam.tool
    :func: _getMainParser
-   :prog: gcamtool.py
+   :prog: gt
 
    run : @replace
       .. _run-label:
@@ -80,41 +80,41 @@ Usage
 
       ::
 
-          gcamtool.py -P Foo run
+          gt -P Foo run
 
       Run all steps for scenario group 'test' for project 'Foo', but only for
       scenarios 'baseline' and 'policy-1':
 
       ::
 
-          gcamtool.py -P Foo run -g test -S baseline,policy1
+          gt -P Foo run -g test -S baseline,policy1
 
       or, equivalently:
 
       ::
 
-          gcamtool.py -P Foo run --group test --scenario baseline --step policy1
+          gt -P Foo run --group test --scenario baseline --step policy1
 
       Run only the 'setup' and 'gcam' steps for scenario 'baseline' in the
       default scenario group:
 
       ::
 
-          gcamtool.py -P Foo run -s setup,gcam -S baseline,policy-1
+          gt -P Foo run -s setup,gcam -S baseline,policy-1
 
       Same as above, but queue a batch job to run these commands on the queue
       'short':
 
       ::
 
-          gcamtool.py -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+          gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
 
       Show the commands that would be executed for the above command, but
       don't run them:
 
       ::
 
-          gcamtool.py -P Foo run -s setup,gcam -S baseline,policy-1 -n
+          gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
 
 
    protect : @replace
@@ -140,7 +140,7 @@ Usage
          REGIONS='Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA'
          OUTDIR="$HOME/tmp/xml"
 
-         gcamtool.py protect -f 0.8 "$INFILES" -l "$CLASSES" -r "$REGIONS" -o "$OUTDIR" -t 'prot_{filename}'
+         gt protect -f 0.8 "$INFILES" -l "$CLASSES" -r "$REGIONS" -o "$OUTDIR" -t 'prot_{filename}'
 
 
       .. code-block:: bash
@@ -148,7 +148,7 @@ Usage
          # Run the land protection scenario "s1", described in the file ``$HOME/protect.xml``,
          # placing the results in the directory ``$HOME/ws/workspace1``
 
-         gcamtool.py protect -s s1 -S "$HOME/protect.xml" -w "$HOME/ws/workspace1"
+         gt protect -s s1 -S "$HOME/protect.xml" -w "$HOME/ws/workspace1"
 
 
    chart : @replace
@@ -182,20 +182,20 @@ Usage
 
       .. code-block:: bash
 
-         $ gcamtool.py config project
+         $ gt config project
          [MyProject]
          GCAM.DefaultProject = MyProject
          GCAM.ProjectRoot = /Users/rjp/bitbucket/myProject
          GCAM.ProjectXmlFile = /Users/rjp/bitbucket/myProject/etc/project.xml
 
-         $ gcamtool.py config -x GCAM.DefaultProject
+         $ gt config -x GCAM.DefaultProject
          MyProject
 
-         $ gcamtool.py config sand
+         $ gt config sand
         [MyProject]
               GCAM.SandboxRoot = /Users/rjp/ws/myProject
 
-         $ gcamtool.py config sand -d
+         $ gt config sand -d
          [DEFAULT]
               GCAM.SandboxRoot = /Users/rjp/ws
 
@@ -240,7 +240,7 @@ Usage
 
       .. code-block:: bash
 
-         gcamtool.py gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
+         gt gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
 
       would run the scenario ``MyScenario`` in the newly created sandbox (workspace)
       ``~/sandboxes/MyProject/MyScenario`` using the configuration file
@@ -256,7 +256,7 @@ Usage
 
       .. code-block:: bash
 
-         gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region
+         gt query -o. -s MyReference,MyPolicyCase liquids-by-region
 
       would run the ``liquids-by-region`` query on two scenarios, MyReference and
       MyPolicyCase. Query results will be stored in the files
@@ -293,11 +293,11 @@ Usage
       operations to be sure of the directory that will be operated on, or use the
       ``--noExecute`` option to show the command that would be executed by ``--run``.
 
-Extending gcamtool using plug-ins
+Extending gt using plug-ins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   .. _plugins-label:
 
-The :doc:`gcamtool` script will load any python files whose name ends in
+The gt script will load any python files whose name ends in
 ``_plugin.py``, found in any of the directories indicated in the config
 file variable ``GCAM.PluginPath``. The value of ``GCAM.PluginPath`` must
 be a sequence of directory names separated by colons (``:``) on Unix-like

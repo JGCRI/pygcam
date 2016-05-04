@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>gcamtool.py &mdash; pygcam 0.1a1 documentation</title>
+  <title>gt &mdash; pygcam 0.1a1 documentation</title>
   
 
   
@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">gt</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -138,7 +138,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li><code class="docutils literal"><span class="pre">gcamtool.py</span></code></li>
+    <li><code class="docutils literal"><span class="pre">gt</span></code></li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -152,9 +152,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="gcamtool-py">
-<h1><code class="docutils literal"><span class="pre">gcamtool.py</span></code><a class="headerlink" href="#gcamtool-py" title="Permalink to this headline">¶</a></h1>
-<p>The gcamtool.py script unifies GCAM workflow managment functionality into a
+  <div class="section" id="gt">
+<h1><code class="docutils literal"><span class="pre">gt</span></code><a class="headerlink" href="#gt" title="Permalink to this headline">¶</a></h1>
+<p>The gt script unifies GCAM workflow managment functionality into a
 single script with sub-commands. Generic sub-commands are implemented directly
 by the pygcam library. Project-specific features can be added via
 <a class="reference internal" href="#plugins-label"><em>plugins</em></a>.</p>
@@ -184,15 +184,15 @@ workspaces. (See the <a class="reference internal" href="#ws-label"><em>ws</em><
 defined in an XML file so that individual or groups of steps can be executed for one
 or more scenarios. The <code class="docutils literal"><span class="pre">run</span></code> sub-command supports direct invocation of other
 workflow steps as well as running arbitrary programs of the user&#8217;s choosing.</p>
-<p>Finally, gcamtool.py allows all project steps to be run on a compute node in a
+<p>Finally, gt allows all project steps to be run on a compute node in a
 High-Performance Computing environment by specifying &#8216;-b&#8217; or &#8216;&#8211;batch&#8217;&#8217; on the
 command-line. (Note that this is not available on Mac OS X or Windows.)</p>
 <p>For example, the command:</p>
-<div class="highlight-bash"><div class="highlight"><pre>gcamtool.py -b -P MyProject run -S MyScenario
+<div class="highlight-bash"><div class="highlight"><pre>gt -b -P MyProject run -S MyScenario
 </pre></div>
 </div>
 <p>runs all steps for scenario <code class="docutils literal"><span class="pre">MyScenario</span></code> in the project <code class="docutils literal"><span class="pre">MyProject</span></code> by
-queuing a batch job on the default queue. Arguments to <code class="docutils literal"><span class="pre">gcamtool.py</span></code> allow
+queuing a batch job on the default queue. Arguments to <code class="docutils literal"><span class="pre">gt</span></code> allow
 the user to set various resource requirements and to select the queue to use.</p>
 <p>The command to run to queue the batch job is taken from the configuration
 file parameter <code class="docutils literal"><span class="pre">GCAM.BatchCommand</span></code>. Example batch commands for the SLURM
@@ -204,11 +204,11 @@ sub-command specific options must follow it.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <pre class="literal-block">
-usage: gcamtool.py [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level]
-                   [-L LOGFILE] [-m MINUTES] [-P name] [-q QUEUENAME]
-                   [-r RESOURCES] [--set name=value] [-v] [--version]
-                   {chart,config,diff,gcam,protect,query,run,setup,ws,bioConstraint,deltaConstraint}
-                   ...
+usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
+          [-m MINUTES] [-P name] [-q QUEUENAME] [-r RESOURCES]
+          [--set name=value] [-v] [--version]
+          {chart,config,diff,gcam,protect,query,run,setup,ws,bioConstraint,deltaConstraint}
+          ...
 </pre>
 <dl class="docutils">
 <dt>Options:</dt>
@@ -290,18 +290,17 @@ are grouped by and summed across elements with the indicated &#8216;indexCol&#82
 indicated by using the &#8216;-S&#8217; (&#8216;&#8211;sumYears&#8217;) option. Numerous options allow the appearance to
 be customized.</p>
 <pre class="literal-block">
-usage: gcamtool.py chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT]
-                         [-d OUTPUTDIR] [-D WORKINGDIR] [-e] [-f FROMFILE]
-                         [-F DIVISORFILE] [--format FORMAT] [-g] [-i]
-                         [-I INDEXCOL] [-k] [-l] [-L LABELCOLOR]
-                         [-m MULTIPLIER] [-n NCOL] [-N SCENARIO] [--negate]
-                         [-o OUTFILE] [-O] [-p PALETTE] [-r ROTATION]
-                         [-R REFERENCE] [-s SKIPROWS] [-S] [-t YEARSTEP]
-                         [-T TITLE] [--timeseries] [--transparent]
-                         [-u UNSTACKED] [-v VALUECOL] [-x SUFFIX] [-X XLABEL]
-                         [-Y YLABEL] [-y YEARS] [--ymax YMAX] [--ymin YMIN]
-                         [-V] [-z] [--legendY LEGENDY] [--barWidth BARWIDTH]
-                         [csvFile]
+usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
+                [-D WORKINGDIR] [-e] [-f FROMFILE] [-F DIVISORFILE]
+                [--format FORMAT] [-g] [-i] [-I INDEXCOL] [-k] [-l]
+                [-L LABELCOLOR] [-m MULTIPLIER] [-n NCOL] [-N SCENARIO]
+                [--negate] [-o OUTFILE] [-O] [-p PALETTE] [-r ROTATION]
+                [-R REFERENCE] [-s SKIPROWS] [-S] [-t YEARSTEP] [-T TITLE]
+                [--timeseries] [--transparent] [-u UNSTACKED] [-v VALUECOL]
+                [-x SUFFIX] [-X XLABEL] [-Y YLABEL] [-y YEARS] [--ymax YMAX]
+                [--ymin YMIN] [-V] [-z] [--legendY LEGENDY]
+                [--barWidth BARWIDTH]
+                [csvFile]
 </pre>
 <dl class="last docutils">
 <dt>Positional arguments:</dt>
@@ -545,26 +544,26 @@ are displayed with their values. The match is case-insensitive.</p>
 variable name (case-sensitive) and only the value is printed. This is useful mainly
 for scripting. For general use the substring matching is more convenient.</p>
 <p>Examples:</p>
-<div class="highlight-bash"><div class="highlight"><pre> <span class="nv">$ </span>gcamtool.py config project
+<div class="highlight-bash"><div class="highlight"><pre> <span class="nv">$ </span>gt config project
  <span class="o">[</span>MyProject<span class="o">]</span>
  GCAM.DefaultProject <span class="o">=</span> MyProject
  GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket/myProject
  GCAM.ProjectXmlFile <span class="o">=</span> /Users/rjp/bitbucket/myProject/etc/project.xml
 
- <span class="nv">$ </span>gcamtool.py config -x GCAM.DefaultProject
+ <span class="nv">$ </span>gt config -x GCAM.DefaultProject
  MyProject
 
- <span class="nv">$ </span>gcamtool.py config sand
+ <span class="nv">$ </span>gt config sand
 <span class="o">[</span>MyProject<span class="o">]</span>
       GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws/myProject
 
- <span class="nv">$ </span>gcamtool.py config sand -d
+ <span class="nv">$ </span>gt config sand -d
  <span class="o">[</span>DEFAULT<span class="o">]</span>
       GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws
 </pre></div>
 </div>
 <pre class="literal-block">
-usage: gcamtool.py config [-h] [-d] [-x] [--version] [name]
+usage: gt config [-h] [-d] [-x] [--version] [name]
 </pre>
 <dl class="last docutils">
 <dt>Positional arguments:</dt>
@@ -620,10 +619,10 @@ computed; rather, the .csv file contents are combined into a single .xlsx file.<
 
             </p>
 <pre class="literal-block">
-usage: gcamtool.py diff [-h] [-D WORKINGDIR] [-g GROUPSUM] [-i] [-o OUTFILE]
-                        [-c] [-q QUERYFILE] [-S] [-s SKIPROWS] [--version]
-                        [-y YEARS] [-Y STARTYEAR]
-                        csvFiles [csvFiles ...]
+usage: gt diff [-h] [-D WORKINGDIR] [-g GROUPSUM] [-i] [-o OUTFILE] [-c]
+               [-q QUERYFILE] [-S] [-s SKIPROWS] [--version] [-y YEARS]
+               [-Y STARTYEAR]
+               csvFiles [csvFiles ...]
 </pre>
 <dl class="last docutils">
 <dt>Positional arguments:</dt>
@@ -714,15 +713,15 @@ reference files rather than symbolic links. Directories into which GCAM writes r
 (e.g., the GCAM executable) are symbolically linked (with the same caveat for Windows
 users.)</p>
 <p>For example:</p>
-<div class="highlight-bash"><div class="highlight"><pre>gcamtool.py gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
+<div class="highlight-bash"><div class="highlight"><pre>gt gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
 </pre></div>
 </div>
 <p>would run the scenario <code class="docutils literal"><span class="pre">MyScenario</span></code> in the newly created sandbox (workspace)
 <code class="docutils literal"><span class="pre">~/sandboxes/MyProject/MyScenario</span></code> using the configuration file
 <code class="docutils literal"><span class="pre">~/MyProject/scenarios/MyScenario/config.xml</span></code>.</p>
 <pre class="literal-block">
-usage: gcamtool.py gcam [-h] [-C CONFIGFILE] [-s SCENARIO] [-S SCENARIOSDIR]
-                        [--version] [-w WORKSPACE]
+usage: gt gcam [-h] [-C CONFIGFILE] [-s SCENARIO] [-S SCENARIOSDIR]
+               [--version] [-w WORKSPACE]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -778,20 +777,19 @@ scenarios can be specified in an XML file, <a class="reference internal" href="l
 <span class="nv">REGIONS</span><span class="o">=</span><span class="s1">&#39;Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA&#39;</span>
 <span class="nv">OUTDIR</span><span class="o">=</span><span class="s2">&quot;$HOME/tmp/xml&quot;</span>
 
-gcamtool.py protect -f 0.8 <span class="s2">&quot;$INFILES&quot;</span> -l <span class="s2">&quot;$CLASSES&quot;</span> -r <span class="s2">&quot;$REGIONS&quot;</span> -o <span class="s2">&quot;$OUTDIR&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
+gt protect -f 0.8 <span class="s2">&quot;$INFILES&quot;</span> -l <span class="s2">&quot;$CLASSES&quot;</span> -r <span class="s2">&quot;$REGIONS&quot;</span> -o <span class="s2">&quot;$OUTDIR&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
 </pre></div>
 </div>
 <div class="highlight-bash"><div class="highlight"><pre><span class="c"># Run the land protection scenario &quot;s1&quot;, described in the file ``$HOME/protect.xml``,</span>
 <span class="c"># placing the results in the directory ``$HOME/ws/workspace1``</span>
 
-gcamtool.py protect -s s1 -S <span class="s2">&quot;$HOME/protect.xml&quot;</span> -w <span class="s2">&quot;$HOME/ws/workspace1&quot;</span>
+gt protect -s s1 -S <span class="s2">&quot;$HOME/protect.xml&quot;</span> -w <span class="s2">&quot;$HOME/ws/workspace1&quot;</span>
 </pre></div>
 </div>
 <pre class="literal-block">
-usage: gcamtool.py protect [-h] [-b] [-f FRACTION] [--inPlace]
-                           [-l LANDCLASSES] [-m] [-o OUTDIR] [-t TEMPLATE]
-                           [-r REGIONS] [-s SCENARIO] [-S SCENARIOFILE] [-V]
-                           [-w WORKSPACE]
+usage: gt protect [-h] [-b] [-f FRACTION] [--inPlace] [-l LANDCLASSES] [-m]
+                  [-o OUTDIR] [-t TEMPLATE] [-r REGIONS] [-s SCENARIO]
+                  [-S SCENARIOFILE] [-V] [-w WORKSPACE]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -879,7 +877,7 @@ usage: gcamtool.py protect [-h] [-b] [-f FRACTION] [--inPlace]
 named XML queries. The results are placed in a file in the specified
 output directory with a name composed of the basename of the
 XML query file plus the scenario name. For example,</p>
-<div class="highlight-bash"><div class="highlight"><pre>gcamtool query -o. -s MyReference,MyPolicyCase liquids-by-region
+<div class="highlight-bash"><div class="highlight"><pre>gt query -o. -s MyReference,MyPolicyCase liquids-by-region
 </pre></div>
 </div>
 <p>would run the <code class="docutils literal"><span class="pre">liquids-by-region</span></code> query on two scenarios, MyReference and
@@ -895,10 +893,10 @@ an XML file, a query with a title matching the query name (first literally, then
 replacing <code class="docutils literal"><span class="pre">'_'</span></code> and <code class="docutils literal"><span class="pre">'-'</span></code> characters with spaces) is sought. Note that query names are
 case-sensitive.</p>
 <pre class="literal-block">
-usage: gcamtool.py query [-h] [-d XMLDB] [-D] [-R REGIONMAP] [-n]
-                         [-o OUTPUTDIR] [-Q QUERYPATH] [-r REGIONS]
-                         [-s SCENARIO] [--version] [-w WORKSPACE]
-                         [queryName [queryName ...]]
+usage: gt query [-h] [-d XMLDB] [-D] [-R REGIONMAP] [-n] [-o OUTPUTDIR]
+                [-Q QUERYPATH] [-r REGIONS] [-s SCENARIO] [--version]
+                [-w WORKSPACE]
+                [queryName [queryName ...]]
 </pre>
 <dl class="last docutils">
 <dt>Positional arguments:</dt>
@@ -979,37 +977,37 @@ The workflow steps indicated in the XML file and command-line determine which
 commands to run.</p>
 <p>Examples:</p>
 <p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gcamtool.py -P Foo run
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run
 </pre></div>
 </div>
 <p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
 scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gcamtool.py -P Foo run -g test -S baseline,policy1
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -g test -S baseline,policy1
 </pre></div>
 </div>
 <p>or, equivalently:</p>
-<div class="highlight-python"><div class="highlight"><pre>gcamtool.py -P Foo run --group test --scenario baseline --step policy1
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run --group test --scenario baseline --step policy1
 </pre></div>
 </div>
 <p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
 default scenario group:</p>
-<div class="highlight-python"><div class="highlight"><pre>gcamtool.py -P Foo run -s setup,gcam -S baseline,policy-1
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1
 </pre></div>
 </div>
 <p>Same as above, but queue a batch job to run these commands on the queue
 &#8216;short&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gcamtool.py -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+<div class="highlight-python"><div class="highlight"><pre>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
 </pre></div>
 </div>
 <p>Show the commands that would be executed for the above command, but
 don&#8217;t run them:</p>
-<div class="highlight-python"><div class="highlight"><pre>gcamtool.py -P Foo run -s setup,gcam -S baseline,policy-1 -n
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
 </pre></div>
 </div>
 <pre class="literal-block">
-usage: gcamtool.py run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
-                       [-l] [-L] [-n] [-p PROJECT] [-q] [-s STEPS]
-                       [-S SCENARIOS] [--version] [--vars]
+usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
+              [-K SKIPSCENARIOS] [-l] [-L] [-n] [-p PROJECT] [-q] [-s STEPS]
+              [-S SCENARIOS] [--version] [--vars]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1034,10 +1032,16 @@ usage: gcamtool.py run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
 <tr><td>&nbsp;</td><td>List the scenario groups defined in the project file and exit.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-k</span>, <span class="option">--skipStep</span></kbd></td>
-<td>Steps NOT to run. These must be names of steps defined in the
+<td>Steps to skip. These must be names of steps defined in the
                             project.xml file. Multiple steps can be given in a single (comma-delimited)
                             argument, or the -k flag can be repeated to indicate additional steps.
                             By default, all steps are run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-K</span>, <span class="option">--skipScenario</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Scenarios to skip. Multiple scenarios can be given in a single
+                            (comma-delimited) argument, or the -K flag can be repeated to indicate
+                            additional scenarios. By default, all scenarios are run.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-l=False</span>, <span class="option">--listSteps=False</span></kbd></td>
 </tr>
@@ -1088,10 +1092,10 @@ usage: gcamtool.py run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
 files and construction of a corresponding configuration XML file.
 See <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> for a detailed description.</p>
 <pre class="literal-block">
-usage: gcamtool.py setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
-                         [-p period-or-year] [-R RESULTSDIR] [-s SCENARIO]
-                         [-S SUBDIR] [-u] [-x XMLSOURCEDIR] [-X XMLOUTPUTROOT]
-                         [-w WORKSPACE] [-y YEARS]
+usage: gt setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
+                [-p period-or-year] [-R RESULTSDIR] [-s SCENARIO] [-S SUBDIR]
+                [-u] [-x XMLSOURCEDIR] [-X XMLOUTPUTROOT] [-w WORKSPACE]
+                [-y YEARS]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1167,8 +1171,8 @@ automatically creates workspaces as needed.</p>
 operations to be sure of the directory that will be operated on, or use the
 <code class="docutils literal"><span class="pre">--noExecute</span></code> option to show the command that would be executed by <code class="docutils literal"><span class="pre">--run</span></code>.</p>
 <pre class="literal-block">
-usage: gcamtool.py ws [-h] [--create] [--delete] [-n] [-p] [-r RUN]
-                      [-s SCENARIO] [--version]
+usage: gt ws [-h] [--create] [--delete] [-n] [-p] [-r RUN] [-s SCENARIO]
+             [--version]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1211,12 +1215,11 @@ usage: gcamtool.py ws [-h] [--create] [--delete] [-n] [-p] [-r RUN]
 <dt><strong>bioConstraint</strong></dt>
 <dd><p class="first">Bioenergy constraint generator</p>
 <pre class="literal-block">
-usage: gcamtool.py bioConstraint [-h] [-b BASELINE] [-B {tax,subsidy}]
-                                 [-c COEFFICIENTS] [-e {tax,subsidy}]
-                                 [-l DEFAULTLEVEL] [-L ANNUALLEVELS] [-m]
-                                 [-p POLICY] [-P {tax,subsidy}]
-                                 [-R RESULTSDIR] [-s] [-S SUBDIR] [-V]
-                                 [-x XMLOUTPUTDIR] [-y YEARS]
+usage: gt bioConstraint [-h] [-b BASELINE] [-B {tax,subsidy}]
+                        [-c COEFFICIENTS] [-e {tax,subsidy}] [-l DEFAULTLEVEL]
+                        [-L ANNUALLEVELS] [-m] [-p POLICY] [-P {tax,subsidy}]
+                        [-R RESULTSDIR] [-s] [-S SUBDIR] [-V]
+                        [-x XMLOUTPUTDIR] [-y YEARS]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1303,12 +1306,11 @@ usage: gcamtool.py bioConstraint [-h] [-b BASELINE] [-B {tax,subsidy}]
 <dd><p class="first">Specify incremental values to add to the production of a given fuel,
                               by year, and generate the corresponding constraint file.</p>
 <pre class="literal-block">
-usage: gcamtool.py deltaConstraint [-h] [-c COEFFICIENTS] -b BASELINE
-                                   [-B {tax,subsidy}] [-f FUELNAME]
-                                   [-l DEFAULTDELTA] [-L ANNUALDELTAS] [-m] -p
-                                   POLICY [-P {tax,subsidy}] [-R RESULTSDIR]
-                                   [-S SUBDIR] [-t FUELTAG] [-T {tax,subsidy}]
-                                   [-V] [-x XMLOUTPUTDIR] [-y YEARS]
+usage: gt deltaConstraint [-h] [-c COEFFICIENTS] -b BASELINE
+                          [-B {tax,subsidy}] [-f FUELNAME] [-l DEFAULTDELTA]
+                          [-L ANNUALDELTAS] [-m] -p POLICY [-P {tax,subsidy}]
+                          [-R RESULTSDIR] [-S SUBDIR] [-t FUELTAG]
+                          [-T {tax,subsidy}] [-V] [-x XMLOUTPUTDIR] [-y YEARS]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1398,11 +1400,11 @@ usage: gcamtool.py deltaConstraint [-h] [-c COEFFICIENTS] -b BASELINE
 </dl>
 </dd>
 </dl>
-<div class="section" id="extending-gcamtool-using-plug-ins">
-<h3>Extending gcamtool using plug-ins<a class="headerlink" href="#extending-gcamtool-using-plug-ins" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="extending-gt-using-plug-ins">
+<h3>Extending gt using plug-ins<a class="headerlink" href="#extending-gt-using-plug-ins" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div></div></blockquote>
-<p id="plugins-label">The <a class="reference internal" href=""><em>gcamtool.py</em></a> script will load any python files whose name ends in
+<p id="plugins-label">The gt script will load any python files whose name ends in
 <code class="docutils literal"><span class="pre">_plugin.py</span></code>, found in any of the directories indicated in the config
 file variable <code class="docutils literal"><span class="pre">GCAM.PluginPath</span></code>. The value of <code class="docutils literal"><span class="pre">GCAM.PluginPath</span></code> must
 be a sequence of directory names separated by colons (<code class="docutils literal"><span class="pre">:</span></code>) on Unix-like

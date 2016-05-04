@@ -3,7 +3,7 @@ Tutorial -- Using ``pygcam``
 
   .. note::
 
-        This tutorial is currently under development.
+        This tutorial is currently under development!
 
 Setting up a GCAM experiment
 ----------------------------------
@@ -16,7 +16,7 @@ Configuration
        The configuration API and default variable settings are described in :doc:`config`
 
 
-  * First run creates ~/.pygcam
+  * First run creates ~/.pygcam.cfg
 
   * Required parameters
 
@@ -54,7 +54,7 @@ Run-time structure:
     * Hint: use ``-l``, ``-L``, and ``-g`` to list steps, scenarios, and groups
 
     * Choose steps, scenarios, groups to run using ``-s``, ``-S``, and ``-g`` flags,
-      and choose steps *not* to run using ``-k`` flag.
+      and choose steps or scenarios *not* to run using ``-k`` and ``-K`` flags.
 
     * Setting defaults to simplify use
 

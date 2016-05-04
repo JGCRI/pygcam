@@ -50,7 +50,7 @@ showing their default values.
 
 The main script (:doc:`gcamtool`) implements several "subcommands" that perform various
 steps in a typical GCAM analysis. The script implements a :doc:`plug-in <subcommand>`
-architecture allowing users to customize :doc:`gcamtool <gcamtool>` and avoid a proliferation of scripts.
+architecture allowing users to customize :doc:`gt <gcamtool>` and avoid a proliferation of scripts.
 
    * The ``run`` subcommand reads an XML input file and runs one or more steps of an analysis,
      and these steps can (typically will) invoke other subcommands as required.
@@ -138,7 +138,7 @@ project. Consider the following directory structure:
         * config.xml
 
 
-With this approach, the gcamtool.py script can get the main workspace
+With this approach, the ``gt`` script can get the main workspace
 location from the variable ``GCAM.WorkspaceRoot`` from the configuration file
 ``~.pygcam.cfg`` (which, in this approach can be set once for all projects)
 and you need only pass the scenario name and project name, allowing the path
