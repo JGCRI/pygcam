@@ -416,7 +416,7 @@ class Project(object):
             raise CommandlineError("Requested %s do not exist in project '%s', group '%s': %s" % \
                                   (argName, self.projectName, self.scenarioGroupName, s))
 
-    def run(self, scenarios, steps, skips, args, tool):
+    def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool):
         """
         Command templates can include keywords curly braces that are substituted
         to create the command to execute in the shell. Variables are defined in
@@ -453,8 +453,8 @@ class Project(object):
         self.maybeListProjectArgs(args, knownGroups, knownScenarios, knownSteps)
 
         # Set steps / scenarios to all known values if user doesn't specify any
-        steps = set(steps or knownSteps) - set(skips or [])
-        scenarios = scenarios or knownScenarios
+        steps = set(steps or knownSteps) - set(skipSteps or [])
+        scenarios = set(scenarios or knownScenarios) - set(skipScenarios or [])
 
         # Check that the requested scenarios and steps are defined
         self.validateProjectArgs(scenarios, knownScenarios, 'scenarios')
@@ -521,15 +521,18 @@ def driver(args, tool):
         raise CommandlineError("runProj: must specify project name")
 
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
-    skips = flatten(map(lambda s: s.split(','), args.skipSteps)) if args.skipSteps else None
+    skipSteps = flatten(map(lambda s: s.split(','), args.skipSteps)) if args.skipSteps else None
+
     scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
+    skipScenarios = flatten(map(lambda s: s.split(','), args.skipScenarios)) if args.skipScenarios else None
+
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
     parser  = ET.XMLParser(remove_blank_text=True)
     tree    = ET.parse(projectFile, parser)
     project = Project(tree, args.project, args.group)
 
-    project.run(scenarios, steps, skips, args, tool)
+    project.run(scenarios, skipScenarios, steps, skipSteps, args, tool)
 
 
 class ProjectCommand(SubcommandABC):
@@ -554,10 +557,15 @@ class ProjectCommand(SubcommandABC):
                             help='''List the scenario groups defined in the project file and exit.''')
 
         parser.add_argument('-k', '--skipStep', dest='skipSteps', action='append',
-                            help='''Steps NOT to run. These must be names of steps defined in the
+                            help='''Steps to skip. These must be names of steps defined in the
                             project.xml file. Multiple steps can be given in a single (comma-delimited)
                             argument, or the -k flag can be repeated to indicate additional steps.
                             By default, all steps are run.''')
+
+        parser.add_argument('-K', '--skipScenario', dest='skipScenarios', action='append',
+                            help='''Scenarios to skip. Multiple scenarios can be given in a single
+                            (comma-delimited) argument, or the -K flag can be repeated to indicate
+                            additional scenarios. By default, all scenarios are run.''')
 
         parser.add_argument('-l', '--listSteps', action='store_true', default=False,
                             help='''List the steps defined for the given project and exit.
