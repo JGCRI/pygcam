@@ -14,6 +14,7 @@ Test
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
 - land protection command
+    - uses new resource_stream function; not tested yet
 
 Features
 --------
