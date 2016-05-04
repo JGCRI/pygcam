@@ -4,6 +4,7 @@ include setup.py
 
 # Source code
 include bin/gcamtool.py
+include bin/gt.cmd
 include pygcam/*.py
 
 # Documentation source as well as generated html
