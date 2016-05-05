@@ -1,18 +1,17 @@
-import ez_setup
-ez_setup.use_setuptools()
+import platform
 
-from setuptools import setup #, find_packages
+if platform.system() != 'Windows':
+    # Unfortunately, this stalled on Windows when I tested it...
+    import ez_setup
+    ez_setup.use_setuptools()
+
+from setuptools import setup
 
 requirements = ['lxml',
                 'numpy',
                 'pandas',
                 'seaborn',
                 ]
-
-# Apparently 'bin' should be in pygcam/bin, not pygcam/pygcam/bin
-# "When we install the package, setuptools will copy the script to
-# our PATH and make it available for general use."
-# scripts = ['bin/gcamtool.py', 'bin/gt.cmd']
 
 setup(
     name='pygcam',
@@ -23,9 +22,6 @@ setup(
     entry_points={'console_scripts': ['gt = pygcam.tool:main']},
     install_requires=requirements,
     include_package_data = True,
-
-    # Obviated by entry_points, which creates gt on Linux/Mac and gt.exe on Windows
-    # scripts=scripts,
 
     url='https://bitbucket.org/plevin/pygcam',
     download_url='ssh://git@bitbucket.org/plevin/pygcam.git',

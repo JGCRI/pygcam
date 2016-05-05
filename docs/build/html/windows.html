@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
-        <link rel="next" title="gcamtool.py" href="gcamtool.html"/>
+        <link rel="next" title="gt (GCAM tool)" href="gcamtool.html"/>
         <link rel="prev" title="Installation" href="install.html"/> 
 
   
@@ -88,7 +88,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -201,38 +201,6 @@ create symbolic links in those workspaces.</p>
 </ul>
 </dd>
 </dl>
-<div class="section" id="running-python-scripts">
-<h3>Running python scripts<a class="headerlink" href="#running-python-scripts" title="Permalink to this headline">¶</a></h3>
-<p>To run python scripts directly, i.e., with having to run python on the script,
-modify the <code class="docutils literal"><span class="pre">PATH</span></code> environment variable to include the location of the
-<code class="docutils literal"><span class="pre">pygcam/bin</span></code> folder, which holds the scripts.</p>
-<p>To do this: Start menu -&gt; right click on Computer -&gt; Properties -&gt; Advanced,
-then edit the PATH by inserting the full path to your pygcam/bin folder,
-with a semi-colon (;) separating path entries.</p>
-</div>
-<div class="section" id="running-scripts-without-typing-the-py-extension">
-<h3>Running scripts without typing the <code class="docutils literal"><span class="pre">.py</span></code> extension<a class="headerlink" href="#running-scripts-without-typing-the-py-extension" title="Permalink to this headline">¶</a></h3>
-<p>Note that this works when using a cmd.com or PowerShell, but does not work
-under a Cygwin <code class="docutils literal"><span class="pre">bash</span></code> shell.</p>
-<blockquote>
-<div><ol class="arabic">
-<li><p class="first">Modify the <code class="docutils literal"><span class="pre">PATHEXT</span></code> variable to include Python scripts, e.g.:</p>
-<p><code class="docutils literal"><span class="pre">PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY</span></code></p>
-</li>
-<li><p class="first">In a command window, type the following commands. The first associates
-<code class="docutils literal"><span class="pre">.py</span></code> files with a file type <code class="docutils literal"><span class="pre">Python.File</span></code>. The second specifies
-the command to run to execute files of the type <code class="docutils literal"><span class="pre">Python.File</span></code>.</p>
-</li>
-</ol>
-<blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span class="na">assoc .py</span><span class="o">=</span><span class="s">Python.File</span>
-<span class="na">ftype Python.File</span><span class="o">=</span><span class="s">c:\Users\{insert your user name}\Anaconda2\python.exe &quot;%1&quot; %*</span>
-</pre></div>
-</div>
-</div></blockquote>
-</div></blockquote>
-<p><em>Note: The path after ``Python.File=`` should be the path to your python executable.</em></p>
-</div>
 </div>
 <div class="section" id="using-cygwin">
 <h2>Using Cygwin<a class="headerlink" href="#using-cygwin" title="Permalink to this headline">¶</a></h2>
@@ -266,7 +234,10 @@ learning curve than <code class="docutils literal"><span class="pre">nano</span>
 </li>
 </ul>
 </div></blockquote>
-<p>Don’t install python since we’re using Anaconda. Installing another python just confuses things.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Don’t install python since we’re using Anaconda. Installing another version of Python just confuses things.</p>
+</div>
 <p>Optionally, if you plan to work with the code in the <code class="docutils literal"><span class="pre">git</span></code> repository, download <code class="docutils literal"><span class="pre">git</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
@@ -276,6 +247,8 @@ learning curve than <code class="docutils literal"><span class="pre">nano</span>
 </li>
 </ul>
 </div></blockquote>
+<p>Alternatively, you might try the free <a class="reference external" href="https://www.sourcetreeapp.com">SourceTree</a> application
+from Atlassian, which provides a nice user interface for <code class="docutils literal"><span class="pre">git</span></code> on Mac OS X and Windows.</p>
 </div>
 </div>
 
@@ -286,7 +259,7 @@ learning curve than <code class="docutils literal"><span class="pre">nano</span>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="gcamtool.html" class="btn btn-neutral float-right" title="gcamtool.py" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="gcamtool.html" class="btn btn-neutral float-right" title="gt (GCAM tool)" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="install.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

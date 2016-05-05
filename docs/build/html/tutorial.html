@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gcamtool.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -157,7 +157,7 @@
 <blockquote>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">This tutorial is currently under development.</p>
+<p class="last">This tutorial is currently under development!</p>
 </div>
 </div></blockquote>
 <div class="section" id="setting-up-a-gcam-experiment">
@@ -172,7 +172,7 @@
 </div>
 </div></blockquote>
 <ul class="simple">
-<li>First run creates ~/.pygcam</li>
+<li>First run creates ~/.pygcam.cfg</li>
 <li>Required parameters</li>
 </ul>
 </div></blockquote>
@@ -211,11 +211,11 @@
 </li>
 <li><p class="first">Create a file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> (template ...)</p>
 </li>
-<li><p class="first">Use the <code class="docutils literal"><span class="pre">run</span></code> sub-command of <a class="reference internal" href="gcamtool.html"><em>gcamtool.py</em></a></p>
+<li><p class="first">Use the <code class="docutils literal"><span class="pre">run</span></code> sub-command of <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a></p>
 <ul class="simple">
 <li>Hint: use <code class="docutils literal"><span class="pre">-l</span></code>, <code class="docutils literal"><span class="pre">-L</span></code>, and <code class="docutils literal"><span class="pre">-g</span></code> to list steps, scenarios, and groups</li>
 <li>Choose steps, scenarios, groups to run using <code class="docutils literal"><span class="pre">-s</span></code>, <code class="docutils literal"><span class="pre">-S</span></code>, and <code class="docutils literal"><span class="pre">-g</span></code> flags,
-and choose steps <em>not</em> to run using <code class="docutils literal"><span class="pre">-k</span></code> flag.</li>
+and choose steps or scenarios <em>not</em> to run using <code class="docutils literal"><span class="pre">-k</span></code> and <code class="docutils literal"><span class="pre">-K</span></code> flags.</li>
 <li>Setting defaults to simplify use</li>
 </ul>
 </li>

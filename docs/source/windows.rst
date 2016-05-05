@@ -48,37 +48,6 @@ Also, note the following:
     you want to keep your GCAM workspaces on an external drive. Pygcam will fail when trying to
     create symbolic links in those workspaces.
 
-Running python scripts
-^^^^^^^^^^^^^^^^^^^^^^^^
-To run python scripts directly, i.e., with having to run python on the script,
-modify the ``PATH`` environment variable to include the location of the
-``pygcam/bin`` folder, which holds the scripts.
-
-To do this: Start menu -> right click on Computer -> Properties -> Advanced,
-then edit the PATH by inserting the full path to your pygcam/bin folder,
-with a semi-colon (;) separating path entries.
-
-Running scripts without typing the ``.py`` extension
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Note that this works when using a cmd.com or PowerShell, but does not work
-under a Cygwin ``bash`` shell.
-
-  1. Modify the ``PATHEXT`` variable to include Python scripts, e.g.:
-
-     ``PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY``
-
-  2. In a command window, type the following commands. The first associates
-     ``.py`` files with a file type ``Python.File``. The second specifies
-     the command to run to execute files of the type ``Python.File``.
-
-    .. code-block:: cfg
-
-      assoc .py=Python.File
-      ftype Python.File=c:\Users\{insert your user name}\Anaconda2\python.exe "%1" %*
-
-*Note: The path after ``Python.File=`` should be the path to your python executable.*
-
-
 Using Cygwin
 ------------
 
@@ -112,10 +81,13 @@ I recommend installing just these for now (easy to add more later):
     - **bash** (The GNU Bourne Again Shell -- this is the terminal program)
     - **bash-completion** (saves a lot of typing)
 
-Don’t install python since we’re using Anaconda. Installing another python just confuses things.
+.. note:: Don’t install python since we’re using Anaconda. Installing another version of Python just confuses things.
 
 Optionally, if you plan to work with the code in the ``git`` repository, download ``git``:
 
   - under *Devel*
 
     - **git** (select “git: Distributed version control system” and all the required libraries will be installed, too.)
+
+Alternatively, you might try the free `SourceTree <https://www.sourcetreeapp.com>`_ application
+from Atlassian, which provides a nice user interface for ``git`` on Mac OS X and Windows.

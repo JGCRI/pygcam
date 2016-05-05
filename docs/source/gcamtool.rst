@@ -1,5 +1,5 @@
-``gt``
-================
+``gt`` (GCAM tool)
+==================
 
 The gt script unifies GCAM workflow managment functionality into a
 single script with sub-commands. Generic sub-commands are implemented directly

@@ -47,10 +47,30 @@ folder up one level. Delete the empty outer folder ('x', or whatever you called 
 
 Install ``pygcam``
 -------------------
-  - Install pygcam:
+There is a Python installer module called ``setup.py`` in the top level of the
+``pygcam`` repository. You can running this script with various options to install,
+or uninstall ``pygcam``.
 
-    ``python setup.exe install``
+  - If you are working with ``pygcam`` from a cloned git repository, you should
+    install ``pygcam`` in 'develop' mode, which will create references to the source
+    code and therefore will be updated whenever you update the repository. To do this,
+    run the command:
 
+    ``python setup.py develop``
+
+  - If you are not interested in maintaining links back to a source repository, you
+    can run the standard installation procedure:
+
+    ``python setup.py install``
+
+The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
+Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, automating
+this failed on Windows, so if the commands above fail, you will have to install
+``setuptools``.
+
+  - To install ``setuptools`` manually, run this command in a terminal:
+
+    ``conda install setuptools``
 
 
 Initialize the configuration file

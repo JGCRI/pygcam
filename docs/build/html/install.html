@@ -88,7 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
@@ -207,10 +207,31 @@ folder up one level. Delete the empty outer folder (&#8216;x&#8217;, or whatever
 </div>
 <div class="section" id="install-pygcam">
 <h2>Install <code class="docutils literal"><span class="pre">pygcam</span></code><a class="headerlink" href="#install-pygcam" title="Permalink to this headline">¶</a></h2>
+<p>There is a Python installer module called <code class="docutils literal"><span class="pre">setup.py</span></code> in the top level of the
+<code class="docutils literal"><span class="pre">pygcam</span></code> repository. You can running this script with various options to install,
+or uninstall <code class="docutils literal"><span class="pre">pygcam</span></code>.</p>
 <blockquote>
 <div><ul>
-<li><p class="first">Install pygcam:</p>
-<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.exe</span> <span class="pre">install</span></code></p>
+<li><p class="first">If you are working with <code class="docutils literal"><span class="pre">pygcam</span></code> from a cloned git repository, you should
+install <code class="docutils literal"><span class="pre">pygcam</span></code> in &#8216;develop&#8217; mode, which will create references to the source
+code and therefore will be updated whenever you update the repository. To do this,
+run the command:</p>
+<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">develop</span></code></p>
+</li>
+<li><p class="first">If you are not interested in maintaining links back to a source repository, you
+can run the standard installation procedure:</p>
+<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p>
+</li>
+</ul>
+</div></blockquote>
+<p>The <code class="docutils literal"><span class="pre">setup.py</span></code> script uses a Python module called <code class="docutils literal"><span class="pre">setuptools</span></code>. On Mac OS X and
+Linux, <code class="docutils literal"><span class="pre">setup.py</span></code> installs <code class="docutils literal"><span class="pre">setuptools</span></code> automatically. Unfortunately, automating
+this failed on Windows, so if the commands above fail, you will have to install
+<code class="docutils literal"><span class="pre">setuptools</span></code>.</p>
+<blockquote>
+<div><ul>
+<li><p class="first">To install <code class="docutils literal"><span class="pre">setuptools</span></code> manually, run this command in a terminal:</p>
+<p><code class="docutils literal"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">setuptools</span></code></p>
 </li>
 </ul>
 </div></blockquote>
