@@ -158,9 +158,8 @@
 reads a single XML input file that defines one or more projects, one or
 more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
-in the order defined. The script was developed for use with the
-<a class="reference external" href="https://bitbucket.org/plevin/gcam-utils/wiki/Home">gcam-utils</a>
-scripts, however any scripts or programs can be called in workflow
+in the order defined. The script was developed for use with other <code class="docutils literal"><span class="pre">gt</span></code>
+sub-commands, however any scripts or programs can be called in workflow
 &#8216;steps&#8217;.</p>
 <p>Command-line usage is describe on the <a class="reference internal" href="gcamtool.html#run-label"><em>gt run</em></a> page.
 The <code class="docutils literal"><span class="pre">project.xml</span></code> file elements are described below.</p>
@@ -302,7 +301,7 @@ same as the scenario, but this can be defined separately using the
 <code class="docutils literal"><span class="pre">subdir=&quot;otherName&quot;</span></code> attribute.</p>
 <p>For example,</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;biodiesel-1&quot;</span> <span class="na">subdir=</span><span class="s">&quot;biodiesel&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -365,7 +364,7 @@ invoked by using the name of a gt sub-command <em>preceded by the &#64; symbol</
 and following it with any desired parameters accepted by that sub-command.
 For example, a step that runs GCAM might look like this:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P<span class="nt">&lt;/step&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -384,7 +383,7 @@ the named scenario group. This allows you to define steps specific to
 different scenario groups.</p>
 <p>For example, the block:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;steps&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;steps&gt;</span>
    <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;1&quot;</span> <span class="na">name=</span><span class="s">&quot;setup&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}<span class="nt">&lt;/step&gt;</span>
            <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;2&quot;</span> <span class="na">name=</span><span class="s">&quot;gcam&quot;</span>  <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}<span class="nt">&lt;/step&gt;</span>
            <span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;3&quot;</span> <span class="na">name=</span><span class="s">&quot;query&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">&gt;</span>@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q &quot;{queryPath}&quot; &quot;@{queryFile}&quot;<span class="nt">&lt;/step&gt;</span>
@@ -410,7 +409,7 @@ steps. To redefine a step, the project defines a <code class="docutils literal">
 same values for the attributes <code class="docutils literal"><span class="pre">name</span></code>, <code class="docutils literal"><span class="pre">seq</span></code>, and <code class="docutils literal"><span class="pre">runFor</span></code>. A
 default step can be deleted by redefining it with no text value, e.g.,</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">/&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">/&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -461,7 +460,7 @@ in <code class="docutils literal"><span class="pre">&lt;project&gt;</span></code
 <p>The <code class="docutils literal"><span class="pre">&lt;vars&gt;</span></code> element contains a series of <code class="docutils literal"><span class="pre">&lt;var&gt;</span></code> declarations.
 Values can be assigned directly to variable names, as in:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;myVar&quot;</span><span class="nt">&gt;</span>foo<span class="nt">&lt;/var&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;var</span> <span class="na">name=</span><span class="s">&quot;myVar&quot;</span><span class="nt">&gt;</span>foo<span class="nt">&lt;/var&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -633,7 +632,7 @@ part of your text might be confused for a variable reference.</li>
 </ul>
 <p>For example,</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;text&gt;</span>some text {scenario}<span class="nt">&lt;/text&gt;</span>
     <span class="nt">&lt;text&gt;</span>other text<span class="nt">&lt;/text&gt;</span>
 <span class="nt">&lt;/tmpFile&gt;</span>
@@ -678,7 +677,7 @@ selectively drop the line by redefining an a <code class="docutils literal"><spa
 same tag name. To delete a value, provide no value. For example, if the
 defaults section has this definition:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;text&gt;</span>line 1<span class="nt">&lt;/text&gt;</span>
     <span class="nt">&lt;text</span> <span class="na">tag=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>line 2<span class="nt">&lt;/text&gt;</span>
 <span class="nt">&lt;/tmpFile&gt;</span>
@@ -688,7 +687,7 @@ defaults section has this definition:</p>
 <p>a project can cause the second line to be dropped when writing the temp
 file, by specifying:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;tmpFile</span> <span class="na">varName=</span><span class="s">&quot;queryTempFile&quot;</span> <span class="na">dir=</span><span class="s">&quot;/tmp/myProject&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;text</span> <span class="na">tag=</span><span class="s">&quot;2&quot;</span><span class="nt">/&gt;</span>
 <span class="nt">&lt;/tmpFile&gt;</span>
 </pre></div>
@@ -699,7 +698,7 @@ file, by specifying:</p>
 <div class="section" id="example-project-xml-file">
 <h2>Example project.xml file<a class="headerlink" href="#example-project-xml-file" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;projects&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;projects&gt;</span>
    <span class="nt">&lt;defaults&gt;</span>
      <span class="nt">&lt;vars&gt;</span>
        <span class="c">&lt;!-- User variables, used only by defined steps --&gt;</span>

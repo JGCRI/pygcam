@@ -8,9 +8,8 @@ The ``run`` sub-command is a workflow management script for GCAM. It
 reads a single XML input file that defines one or more projects, one or
 more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
-in the order defined. The script was developed for use with the
-`gcam-utils <https://bitbucket.org/plevin/gcam-utils/wiki/Home>`__
-scripts, however any scripts or programs can be called in workflow
+in the order defined. The script was developed for use with other ``gt``
+sub-commands, however any scripts or programs can be called in workflow
 'steps'.
 
 Command-line usage is describe on the :ref:`gt run<run-label>` page.

@@ -188,7 +188,7 @@ workflow steps as well as running arbitrary programs of the user&#8217;s choosin
 High-Performance Computing environment by specifying &#8216;-b&#8217; or &#8216;&#8211;batch&#8217;&#8217; on the
 command-line. (Note that this is not available on Mac OS X or Windows.)</p>
 <p>For example, the command:</p>
-<div class="highlight-bash"><div class="highlight"><pre>gt -b -P MyProject run -S MyScenario
+<div class="highlight-bash"><div class="highlight"><pre><span></span>gt -b -P MyProject run -S MyScenario
 </pre></div>
 </div>
 <p>runs all steps for scenario <code class="docutils literal"><span class="pre">MyScenario</span></code> in the project <code class="docutils literal"><span class="pre">MyProject</span></code> by
@@ -544,20 +544,20 @@ are displayed with their values. The match is case-insensitive.</p>
 variable name (case-sensitive) and only the value is printed. This is useful mainly
 for scripting. For general use the substring matching is more convenient.</p>
 <p>Examples:</p>
-<div class="highlight-bash"><div class="highlight"><pre> <span class="nv">$ </span>gt config project
+<div class="highlight-bash"><div class="highlight"><pre><span></span> $ gt config project
  <span class="o">[</span>MyProject<span class="o">]</span>
  GCAM.DefaultProject <span class="o">=</span> MyProject
  GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket/myProject
  GCAM.ProjectXmlFile <span class="o">=</span> /Users/rjp/bitbucket/myProject/etc/project.xml
 
- <span class="nv">$ </span>gt config -x GCAM.DefaultProject
+ $ gt config -x GCAM.DefaultProject
  MyProject
 
- <span class="nv">$ </span>gt config sand
+ $ gt config sand
 <span class="o">[</span>MyProject<span class="o">]</span>
       GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws/myProject
 
- <span class="nv">$ </span>gt config sand -d
+ $ gt config sand -d
  <span class="o">[</span>DEFAULT<span class="o">]</span>
       GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws
 </pre></div>
@@ -713,7 +713,7 @@ reference files rather than symbolic links. Directories into which GCAM writes r
 (e.g., the GCAM executable) are symbolically linked (with the same caveat for Windows
 users.)</p>
 <p>For example:</p>
-<div class="highlight-bash"><div class="highlight"><pre>gt gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
+<div class="highlight-bash"><div class="highlight"><pre><span></span>gt gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
 </pre></div>
 </div>
 <p>would run the scenario <code class="docutils literal"><span class="pre">MyScenario</span></code> in the newly created sandbox (workspace)
@@ -769,21 +769,21 @@ land allocations.</p>
 <p>Simple protection scenarios can be specified on the command-line. More complex
 scenarios can be specified in an XML file, <a class="reference internal" href="landProtection-xml.html#protect-xml"><em>landProtection.xml</em></a>.</p>
 <p>Examples:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Create and modify copies of the reference land files, renaming them with</span>
-<span class="c"># &quot;prot\_&quot; prefix. Protect 80% of the &quot;UnmanagedForest&quot; and &quot;UnmanagedPasture&quot;</span>
-<span class="c"># land classes in the specified regions only.</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># Create and modify copies of the reference land files, renaming them with</span>
+<span class="c1"># &quot;prot\_&quot; prefix. Protect 80% of the &quot;UnmanagedForest&quot; and &quot;UnmanagedPasture&quot;</span>
+<span class="c1"># land classes in the specified regions only.</span>
 
 <span class="nv">CLASSES</span><span class="o">=</span>UnmanagedForest,UnmanagedPasture
 <span class="nv">REGIONS</span><span class="o">=</span><span class="s1">&#39;Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA&#39;</span>
-<span class="nv">OUTDIR</span><span class="o">=</span><span class="s2">&quot;$HOME/tmp/xml&quot;</span>
+<span class="nv">OUTDIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/tmp/xml&quot;</span>
 
-gt protect -f 0.8 <span class="s2">&quot;$INFILES&quot;</span> -l <span class="s2">&quot;$CLASSES&quot;</span> -r <span class="s2">&quot;$REGIONS&quot;</span> -o <span class="s2">&quot;$OUTDIR&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
+gt protect -f 0.8 <span class="s2">&quot;</span><span class="nv">$INFILES</span><span class="s2">&quot;</span> -l <span class="s2">&quot;</span><span class="nv">$CLASSES</span><span class="s2">&quot;</span> -r <span class="s2">&quot;</span><span class="nv">$REGIONS</span><span class="s2">&quot;</span> -o <span class="s2">&quot;</span><span class="nv">$OUTDIR</span><span class="s2">&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
 </pre></div>
 </div>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Run the land protection scenario &quot;s1&quot;, described in the file ``$HOME/protect.xml``,</span>
-<span class="c"># placing the results in the directory ``$HOME/ws/workspace1``</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># Run the land protection scenario &quot;s1&quot;, described in the file ``$HOME/protect.xml``,</span>
+<span class="c1"># placing the results in the directory ``$HOME/ws/workspace1``</span>
 
-gt protect -s s1 -S <span class="s2">&quot;$HOME/protect.xml&quot;</span> -w <span class="s2">&quot;$HOME/ws/workspace1&quot;</span>
+gt protect -s s1 -S <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/protect.xml&quot;</span> -w <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/ws/workspace1&quot;</span>
 </pre></div>
 </div>
 <pre class="literal-block">
@@ -877,7 +877,7 @@ usage: gt protect [-h] [-b] [-f FRACTION] [--inPlace] [-l LANDCLASSES] [-m]
 named XML queries. The results are placed in a file in the specified
 output directory with a name composed of the basename of the
 XML query file plus the scenario name. For example,</p>
-<div class="highlight-bash"><div class="highlight"><pre>gt query -o. -s MyReference,MyPolicyCase liquids-by-region
+<div class="highlight-bash"><div class="highlight"><pre><span></span>gt query -o. -s MyReference,MyPolicyCase liquids-by-region
 </pre></div>
 </div>
 <p>would run the <code class="docutils literal"><span class="pre">liquids-by-region</span></code> query on two scenarios, MyReference and
@@ -977,31 +977,31 @@ The workflow steps indicated in the XML file and command-line determine which
 commands to run.</p>
 <p>Examples:</p>
 <p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run
 </pre></div>
 </div>
 <p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
 scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -g test -S baseline,policy1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -g test -S baseline,policy1
 </pre></div>
 </div>
 <p>or, equivalently:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run --group test --scenario baseline --step policy1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run --group test --scenario baseline --step policy1
 </pre></div>
 </div>
 <p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
 default scenario group:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1
 </pre></div>
 </div>
 <p>Same as above, but queue a batch job to run these commands on the queue
 &#8216;short&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
 </pre></div>
 </div>
 <p>Show the commands that would be executed for the above command, but
 don&#8217;t run them:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
 </pre></div>
 </div>
 <pre class="literal-block">
