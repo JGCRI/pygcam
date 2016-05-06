@@ -271,7 +271,7 @@ class GcamTool(object):
         args = self.parser.parse_args(args=shellArgs)
         jobName   = args.jobName
         queueName = args.queueName or getParam('GCAM.DefaultQueue')
-        logFile   = args.logFile or getParam('GCAM.BatchLogFile')
+        logFile   = args.logFile or getParam('GCAM.BatchLogFile', raw=True)
         minutes   = args.minutes or float(getParam('GCAM.Minutes'))
         walltime  = "%02d:%02d:00" % (minutes / 60, minutes % 60)
 
