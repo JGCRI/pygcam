@@ -34,9 +34,8 @@ _instructions = '''#
 # square brackets. For example for the project PROJECT0, you would
 # add [PROJECT0]. All settings after this until the next section
 # declaration (or end of file) taken as values for "PROJECT0". The
-# script gcamtool.py allows you to identify the project you are
-# operating on so that the corresponding values are read from the
-# config file.
+# "gt" script allows you to identify the project you are operating
+# on so that the corresponding values are read from the config file.
 #
 '''
 

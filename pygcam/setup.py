@@ -1,5 +1,5 @@
 '''
-.. gcamtool.py plugin for setting up / customizing GCAM project's XML files.
+.. gcamtool plugin for setting up / customizing GCAM project's XML files.
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 

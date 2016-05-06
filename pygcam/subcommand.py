@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 class SubcommandABC(object):
     """
-    Abstract base class for sub-commands. Defines the protocol expected by ``gcamtool``
+    Abstract base class for sub-commands. Defines the protocol expected by ``gt``
     for defining sub-commands. Plugin files should be named ``'*_plugin.py'`` and must
     define a subclass of ``SubcommandABC``. To allow the class to be identified, it can be
     named ``Plugin`` or the global variable ``PluginClass`` can identify the class.
@@ -47,8 +47,8 @@ class SubcommandABC(object):
     def run(self, args, tool):
         """
         Perform the function intended by the ``SubcommandABC`` subclass. This function
-        is invoked by ``gcamtool`` on the ``SubcommandABC`` instance whose name matches
-        the given sub-command. (This is an  abstract method that must be implemented in
+        is invoked by ``gt`` on the ``SubcommandABC`` instance whose name matches the
+        given sub-command. (This is an  abstract method that must be implemented in
         the subclass.)
 
         :param args: the argument dictionary

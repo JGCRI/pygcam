@@ -186,7 +186,7 @@ def saveToFile(txt, dirname='', filename=''):
 def getBatchDir(scenario, resultsDir, fromMCS=False):
     """
     Get the name of the directory holding batch query results. This differs
-    when running in pygcam's gcamtool.py or when running in GCAM-MCS.
+    when running in pygcam's "gt" or when running in GCAM-MCS.
 
     :param scenario: (str) the name of a scenario
     :param resultsDir: (str) the directory in which the batch results directory

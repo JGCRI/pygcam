@@ -186,7 +186,7 @@ class Step(object):
         _logger.info("[%s, %s, %s] %s", scenario.name, self.seq, self.name, command)
 
         if not noRun:
-            if command[0] == '@':       # run internally in gcamtool
+            if command[0] == '@':       # run internally in gt
                 argList = shlex.split(command[1:])
                 argList = flatten(map(lambda s: glob.glob(s) or [s], argList))  # expand shell wildcards
                 tool.run(argList=argList)

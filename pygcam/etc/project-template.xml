@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-This file defines one or more "projects" that are run using the gcamtool.py script.
+This file defines one or more "projects" that are run using the "gt" script.
 -->
 <projects> <!-- <projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:noNamespaceSchemaLocation="../pygcam/pygcam/etc/project-schema.xsd"> -->
