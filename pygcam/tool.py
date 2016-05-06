@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-.. The "gcamtool" commandline program
+.. The "gt" (gcamtool) commandline program
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
@@ -31,7 +31,7 @@ from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
-PROGRAM = 'gcamtool'
+PROGRAM = 'gt'
 __version__ = '0.1'
 
 BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
@@ -41,10 +41,10 @@ BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
 
 def _writeScript(args, delete=False):
     """
-    Create a shell script in a temporary file which calls gcamtool.py
-    with the given `args`.
-    :param args: (list of str) arguments to gcamtool.py to write into
-        a script to be executed as a batch job
+    Create a shell script in a temporary file which calls gt with the
+    given `args`.
+    :param args: (list of str) arguments to "gt" to write into a
+        script to be executed as a batch job
     :param delete: (bool) if True, mark the tmp file for deletion.
     :return: (str) the pathname of the script
     """
@@ -56,9 +56,9 @@ def _writeScript(args, delete=False):
 
     with open(scriptFile, 'w') as f:
         shellArgs = map(pipes.quote, args)
-        f.write("#!/bin/bash\n")
+        f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
         f.write("rm -f %s\n" % pipes.quote(scriptFile))       # file removes itself
-        f.write("gcamtool.py %s\n" % ' '.join(shellArgs))
+        f.write("gt %s\n" % ' '.join(shellArgs))
 
     os.chmod(scriptFile, 0755)
     return scriptFile
@@ -124,8 +124,8 @@ class GcamTool(object):
                             help='''Comma-delimited list of environment variable assignments to pass
                             to queued batch job, e.g., -E "FOO=1,BAR=2". (Linux only)''')
 
-        parser.add_argument('-j', '--jobName', default='gcamtool',
-                            help='''Specify a name for the queued batch job. Default is "gcamtool".
+        parser.add_argument('-j', '--jobName', default='gt',
+                            help='''Specify a name for the queued batch job. Default is "gt".
                             (Linux only)''')
 
         parser.add_argument('-l', '--logLevel', type=str.lower, metavar='level',
@@ -230,7 +230,7 @@ class GcamTool(object):
         :param argList: (list of str) argument list to parse (when called recursively)
         :return: none
         """
-        assert args or argList, "gcamtool.run requires either args or argList"
+        assert args or argList, "GcamTool.run requires either args or argList"
 
         if argList is not None:         # might be called with empty list of subcmd args
             # called recursively
