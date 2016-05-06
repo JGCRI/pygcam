@@ -262,7 +262,7 @@ class GcamTool(object):
         import platform
 
         system = platform.system()
-        if system in ['Windows', 'Darwin']:
+        if False and system in ['Windows', 'Darwin']:
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
@@ -271,7 +271,7 @@ class GcamTool(object):
         args = self.parser.parse_args(args=shellArgs)
         jobName   = args.jobName
         queueName = args.queueName or getParam('GCAM.DefaultQueue')
-        logFile   = args.logFile or getParam('GCAM.BatchLogFile', raw=True)
+        logFile   = args.logFile or getParam('GCAM.BatchLogFile', raw=False)
         minutes   = args.minutes or float(getParam('GCAM.Minutes'))
         walltime  = "%02d:%02d:00" % (minutes / 60, minutes % 60)
 
@@ -293,6 +293,9 @@ class GcamTool(object):
 
         try:
             command = batchCmd.format(**batchArgs)
+            # deal with problem "%" chars used by SLURM variables
+            if getParam('GCAM.BatchLogFileDollarToPercent'):
+                command = command.replace('$', '%')
         except KeyError as e:
             raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 
