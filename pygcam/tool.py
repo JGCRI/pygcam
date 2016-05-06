@@ -39,7 +39,7 @@ BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
                       ProjectCommand, SetupCommand, WorkspaceCommand,
                       BioConstraintsCommand, DeltaConstraintsCommand]
 
-def _writeScript(args, delete=False):
+def _writeBatchScript(args, delete=False):
     """
     Create a shell script in a temporary file which calls gt with the
     given `args`.
@@ -51,13 +51,17 @@ def _writeScript(args, delete=False):
     tmpDir = getParam('GCAM.UserTempDir')
     mkdirs(tmpDir)
 
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
+    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=False)
     _logger.info("Creating batch script '%s'", scriptFile)
 
     with open(scriptFile, 'w') as f:
-        shellArgs = map(pipes.quote, args)
         f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
-        f.write("rm -f %s\n" % pipes.quote(scriptFile))       # file removes itself
+        if delete:
+            f.write("rm -f %s\n" % pipes.quote(scriptFile)) # file removes itself once running
+        else:
+            _logger.info('Batch script file will not be deleted.')
+
+        shellArgs = map(pipes.quote, args)
         f.write("gt %s\n" % ' '.join(shellArgs))
 
     os.chmod(scriptFile, 0755)
@@ -133,7 +137,10 @@ class GcamTool(object):
                             help='Sets the log level of the program.')
 
         parser.add_argument('-L', '--logFile',
-                            help='Sets the name of a log file for batch runs.')
+                            help='''Sets the name of a log file for batch runs. Default is "gt-%j.out"
+                            where "%j" is replaced (in SLURM) by the jobid. If the argument is not
+                            an absolute pathname, it is appended to the value of GCAM.LogDir to
+                            compute the full pathname.''')
 
         parser.add_argument('-m', '--minutes', type=float,
                             help='''Set the number of minutes to allocate for the queued batch job.
@@ -174,10 +181,6 @@ class GcamTool(object):
                 sep = os.path.pathsep           # ';' on Windows, ':' on Unix
                 items = pluginPath.split(sep)
                 self.loadPlugins(items)
-
-        # moduleDir = os.path.dirname(os.path.abspath(__file__))
-        # pluginDir = os.path.join(moduleDir, 'plugins')
-        # self.loadPlugins([pluginDir] + items)
 
     def instantiatePlugin(self, pluginClass):
         plugin = pluginClass(self.subparsers)
@@ -263,25 +266,30 @@ class GcamTool(object):
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
-        scriptFile = _writeScript(shellArgs, delete=not run)    # delete it if just showing cmd
+        scriptFile = _writeBatchScript(shellArgs, delete=not run)    # delete it if just showing cmd
 
         args = self.parser.parse_args(args=shellArgs)
         jobName   = args.jobName
         queueName = args.queueName or getParam('GCAM.DefaultQueue')
-        logFile   = args.logFile
+        logFile   = args.logFile or getParam('GCAM.BatchLogFile')
         minutes   = args.minutes or float(getParam('GCAM.Minutes'))
         walltime  = "%02d:%02d:00" % (minutes / 60, minutes % 60)
 
+        if logFile:
+            logDir = getParam('GCAM.BatchLogDir')
+            logFile = os.path.normpath(os.path.join(logDir, logFile))
+            mkdirs(os.path.dirname(logFile))
+
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
-        batchArgs = {'logFile'   : logFile,
+        batchArgs = {'scriptFile': scriptFile,
+                     'logFile'   : logFile,
                      'minutes'   : minutes,
                      'walltime'  : walltime,
                      'queueName' : queueName,
                      'jobName'   : jobName}
 
         batchCmd = getParam('GCAM.BatchCommand')
-        batchCmd += ' ' + scriptFile
 
         try:
             command = batchCmd.format(**batchArgs)
@@ -290,6 +298,9 @@ class GcamTool(object):
 
         if not run:
             print command
+            print "Script file '%s':" % scriptFile
+            with open(scriptFile) as f:
+                print f.read()
             return
 
         _logger.info('Running: %s', command)
