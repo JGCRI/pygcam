@@ -10,7 +10,10 @@
 import os
 import re
 import subprocess
-from .utils import getTempFile, TempFile, mkdirs, ensureExtension, saveToFile
+from lxml import etree as ET
+from pkg_resources import resource_stream
+from .utils import getTempFile, TempFile, mkdirs, ensureExtension, saveToFile, XMLFile, getBooleanXML
+from .queryFile import QueryFile
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .Xvfb import Xvfb
@@ -20,6 +23,8 @@ from .subcommand import SubcommandABC
 _logger = getLogger(__name__)
 
 __version__ = '0.2'
+
+NUM_AEZS = 18
 
 GCAM_32_REGIONS = [
     'Africa_Eastern',
@@ -147,7 +152,17 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     return df
 
 def writeCsv(df, filename, header='', float_format="%.4f"):
-    'Write a file in "standard" GCAM csv format'
+    """
+    Save a DataFrame a file in "standard" GCAM csv format', which
+    means without a numerical index, and with column headers on
+    the second line.
+
+    :param df:
+    :param filename:
+    :param header:
+    :param float_format:
+    :return:
+    """
     _logger.debug("Writing %s", filename)
 
     txt = df.to_csv(None, float_format=float_format)
@@ -258,7 +273,88 @@ def dropExtraCols(df, inplace=True):
     resultDF = df.drop(dropCols, axis=1, inplace=inplace)
     return resultDF
 
-def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None, delete=True):
+def _removeLevelByName(rewriteList, levelName):
+    """
+    If there was a hard-coded rewrite for levelName, delete it so we
+    can use the one defined in the query file.
+    """
+    nodes = rewriteList.xpath("./level[@name='%s']" % levelName)
+    for levelElt in nodes:
+        rewriteList.remove(levelElt)
+
+def _addRegionMap(regionMap, rewriteList):
+    _removeLevelByName(rewriteList, 'region')
+
+    levelElt = ET.Element('level', name='region')
+    rewriteList.append(levelElt)
+
+    for fromReg, toReg in regionMap.iteritems():
+        rewrite = ET.Element('rewrite', attrib={'from': fromReg, 'to': toReg})
+        levelElt.append(rewrite)
+
+def _addRewrites(levelElt, rewriteSet):
+
+    def _appendRewrite(From, to):
+        'Helper function to reduce redundancy'
+        node = ET.Element('rewrite', attrib={'from': From, 'to': to})
+        levelElt.append(node)
+
+    byAEZ = rewriteSet.byAEZ
+    for rewrite in rewriteSet.rewrites:
+        From = rewrite.From             # "from" is a keyword, thus "From"
+        to = rewrite.to
+
+        if byAEZ:
+            # Generate a rewrite for each AEZ
+            for aez in range(1, NUM_AEZS + 1):
+                fromAEZ = From + 'AEZ%02d' % aez
+                _appendRewrite(fromAEZ, to)
+        else:
+            _appendRewrite(From, to)
+
+def _addRewriteSet(rewriteSetList, rewriteParser, rewriteList, title):
+    _logger.debug("Applying rewriteSets to query '%s'", title)
+
+    # TBD: Verify with Pralit.
+    # Set to True if any of the mappings requires this, since it apparently we
+    # cannot set these independently in different rewrite lists.
+    appendValues = False
+
+    for rewriteSetName, level in rewriteSetList:
+        rewriteSet = rewriteParser.getRewriteSet(rewriteSetName)
+        levelName = level or rewriteSet.level
+
+        _removeLevelByName(rewriteList, levelName)
+        levelElt = ET.Element('level', name=levelName)
+
+        _logger.debug("Applying rewriteSet '%s', level '%s'", rewriteSetName, levelName)
+
+        rewriteList.append(levelElt)
+        _addRewrites(levelElt, rewriteSet)
+        appendValues = appendValues or rewriteSet.appendValues
+
+    rewriteList.set('append-values', 'true' if appendValues else 'false')
+
+def _findQueryByName(tree, title):
+    """
+    Try the title and variations thereof to locate the query by name
+    """
+    # This Xpath supports both Main_Queries-type files and batch query files
+    xpathPattern = '/queries/queryGroup/*[@title="{title}"]|/queries/aQuery/*[@title="{title}"]'
+
+    patterns = (None, '_', '-', '[-_]')
+
+    for pattern in patterns:
+        altTitle = re.sub(pattern, ' ', title) if pattern else title
+        xpath = xpathPattern.format(title=altTitle)
+        elts = tree.xpath(xpath)  # returns empty list or list of elements found
+        if len(elts) != 0:
+            return elts
+
+    return None
+
+def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None,
+                           rewriteSetList=None, rewriteParser=None, delete=True):
     '''
     Find a query with the given title either as a file (with .xml extension) or
     within an XML query file by searching queryPath. If the query with "title" is
@@ -267,78 +363,57 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None, delete=Tru
     '''
     sep = os.path.pathsep           # ';' on Windows, ':' on Unix
     items = queryPath.split(sep)
+
+    parser = ET.XMLParser(remove_blank_text=True)
+
     for item in items:
         if os.path.isdir(item):
             pathname = os.path.join(item, title + '.xml')
             if os.path.isfile(pathname):
                 return pathname
-        else:
-            from lxml import etree as ET    # lazy import speeds startup
+            else:
+                continue
 
-            # Support both Main_Queries-type files and batch query files
-            xpathPattern = '/queries/queryGroup/*[@title="{title}"]|/queries/aQuery/*[@title="{title}"]'
+        # Find the query within an XML query file
+        tree = ET.parse(item, parser=parser)
+        elts = _findQueryByName(tree, title)
 
-            tree = ET.parse(item)
-            xpath = xpathPattern.format(title=title)
-            elts = tree.xpath(xpath)  # returns empty list or list of elements found
+        if elts is None or len(elts) == 0:
+            continue # to next item in QueryPath
 
-            if elts is None or len(elts) == 0:
-                # if the literal search fails, repeat search with all "-" changed to " ".
-                altTitle = re.sub('_', ' ', title)
-                xpath = xpathPattern.format(title=altTitle)
-                elts = tree.xpath(xpath)
+        root = ET.Element("queries")
+        aQuery = ET.Element("aQuery")
+        root.append(aQuery)
+        for region in regions:
+            aQuery.append(ET.Element('region', name=region))
 
-            if elts is None or len(elts) == 0:
-                # if the literal search fails, repeat search with all "_" changed to " ".
-                altTitle = re.sub('-', ' ', title)
-                xpath = xpathPattern.format(title=altTitle)
-                elts = tree.xpath(xpath)
+        queryElt = elts[0]
+        aQuery.append(queryElt)
 
-            if elts is None or len(elts) == 0:
-                # if the literal search fails, repeat search with all "-" or "_" changed to " ".
-                altTitle = re.sub('[-_]', ' ', title)
-                xpath = xpathPattern.format(title=altTitle)
-                elts = tree.xpath(xpath)
+        if regionMap or rewriteSetList:
+            # if a rewrite list element exists already, use it, otherwise create it.
+            subtree = ET.ElementTree(element=queryElt)
+            found = subtree.xpath('//labelRewriteList')
+            if len(found) == 1:
+                rewriteList = found[0]
+            else:
+                # create and insert a labelRewriteList element
+                rewriteList = ET.Element('labelRewriteList', attrib={'append-values': 'true'})
+                queryElt.append(rewriteList)
 
-            if len(elts) == 1:
-                elt = elts[0]
-                root = ET.Element("queries")
-                aQuery = ET.Element("aQuery")
-                root.append(aQuery)
-                for region in regions:
-                    aQuery.append(ET.Element('region', name=region))
+            if regionMap:
+                _addRegionMap(regionMap, rewriteList)
 
-                aQuery.append(elt)
+            if rewriteSetList:
+                _addRewriteSet(rewriteSetList, rewriteParser, rewriteList, title)
 
-                if regionMap:
-                    # if a rewrite list exists already, use it, otherwise create it.
-                    subtree = ET.ElementTree(element=elt)
-                    found = subtree.xpath('//labelRewriteList')
-                    if len(found) == 1:
-                        rewriteList = found[0]
+        # Extract the query into file to submit it to ModelInterface
+        tmpFile = getTempFile(suffix='.xml', delete=delete)
+        _logger.debug("Writing extracted query for '%s' to tmp file '%s'", title, tmpFile)
+        tree = ET.ElementTree(root)
+        tree.write(tmpFile, xml_declaration=True, encoding="UTF-8", pretty_print=True)
+        return tmpFile
 
-                        # If there was a hard-coded rewrite for regions, delete it
-                        # TBD: TEST THIS
-                        found = rewriteList.xpath("./level[@name='region']")
-                        for regionElt in found:
-                            rewriteList.remove(regionElt)
-                    else:
-                        # create and inject the element
-                        rewriteList = ET.Element('labelRewriteList')
-                        elt.append(rewriteList)
-
-                    level = ET.Element('level', name='region')
-                    rewriteList.append(level)
-                    for fromReg, toReg in regionMap.iteritems():
-                        level.append(ET.Element('rewrite', attrib={'from': fromReg, 'to': toReg}))
-
-                tmpFile = getTempFile(suffix='.xml', delete=delete)
-                _logger.debug("Writing extracted query for '%s' to tmp file '%s'", title, tmpFile)
-                tree = ET.ElementTree(root)
-                tree.write(tmpFile, xml_declaration=True, encoding="UTF-8", pretty_print=True)
-                return tmpFile
-
-    return None
 
 BatchQueryTemplate = """<?xml version="1.0"?>
 <!-- WARNING: this file is automatically generated. Changes may be overwritten. -->
@@ -357,7 +432,6 @@ BatchQueryTemplate = """<?xml version="1.0"?>
     </class>
 </ModelInterfaceBatch>
 """
-
 
 def _createJavaCommand(batchFile, redirect):
     jarFile = os.path.normpath(getParam('GCAM.JarFile'))
@@ -384,8 +458,8 @@ def _deleteFile(filename):
         pass
 
 def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
-                  csvFile=None, miLogFile=None, regions=None,
-                  regionMap=None, noRun=False, noDelete=False):
+                  csvFile=None, miLogFile=None, regions=None, regionMap=None,
+                  rewriters=None, rewriteParser=None, noRun=False, noDelete=False):
     """
     Run a query against GCAM's XML database given by `xmldb` (or computed
     from other parameters), optionally saving the results into `outfile`.
@@ -401,8 +475,13 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
     :param csvFile: if None, query results are written to a computed filename.
     :param miLogFile: (str) optional name of a log file to write ModelInterface output to.
     :param regions: (iterable of str) the regions you want to include in the query
-    :param regionMap: (dict-like) keys are the names of regions that should be mapped; the
-        value is the name of the aggregate region to map into.
+    :param regionMap: (dict-like) keys are the names of regions that should be rewritten.
+        The value is the name of the aggregate region to map into.
+    :param rewriters: (list of tuples of (mapName, level)) list of mapping rewrites to
+        apply to the query results, based on rewriteSets.xml. If level is specified, it
+        overrides the level given in the mapping as defined in rewriteSets.xml.
+    :param rewriteParser: (RewriteSetParser instance) parsed representation of
+        rewriteSets.xml
     :param noRun: (bool) if True, the command is printed but not executed
     :param noDelete: (bool) if True, temporary files created by this function are
         not deleted (use for debugging)
@@ -415,8 +494,10 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
 
     delete = not noDelete
 
-    # Look for both the literal name as given as well as the name with underscores replaced with spaces
-    filename = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap, delete=delete)
+    # Look for both the literal name as given as well as the name with "-" and "_" replaced with " "
+    filename = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap,
+                                      rewriteSetList=rewriters, rewriteParser=rewriteParser,
+                                      delete=delete)
 
     if not filename:
         raise PygcamException("Error: file for query '%s' was not found." % basename)
@@ -430,7 +511,8 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
     # Create a batch file for ModelInterface to invoke the query on the named
     # scenario, and save the output where specified
     batchFile = getTempFile(suffix='.xml', delete=delete)
-    batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=filename, csvFile=csvPath, xmldb=xmldb)
+    batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=filename,
+                                              csvFile=csvPath, xmldb=xmldb)
 
     _logger.debug("Creating temporary batch file '%s'", batchFile)
     saveToFile(batchFileText, filename=batchFile)
@@ -489,6 +571,14 @@ def ensureCSV(file):
     return ensureExtension(file, '.csv')
 
 def sumYears(files, skiprows=1, interpolate=False):
+    """
+    TBD.
+
+    :param files:
+    :param skiprows:
+    :param interpolate:
+    :return:
+    """
     csvFiles = map(ensureCSV, files)
     dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate), csvFiles)
 
@@ -505,6 +595,15 @@ def sumYears(files, skiprows=1, interpolate=False):
 
 # TBD: pass an output directory?
 def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
+    """
+    TBD.
+
+    :param groupCol:
+    :param files:
+    :param skiprows:
+    :param interpolate:
+    :return:
+    """
     import numpy as np
 
     csvFiles = map(ensureCSV, files)
@@ -530,6 +629,17 @@ def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
             f.write("%s\n%s\n" % (label, csvText))
 
 def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startYear=0):
+    """
+    TBD.
+
+    :param inFiles:
+    :param outFile:
+    :param skiprows:
+    :param interpolate:
+    :param years:
+    :param startYear:
+    :return:
+    """
     import pandas as pd
 
     csvFiles = map(ensureCSV, inFiles)
@@ -575,8 +685,62 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
             worksheet.write_string(0, 1, fname)
             worksheet.write_url(1, 0, "internal:index!A1", linkFmt, "Back to index")
 
+#
+# Classes to parse rewriteSets.xml (see pygcam/etc/rewriteSets-schema.xsd)
+#
+class Rewrite(object):
+    def __init__(self, node):
+        self.From = node.get('from')    # 'from' is a keyword...
+        self.to   = node.get('to')
+        self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
+
+    def __str__(self):
+        return "<Rewrite from='%s' to='%s' byAEZ='%s'>" % (self.From, self.to, self.byAEZ)
+
+
+class RewriteSet(object):
+    def __init__(self, node):
+        self.name  = node.get('name')
+        self.level = node.get('level')
+        self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
+        self.appendValues = getBooleanXML(node.get('append-values', '0'))
+        self.rewrites = map(Rewrite, node.findall('rewrite'))
+
+    def __str__(self):
+        return "<RewriteSet name='%s' level='%s' byAEZ='%s' append-values='%s'>" % \
+               (self.name, self.level, self.byAEZ, self.appendValues)
+
+class RewriteSetParser(object):
+    def __init__(self, node, filename):
+        rewriteSets = map(RewriteSet, node.findall('rewriteSet'))
+        self.rewriteSets = {obj.name : obj for obj in rewriteSets}
+        self.filename = filename # for error messages only
+
+    def getRewriteSet(self, name):
+        try:
+            return self.rewriteSets[name]
+        except KeyError:
+            raise PygcamException('RewriteSet "%s" not found in file "%s"' % (name, self.filename))
+
+    @classmethod
+    def parse(cls, filename):
+        """
+        Parse an XML file holding a list of query result rewrites.
+        :param filename: (str) the name of the XML file to read
+        :return: a list of RewriteSet instances
+        """
+        schemaStream = resource_stream('pygcam', 'etc/rewriteSets-schema.xsd')
+        xmlFile = XMLFile(filename, schemaFile=schemaStream)
+        return cls(xmlFile.tree.getroot(), filename)
+
 
 def main(args):
+    """
+    TBD.
+
+    :param args:
+    :return: none
+    """
     miLogFile   = getParam('GCAM.ModelInterfaceLogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
     workspace   = args.workspace or getParam('GCAM.SandboxRoot')
@@ -589,8 +753,12 @@ def main(args):
 
     _logger.debug("Query names: '%s'", queryNames)
 
-    if not queryNames:
-        raise CommandlineError("Error: At least one query name must be specified")
+    queryFileNode = QueryFile.parse(args.queryFile) if args.queryFile else None
+    queryNodes = queryFileNode.queries if queryFileNode else []
+    rewriteParser = RewriteSetParser.parse(args.rewriteSetsFile) if args.rewriteSetsFile else None
+
+    if not (queryNames or queryFileNode):
+        raise CommandlineError("Error: At least one query name or a query XML file must be specified")
 
     mkdirs(outputDir)
 
@@ -602,6 +770,7 @@ def main(args):
         miLogFile = os.path.abspath(miLogFile)
         if os.path.lexists(miLogFile):
             os.unlink(miLogFile)       # remove it, if any, to start fresh
+
 
     for scenario in scenarios:
         for queryName in queryNames:
@@ -620,6 +789,14 @@ def main(args):
                           miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                           noRun=args.noRun, noDelete=args.noDelete)
 
+        for queryNode in queryNodes:
+            queryName = queryNode.name
+            rewriters = queryNode.rewriters
+
+            runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
+                          miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                          rewriters=rewriters, rewriteParser=rewriteParser,
+                          noRun=args.noRun, noDelete=args.noDelete)
 
 class QueryCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -644,17 +821,15 @@ class QueryCommand(SubcommandABC):
                             help='''Don't delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.''')
 
-        parser.add_argument('-R', '--regionMap',
-                            help='''A file containing tab-separated pairs of names, the first being a GCAM region
-                                    and the second being the name to map this region to. Lines starting with "#" are
-                                    treated as comments. Lines without a tab character are also ignored. This arg
-                                    overrides the value of config variable GCAM.RegionMapFile.''')
-
         parser.add_argument('-n', '--noRun', action="store_true",
                             help="Show the command to be run, but don't run it")
 
         parser.add_argument('-o', '--outputDir',
                              help='Where to output the result (default taken from config parameter "GCAM.OutputDir")')
+
+        parser.add_argument('-q', '--queryFile',
+                            help='''An XML file holding a list of queries to run, with optional mappings specified to
+                            rewrite output. This file has the same structure as the <queries> element in project.xml.''')
 
         parser.add_argument('-Q', '--queryPath',
                             help='''A semicolon-delimited list of directories or filenames to look in to find query files.
@@ -664,9 +839,19 @@ class QueryCommand(SubcommandABC):
                             help='''A comma-separated list of regions on which to run queries found in query files structured
                                     like Main_Queries.xml. If not specified, defaults to querying all 32 regions.''')
 
+        parser.add_argument('-R', '--regionMap',
+                            help='''A file containing tab-separated pairs of names, the first being a GCAM region
+                                    and the second being the name to map this region to. Lines starting with "#" are
+                                    treated as comments. Lines without a tab character are also ignored. This arg
+                                    overrides the value of config variable GCAM.RegionMapFile.''')
+
         parser.add_argument('-s', '--scenario', default='Reference',
                             help='''A comma-separated list of scenarios to run the query/queries for (default is "Reference")
                                     Note that these refer to a scenarios in the XML database.''')
+
+        parser.add_argument('-S', '--rewriteSetsFile',
+                            help='''An XML file defining query maps by name (default taken from
+                            config parameter "GCAM.QueryRewriteSetsFile")''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 

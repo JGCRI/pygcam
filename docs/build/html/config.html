@@ -83,19 +83,21 @@
             
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html">queries.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html#rewritesets-xml">rewriteSets.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -444,7 +446,8 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="c1"># The reference config file to use as a starting point for &quot;setup&quot;</span>
 <span class="na">GCAM.RefConfigFile</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/exe/configuration_ref.xml</span>
 
-<span class="na">GCAM.RefQueryDir</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/output/queries</span>
+<span class="c1"># deprecated</span>
+<span class="c1"># GCAM.RefQueryDir = %(GCAM.RefWorkspace)s/output/queries</span>
 
 <span class="c1"># The location of the ModelInterface to use.</span>
 <span class="na">GCAM.ModelInterface</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/ModelInterface</span>
@@ -454,8 +457,11 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="c1"># QueryPath is string with one or more colon-delimited elements that</span>
 <span class="c1"># identify directories or XML files in which to find batch query</span>
 <span class="c1"># definitions.</span>
-<span class="na">GCAM.QueryDir</span>    <span class="o">=</span> <span class="s">%(GCAM.RefQueryDir)s</span>
-<span class="na">GCAM.QueryPath</span>   <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/Main_Queries.xml</span>
+<span class="na">GCAM.QueryDir</span>     <span class="o">=</span> <span class="s">%(GCAM.RefQueryDir)s</span>
+<span class="na">GCAM.QueryPath</span>    <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/Main_Queries.xml</span>
+
+<span class="c1"># File that defines query rewrites by name for use by query command.</span>
+<span class="na">GCAM.QueryRewriteSetsFile</span> <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/rewriteSets.xml</span>
 
 <span class="c1"># The location of GCAM source code (for the purpose of reading</span>
 <span class="c1"># the .csv file that defines the current regional aggregation.</span>
@@ -463,6 +469,7 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 
 <span class="c1"># Root directory for where the user keeps project folders</span>
 <span class="na">GCAM.ProjectRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/projects</span>
+
 
 <span class="c1"># The name of the XML Starlet program. Use full path if it&#39;s not</span>
 <span class="c1"># found on your usual PATH.</span>
@@ -518,14 +525,32 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="c1"># DEBUG, INFO, WARNING, ERROR, CRITICAL</span>
 <span class="na">GCAM.LogLevel</span>   <span class="o">=</span> <span class="s">WARNING</span>
 
-<span class="c1"># Save log messages in the indicated file</span>
+<span class="c1"># If set, application logger messages are written here. Note that</span>
+<span class="c1"># this is different than the GCAM.BatchLogFile for batch job output.</span>
 <span class="na">GCAM.LogFile</span>    <span class="o">=</span>
+
+<span class="c1"># Save batch log messages in the indicated file. Default is set up</span>
+<span class="c1"># for SLURM, which replaces &quot;%j&quot; with the jobid. Note that &quot;%&quot; is a</span>
+<span class="c1"># special character in configparser, the &quot;%&quot; cannot be specified</span>
+<span class="c1"># directly. Instead, use &quot;$&quot;, which is translated to &quot;%&quot; after all</span>
+<span class="c1"># interpolation is done, unless GCAM.BatchLogFileDollarToPercent is</span>
+<span class="c1"># False.</span>
+<span class="na">GCAM.BatchLogFile</span> <span class="o">=</span> <span class="s">gt-$j.out</span>
+
+<span class="na">GCAM.BatchLogFileDollarToPercent</span> <span class="o">=</span> <span class="s">True</span>
+
+<span class="c1"># If GCAM.BatchLogFile or the --logFile arg to gt is not an absolute</span>
+<span class="c1"># path (i.e., the path portion of the logFile does not start with &#39;/&#39;,</span>
+<span class="c1"># with Windows paths converted to Unix format), then batch log files</span>
+<span class="c1"># are created relative to this directory.</span>
+<span class="na">GCAM.BatchLogDir</span>    <span class="o">=</span> <span class="s">%(GCAM.SandboxRoot)s/log</span>
 
 <span class="c1"># Show log messages on the console (terminal)</span>
 <span class="na">GCAM.LogConsole</span> <span class="o">=</span> <span class="s">True</span>
 
 <span class="c1"># The name of the queue used for submitting batch jobs on a cluster.</span>
-<span class="na">GCAM.DefaultQueue</span> <span class="o">=</span> <span class="s">slurm</span>
+<span class="c1"># On SLURM, you can request multiple queue, taking first one available.</span>
+<span class="na">GCAM.DefaultQueue</span> <span class="o">=</span> <span class="s">short,slurm</span>
 
 <span class="c1">#GCAM.QueuePBS = qsub -q {queueName} -N {jobName} -l walltime={walltime} \</span>
 <span class="c1">#  -d {exeDir} -e {logFile} -m n -j oe -l pvmem=6GB -v %(GCAM.OtherBatchArgs)s \</span>
@@ -539,7 +564,7 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="c1">#  -D {exeDir} --get-user-env=10L -s --mem=6000 --tmp=6000 %(GCAM.OtherBatchArgs)s \</span>
 <span class="c1">#  --export=QUEUE_GCAM_CONFIG_FILE=&#39;{configs}&#39;,QUEUE_GCAM_WORKSPACE=&#39;{workspace}&#39;,QUEUE_GCAM_NO_RUN_GCAM={noRunGCAM}</span>
 
-<span class="na">GCAM.QueueSLURM</span> <span class="o">=</span> <span class="s">sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} --get-user-env=10L -s %(GCAM.OtherBatchArgs)s</span>
+<span class="na">GCAM.QueueSLURM</span> <span class="o">=</span> <span class="s">sbatch -p {queueName} --nodes=1 -J {jobName} -t {walltime} --get-user-env=10L -s %(GCAM.OtherBatchArgs)s -o {logFile} -e {logFile} {scriptFile}</span>
 
 <span class="c1"># Arbitrary arguments to add to the selected batch command</span>
 <span class="na">GCAM.OtherBatchArgs</span> <span class="o">=</span>

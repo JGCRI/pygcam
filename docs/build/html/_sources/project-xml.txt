@@ -43,7 +43,7 @@ below.
 <defaults>
 ^^^^^^^^^^
 
-The element ``<defaults>`` sets default values for variables and
+The optional ``<defaults>`` element sets default values for variables and
 workflow steps. This allows definitions to be shared across projects,
 reducing redundancy. Individual projects can override and/or declare new
 variables steps as needed. The ``<defaults>`` element takes no

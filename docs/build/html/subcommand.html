@@ -83,19 +83,21 @@
             
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html">queries.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html#rewritesets-xml">rewriteSets.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -205,7 +207,7 @@ configuration file.</p>
 <dl class="class">
 <dt id="pygcam.subcommand.SubcommandABC">
 <em class="property">class </em><code class="descclassname">pygcam.subcommand.</code><code class="descname">SubcommandABC</code><span class="sig-paren">(</span><em>name</em>, <em>subparsers</em>, <em>kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.subcommand.SubcommandABC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract base class for sub-commands. Defines the protocol expected by <code class="docutils literal"><span class="pre">gcamtool</span></code>
+<dd><p>Abstract base class for sub-commands. Defines the protocol expected by <code class="docutils literal"><span class="pre">gt</span></code>
 for defining sub-commands. Plugin files should be named <code class="docutils literal"><span class="pre">'*_plugin.py'</span></code> and must
 define a subclass of <code class="docutils literal"><span class="pre">SubcommandABC</span></code>. To allow the class to be identified, it can be
 named <code class="docutils literal"><span class="pre">Plugin</span></code> or the global variable <code class="docutils literal"><span class="pre">PluginClass</span></code> can identify the class.</p>
@@ -245,8 +247,8 @@ abstract method that must be implemented in the subclass.)</p>
 <dt id="pygcam.subcommand.SubcommandABC.run">
 <code class="descname">run</code><span class="sig-paren">(</span><em>args</em>, <em>tool</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.subcommand.SubcommandABC.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform the function intended by the <code class="docutils literal"><span class="pre">SubcommandABC</span></code> subclass. This function
-is invoked by <code class="docutils literal"><span class="pre">gcamtool</span></code> on the <code class="docutils literal"><span class="pre">SubcommandABC</span></code> instance whose name matches
-the given sub-command. (This is an  abstract method that must be implemented in
+is invoked by <code class="docutils literal"><span class="pre">gt</span></code> on the <code class="docutils literal"><span class="pre">SubcommandABC</span></code> instance whose name matches the
+given sub-command. (This is an  abstract method that must be implemented in
 the subclass.)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

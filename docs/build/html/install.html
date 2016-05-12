@@ -32,7 +32,7 @@
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
         <link rel="next" title="Using pygcam under Windows" href="windows.html"/>
-        <link rel="prev" title="GCAM XML-Setup" href="setup.html"/> 
+        <link rel="prev" title="Introduction to pygcam" href="intro.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -83,19 +83,21 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html">queries.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html#rewritesets-xml">rewriteSets.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
@@ -245,7 +247,7 @@ file is <code class="docutils literal"><span class="pre">.pygcam.cfg</span></cod
 <p>Below are some key parameters you may wish to modify in your
 <code class="docutils literal"><span class="pre">.pygcam.cfg</span></code> file.</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 
 <span class="c1"># Set a default project to use if the &quot;-P&quot; flag is not specified to gt.</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">XXX</span>
@@ -308,7 +310,7 @@ a current version for your platform. Do the following:</p>
 <li><p class="first">For this example, we will create a folder called <code class="docutils literal"><span class="pre">x</span></code> in our home
 directory to hold the <code class="docutils literal"><span class="pre">git</span></code> repository. Use any name you prefer.
 Run these commands to download a copy of the Python files:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>mkdir ~/bb
+<div class="highlight-bash"><div class="highlight"><pre>mkdir ~/bb
 <span class="nb">cd</span> ~/bb
 git clone git@bitbucket.org:plevin/pygcam.git
 </pre></div>
@@ -332,13 +334,13 @@ on the <a class="reference internal" href="windows.html"><em>Using pygcam under 
 sake of an example, we&#8217;ll make a new directory called
 <code class="docutils literal"><span class="pre">bb</span></code> (for bitbucket) in our home directory, but you
 can call this whatever you like.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>mkdir ~/bb    <span class="c1"># ~ is shorthand for your home directory</span>
+<div class="highlight-bash"><div class="highlight"><pre>mkdir ~/bb    <span class="c"># ~ is shorthand for your home directory</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">Open a <code class="docutils literal"><span class="pre">cygwin</span> <span class="pre">terminal</span></code> run these commands to download
 the source code:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> ~/bb
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">cd</span> ~/bb
 git clone git@bitbucket.org:plevin/pygcam.git
 </pre></div>
 </div>
@@ -354,7 +356,7 @@ do the following.</p>
 <div><ul>
 <li><p class="first">Run the following command to have Python print out the location of the &#8220;user site&#8221;
 directory, i.e., where we will create a &#8221;.pth&#8221; file:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>python -c <span class="s1">&#39;import site; site._script()&#39;</span> --user-site
+<div class="highlight-bash"><div class="highlight"><pre>python -c <span class="s1">&#39;import site; site._script()&#39;</span> --user-site
 </pre></div>
 </div>
 </li>
@@ -365,9 +367,9 @@ it ends in <code class="docutils literal"><span class="pre">.pth</span></code>.)
 commands, however be sure to replace <em>pygcam-source-path</em> with the path to
 the <code class="docutils literal"><span class="pre">pygcam</span></code> source, and <em>user-site-path</em> with the path displayed by the
 command above.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># For this example, we assume that the user site (printed by the</span>
-<span class="c1"># command above) is /Users/rjp/.local/lib/python2.7/site-packages,</span>
-<span class="c1"># and we have cloned pygcam into the folder /Users/rjp/bb/pygcam:</span>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># For this example, we assume that the user site (printed by the</span>
+<span class="c"># command above) is /Users/rjp/.local/lib/python2.7/site-packages,</span>
+<span class="c"># and we have cloned pygcam into the folder /Users/rjp/bb/pygcam:</span>
 
 <span class="nb">echo</span> /Users/rjp/bb/pygcam &gt; /Users/rjp/.local/lib/python2.7/site-packages/pygcam.pth
 </pre></div>
@@ -389,7 +391,7 @@ command above.</p>
         <a href="windows.html" class="btn btn-neutral float-right" title="Using pygcam under Windows" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="setup.html" class="btn btn-neutral" title="GCAM XML-Setup" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="intro.html" class="btn btn-neutral" title="Introduction to pygcam" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

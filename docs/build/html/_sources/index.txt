@@ -8,9 +8,9 @@ Contents
    :maxdepth: 1
 
    intro
-   setup
    install
    windows
+   setup
 
 
 The ``gt`` workflow management script
@@ -21,6 +21,13 @@ The ``gt`` workflow management script
 
    gcamtool
 
+Tutorial
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial
 
 XML input file formats for ``gt`` sub-commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,15 +36,8 @@ XML input file formats for ``gt`` sub-commands
    :maxdepth: 1
 
    project-xml
+   query-xml
    landProtection-xml
-
-Tutorial
-----------
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorial
 
 
 Application Programming Interface (API)
