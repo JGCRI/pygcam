@@ -21,6 +21,7 @@ from .utils import getTempFile, flatten, shellCommand, getBooleanXML, unixPath, 
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .subcommand import SubcommandABC
+from .queryFile import QueryFile
 
 __version__ = '0.2'
 
@@ -285,6 +286,7 @@ class Project(object):
         self.subdir = projectNode.get('subdir', '')
 
         defaultsNode = tree.find('defaults')   # returns 1st match
+        hasDefaults = defaultsNode is not None
 
         scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
         self.scenarioGroupDict = groupDict = {group.name : group for group in scenarioGroups}
@@ -300,7 +302,7 @@ class Project(object):
         self.baselineName  = scenarioGroup.baseline
         self.scenarioDict  = scenarioGroup.scenarioDict
 
-        dfltSteps = map(Step, defaultsNode.findall('./steps/step'))
+        dfltSteps = map(Step, defaultsNode.findall('./steps/step')) if hasDefaults else []
         projSteps = map(Step, projectNode.findall('./steps/step'))
         allSteps  = dfltSteps + projSteps
 
@@ -312,10 +314,12 @@ class Project(object):
 
         self.vars = {}
 
-        map(Variable, defaultsNode.findall('./vars/var'))
+        if hasDefaults:
+            map(Variable, defaultsNode.findall('./vars/var'))
+
         map(Variable,  projectNode.findall('./vars/var'))
 
-        dfltTmpFileNodes = defaultsNode.findall('tmpFile')
+        dfltTmpFileNodes = defaultsNode.findall('tmpFile') if hasDefaults else []
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(_TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
