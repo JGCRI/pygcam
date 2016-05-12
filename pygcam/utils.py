@@ -236,6 +236,7 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
     # Load the compiled code if it's a '.pyc', otherwise load the source code
     module = None
     try:
+        # TBD: this test isn't necessary since load_source loads a .pyc instead if found
         if base.endswith('.py'):
             module = load_source(moduleName, modulePath)
         elif base.endswith('.pyc'):
@@ -304,7 +305,7 @@ class XMLFile(object):
     Represents an XML file, which is parsed by lxml.etree and stored internally.
 
     :param xmlFile: pathname of the XML file
-    :param schemaFile: optional XMLSchema file to use for validation
+    :param schemaFile: optional XMLSchema file (or stream) to use for validation
     :param raiseError: if True, raise an error if validation fails
     :param rootClass: optional root class, which is instantiated for the parsed
       tree and stored internally
@@ -330,7 +331,7 @@ class XMLFile(object):
         else:
             return schema.validate(self.tree)
 
-        self.root = rootClass(self.tree)
+        self.root = rootClass(self.tree) if rootClass else None
 
     def getRoot(self):
         return self.root
