@@ -9,7 +9,7 @@ Cleanup
 
 Test
 ----
-- setup.py installer
+- setup.py installer with full install
 - write more unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
@@ -18,6 +18,33 @@ Test
 
 Features
 --------
+- In chart subcommand, allow args to -m (multiplier) to take symbolic
+  values like EJ_to_Quad, where these are driven by a builtin table
+  with common ones, augmented if needed by a user file, e.g.,
+
+    GCAM.UnitMultipliers = %(ProjectRoot)/etc/multipliers.txt
+
+    Could have, e.g.,
+
+    EJ_per_km2_to_Quad_per_Mha =
+
+    could even do this as a python file that is interpreted, or
+    as a cfg file where final expression is evaluated with the
+    list of variables in a namespace that is passed.
+
+    See unitConversion.py for values gleaned from PNNL files.
+
+- Allow plotting a marker at the total for a bar
+
+- Allow overlay of, say, line chart using right Y axis on barchart
+  using left Y axis, as in "US Land Cover and LUC Emissions"
+
+- Generalize the mapping capability beyond region maps.
+  - Write a tmp XML file identical to the <queries> element
+     - project.py doesn't need to interpret the XML at all. It's validated
+       by project-schema.xsd. Just write it to a temp file and store name
+       in varName.
+
 - Have a flag for batch mode that runs the baseline, then batches
   the policy scenarios with '-d singleton' to cause them to wait
   for the baseline to complete.
@@ -26,11 +53,10 @@ Features
     include baseline and at least one policy scenario, add args
     "-d afterok:<jobid>" to existing value of GCAM.OtherBatchArgs,
     where <jobid> is the id of the baseline job.
+  - use subprocess.check_output() and look for "Submitted batch job (\d+)"
 
 - If scenario has unique name among groups, run it even if group isn't specified?
     - Will require restructuring since it's assumed there's one group name
-
-- Make project <defaults> optional.
 
 - Specify a simple project without writing custom python code.
     - Create xmlsrc
@@ -71,10 +97,16 @@ Other
 - pygcam/etc/site.cfg
     - see what happens with this on installation via setup.py
     - would be much better outside the installed module
-    - maybe have a setup arg that says where to symlink to for site.cfg
+    - maybe use an environment var, e.g., PYGCAM_SITE_CONFIG_FILE
 
 Document
 --------
+- queryMapping
+  - default "level" set in query itself, can override in query list
+  - append-values="false" unless any of the queries sets it to "true"
+
+- <defaults> is now optional
+
 - Document the Subcommand (plugin) protocol
     - class 'Plugin' or variable PluginClass which identifies classname
     - addArgs()
@@ -84,29 +116,45 @@ Document
 
 - Assumptions behind setup code
 
-- Adding otaq2016.pth or other project-specific code
-  - Is this necessary now that there's just one scenarios.py, loaded by pathname?
+- Eliminate the need for *.pth files for scenarios.py files: we can
+  load them directly by pathname.
+
+  # Apparently have to load intermediate module first, as below
+  import imp
+  modDir  = '/Users/rjp/bitbucket/otaq2016/xmlsrc'  # replace with xmlSrcDir
+  modName = 'xmlsrc'
+
+  # load group module level if required
+  if args.groupDir:
+     modDir  += '/' + args.groupDir
+     modName += '.' + args.groupDir
+     imp.load_source(modName, modDir)
+
+  mod = imp.load_source(modName + '.scenarios', modDir + '/scenarios.py')
+
 
 Tasks
 -----
 - Modify CI command to use Marshall's query results
-- Have CI command take a flag to generate CI. Maybe this is redundant with fuelEJ.txt?
 - Test diff cmd
 - Test constraint cmds
 - Test land protection cmd
     - Simplify to eliminate complicated cmdline opts?
-- Should constraint commands remain plugins?
-    - They're for use by biofuel studies only?
+- Should constraint commands be converted back to plugins?
+    - They're for use by biofuel studies only (maybe a sep plugin dir?)
     - Perhaps split out generic function from domain-specific
 - Update documentation
-- Test everything again on Windows
 
 
 MCS Integration
 ===============
 
 - Trial generation should be unaffected
-- Still needs either wrapper (runner.py) or jug-type master-slave approach
+    - document ordering: setup first then gensim
+
+- Needs wrapper (runner.py) or jug-type master-slave approach
+    - master-slave avoids stacking jobs in advance
+    - jug handles tracking incomplete jobs
 
 - Using jug
     - Slave asks for next task
