@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+
+    <xs:element name='queries'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='query'/>
+            </xs:sequence>
+            <xs:attribute name='defaultMap' type='xs:string'/>
+            <xs:attribute name='varName' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='query'>
+        <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs='unbounded'>
+                <xs:element maxOccurs='unbounded' ref='rewriter'/>
+            </xs:choice>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='useDefault' type='xs:boolean'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='rewriter'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='level' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

@@ -24,6 +24,7 @@
                 <xs:element ref='steps'/>
                 <xs:element ref='tmpFile'/>
                 <xs:element ref='vars'/>
+                <xs:element ref='queries'/>
             </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -35,6 +36,7 @@
                 <xs:element ref='tmpFile'/>
                 <xs:element ref='vars'/>
                 <xs:element ref='scenarioGroup'/>
+                <xs:element ref='queries'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='subdir' type='xs:string'/>
@@ -120,6 +122,38 @@
             <xs:simpleContent>
                 <xs:extension base="xs:string">
                     <xs:attribute name='tag' type='xs:string'/>
+                    <xs:attribute name='args' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='queries'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='query'/>
+            </xs:sequence>
+            <xs:attribute name='varName' use='required' type='xs:string'/>
+            <xs:attribute name='defaultMap' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='query'>
+        <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs='unbounded'>
+                <xs:element ref='rewriter'/>
+            </xs:choice>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='useDefault' type='xs:boolean'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='rewriter'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='level' type='xs:string'/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>

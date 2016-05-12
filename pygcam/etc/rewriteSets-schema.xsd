@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+
+    <xs:element name='rewriteSets'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='rewriteSet'/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='rewriteSet'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='rewrite'/>
+            </xs:sequence>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='level' use='required' type='xs:string'/>
+            <xs:attribute name='byAEZ' type='xs:string'/>
+            <xs:attribute name='append-values' type='xs:boolean'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='rewrite'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='to' use='required' type='xs:string'/>
+                    <xs:attribute name='from' use='required' type='xs:string'/>
+                    <xs:attribute name='byAEZ' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
