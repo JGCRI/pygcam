@@ -115,19 +115,23 @@ def readConfigFiles():
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
         exeFile = 'Release/objects'
         useXvfb = 'False'
+        editor  = 'open -e'
     elif platformName == 'Linux':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = './gcam.exe'
         useXvfb = 'True'
+        editor  = os.getenv('EDITOR', 'vi')
     elif platformName == 'Windows':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = 'Objects-Main.exe'
         useXvfb = 'False'
+        editor  = os.getenv('EDITOR', 'notepad.exe')
     else:
         # unknown what this might be, but just in case
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = 'gcam.exe'
         useXvfb = 'False'
+        editor  = os.getenv('EDITOR', 'vi')
 
     # Initialize config parser with default values
     _ConfigParser = SafeConfigParser()
@@ -145,6 +149,7 @@ def readConfigFiles():
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.JarFile', jarFile)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
+    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.TextEditor', editor)
 
     try:
         readConfigResourceFile('etc/site.cfg')
@@ -295,6 +300,11 @@ class ConfigCommand(SubcommandABC):
                             help='''Indicates to operate on the DEFAULT
                                     section rather than the project section.''')
 
+        parser.add_argument('-e', '--edit', action='store_true',
+                            help='''Edit the configuration file. The command given by the
+                            value of config variable GCAM.TextEditor is run with the
+                            .pygcam.cfg file as an argument.''')
+
         parser.add_argument('name', nargs='?', default='',
                             help='''Show the names and values of all parameters whose
                             name contains the given value. The match is case-insensitive.
@@ -354,6 +364,16 @@ class ConfigCommand(SubcommandABC):
 
         if args.test:
             self.testConfig(section)
+            return
+
+        if args.edit:
+            import subprocess
+
+            cmd = getParam('GCAM.TextEditor') + ' ' + os.path.join(getParam('Home'), USR_CONFIG_FILE)
+            print cmd
+            exitStatus = subprocess.call(cmd, shell=True)
+            if exitStatus <> 0:
+                raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
             return
 
         if args.name and args.exact:
