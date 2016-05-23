@@ -595,6 +595,8 @@ class XMLEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
+        _logger.info("Update ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
+
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
     def delScenarioComponent(self, name):
