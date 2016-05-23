@@ -5,13 +5,63 @@ Tutorial -- Using ``pygcam``
 
         This tutorial is currently under development!
 
+Overview
+----------
+Here we provide a brief introduction to the elements of this tutorial. The tutorial
+explains how to setup ``pygcam`` and manage the GCAM workflow. A separate tutorial
+will (eventually) be developed to describe how to use ``pygcam`` programmatically.
+
+Installation
+^^^^^^^^^^^^^
+
+Before using ``pygcam``, you must install a Python 2.7 environment and then
+install the ``pygcam`` package. See the :doc:`install` page for details.
+Windows users should also refer to :doc:`windows`.
+
+Configuration
+^^^^^^^^^^^^^^^
+The ``pygcam`` scripts and libraries rely on a configuration file to:
+
+  * define the location of essential and optional files,
+  * allow the user to set defaults for many command-line arguments to scripts, and
+  * define both global default and project-specific values for all parameters
+
+See :ref:`Initial Configuration <initial-configuration-label>` for how to set up
+the configuration file for the first time.
+
+Project definition file
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Many of the features of the :doc:`gcamtool` script can be used directly without
+setting up a project definition. However, the full workflow-management capabilities
+of ``pygcam`` require an XML-based project definition file that describes:
+
+* one or more projects that may have different workflow steps
+* one or more "scenario groups" that define a baseline and related policy scenarios
+* a set of steps to perform, e.g., run GCAM, query the database, compute differences, plot figures.
+* data required by some of the steps
+
+See :doc:`project-xml` for a detailed description of the file's XML schema.
+
+
+.. _initial-configuration-label:
+
 Initial configuration
 -----------------------
 
-The ``pygcam`` package uses a configuration file stored in ``$(HOME)/.pygcam.cfg``. When ``gt``
-runs, it checks whether this file exists. If not, it creates the file, with all possible
-configuration parameters shown in comments explaining their purpose and showing their
-default values. Uncomment a line by removing the leading '#' character.
+The ``pygcam`` package uses a configuration file called ``.pygcam.cfg``, stored in
+the user's home directory, i.e., ``$(HOME)/.pygcam.cfg``. When ``gt`` runs, it
+checks whether this file exists. If the file is not found, it is created with all
+available configuration parameters shown in comments (i.e., lines starting with '#')
+explaining their purpose and showing their default values. To uncomment a line,
+simply remove the leading '#' character.
+
+  .. note::
+
+        Edit the configuration file (.pygcam.cfg) with an editor capable of
+        working with plain text--not a word-processor such as Word. Use the
+        command ``gt config -e`` to invoke a system-appropriate editor on the
+        configuration file. See :doc:`config` for details.
+
 
 ``pygcam`` requires that certain variables be set. The table below shows
 key variables, indicating whether they are required or optional, and whether their value

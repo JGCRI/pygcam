@@ -204,6 +204,32 @@ before writing a new file.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="pygcam.landProtection.createProtected">
+<code class="descclassname">pygcam.landProtection.</code><code class="descname">createProtected</code><span class="sig-paren">(</span><em>tree, fraction, landClasses=['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland'], regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.createProtected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify an lxml tree representing a GCAM input file to protect a <cite>fraction</cite>
+of <cite>landClasses</cite> in <cite>regions</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tree</strong> &#8211; a tree representing a parsed GCAM land_input XML file</li>
+<li><strong>fraction</strong> &#8211; the fraction of land in the given land classes to protect</li>
+<li><strong>landClasses</strong> &#8211; a string or a list of strings, or None. If None, all
+unmanaged land classes are modified.</li>
+<li><strong>regions</strong> &#8211; a string or a list of strings, or None. If None, all
+regions are modified.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pygcam.landProtection.protectLand">
 <code class="descclassname">pygcam.landProtection.</code><code class="descname">protectLand</code><span class="sig-paren">(</span><em>infile, outfile, fraction, landClasses=['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland'], regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.protectLand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a copy of <cite>infile</cite> that protects a <cite>fraction</cite> of <cite>landClasses</cite> in <cite>regions</cite>.</p>

@@ -162,12 +162,61 @@
 <p class="last">This tutorial is currently under development!</p>
 </div>
 </div></blockquote>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Here we provide a brief introduction to the elements of this tutorial. The tutorial
+explains how to setup <code class="docutils literal"><span class="pre">pygcam</span></code> and manage the GCAM workflow. A separate tutorial
+will (eventually) be developed to describe how to use <code class="docutils literal"><span class="pre">pygcam</span></code> programmatically.</p>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>Before using <code class="docutils literal"><span class="pre">pygcam</span></code>, you must install a Python 2.7 environment and then
+install the <code class="docutils literal"><span class="pre">pygcam</span></code> package. See the <a class="reference internal" href="install.html"><em>Installation</em></a> page for details.
+Windows users should also refer to <a class="reference internal" href="windows.html"><em>Using pygcam under Windows</em></a>.</p>
+</div>
+<div class="section" id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">pygcam</span></code> scripts and libraries rely on a configuration file to:</p>
+<blockquote>
+<div><ul class="simple">
+<li>define the location of essential and optional files,</li>
+<li>allow the user to set defaults for many command-line arguments to scripts, and</li>
+<li>define both global default and project-specific values for all parameters</li>
+</ul>
+</div></blockquote>
+<p>See <a class="reference internal" href="#initial-configuration-label"><em>Initial Configuration</em></a> for how to set up
+the configuration file for the first time.</p>
+</div>
+<div class="section" id="project-definition-file">
+<h3>Project definition file<a class="headerlink" href="#project-definition-file" title="Permalink to this headline">¶</a></h3>
+<p>Many of the features of the <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script can be used directly without
+setting up a project definition. However, the full workflow-management capabilities
+of <code class="docutils literal"><span class="pre">pygcam</span></code> require an XML-based project definition file that describes:</p>
+<ul class="simple">
+<li>one or more projects that may have different workflow steps</li>
+<li>one or more &#8220;scenario groups&#8221; that define a baseline and related policy scenarios</li>
+<li>a set of steps to perform, e.g., run GCAM, query the database, compute differences, plot figures.</li>
+<li>data required by some of the steps</li>
+</ul>
+<p>See <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> for a detailed description of the file&#8217;s XML schema.</p>
+</div>
+</div>
 <div class="section" id="initial-configuration">
-<h2>Initial configuration<a class="headerlink" href="#initial-configuration" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">pygcam</span></code> package uses a configuration file stored in <code class="docutils literal"><span class="pre">$(HOME)/.pygcam.cfg</span></code>. When <code class="docutils literal"><span class="pre">gt</span></code>
-runs, it checks whether this file exists. If not, it creates the file, with all possible
-configuration parameters shown in comments explaining their purpose and showing their
-default values. Uncomment a line by removing the leading &#8216;#&#8217; character.</p>
+<span id="initial-configuration-label"></span><h2>Initial configuration<a class="headerlink" href="#initial-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">pygcam</span></code> package uses a configuration file called <code class="docutils literal"><span class="pre">.pygcam.cfg</span></code>, stored in
+the user&#8217;s home directory, i.e., <code class="docutils literal"><span class="pre">$(HOME)/.pygcam.cfg</span></code>. When <code class="docutils literal"><span class="pre">gt</span></code> runs, it
+checks whether this file exists. If the file is not found, it is created with all
+available configuration parameters shown in comments (i.e., lines starting with &#8216;#&#8217;)
+explaining their purpose and showing their default values. To uncomment a line,
+simply remove the leading &#8216;#&#8217; character.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Edit the configuration file (.pygcam.cfg) with an editor capable of
+working with plain text&#8211;not a word-processor such as Word. Use the
+command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to invoke a system-appropriate editor on the
+configuration file. See <a class="reference internal" href="config.html"><em>pygcam.config</em></a> for details.</p>
+</div>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">pygcam</span></code> requires that certain variables be set. The table below shows
 key variables, indicating whether they are required or optional, and whether their value
 must be a file or directory.</p>
@@ -281,7 +330,7 @@ created some (non-pygcam) variables prefixed by <code class="docutils literal"><
 convention to identify standard pygcam variables. For user-defined variables, use any
 prefix desired, or none at all.</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">Paper1</span>
 
 <span class="na">User.ProjectName</span>    <span class="o">=</span> <span class="s">_NOT_SET_</span>

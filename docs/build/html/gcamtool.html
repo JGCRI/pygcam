@@ -244,10 +244,10 @@ usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
 </td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-L</span>, <span class="option">--logFile</span></kbd></td>
-<td>Sets the name of a log file for batch runs. Default is &#8220;gt-%j.out&#8221;
-                            where &#8220;%j&#8221; is replaced (in SLURM) by the jobid. If the argument is not
-                            an absolute pathname, it is appended to the value of GCAM.LogDir to
-                            compute the full pathname.</td></tr>
+<td>Sets the name of a log file for batch runs. Default is &#8220;gt-$j.out&#8221;
+                            where &#8220;$j&#8221; is replaced by &#8220;%%j&#8221;, which (in SLURM) is the jobid. If the
+                            argument is not an absolute pathname, it is treated as relative to the
+                            value of GCAM.LogDir.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-m</span>, <span class="option">--minutes</span></kbd></td>
 <td>Set the number of minutes to allocate for the queued batch job.
@@ -568,7 +568,7 @@ for scripting. For general use the substring matching is more convenient.</p>
 </pre></div>
 </div>
 <pre class="literal-block">
-usage: gt config [-h] [-d] [-x] [--version] [name]
+usage: gt config [-h] [-d] [-e] [-x] [-t] [--version] [name]
 </pre>
 <dl class="last docutils">
 <dt>Positional arguments:</dt>
@@ -595,11 +595,23 @@ usage: gt config [-h] [-d] [-x] [--version] [name]
 <tr><td>&nbsp;</td><td>Indicates to operate on the DEFAULT
                                     section rather than the project section.</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">-e=False</span>, <span class="option">--edit=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Edit the configuration file. The command given by the
+                            value of config variable GCAM.TextEditor is run with the
+                            .pygcam.cfg file as an argument.</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">-x=False</span>, <span class="option">--exact=False</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Treat the text not as a substring to match, but
                             as the name of a specific variable. Match is case-sensitive.
                             Prints only the value.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t=False</span>, <span class="option">--test=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Test the settings in the configuration file to ensure
+                            that the basic setup is ok, i.e., required parameters have
+                            values that make sense. If specified, no variables are displayed.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
@@ -970,7 +982,7 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-q QUERYFILE]
 <kbd><span class="option">-S</span>, <span class="option">--rewriteSetsFile</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>An XML file defining query maps by name (default taken from
-                            config parameter &#8220;GCAM.QueryRewriteSetsFile&#8221;)</td></tr>
+                            config parameter &#8220;GCAM.RewriteSetsFile&#8221;)</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>

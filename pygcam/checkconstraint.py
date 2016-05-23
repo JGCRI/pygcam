@@ -7,7 +7,6 @@
 # within the desired tolerance, which can be specified in absolute or
 # percentage terms.
 #
-
 from lxml import etree as ET
 from pygcam.error import PygcamException, FileMissingError
 
@@ -15,6 +14,31 @@ def _getTextFor(parentNode, elementName):
     node = parentNode.find(elementName)
     return None if node is None else node.text
 
+# TBD: need to specify results to compare to constraints, generally
+# TBD: by reading a query output file.
+# For example:
+
+def checkConstraints(constraintFile, region, policyName, results, tolerance=0.01):
+    """
+    Check that `results` are within `tolerance` of the values for `policyName` in `region`,
+    as per `constraintFile`. That is, for each year,
+    abs((constraint - result)/constraint) <= tolerance
+    :param constraintFile: (str) the path to an XML file containing constraint definitions
+    :param region: (str) the region for which to check constraints
+    :param policyName: (str) the name of the policy for which to check constraints
+    :param results: (dict-like) the results of the run for the constrained quantity; key
+      must be year (str or int) and value must be coercible to float
+    :return: (bool) True if all constraints are binding within `tolerance`.
+    """
+    binding = False
+    # TBD: read the constraint XML file
+
+    # TBD: extract the info for the given region and policy
+
+    # TBD: compare all years in results to check if constraints are binding (within tolerance)
+    # binding =  abs((constraint - result)/constraint) <= tolerance
+
+    return binding
 
 class Policy(object):
     def __init__(self, node):
@@ -91,3 +115,4 @@ if __name__ == '__main__':
     info = ConstraintInfo(filename)
     policy = info.getPolicy('USA', 'Biodiesel-Ceiling')
     print policy
+
