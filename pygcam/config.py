@@ -305,15 +305,56 @@ class ConfigCommand(SubcommandABC):
                             as the name of a specific variable. Match is case-sensitive.
                             Prints only the value.''')
 
+        parser.add_argument('-t', '--test', action='store_true',
+                            help='''Test the settings in the configuration file to ensure
+                            that the basic setup is ok, i.e., required parameters have
+                            values that make sense. If specified, no variables are displayed.''')
+
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
 
         return parser
+
+    def testConfig(self, section):
+        requiredDirs = ['SandboxRoot', 'ProjectRoot', 'QueryDir',
+                        'ModelInterface', 'RefWorkspace', 'TempDir']
+        requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'JarFile']
+        optionalDirs  = ['RegionMapFile', 'UserTempDir']
+        optionalFiles = ['QueryRewriteSetsFile']
+
+        dirVars  = requiredDirs  + optionalDirs
+        fileVars = requiredFiles + optionalFiles
+
+        optionalVars = optionalDirs + optionalFiles
+
+        for item in dirVars + fileVars:
+            var = 'GCAM.' + item
+            value = getParam(var)
+
+            if not value:
+                if item in optionalVars:
+                    continue
+                print "Config variable %s is empty" % var
+
+            elif not os.path.lexists(value):
+                print "Config variable %s refers to missing file or directory '%s'" % (var, value)
+
+            elif not os.path.isfile(value) and item in fileVars:
+                print "Config variable %s does not refer to a file (%s)" % (var, value)
+
+            elif not os.path.isdir(value) and item in dirVars:
+                print "Config variable %s does not refer to a directory (%s)" % (var, value)
+
+            print 'OK:', var, '=', value
 
     def run(self, args, tool):
         section = 'DEFAULT' if args.useDefault else args.configSection
 
         if section != 'DEFAULT' and not _ConfigParser.has_section(section):
             raise CommandlineError("Unknown configuration file section '%s'" % section)
+
+        if args.test:
+            self.testConfig(section)
+            return
 
         if args.name and args.exact:
             value = getParam(args.name, section=section)

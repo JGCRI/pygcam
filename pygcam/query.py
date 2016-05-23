@@ -750,12 +750,13 @@ def main(args):
     regions     = args.regions.split(',') if args.regions else GCAM_32_REGIONS
     scenarios   = args.scenario.split(',')
     queryNames  = args.queryName
+    rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
 
     _logger.debug("Query names: '%s'", queryNames)
 
     queryFileNode = QueryFile.parse(args.queryFile) if args.queryFile else None
     queryNodes = queryFileNode.queries if queryFileNode else []
-    rewriteParser = RewriteSetParser.parse(args.rewriteSetsFile) if args.rewriteSetsFile else None
+    rewriteParser = RewriteSetParser.parse(rewriteSetsFile) if rewriteSetsFile else None
 
     if not (queryNames or queryFileNode):
         raise CommandlineError("Error: At least one query name or a query XML file must be specified")
@@ -851,7 +852,7 @@ class QueryCommand(SubcommandABC):
 
         parser.add_argument('-S', '--rewriteSetsFile',
                             help='''An XML file defining query maps by name (default taken from
-                            config parameter "GCAM.QueryRewriteSetsFile")''')
+                            config parameter "GCAM.RewriteSetsFile")''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 

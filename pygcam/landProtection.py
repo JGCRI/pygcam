@@ -20,6 +20,7 @@ from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
+# TBD:  add OtherArableLand and test it!
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 
 PROGRAM = 'protectLand.py'
@@ -91,6 +92,7 @@ class LandProtection(object):
     def getScenario(self, name):
         return Scenario.getScenario(name)
 
+    # TBD:
     def protectLand(self, infile, outfile, scenarioName, backup=True):
         """
         Generate a copy of `infile` with land protected according to `scenarioName`,
@@ -115,7 +117,7 @@ class LandProtection(object):
         for protReg in scenario.protRegDict.values():
             regions = [protReg.name]
             for prot in protReg.protections:
-                _createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
+                createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
 
         if backup:
             try:
@@ -214,13 +216,8 @@ class Scenario(object):
     def getScenario(cls, name):
         return cls.Instances.get(name)
 
-# deprecated
-# class Protection(object):
-#     def __init__(self, node):
-#         self.landClasses = _findChildren(node, 'landClass', cls=str)
-#         self.fraction = float(node.get('fraction'))
 
-def _createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=None):
+def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=None):
     """
     Modify an lxml tree representing a GCAM input file to protect a `fraction`
     of `landClasses` in `regions`.
@@ -288,7 +285,7 @@ def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, reg
     parser = ET.XMLParser(remove_blank_text=True)
     tree = ET.parse(infile, parser)
 
-    _createProtected(tree, fraction, landClasses=landClasses, regions=regions)
+    createProtected(tree, fraction, landClasses=landClasses, regions=regions)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
 

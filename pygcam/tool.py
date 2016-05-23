@@ -137,10 +137,10 @@ class GcamTool(object):
                             help='Sets the log level of the program.')
 
         parser.add_argument('-L', '--logFile',
-                            help='''Sets the name of a log file for batch runs. Default is "gt-%j.out"
-                            where "%j" is replaced (in SLURM) by the jobid. If the argument is not
-                            an absolute pathname, it is appended to the value of GCAM.LogDir to
-                            compute the full pathname.''')
+                            help='''Sets the name of a log file for batch runs. Default is "gt-$j.out"
+                            where "$j" is replaced by "%%j", which (in SLURM) is the jobid. If the
+                            argument is not an absolute pathname, it is treated as relative to the
+                            value of GCAM.LogDir.''')
 
         parser.add_argument('-m', '--minutes', type=float,
                             help='''Set the number of minutes to allocate for the queued batch job.
