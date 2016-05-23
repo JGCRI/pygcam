@@ -420,6 +420,22 @@ class Project(object):
             raise CommandlineError("Requested %s do not exist in project '%s', group '%s': %s" % \
                                   (argName, self.projectName, self.scenarioGroupName, s))
 
+    def sortScenarios(self, scenarioSet):
+        """
+        If a baseline is in the scenario set, move it to the front and return the new list
+        """
+        scenarios = list(scenarioSet)
+
+        for scenarioName in scenarios:
+            scenario = self.scenarioDict[scenarioName]
+            if scenario.isBaseline:
+                scenarios.remove(scenarioName)
+                scenarios.insert(0, scenarioName)
+                break
+
+        return scenarios
+
+
     def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool):
         """
         Command templates can include keywords curly braces that are substituted
@@ -465,6 +481,8 @@ class Project(object):
         self.validateProjectArgs(steps,     knownSteps,     'steps')
 
         quitProgram = args.quit
+
+        scenarios = self.sortScenarios(scenarios)
 
         for scenarioName in scenarios:
             scenario = self.scenarioDict[scenarioName]
