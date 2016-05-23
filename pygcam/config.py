@@ -151,10 +151,13 @@ def readConfigFiles():
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.TextEditor', editor)
 
-    try:
-        readConfigResourceFile('etc/site.cfg')
-    except:
-        pass        # no error if it doesn't exist
+    siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
+    if siteConfig:
+        try:
+            with open(siteConfig) as fp:
+                _ConfigParser.readfp(fp)
+        except Exception as e:
+            print "WARNING: Failed to read site config file: %s" % e
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
