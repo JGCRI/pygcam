@@ -413,7 +413,7 @@ which are provided for reference.</p>
 <p class="last">When de-referencing a variable in the config file, you must include the
 trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception will be raised.</p>
 </div>
-<div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
+<div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
 
 <span class="c1"># This project is used if &#39;-p&#39; flag not given to gcamtool</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span>
@@ -461,7 +461,7 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="na">GCAM.QueryPath</span>    <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/Main_Queries.xml</span>
 
 <span class="c1"># File that defines query rewrites by name for use by query command.</span>
-<span class="na">GCAM.QueryRewriteSetsFile</span> <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/rewriteSets.xml</span>
+<span class="na">GCAM.RewriteSetsFile</span> <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/rewriteSets.xml</span>
 
 <span class="c1"># The location of GCAM source code (for the purpose of reading</span>
 <span class="c1"># the .csv file that defines the current regional aggregation.</span>
