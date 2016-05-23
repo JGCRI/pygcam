@@ -18,6 +18,19 @@ Test
 
 Features
 --------
+- Test pyfunc capability and use it to generate protected areas based on
+  distro.
+
+- Create in otaq2016 a module (or use scenarios.py, logically) a func
+  that takes an XMLInputFile as an input, and calls createProtected:
+
+  createProtected(xmlFile.tree, fraction, landClasses=UnmanagedLandClasses, regions=None)
+
+  But prior to that, have a python func that is passed an np.array
+  produced by some distribution, which is stored in the module for use
+  when the writeFunc is called. This way the parameter is processed
+  normally.
+
 - In chart subcommand, allow args to -m (multiplier) to take symbolic
   values like EJ_to_Quad, where these are driven by a builtin table
   with common ones, augmented if needed by a user file, e.g.,
@@ -44,6 +57,9 @@ Features
      - project.py doesn't need to interpret the XML at all. It's validated
        by project-schema.xsd. Just write it to a temp file and store name
        in varName.
+
+- Modify case with batchfile by name so it is copied to the tmp file and the
+  rest proceeds as with query definition files.
 
 - Have a flag for batch mode that runs the baseline, then batches
   the policy scenarios with '-d singleton' to cause them to wait
@@ -98,6 +114,9 @@ Other
     - see what happens with this on installation via setup.py
     - would be much better outside the installed module
     - maybe use an environment var, e.g., PYGCAM_SITE_CONFIG_FILE
+
+- Host the xsd files somewhere dependable so they can be referenced in XML
+  files, allowing smart editing.
 
 Document
 --------
