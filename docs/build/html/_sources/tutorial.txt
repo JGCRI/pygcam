@@ -57,7 +57,7 @@ simply remove the leading '#' character.
 
   .. note::
 
-        Edit the configuration file (.pygcam.cfg) with an editor capable of
+        Edit the configuration file (.pygcam.cfg) with any editor capable of
         working with plain text--not a word-processor such as Word. Use the
         command ``gt config -e`` to invoke a system-appropriate editor on the
         configuration file. See :doc:`config` for details.
