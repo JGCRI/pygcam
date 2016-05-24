@@ -10,8 +10,7 @@ import sys
 import os
 import copy
 from lxml import etree as ET
-from pkg_resources import resource_stream
-from .utils import mkdirs, flatten, XMLFile
+from .utils import mkdirs, flatten, XMLFile, resource_stream
 from .query import GCAM_32_REGIONS
 from .config import getParam
 from .error import FileFormatError, CommandlineError, PygcamException

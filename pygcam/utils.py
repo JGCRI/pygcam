@@ -12,6 +12,8 @@ import sys
 import re
 import subprocess
 import shutil
+import io
+import pkgutil
 from itertools import chain
 from tempfile import mkstemp, mkdtemp
 from .config import getParam
@@ -45,6 +47,13 @@ def simpleFormat(s, varDict):
         return result
     except KeyError as e:
         raise FileFormatError('Unknown parameter %s in project XML template' % e)
+
+def resource_stream(package, relpath):
+    """
+    Mimic pkg_resources function using standard library (pkgutil) function.
+    """
+    text = pkgutil.get_data(package, relpath)
+    return io.BytesIO(text)
 
 def getBooleanXML(value):
     """

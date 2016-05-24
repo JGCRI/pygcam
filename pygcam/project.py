@@ -13,15 +13,15 @@ import sys
 import shlex
 import re
 import glob
-from pkg_resources import resource_stream
 from os.path import join
 from lxml import etree as ET
 from .config import getParam, getConfigDict
-from .utils import getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat
+from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
+                    resource_stream)
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .subcommand import SubcommandABC
-from .queryFile import QueryFile
+#from .queryFile import QueryFile
 
 __version__ = '0.2'
 
@@ -329,8 +329,8 @@ class Project(object):
         Validate a parsed project.xml file
         '''
         schemaStream = resource_stream('pygcam', 'etc/project-schema.xsd')
-        schemaDoc = ET.parse(schemaStream)
 
+        schemaDoc = ET.parse(schemaStream)
         schema = ET.XMLSchema(schemaDoc)
 
         if raiseError:

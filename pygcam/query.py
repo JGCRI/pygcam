@@ -11,8 +11,8 @@ import os
 import re
 import subprocess
 from lxml import etree as ET
-from pkg_resources import resource_stream
-from .utils import getTempFile, TempFile, mkdirs, ensureExtension, saveToFile, XMLFile, getBooleanXML
+from .utils import (getTempFile, TempFile, mkdirs, ensureExtension, saveToFile, XMLFile,
+                    getBooleanXML, resource_stream)
 from .queryFile import QueryFile
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger

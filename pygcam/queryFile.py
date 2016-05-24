@@ -5,8 +5,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from pkg_resources import resource_stream
-from .utils import XMLFile, getBooleanXML
+from .utils import XMLFile, getBooleanXML, resource_stream
 
 #
 # Classes to parse queryFiles and the <queries> element of project.xml
