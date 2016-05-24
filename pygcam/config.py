@@ -331,8 +331,8 @@ class ConfigCommand(SubcommandABC):
         requiredDirs = ['SandboxRoot', 'ProjectRoot', 'QueryDir',
                         'ModelInterface', 'RefWorkspace', 'TempDir']
         requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'JarFile']
-        optionalDirs  = ['RegionMapFile', 'UserTempDir']
-        optionalFiles = ['QueryRewriteSetsFile']
+        optionalDirs  = ['UserTempDir']
+        optionalFiles = ['RegionMapFile', 'RewriteSetsFile']
 
         dirVars  = requiredDirs  + optionalDirs
         fileVars = requiredFiles + optionalFiles
