@@ -246,6 +246,22 @@ Usage
       ``~/sandboxes/MyProject/MyScenario`` using the configuration file
       ``~/MyProject/scenarios/MyScenario/config.xml``.
 
+   new : @replace
+      .. _new-label:
+
+      Create the directory structure and basic files required for a new pygcam project.
+      If a directory is specified with the ``-r`` flag, the project is created with the
+      given name in that directory; otherwise the project is created in the directory
+      identified by the config variable ``GCAM.ProjectRoot``.
+
+      This sub-command creates examples of ``xmlsrc/scenarios.py``, ``etc/queries.xml``,
+      ``etc/project.xml``, ``etc/rewriteSets.xml``, and ``etc/protection.xml`` that can
+      be edited to fit the needs of your project.
+
+      If the ``-c`` flag is given, a basic entry for the new project is added to the
+      users configuration file, ``$HOME/.pygcam.cfg``. Before modifying this file, a
+      backup is created in ``$HOME/.pygcam.cfg~``.
+
    query : @replace
       .. _query-label:
 

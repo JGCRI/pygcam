@@ -156,25 +156,25 @@
             
   <div class="section" id="tutorial-using-pygcam">
 <h1>Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code><a class="headerlink" href="#tutorial-using-pygcam" title="Permalink to this headline">¶</a></h1>
-<blockquote>
-<div><div class="admonition note">
+<div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">This tutorial is currently under development!</p>
+<p class="last"><em>This tutorial is currently under development.</em></p>
 </div>
-</div></blockquote>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a brief introduction to the elements of this tutorial. The tutorial
 explains how to setup <code class="docutils literal"><span class="pre">pygcam</span></code> and manage the GCAM workflow. A separate tutorial
 will (eventually) be developed to describe how to use <code class="docutils literal"><span class="pre">pygcam</span></code> programmatically.</p>
-<div class="section" id="installation">
-<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>The steps involved in using <code class="docutils literal"><span class="pre">pygcam</span></code> are explained briefly here, and in more
+detail in the sections that follow.</p>
+<div class="section" id="install-pygcam">
+<h3>1. Install pygcam<a class="headerlink" href="#install-pygcam" title="Permalink to this headline">¶</a></h3>
 <p>Before using <code class="docutils literal"><span class="pre">pygcam</span></code>, you must install a Python 2.7 environment and then
 install the <code class="docutils literal"><span class="pre">pygcam</span></code> package. See the <a class="reference internal" href="install.html"><em>Installation</em></a> page for details.
 Windows users should also refer to <a class="reference internal" href="windows.html"><em>Using pygcam under Windows</em></a>.</p>
 </div>
-<div class="section" id="configuration">
-<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="configure-pygcam">
+<h3>2. Configure pygcam<a class="headerlink" href="#configure-pygcam" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">pygcam</span></code> scripts and libraries rely on a configuration file to:</p>
 <blockquote>
 <div><ul class="simple">
@@ -184,20 +184,43 @@ Windows users should also refer to <a class="reference internal" href="windows.h
 </ul>
 </div></blockquote>
 <p>See <a class="reference internal" href="#initial-configuration-label"><em>Initial Configuration</em></a> for how to set up
-the configuration file for the first time.</p>
+the configuration file for the first time, and the <a class="reference internal" href="config.html"><em>pygcam.config</em></a> page for
+detailed information about the configuration file.</p>
 </div>
-<div class="section" id="project-definition-file">
-<h3>Project definition file<a class="headerlink" href="#project-definition-file" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="define-the-project">
+<h3>3. Define the project<a class="headerlink" href="#define-the-project" title="Permalink to this headline">¶</a></h3>
 <p>Many of the features of the <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script can be used directly without
 setting up a project definition. However, the full workflow-management capabilities
 of <code class="docutils literal"><span class="pre">pygcam</span></code> require an XML-based project definition file that describes:</p>
 <ul class="simple">
 <li>one or more projects that may have different workflow steps</li>
 <li>one or more &#8220;scenario groups&#8221; that define a baseline and related policy scenarios</li>
-<li>a set of steps to perform, e.g., run GCAM, query the database, compute differences, plot figures.</li>
+<li>a set of steps to perform (e.g., run GCAM, query the database, compute differences
+between scenario results, plot figures of scenario results and differences from
+baselines.)</li>
 <li>data required by some of the steps</li>
 </ul>
+<p>The <a class="reference internal" href="gcamtool.html#new-label"><em>new</em></a> sub-command of the <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script can be used to create the
+initial structure and files required for a new project, and optionally, insert
+a section for the new project in the <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> configuration file.</p>
 <p>See <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> for a detailed description of the file&#8217;s XML schema.</p>
+</div>
+<div class="section" id="setup-the-project-files">
+<h3>4. Setup the project files<a class="headerlink" href="#setup-the-project-files" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="gcamtool.html#setup-label"><em>setup</em></a> sub-command of the <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script provides
+support for modifying GCAM&#8217;s XML data files and configuration file according to
+the needs of your project. See <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> for details.</p>
+<p>This is the only step of the pygcam workflow process that requires Python programming.
+Work is underway to allow simple projects to be defined without requiring Python code.</p>
+</div>
+<div class="section" id="run-the-project">
+<h3>5. Run the project<a class="headerlink" href="#run-the-project" title="Permalink to this headline">¶</a></h3>
+<p>Project workflow is managed using the <a class="reference internal" href="gcamtool.html#run-label"><em>run</em></a> sub-command of the
+<a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script, which reads the <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file to
+understand the project setup, and offers numerous options allowing you
+to choose which project, scenario group, or scenarios to operate on and which
+steps to run.</p>
+<hr class="docutils" />
 </div>
 </div>
 <div class="section" id="initial-configuration">
@@ -208,93 +231,21 @@ checks whether this file exists. If the file is not found, it is created with al
 available configuration parameters shown in comments (i.e., lines starting with &#8216;#&#8217;)
 explaining their purpose and showing their default values. To uncomment a line,
 simply remove the leading &#8216;#&#8217; character.</p>
-<blockquote>
-<div><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Edit the configuration file (.pygcam.cfg) with any editor capable of
-working with plain text&#8211;not a word-processor such as Word. Use the
-command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to invoke a system-appropriate editor on the
+<p>Edit the configuration file with any editor capable of
+working with plain text&#8212;not a word-processor such as Word. You can use
+the command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to invoke a system-appropriate editor on the
 configuration file. See <a class="reference internal" href="config.html"><em>pygcam.config</em></a> for details.</p>
-</div>
-</div></blockquote>
-<p><code class="docutils literal"><span class="pre">pygcam</span></code> requires that certain variables be set. The table below shows
-key variables, indicating whether they are required or optional, and whether their value
-must be a file or directory.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="51%" />
-<col width="23%" />
-<col width="26%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Variable name</th>
-<th class="head">Required</th>
-<th class="head">Type</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>GCAM.SandboxRoot</td>
-<td>yes</td>
-<td>directory</td>
-</tr>
-<tr class="row-odd"><td>GCAM.ProjectRoot</td>
-<td>yes</td>
-<td>directory</td>
-</tr>
-<tr class="row-even"><td>GCAM.QueryDir</td>
-<td>yes</td>
-<td>directory</td>
-</tr>
-<tr class="row-odd"><td>GCAM.ModelInterface</td>
-<td>yes</td>
-<td>directory</td>
-</tr>
-<tr class="row-even"><td>GCAM.RefWorkspace</td>
-<td>yes</td>
-<td>directory</td>
-</tr>
-<tr class="row-odd"><td>GCAM.TempDir</td>
-<td>yes</td>
-<td>directory</td>
-</tr>
-<tr class="row-even"><td>GCAM.ProjectXmlFile</td>
-<td>yes</td>
-<td>file</td>
-</tr>
-<tr class="row-odd"><td>GCAM.RefConfigFile</td>
-<td>yes</td>
-<td>file</td>
-</tr>
-<tr class="row-even"><td>GCAM.JarFile</td>
-<td>yes</td>
-<td>file</td>
-</tr>
-<tr class="row-odd"><td>GCAM.RegionMapFile</td>
-<td>no</td>
-<td>directory</td>
-</tr>
-<tr class="row-even"><td>GCAM.UserTempDir</td>
-<td>no</td>
-<td>directory</td>
-</tr>
-<tr class="row-odd"><td>GCAM.RewriteSetsFile</td>
-<td>no</td>
-<td>file</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<div><div class="admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">The configuration API and default variable settings are described in <a class="reference internal" href="config.html"><em>pygcam.config</em></a></p>
 </div>
-</div></blockquote>
 <div class="section" id="configuration-file-sections">
 <h3>Configuration file sections<a class="headerlink" href="#configuration-file-sections" title="Permalink to this headline">¶</a></h3>
 <p>The configuration file is divided into sections indicated by a name in square brackets.
 All variable declarations following a section declaration, until the next section
 declaration (if any) appear in the declared section. You can declare a section multiple
-times to add new values to the section.</p>
+times to add new values to the section.
+(See <a class="reference internal" href="#sample-config-label"><em>Sample Configuration File</em></a>, below.)</p>
 <div class="section" id="project-sections">
 <h4>Project sections<a class="headerlink" href="#project-sections" title="Permalink to this headline">¶</a></h4>
 <p>Each project should have its own section. For example, to setup a project called, say,
@@ -312,25 +263,14 @@ projects can be defined in the <code class="docutils literal"><span class="pre">
 allowing them to be overridden on a project-by-project basis.</p>
 </div>
 </div>
-<div class="section" id="using-configuration-variables">
-<h3>Using configuration variables<a class="headerlink" href="#using-configuration-variables" title="Permalink to this headline">¶</a></h3>
-<p>Within the configuration file, variables are often defined in terms of other variables.
-The syntax for referencing the value of a variable is the precede the variable name with
-<code class="docutils literal"><span class="pre">%(</span></code> and follow it with <code class="docutils literal"><span class="pre">)s</span></code>. This to reference variable <code class="docutils literal"><span class="pre">GCAM.QueryDir</span></code>, you
-would write <code class="docutils literal"><span class="pre">%(GCAM.QueryDir)</span></code>. Note that variable names are case-sensitive.</p>
-<p>Variables&#8217; values are substituted when a variable&#8217;s value is requested, not when the
-variable is defined. The difference is that if variable <code class="docutils literal"><span class="pre">A</span></code> is defined in terms of
-variable <code class="docutils literal"><span class="pre">B</span></code>, (e.g., <code class="docutils literal"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">%(B)s/something/else</span></code>), you can subsequently change
-<code class="docutils literal"><span class="pre">B</span></code> and the value of <code class="docutils literal"><span class="pre">A</span></code> will show this when <code class="docutils literal"><span class="pre">A</span></code> is accessed by <code class="docutils literal"><span class="pre">pygcam</span></code>.</p>
-</div>
 <div class="section" id="sample-configuration-file">
-<h3>Sample configuration file<a class="headerlink" href="#sample-configuration-file" title="Permalink to this headline">¶</a></h3>
+<span id="sample-config-label"></span><h3>Sample configuration file<a class="headerlink" href="#sample-configuration-file" title="Permalink to this headline">¶</a></h3>
 <p>Below is a sample configuration file for a project called <code class="docutils literal"><span class="pre">Paper1</span></code>. The user has
 created some (non-pygcam) variables prefixed by <code class="docutils literal"><span class="pre">User.</span></code>. The prefixes are merely a
 convention to identify standard pygcam variables. For user-defined variables, use any
 prefix desired, or none at all.</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">Paper1</span>
 
 <span class="na">User.ProjectName</span>    <span class="o">=</span> <span class="s">_NOT_SET_</span>
@@ -369,48 +309,8 @@ prefix desired, or none at all.</p>
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="location-of-gcam-program-and-data-files">
-<h3>Location of GCAM program and data files<a class="headerlink" href="#location-of-gcam-program-and-data-files" title="Permalink to this headline">¶</a></h3>
-<p>The configuration variable <code class="docutils literal"><span class="pre">GCAM.RefWorkspace</span></code> must point to a directory
-structured like the standard GCAM <code class="docutils literal"><span class="pre">Main_User_Workspace</span></code>, with sub-directories
-for <code class="docutils literal"><span class="pre">input</span></code>, <code class="docutils literal"><span class="pre">output</span></code>, <code class="docutils literal"><span class="pre">libs</span></code>, and <code class="docutils literal"><span class="pre">exe</span></code>.</p>
-<p>The variable <code class="docutils literal"><span class="pre">GCAM.ModelInterface</span></code> should point to a directory holding the
-ModelInterface program. This is used to locate the <code class="docutils literal"><span class="pre">jar</span></code> (Java archive) file
-that contains the ModelInterface code. The variable <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code> provides
-the location of the jar file. The variable is initialized differently on Windows,
-OS X, and Linux as follows:</p>
-<blockquote>
-<div><table border="1" class="docutils">
-<colgroup>
-<col width="9%" />
-<col width="91%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">System</th>
-<th class="head">Default definition of GCAM.JarFile</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>Windows</td>
-<td>%(GCAM.ModelInterface)s/ModelInterface.jar</td>
-</tr>
-<tr class="row-odd"><td>Linux</td>
-<td>%(GCAM.ModelInterface)s/ModelInterface.jar</td>
-</tr>
-<tr class="row-even"><td>OS X</td>
-<td>%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</td>
-</tr>
-</tbody>
-</table>
-</div></blockquote>
-<p>You can set either <code class="docutils literal"><span class="pre">GCAM.ModelInterface</span></code>, if the definition above for <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code> is correct
-for your installation, or you can directly set <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code>.</p>
-<p>Note that <code class="docutils literal"><span class="pre">pygcam</span></code> does not run GCAM in the reference workspace; it uses the files there to
-create new workspaces as required. Creating separate workspaces for each scenario allows multiple
-scenarios to be run simultaneously without contention for the XML database which is created at the
-end of the model run.</p>
 </div>
-</div>
+<hr class="docutils" />
 <div class="section" id="project-structure">
 <h2>Project structure<a class="headerlink" href="#project-structure" title="Permalink to this headline">¶</a></h2>
 <blockquote>
@@ -421,10 +321,12 @@ end of the model run.</p>
 </ul>
 </div></blockquote>
 </div>
+<hr class="docutils" />
 <div class="section" id="setting-up-a-gcam-experiment">
 <h2>Setting up a GCAM experiment<a class="headerlink" href="#setting-up-a-gcam-experiment" title="Permalink to this headline">¶</a></h2>
 <p>TBD.</p>
 </div>
+<hr class="docutils" />
 <div class="section" id="running-a-gcam-experiment">
 <h2>Running a GCAM experiment<a class="headerlink" href="#running-a-gcam-experiment" title="Permalink to this headline">¶</a></h2>
 <p>Run-time structure:</p>

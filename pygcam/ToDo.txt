@@ -9,43 +9,30 @@ Cleanup
 
 Test
 ----
+- Finish implementing/testing the queryFile and rewriteSets features
 - setup.py installer with full install
 - write more unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
 - land protection command
-    - uses new resource_stream function; not tested yet
+    - uses new resourceStream function; not tested yet
 
 Features
 --------
-- Test pyfunc capability and use it to generate protected areas based on
-  distro.
-
-- Create in otaq2016 a module (or use scenarios.py, logically) a func
-  that takes an XMLInputFile as an input, and calls createProtected:
-
-  createProtected(xmlFile.tree, fraction, landClasses=UnmanagedLandClasses, regions=None)
-
-  But prior to that, have a python func that is passed an np.array
-  produced by some distribution, which is stored in the module for use
-  when the writeFunc is called. This way the parameter is processed
-  normally.
-
 - In chart subcommand, allow args to -m (multiplier) to take symbolic
   values like EJ_to_Quad, where these are driven by a builtin table
   with common ones, augmented if needed by a user file, e.g.,
 
-    GCAM.UnitMultipliers = %(ProjectRoot)/etc/multipliers.txt
+    GCAM.UnitMultipliers = %(ProjectRoot)/etc/multipliers.py
 
-    Could have, e.g.,
+    EJ_per_km2_to_Quad_per_Mha = whatever
 
-    EJ_per_km2_to_Quad_per_Mha =
+    Do this as a python file, e.g., unitConversion.py has values
+    gleaned from PNNL files. To see if a value is defined, do:
+        import pygcam.unitConversion as units
+        getattr(units, 't_Mt', None)    # returns None if not defined
 
-    could even do this as a python file that is interpreted, or
-    as a cfg file where final expression is evaluated with the
-    list of variables in a namespace that is passed.
-
-    See unitConversion.py for values gleaned from PNNL files.
+    Rewrite unitConversion.py to have more uniform/predictable naming scheme.
 
 - Allow plotting a marker at the total for a bar
 
@@ -154,19 +141,29 @@ Document
 
 Tasks
 -----
-- Modify CI command to use Marshall's query results
-- Test diff cmd
+- Validate diff cmd
 - Test constraint cmds
 - Test land protection cmd
     - Simplify to eliminate complicated cmdline opts?
 - Should constraint commands be converted back to plugins?
     - They're for use by biofuel studies only (maybe a sep plugin dir?)
     - Perhaps split out generic function from domain-specific
-- Update documentation
 
 
 MCS Integration
 ===============
+- Test pyfunc capability and use it to generate protected areas based on
+  distro.
+
+- Create in otaq2016 a module (or use scenarios.py, logically) a func
+  that takes an XMLInputFile as an input, and calls createProtected:
+
+  createProtected(xmlFile.tree, fraction, landClasses=UnmanagedLandClasses, regions=None)
+
+  But prior to that, have a python func that is passed an np.array
+  produced by some distribution, which is stored in the module for use
+  when the writeFunc is called. This way the parameter is processed
+  normally.
 
 - Trial generation should be unaffected
     - document ordering: setup first then gensim

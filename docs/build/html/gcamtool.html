@@ -209,7 +209,7 @@ sub-command specific options must follow it.</p>
 usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
           [-m MINUTES] [-P name] [-q QUEUENAME] [-r RESOURCES]
           [--set name=value] [-v] [--version]
-          {chart,config,diff,gcam,protect,query,run,setup,ws,bioConstraint,deltaConstraint}
+          {bioConstraint,deltaConstraint,chart,config,diff,gcam,new,run,protect,query,setup,ws}
           ...
 </pre>
 <dl class="docutils">
@@ -286,6 +286,191 @@ usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
 </dd>
 <dt>Sub-commands:</dt>
 <dd><dl class="first last docutils">
+<dt><strong>bioConstraint</strong></dt>
+<dd><p class="first">Bioenergy constraint generator</p>
+<pre class="literal-block">
+usage: gt bioConstraint [-h] [-b BASELINE] [-B {tax,subsidy}]
+                        [-c COEFFICIENTS] [-e {tax,subsidy}] [-l DEFAULTLEVEL]
+                        [-L ANNUALLEVELS] [-m] [-p POLICY] [-P {tax,subsidy}]
+                        [-R RESULTSDIR] [-s] [-S SUBDIR] [-V]
+                        [-x XMLOUTPUTDIR] [-y YEARS]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
+<td>The baseline on which the policy scenario is based</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-B=tax</span>, <span class="option">--biomassPolicyType=tax</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
+                            sets the cellulosic ethanol conversion coefficients. Defaults to
+                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-e=tax</span>, <span class="option">--cellEtohPolicyType=tax</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Cellulosic ethanol policy type</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultLevel=0.0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Target cellulosic biofuel level (EJ). All or individual years
+                            values can be set (overriding -l flag values) using the -L flag.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L</span>, <span class="option">--annualLevels</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Optional cellulosic biofuel production levels by year. Value
+                            must be a comma-delimited string of year:level pairs, where level is
+                            given in EJ. If -l is not used to set default for all years, you must
+                            specify values for all years using this option.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p</span>, <span class="option">--policy</span></kbd></td>
+<td>The policy scenario name</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-P=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R</span>, <span class="option">--resultsDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=False</span>, <span class="option">--switchgrass=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Generate constraints for switchgrass</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
+<td>Sub-directory for local-xml files, if any</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory into which to generate XML files. Defaults to
+                             policy name in the current directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
+                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>deltaConstraint</strong></dt>
+<dd><p class="first">Specify incremental values to add to the production of a given fuel,
+                              by year, and generate the corresponding constraint file.</p>
+<pre class="literal-block">
+usage: gt deltaConstraint [-h] [-c COEFFICIENTS] -b BASELINE
+                          [-B {tax,subsidy}] [-f FUELNAME] [-l DEFAULTDELTA]
+                          [-L ANNUALDELTAS] [-m] -p POLICY [-P {tax,subsidy}]
+                          [-R RESULTSDIR] [-S SUBDIR] [-t FUELTAG]
+                          [-T {tax,subsidy}] [-V] [-x XMLOUTPUTDIR] [-y YEARS]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
+                            sets the cellulosic ethanol conversion coefficients. Defaults to
+                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
+<td>The baseline on which the policy scenario is based</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-B=subsidy</span>, <span class="option">--biomassPolicyType=subsidy</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type. Default is subsidy.</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f=cellulosic ethanol</span>, <span class="option">--fuelName=cellulosic ethanol</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The fuel to generate constraints for. Default is cellulosic ethanol</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultDelta=0.0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Default increment to add to each year (EJ). All or individual
+                            years values can be set (overriding -l flag values) using the -L flag.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L=</span>, <span class="option">--annualDeltas=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Optional production increments by year. Value must be a
+                            comma-delimited string of year:level pairs, where level in is EJ.
+                            If -l is not used to set default for all years, you must specify
+                            values for all years using this option.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p</span>, <span class="option">--policy</span></kbd></td>
+<td>The policy scenario name</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-P=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type. Default is subsidy.</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R=.</span>, <span class="option">--resultsDir=.</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
+<td>Sub-directory for local-xml files, if any</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t=cell-etoh</span>, <span class="option">--fuelTag=cell-etoh</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The fuel tag to generate constraints for. Default is cell-etoh</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-T=tax</span>, <span class="option">--policyType=tax</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">Type of policy to use for the fuel. Default is tax.</p>
+<p class="last">Possible choices: tax, subsidy</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory into which to generate XML files.
+                             Defaults to policy name in the current directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
+                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
 <dt><strong>chart</strong></dt>
 <dd><p class="first" id="chart-label">The <code class="docutils literal"><span class="pre">chart</span></code> sub-command generates plots from GCAM-style &#8221;.csv&#8221; files.
 Two types of plots are currently supported: (i) stacked bar plots based on summing values
@@ -778,6 +963,172 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-s SCENARIO] [-S SCENARIOSDIR]
 </dd>
 </dl>
 </dd>
+<dt><strong>new</strong></dt>
+<dd><p class="first" id="new-label">Create the directory structure and basic files required for a new pygcam project.
+If a directory is specified with the <code class="docutils literal"><span class="pre">-r</span></code> flag, the project is created with the
+given name in that directory; otherwise the project is created in the directory
+identified by the config variable <code class="docutils literal"><span class="pre">GCAM.ProjectRoot</span></code>.</p>
+<p>This sub-command creates examples of <code class="docutils literal"><span class="pre">xmlsrc/scenarios.py</span></code>, <code class="docutils literal"><span class="pre">etc/queries.xml</span></code>,
+<code class="docutils literal"><span class="pre">etc/project.xml</span></code>, <code class="docutils literal"><span class="pre">etc/rewriteSets.xml</span></code>, and <code class="docutils literal"><span class="pre">etc/protection.xml</span></code> that can
+be edited to fit the needs of your project.</p>
+<p>If the <code class="docutils literal"><span class="pre">-c</span></code> flag is given, a basic entry for the new project is added to the
+users configuration file, <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>. Before modifying this file, a
+backup is created in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg~</span></code>.</p>
+<pre class="literal-block">
+usage: gt new [-h] [-c] [-r PATH] [--version] name
+</pre>
+<dl class="last docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>name</kbd></td>
+<td>Create the structure for the named project.</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-c=False</span>, <span class="option">--addToConfig=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Add a section for the new project to $HOME/.pygcam.cfg after
+                            making a backup of the file in $HOME/.pygcam.cfg~</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-r</span>, <span class="option">--projectRoot</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory in which to create the a subdirectory for the named project.
+                            Default is the value of config variable GCAM.ProjectDir</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>run</strong></dt>
+<dd><p class="first" id="run-label">This sub-command reads instructions from the file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a>, the
+location of which is taken from the user&#8217;s <a class="reference internal" href="config.html#pygcam-cfg"><em>~/.pygcam.cfg</em></a> file.
+The workflow steps indicated in the XML file and command-line determine which
+commands to run.</p>
+<p>Examples:</p>
+<p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run
+</pre></div>
+</div>
+<p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
+scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -g test -S baseline,policy1
+</pre></div>
+</div>
+<p>or, equivalently:</p>
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run --group test --scenario baseline --step policy1
+</pre></div>
+</div>
+<p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
+default scenario group:</p>
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1
+</pre></div>
+</div>
+<p>Same as above, but queue a batch job to run these commands on the queue
+&#8216;short&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+</pre></div>
+</div>
+<p>Show the commands that would be executed for the above command, but
+don&#8217;t run them:</p>
+<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
+</pre></div>
+</div>
+<pre class="literal-block">
+usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
+              [-K SKIPSCENARIOS] [-l] [-L] [-n] [-p PROJECT] [-q] [-s STEPS]
+              [-S SCENARIOS] [--version] [--vars]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f</span>, <span class="option">--projectFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The XML file describing the project. If set, command-line
+                            argument takes precedence. Otherwise, value is taken from config file
+                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
+                            is &#8216;./project.xml&#8217;.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
+<td>The name of the scenario group to process. If not specified,
+                            the group with attribute default=&#8221;1&#8221; is processed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-G=False</span>, <span class="option">--listGroups=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the scenario groups defined in the project file and exit.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-k</span>, <span class="option">--skipStep</span></kbd></td>
+<td>Steps to skip. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -k flag can be repeated to indicate additional steps.
+                            By default, all steps are run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-K</span>, <span class="option">--skipScenario</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Scenarios to skip. Multiple scenarios can be given in a single
+                            (comma-delimited) argument, or the -K flag can be repeated to indicate
+                            additional scenarios. By default, all scenarios are run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=False</span>, <span class="option">--listSteps=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the steps defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L=False</span>, <span class="option">--listScenarios=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the scenarios defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Display the commands that would be run, but don&#8217;t run them.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p</span>, <span class="option">--project</span></kbd></td>
+<td>The name of the project to run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-q=False</span>, <span class="option">--quit=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Quit if an error occurs when processing a scenario. By default, the
+                            next scenario (if any) is run when an error occurs in a scenario.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--step</span></kbd></td>
+<td>The steps to run. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -s flag can be repeated to indicate additional steps.
+                            By default, all steps are run.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S</span>, <span class="option">--scenario</span></kbd></td>
+<td>Which of the scenarios defined for the given project should
+                            be run. Multiple scenarios can be given in a single (comma-delimited)
+                            argument, or the -S flag can be repeated to indicate additional steps.
+                            By default, all active scenarios are run.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--vars=False</span></kbd></td>
+<td>List variables and their values</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
 <dt><strong>protect</strong></dt>
 <dd><p class="first" id="protect-label">Generate versions of GCAM&#8217;s land_input XML files that protect a given fraction of
 land of the given land types in the given regions by subtracting the required land
@@ -997,123 +1348,6 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-q QUERYFILE]
 </dd>
 </dl>
 </dd>
-<dt><strong>run</strong></dt>
-<dd><p class="first" id="run-label">This sub-command reads instructions from the file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a>, the
-location of which is taken from the user&#8217;s <a class="reference internal" href="config.html#pygcam-cfg"><em>~/.pygcam.cfg</em></a> file.
-The workflow steps indicated in the XML file and command-line determine which
-commands to run.</p>
-<p>Examples:</p>
-<p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run
-</pre></div>
-</div>
-<p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
-scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -g test -S baseline,policy1
-</pre></div>
-</div>
-<p>or, equivalently:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run --group test --scenario baseline --step policy1
-</pre></div>
-</div>
-<p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
-default scenario group:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1
-</pre></div>
-</div>
-<p>Same as above, but queue a batch job to run these commands on the queue
-&#8216;short&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
-</pre></div>
-</div>
-<p>Show the commands that would be executed for the above command, but
-don&#8217;t run them:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
-</pre></div>
-</div>
-<pre class="literal-block">
-usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
-              [-K SKIPSCENARIOS] [-l] [-L] [-n] [-p PROJECT] [-q] [-s STEPS]
-              [-S SCENARIOS] [--version] [--vars]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-f</span>, <span class="option">--projectFile</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The XML file describing the project. If set, command-line
-                            argument takes precedence. Otherwise, value is taken from config file
-                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
-                            is &#8216;./project.xml&#8217;.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
-<td>The name of the scenario group to process. If not specified,
-                            the group with attribute default=&#8221;1&#8221; is processed.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-G=False</span>, <span class="option">--listGroups=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>List the scenario groups defined in the project file and exit.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-k</span>, <span class="option">--skipStep</span></kbd></td>
-<td>Steps to skip. These must be names of steps defined in the
-                            project.xml file. Multiple steps can be given in a single (comma-delimited)
-                            argument, or the -k flag can be repeated to indicate additional steps.
-                            By default, all steps are run.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-K</span>, <span class="option">--skipScenario</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Scenarios to skip. Multiple scenarios can be given in a single
-                            (comma-delimited) argument, or the -K flag can be repeated to indicate
-                            additional scenarios. By default, all scenarios are run.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-l=False</span>, <span class="option">--listSteps=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>List the steps defined for the given project and exit.
-                            Dynamic variables (created at run-time) are not displayed.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-L=False</span>, <span class="option">--listScenarios=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>List the scenarios defined for the given project and exit.
-                            Dynamic variables (created at run-time) are not displayed.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Display the commands that would be run, but don&#8217;t run them.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-p</span>, <span class="option">--project</span></kbd></td>
-<td>The name of the project to run.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-q=False</span>, <span class="option">--quit=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Quit if an error occurs when processing a scenario. By default, the
-                            next scenario (if any) is run when an error occurs in a scenario.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-s</span>, <span class="option">--step</span></kbd></td>
-<td>The steps to run. These must be names of steps defined in the
-                            project.xml file. Multiple steps can be given in a single (comma-delimited)
-                            argument, or the -s flag can be repeated to indicate additional steps.
-                            By default, all steps are run.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-S</span>, <span class="option">--scenario</span></kbd></td>
-<td>Which of the scenarios defined for the given project should
-                            be run. Multiple scenarios can be given in a single (comma-delimited)
-                            argument, or the -S flag can be repeated to indicate additional steps.
-                            By default, all active scenarios are run.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--vars=False</span></kbd></td>
-<td>List variables and their values</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
 <dt><strong>setup</strong></dt>
 <dd><p class="first" id="setup-label">The <code class="docutils literal"><span class="pre">setup</span></code> sub-command automates modification to copies of GCAM&#8217;s input XML
 files and construction of a corresponding configuration XML file.
@@ -1234,191 +1468,6 @@ usage: gt ws [-h] [--create] [--delete] [-n] [-p] [-r RUN] [-s SCENARIO]
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
-<dt><strong>bioConstraint</strong></dt>
-<dd><p class="first">Bioenergy constraint generator</p>
-<pre class="literal-block">
-usage: gt bioConstraint [-h] [-b BASELINE] [-B {tax,subsidy}]
-                        [-c COEFFICIENTS] [-e {tax,subsidy}] [-l DEFAULTLEVEL]
-                        [-L ANNUALLEVELS] [-m] [-p POLICY] [-P {tax,subsidy}]
-                        [-R RESULTSDIR] [-s] [-S SUBDIR] [-V]
-                        [-x XMLOUTPUTDIR] [-y YEARS]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group">
-<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
-<td>The baseline on which the policy scenario is based</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-B=tax</span>, <span class="option">--biomassPolicyType=tax</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
-                            sets the cellulosic ethanol conversion coefficients. Defaults to
-                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-e=tax</span>, <span class="option">--cellEtohPolicyType=tax</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Cellulosic ethanol policy type</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultLevel=0.0</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Target cellulosic biofuel level (EJ). All or individual years
-                            values can be set (overriding -l flag values) using the -L flag.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-L</span>, <span class="option">--annualLevels</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Optional cellulosic biofuel production levels by year. Value
-                            must be a comma-delimited string of year:level pairs, where level is
-                            given in EJ. If -l is not used to set default for all years, you must
-                            specify values for all years using this option.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-p</span>, <span class="option">--policy</span></kbd></td>
-<td>The policy scenario name</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-P=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-R</span>, <span class="option">--resultsDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-s=False</span>, <span class="option">--switchgrass=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Generate constraints for switchgrass</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
-<td>Sub-directory for local-xml files, if any</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The directory into which to generate XML files. Defaults to
-                             policy name in the current directory.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
-<dt><strong>deltaConstraint</strong></dt>
-<dd><p class="first">Specify incremental values to add to the production of a given fuel,
-                              by year, and generate the corresponding constraint file.</p>
-<pre class="literal-block">
-usage: gt deltaConstraint [-h] [-c COEFFICIENTS] -b BASELINE
-                          [-B {tax,subsidy}] [-f FUELNAME] [-l DEFAULTDELTA]
-                          [-L ANNUALDELTAS] [-m] -p POLICY [-P {tax,subsidy}]
-                          [-R RESULTSDIR] [-S SUBDIR] [-t FUELTAG]
-                          [-T {tax,subsidy}] [-V] [-x XMLOUTPUTDIR] [-y YEARS]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
-                            sets the cellulosic ethanol conversion coefficients. Defaults to
-                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
-<td>The baseline on which the policy scenario is based</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-B=subsidy</span>, <span class="option">--biomassPolicyType=subsidy</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type. Default is subsidy.</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-f=cellulosic ethanol</span>, <span class="option">--fuelName=cellulosic ethanol</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The fuel to generate constraints for. Default is cellulosic ethanol</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultDelta=0.0</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Default increment to add to each year (EJ). All or individual
-                            years values can be set (overriding -l flag values) using the -L flag.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-L=</span>, <span class="option">--annualDeltas=</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Optional production increments by year. Value must be a
-                            comma-delimited string of year:level pairs, where level in is EJ.
-                            If -l is not used to set default for all years, you must specify
-                            values for all years using this option.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-p</span>, <span class="option">--policy</span></kbd></td>
-<td>The policy scenario name</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-P=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type. Default is subsidy.</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-R=.</span>, <span class="option">--resultsDir=.</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
-<td>Sub-directory for local-xml files, if any</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-t=cell-etoh</span>, <span class="option">--fuelTag=cell-etoh</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The fuel tag to generate constraints for. Default is cell-etoh</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-T=tax</span>, <span class="option">--policyType=tax</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Type of policy to use for the fuel. Default is tax.</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The directory into which to generate XML files.
-                             Defaults to policy name in the current directory.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
 </tbody>
 </table>
 </dd>

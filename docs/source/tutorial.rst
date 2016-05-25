@@ -1,9 +1,9 @@
 Tutorial -- Using ``pygcam``
 =============================
 
-  .. note::
+.. note::
 
-        This tutorial is currently under development!
+   *This tutorial is currently under development.*
 
 Overview
 ----------
@@ -11,15 +11,18 @@ Here we provide a brief introduction to the elements of this tutorial. The tutor
 explains how to setup ``pygcam`` and manage the GCAM workflow. A separate tutorial
 will (eventually) be developed to describe how to use ``pygcam`` programmatically.
 
-Installation
-^^^^^^^^^^^^^
+The steps involved in using ``pygcam`` are explained briefly here, and in more
+detail in the sections that follow.
+
+1. Install pygcam
+^^^^^^^^^^^^^^^^^^^
 
 Before using ``pygcam``, you must install a Python 2.7 environment and then
 install the ``pygcam`` package. See the :doc:`install` page for details.
 Windows users should also refer to :doc:`windows`.
 
-Configuration
-^^^^^^^^^^^^^^^
+2. Configure pygcam
+^^^^^^^^^^^^^^^^^^^^
 The ``pygcam`` scripts and libraries rely on a configuration file to:
 
   * define the location of essential and optional files,
@@ -27,21 +30,49 @@ The ``pygcam`` scripts and libraries rely on a configuration file to:
   * define both global default and project-specific values for all parameters
 
 See :ref:`Initial Configuration <initial-configuration-label>` for how to set up
-the configuration file for the first time.
+the configuration file for the first time, and the :doc:`config` page for
+detailed information about the configuration file.
 
-Project definition file
-^^^^^^^^^^^^^^^^^^^^^^^^^
+3. Define the project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Many of the features of the :doc:`gcamtool` script can be used directly without
 setting up a project definition. However, the full workflow-management capabilities
 of ``pygcam`` require an XML-based project definition file that describes:
 
 * one or more projects that may have different workflow steps
 * one or more "scenario groups" that define a baseline and related policy scenarios
-* a set of steps to perform, e.g., run GCAM, query the database, compute differences, plot figures.
+* a set of steps to perform (e.g., run GCAM, query the database, compute differences
+  between scenario results, plot figures of scenario results and differences from
+  baselines.)
 * data required by some of the steps
+
+The :ref:`new <new-label>` sub-command of the :doc:`gcamtool` script can be used to create the
+initial structure and files required for a new project, and optionally, insert
+a section for the new project in the ``$HOME/.pygcam.cfg`` configuration file.
 
 See :doc:`project-xml` for a detailed description of the file's XML schema.
 
+
+4. Setup the project files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The :ref:`setup <setup-label>` sub-command of the :doc:`gcamtool` script provides
+support for modifying GCAM's XML data files and configuration file according to
+the needs of your project. See :doc:`setup` for details.
+
+This is the only step of the pygcam workflow process that requires Python programming.
+Work is underway to allow simple projects to be defined without requiring Python code.
+
+
+5. Run the project
+^^^^^^^^^^^^^^^^^^^^^
+Project workflow is managed using the :ref:`run <run-label>` sub-command of the
+:doc:`gcamtool` script, which reads the :doc:`project-xml` file to
+understand the project setup, and offers numerous options allowing you
+to choose which project, scenario group, or scenarios to operate on and which
+steps to run.
+
+
+------------------------------------------
 
 .. _initial-configuration-label:
 
@@ -55,49 +86,14 @@ available configuration parameters shown in comments (i.e., lines starting with 
 explaining their purpose and showing their default values. To uncomment a line,
 simply remove the leading '#' character.
 
-  .. note::
+Edit the configuration file with any editor capable of
+working with plain text---not a word-processor such as Word. You can use
+the command ``gt config -e`` to invoke a system-appropriate editor on the
+configuration file. See :doc:`config` for details.
 
-        Edit the configuration file (.pygcam.cfg) with any editor capable of
-        working with plain text--not a word-processor such as Word. Use the
-        command ``gt config -e`` to invoke a system-appropriate editor on the
-        configuration file. See :doc:`config` for details.
+.. seealso::
 
-
-``pygcam`` requires that certain variables be set. The table below shows
-key variables, indicating whether they are required or optional, and whether their value
-must be a file or directory.
-
-+----------------------+----------+-----------+
-| Variable name        | Required | Type      |
-+======================+==========+===========+
-| GCAM.SandboxRoot     | yes      | directory |
-+----------------------+----------+-----------+
-| GCAM.ProjectRoot     | yes      | directory |
-+----------------------+----------+-----------+
-| GCAM.QueryDir        | yes      | directory |
-+----------------------+----------+-----------+
-| GCAM.ModelInterface  | yes      | directory |
-+----------------------+----------+-----------+
-| GCAM.RefWorkspace    | yes      | directory |
-+----------------------+----------+-----------+
-| GCAM.TempDir         | yes      | directory |
-+----------------------+----------+-----------+
-| GCAM.ProjectXmlFile  | yes      | file      |
-+----------------------+----------+-----------+
-| GCAM.RefConfigFile   | yes      | file      |
-+----------------------+----------+-----------+
-| GCAM.JarFile         | yes      | file      |
-+----------------------+----------+-----------+
-| GCAM.RegionMapFile   | no       | directory |
-+----------------------+----------+-----------+
-| GCAM.UserTempDir     | no       | directory |
-+----------------------+----------+-----------+
-| GCAM.RewriteSetsFile | no       | file      |
-+----------------------+----------+-----------+
-
-    .. seealso::
-
-       The configuration API and default variable settings are described in :doc:`config`
+   The configuration API and default variable settings are described in :doc:`config`
 
 Configuration file sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -105,6 +101,7 @@ The configuration file is divided into sections indicated by a name in square br
 All variable declarations following a section declaration, until the next section
 declaration (if any) appear in the declared section. You can declare a section multiple
 times to add new values to the section.
+(See :ref:`Sample Configuration File <sample-config-label>`, below.)
 
 Project sections
 ~~~~~~~~~~~~~~~~~~
@@ -123,17 +120,7 @@ projects can be defined in the ``[DEFAULT]`` section.
 All pre-defined ``pygcam`` variables are defined in the ``[DEFAULT]`` section,
 allowing them to be overridden on a project-by-project basis.
 
-Using configuration variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Within the configuration file, variables are often defined in terms of other variables.
-The syntax for referencing the value of a variable is the precede the variable name with
-``%(`` and follow it with ``)s``. This to reference variable ``GCAM.QueryDir``, you
-would write ``%(GCAM.QueryDir)``. Note that variable names are case-sensitive.
-
-Variables' values are substituted when a variable's value is requested, not when the
-variable is defined. The difference is that if variable ``A`` is defined in terms of
-variable ``B``, (e.g., ``A = %(B)s/something/else``), you can subsequently change
-``B`` and the value of ``A`` will show this when ``A`` is accessed by ``pygcam``.
+.. _sample-config-label:
 
 Sample configuration file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -180,36 +167,7 @@ prefix desired, or none at all.
     GCAM.RegionMapFile = %(GCAM.ProjectRoot)s/etc/Regions.txt
     GCAM.PluginPath    = %(User.RepoRoot)s/paper1/plugins
 
-
-Location of GCAM program and data files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The configuration variable ``GCAM.RefWorkspace`` must point to a directory
-structured like the standard GCAM ``Main_User_Workspace``, with sub-directories
-for ``input``, ``output``, ``libs``, and ``exe``.
-
-The variable ``GCAM.ModelInterface`` should point to a directory holding the
-ModelInterface program. This is used to locate the ``jar`` (Java archive) file
-that contains the ModelInterface code. The variable ``GCAM.JarFile`` provides
-the location of the jar file. The variable is initialized differently on Windows,
-OS X, and Linux as follows:
-
-  +---------+---------------------------------------------------------------------------------------+
-  | System  | Default definition of GCAM.JarFile                                                    |
-  +=========+=======================================================================================+
-  | Windows | %(GCAM.ModelInterface)s/ModelInterface.jar                                            |
-  +---------+---------------------------------------------------------------------------------------+
-  | Linux   | %(GCAM.ModelInterface)s/ModelInterface.jar                                            |
-  +---------+---------------------------------------------------------------------------------------+
-  | OS X    | %(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar |
-  +---------+---------------------------------------------------------------------------------------+
-
-You can set either ``GCAM.ModelInterface``, if the definition above for ``GCAM.JarFile`` is correct
-for your installation, or you can directly set ``GCAM.JarFile``.
-
-Note that ``pygcam`` does not run GCAM in the reference workspace; it uses the files there to
-create new workspaces as required. Creating separate workspaces for each scenario allows multiple
-scenarios to be run simultaneously without contention for the XML database which is created at the
-end of the model run.
+------------------------------------------------
 
 Project structure
 ------------------
@@ -218,10 +176,13 @@ Project structure
   * xmlsrc, local-xml, dyn-xml
   * scenarios.py
 
+------------------------------------------------
 
 Setting up a GCAM experiment
 ----------------------------------
 TBD.
+
+------------------------------------------------
 
 
 Running a GCAM experiment

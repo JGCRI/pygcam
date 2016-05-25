@@ -166,6 +166,11 @@
 </div></blockquote>
 <p>The <code class="docutils literal"><span class="pre">pygcam.config</span></code> module provides access to configuration parameters. The
 configuration file and the API to access it are described below.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Usage of the <code class="docutils literal"><span class="pre">config</span></code> sub-command is described on the
+<a class="reference internal" href="gcamtool.html#config-label"><em>gt config</em></a> page.</p>
+</div>
 <div class="section" id="the-configuration-files">
 <span id="pygcam-cfg"></span><h2>The configuration files<a class="headerlink" href="#the-configuration-files" title="Permalink to this headline">¶</a></h2>
 <p>There are three configuration files, two of which the user can modify:</p>
@@ -190,7 +195,7 @@ project-specific sections with names chosen by the user. This name should match 
 of the corresponding project in the <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file.</p>
 <p>For example, consider the following values in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>:</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 <span class="na">GCAM.Root</span> <span class="o">=</span> <span class="s">%(Home)s/GCAM</span>
 
 <span class="k">[Project1]</span>
@@ -205,8 +210,8 @@ of the corresponding project in the <a class="reference internal" href="project-
 project <code class="docutils literal"><span class="pre">OtherProject</span></code> since no project-specific value is defined, but the project
 <code class="docutils literal"><span class="pre">Project1</span></code> overrides this with the value <code class="docutils literal"><span class="pre">/other/location/GCAM</span></code>.</p>
 <p>The available parameters and their default values are described below.</p>
-<div class="section" id="editing-the-configuration-file">
-<h3>Editing the configuration file<a class="headerlink" href="#editing-the-configuration-file" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="editing-the-user-configuration-file">
+<h3>Editing the user configuration file<a class="headerlink" href="#editing-the-user-configuration-file" title="Permalink to this headline">¶</a></h3>
 <p>You can edit the configuration file, <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>, with any editor capable of
 working with plain text, i.e., not a word-processor such as Word. Use the command
 <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to invoke an editor on the configuration file.</p>
@@ -216,24 +221,143 @@ value shown in the table below. Set this value in the configuration file to invo
 your preferred editor. For example, if you prefer the <code class="docutils literal"><span class="pre">emacs</span></code> editor, you can add
 this line to <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>:</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">emacs</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">emacs</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Then, invoking the command:</p>
 <blockquote>
-<div><div class="highlight-shell"><div class="highlight"><pre><span></span>gt config -e
+<div><div class="highlight-bash"><div class="highlight"><pre>gt config -e
 </pre></div>
 </div>
 </div></blockquote>
 <p>will cause the command <code class="docutils literal"><span class="pre">emacs</span> <span class="pre">$HOME/.pygcam.cfg</span></code> to be run.</p>
+<div class="section" id="referencing-configuration-variables">
+<h4>Referencing configuration variables<a class="headerlink" href="#referencing-configuration-variables" title="Permalink to this headline">¶</a></h4>
+<p>Within the configuration file, variables are often defined in terms of other variables.
+The syntax for referencing the value of a variable is the precede the variable name with
+<code class="docutils literal"><span class="pre">%(</span></code> and follow it with <code class="docutils literal"><span class="pre">)s</span></code>. This to reference variable <code class="docutils literal"><span class="pre">GCAM.QueryDir</span></code>, you
+would write <code class="docutils literal"><span class="pre">%(GCAM.QueryDir)</span></code>. Note that variable names are case-sensitive.</p>
+<p>Variables&#8217; values are substituted when a variable&#8217;s value is requested, not when the
+variable is defined. The difference is that if variable <code class="docutils literal"><span class="pre">A</span></code> is defined in terms of
+variable <code class="docutils literal"><span class="pre">B</span></code>, (e.g., <code class="docutils literal"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">%(B)s/something/else</span></code>), you can subsequently change
+<code class="docutils literal"><span class="pre">B</span></code> and the value of <code class="docutils literal"><span class="pre">A</span></code> will show this when <code class="docutils literal"><span class="pre">A</span></code> is accessed by <code class="docutils literal"><span class="pre">pygcam</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When de-referencing a variable in the config file, you must include the
+trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception will be raised.</p>
+</div>
+</div>
+</div>
+<div class="section" id="validating-configuration-settings">
+<h3>Validating configuration settings<a class="headerlink" href="#validating-configuration-settings" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">pygcam</span></code> requires that certain configuration variables be set. The table
+below shows key variables, indicating whether they are required or optional,
+and whether their value must be a file or directory.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="51%" />
+<col width="23%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variable name</th>
+<th class="head">Required</th>
+<th class="head">Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>GCAM.SandboxRoot</td>
+<td>yes</td>
+<td>directory</td>
+</tr>
+<tr class="row-odd"><td>GCAM.ProjectRoot</td>
+<td>yes</td>
+<td>directory</td>
+</tr>
+<tr class="row-even"><td>GCAM.QueryDir</td>
+<td>yes</td>
+<td>directory</td>
+</tr>
+<tr class="row-odd"><td>GCAM.ModelInterface</td>
+<td>yes</td>
+<td>directory</td>
+</tr>
+<tr class="row-even"><td>GCAM.RefWorkspace</td>
+<td>yes</td>
+<td>directory</td>
+</tr>
+<tr class="row-odd"><td>GCAM.TempDir</td>
+<td>yes</td>
+<td>directory</td>
+</tr>
+<tr class="row-even"><td>GCAM.ProjectXmlFile</td>
+<td>yes</td>
+<td>file</td>
+</tr>
+<tr class="row-odd"><td>GCAM.RefConfigFile</td>
+<td>yes</td>
+<td>file</td>
+</tr>
+<tr class="row-even"><td>GCAM.JarFile</td>
+<td>yes</td>
+<td>file</td>
+</tr>
+<tr class="row-odd"><td>GCAM.UserTempDir</td>
+<td>no</td>
+<td>directory</td>
+</tr>
+<tr class="row-even"><td>GCAM.RegionMapFile</td>
+<td>no</td>
+<td>file</td>
+</tr>
+<tr class="row-odd"><td>GCAM.RewriteSetsFile</td>
+<td>no</td>
+<td>file</td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal"><span class="pre">config</span></code> sub-command provides a limited amount of validation by checking
+that all required and optional variables are set to reasonable values. To check
+the config file, run the command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-t</span></code>. You can specify a project to
+check that project&#8217;s variables. For example, I can test the values set for project
+<code class="docutils literal"><span class="pre">Paper1</span></code> with the following command, shown with command output:</p>
+<blockquote>
+<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>gt -P Paper1 config -t
+OK: GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws/paper1
+OK: GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket/paper1
+OK: GCAM.QueryDir <span class="o">=</span> /Users/rjp/bitbucket/paper1/queries
+OK: GCAM.ModelInterface <span class="o">=</span> /Users/rjp/GCAM/current/ModelInterface
+OK: GCAM.RefWorkspace <span class="o">=</span> /Users/rjp/GCAM/current/Main_User_Workspace
+OK: GCAM.TempDir <span class="o">=</span> /tmp
+OK: GCAM.UserTempDir <span class="o">=</span> /Users/rjp/tmp
+OK: GCAM.ProjectXmlFile <span class="o">=</span> /Users/rjp/bitbucket/paper1/etc/project.xml
+OK: GCAM.RefConfigFile <span class="o">=</span> /Users/rjp/GCAM/current/Main_User_Workspace/exe/configuration_ref.xml
+OK: GCAM.JarFile <span class="o">=</span> /Users/rjp/bitbucket/gcam-proj/ModelInterface/ModelInterface.jar
+OK: GCAM.RegionMapFile <span class="o">=</span> /Users/rjp/bitbucket/paper1/etc/Regions.txt
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="location-of-gcam-program-and-data-files">
+<h3>Location of GCAM program and data files<a class="headerlink" href="#location-of-gcam-program-and-data-files" title="Permalink to this headline">¶</a></h3>
+<p>The configuration variable <code class="docutils literal"><span class="pre">GCAM.RefWorkspace</span></code> must point to a directory
+structured like the standard GCAM <code class="docutils literal"><span class="pre">Main_User_Workspace</span></code>, with sub-directories
+for <code class="docutils literal"><span class="pre">input</span></code>, <code class="docutils literal"><span class="pre">output</span></code>, <code class="docutils literal"><span class="pre">libs</span></code>, and <code class="docutils literal"><span class="pre">exe</span></code>.</p>
+<p>The variable <code class="docutils literal"><span class="pre">GCAM.ModelInterface</span></code> should point to a directory holding the
+ModelInterface program.</p>
+<p>Note that <code class="docutils literal"><span class="pre">pygcam</span></code> does not run GCAM in the reference workspace&#8217;s <code class="docutils literal"><span class="pre">exe</span></code> directory;
+it uses the files there to create new workspaces as required.
+Creating separate workspaces for each scenario allows multiple
+scenarios to be run simultaneously without contention for the XML database
+which is created at the end of the model run.</p>
 </div>
 <div class="section" id="default-values">
 <h3>Default values<a class="headerlink" href="#default-values" title="Permalink to this headline">¶</a></h3>
-<p>The sytem default values are provided in the <code class="docutils literal"><span class="pre">pygcam</span></code> package in a file called
+<p>The system default values are provided in the <code class="docutils literal"><span class="pre">pygcam</span></code> package in a file called
 <code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code>, which is listed below.</p>
-<p>In addition to these values, five values are set dynamically based on the operating
-system being used, as shown in the table below.</p>
+<p>In addition to these values, several values are set dynamically based on the
+operating system being used, as shown in the tables below.</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="31%" />
@@ -275,21 +399,35 @@ system being used, as shown in the table below.</p>
 <td>notepad.exe</td>
 <td>vi</td>
 </tr>
-<tr class="row-even"><td>GCAM.JarFIle</td>
-<td colspan="4"><em>see text below</em></td>
+</tbody>
+</table>
+<p>In addition, the variable <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code> provides the location of the jar file.
+The variable is initialized differently on Windows, OS X, and Linux as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">System</th>
+<th class="head">Default definition of GCAM.JarFile</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Windows</td>
+<td>%(GCAM.ModelInterface)s/ModelInterface.jar</td>
+</tr>
+<tr class="row-odd"><td>Linux</td>
+<td>%(GCAM.ModelInterface)s/ModelInterface.jar</td>
+</tr>
+<tr class="row-even"><td>OS X</td>
+<td>%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</td>
 </tr>
 </tbody>
 </table>
-<p>The variable <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code> is set to <code class="docutils literal"><span class="pre">%(GCAM.ModelInterface)s/ModelInterface.jar</span></code>
-on all operating systems except on Mac OS X where it is set to
-<code class="docutils literal"><span class="pre">%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</span></code>.</p>
-<blockquote>
-<div><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">When de-referencing a variable in the config file, you must include the
-trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception will be raised.</p>
-</div>
-<div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<div class="section" id="the-system-defaults-file">
+<h4>The system defaults file<a class="headerlink" href="#the-system-defaults-file" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 
 <span class="c1"># This project is used if &#39;-P&#39; flag not given to the &#39;gt&#39; command</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span>
@@ -333,7 +471,7 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="na">GCAM.QueryPath</span>    <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/Main_Queries.xml</span>
 
 <span class="c1"># File that defines query rewrites by name for use by query command.</span>
-<span class="c1"># GCAM.RewriteSetsFile = %(GCAM.QueryDir)s/rewriteSets.xml</span>
+<span class="c1"># GCAM.RewriteSetsFile = %(GCAM.ProjectDir)s/etc/rewriteSets.xml</span>
 <span class="na">GCAM.RewriteSetsFile</span> <span class="o">=</span>
 
 <span class="c1"># The location of GCAM source code (for the purpose of reading</span>
@@ -341,8 +479,8 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="na">GCAM.SourceWorkspace</span> <span class="o">=</span>
 
 <span class="c1"># Root directory for where the user keeps project folders</span>
-<span class="na">GCAM.ProjectRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/projects</span>
-
+<span class="na">GCAM.ProjectRoot</span> <span class="o">=</span> <span class="s">%(Home)s/projects</span>
+<span class="na">GCAM.ProjectDir</span>  <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s</span>
 
 <span class="c1"># The name of the XML Starlet program. Use full path if it&#39;s not</span>
 <span class="c1"># found on your usual PATH.</span>
@@ -350,14 +488,14 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 
 <span class="c1"># If using the XML &quot;setup&quot; system, this is the root folder for</span>
 <span class="c1"># setup source files</span>
-<span class="na">GCAM.XmlSrc</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/xmlsrc</span>
+<span class="na">GCAM.XmlSrc</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/xmlsrc</span>
 
 <span class="c1"># The folders for setup-generated XML files.</span>
-<span class="na">GCAM.LocalXml</span>       <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/local-xml</span>
-<span class="na">GCAM.DynXml</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/dyn-xml</span>
+<span class="na">GCAM.LocalXml</span>       <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/local-xml</span>
+<span class="na">GCAM.DynXml</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/dyn-xml</span>
 
 <span class="c1"># The default input file for the runProj sub-command</span>
-<span class="na">GCAM.ProjectXmlFile</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/etc/project.xml</span>
+<span class="na">GCAM.ProjectXmlFile</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/etc/project.xml</span>
 
 <span class="c1"># Whether GCAM should generate a debug file (no value =&gt; no change)</span>
 <span class="na">GCAM.WriteDebugFile</span>     <span class="o">=</span>
@@ -483,9 +621,10 @@ trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception wi
 <span class="na">GCAM.ExcelNumberFormat</span> <span class="o">=</span> <span class="s">0.000</span>
 </pre></div>
 </div>
-</div></blockquote>
 </div>
 </div>
+</div>
+<hr class="docutils" />
 <div class="section" id="module-pygcam.config">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.config" title="Permalink to this headline">¶</a></h2>
 <p><em>Code author: Richard Plevin</em></p>
