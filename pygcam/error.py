@@ -30,6 +30,16 @@ class FileFormatError(PygcamException):
     """
     pass
 
+class FileExistsError(PygcamException):
+    """
+    Raised when trying to write a file that already exists (if not allowed)
+    """
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __str__(self):
+        return "Refusing to overwrite file: %s" % self.filename
+
 class ConfigFileError(FileFormatError):
     """
     Raised when an error is found in the configuration file ``~/.pygcam.cfg``.
