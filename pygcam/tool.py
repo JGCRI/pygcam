@@ -25,6 +25,7 @@ from .landProtection import ProtectLandCommand
 from .query import QueryCommand
 from .runGCAM import GcamCommand
 from .workspace import WorkspaceCommand
+from .new import NewProjectCommand
 from .setup import SetupCommand
 from .log import getLogger, setLogLevel, configureLogs
 from .windows import IsWindows
@@ -34,10 +35,10 @@ _logger = getLogger(__name__)
 PROGRAM = 'gt'
 __version__ = '0.1'
 
-BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand,
-                      GcamCommand, ProtectLandCommand, QueryCommand,
-                      ProjectCommand, SetupCommand, WorkspaceCommand,
-                      BioConstraintsCommand, DeltaConstraintsCommand]
+BuiltinSubcommands = [BioConstraintsCommand, DeltaConstraintsCommand,
+                      ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
+                      NewProjectCommand, ProjectCommand, ProtectLandCommand,
+                      QueryCommand, SetupCommand, WorkspaceCommand]
 
 def _writeBatchScript(args, delete=False):
     """
@@ -394,6 +395,9 @@ def main():
     try:
         _main()
         return 0
+
+    except CommandlineError as e:
+        print e
 
     except Exception as e:
         print "%s failed: %s" % (PROGRAM, e)
