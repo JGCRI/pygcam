@@ -1,0 +1,15 @@
+<queries varName="queryXmlFile" defaultMap="eightRegions">
+    <query name="land_cover">
+        <rewriter name="eightRegions"/>
+        <rewriter name="landCover"/>
+    </query>
+
+    <query name="Ag Production by Crop Type">
+        <rewriter name="eightRegions"/>
+        <rewriter name="biofuels" level="output"/>
+    </query>
+
+    <query name="Refined_liquids_for_vehicles_production_by_technology"/>
+    <query name="Climate_forcing"/>
+    <query name="Global_mean_temperature"/>
+</queries>
