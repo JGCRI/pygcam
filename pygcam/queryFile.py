@@ -5,7 +5,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from .utils import XMLFile, getBooleanXML, resource_stream
+from .utils import XMLFile, getBooleanXML, resourceStream
 
 #
 # Classes to parse queryFiles and the <queries> element of project.xml
@@ -38,6 +38,6 @@ class QueryFile(object):
         :param filename: (str) the name of the XML file to read
         :return: a QueryFile instance.
         """
-        schemaStream = resource_stream('pygcam', 'etc/queryFile-schema.xsd')
+        schemaStream = resourceStream('etc/queryFile-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream)
         return cls(xmlFile.tree.getroot())

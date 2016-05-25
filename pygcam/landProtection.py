@@ -10,7 +10,7 @@ import sys
 import os
 import copy
 from lxml import etree as ET
-from .utils import mkdirs, flatten, XMLFile, resource_stream
+from .utils import mkdirs, flatten, XMLFile, resourceStream
 from .query import GCAM_32_REGIONS
 from .config import getParam
 from .error import FileFormatError, CommandlineError, PygcamException
@@ -322,7 +322,7 @@ def driver(args):
 
         _logger.debug("Land-protection scenario '%s'", scenarioName)
 
-        schemaStream = resource_stream('pygcam', 'etc/protection-schema.xsd')
+        schemaStream = resourceStream('etc/protection-schema.xsd')
         #schemaFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pygcam', 'etc', 'protection-schema.xsd')
 
         xmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)

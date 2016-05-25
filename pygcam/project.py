@@ -17,7 +17,7 @@ from os.path import join
 from lxml import etree as ET
 from .config import getParam, getConfigDict
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
-                    resource_stream)
+                    resourceStream)
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .subcommand import SubcommandABC
@@ -328,7 +328,7 @@ class Project(object):
         '''
         Validate a parsed project.xml file
         '''
-        schemaStream = resource_stream('pygcam', 'etc/project-schema.xsd')
+        schemaStream = resourceStream('etc/project-schema.xsd')
 
         schemaDoc = ET.parse(schemaStream)
         schema = ET.XMLSchema(schemaDoc)

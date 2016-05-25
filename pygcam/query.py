@@ -12,7 +12,7 @@ import re
 import subprocess
 from lxml import etree as ET
 from .utils import (getTempFile, TempFile, mkdirs, ensureExtension, saveToFile, XMLFile,
-                    getBooleanXML, resource_stream)
+                    getBooleanXML, resourceStream)
 from .queryFile import QueryFile
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
@@ -729,7 +729,7 @@ class RewriteSetParser(object):
         :param filename: (str) the name of the XML file to read
         :return: a list of RewriteSet instances
         """
-        schemaStream = resource_stream('pygcam', 'etc/rewriteSets-schema.xsd')
+        schemaStream = resourceStream('etc/rewriteSets-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream)
         return cls(xmlFile.tree.getroot(), filename)
 

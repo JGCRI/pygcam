@@ -17,7 +17,7 @@ import pkgutil
 from itertools import chain
 from tempfile import mkstemp, mkdtemp
 from .config import getParam
-from .error import PygcamException, FileFormatError
+from .error import PygcamException, FileFormatError, FileExistsError
 from .log import getLogger, getLogLevel
 
 _logger = getLogger(__name__)
@@ -48,12 +48,44 @@ def simpleFormat(s, varDict):
     except KeyError as e:
         raise FileFormatError('Unknown parameter %s in project XML template' % e)
 
-def resource_stream(package, relpath):
+def getResource(relpath):
     """
-    Mimic pkg_resources function using standard library (pkgutil) function.
+    Extract a resource (e.g., file) from the given relative path in
+    the pygcam package.
+
+    :param relpath: (str) a path relative to the pygcam package
+    :return: the file contents
     """
-    text = pkgutil.get_data(package, relpath)
+    contents = pkgutil.get_data('pygcam', relpath)
+    return contents
+
+def resourceStream(relpath):
+    """
+    Return a stream on the resource found on the given path relative
+    to the pygcam package.
+
+    :param relpath: (str) a path relative to the pygcam package
+    :return: (file-like stream) a file-like buffer opened on the desired resource.
+    """
+    text = getResource(relpath)
     return io.BytesIO(text)
+
+def copyResource(relpath, dest, overwrite=True):
+    """
+    Copy a resource from the 'pygcam' package to the given destination.
+
+    :param relpath: (str) a path relative to the pygcam package
+    :param dest: (str) the pathname of the file to create by copying the resource.
+    :param overwrite: (bool) if False, raise an error if the destination
+      file already exists.
+    :return: none
+    """
+    if not overwrite and os.path.lexists(dest):
+        raise FileFormatError(dest)
+
+    text = getResource(relpath)
+    with open(dest, 'w') as f:
+        f.write(text)
 
 def getBooleanXML(value):
     """
