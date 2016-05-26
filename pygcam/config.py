@@ -341,8 +341,8 @@ class ConfigCommand(SubcommandABC):
         return parser
 
     def testConfig(self, section):
-        requiredDirs = ['SandboxRoot', 'ProjectRoot', 'QueryDir',
-                        'ModelInterface', 'RefWorkspace', 'TempDir']
+        requiredDirs = ['SandboxRoot', 'SandboxDir', 'ProjectRoot', 'ProjectDir',
+                        'QueryDir', 'ModelInterface', 'RefWorkspace', 'TempDir']
         requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'JarFile']
         optionalDirs  = ['UserTempDir']
         optionalFiles = ['RegionMapFile', 'RewriteSetsFile']

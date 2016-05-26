@@ -767,7 +767,7 @@ def main(args):
     # """
     miLogFile   = getParam('GCAM.ModelInterfaceLogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
-    workspace   = args.workspace or getParam('GCAM.SandboxRoot')
+    workspace   = args.workspace or getParam('GCAM.SandboxDir')
     xmldb       = args.xmldb     or os.path.join(workspace, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')

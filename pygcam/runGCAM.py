@@ -129,7 +129,7 @@ CONFIG_FILE_DELIM = ':'
 
 def runGCAM(args):
     scenarios = args.scenario.split(',') if args.scenario else None
-    workspace = args.workspace  or getParam('GCAM.SandboxRoot')
+    workspace = args.workspace  or getParam('GCAM.SandboxDir')
     workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
     setupWorkspace(workspace)
 
