@@ -200,10 +200,13 @@ between scenario results, plot figures of scenario results and differences from
 baselines.)</li>
 <li>data required by some of the steps</li>
 </ul>
-<p>The <a class="reference internal" href="gcamtool.html#new-label"><em>new</em></a> sub-command of the <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script can be used to create the
+<p>See <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> for a detailed description of the file&#8217;s XML schema.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <a class="reference internal" href="gcamtool.html#new-label"><em>new</em></a> sub-command of the <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> script can be used to create the
 initial structure and files required for a new project, and optionally, insert
 a section for the new project in the <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> configuration file.</p>
-<p>See <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> for a detailed description of the file&#8217;s XML schema.</p>
+</div>
 </div>
 <div class="section" id="setup-the-project-files">
 <h3>4. Setup the project files<a class="headerlink" href="#setup-the-project-files" title="Permalink to this headline">¶</a></h3>
@@ -235,10 +238,6 @@ simply remove the leading &#8216;#&#8217; character.</p>
 working with plain text&#8212;not a word-processor such as Word. You can use
 the command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to invoke a system-appropriate editor on the
 configuration file. See <a class="reference internal" href="config.html"><em>pygcam.config</em></a> for details.</p>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">The configuration API and default variable settings are described in <a class="reference internal" href="config.html"><em>pygcam.config</em></a></p>
-</div>
 <div class="section" id="configuration-file-sections">
 <h3>Configuration file sections<a class="headerlink" href="#configuration-file-sections" title="Permalink to this headline">¶</a></h3>
 <p>The configuration file is divided into sections indicated by a name in square brackets.
@@ -273,10 +272,8 @@ prefix desired, or none at all.</p>
 <div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">Paper1</span>
 
-<span class="na">User.ProjectName</span>    <span class="o">=</span> <span class="s">_NOT_SET_</span>
 <span class="na">User.RepoRoot</span>       <span class="o">=</span> <span class="s">%(Home)s/git-repo</span>
-<span class="na">GCAM.ProjectRoot</span>    <span class="o">=</span> <span class="s">%(User.RepoRoot)s/%(User.ProjectName)s</span>
-<span class="na">GCAM.SandboxRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/ws/%(User.ProjectName)s</span>
+<span class="na">GCAM.SandboxRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/ws</span>
 
 <span class="na">GCAM.LogLevel</span>       <span class="o">=</span> <span class="s">INFO</span>
 <span class="na">GCAM.ShowStackTrace</span> <span class="o">=</span> <span class="s">True</span>
@@ -289,7 +286,7 @@ prefix desired, or none at all.</p>
 <span class="na">GCAM.JavaLibPath</span>    <span class="o">=</span> <span class="s">/pic/projects/GCAM/GCAM-libraries/lib/basex</span>
 <span class="na">GCAM.OtherBatchArgs</span> <span class="o">=</span> <span class="s">-A my_account</span>
 
-<span class="na">GCAM.QueryDir</span>  <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/queries</span>
+<span class="na">GCAM.QueryDir</span>  <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/queries</span>
 <span class="na">GCAM.QueryPath</span> <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s</span>
 
 <span class="c1"># Default location for query results</span>
@@ -302,9 +299,7 @@ prefix desired, or none at all.</p>
 <span class="na">GCAM.WriteOutputCsv</span>     <span class="o">=</span> <span class="s">False</span>
 
 <span class="k">[Paper1]</span>
-<span class="na">User.ProjectName</span>   <span class="o">=</span> <span class="s">paper1</span>
-<span class="na">GCAM.RegionMapFile</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/etc/Regions.txt</span>
-<span class="na">GCAM.PluginPath</span>    <span class="o">=</span> <span class="s">%(User.RepoRoot)s/paper1/plugins</span>
+<span class="na">GCAM.RegionMapFile</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/etc/Regions.txt</span>
 </pre></div>
 </div>
 </div></blockquote>

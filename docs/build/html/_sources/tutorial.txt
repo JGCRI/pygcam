@@ -46,11 +46,13 @@ of ``pygcam`` require an XML-based project definition file that describes:
   baselines.)
 * data required by some of the steps
 
-The :ref:`new <new-label>` sub-command of the :doc:`gcamtool` script can be used to create the
-initial structure and files required for a new project, and optionally, insert
-a section for the new project in the ``$HOME/.pygcam.cfg`` configuration file.
-
 See :doc:`project-xml` for a detailed description of the file's XML schema.
+
+.. note::
+
+   The :ref:`new <new-label>` sub-command of the :doc:`gcamtool` script can be used to create the
+   initial structure and files required for a new project, and optionally, insert
+   a section for the new project in the ``$HOME/.pygcam.cfg`` configuration file.
 
 
 4. Setup the project files
@@ -91,10 +93,6 @@ working with plain text---not a word-processor such as Word. You can use
 the command ``gt config -e`` to invoke a system-appropriate editor on the
 configuration file. See :doc:`config` for details.
 
-.. seealso::
-
-   The configuration API and default variable settings are described in :doc:`config`
-
 Configuration file sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The configuration file is divided into sections indicated by a name in square brackets.
@@ -134,10 +132,8 @@ prefix desired, or none at all.
     [DEFAULT]
     GCAM.DefaultProject = Paper1
 
-    User.ProjectName    = _NOT_SET_
     User.RepoRoot       = %(Home)s/git-repo
-    GCAM.ProjectRoot    = %(User.RepoRoot)s/%(User.ProjectName)s
-    GCAM.SandboxRoot    = %(Home)s/ws/%(User.ProjectName)s
+    GCAM.SandboxRoot    = %(Home)s/ws
 
     GCAM.LogLevel       = INFO
     GCAM.ShowStackTrace = True
@@ -150,7 +146,7 @@ prefix desired, or none at all.
     GCAM.JavaLibPath    = /pic/projects/GCAM/GCAM-libraries/lib/basex
     GCAM.OtherBatchArgs = -A my_account
 
-    GCAM.QueryDir  = %(GCAM.ProjectRoot)s/queries
+    GCAM.QueryDir  = %(GCAM.ProjectDir)s/queries
     GCAM.QueryPath = %(GCAM.QueryDir)s
 
     # Default location for query results
@@ -163,9 +159,7 @@ prefix desired, or none at all.
     GCAM.WriteOutputCsv     = False
 
     [Paper1]
-    User.ProjectName   = paper1
-    GCAM.RegionMapFile = %(GCAM.ProjectRoot)s/etc/Regions.txt
-    GCAM.PluginPath    = %(User.RepoRoot)s/paper1/plugins
+    GCAM.RegionMapFile = %(GCAM.ProjectDir)s/etc/Regions.txt
 
 ------------------------------------------------
 

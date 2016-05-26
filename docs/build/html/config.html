@@ -432,12 +432,26 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># This project is used if &#39;-P&#39; flag not given to the &#39;gt&#39; command</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span>
 
+<span class="c1"># This defines the variable for documentation purposes. The value</span>
+<span class="c1"># is set automatically in each project section to the name of that</span>
+<span class="c1"># section -- unless a non-blank value already exists in the section.</span>
+<span class="na">GCAM.ProjectName</span> <span class="o">=</span>
+
+<span class="c1"># Root directory for where the user keeps project folders</span>
+<span class="na">GCAM.ProjectRoot</span> <span class="o">=</span> <span class="s">%(Home)s/projects</span>
+<span class="na">GCAM.ProjectDir</span>  <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/%(GCAM.ProjectName)s</span>
+
 <span class="c1"># Where to find plug-ins. Internal plugin directory is added</span>
 <span class="c1"># automatically. Use this to add custom plug-ins outside the pygcam</span>
 <span class="c1"># source tree. The value is a semicolon-delimited (on Windows) or</span>
 <span class="c1"># colon-delimited (on Unix) string of directories to search for files</span>
 <span class="c1"># matching the pattern &#39;*_plugin.py&#39;</span>
-<span class="na">GCAM.PluginPath</span> <span class="o">=</span>
+<span class="na">GCAM.PluginPath</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/plugins</span>
+
+<span class="c1"># The default location in which to find or create GCAM runtime</span>
+<span class="c1"># sandboxes</span>
+<span class="na">GCAM.SandboxRoot</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/ws</span>
+<span class="na">GCAM.SandboxDir</span>  <span class="o">=</span> <span class="s">%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s</span>
 
 <span class="c1"># Sets the folder holding the symlink &quot;current&quot; which refers</span>
 <span class="c1"># to a folder holding Main_User_Workspace and ModelInterface.</span>
@@ -447,10 +461,6 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># Refers to the GCAM folder holding the version of the model</span>
 <span class="c1"># you want to use. It is convenient to make this a symbolic link.</span>
 <span class="na">GCAM.Current</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/current</span>
-
-<span class="c1"># The default location in which to find or create GCAM runtime</span>
-<span class="c1"># sandboxes</span>
-<span class="na">GCAM.SandboxRoot</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/ws</span>
 
 <span class="c1"># The location of the Main_User_Workspace to use. This can refer</span>
 <span class="c1"># to any folder; GCAM.Current is just an optional convention.</span>
@@ -477,10 +487,6 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># The location of GCAM source code (for the purpose of reading</span>
 <span class="c1"># the .csv file that defines the current regional aggregation.</span>
 <span class="na">GCAM.SourceWorkspace</span> <span class="o">=</span>
-
-<span class="c1"># Root directory for where the user keeps project folders</span>
-<span class="na">GCAM.ProjectRoot</span> <span class="o">=</span> <span class="s">%(Home)s/projects</span>
-<span class="na">GCAM.ProjectDir</span>  <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s</span>
 
 <span class="c1"># The name of the XML Starlet program. Use full path if it&#39;s not</span>
 <span class="c1"># found on your usual PATH.</span>
@@ -538,7 +544,7 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 
 <span class="c1"># If set, application logger messages are written here. Note that</span>
 <span class="c1"># this is different than the GCAM.BatchLogFile for batch job output.</span>
-<span class="na">GCAM.LogFile</span>    <span class="o">=</span>
+<span class="na">GCAM.LogFile</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxDir)s/log/gt.log</span>
 
 <span class="c1"># Save batch log messages in the indicated file. Default is set up</span>
 <span class="c1"># for SLURM, which replaces &quot;%j&quot; with the jobid. Note that &quot;%&quot; is a</span>

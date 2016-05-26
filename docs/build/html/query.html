@@ -220,22 +220,24 @@ described in <a class="reference internal" href="query-xml.html"><em>queries.xml
 <dl class="function">
 <dt id="pygcam.query.csv2xlsx">
 <code class="descclassname">pygcam.query.</code><code class="descname">csv2xlsx</code><span class="sig-paren">(</span><em>inFiles</em>, <em>outFile</em>, <em>skiprows=0</em>, <em>interpolate=False</em>, <em>years=None</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.csv2xlsx" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD.</p>
+<dd><p>Convert a set of CSV files representing GCAM query results into an XLSX file
+with an index page linked by the file names to the sheets with the results.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inFiles</strong> &#8211; </li>
-<li><strong>outFile</strong> &#8211; </li>
-<li><strong>skiprows</strong> &#8211; </li>
-<li><strong>interpolate</strong> &#8211; </li>
-<li><strong>years</strong> &#8211; </li>
-<li><strong>startYear</strong> &#8211; </li>
+<li><strong>inFiles</strong> &#8211; (list of str) the names of CSV files to read.</li>
+<li><strong>outFile</strong> &#8211; (str) the name of the XLSX file to create</li>
+<li><strong>skiprows</strong> &#8211; (int) the number of rows to skip in the CSV files before processing.</li>
+<li><strong>interpolate</strong> &#8211; (bool) if True, interpolate annual values between time-steps.</li>
+<li><strong>years</strong> &#8211; (str) the years to extract from the CSV files; must be of the form
+XXXX-YYYY, e.g. 2010-2050.</li>
+<li><strong>startYear</strong> &#8211; (int) If interpolating, the year to begin interpolation</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
 </td>
 </tr>
 </tbody>
@@ -260,6 +262,23 @@ which should be a comma-delimited string. The default value is <code class="docu
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the original <cite>df</cite> (if inplace=True) or the modified copy.</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.ensureCSV">
+<code class="descclassname">pygcam.query.</code><code class="descname">ensureCSV</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.ensureCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that the file has a &#8216;.csv&#8217; extension by replacing or adding
+the extension, as required.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file</strong> &#8211; (str) a filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str) the filename with a &#8216;.csv&#8217; extension.</td>
 </tr>
 </tbody>
 </table>
@@ -291,7 +310,7 @@ empty (the default value), the built-in default 32-region list is returned.</td>
 <dt id="pygcam.query.interpolateYears">
 <code class="descclassname">pygcam.query.</code><code class="descname">interpolateYears</code><span class="sig-paren">(</span><em>df</em>, <em>startYear=0</em>, <em>inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.interpolateYears" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate linearly between each pair of years in the GCAM output. The
-timestep is calculated from the numerical (string) column headings given
+time-step is calculated from the numerical (string) column headings given
 in the <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html">DataFrame</a> <cite>df</cite>, which are assumed to represent years in the time-series.
 The years to interpolate between are read from <cite>df</cite>, so there&#8217;s no dependency
 on any particular time-step, or even on the time-step being constant.</p>
@@ -302,8 +321,8 @@ on any particular time-step, or even on the time-step being constant.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>df</strong> &#8211; (DataFrame) Data of the format returned by batch queries
 on the GCAM XML database</li>
-<li><strong>startYear</strong> &#8211; If non-zero, begin interpolation at this year.</li>
-<li><strong>inplace</strong> &#8211; If True, modify <cite>df</cite> in place; otherwise modify a copy.</li>
+<li><strong>startYear</strong> &#8211; (int) If non-zero, begin interpolation at this year.</li>
+<li><strong>inplace</strong> &#8211; (bool) If True, modify <cite>df</cite> in place; otherwise modify a copy.</li>
 </ul>
 </td>
 </tr>
@@ -333,28 +352,12 @@ range (inclusive) are kept. Data for other years is dropped.</td>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.query.main">
-<code class="descclassname">pygcam.query.</code><code class="descname">main</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> &#8211; </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="pygcam.query.readCsv">
 <code class="descclassname">pygcam.query.</code><code class="descname">readCsv</code><span class="sig-paren">(</span><em>filename</em>, <em>skiprows=1</em>, <em>years=None</em>, <em>interpolate=False</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.readCsv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read a CSV file of the form generated by GCAM batch queries, i.e., skip on
 row and then read column headings and data. Optionally drop all years outside
 the <cite>years</cite> given. Optionally linearly interpolate annual values between
-timesteps.</p>
+time-steps.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -363,7 +366,7 @@ timesteps.</p>
 <li><strong>filename</strong> &#8211; (str) the path to a CSV file</li>
 <li><strong>skiprows</strong> &#8211; (int) the number of rows to skip before reading the data matrix</li>
 <li><strong>years</strong> &#8211; (iterable of two values coercible to int) the year columns to keep; others are dropped</li>
-<li><strong>interpolate</strong> &#8211; (bool) If True, interpolate annual values between timesteps</li>
+<li><strong>interpolate</strong> &#8211; (bool) If True, interpolate annual values between time-steps</li>
 <li><strong>startYear</strong> &#8211; (int) If interpolating, the year to begin interpolation</li>
 </ul>
 </td>
@@ -389,8 +392,9 @@ return the DataFrame. Data is read from the computed filename
 <li><strong>batchDir</strong> &#8211; (str) a directory in which the data file resides</li>
 <li><strong>baseline</strong> &#8211; (str) the name of a baseline scenario</li>
 <li><strong>queryName</strong> &#8211; (str) the name of a batch query.</li>
-<li><strong>years</strong> &#8211; (iterable of two values coercible to int) the year columnss to keep; others are dropped</li>
-<li><strong>interpolate</strong> &#8211; (bool) If True, interpolate annual values between timesteps</li>
+<li><strong>years</strong> &#8211; (iterable of two values coercible to int) the year columns to keep;
+others are dropped</li>
+<li><strong>interpolate</strong> &#8211; (bool) If True, interpolate annual values between time-steps</li>
 <li><strong>startYear</strong> &#8211; (int) If interpolating, the year to begin interpolation</li>
 </ul>
 </td>
@@ -465,19 +469,21 @@ not deleted (use for debugging)</li>
 <dl class="function">
 <dt id="pygcam.query.sumYears">
 <code class="descclassname">pygcam.query.</code><code class="descname">sumYears</code><span class="sig-paren">(</span><em>files</em>, <em>skiprows=1</em>, <em>interpolate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.sumYears" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD.</p>
+<dd><p>For each file given, sum all values in each year column and create
+a file holding the result. Each resulting filename has the same basename
+as the input file but ending with &#8216;-sum.csv&#8217;.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>files</strong> &#8211; </li>
-<li><strong>skiprows</strong> &#8211; </li>
-<li><strong>interpolate</strong> &#8211; </li>
+<li><strong>files</strong> &#8211; (list of str) Filenames to process</li>
+<li><strong>skiprows</strong> &#8211; (int) the number of rows to skip prior to column headers</li>
+<li><strong>interpolate</strong> &#8211; (bool) if True, interpolate annual values between time-steps</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
 </td>
 </tr>
 </tbody>
@@ -487,20 +493,31 @@ not deleted (use for debugging)</li>
 <dl class="function">
 <dt id="pygcam.query.sumYearsByGroup">
 <code class="descclassname">pygcam.query.</code><code class="descname">sumYearsByGroup</code><span class="sig-paren">(</span><em>groupCol</em>, <em>files</em>, <em>skiprows=1</em>, <em>interpolate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.sumYearsByGroup" title="Permalink to this definition">¶</a></dt>
-<dd><p>TBD.</p>
+<dd><p>Group data for each time-step (or interpolated annual values) by the given
+column (with categorical data like region or sector), and sum all
+members of each group to produce a time-series for each group. Equivalent to
+a SQL &#8220;group by&#8221; operation. For each input file, a new .CSV file is written
+with the name formed by the basename of the original file, followed by
+&#8220;-groupby-&#8221; and the groupCol. For example, given the file &#8220;foobar.csv&#8221; and
+groupCol &#8220;region&#8221;, the file &#8220;foobar-groupby-region.csv&#8221; would be generated.
+Tests that all rows have the same units; otherwise raises an error.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>groupCol</strong> &#8211; </li>
-<li><strong>files</strong> &#8211; </li>
-<li><strong>skiprows</strong> &#8211; </li>
-<li><strong>interpolate</strong> &#8211; </li>
+<li><strong>groupCol</strong> &#8211; (str) the column with categorical data to group by.</li>
+<li><strong>files</strong> &#8211; (list of str) Filenames to process</li>
+<li><strong>skiprows</strong> &#8211; (int) the number of rows to skip prior to column headers</li>
+<li><strong>interpolate</strong> &#8211; (bool) if True, interpolate annual values between time-steps</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">none</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises CommandLineError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">if the rows in the input file don&#8217;t all have the same units</p>
 </td>
 </tr>
 </tbody>
@@ -518,14 +535,18 @@ the second line.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>df</strong> &#8211; </li>
-<li><strong>filename</strong> &#8211; </li>
-<li><strong>header</strong> &#8211; </li>
-<li><strong>float_format</strong> &#8211; </li>
+<li><strong>df</strong> &#8211; (pandas.DataFrame) a DataFrame holding the data to write</li>
+<li><strong>filename</strong> &#8211; (str) the name of the file to create</li>
+<li><strong>header</strong> &#8211; (str) a string to write as the first line of the file,
+(a single line preceding column headers is standard GCAM query result
+format.)</li>
+<li><strong>float_format</strong> &#8211; (str) a format string indicating how to represent
+numeric values. Default shows 4 decimal places. To limit results to,
+for example, 2 decimal places, use float_format=&#8221;%.2f&#8221;.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
 </td>
 </tr>
 </tbody>
