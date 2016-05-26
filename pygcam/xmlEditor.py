@@ -830,7 +830,7 @@ class XMLEditor(object):
         self.delScenarioComponent("protected_land_input_2")
         self.delScenarioComponent("protected_land_input_3")
 
-    def protectLand(self, fraction, landClasses=UnmanagedLandClasses, regions=None):
+    def protectLand(self, fraction, landClasses=None, otherArable=False, regions=None):
         """
         Modify land_input files to protect a constant fraction of unmanaged
         land of the given classes, in the given regions.
@@ -838,7 +838,9 @@ class XMLEditor(object):
         :param fraction: (float) the fraction of land in the given land classes
                to protect
         :param landClasses: a string or a list of strings, or None. If None, all
-               unmanaged land classes are modified.
+               "standard" unmanaged land classes are modified.
+        :param otherArable: (bool) if True, land class 'OtherArableLand' is
+            included in default land classes.
         :param regions: a string or a list of strings, or None. If None, all
                regions are modified.
         """
@@ -851,7 +853,8 @@ class XMLEditor(object):
             filename = landFile + '.xml'
             landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
-            protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses, regions=regions)
+            protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
+                        otherArable=otherArable, regions=regions)
             self.updateScenarioComponent(landFile, landFileRel)
 
     # TBD: normalize so that all (year, value) args behave like the pairs, in all fns?

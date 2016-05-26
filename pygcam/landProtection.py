@@ -19,7 +19,7 @@ from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
-# TBD:  add OtherArableLand and test it!
+# These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 
 PROGRAM = 'protectLand.py'
@@ -46,6 +46,7 @@ def _makeLandClassXpath(landClasses, protected=False):
     patterns = map(lambda s: "starts-with(@name, '%s%s')" % (prefix, s), landClasses)
     landPattern = ' or '.join(patterns)
     xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
+    print 'landClassXpath:', xpath
     return xpath
 
 def _findChildren(node, tag, cls=None):
@@ -216,7 +217,7 @@ class Scenario(object):
         return cls.Instances.get(name)
 
 
-def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=None):
+def createProtected(tree, fraction, landClasses=None, otherArable=False, regions=None):
     """
     Modify an lxml tree representing a GCAM input file to protect a `fraction`
     of `landClasses` in `regions`.
@@ -224,7 +225,9 @@ def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=No
     :param tree: a tree representing a parsed GCAM land_input XML file
     :param fraction: the fraction of land in the given land classes to protect
     :param landClasses: a string or a list of strings, or None. If None, all
-           unmanaged land classes are modified.
+           standard unmanaged land classes are modified.
+    :param otherArable: (bool) if True, land class 'OtherArableLand' is
+        included in default land classes.
     :param regions: a string or a list of strings, or None. If None, all
            regions are modified.
     :return: None
@@ -237,6 +240,9 @@ def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=No
     # print 'CreateProtected regions:', regions
     regionXpath = _makeRegionXpath(regions) if regions else ''
     landRoots = tree.xpath(regionXpath + '//LandAllocatorRoot')
+
+    if not landClasses:
+        landClasses = UnmanagedLandClasses + (['OtherArableLand'] if otherArable else [])
 
     unmgdXpath     = _makeLandClassXpath(landClasses)
     protectedXpath = _makeLandClassXpath(landClasses, protected=True)
@@ -268,7 +274,7 @@ def createProtected(tree, fraction, landClasses=UnmanagedLandClasses, regions=No
             multiplyValues(originalAreas, 1 - fraction)
             multiplyValues(protectedAreas, fraction)
 
-def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, regions=None):
+def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False, regions=None):
     """
     Create a copy of `infile` that protects a `fraction` of `landClasses` in `regions`.
 
@@ -276,15 +282,17 @@ def protectLand(infile, outfile, fraction, landClasses=UnmanagedLandClasses, reg
     :param outfile: the path of the XML file to create by modifying data from `infile`
     :param fraction: the fraction of land in the given land classes to protect
     :param landClasses: a string or a list of strings, or None. If None, all
-           unmanaged land classes are modified.
+        "standard" unmanaged land classes are modified.
+    :param otherArable: (bool) if True, land class 'OtherArableLand' is
+        included in default land classes.
     :param regions: a string or a list of strings, or None. If None, all
-           regions are modified.
+        regions are modified.
     :return: None
     """
     parser = ET.XMLParser(remove_blank_text=True)
     tree = ET.parse(infile, parser)
 
-    createProtected(tree, fraction, landClasses=landClasses, regions=regions)
+    createProtected(tree, fraction, landClasses=landClasses, otherArable=otherArable, regions=regions)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
 
@@ -295,7 +303,6 @@ def driver(args):
 
     global Verbose
     Verbose = args.verbose
-    landClasses  = flatten(map(lambda s: s.split(','), args.landClasses)) if args.landClasses else UnmanagedLandClasses
     regions      = args.regions and flatten(map(lambda s: s.split(','), args.regions))
     scenarioFile = args.scenarioFile or getParam('GCAM.LandProtectionXmlFile')
     scenarioName = args.scenario
@@ -342,6 +349,9 @@ def driver(args):
     fraction = args.fraction
     if fraction is None:
         raise CommandlineError('If not using protection scenarios, fraction must be provided')
+
+    landClasses = flatten(map(lambda s: s.split(','), args.landClasses)) if args.landClasses \
+                    else UnmanagedLandClasses + (['OtherArableLand'] if args.otherArable else [])
 
     fraction = float(fraction)
     templateDict = {'fraction' : str(int(fraction * 100)),
@@ -393,6 +403,10 @@ class ProtectLandCommand(SubcommandABC):
         parser.add_argument('-o', '--outDir', type=str, default='.',
                             help='''The directory into which to write the modified files.
                                     Default is current directory.''')
+
+        parser.add_argument('-O', '--otherArable', action='store_true',
+                            help='''Include OtherArableLand in the list of default land classes to protect.
+                            This flag is ignored if the -l (--landClasses) argument is used.''')
 
         parser.add_argument('-t', '--template', type=str, default=DefaultTemplate,
                             help='''Specify a template to use for output filenames. The keywords {fraction}, {filename},
