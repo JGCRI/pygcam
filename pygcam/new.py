@@ -99,7 +99,7 @@ class NewProjectCommand(SubcommandABC):
 
         parser.add_argument('-r', '--projectRoot', dest='root', metavar='PATH',
                             help='''The directory in which to create the a subdirectory for the named project.
-                            Default is the value of config variable GCAM.ProjectDir''')
+                            Default is the value of config variable GCAM.ProjectRoot''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
 

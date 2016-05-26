@@ -78,7 +78,7 @@ class SetupCommand(SubcommandABC):
 
         # TBD: remove ability to override on cmdline if not useful
         args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
-        args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectRoot')
+        args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectDir')
         groupDir = args.group if args.useGroupDir else ''
         subdir = args.subdir or scenario
         args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), groupDir, subdir)
