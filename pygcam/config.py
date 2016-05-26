@@ -174,6 +174,14 @@ def readConfigFiles():
             fp.write(_instructions)
             fp.write(commented)
 
+    # Create (if not defined) GCAM.ProjectName in each section, holding the
+    # section (i.e., project) name. If user has set this, the value is unchanged.
+    projectNameVar = 'GCAM.ProjectName'
+    for section in _ConfigParser.sections():
+        if not (_ConfigParser.has_option(section, projectNameVar) and   # var must exist
+                _ConfigParser.get(section, projectNameVar)):            # and not be blank
+            _ConfigParser.set(section, projectNameVar, section)
+
     projectName = getParam('GCAM.DefaultProject', section=DEFAULT_SECTION)
     if projectName:
         setSection(projectName)

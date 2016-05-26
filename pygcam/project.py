@@ -460,7 +460,7 @@ class Project(object):
         argDict['scenarioGroup'] = self.scenarioGroupName
 
         argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
-        argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxRoot'], groupDir, subdir), rmFinalSlash=True)
+        argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxDir'], groupDir, subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
@@ -494,10 +494,7 @@ class Project(object):
             # These get reset as each scenario is processed
             argDict['scenario'] = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
-            #argDict['scenarioSrcDir'] = unixPath(join(projectSrcDir, scenario.subdir), rmFinalSlash=True)
-            #argDict['scenarioXmlDir'] = unixPath(join(projectXmlDir, scenarioName))
-            sandboxRoot = getParam('GCAM.SandboxRoot')
-            argDict['sandboxDir'] = sandboxDir = unixPath(join(sandboxRoot, groupDir))
+            argDict['sandboxDir'] = sandboxDir = unixPath(join(getParam('GCAM.SandboxDir'), groupDir))
             argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxDir, scenarioName))
             argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
             argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
@@ -540,7 +537,7 @@ def driver(args, tool):
         args.project = args.configSection or getParam('GCAM.DefaultProject')
 
     if not args.project:
-        raise CommandlineError("runProj: must specify project name")
+        raise CommandlineError("run: must specify project name")
 
     steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
     skipSteps = flatten(map(lambda s: s.split(','), args.skipSteps)) if args.skipSteps else None
