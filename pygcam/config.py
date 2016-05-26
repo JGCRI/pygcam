@@ -19,6 +19,8 @@ CONFIG_VAR_NAME = 'QUEUE_GCAM_CONFIG_FILE'
 WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
 NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
 
+PlatformName = platform.system()
+
 _instructions = '''#
 # This file defines variables read by the pygcam package. It allows
 # you to customize many aspects of pygcam, such as file locations,
@@ -51,16 +53,22 @@ def _getCommentedDefaults(systemDefaults):
         '''Comment out any line starting with GCAM.* ='''
         return '# ' + match.group()
 
+    result = _instructions
+
     p = re.compile('^(GCAM\.\S+\s*=)', re.MULTILINE)
-    result = p.sub(comment, systemDefaults)
+    result += p.sub(comment, systemDefaults)
 
     # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
-    dynamic  = "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
-    dynamic += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
-    dynamic += "# Location of ModelInterface jar file\n# GCAM.JarFile = %s\n\n" % getParam('GCAM.JarFile', raw=True)
-    dynamic += "# Whether to use a virtual display when running ModelInterface\n# GCAM.UseVirtualBuffer = %s\n\n" % getParam('GCAM.UseVirtualBuffer', raw=True)
+    result += "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
+    result += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
+    result += "# Location of ModelInterface jar file\n# GCAM.JarFile = %s\n\n" % getParam('GCAM.JarFile', raw=True)
+    result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.UseVirtualBuffer = %s\n\n" % getParam('GCAM.UseVirtualBuffer', raw=True)
+    result += "# Editor command to invoke by 'gt config -e'\n# GCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
 
-    return result + dynamic
+    if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n'
+        result = result.replace(r'\n', '\r\n')
+
+    return result
 
 _ConfigParser = None
 
@@ -102,26 +110,24 @@ def readConfigFiles():
     """
     global _ConfigParser
 
-    platformName = platform.system()
-
     # HOME exists on all Unix-like systems; for Windows it's HOMEPATH
-    if platformName == 'Windows':
+    if PlatformName == 'Windows':
         home = os.path.realpath(os.getenv('HOMEPATH'))  # adds home drive
         home = home.replace('\\', '/')                  # avoids '\' quoting issues
     else:
         home = os.getenv('HOME')
 
-    if platformName == 'Darwin':
+    if PlatformName == 'Darwin':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
         exeFile = 'Release/objects'
         useXvfb = 'False'
         editor  = 'open -e'
-    elif platformName == 'Linux':
+    elif PlatformName == 'Linux':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = './gcam.exe'
         useXvfb = 'True'
         editor  = os.getenv('EDITOR', 'vi')
-    elif platformName == 'Windows':
+    elif PlatformName == 'Windows':
         jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
         exeFile = 'Objects-Main.exe'
         useXvfb = 'False'
@@ -171,7 +177,6 @@ def readConfigFiles():
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as fp:
             commented = _getCommentedDefaults(systemDefaults)
-            fp.write(_instructions)
             fp.write(commented)
 
     # Create (if not defined) GCAM.ProjectName in each section, holding the
