@@ -380,7 +380,7 @@ class ConfigCommand(SubcommandABC):
         if args.edit:
             import subprocess
 
-            cmd = getParam('GCAM.TextEditor') + ' ' + os.path.join(getParam('Home'), USR_CONFIG_FILE)
+            cmd = "%s %s/%s" % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
             print cmd
             exitStatus = subprocess.call(cmd, shell=True)
             if exitStatus <> 0:
