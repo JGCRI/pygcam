@@ -373,15 +373,6 @@ class ConfigCommand(SubcommandABC):
             print 'OK:', var, '=', value
 
     def run(self, args, tool):
-        section = 'DEFAULT' if args.useDefault else args.configSection
-
-        if section != 'DEFAULT' and not _ConfigParser.has_section(section):
-            raise CommandlineError("Unknown configuration file section '%s'" % section)
-
-        if args.test:
-            self.testConfig(section)
-            return
-
         if args.edit:
             import subprocess
 
@@ -390,6 +381,15 @@ class ConfigCommand(SubcommandABC):
             exitStatus = subprocess.call(cmd, shell=True)
             if exitStatus <> 0:
                 raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
+            return
+
+        section = 'DEFAULT' if args.useDefault else args.configSection
+
+        if section != 'DEFAULT' and not _ConfigParser.has_section(section):
+            raise CommandlineError("Unknown configuration file section '%s'" % section)
+
+        if args.test:
+            self.testConfig(section)
             return
 
         if args.name and args.exact:
