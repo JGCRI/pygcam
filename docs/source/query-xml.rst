@@ -133,7 +133,10 @@ element
 
     .. code-block:: xml
 
-       <rewrite from="biomass" to="Biomass"/>
+       <rewriteSet name="landCover" level="LandLeaf" byAEZ="true">
+           <rewrite from="biomass" to="Biomass"/>
+           ...
+       </rewriteSet>
 
 is expanded in the generated query file to:
 

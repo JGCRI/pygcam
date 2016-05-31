@@ -308,45 +308,67 @@ prefix desired, or none at all.</p>
 <hr class="docutils" />
 <div class="section" id="project-structure">
 <h2>Project structure<a class="headerlink" href="#project-structure" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> system provides programmatic methods (i.e., Python functions) that
+automatic common edits to GCAM XML input and configuration files. The output of the
+setup system is thus a set of modified XML input and configuration files. These files
+should not be edited manually as the changes will be overwritten the next time the
+setup system is run.</p>
+<p>The files defining a project are stored in the directory identified by the configuration
+parameter <code class="docutils literal"><span class="pre">GCAM.XmlSrc</span></code>, which defaults to <code class="docutils literal"><span class="pre">%(GCAM.ProjectDir)s/xmlsrc</span></code>, i.e., the
+directory <code class="docutils literal"><span class="pre">xmlsrc</span></code> within your project directory. Included under <code class="docutils literal"><span class="pre">xmlsrc</span></code> are</p>
 <blockquote>
 <div><ul class="simple">
-<li>XML files</li>
-<li>xmlsrc, local-xml, dyn-xml</li>
-<li>scenarios.py</li>
+<li>Custom XML files</li>
+<li>A Python file that defines baseline and policy scenarios, and calls the setup
+functions as needed to modify standard input files or included custom one.</li>
 </ul>
 </div></blockquote>
-</div>
-<hr class="docutils" />
-<div class="section" id="setting-up-a-gcam-experiment">
-<h2>Setting up a GCAM experiment<a class="headerlink" href="#setting-up-a-gcam-experiment" title="Permalink to this headline">¶</a></h2>
-<p>TBD.</p>
+<p>The gcamtool <a class="reference internal" href="gcamtool.html#setup-label"><em>setup</em></a> sub-command loads the Python file and calls the
+setup functions corresponding to the requires baseline and policy scenarios. This
+modifies reference XML files and copies custom XML files to a directory identified by the
+config parameter <code class="docutils literal"><span class="pre">GCAM.LocalXml</span></code>, which default to <code class="docutils literal"><span class="pre">%(GCAM.ProjectDir)s/local-xml</span></code>.
+Dynamically generated constraints (i.e., those that depend on the output of the baseline
+scenario) are written to the directory indicated by <code class="docutils literal"><span class="pre">GCAM.DynXml</span></code>, which defaults to
+<code class="docutils literal"><span class="pre">%(GCAM.ProjectDir)s/dyn-xml</span></code>. See the <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> page for further details.</p>
+<p>N.B. a system for defining projects without writing any Python code is currently in development.</p>
 </div>
 <hr class="docutils" />
 <div class="section" id="running-a-gcam-experiment">
 <h2>Running a GCAM experiment<a class="headerlink" href="#running-a-gcam-experiment" title="Permalink to this headline">¶</a></h2>
-<p>Run-time structure:</p>
-<blockquote>
-<div><ul>
-<li><dl class="first docutils">
-<dt>SandboxRoot</dt>
-<dd><ul class="first last simple">
-<li><em>figure showing sandbox structure</em></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p class="first">Create a file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> (template ...)</p>
-</li>
-<li><p class="first">Use the <code class="docutils literal"><span class="pre">run</span></code> sub-command of <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a></p>
-<ul class="simple">
-<li>Hint: use <code class="docutils literal"><span class="pre">-l</span></code>, <code class="docutils literal"><span class="pre">-L</span></code>, and <code class="docutils literal"><span class="pre">-g</span></code> to list steps, scenarios, and groups</li>
-<li>Choose steps, scenarios, groups to run using <code class="docutils literal"><span class="pre">-s</span></code>, <code class="docutils literal"><span class="pre">-S</span></code>, and <code class="docutils literal"><span class="pre">-g</span></code> flags,
-and choose steps or scenarios <em>not</em> to run using <code class="docutils literal"><span class="pre">-k</span></code> and <code class="docutils literal"><span class="pre">-K</span></code> flags.</li>
-<li>Setting defaults to simplify use</li>
-</ul>
-</li>
-</ul>
-</div></blockquote>
+<p>The basic GCAM experiment consists of a running a baseline scenario and one or more policy
+scenarios that are compared to the baseline. In <code class="docutils literal"><span class="pre">pygcam</span></code>, the experiment is defined in
+a <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file, the location of which is specified by the config parameter
+<code class="docutils literal"><span class="pre">GCAM.ProjectXmlFile</span></code>, which defaults to <code class="docutils literal"><span class="pre">%(GCAM.ProjectDir)s/etc/project.xml</span></code>.</p>
+<p>The <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file describes all the workflow steps required to setup, run, and
+analyze the scenarios. The entire workflow or select steps can be run using the gcamtool
+<cite>:ref: run &lt;run-label&gt;</cite> sub-command.</p>
+<div class="section" id="run-time-structure">
+<h3>Run-time structure<a class="headerlink" href="#run-time-structure" title="Permalink to this headline">¶</a></h3>
+<p>In <code class="docutils literal"><span class="pre">pygcam</span></code>, each GCAM scenario is run in a separate copy of the standard GCAM
+workspace. On Unix-like systems (and on Windows if
+the user has adequate administrative privileges), the read-only files are symbolically
+linked to the scenario workspace, avoiding copying of many megabytes of data.</p>
+<p>Windows users lacking permission to create symbolic links should can the following
+configuration parameter to cause copying rather than linking to occur:</p>
+<div class="highlight-cfg"><div class="highlight"><pre><span class="na">GCAM.CopyAllFiles</span> <span class="o">=</span> <span class="s">True</span>
+</pre></div>
+</div>
+<p>To avoid ambiguity between the reference GCAM workspace (i.e., <code class="docutils literal"><span class="pre">Main_User_Workspace</span></code>)
+and the per-scenario, generated workspaces, we refer to the latter as <cite>sandboxes</cite>, which
+is a computing term that refers to isolation areas in which programs are run to avoid
+interactions with other programs.</p>
+<p>The default <code class="docutils literal"><span class="pre">pygcam</span></code> structure assumes there is a directory under which you want all
+sandboxes to be created. This is defined by the config parameter <code class="docutils literal"><span class="pre">GCAM.SandboxRoot</span></code>,
+which defaults to <code class="docutils literal"><span class="pre">%(GCAM.Root)s/ws</span></code>. <code class="docutils literal"><span class="pre">GCAM.Root</span></code> in turn defaults to
+<code class="docutils literal"><span class="pre">%(Home)s/GCAM</span></code>, thus the default sandbox root is <code class="docutils literal"><span class="pre">%(Home)s/GCAM/ws</span></code>. You can change
+<code class="docutils literal"><span class="pre">GCAM.Root</span></code> or <code class="docutils literal"><span class="pre">GCAM.SandboxRoot</span></code> to any desired directory. The sandbox for an
+individual project is defined by <code class="docutils literal"><span class="pre">GCAM.SandboxDir</span></code>, which defaults
+to <code class="docutils literal"><span class="pre">%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s</span></code>.</p>
+<p>With the project&#8217;s sandbox directory are the standard GCAM workspace folders, i.e.,
+<code class="docutils literal"><span class="pre">input</span></code>, <code class="docutils literal"><span class="pre">libs</span></code>, <code class="docutils literal"><span class="pre">exe</span></code> (which are symbolic links when possible), and <code class="docutils literal"><span class="pre">output</span></code>,
+which is always created locally in the sandbox to hold the GCAM output files.</p>
+<p><em>Create a figure showing file structure</em></p>
+</div>
 </div>
 </div>
 

@@ -156,15 +156,20 @@
             
   <div class="section" id="project-xml">
 <span id="id1"></span><h1>project.xml<a class="headerlink" href="#project-xml" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">run</span></code> sub-command is a workflow management script for GCAM. It
-reads a single XML input file that defines one or more projects, one or
-more groups of scenarios, one or more scenarios, and one or more workflow
+<p>The <code class="docutils literal"><span class="pre">run</span></code> sub-command of <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> provides workflow management
+for GCAM. It reads a single XML input file that defines one or more projects,
+one or more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
-in the order defined. The script was developed for use with other <code class="docutils literal"><span class="pre">gt</span></code>
+in the order defined. The script was developed for use with other <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a>
 sub-commands, however any scripts or programs can be called in workflow
 &#8216;steps&#8217;.</p>
 <p>Command-line usage is describe on the <a class="reference internal" href="gcamtool.html#run-label"><em>gt run</em></a> page.
-The <code class="docutils literal"><span class="pre">project.xml</span></code> file elements are described below.</p>
+The <code class="docutils literal"><span class="pre">project.xml</span></code> file elements are described below. The <a class="reference internal" href="gcamtool.html#new-label"><em>new</em></a>
+sub-command copies a generic <code class="docutils literal"><span class="pre">project.xml</span></code> file into the newly created
+project directory, which should be modified to suit your needs.</p>
+<p>Note that the <a class="reference internal" href="gcamtool.html#run-label"><em>run</em></a> sub-command provides several options that
+list elements of the <code class="docutils literal"><span class="pre">project.xml</span></code> file. Use the <code class="docutils literal"><span class="pre">-l</span></code>, <code class="docutils literal"><span class="pre">-L</span></code>, and <code class="docutils literal"><span class="pre">-g</span></code> to
+list steps, scenarios, and groups, respectively.</p>
 <div class="section" id="xml-elements">
 <h2>XML elements<a class="headerlink" href="#xml-elements" title="Permalink to this headline">¶</a></h2>
 <p>The elements that comprise the project.xml file are described below.</p>

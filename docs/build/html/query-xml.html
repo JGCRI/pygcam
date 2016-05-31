@@ -310,7 +310,10 @@ value is set to &#8220;false&#8221;.</p>
 and zero-padded, 2-digit integers from 1 to 18. In the example below, the
 element</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomass&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;rewriteSet</span> <span class="na">name=</span><span class="s">&quot;landCover&quot;</span> <span class="na">level=</span><span class="s">&quot;LandLeaf&quot;</span> <span class="na">byAEZ=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomass&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
+    ...
+<span class="nt">&lt;/rewriteSet&gt;</span>
 </pre></div>
 </div>
 </div></blockquote>

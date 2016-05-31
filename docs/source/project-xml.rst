@@ -4,16 +4,23 @@
 project.xml
 ===============
 
-The ``run`` sub-command is a workflow management script for GCAM. It
-reads a single XML input file that defines one or more projects, one or
-more groups of scenarios, one or more scenarios, and one or more workflow
+The ``run`` sub-command of :doc:`gcamtool` provides workflow management
+for GCAM. It reads a single XML input file that defines one or more projects,
+one or more groups of scenarios, one or more scenarios, and one or more workflow
 steps. The workflow steps for the chosen project and scenario(s) are run
-in the order defined. The script was developed for use with other ``gt``
+in the order defined. The script was developed for use with other :doc:`gcamtool`
 sub-commands, however any scripts or programs can be called in workflow
 'steps'.
 
 Command-line usage is describe on the :ref:`gt run<run-label>` page.
-The ``project.xml`` file elements are described below.
+The ``project.xml`` file elements are described below. The :ref:`new <new-label>`
+sub-command copies a generic ``project.xml`` file into the newly created
+project directory, which should be modified to suit your needs.
+
+Note that the :ref:`run <run-label>` sub-command provides several options that
+list elements of the ``project.xml`` file. Use the ``-l``, ``-L``, and ``-g`` to
+list steps, scenarios, and groups, respectively.
+
 
 XML elements
 ------------

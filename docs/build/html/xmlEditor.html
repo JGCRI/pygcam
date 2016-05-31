@@ -340,7 +340,7 @@ is checked, and if not present, and error is raised.</p>
 
 <dl class="method">
 <dt id="pygcam.xmlEditor.XMLEditor.protectLand">
-<code class="descname">protectLand</code><span class="sig-paren">(</span><em>fraction, landClasses=['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland'], regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.protectLand" title="Permalink to this definition">¶</a></dt>
+<code class="descname">protectLand</code><span class="sig-paren">(</span><em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.protectLand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Modify land_input files to protect a constant fraction of unmanaged
 land of the given classes, in the given regions.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -351,7 +351,9 @@ land of the given classes, in the given regions.</p>
 <li><strong>fraction</strong> &#8211; (float) the fraction of land in the given land classes
 to protect</li>
 <li><strong>landClasses</strong> &#8211; a string or a list of strings, or None. If None, all
-unmanaged land classes are modified.</li>
+&#8220;standard&#8221; unmanaged land classes are modified.</li>
+<li><strong>otherArable</strong> &#8211; (bool) if True, land class &#8216;OtherArableLand&#8217; is
+included in default land classes.</li>
 <li><strong>regions</strong> &#8211; a string or a list of strings, or None. If None, all
 regions are modified.</li>
 </ul>

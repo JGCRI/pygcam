@@ -205,7 +205,7 @@ before writing a new file.</li>
 
 <dl class="function">
 <dt id="pygcam.landProtection.createProtected">
-<code class="descclassname">pygcam.landProtection.</code><code class="descname">createProtected</code><span class="sig-paren">(</span><em>tree, fraction, landClasses=['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland'], regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.createProtected" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.landProtection.</code><code class="descname">createProtected</code><span class="sig-paren">(</span><em>tree</em>, <em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.createProtected" title="Permalink to this definition">¶</a></dt>
 <dd><p>Modify an lxml tree representing a GCAM input file to protect a <cite>fraction</cite>
 of <cite>landClasses</cite> in <cite>regions</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -216,7 +216,9 @@ of <cite>landClasses</cite> in <cite>regions</cite>.</p>
 <li><strong>tree</strong> &#8211; a tree representing a parsed GCAM land_input XML file</li>
 <li><strong>fraction</strong> &#8211; the fraction of land in the given land classes to protect</li>
 <li><strong>landClasses</strong> &#8211; a string or a list of strings, or None. If None, all
-unmanaged land classes are modified.</li>
+standard unmanaged land classes are modified.</li>
+<li><strong>otherArable</strong> &#8211; (bool) if True, land class &#8216;OtherArableLand&#8217; is
+included in default land classes.</li>
 <li><strong>regions</strong> &#8211; a string or a list of strings, or None. If None, all
 regions are modified.</li>
 </ul>
@@ -231,7 +233,7 @@ regions are modified.</li>
 
 <dl class="function">
 <dt id="pygcam.landProtection.protectLand">
-<code class="descclassname">pygcam.landProtection.</code><code class="descname">protectLand</code><span class="sig-paren">(</span><em>infile, outfile, fraction, landClasses=['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland'], regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.protectLand" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.landProtection.</code><code class="descname">protectLand</code><span class="sig-paren">(</span><em>infile</em>, <em>outfile</em>, <em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.protectLand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a copy of <cite>infile</cite> that protects a <cite>fraction</cite> of <cite>landClasses</cite> in <cite>regions</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -242,7 +244,9 @@ regions are modified.</li>
 <li><strong>outfile</strong> &#8211; the path of the XML file to create by modifying data from <cite>infile</cite></li>
 <li><strong>fraction</strong> &#8211; the fraction of land in the given land classes to protect</li>
 <li><strong>landClasses</strong> &#8211; a string or a list of strings, or None. If None, all
-unmanaged land classes are modified.</li>
+&#8220;standard&#8221; unmanaged land classes are modified.</li>
+<li><strong>otherArable</strong> &#8211; (bool) if True, land class &#8216;OtherArableLand&#8217; is
+included in default land classes.</li>
 <li><strong>regions</strong> &#8211; a string or a list of strings, or None. If None, all
 regions are modified.</li>
 </ul>
