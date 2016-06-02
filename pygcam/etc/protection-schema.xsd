@@ -55,10 +55,21 @@
     <xs:element name='protection'>
         <xs:complexType>
             <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='landClass'/>
+				<xs:element ref='fraction'/>
+				<xs:sequence maxOccurs='unbounded'>
+					<xs:element ref='landClass'/>
+				</xs:sequence>
             </xs:sequence>
-            <xs:attribute name='fraction' use='required' type='xs:decimal'/>
         </xs:complexType>
+    </xs:element>
+
+    <xs:element name='fraction'>
+         <xs:simpleType>
+            <xs:restriction base="xs:decimal">
+                <xs:minInclusive value="0.0"/>
+                <xs:maxInclusive value="1.0"/>
+            </xs:restriction>
+        </xs:simpleType>
     </xs:element>
 
 </xs:schema>

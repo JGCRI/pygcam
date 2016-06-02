@@ -39,11 +39,7 @@ Features
 - Allow overlay of, say, line chart using right Y axis on barchart
   using left Y axis, as in "US Land Cover and LUC Emissions"
 
-- Generalize the mapping capability beyond region maps.
-  - Write a tmp XML file identical to the <queries> element
-     - project.py doesn't need to interpret the XML at all. It's validated
-       by project-schema.xsd. Just write it to a temp file and store name
-       in varName.
+- Set CopyAllFiles to True automatically if linking fails on Windows.
 
 - Modify case with batchfile by name so it is copied to the tmp file and the
   rest proceeds as with query definition files.
@@ -152,8 +148,11 @@ Tasks
 
 MCS Integration
 ===============
-- Test pyfunc capability and use it to generate protected areas based on
-  distro.
+- Test "constant" distro
+
+- Test FileChooser
+
+- Test pyfunc capability and use it to generate protected areas based on distro.
 
 - Create in otaq2016 a module (or use scenarios.py, logically) a func
   that takes an XMLInputFile as an input, and calls createProtected:

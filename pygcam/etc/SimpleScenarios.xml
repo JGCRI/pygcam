@@ -1,0 +1,46 @@
+<!--
+  Possible syntax for defining simple setup "script" in XML
+-->
+
+<!-- This makes listing groups harder, but not impossible -->
+<scenarioGroup name="protect-{fraction}" useGroupDir="0">
+
+    <nameVar name="fraction" type="float" min="0.0" max="1.0"/>
+
+    <scenario name="base-{fraction}-ssp-{sspnum}" baseline="1">
+        <nameVar name="sspnum" type="int" min="1" max="5"/>
+
+        <update name="cement_2">cement_incelas_ssp{sspnum}.xml'</update>
+        <update name="industry_2">industry_incelas_ssp{sspnum}.xml'</update>
+        <update name="socioeconomics_2">socioeconomics_ssp{sspnum}.xml'</update>
+
+        <delete name="nonco2_pland"/>
+
+        <!-- Replace standard files with these modified versions -->
+        <replace name="energy_transformation" dir="scenario">en_transformation_OTAQ.xml</replace>
+        <replace name="transportation">transportation_UCD_OTAQ.xml</replace>
+
+        <!-- general format
+            <insert name="whatever" before="tag">path</insert>
+            <insert name="whatever" after="tag">path</insert>
+        -->
+        <insert name="refining_LDV">refining_LDV_OTAQ.xml</insert>
+
+        <!-- US sugar ethanol and palm biodiesel -->
+        <insert name="energy_USSugar">USSugarEthanol.xml</insert>
+        <insert name="energy_USPalm">USPalmBioDiesel.xml</insert>
+
+        <!-- Don't ramp up biofuel shareweight in US. Tunes ref case to be close to AEO 2015 projection -->
+        <insert name="energy_transformationBFS1">Biofuelshareweights.xml</insert>
+
+    </scenario>
+
+    <scenario name="alca" active="1"/>
+    <scenario name="clca" active="1"/>
+    <scenario name="tailpipe" active="1"/>
+
+</scenarioGroup>
+
+<!--
+
+-->

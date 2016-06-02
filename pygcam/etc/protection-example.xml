@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<landProtection>
+<landProtection> <!-- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="protection-schema.xsd" -->
     <!--
     <group> assigns to a set of regions a name that can be used in protection scenarios.
 
@@ -60,22 +60,26 @@
         regions within the group.
         -->
         <protectedRegion name="Developing">
-            <protection fraction="0.5">
+            <protection>
+                <fraction>0.5</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
             </protection>
-            <protection fraction="0.25">
+            <protection>
+                <fraction>0.25</fraction>
                 <landClass>Shrubland</landClass>
                 <landClass>Grassland</landClass>
             </protection>
         </protectedRegion>
 
         <protectedRegion name="MiddleIncome">
-            <protection fraction="0.7">
+            <protection>
+                <fraction>0.7</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
             </protection>
-            <protection fraction="0.4">
+            <protection>
+                <fraction>0.4</fraction>
                 <landClass>Shrubland</landClass>
                 <landClass>Grassland</landClass>
             </protection>
@@ -83,10 +87,12 @@
 
         <!-- This overrides Brazil's definition in MiddleIncome -->
         <protectedRegion name="Brazil">
-            <protection fraction="0.5">
+            <protection>
+                <fraction>0.5</fraction>
                 <landClass>UnmanagedForest</landClass>
             </protection>
-            <protection fraction="0.4">
+            <protection>
+                <fraction>0.4</fraction>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
                 <landClass>Grassland</landClass>
@@ -94,11 +100,13 @@
         </protectedRegion>
 
         <protectedRegion name="Developed">
-            <protection fraction="0.9">
+            <protection>
+                <fraction>0.9</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
             </protection>
-            <protection fraction="0.5">
+            <protection>
+                <fraction>0.5</fraction>
                 <landClass>Shrubland</landClass>
                 <landClass>Grassland</landClass>
             </protection>
@@ -107,7 +115,8 @@
 
     <scenario name="protectHalf">
         <protectedRegion name="Global">
-            <protection fraction="0.5">
+            <protection>
+                <fraction>0.5</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
@@ -116,11 +125,12 @@
         </protectedRegion>
     </scenario>
 
-    <!-- Simple scenarios applying a constant protection fraction globally -->
+    <!-- Simple scenarios applying a constant fraction globally -->
 
     <scenario name="protect-0">
-        <protectedRegion name="Global">
-            <protection fraction="0">
+      <protectedRegion name="Global">
+            <protection>
+                <fraction>0</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
@@ -131,7 +141,8 @@
 
     <scenario name="protect-0.1">
         <protectedRegion name="Global">
-            <protection fraction="0.1">
+            <protection>
+                <fraction>0.1</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
@@ -142,7 +153,8 @@
 
     <scenario name="protect-0.3">
         <protectedRegion name="Global">
-            <protection fraction="0.3">
+            <protection>
+                <fraction>0.3</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
@@ -153,7 +165,8 @@
 
     <scenario name="protect-0.5">
         <protectedRegion name="Global">
-            <protection fraction="0.5">
+            <protection>
+                <fraction>0.5</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
@@ -164,7 +177,8 @@
 
     <scenario name="protect-0.7">
         <protectedRegion name="Global">
-            <protection fraction="0.7">
+            <protection>
+                <fraction>0.7</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
@@ -175,7 +189,8 @@
 
     <scenario name="protect-0.9">
         <protectedRegion name="Global">
-            <protection fraction="0.9">
+            <protection>
+                <fraction>0.9</fraction>
                 <landClass>UnmanagedForest</landClass>
                 <landClass>UnmanagedPasture</landClass>
                 <landClass>Shrubland</landClass>
