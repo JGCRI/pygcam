@@ -131,7 +131,9 @@ def runGCAM(args):
     scenarios = args.scenario.split(',') if args.scenario else None
     workspace = args.workspace  or getParam('GCAM.SandboxDir')
     workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
-    setupWorkspace(workspace)
+
+    if not os.path.lexists(workspace) or args.forceCreate:         # TBD: maybe rmtree first?
+        setupWorkspace(workspace)
 
     exeDir = os.path.join(workspace, 'exe')
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
@@ -168,10 +170,12 @@ class GcamCommand(SubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('-C', '--configFile',
-                            help='''Specify the one or more GCAM configuration filenames, separated commas.
+                            help='''Specify the one or more GCAM configuration filenames, separated by commas.
                             If multiple configuration files are given, the are run in succession in the
-                            same "job" on the cluster.  N.B. This argument is ignored if scenarios are named
-                            via the -s flag.''')
+                            same "job" on the cluster.''')
+
+        parser.add_argument('-f', '--forceCreate', action='store_true',
+                            help='''Re-create the workspace, even if it already exists.''')
 
         parser.add_argument('-s', '--scenario', default='',
                             help='''Specify the scenario(s) to run. Can be a comma-delimited list of scenario
@@ -180,7 +184,7 @@ class GcamCommand(SubcommandABC):
 
         parser.add_argument('-S', '--scenariosDir', default='',
                             help='''Specify the directory holding scenarios. Default is the value of config file
-                            param GCAM.ScenariosDir, if set, otherwise "." (i.e., the current directory).''')
+                            param GCAM.ScenariosDir, if set, otherwise it's the current directory.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 

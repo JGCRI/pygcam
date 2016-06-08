@@ -532,7 +532,7 @@ class Project(object):
             print "  ", t.varName
 
 
-def driver(args, tool):
+def driver(args, tool, cmdClass=Project):
     if not args.project:
         args.project = args.configSection or getParam('GCAM.DefaultProject')
 
@@ -549,16 +549,15 @@ def driver(args, tool):
 
     parser  = ET.XMLParser(remove_blank_text=True)
     tree    = ET.parse(projectFile, parser)
-    project = Project(tree, args.project, args.group)
+    project = cmdClass(tree, args.project, args.group)
 
     project.run(scenarios, skipScenarios, steps, skipSteps, args, tool)
 
 
 class ProjectCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        kwargs = {#'aliases' : ['run'],
-                  'help' : '''Run the steps for a project defined in a project.xml file'''}
-        super(ProjectCommand, self).__init__('run', subparsers, kwargs)
+    def __init__(self, subparsers, name='run', help='Run the steps for a project defined in a project.xml file'):
+        kwargs = {'help' : help}
+        super(ProjectCommand, self).__init__(name, subparsers, kwargs)
 
     def addArgs(self, parser):
 

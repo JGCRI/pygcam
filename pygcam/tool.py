@@ -340,7 +340,7 @@ def catchSignals():
     for sig in signals:
         signal.signal(sig, _sigHandler)
 
-def _main():
+def _main(argv=None):
     getConfig()
     configureLogs()
 
@@ -354,7 +354,7 @@ def _main():
     parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
     parser.add_argument('--set', dest='configVars', metavar='name=value', action='append', default=[])
 
-    ns, otherArgs = parser.parse_known_args()
+    ns, otherArgs = parser.parse_known_args(args=argv)
 
     if ns.configSection:
         setParam('GCAM.DefaultProject', ns.configSection)
@@ -391,9 +391,9 @@ def _main():
         TempFile.deleteAll()
 
 
-def main():
+def main(argv=None):
     try:
-        _main()
+        _main(argv)
         return 0
 
     except CommandlineError as e:
