@@ -150,7 +150,7 @@ def runGCAM(args):
     _logger.info("cd %s", exeDir)
     os.chdir(exeDir)        # if isQsubbed, this is redundant but harmless
 
-    gcamPath = getParam('GCAM.Executable')
+    gcamPath = os.abspath(getParam('GCAM.Executable'))
 
     for configFile in configFiles:
         gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
