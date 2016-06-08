@@ -460,8 +460,8 @@ class Project(object):
         argDict['scenarioGroup'] = self.scenarioGroupName
 
         argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
-        argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxDir'], groupDir, subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
+        # deprecated argDict['projectWsDir']  = unixPath(join(argDict['GCAM.SandboxDir'], groupDir, subdir), rmFinalSlash=True)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows
@@ -492,12 +492,14 @@ class Project(object):
                 continue
 
             # These get reset as each scenario is processed
-            argDict['scenario'] = scenarioName
+            argDict['scenario']       = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
-            argDict['sandboxDir'] = sandboxDir = unixPath(join(getParam('GCAM.SandboxDir'), groupDir))
-            argDict['scenarioWsDir'] = scenarioWsDir = unixPath(join(sandboxDir, scenarioName))
-            argDict['diffsDir'] = unixPath(join(scenarioWsDir, 'diffs'))
-            argDict['batchDir'] = unixPath(join(scenarioWsDir, 'batch-' + scenarioName))
+            argDict['sandboxRoot']    = argDict['GCAM.SandboxRoot']
+            argDict['sandboxDir']     = sandboxDir  = argDict['GCAM.SandboxDir']
+            argDict['sandboxGroupDir']= groupDir = unixPath(join(sandboxDir, groupDir))
+            argDict['scenarioDir']    = scenarioDir = unixPath(join(groupDir, scenarioName))
+            argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
+            argDict['batchDir']       = unixPath(join(scenarioDir, 'batch-' + scenarioName))
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
             # variables indicated in <tmpFile>. This is in the scenario loop so run-time
