@@ -143,6 +143,9 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     except IOError, e:
         raise FileMissingError(os.path.abspath(filename), e)
 
+    except Exception, e:
+        raise PygcamException('Error reading %s: %s' % (filename, e))
+
     if years:
         limitYears(df, years)
 
