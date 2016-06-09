@@ -150,6 +150,8 @@ MCS Integration
 ===============
 - Test "constant" distro
 
+- Eliminate scenarios.xml file; this information can be found in project.xml
+
 - Test FileChooser
 
 - Test pyfunc capability and use it to generate protected areas based on distro.
