@@ -1,24 +1,56 @@
 Bugs
-----
+====
 - Diff without -i is still interpolating.
 
-Cleanup
--------
-- Eliminate "scenarios.xml" from gcammcs? Obviated by project.xml?
-  - Check whether it's used by gcammcs
-
 Test
-----
+====
 - Finish implementing/testing the queryFile and rewriteSets features
-- setup.py installer with full install
+- setup.py installer: test with full install
 - write more unit tests
 - changes to XML format and validation
     - pygcam and also gcammcs (results, parameters, scenarios)
-- land protection command
-    - uses new resourceStream function; not tested yet
 
 Features
---------
+========
+
+Near-term
+---------
+- Finish checkConstraint.py
+
+- Set CopyAllFiles to True automatically if linking fails on Windows.
+
+Medium-term
+-----------
+- Specify a simple project without writing custom python code.
+    - Create xmlsrc
+    - Use built-in scenarios.py that just needs scenario names,
+      called from runProj
+    - <scenario> has a <files> section similar to configuration.xml
+    - support a delete="true" attribute
+    - Use stopYear to limit run
+
+    - A "simple" project either:
+        - Has manually creates sandboxes
+        - Has generated sandboxes, but the project only adds to and
+          removes from configuration.xml with references to local files.
+        - Code doesn't use XmlEditor
+            - Already supported using scenarios.py
+
+- Have a flag for batch mode that runs the baseline, then batches
+  the policy scenarios with '-d singleton' to cause them to wait
+  for the baseline to complete.
+  - Maybe --split => split the scenario to run in own batch jobs
+    rather than running them all in one big job. If the scenarios
+    include baseline and at least one policy scenario, add args
+    "-d afterok:<jobid>" to existing value of GCAM.OtherBatchArgs,
+    where <jobid> is the id of the baseline job.
+  - use subprocess.check_output() and look for "Submitted batch job (\d+)"
+
+- If scenario has unique name among groups, run it even if group isn't specified?
+    - Will require restructuring since it's assumed there's one group name
+
+Long-term
+---------
 - In chart subcommand, allow args to -m (multiplier) to take symbolic
   values like EJ_to_Quad, where these are driven by a builtin table
   with common ones, augmented if needed by a user file, e.g.,
@@ -39,47 +71,15 @@ Features
 - Allow overlay of, say, line chart using right Y axis on barchart
   using left Y axis, as in "US Land Cover and LUC Emissions"
 
-- Set CopyAllFiles to True automatically if linking fails on Windows.
-
-- Modify case with batchfile by name so it is copied to the tmp file and the
+- Modify handling of named batchfile so it is copied to the tmp file and the
   rest proceeds as with query definition files.
 
-- Have a flag for batch mode that runs the baseline, then batches
-  the policy scenarios with '-d singleton' to cause them to wait
-  for the baseline to complete.
-  - Maybe --split => split the scenario to run in own batch jobs
-    rather than running them all in one big job. If the scenarios
-    include baseline and at least one policy scenario, add args
-    "-d afterok:<jobid>" to existing value of GCAM.OtherBatchArgs,
-    where <jobid> is the id of the baseline job.
-  - use subprocess.check_output() and look for "Submitted batch job (\d+)"
-
-- If scenario has unique name among groups, run it even if group isn't specified?
-    - Will require restructuring since it's assumed there's one group name
-
-- Specify a simple project without writing custom python code.
-    - Create xmlsrc
-    - Use built-in scenarios.py that just needs scenario names,
-      called from runProj
-    - <scenario> has a <files> section similar to configuration.xml
-    - support a delete="true" attribute
-    - Use stopYear to limit run
-
-- A "simple" project either:
-    - Has manually creates sandboxes
-    - Has generated sandboxes, but the project only adds to and
-      removes from configuration.xml with references to local files.
-
-- Code doesn't use XmlEditor
-    - Already supported using scenarios.py
-
-- Advantages of this setup
-    - Standardized and documented format
-    - Easily transition to using additional pygcam features
-    - Simplifies sharing of experiments, e.g., via git
-
-Other
------
+- Make seq="x" optional in project <step> definitions; use order as defined.
+  If user is not overriding any steps (most common use case), explicit seq
+  nums are not needed.
+  - Just run in the order listed
+  - Another option is to have an explicit <step after="stepname">, to create
+    dependence DAG, which leads toward gcam-driver type of functionality.
 
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
@@ -87,27 +87,16 @@ Other
 - Integrate gcam-driver code / ideas
     - Consider re-implementing using jug
 
-- Make seq="x" optional in project <step> definitions; use order as defined.
-  If user is not overriding any steps (most common use case), explicit seq
-  nums are not needed.
-  - Another option is to have an explicit <step after="stepname">, to create
-    dependence DAG, which leads toward gcam-driver type of functionality.
-
-- pygcam/etc/site.cfg
-    - see what happens with this on installation via setup.py
-    - would be much better outside the installed module
-    - maybe use an environment var, e.g., PYGCAM_SITE_CONFIG_FILE
-
-- Host the xsd files somewhere dependable so they can be referenced in XML
+- Host the xsd files somewhere so they can be referenced in XML
   files, allowing smart editing.
 
 Document
---------
+========
 - queryMapping
   - default "level" set in query itself, can override in query list
   - append-values="false" unless any of the queries sets it to "true"
 
-- <defaults> is now optional
+- In project.xml, <defaults> section is optional
 
 - Document the Subcommand (plugin) protocol
     - class 'Plugin' or variable PluginClass which identifies classname
@@ -115,6 +104,9 @@ Document
     - run(args, tool)
     - when it gets loaded and run
     - other suggestions, e.g., plugins should use logging
+
+- Use of pygcam/etc/site.cfg
+    - Path is value of $PYGCAM_SITE_CONFIG_FILE
 
 - Assumptions behind setup code
 
@@ -136,9 +128,9 @@ Document
 
 
 Tasks
------
+=====
 - Validate diff cmd
-- Test constraint cmds
+- Test old constraint cmds
 - Test land protection cmd
     - Simplify to eliminate complicated cmdline opts?
 - Should constraint commands be converted back to plugins?
@@ -148,13 +140,9 @@ Tasks
 
 MCS Integration
 ===============
-- Test "constant" distro
-
-- Eliminate scenarios.xml file; this information can be found in project.xml
-
-- Test FileChooser
-
 - Test pyfunc capability and use it to generate protected areas based on distro.
+
+- Failure to run diffs is being reported by Runner.py as success
 
 - Create in otaq2016 a module (or use scenarios.py, logically) a func
   that takes an XMLInputFile as an input, and calls createProtected:
@@ -166,6 +154,16 @@ MCS Integration
   when the writeFunc is called. This way the parameter is processed
   normally.
 
+
+MCS Cleanup
+-----------
+- Eliminate scenarios.xml file; this information can be found in project.xml
+- Test "constant" distro
+- Test FileChooser
+
+
+MCS Notes
+---------
 - Trial generation should be unaffected
     - document ordering: setup first then gensim
 
@@ -181,6 +179,11 @@ MCS Integration
         - sets per-task alarm
         - database updates (unless jug results mgmt obviates this)
         - returns status or tuple/dict with more info?
+
+Useful command:
+
+    gcammcs iterate -s1 -e corn -t0,7-11 -c 'gt mcs -S corn -s CI --sandbox {trialDir} --localXml {expDir}/local-xml'
+
 
 GUI implementation
 ==================

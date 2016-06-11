@@ -406,4 +406,4 @@ def main(argv=None):
             import traceback
             traceback.print_exc()
 
-        return 1
+    return 1
