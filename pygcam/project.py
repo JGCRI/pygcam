@@ -613,7 +613,7 @@ class ProjectCommand(SubcommandABC):
         parser.add_argument('-S', '--scenario', dest='scenarios', action='append',
                             help='''Which of the scenarios defined for the given project should
                             be run. Multiple scenarios can be given in a single (comma-delimited)
-                            argument, or the -S flag can be repeated to indicate additional steps.
+                            argument, or the -S flag can be repeated to indicate additional scenarios.
                             By default, all active scenarios are run.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
