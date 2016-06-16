@@ -21,12 +21,12 @@ class Xvfb(object):
     This allows X11 apps that (think they) need a display to be run in "headless" mode.
     Sets the environment var DISPLAY to the corresponding value (i.e., for display 1, DISPLAY=":1.0")
     '''
-    # The first message in the "|" expression occurs on the Linux systems this has been
+    # The first 2 messages in the "|" expression occurs on the Linux systems this has been
     # tested on. The second message occurs on Mac OSX 10.9.
     # This may require updating to run on other systems or versions of these systems.
-    lockFailureMsg = "(Could not create server lock file)|(Server is already active for display)"
+    lockFailureMsg = "(Could not create server lock file)|(Cannot establish any listening sockets)|(Server is already active for display)"
 
-    def __init__(self, delay=0.2, maxDisplays=20):
+    def __init__(self, delay=1.0, maxDisplays=20):
         self.delay = delay
         self.maxDisplays = maxDisplays
         self.proc = None
