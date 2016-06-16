@@ -85,10 +85,10 @@ class Xvfb(object):
             errmsgs = list(self.proc.stdout)
             lockFailure = any(map(lambda line: re.search(self.lockFailureMsg, line), errmsgs))
 
-            if lockFailure:     # must be allocated to someone else
+            if lockFailure:     # display must be allocated to someone else
                 continue        # try the next display number
 
             # Fail if there's any reason other than failing to acquire the lock
-            raise XvfbException("Xvfb failed: %s" % errmsgs)
+            raise XvfbException("Xvfb %s failed: %s" % (display, errmsgs))
 
         raise XvfbException("Failed to open any display using Xvfb")
