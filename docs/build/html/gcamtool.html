@@ -922,7 +922,7 @@ users.)</p>
 <code class="docutils literal"><span class="pre">~/sandboxes/MyProject/MyScenario</span></code> using the configuration file
 <code class="docutils literal"><span class="pre">~/MyProject/scenarios/MyScenario/config.xml</span></code>.</p>
 <pre class="literal-block">
-usage: gt gcam [-h] [-C CONFIGFILE] [-s SCENARIO] [-S SCENARIOSDIR]
+usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-s SCENARIO] [-S SCENARIOSDIR]
                [--version] [-w WORKSPACE]
 </pre>
 <dl class="last docutils">
@@ -934,10 +934,13 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-s SCENARIO] [-S SCENARIOSDIR]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-C</span>, <span class="option">--configFile</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Specify the one or more GCAM configuration filenames, separated commas.
+<tr><td>&nbsp;</td><td>Specify the one or more GCAM configuration filenames, separated by commas.
                             If multiple configuration files are given, the are run in succession in the
-                            same &#8220;job&#8221; on the cluster.  N.B. This argument is ignored if scenarios are named
-                            via the -s flag.</td></tr>
+                            same &#8220;job&#8221; on the cluster.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f=False</span>, <span class="option">--forceCreate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Re-create the workspace, even if it already exists.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
 </tr>
@@ -948,7 +951,7 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-s SCENARIO] [-S SCENARIOSDIR]
 <kbd><span class="option">-S=</span>, <span class="option">--scenariosDir=</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Specify the directory holding scenarios. Default is the value of config file
-                            param GCAM.ScenariosDir, if set, otherwise &#8221;.&#8221; (i.e., the current directory).</td></tr>
+                            param GCAM.ScenariosDir, if set, otherwise it&#8217;s the current directory.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
@@ -1003,7 +1006,7 @@ usage: gt new [-h] [-c] [-r PATH] [--version] name
 <kbd><span class="option">-r</span>, <span class="option">--projectRoot</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>The directory in which to create the a subdirectory for the named project.
-                            Default is the value of config variable GCAM.ProjectDir</td></tr>
+                            Default is the value of config variable GCAM.ProjectRoot</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
@@ -1116,7 +1119,7 @@ usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
 <kbd><span class="option">-S</span>, <span class="option">--scenario</span></kbd></td>
 <td>Which of the scenarios defined for the given project should
                             be run. Multiple scenarios can be given in a single (comma-delimited)
-                            argument, or the -S flag can be repeated to indicate additional steps.
+                            argument, or the -S flag can be repeated to indicate additional scenarios.
                             By default, all active scenarios are run.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
@@ -1156,7 +1159,7 @@ gt protect -s s1 -S <span class="s2">&quot;$HOME/protect.xml&quot;</span> -w <sp
 </div>
 <pre class="literal-block">
 usage: gt protect [-h] [-b] [-f FRACTION] [--inPlace] [-l LANDCLASSES] [-m]
-                  [-o OUTDIR] [-t TEMPLATE] [-r REGIONS] [-s SCENARIO]
+                  [-o OUTDIR] [-O] [-t TEMPLATE] [-r REGIONS] [-s SCENARIO]
                   [-S SCENARIOFILE] [-V] [-w WORKSPACE]
 </pre>
 <dl class="last docutils">
@@ -1197,6 +1200,11 @@ usage: gt protect [-h] [-b] [-f FRACTION] [--inPlace] [-l LANDCLASSES] [-m]
 </tr>
 <tr><td>&nbsp;</td><td>The directory into which to write the modified files.
                                     Default is current directory.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-O=False</span>, <span class="option">--otherArable=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Include OtherArableLand in the list of default land classes to protect.
+                            This flag is ignored if the -l (&#8211;landClasses) argument is used.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-t=prot_{fraction}_{filename}</span>, <span class="option">--template=prot_{fraction}_{filename}</span></kbd></td>
 </tr>

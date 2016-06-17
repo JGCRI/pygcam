@@ -477,7 +477,7 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># QueryPath is string with one or more colon-delimited elements that</span>
 <span class="c1"># identify directories or XML files in which to find batch query</span>
 <span class="c1"># definitions.</span>
-<span class="na">GCAM.QueryDir</span>     <span class="o">=</span> <span class="s">%(GCAM.RefQueryDir)s</span>
+<span class="na">GCAM.QueryDir</span>     <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/queries</span>
 <span class="na">GCAM.QueryPath</span>    <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s/Main_Queries.xml</span>
 
 <span class="c1"># File that defines query rewrites by name for use by query command.</span>
