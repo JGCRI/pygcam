@@ -94,6 +94,9 @@ class _TmpFile(object):
 
         self.textNodes = defaults + textNodes
 
+    @classmethod
+    def decache(cls):
+        cls.Instances = {}
 
     @classmethod
     def writeFiles(cls, argDict):
@@ -216,6 +219,10 @@ class SimpleVariable(object):
 
     def evaluate(self, argDict):
         return self.getValue()
+
+    @classmethod
+    def decache(cls):
+        cls.Instances = {}
 
     @classmethod
     def instances(cls):

@@ -2,6 +2,12 @@ Bugs
 ====
 - Diff without -i is still interpolating.
 
+- There's a subtle problem with repeated use of GcamTool as top-level call.
+  First symptom is query list is repeated. Seems to be stale state from
+  prior invocation, suggesting a need to re-initialize (class vars?) when
+  called from top-level.
+  - in any case, all the start-up stuff is rerun needlessly, currently
+
 Test
 ====
 - Finish implementing/testing the queryFile and rewriteSets features
@@ -92,6 +98,8 @@ Long-term
 
 Document
 ========
+- New <Parameter active="0"> attribute
+
 - queryMapping
   - default "level" set in query itself, can override in query list
   - append-values="false" unless any of the queries sets it to "true"
@@ -195,3 +203,50 @@ GUI implementation
         - if direct, show output in window
     - have a 'kill' command for local or batch (sdel?)
 - View & update config file
+
+
+GCAM enhancements to simplify scripting
+=======================================
+1. Report more meaningful exit statuses
+
+ModelInterface fails but exits with 0 status. GCAM seems to consistently exit with status 1 when it fails.
+
+Ideally, there would be a small number of status codes so a script can do the right thing. Currently I
+have to parse error output, which is a nuisance and not robust in the long run.
+
+Useful GCAM exit codes
+  0 = success
+  1 = failed to read a config file or xml file referenced therein
+  2 = failed to solve markets in some period (alternatively, the status could be the failed timestep)
+
+Already exits with code indicating a signal was caught. Seems to be 128 + signum.
+    130 on SIGINT (2)
+    131 on SIGQUIT (3)
+    143 on SIGTERM (15)
+    142 on SIGALRM (14)
+    158 on SIGUSR1 (30 on OS X)
+
+I’m not sure if there are other failure modes.
+
+Useful MI exit codes
+  0 = success
+  1 = failed to read a batch file or a query file
+  2 = query failed (syntax error in XPath, presumably)
+  3 = query returned no data (may not always be an error)
+
+2. Quit upon on failure to solve.
+
+When GCAM fails to converge, the task often eats up the entire time allocation spinning uselessly.
+If there are reasons that this is sometimes useful, then a cmd-line flag that indicates to quit on
+market failure would be helpful. (Or make this the default and have a flag to not quit.)
+
+As it is I’ll probably write code to parse model output to detect this. But it’s generally a waste
+of time.
+
+Look for "^ERROR:Currently Unsolved Markets:"
+
+After failing to solve in one or more periods, the climate model is still called, the database is
+written, and the model reports:
+
+    Model run completed.
+    Model exiting successfully.
