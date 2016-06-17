@@ -20,7 +20,7 @@ from .chart import ChartCommand
 from .config import ConfigCommand, getParam, getConfig, getParamAsBoolean, setParam, getSection, setSection
 from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
-from .project import ProjectCommand
+from .project import ProjectCommand, _TmpFile, SimpleVariable
 from .landProtection import ProtectLandCommand
 from .query import QueryCommand
 from .runGCAM import GcamCommand
@@ -115,6 +115,11 @@ class GcamTool(object):
         #     cls._plugins[alias] = plugin
 
     def __init__(self, loadPlugins=True):
+
+        # TODO: This is a patch to so address re-entry issue, prior to proper integration
+        _TmpFile.decache()
+        SimpleVariable.decache()
+
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
                                                        # add_help=False)  # add help manually
 
