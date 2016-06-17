@@ -25,7 +25,7 @@ from .landProtection import ProtectLandCommand
 from .query import QueryCommand
 from .runGCAM import GcamCommand
 from .workspace import WorkspaceCommand
-from .new import NewProjectCommand
+from .newProject import NewProjectCommand
 from .setup import SetupCommand
 from .log import getLogger, setLogLevel, configureLogs
 from .windows import IsWindows
