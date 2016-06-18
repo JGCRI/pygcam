@@ -789,15 +789,14 @@ def main(args):
         raise CommandlineError("Error: At least one query name or a query XML file must be specified")
 
     mkdirs(outputDir)
+    if miLogFile:
+        miLogFile = os.path.abspath(os.path.join(outputDir, miLogFile))
+        if os.path.lexists(miLogFile):
+            os.unlink(miLogFile)       # remove it, if any, to start fresh
 
     xmldb = os.path.abspath(xmldb)
 
     regionMap = readRegionMap(regionFile) if regionFile else None
-
-    if miLogFile:
-        miLogFile = os.path.abspath(miLogFile)
-        if os.path.lexists(miLogFile):
-            os.unlink(miLogFile)       # remove it, if any, to start fresh
 
     for scenario in scenarios:
         for queryName in queryNames:
