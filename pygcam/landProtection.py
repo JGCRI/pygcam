@@ -26,29 +26,6 @@ PROGRAM = 'protectLand.py'
 __version__ = '0.1'
 Verbose = False
 
-def _makeRegionXpath(regions):
-    if not regions:
-        return ""
-
-    if isinstance(regions, (str, unicode)):
-        regions = [regions]
-
-    patterns = map(lambda s: "@name='%s'" % s, regions)
-    regionPattern = ' or '.join(patterns)
-    xpath = "//region[%s]" % regionPattern
-    return xpath
-
-def _makeLandClassXpath(landClasses, protected=False):
-    if isinstance(landClasses, (str, unicode)):
-        landClasses = [landClasses]
-
-    prefix = 'Protected' if protected else ''
-    patterns = map(lambda s: "starts-with(@name, '%s%s')" % (prefix, s), landClasses)
-    landPattern = ' or '.join(patterns)
-    xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
-    print 'landClassXpath:', xpath
-    return xpath
-
 def _findChildren(node, tag, cls=None):
     """
     Find all the children beneath `node` with the given `tag`, and
@@ -216,8 +193,81 @@ class Scenario(object):
     def getScenario(cls, name):
         return cls.Instances.get(name)
 
+def _makeRegionXpath(regions):
+    if not regions:
+        return ""
 
-def createProtected(tree, fraction, landClasses=None, otherArable=False, regions=None):
+    if isinstance(regions, (str, unicode)):
+        regions = [regions]
+
+    patterns = map(lambda s: "@name='%s'" % s, regions)
+    regionPattern = ' or '.join(patterns)
+    xpath = "//region[%s]" % regionPattern
+    _logger.debug('regionXpath: ' + xpath)
+    return xpath
+
+def _makeLandClassXpath(landClasses, protected=False):
+    if isinstance(landClasses, (str, unicode)):
+        landClasses = [landClasses]
+
+    prefix = 'Protected' if protected else ''
+    patterns = map(lambda s: 'starts-with(@name, "%s%s")' % (prefix, s), landClasses)
+    landPattern = ' or '.join(patterns)
+    xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
+    _logger.debug('landClassXpath: ' + xpath)
+    return xpath
+
+def unProtectLand(tree, landClasses=None, otherArable=False, regions=None):
+    """
+    Restore the file to 0% land protection by adding the protected land back
+    into its unprotected counterpart and deleting the protected elements.
+
+    :param tree: a tree representing a parsed GCAM land_input XML file
+    :param landClasses: a string or a list of strings, or None. If None, all
+           standard unmanaged land classes are modified.
+    :param otherArable: (bool) if True, land class 'OtherArableLand' is
+        included in default land classes.
+    :param regions: a string or a list of strings, or None. If None, all
+           regions are modified.
+    :return: None
+    """
+    regionXpath = _makeRegionXpath(regions) if regions else ''
+    landRoots = tree.xpath(regionXpath + '//LandAllocatorRoot')
+
+    if not landClasses:
+        landClasses = UnmanagedLandClasses + (['OtherArableLand'] if otherArable else [])
+
+    protectedXpath = _makeLandClassXpath(landClasses, protected=True)
+
+    for landRoot in landRoots:
+        protectedNodes = landRoot.xpath(protectedXpath)
+
+        if len(protectedNodes) == 0:
+            continue
+
+        # Find matching not-protected node and add protected land back in
+        for node in protectedNodes:
+            name = node.get('name')
+            unProtectedName = name[len("Protected"):]
+            prefix = './/UnmanagedLandLeaf[@name="%s"]' % unProtectedName
+
+            protectedAllocs = node.xpath(".//allocation|.//landAllocation")
+
+            for alloc in protectedAllocs:
+                year = alloc.get('year')
+                xpath = prefix + '//%s[@year="%s"]' % (alloc.tag, year)
+                unprotectedAlloc = landRoot.find(xpath)
+                originalArea = float(unprotectedAlloc.text) + float(alloc.text)
+                unprotectedAlloc.text = str(originalArea)
+
+        # Remove all the protected nodes, restoring the file to its original state
+        landNodes = landRoot.xpath('./LandNode[starts-with(@name, "Protected")]')
+        for landNode in landNodes:
+            parent = landNode.getparent()
+            parent.remove(landNode)
+
+def createProtected(tree, fraction, landClasses=None, otherArable=False,
+                    regions=None, unprotectFirst=False):
     """
     Modify an lxml tree representing a GCAM input file to protect a `fraction`
     of `landClasses` in `regions`.
@@ -237,15 +287,20 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False, regions
             newValue = float(n.text) * factor
             n.text = str(newValue)
 
-    # print 'CreateProtected regions:', regions
-    regionXpath = _makeRegionXpath(regions) if regions else ''
-    landRoots = tree.xpath(regionXpath + '//LandAllocatorRoot')
+    # Remove any existing land protection, if so requested
+    if unprotectFirst:
+        unProtectLand(tree, landClasses=landClasses, otherArable=otherArable, regions=regions)
+
+    regionXpath = (_makeRegionXpath(regions) if regions else '') + '//LandAllocatorRoot'
+    landRoots = tree.xpath(regionXpath)
 
     if not landClasses:
         landClasses = UnmanagedLandClasses + (['OtherArableLand'] if otherArable else [])
 
     unmgdXpath     = _makeLandClassXpath(landClasses)
     protectedXpath = _makeLandClassXpath(landClasses, protected=True)
+
+    allocXpath = ".//allocation|.//landAllocation"
 
     for landRoot in landRoots:
         # ensure that we're not protecting an already-protected land class in these regions
@@ -264,10 +319,9 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False, regions
             newName = 'Protected' + node.get('name')
             new.set('name', newName)
             landnode.set('name', newName)
-            landnode.set('fraction', str(fraction))
+            landnode.set('fraction', "%.4f" %fraction)
             landnode.append(new)
 
-            allocXpath = ".//allocation|.//landAllocation"
             originalAreas = node.xpath(allocXpath)
             protectedAreas = new.xpath(allocXpath)
 

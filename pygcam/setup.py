@@ -26,7 +26,8 @@ class SetupCommand(SubcommandABC):
         defaultYears = '2015-2100'
 
         parser.add_argument('-b', '--baseline',
-                            help='Identify the baseline the selected scenario is based on.')
+                            help='''Identify the baseline the selected scenario is based on.
+                                 Note: at least one of --baseline (-b) / --scenario (-s) must be used.''')
 
         parser.add_argument('-g', '--group',
                             help='The scenario group to process. Defaults to the group labeled default="1".')
@@ -49,7 +50,8 @@ class SetupCommand(SubcommandABC):
                             help='The parent directory holding the GCAM output workspaces')
 
         parser.add_argument('-s', '--scenario',
-                            help='Identify the scenario to run.')
+                            help='''Identify the scenario to run.
+                            Note: at least one of --baseline (-b) / --scenario (-s) must be used.''')
 
         parser.add_argument('-S', '--subdir', default="",
                             help='A sub-directory to use instead of scenario name')
@@ -76,6 +78,9 @@ class SetupCommand(SubcommandABC):
     def run(self, args, tool):
         scenario = args.scenario or args.baseline
 
+        if not scenario:
+            raise SetupException('At least one of --baseline (-b) / --scenario (-s) must be used.')
+
         # TBD: remove ability to override on cmdline if not useful
         args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectDir')
@@ -83,6 +88,12 @@ class SetupCommand(SubcommandABC):
         subdir = args.subdir or scenario
         args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), groupDir, subdir)
 
+        # TBD: instead of setting path, load module by name as in
+        # TBD:   modname, objname = funcRef.rsplit('.', 1)
+        # TBD:   modulePath = os.path.join(self.trialFuncDir, modname + '.py')
+        # TBD:   try:
+        # TBD:      trialFunc = loadObjectFromPath(objname, modulePath)
+        #
         sys.path.insert(0, os.path.dirname(os.path.dirname(args.xmlSourceDir)))
 
         # TBD: document this
