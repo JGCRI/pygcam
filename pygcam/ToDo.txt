@@ -8,6 +8,10 @@ Bugs
   called from top-level.
   - in any case, all the start-up stuff is rerun needlessly, currently
 
+- To try:
+  - Move run dir back to /pic/scratch/plev920
+
+
 Test
 ====
 - Finish implementing/testing the queryFile and rewriteSets features
@@ -27,6 +31,11 @@ Near-term
 
 Medium-term
 -----------
+- For all top-level command-line funcs, create a dict of default
+  values that is used in parseArgs but also passed as a set of
+  defaults for the top-level func so caller doesn't have to supply
+  all the args. Might be able to extract this from parseArgs parser.
+
 - Specify a simple project without writing custom python code.
     - Create xmlsrc
     - Use built-in scenarios.py that just needs scenario names,
