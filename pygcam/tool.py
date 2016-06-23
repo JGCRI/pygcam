@@ -331,11 +331,24 @@ def _getMainParser():
     tool = GcamTool(loadPlugins=False)
     return tool.parser
 
+# We catch only these 3 signals. Can extend this if needed.
+def signame(signum):
+    if signum == signal.SIGTERM:
+        return 'SIGTERM'
+
+    if signum == signal.SIGQUIT:
+        return 'SIGQUIT'
+
+    if signum == signal.SIGALRM:
+        return 'SIGALRM'
+
+    return 'signal %d' % signum
 
 class SignalException(Exception):
     pass
 
 def _sigHandler(signum, _frame):
+    msg = "gt process received " + signame(signum)
     raise SignalException(signum)
 
 def catchSignals():
@@ -394,6 +407,16 @@ def _main(argv=None):
     finally:
         # Delete any temporary files that were created
         TempFile.deleteAll()
+
+def exceptionPassingMain(argv=None):
+    '''Like main() but allowing exceptions to flow through to caller'''
+    try:
+        _main(argv)
+        return 0
+
+    except Exception as e:
+        _logger.error( "exceptionPassingMain: %s", e)
+        raise
 
 
 def main(argv=None):
