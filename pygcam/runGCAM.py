@@ -124,11 +124,18 @@ def setupWorkspace(runWorkspace):
     linkXmlDir('GCAM.LocalXml', 'local-xml')
     linkXmlDir('GCAM.DynXml',   'dyn-xml')
 
-def gcamWrapper(cmd):
+def gcamWrapper(args):
     import subprocess as subp
     import re
 
-    proc = subp.Popen(cmd, bufsize=0, stdout=subp.PIPE, close_fds=True)
+    _logger.debug('running gcamWrapper')
+
+    try:
+        proc = subp.Popen(args, bufsize=0, stdout=subp.PIPE, close_fds=True)
+    except Exception as e:
+        cmd = ' '.join(args)
+        raise GcamRuntimeError('gcamWrapper failed to run command: %s (%s)' % (cmd, e))
+
     out = proc.stdout
 
     pattern = re.compile('(BaseXException|Model did not solve)')
@@ -182,7 +189,7 @@ def runGCAM(args):
         command = ' '.join(gcamArgs)
         _logger.info('Running: %s', command)
 
-        exitCode = subprocess.call(gcamArgs, shell=False) if args.noWrapper else gcamWrapper(command)
+        exitCode = subprocess.call(gcamArgs, shell=False) if args.noWrapper else gcamWrapper(gcamArgs)
         if exitCode != 0:
             raise ProgramExecutionError(command, exitCode)
 
