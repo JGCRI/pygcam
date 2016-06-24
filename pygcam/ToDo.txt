@@ -105,6 +105,13 @@ Long-term
 - Host the xsd files somewhere so they can be referenced in XML
   files, allowing smart editing.
 
+- gcamwrap.py: Take command-line args to:
+  - choose config file
+  - set scenario name
+  - set GHG reporting step
+  - set various debugging options (which files to write; file names)
+  - restore default values (if given, do this first, then apply rest)
+
 Document
 ========
 - New <Parameter active="0"> attribute
@@ -161,23 +168,20 @@ MCS Integration
 
 - Failure to run diffs is being reported by Runner.py as success
 
-- Create in otaq2016 a module (or use scenarios.py, logically) a func
-  that takes an XMLInputFile as an input, and calls createProtected:
-
-  createProtected(xmlFile.tree, fraction, landClasses=UnmanagedLandClasses, regions=None)
-
-  But prior to that, have a python func that is passed an np.array
-  produced by some distribution, which is stored in the module for use
-  when the writeFunc is called. This way the parameter is processed
-  normally.
-
 
 MCS Cleanup
 -----------
 - Eliminate scenarios.xml file; this information can be found in project.xml
 - Test "constant" distro
-- Test FileChooser
+- Test (or deprecate) FileChooser
+- Test xml db exists before running queries and raise a more targeted error
+- If stacked jobs are not yet running, but aborted, set status in db accordingly
+  - not needed in using master/worker architecture
+  - might also be possible to use sqlite in this approach; only master writes
 
+- When creating the run workspace, make all regular files read-only:
+
+    find . -type f -print0 | xargs -0 chmod -w
 
 MCS Notes
 ---------
@@ -227,13 +231,6 @@ Useful GCAM exit codes
   0 = success
   1 = failed to read a config file or xml file referenced therein
   2 = failed to solve markets in some period (alternatively, the status could be the failed timestep)
-
-Already exits with code indicating a signal was caught. Seems to be 128 + signum.
-    130 on SIGINT (2)
-    131 on SIGQUIT (3)
-    143 on SIGTERM (15)
-    142 on SIGALRM (14)
-    158 on SIGUSR1 (30 on OS X)
 
 I’m not sure if there are other failure modes.
 
