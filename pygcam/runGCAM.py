@@ -7,6 +7,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
+import sys
 import subprocess
 import platform
 import shutil
@@ -128,32 +129,36 @@ def gcamWrapper(args):
     import subprocess as subp
     import re
 
-    _logger.debug('running gcamWrapper')
+    buffered = getParamAsBoolean('GCAM.BufferedWrapperOutput')
+    buff = 'buffered' if buffered else 'unbuffered'
+    _logger.debug('running gcamWrapper (%s)', buff)
 
     try:
-        proc = subp.Popen(args, bufsize=0, stdout=subp.PIPE, close_fds=True)
+        gcamProc = subp.Popen(args, bufsize=0, stdout=subp.PIPE, close_fds=True)
+
     except Exception as e:
         cmd = ' '.join(args)
         raise GcamRuntimeError('gcamWrapper failed to run command: %s (%s)' % (cmd, e))
 
-    out = proc.stdout
+    pattern = re.compile('(org.basex.core.BaseXException:.*|Model did not solve .*)')
 
-    pattern = re.compile('(BaseXException|Model did not solve)')
-
+    gcamOut = gcamProc.stdout
     while True:
-        line = out.readline()
-        if not line:
+        line = gcamOut.readline()
+        if line == '':
             break
 
-        print line,
+        sys.stdout.write(line)
+        if not buffered:
+            sys.stdout.flush()
 
         match = re.search(pattern, line)
         if match:
-            proc.terminate()
+            gcamProc.terminate()
             reason = match.group(0)
             raise GcamRuntimeError('GCAM failed: ' + reason)
 
-    status = proc.poll()
+    status = gcamProc.poll()
     return status
 
 CONFIG_FILE_DELIM = ':'
