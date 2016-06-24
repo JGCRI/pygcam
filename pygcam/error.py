@@ -60,6 +60,12 @@ class ProgramExecutionError(PygcamException):
     def __str__(self):
         return "Command '%s' failed with exit code %s" % (self.command, self.exitCode)
 
+class GcamRuntimeError(PygcamException):
+    """
+    The gcamWrapper detected and error and terminated the model run.
+    """
+    pass
+
 class SetupException(Exception):
     """
     Raised from the setup sub-system.

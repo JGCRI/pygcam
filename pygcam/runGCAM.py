@@ -11,7 +11,7 @@ import subprocess
 import platform
 import shutil
 from lxml import etree as ET
-from .error import ProgramExecutionError
+from .error import ProgramExecutionError, GcamRuntimeError
 from .utils import mkdirs
 from .config import getParam, getParamAsBoolean
 from .log import getLogger
@@ -124,6 +124,30 @@ def setupWorkspace(runWorkspace):
     linkXmlDir('GCAM.LocalXml', 'local-xml')
     linkXmlDir('GCAM.DynXml',   'dyn-xml')
 
+def gcamWrapper(cmd):
+    import subprocess as subp
+    import re
+
+    proc = subp.Popen(cmd, bufsize=0, stdout=subp.PIPE, close_fds=True)
+    out = proc.stdout
+
+    pattern = re.compile('(BaseXException|Model did not solve)')
+
+    while True:
+        line = out.readline()
+        if not line:
+            break
+
+        print line,
+
+        match = re.search(pattern, line)
+        if match:
+            proc.terminate()
+            reason = match.group(0)
+            raise GcamRuntimeError('GCAM failed: ' + reason)
+
+    status = proc.poll()
+    return status
 
 CONFIG_FILE_DELIM = ':'
 
@@ -158,7 +182,7 @@ def runGCAM(args):
         command = ' '.join(gcamArgs)
         _logger.info('Running: %s', command)
 
-        exitCode = subprocess.call(gcamArgs, shell=False)
+        exitCode = subprocess.call(gcamArgs, shell=False) if args.noWrapper else gcamWrapper(command)
         if exitCode != 0:
             raise ProgramExecutionError(command, exitCode)
 
@@ -192,6 +216,10 @@ class GcamCommand(SubcommandABC):
                             help='''Specify the path to the GCAM workspace to use. If it doesn't exist, the named
                             workspace will be created. If not specified on the command-line, the value of config
                             file parameter GCAM.Workspace is used, i.e., the "standard" workspace.''')
+
+        parser.add_argument('-W', '--noWrapper', action='store_true',
+                            help='''Do not run gcam within a wrapper that detects errors as early as possible
+                            and terminates the model run. By default, the wrapper is used.''')
         return parser
 
     def run(self, args, tool):
