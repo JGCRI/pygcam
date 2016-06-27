@@ -134,13 +134,13 @@ def gcamWrapper(args):
     _logger.debug('running gcamWrapper (%s)', buff)
 
     try:
-        gcamProc = subp.Popen(args, bufsize=0, stdout=subp.PIPE, close_fds=True)
+        gcamProc = subp.Popen(args, bufsize=0, stdout=subp.PIPE, stderr=subp.STDOUT, close_fds=True)
 
     except Exception as e:
         cmd = ' '.join(args)
         raise GcamRuntimeError('gcamWrapper failed to run command: %s (%s)' % (cmd, e))
 
-    pattern = re.compile('(org.basex.core.BaseXException:.*|Model did not solve .*)')
+    pattern = re.compile('(.*(BaseXException|Model did not solve).*)')
 
     gcamOut = gcamProc.stdout
     while True:
