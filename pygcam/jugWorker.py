@@ -51,7 +51,12 @@ class Result(object):
         self.value   = value        # numerical result
 
     def __str__(self):
-        return "<Result step=%s status=%d value=%.2f>" % (self.step, self.status, self.value)
+        try:
+            valueStr = '%.2f' % self.value
+        except:
+            valueStr = str(self.value)
+
+        return "<Result step=%s status=%s value=%s>" % (self.step, self.status, valueStr)
 
 def runGCAM(context):
     sleep(1)
