@@ -27,6 +27,7 @@ from .runGCAM import GcamCommand
 from .workspace import WorkspaceCommand
 from .newProject import NewProjectCommand
 from .setup import SetupCommand
+from .jugCmd import JugCommand
 from .log import getLogger, setLogLevel, configureLogs
 from .windows import IsWindows
 
@@ -37,7 +38,7 @@ __version__ = '0.1'
 
 BuiltinSubcommands = [BioConstraintsCommand, DeltaConstraintsCommand,
                       ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      NewProjectCommand, ProjectCommand, ProtectLandCommand,
+                      JugCommand, NewProjectCommand, ProjectCommand, ProtectLandCommand,
                       QueryCommand, SetupCommand, WorkspaceCommand]
 
 def _writeBatchScript(args, delete=False):
@@ -111,8 +112,6 @@ class GcamTool(object):
     @classmethod
     def addPlugin(cls, plugin):
         cls._plugins[plugin.name] = plugin
-        # for alias in plugin.parser.aliases:
-        #     cls._plugins[alias] = plugin
 
     def __init__(self, loadPlugins=True):
 
@@ -121,7 +120,6 @@ class GcamTool(object):
         SimpleVariable.decache()
 
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
-                                                       # add_help=False)  # add help manually
 
         parser.add_argument('-b', '--batch', action='store_true',
                             help='''Run the commands by submitting a batch job using the command
@@ -408,18 +406,8 @@ def _main(argv=None):
         # Delete any temporary files that were created
         TempFile.deleteAll()
 
-def exceptionPassingMain(argv=None):
-    '''Like main() but allowing exceptions to flow through to caller'''
-    try:
-        _main(argv)
-        return 0
 
-    except Exception as e:
-        _logger.error( "exceptionPassingMain: %s", e)
-        raise
-
-
-def main(argv=None):
+def main(argv=None, raiseError=False):
     try:
         _main(argv)
         return 0
@@ -428,6 +416,9 @@ def main(argv=None):
         print e
 
     except Exception as e:
+        if raiseError:
+            raise
+
         print "%s failed: %s" % (PROGRAM, e)
 
         if not getSection() or getParamAsBoolean('GCAM.ShowStackTrace'):
