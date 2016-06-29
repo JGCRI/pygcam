@@ -23,7 +23,7 @@ import sys
 from random import random
 from time import sleep
 import argparse
-from jug import TaskGenerator
+from jug import TaskGenerator, task
 
 from pygcam.utils import parseTrialString
 from pygcam.log import getLogger
@@ -146,8 +146,21 @@ trials = parseTrialString(args.trials)
 baseline = args.baseline
 scenarios = args.scenario.split(',')
 
-#results = ["runPolicy(runBaseline(Context({simId}, {trial}, {baseline})), {policy})".format(simId=simId, baseline=baseline, policy=policy, trial=trial) \
-#           for trial in trials for policy in scenarios]
-
 results = [runPolicy(runBaseline(Context(simId, trial, baseline)), policy) for trial in trials for policy in scenarios]
-#print results
+
+def getResults(simId, trialStr, baseline, scenarioStr):
+    """
+    Get result for the given trials, baseline, and scenario list for the given simId.
+    Intended to be called by a Python script that needs to collect status.
+
+    :param simId: (int) simulation id
+    :param trialStr: (str) string representation of a set of trials
+    :param baseline: (str) name of baseline scenario
+    :param scenarios: (str) comma-delimited scenario names
+    :return: a list of Result instances
+    """
+    trials = parseTrialString(trialStr)
+    scenarios = scenarioStr.split(',')
+
+    results = [runPolicy(runBaseline(Context(simId, trial, baseline)), policy) for trial in trials for policy in scenarios]
+    return task.value(results)
