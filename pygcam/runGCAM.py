@@ -149,16 +149,18 @@ def gcamWrapper(args):
             break
 
         sys.stdout.write(line)
-        if not buffered:
+        if not buffered:            # unbuffered is useful for debugging; otherwise, use buffering
             sys.stdout.flush()
 
         match = re.search(pattern, line)
         if match:
             gcamProc.terminate()
             reason = match.group(0)
-            raise GcamRuntimeError('GCAM failed: ' + reason)
+            raise GcamRuntimeError('GCAM reported error: ' + reason)
 
-    status = gcamProc.poll()
+    _logger.debug('gcamWrapper found EOF. Waiting for GCAM to exit...')
+    status = gcamProc.wait()
+    _logger.debug('gcamWrapper: GCAM exited with status %s', status)
     return status
 
 CONFIG_FILE_DELIM = ':'

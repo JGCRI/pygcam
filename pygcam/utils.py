@@ -533,5 +533,93 @@ class TempFile(object):
             if raiseError:
                 raise PygcamException('No TempFile instance with name "%s"' % filename)
 
+
+TRIAL_STRING_DELIMITER = ','
+
+def parseTrialString(string):
+    '''
+    Converts a comma-separated list of ranges into a list of numbers.
+    Ex. 1,3,4-6,2 becomes [1,3,4,5,6,2]. Duplicates are deleted.
+    '''
+    rangeStrs = string.split(TRIAL_STRING_DELIMITER)
+    res = set()
+    for rangeStr in rangeStrs:
+        r = [int(x) for x in rangeStr.strip().split('-')]
+        if len(r) == 2:
+            r = range(r[0], r[1] + 1)
+        elif len(r) != 1:
+            raise ValueError('Malformed trial string.')
+        res = res.union(set(r))
+    return list(res)
+
+def createTrialString(lst):
+    '''
+    Assemble a list of numbers into a compact list using hyphens to identify ranges.
+    This reverses the operation of parseTrialString
+    '''
+    from itertools import groupby   # lazy imports
+    from operator import itemgetter
+
+    lst = sorted(set(lst))
+    ranges = []
+    for _, g in groupby(enumerate(lst), lambda (i, x): i - x):
+        group = map(lambda x: str(itemgetter(1)(x)), g)
+        if group[0] == group[-1]:
+            ranges.append(group[0])
+        else:
+            ranges.append(group[0] + '-' + group[-1])
+    return TRIAL_STRING_DELIMITER.join(ranges)
+
+def chunkify(lst, chunks):
+    '''
+    Generator to turn a list into the number of lists given by chunks.
+    In the case that len(lst) % chunksize != 0, all chunks are made as
+    close to the same size as possible.
+    '''
+    l = len(lst)
+    numWithExtraEntry = l % chunks  # this many chunks have one extra entry
+    chunkSize = (l - numWithExtraEntry) / chunks + 1
+    switch = numWithExtraEntry * chunkSize
+
+    i = 0
+    while i < l:
+        if i == switch:
+            chunkSize -= 1
+        yield lst[i:i + chunkSize]
+        i += chunkSize
+
+# TBD: test this. May not be necessary.
+#
+# Read output from subprocess without buffering
+# Based on https://gist.github.com/thelinuxkid/5114777
+#
+# def unbuffered(proc, stream='stdout'):
+#     import contextlib
+#
+#     # Unix, Windows and old Macintosh end-of-line
+#     newlines = ['\n', '\r\n', '\r']
+#
+#     s = getattr(proc, stream)
+#
+#     with contextlib.closing(s):
+#         while True:
+#             out = []
+#             last = s.read(1)
+#
+#             # Don't loop forever
+#             if last == '' and proc.poll() is not None:
+#                 break
+#
+#             while last not in newlines:
+#                 # Don't loop forever
+#                 if last == '' and proc.poll() is not None:
+#                     break
+#
+#                 out.append(last)
+#                 last = s.read(1)
+#
+#             out = ''.join(out)
+#             yield out
+
 if __name__ == '__main__':
     pass

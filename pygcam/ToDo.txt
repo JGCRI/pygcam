@@ -183,11 +183,11 @@ MCS Cleanup
 
     find . -type f -print0 | xargs -0 chmod -w
 
+- Optionally Use delta method from SALib instead of the CB method.
+- Incorporate SALib sampling as alternative. (Or just use external input files) 
+
 MCS Notes
 ---------
-- Trial generation should be unaffected
-    - document ordering: setup first then gensim
-
 - Needs wrapper (runner.py) or jug-type master-slave approach
     - master-slave avoids stacking jobs in advance
     - jug handles tracking incomplete jobs
