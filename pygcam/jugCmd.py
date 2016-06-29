@@ -72,10 +72,12 @@ def _writeBatchScript(args, delete=False):
     return scriptFile
 
 
-def runWorkers(args, run=True):
+def runWorkers(args):
     import platform
 
     system = platform.system()
+    run = not args.noRun
+
     if run and system in ['Windows', 'Darwin']:
         if system == 'Darwin':
             system = 'OS X (Mac)'   # friendlier name
@@ -134,7 +136,7 @@ def runWorkers(args, run=True):
 
         if not run:
             print(command)
-            print("\nScript file '%s':" % scriptFile)
+            print("\n%s:" % scriptFile)
             with open(scriptFile) as f:
                 print(f.read())
             continue
