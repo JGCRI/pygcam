@@ -19,8 +19,8 @@
 import os
 import subprocess
 import pipes
-from .error import CommandlineError, ConfigFileError, ProgramExecutionError, PygcamException
-from .config import getParam, getParamAsInt
+from .error import ConfigFileError, ProgramExecutionError, PygcamException
+from .config import getParam, getParamAsInt, setParam
 from .utils import mkdirs, getTempFile, parseTrialString, createTrialString, chunkify
 from .subcommand import SubcommandABC
 from .log import getLogger
@@ -46,15 +46,18 @@ def _writeBatchScript(args, delete=False):
     mkdirs(tmpDir)
 
     scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
-    _logger.info("Creating batch script '%s'", scriptFile)
+    _logger.debug("Creating batch script '%s'", scriptFile)
 
-    jugCmd = getParam('GCAM.JugCommand')
+    jugCmd  = getParam('GCAM.JugCommand')
     jugFile = getParam('GCAM.JugScript')
+    jugDir  = getParam('GCAM.JugDir')
 
     with open(scriptFile, 'w') as f:
         # jug doesn't pass through args starting with '--', so we strip
         # those and add them back in jugWorker.py. A bit of a hack...
-        shellArgs = [jugCmd, 'execute', jugFile,
+        shellArgs = [jugCmd,
+                     '--jugdir=' + jugDir,
+                     'execute', jugFile,
                      'simId='    + str(args.simId),
                      'trials='   + args.trials,
                      'baseline=' + pipes.quote(args.baseline),
@@ -91,7 +94,7 @@ def runWorkers(args, run=True):
         mkdirs(os.path.dirname(logFile))
 
     tasksPerNode = args.ntasksPerNode or getParamAsInt('GCAM.JugTasksPerNode')
-    batchCmd = getParam('GCAM.BatchCommand') + ' --ntasks-per-node=%d' % tasksPerNode
+    otherBatchArgs = getParam('GCAM.OtherBatchArgs') + ' --ntasks-per-node=%d' % tasksPerNode
 
     # TBD: default should be the 0-(number of trials in the sim minus 1)
     # TBD: deal with this when the database is integrated into this
@@ -112,6 +115,14 @@ def runWorkers(args, run=True):
                      'queueName': queueName,
                      'jobName': jobName}
 
+        # TBD: this assumes SLURM...
+        # Add the --array arg to process a subset of runs on each node
+        tasks = min(tasksPerNode, len(trialSublist))
+        arrayArg = ' --array=1-%d' % tasks
+        setParam('GCAM.OtherBatchArgs', otherBatchArgs + arrayArg)
+
+        batchCmd = getParam('GCAM.BatchCommand')        # uses GCAM.OtherBatchArgs
+
         try:
             command = batchCmd.format(**batchArgs)
         except KeyError as e:
@@ -121,17 +132,12 @@ def runWorkers(args, run=True):
         if getParam('GCAM.BatchLogFileDollarToPercent'):
             command = command.replace('$', '%')
 
-        # TBD: this assumes SLURM...
-        # Add the --array arg to process a subset of runs on each node
-        tasks = min(tasksPerNode, len(trialSublist))
-        command += ' --array=1-%d' % tasks
-
         if not run:
             print(command)
-            print("Script file '%s':" % scriptFile)
+            print("\nScript file '%s':" % scriptFile)
             with open(scriptFile) as f:
                 print(f.read())
-            return
+            continue
 
         _logger.info('Running: %s', command)
         try:
