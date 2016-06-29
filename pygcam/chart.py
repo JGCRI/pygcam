@@ -22,8 +22,21 @@ __version__  = "0.3"
 
 #%matplotlib inline
 
+_importedMPL = False
+
+def _importMPL():
+    '''
+    Do this on the fly, on demand, to speed up startup whenever not using this module
+    '''
+    global _importedMPL
+
+    if not _importedMPL:
+        import matplotlib as mpl
+        mpl.use('Agg')                      # avoid creating a DISPLAY
+        _importedMPL = True
 
 def setupPalette(count, pal=None):
+    _importMPL()
     import seaborn as sns
 
     # See http://xkcd.com/color/rgb/. These were chosen to be different "enough".
@@ -37,6 +50,8 @@ def setupPalette(count, pal=None):
 
 # For publications, call setupPlot("paper", font_scale=1.5)
 def setupPlot(context="talk", style="white", font_scale=1.0):
+    _importMPL()
+    import seaborn as sns
     sns.set_context(context, font_scale=font_scale)
     sns.set_style(style)
 
@@ -48,6 +63,10 @@ def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='U
     Plot unstacked bars showing the values for 'categoryCol', summed across years,
     for one region, for everything else, and the totals of the two.
     '''
+    _importMPL()
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
     count = len(df[categoryCol].unique())     # categoryCol = 'land-allocation'
     setupPalette(count, pal=palette)
 
@@ -117,6 +136,10 @@ def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=
     the values. The argument 'ncol' specifies the number of columns with
     which to render the legend.
     '''
+    _importMPL()
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
     # TBD: handle year values as columns to plot
     df2 = df[[indexCol, columns, values]].pivot(index=indexCol, columns=columns, values=values)
 
@@ -162,6 +185,9 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
                           zeroLine=False, title="", ygrid=False, yticks=False,
                           ymin=None, ymax=None, barWidth=0.5, legendY=None, yearStep=5,
                           palette=None):
+    _importMPL()
+    import matplotlib.pyplot as plt
+    import seaborn as sns
 
     df = dropExtraCols(df, inplace=False)
     grouped = df.groupby(index)
@@ -223,6 +249,9 @@ def plotStackedSums(df, indexCol=None, columns=None, xlabel='', ylabel='', rotat
 
 def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title="", ygrid=False,
                    yticks=False, ymin=None, ymax=None, legend=False, legendY=None, yearStep=5):
+    _importMPL()
+    import matplotlib.pyplot as plt
+    import seaborn as sns
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
@@ -278,6 +307,9 @@ def amendFilename(filename, suffix):
 
 
 def chartGCAM(args, num=None, negate=False, divisor=None):
+    _importMPL()
+    import matplotlib.pyplot as plt
+
     csvFile    = args.csvFile
     indexCol   = args.indexCol or None
     columns    = args.columns
@@ -401,8 +433,10 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
                                             palette=palette)
 
         if yFormat:
+            from matplotlib.ticker import FuncFormatter
+
             func = (lambda x, p: format(int(x), ',')) if yFormat == ',' else (lambda x, p: yFormat % x)
-            formatter = tkr.FuncFormatter(func)
+            formatter = FuncFormatter(func)
 
             ax.get_yaxis().set_major_formatter(formatter)
 
@@ -437,15 +471,6 @@ def getDivisor(filename):
     return divisor
 
 def main(mainArgs, tool, parser):
-    # Do these slow imports after parseArgs so "-h" responds quickly
-    import matplotlib as mpl
-    mpl.use('Agg')                      # avoid creating a DISPLAY
-    import matplotlib.pyplot as plt
-    import matplotlib.ticker as tkr
-    import pandas as pd
-    import seaborn as sns
-    global plt, pd, sns, tkr
-
     if not mainArgs.fromFile and mainArgs.csvFile == '*null*':
         raise CommandlineError("Must specify a CSV file or use -f flag to read arguments from a file")
 

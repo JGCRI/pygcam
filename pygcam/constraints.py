@@ -5,7 +5,7 @@ Created on 4/26/15
 @author: rjp
 '''
 import os
-import pandas as pd
+#import pandas as pd    # moved inside functions to speed startup
 from .log import getLogger
 from .subcommand import SubcommandABC
 from .utils import mkdirs, getBatchDir, getYearCols, printSeries
@@ -104,6 +104,8 @@ def parseStringPairs(argString, datatype=float):
     a pandas Series where the first value of each pair is the index name and
     the second value is a float, or the type given.
     """
+    import pandas as pd
+
     pairs = argString.split(',')
     dataDict = {year:datatype(coef) for (year, coef) in map(lambda pair: pair.split(':'), pairs)}
     coefficients = pd.Series(data=dataDict)
@@ -176,6 +178,8 @@ cellEtohComboConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 US_REGION_QUERY = 'region in ["USA", "United States"]'
 
 def genBioConstraints(**kwargs):
+    import pandas as pd
+
     fromMCS = kwargs.get('fromMCS', False)
     resultsDir = kwargs['resultsDir']
     baseline = kwargs['baseline']
@@ -284,6 +288,8 @@ fuelConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 '''
 
 def genDeltaConstraints(**kwargs):
+    import pandas as pd
+
     fromMCS  = kwargs.get('fromMCS', False)
     baseline = kwargs['baseline']
     policy   = kwargs['policy']
@@ -542,6 +548,8 @@ if __name__ == '__main__':
     #         </region>
     #     </world>
     # </scenario>
+
+    import pandas as pd
 
     # Generate the XML above
     xml = generateConstraintXML('ElecCO2',
