@@ -33,7 +33,7 @@ _logger = getLogger(__name__)
 #
 # TBD: duplicated from tool.py to avoid mutual imports
 #
-def _writeBatchScript(args):
+def _writeBatchScript(args, delete=False):
     """
     Create a shell script in a temporary file which calls gt with the
     given `args`.
@@ -45,7 +45,7 @@ def _writeBatchScript(args):
     tmpDir = getParam('GCAM.UserTempDir')
     mkdirs(tmpDir)
 
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=False)
+    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
     _logger.info("Creating batch script '%s'", scriptFile)
 
     jugCmd = getParam('GCAM.JugCommand')
@@ -73,9 +73,11 @@ def runWorkers(args, run=True):
     import platform
 
     system = platform.system()
-    if False and system in ['Windows', 'Darwin']:
-        system = 'Mac OS X' if system == 'Darwin' else system
-        raise CommandlineError('Batch commands are not supported on %s' % system)
+    if run and system in ['Windows', 'Darwin']:
+        if system == 'Darwin':
+            system = 'OS X (Mac)'   # friendlier name
+        _logger.info('Batch commands are not supported on %s; setting run=False' % system)
+        run = False
 
     jobName = args.jobName
     queueName = args.queueName or getParam('GCAM.DefaultQueue')
@@ -89,21 +91,17 @@ def runWorkers(args, run=True):
         mkdirs(os.path.dirname(logFile))
 
     tasksPerNode = args.ntasksPerNode or getParamAsInt('GCAM.JugTasksPerNode')
-    batchCmd = getParam('GCAM.BatchCommand') + '--ntasks-per-node=%d' % tasksPerNode
+    batchCmd = getParam('GCAM.BatchCommand') + ' --ntasks-per-node=%d' % tasksPerNode
 
     # TBD: default should be the 0-(number of trials in the sim minus 1)
     # TBD: deal with this when the database is integrated into this
-    trialList = parseTrialString(args.trials) if args.trials else ['0']
-    numTrials = len(trialList)
-    if numTrials < args.nodes:
-        _logger.info('Reducing requested node count(%d) to number of trials (%d)',
-                               args.nodes, numTrials)
-        args.nodes = numTrials
+    trials = args.trials or "0"
+    trialList = parseTrialString(trials)
 
     for trialSublist in chunkify(trialList, args.nodes):
 
         args.trials = createTrialString(trialSublist)
-        scriptFile = _writeBatchScript(args)
+        scriptFile = _writeBatchScript(args, delete=not run)
 
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
@@ -133,7 +131,6 @@ def runWorkers(args, run=True):
             print("Script file '%s':" % scriptFile)
             with open(scriptFile) as f:
                 print(f.read())
-            os.remove(scriptFile)
             return
 
         _logger.info('Running: %s', command)
