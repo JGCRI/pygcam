@@ -94,6 +94,11 @@ def runWorkers(args, run=True):
     # TBD: default should be the 0-(number of trials in the sim minus 1)
     # TBD: deal with this when the database is integrated into this
     trialList = parseTrialString(args.trials) if args.trials else ['0']
+    numTrials = len(trialList)
+    if numTrials < args.nodes:
+        _logger.info('Reducing requested node count(%d) to number of trials (%d)',
+                               args.nodes, numTrials)
+        args.nodes = numTrials
 
     for trialSublist in chunkify(trialList, args.nodes):
 
