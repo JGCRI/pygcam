@@ -17,19 +17,12 @@
 # Each task returns an overall status code, which is 0 for success and non-zero
 # otherwise.
 #
-#
-import os
-import sys
 from random import random
 from time import sleep
-import argparse
 from jug import TaskGenerator, task
 
 from pygcam.utils import parseTrialString
 from pygcam.log import getLogger
-
-PROGRAM = os.path.basename(__file__)
-__version__ = "0.1"
 
 _logger = getLogger(__name__)
 
@@ -56,7 +49,8 @@ class Result(object):
         except:
             valueStr = str(self.value)
 
-        return "<Result step=%s status=%s value=%s>" % (self.step, self.status, valueStr)
+        return "<Result context=%s step=%s policy=%s status=%s value=%s>" % \
+               (self.context, self.step, self.policy, self.status, valueStr)
 
 def runGCAM(context):
     sleep(1)
@@ -84,8 +78,8 @@ def runScenario(context):
     result = runQueries(context)
     return result
 
-# baseline is run as separate task, but policy is run directly,
-# followed by diffs and CI
+# Baseline is run as separate task so its results can be
+# shared by multiple scenarios
 @TaskGenerator
 def runBaseline(context):
     return runScenario(context)
@@ -111,43 +105,6 @@ def runPolicy(baselineResult, policy):
 
     return Result(0, context, 'CI', policy=policy, value=result.value)
 
-
-def parseArgs():
-    parser = argparse.ArgumentParser(prog=PROGRAM)
-
-    parser.add_argument('-b', '--baseline',
-                        help='''The name of the baseline scenario to run''')
-
-    parser.add_argument('-S', '--scenario', default='',
-                        help='''Specify the scenario(s) to run. Can be a comma-delimited list of
-                            scenario names.''')
-
-    parser.add_argument('-s', '--simId', type=int, default=1,
-                        help='The id of the simulation')
-
-    parser.add_argument('-t', '--trials', type=str, default='0',
-                        help='''Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
-                             Defaults to running all trials for the given simulation.''')
-
-    parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-
-    # parser.add_argument('-W', '--noWrapper', action='store_true',
-    #                     help='''Do not run gcam within a wrapper that detects errors as early as possible
-    #                     and terminates the model run. By default, the wrapper is used.''')
-
-    return parser.parse_args()
-
-# Convert args like "simId=1" to "--simId=1" since jug has trouble with '--'
-sys.argv = [sys.argv[0]] + map(lambda arg: '--' + arg, sys.argv[1:])
-
-args = parseArgs()
-simId = args.simId
-trials = parseTrialString(args.trials)
-baseline = args.baseline
-scenarios = args.scenario.split(',')
-
-results = [runPolicy(runBaseline(Context(simId, trial, baseline)), policy) for trial in trials for policy in scenarios]
-
 def getResults(simId, trialStr, baseline, scenarioStr):
     """
     Get result for the given trials, baseline, and scenario list for the given simId.
@@ -164,3 +121,29 @@ def getResults(simId, trialStr, baseline, scenarioStr):
 
     results = [runPolicy(runBaseline(Context(simId, trial, baseline)), policy) for trial in trials for policy in scenarios]
     return task.value(results)
+
+def parseArgs(program, version):
+    '''
+    This CLI is shared by jugMain and jugReportCI
+    '''
+    import argparse
+
+    parser = argparse.ArgumentParser(prog=program)
+
+    parser.add_argument('-b', '--baseline',
+                        help='''The name of the baseline scenario to run''')
+
+    parser.add_argument('-S', '--scenario', default='',
+                        help='''Specify the scenario(s) to run. Can be a comma-delimited list of
+                            scenario names.''')
+
+    parser.add_argument('-s', '--simId', type=int, default=1,
+                        help='The id of the simulation')
+
+    parser.add_argument('-t', '--trials', type=str, default='0',
+                        help='''Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
+                             Defaults to running all trials for the given simulation.''')
+
+    parser.add_argument('--version', action='version', version='%(prog)s ' + version)
+
+    return parser.parse_args()

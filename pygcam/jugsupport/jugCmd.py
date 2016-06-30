@@ -2,10 +2,9 @@
 # Author:  Rich Plevin (rich@plevin.com)
 # Created: 27 Jun 2016
 #
-# This is the "jugfile" used by "jug" to run a Monte Carlo simulation.
-# For each trial, a policy scenario or scenarios depend on a baseline
-# scenario, so the baseline is run first, and the policy is run only if
-# the baseline succeeds.
+# This is the core of the "jugfile" used by "jug" to run a Monte Carlo simulation.
+# For each trial, a policy scenario or scenarios depend on a baseline scenario,
+# so the baseline is run first, and the policy is run only if the baseline succeeds.
 #
 # The work is split into two TaskManagers. The first runs GCAM and queries it
 # to produce CSV files, then, by default, deletes the GCAM "output" directory,
@@ -19,11 +18,11 @@
 import os
 import subprocess
 import pipes
-from .error import ConfigFileError, ProgramExecutionError, PygcamException
-from .config import getParam, getParamAsInt, setParam
-from .utils import mkdirs, getTempFile, parseTrialString, createTrialString, chunkify
-from .subcommand import SubcommandABC
-from .log import getLogger
+from pygcam.error import ConfigFileError, ProgramExecutionError, PygcamException
+from pygcam.config import getParam, getParamAsInt, setParam
+from pygcam.utils import mkdirs, getTempFile, parseTrialString, createTrialString, chunkify
+from pygcam.subcommand import SubcommandABC
+from pygcam.log import getLogger
 
 PROGRAM = os.path.basename(__file__)
 __version__ = "0.1"
