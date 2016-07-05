@@ -293,11 +293,11 @@ class XMLEditor(object):
         mkdirs(scenDir)
         mkdirs(dynDir)
 
-        xmlSubdir = pathjoin(self.xmlSourceDir, self.subdir, 'xml')
+        xmlSubdir = pathjoin(self.xmlSourceDir, self.subdir, self.name, 'xml')
         xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
-            _logger.info("Copy static XML files to %s" % scenDir)
+            _logger.info("Copy %d static XML files to %s" % (len(xmlFiles), scenDir))
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
