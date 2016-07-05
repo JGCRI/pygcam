@@ -12,7 +12,11 @@ import os
 from importlib import import_module
 from .error import SetupException
 from .config import getParam
+from .log import getLogger
 from .subcommand import SubcommandABC
+from .utils import loadModuleFromPath
+
+_logger = getLogger(__name__)
 
 class SetupCommand(SubcommandABC):
     __version__ = '0.1'
@@ -39,8 +43,8 @@ class SetupCommand(SubcommandABC):
                             help='''The "dot spec" for the Python module holding the setup classes and
                             a function called 'scenarioClass' or a dictionary called 'ClassMap' which map
                             scenario names to classes. If the function 'scenarioClass' exists, it is
-                            used. If not, the 'ClassMap' is used. Default is "xmlsrc.subdir.scenarios" (if
-                            subdir is defined) or "xmlsrc.scenarios" (if subdir is undefined) under the
+                            used. If not, the 'ClassMap' is used. Default is "{xmlsrc}/subdir/scenarios.py" (if
+                            subdir is defined) or "{xmlsrc}/scenarios.py" (if subdir is undefined) under the
                             current ProjectRoot.''')
 
         parser.add_argument('-p', '--stop', type=int, metavar='period-or-year', dest='stopPeriod',
@@ -86,24 +90,22 @@ class SetupCommand(SubcommandABC):
         args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectDir')
         groupDir = args.group if args.useGroupDir else ''
         subdir = args.subdir or scenario
-        args.xmlSourceDir  = args.xmlSourceDir  or os.path.join(getParam('GCAM.XmlSrc'), groupDir, subdir)
-
-        # TBD: instead of setting path, load module by name as in
-        # TBD:   modname, objname = funcRef.rsplit('.', 1)
-        # TBD:   modulePath = os.path.join(self.trialFuncDir, modname + '.py')
-        # TBD:   try:
-        # TBD:      trialFunc = loadObjectFromPath(objname, modulePath)
-        #
-        sys.path.insert(0, os.path.dirname(os.path.dirname(args.xmlSourceDir)))
+        args.xmlSourceDir  = args.xmlSourceDir or getParam('GCAM.XmlSrc')
 
         # TBD: document this
-        if not args.module:
-            args.module = 'xmlsrc.' + groupDir + '.scenarios' if args.useGroupDir else 'xmlsrc.scenarios'
+        try:
+            if args.module:
+                module = import_module(args.module, package=None)
+            else:
+                modulePath = os.path.join(args.xmlSourceDir, groupDir, 'scenarios.py')
+                module = loadModuleFromPath(modulePath)
+
+        except Exception as e:
+            raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (args.module, e))
+
+        _logger.debug('Loaded module %s', module)
 
         try:
-            # Try to load the user's module
-            module = import_module(args.module, package=None)
-
             # First look for a function called scenarioMapper
             scenarioMapper = getattr(module, 'scenarioMapper', None)
             if scenarioMapper:
@@ -116,9 +118,6 @@ class SetupCommand(SubcommandABC):
 
         except KeyError:
             raise SetupException('Failed to map scenario "%s" to a class in %s' % (scenario, module.__file__))
-
-        except Exception as e:
-            raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (args.module, e))
 
         # TBD: Ensure that all setup classes conform to this protocol
         obj = scenClass(args.baseline, args.scenario, args.xmlOutputRoot,

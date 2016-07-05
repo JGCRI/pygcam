@@ -238,7 +238,7 @@ class XMLEditor(object):
 
         # Allow scenario name to have arbitrary subdirs between "../local-xml" and
         # the scenario name, e.g., "../local-xml/client/scenario"
-        self.subdir = subdir
+        self.subdir = subdir or ''
 
         # N.B. join helpfully drops out "" components
         self.scenario_dir_abs = makeDirPath((self.local_xml_abs, subdir, name), create=True)
@@ -293,7 +293,7 @@ class XMLEditor(object):
         mkdirs(scenDir)
         mkdirs(dynDir)
 
-        xmlSubdir = pathjoin(self.xmlSourceDir, 'xml')
+        xmlSubdir = pathjoin(self.xmlSourceDir, self.subdir, 'xml')
         xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
