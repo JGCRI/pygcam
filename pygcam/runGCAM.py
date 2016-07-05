@@ -16,7 +16,7 @@ from .error import ProgramExecutionError, GcamRuntimeError
 from .utils import mkdirs
 from .config import getParam, getParamAsBoolean
 from .log import getLogger
-from .windows import setJavaPath, removeSymlink
+from .windows import setJavaPath, removeSymlink, IsWindows
 from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
@@ -190,13 +190,15 @@ def runGCAM(args):
 
     gcamPath = os.path.abspath(getParam('GCAM.Executable'))
 
+    noWrapper = IsWindows or args.noWrapper     # never use the wrapper on Windows
+
     for configFile in configFiles:
         gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
 
         command = ' '.join(gcamArgs)
         _logger.info('Running: %s', command)
 
-        exitCode = subprocess.call(gcamArgs, shell=False) if args.noWrapper else gcamWrapper(gcamArgs)
+        exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else gcamWrapper(gcamArgs)
         if exitCode != 0:
             raise ProgramExecutionError(command, exitCode)
 
