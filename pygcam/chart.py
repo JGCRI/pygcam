@@ -101,7 +101,8 @@ def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='U
 
     ax = sns.barplot(x="region", y="total", hue=categoryCol, data=world, ci=None)
 
-    sns.axlabel(xlabel, ylabel)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     legendY = -0.45 if legendY is None else legendY
     ax.legend(loc='lower center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
 
@@ -165,7 +166,9 @@ def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=
     if ygrid:
         ax.yaxis.grid(color='lightgrey', linestyle='solid')
 
-    sns.axlabel(xlabel, ylabel)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
     legendY = -0.6 if legendY is None else legendY
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
 
@@ -224,7 +227,9 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
         ax.set_autoscale_on(False)
         ax.set_ylim(ymin, ymax)
 
-    sns.axlabel(xlabel, ylabel)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
     legendY = -0.2 if legendY is None else legendY
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
 
@@ -285,7 +290,9 @@ def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title=""
         ax.set_autoscale_on(False)
         ax.set_ylim(ymin, ymax)
 
-    sns.axlabel(xlabel, ylabel)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
     if legend:
         legendY = -0.2 if legendY is None else legendY
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY))
