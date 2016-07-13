@@ -22,7 +22,7 @@ class FileMissingError(PygcamException):
         self.reason   = reason
 
     def __str__(self):
-        return "%s" % self.reason
+        return "Can't read %s: %s" % (self.filename, self.reason)
 
 class FileFormatError(PygcamException):
     """
