@@ -109,7 +109,7 @@ class _TmpFile(object):
 
     def write(self, argDict):
         # Note: TempFiles are deleted in the main driver (tool.py)
-        path = getTempFile('.txt', tmpDir=self.dir, delete=self.delete)
+        path = getTempFile(suffix='.project.txt', tmpDir=self.dir, delete=self.delete)
         path = unixPath(path)
 
         with open(path, 'w') as f:
