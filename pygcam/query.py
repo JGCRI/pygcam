@@ -19,7 +19,7 @@ from .log import getLogger
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean
 from .subcommand import SubcommandABC
-from .runGCAM import getExeDir
+from .runGCAM import getExeDir, setupWorkspace
 
 _logger = getLogger(__name__)
 
@@ -1030,6 +1030,7 @@ def main(args):
         # using an in-memory database, GCAM runs the queries for us, so here we
         # just create the XMLDBDriver.properties and batch files and return.
         if args.prequery:
+            setupWorkspace(args.workspace)
             exeDir = getExeDir(args.workspace)
             batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                         regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,

@@ -33,6 +33,9 @@ def driver(args, tool):
     if args.path:
         print(workspace)
 
+    if args.recreate:
+        args.delete = args.create = True
+
     if args.delete:
         _logger.info('removing ' + workspace)
         try:
@@ -72,6 +75,10 @@ class WorkspaceCommand(SubcommandABC):
         parser.add_argument('--delete', action='store_true',
                             help='''Delete the identified workspace' If used with --create, the
                             deletion occurs first.''')
+
+        parser.add_argument('--recreate', action='store_true',
+                            help='''Recreate the identified workspace. Equivalent to using the
+                            --delete and --create options together.''')
 
         parser.add_argument('-g', '--groupDir', default='',
                             help='''The name of the scenario group subdir''')
