@@ -25,8 +25,8 @@ def driver(args, tool):
         raise CommandlineError("ws: must specify project name")
 
     workspace = getParam('GCAM.SandboxDir')
-    if args.scenario:
-        workspace += '/' + args.scenario
+    if args.scenario or args.groupDir:
+        workspace = os.path.join(workspace, args.groupDir, args.scenario)
 
     workspace = os.path.normpath(os.path.abspath(os.path.expanduser(workspace)))     # handle ~ in pathname
 
@@ -73,6 +73,9 @@ class WorkspaceCommand(SubcommandABC):
                             help='''Delete the identified workspace' If used with --create, the
                             deletion occurs first.''')
 
+        parser.add_argument('-g', '--groupDir', default='',
+                            help='''The name of the scenario group subdir''')
+
         parser.add_argument('-n', '--noExecute', action='store_true',
                             help='''Print the command that would be executed by --run, but
                             don't execute it.''')
@@ -83,7 +86,7 @@ class WorkspaceCommand(SubcommandABC):
         parser.add_argument('-r', '--run',
                             help='''Run the given command in the identified workspace.''')
 
-        parser.add_argument('-s', '--scenario', default="",
+        parser.add_argument('-s', '--scenario', default='',
                             help='''The scenario for the computed workspace root.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
