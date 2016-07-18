@@ -66,7 +66,7 @@ def _writeBatchScript(args, delete=False):
         shellArgs = map(pipes.quote, args)
         f.write("gt %s\n" % ' '.join(shellArgs))
 
-    os.chmod(scriptFile, 0755)
+    os.chmod(scriptFile, 0o755)
     return scriptFile
 
 def _randomSleep(minSleep, maxSleep):
@@ -91,7 +91,7 @@ def _waitForScript(scriptFile):
     exists = False
     for i in range(maxTries):
         if os.path.exists(scriptFile):
-            print "%s exists!" % scriptFile
+            print("%s exists!" % scriptFile)
             exists = True
             break
 
@@ -195,7 +195,6 @@ class GcamTool(object):
         Load the plugin at `path`.
 
         :param path: (str) the pathname of a plugin file.
-        :param subparsers: instance of argparse.parser.add_subparsers
         :return: an instance of the ``SubcommandABC`` subclass defined in `path`
         """
         def getModObj(mod, name):
@@ -304,10 +303,10 @@ class GcamTool(object):
             raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 
         if not run:
-            print command
-            print "Script file '%s':" % scriptFile
+            print(command)
+            print("Script file '%s':" % scriptFile)
             with open(scriptFile) as f:
-                print f.read()
+                print(f.read())
             return
 
         _logger.info('Running: %s', command)
@@ -413,13 +412,13 @@ def main(argv=None, raiseError=False):
         return 0
 
     except CommandlineError as e:
-        print e
+        print(e)
 
     except Exception as e:
         if raiseError:
             raise
 
-        print "%s failed: %s" % (PROGRAM, e)
+        print("%s failed: %s" % (PROGRAM, e))
 
         if not getSection() or getParamAsBoolean('GCAM.ShowStackTrace'):
             import traceback

@@ -141,10 +141,10 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0):
     _logger.debug("Reading %s", filename)
     try:
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
-    except IOError, e:
+    except IOError as e:
         raise FileMissingError(os.path.abspath(filename), e)
 
-    except Exception, e:
+    except Exception as e:
         raise PygcamException('Error reading %s: %s' % (filename, e))
 
     if years:
@@ -670,7 +670,7 @@ def runBatchQueries(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     command = _createJavaCommand(batchFile, redirect)
 
     if noRun:
-        print command
+        print(command)
         return
 
     _logger.debug(command)
@@ -756,7 +756,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
     command = _createJavaCommand(batchFile, redirect)
 
     if noRun:
-        print command
+        print(command)
     else:
         _logger.debug(command)
 
@@ -771,8 +771,8 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
             # The java program always exits with 0 status, but when the query fails,
             # it writes an error message to the CSV file. If this occurs, we delete
             # the file.
+            failed = False
             try:
-                failed = False
                 with open(csvPath, 'r') as f:
                     line = f.readline()
 
@@ -982,7 +982,7 @@ class RewriteSetParser(object):
 
 def main(args):
     # """
-    # TBD.
+    # Main driver for query sub-command
     #
     # :param args:
     # :return: none

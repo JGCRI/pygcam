@@ -241,7 +241,7 @@ class SimpleVariable(object):
 
     @classmethod
     def getDict(cls):
-        argDict = {name: var.value for name, var in cls.Instances.iteritems()}
+        argDict = {name: var.value for name, var in cls.Instances.items()}
         return argDict
 
 
@@ -258,7 +258,7 @@ class Variable(SimpleVariable):
     @classmethod
     def evaluateVars(cls, argDict):
         '''Evaluate vars and store results in argDict'''
-        for name, var in cls.Instances.iteritems():
+        for name, var in cls.Instances.items():
             argDict[name] = var.evaluate(argDict)
 
     def evaluate(self, argDict, value=None):
@@ -354,9 +354,9 @@ class Project(object):
         def showList(strings, header):
             self.quit = True
             if header:
-                print header
+                print(header)
             for s in strings:
-                print '  ', s
+                print('  ', s)
 
         if args.listGroups:
             showList(knownGroups, 'Scenario groups:')
@@ -368,7 +368,7 @@ class Project(object):
             showList(knownSteps, 'Steps:')
 
         if args.vars:
-            varList = ["%15s = %s" % (name, value) for name, value in sorted(self.argDict.iteritems())]
+            varList = ["%15s = %s" % (name, value) for name, value in sorted(self.argDict.items())]
             showList(varList, 'Vars:')
 
         if self.quit:
@@ -452,7 +452,7 @@ class Project(object):
         # Get the text values for all config variables, allowing variables
         # defined in the project to override them.
         cfgDict = getConfigDict(section=self.projectName)
-        for name, value in cfgDict.iteritems():
+        for name, value in cfgDict.items():
             SimpleVariable(name, value)
 
         self.argDict = argDict = Variable.getDict()
@@ -528,17 +528,17 @@ class Project(object):
 
 
     def dump(self, steps, scenarios):
-        print "Scenario group: %s" % self.scenarioGroupName
-        print "Requested steps:", steps
-        print "Requested scenarios:", scenarios
-        print "Defined steps:", self.getKnownSteps()
-        print "Defined scenarios:", self.getKnownScenarios()
-        print 'Defined vars:'
-        for name, var in Variable.Instances.iteritems():
-            print "  %15s : %s" % (name, var.getValue())
-        print '\nTmpFiles:'
+        print("Scenario group: %s" % self.scenarioGroupName)
+        print("Requested steps:", steps)
+        print("Requested scenarios:", scenarios)
+        print("Defined steps:", self.getKnownSteps())
+        print("Defined scenarios:", self.getKnownScenarios())
+        print('Defined vars:')
+        for name, var in Variable.Instances.items():
+            print("  %15s : %s" % (name, var.getValue()))
+        print('\nTmpFiles:')
         for t in self.tmpFiles:
-            print "  ", t.varName
+            print("  ", t.varName)
 
 
 def driver(args, tool, cmdClass=Project):

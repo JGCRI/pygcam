@@ -163,7 +163,7 @@ def readConfigFiles():
             with open(siteConfig) as fp:
                 _ConfigParser.readfp(fp)
         except Exception as e:
-            print "WARNING: Failed to read site config file: %s" % e
+            print("WARNING: Failed to read site config file: %s" % e)
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
@@ -359,27 +359,27 @@ class ConfigCommand(SubcommandABC):
             if not value:
                 if item in optionalVars:
                     continue
-                print "Config variable %s is empty" % var
+                print("Config variable %s is empty" % var)
 
             elif not os.path.lexists(value):
-                print "Config variable %s refers to missing file or directory '%s'" % (var, value)
+                print("Config variable %s refers to missing file or directory '%s'" % (var, value))
 
             elif not os.path.isfile(value) and item in fileVars:
-                print "Config variable %s does not refer to a file (%s)" % (var, value)
+                print("Config variable %s does not refer to a file (%s)" % (var, value))
 
             elif not os.path.isdir(value) and item in dirVars:
-                print "Config variable %s does not refer to a directory (%s)" % (var, value)
+                print("Config variable %s does not refer to a directory (%s)" % (var, value))
 
-            print 'OK:', var, '=', value
+            print('OK:', var, '=', value)
 
     def run(self, args, tool):
         if args.edit:
             import subprocess
 
             cmd = "%s %s/%s" % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
-            print cmd
+            print(cmd)
             exitStatus = subprocess.call(cmd, shell=True)
-            if exitStatus <> 0:
+            if exitStatus != 0:
                 raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
             return
 
@@ -395,16 +395,16 @@ class ConfigCommand(SubcommandABC):
         if args.name and args.exact:
             value = getParam(args.name, section=section)
             if value is not None:
-                print value
+                print(value)
             return
 
         # if no name is given, the pattern matches all variables
         pattern = re.compile('.*' + args.name + '.*', re.IGNORECASE)
 
-        print "[%s]" % section
+        print("[%s]" % section)
         for name, value in sorted(_ConfigParser.items(section)):
             if pattern.match(name):
-                print "%22s = %s" % (name, value)
+                print("%22s = %s" % (name, value))
 
 
 PluginClass = ConfigCommand
