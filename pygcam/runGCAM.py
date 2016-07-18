@@ -26,6 +26,8 @@ __version__ = "0.2"
 
 PlatformName = platform.system()
 
+CONFIG_FILE_DELIM = ':'
+
 def readScenarioName(configFile):
     """
     Read the file `configFile` and extract the scenario name.
@@ -99,8 +101,8 @@ def setupWorkspace(runWorkspace):
     workspaceSymlink('input')
     workspaceSymlink('libs')
 
-    # Add links to libs for basex and xerces-c_3_1.dll (Windows)
-    for filename in ['WriteLocalBaseXDB.class', 'xerces-c_3_1.dll']:
+    # Add links to libs for basex stuff and (on Windows) xerces-c_3_1.dll
+    for filename in ['WriteLocalBaseXDB.class', 'xerces-c_3_1.dll', 'XMLDBDriver.jar']:
         if os.path.lexists(os.path.join(refWorkspace, 'exe', filename)):
             workspaceSymlink(os.path.join('exe', filename))
 
@@ -163,44 +165,46 @@ def gcamWrapper(args):
     _logger.debug('gcamWrapper: GCAM exited with status %s', status)
     return status
 
-CONFIG_FILE_DELIM = ':'
 
-def runGCAM(args):
-    scenarios = args.scenario.split(',') if args.scenario else None
-    workspace = args.workspace  or getParam('GCAM.SandboxDir')
+def getExeDir(workspace, forceCreate=False):
+    workspace = workspace  or getParam('GCAM.SandboxDir')
     workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
 
-    if not os.path.lexists(workspace) or args.forceCreate:         # TBD: maybe rmtree first?
+    if not os.path.lexists(workspace) or forceCreate:         # TBD: maybe rmtree first?
         setupWorkspace(workspace)
 
     exeDir = os.path.join(workspace, 'exe')
-    setJavaPath(exeDir)     # required for Windows; a no-op otherwise
+    return exeDir
 
-    if scenarios:
-        # Translate scenario names into config file paths, assuming scenario FOO lives in
-        # {scenariosDir}/FOO/config.xml
-        scenariosDir = os.path.abspath(args.scenariosDir or getParam('GCAM.ScenariosDir') or '.')
-        configFiles  = map(lambda name: os.path.join(scenariosDir, name, "config.xml"), scenarios)
-    else:
-        configFiles = map(os.path.abspath, args.configFile.split(',')) \
-                        if args.configFile else [os.path.join(exeDir, 'configuration.xml')]
+def runGCAM(args):
+    scenario  = args.scenario
+    exeDir = getExeDir(args.workspace, forceCreate=args.forceCreate)
 
     _logger.info("cd %s", exeDir)
     os.chdir(exeDir)        # if isQsubbed, this is redundant but harmless
+    setJavaPath(exeDir)     # required for Windows; a no-op otherwise
+
+    # TBD: test multiple scenarios; seems each should be run in own 'exe' dir
+    if scenario:
+        # Translate scenario name into config file path, assuming scenario FOO
+        # lives in {scenariosDir}/FOO/config.xml
+        scenariosDir = os.path.abspath(args.scenariosDir or getParam('GCAM.ScenariosDir') or '.')
+        configFile   = os.path.join(scenariosDir, scenario, "config.xml")
+    else:
+        configFile = os.path.abspath(args.configFile or os.path.join(exeDir, 'configuration.xml'))
 
     gcamPath = os.path.abspath(getParam('GCAM.Executable'))
 
     noWrapper = IsWindows or args.noWrapper     # never use the wrapper on Windows
 
-    for configFile in configFiles:
-        gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
+    gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
 
-        command = ' '.join(gcamArgs)
-        _logger.info('Running: %s', command)
+    command = ' '.join(gcamArgs)
+    _logger.info('Running: %s', command)
 
-        exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else gcamWrapper(gcamArgs)
-        if exitCode != 0:
-            raise ProgramExecutionError(command, exitCode)
+    exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else gcamWrapper(gcamArgs)
+    if exitCode != 0:
+        raise ProgramExecutionError(command, exitCode)
 
 
 class GcamCommand(SubcommandABC):
@@ -218,13 +222,11 @@ class GcamCommand(SubcommandABC):
                             help='''Re-create the workspace, even if it already exists.''')
 
         parser.add_argument('-s', '--scenario', default='',
-                            help='''Specify the scenario(s) to run. Can be a comma-delimited list of scenario
-                            names. The scenarios will be run serially in a single batch job, with an allocated
-                            time = GCAM.Minutes * {the number of scenarios}.''')
+                            help='''The scenario to run.''')
 
         parser.add_argument('-S', '--scenariosDir', default='',
-                            help='''Specify the directory holding scenarios. Default is the value of config file
-                            param GCAM.ScenariosDir, if set, otherwise it's the current directory.''')
+                            help='''Specify the directory holding scenarios. Default is the value of config
+                            file param GCAM.ScenariosDir, if set, otherwise it's the current directory.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 

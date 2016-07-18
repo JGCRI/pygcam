@@ -220,7 +220,7 @@ def saveToFile(txt, dirname='', filename=''):
 
     pathname = os.path.join(dirname, filename)
 
-    _logger.debug("Generating file: %s", pathname)
+    _logger.debug("Writing %s", pathname)
     with open(pathname, 'w') as f:
         f.write(txt)
 
@@ -239,6 +239,7 @@ def getBatchDir(scenario, resultsDir, fromMCS=False):
     pathname = os.path.join(resultsDir, scenario, leafDir)
     # '{resultsDir}/{scenario}/{leafDir}'.format(resultsDir=resultsDir, scenario=scenario, leafDir=leafDir)
     return pathname
+
 
 def mkdirs(newdir, mode=0o770):
     """
