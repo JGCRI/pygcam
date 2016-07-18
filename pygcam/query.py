@@ -362,13 +362,15 @@ def _findQueryByName(tree, title):
 
     return None
 
-def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None,
-                           rewriteSetList=None, rewriteParser=None, delete=True):
+def _findOrCreateQueryFile(title, queryPath, regions, outputDir=None, tmpFiles=True,
+                           regionMap=None, rewriteSetList=None, rewriteParser=None,
+                           delete=True):
     '''
     Find a query with the given title either as a file (with .xml extension) or
     within an XML query file by searching queryPath. If the query with "title" is
     found in an XML query file, extract it to generate a batch query file and
-    apply it to the given regions.
+    apply it to the given regions. If outputDir is given, files are written there
+    rather than creating temp files that would be deleted when the program exits.
     '''
     sep = os.path.pathsep           # ';' on Windows, ':' on Unix
     items = queryPath.split(sep)
@@ -416,12 +418,18 @@ def _findOrCreateQueryFile(title, queryPath, regions, regionMap=None,
             if rewriteSetList:
                 _addRewriteSet(rewriteSetList, rewriteParser, rewriteList, title)
 
-        # Extract the query into file to submit it to ModelInterface
-        tmpFile = getTempFile(suffix='.query.xml', delete=delete)
-        _logger.debug("Writing extracted query for '%s' to tmp file '%s'", title, tmpFile)
+        # Extract the query into a file to submit to ModelInterface
+        if outputDir:
+            queryDir = os.path.join(outputDir, 'queries')
+            mkdirs(queryDir)
+            path = os.path.join(queryDir, title + '.xml')
+        else:
+            path = getTempFile(suffix='.query.xml', delete=delete)
+
+        _logger.debug("Writing extracted query for '%s' to '%s'", title, path)
         tree = ET.ElementTree(root)
-        tree.write(tmpFile, xml_declaration=True, encoding="UTF-8", pretty_print=True)
-        return tmpFile
+        tree.write(path, xml_declaration=True, encoding="UTF-8", pretty_print=True)
+        return path
 
 
 BatchQueryTemplate = """<?xml version="1.0"?>
@@ -488,7 +496,7 @@ def _deleteFile(filename):
     except:
         pass    # ignore errors, like "rm -f"
 
-def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None,
+def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, tmpFiles=True,
                                xmldb=None, csvFile=None, regions=None, regionMap=None,
                                rewriters=None, rewriteParser=None, noDelete=False):
     """
@@ -526,7 +534,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None,
     # Look for both the literal name as given as well as the name with "-" and "_" replaced with " "
     queryFile = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap,
                                        rewriteSetList=rewriters, rewriteParser=rewriteParser,
-                                       delete=delete)
+                                       outputDir=outputDir, delete=delete)
 
     if not queryFile:
         raise PygcamException("Error: file for query '%s' was not found." % basename)
@@ -563,10 +571,11 @@ def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batc
 
 
 def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
-                    regions=None, regionMap=None, rewriteParser=None, noDelete=False):
+                    regions=None, regionMap=None, rewriteParser=None,
+                    tmpFiles=True, noDelete=False):
     """
-    Create a temp XML file that will run multiple queries, by extracting queries into separate
-    temp files and referencing them from the batch query file.
+    Create an optionally-temporary XML file that will run multiple queries, by extracting
+    queries into separate temp files and referencing them from the batch query file.
 
     :param scenario: (str) the name of the scenario to perform the query on
     :param queries:
@@ -580,6 +589,8 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         The value is the name of the aggregate region to map into.
     :param rewriteParser: (RewriteSetParser instance) parsed representation of
         rewriteSets.xml
+    :param tmpFiles: (bool) if True temporary files are used and deleted when the
+        program exits, otherwise normal files are create in outputDir.
     :param noDelete: (bool) if True, temporary files created by this function are
         not deleted (use for debugging)
     :return: (str) the pathname of the temporary batch query file
@@ -605,7 +616,7 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         command = _createBatchCommandElement(scenario, queryName, queryPath, outputDir=outputDir,
                                              xmldb=xmldb, regions=regions, regionMap=regionMap,
                                              rewriters=rewriters, rewriteParser=rewriteParser,
-                                             noDelete=noDelete)
+                                             tmpFiles=tmpFiles, noDelete=noDelete)
         commands.append(command)
 
 
@@ -613,7 +624,12 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     # a temp file because this step runs separately from the step running GCAM, and
     # the batch file would be either deleted prematurely or not at all.
     outputDir = outputDir or getParam('GCAM.OutputDir')
-    batchFile = os.path.join(outputDir, 'batch-query.xml')
+    if tmpFiles:
+        batchFile = getTempFile(suffix='.batch.xml', delete=not noDelete, text=True)
+    else:
+        queryDir = os.path.join(outputDir, 'queries')
+        mkdirs(queryDir)
+        batchFile = os.path.join(queryDir, 'generated-batch-query.xml')
 
     batchCommands = ''.join(commands)
     contents = MultiCommandTemplate.format(batchCommands=batchCommands)
@@ -1002,17 +1018,18 @@ def main(args):
 
     regionMap = readRegionMap(regionFile) if regionFile else None
 
+    # TBD: doesn't actually work for multiple scenarios: workspace is scenario-specific
     for scenario in scenarios:
         queries = queryNames + queryNodes
 
         # When writing the XMLDB to disk, we call ModelInterface separately. When
         # using an in-memory database, GCAM runs the queries for us, so here we
         # just create the XMLDBDriver.properties and batch files and return.
-        if args.prequery:
-            exeDir = getExeDir(args.workspace)         # TBD: doesn't work for multiple scenarios
-            batchFile = createBatchFile(scenario, queries, queryPath=queryPath,
-                                        outputDir=outputDir, regions=regions, regionMap=regionMap,
-                                        rewriteParser=rewriteParser, noDelete=noDelete)
+        if args.prequery and getParamAsBoolean('GCAM.BatchMultipleQueries'):
+            exeDir = getExeDir(args.workspace)
+            batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
+                                        regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
+                                        tmpFiles=False, noDelete=noDelete)
 
             writeXmldbDriverProperties(outputDir=exeDir, batchFile=batchFile)
             continue
