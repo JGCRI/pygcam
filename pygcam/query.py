@@ -999,6 +999,10 @@ def main(args):
     noDelete    = args.noDelete
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
 
+    if getParamAsBoolean('GCAM.InMemoryDatabase') and not args.prequery:
+        _logger.info('Skipping query step: using in-memory database')
+        return
+
     _logger.debug("Query names: '%s'", queryNames)
 
     queryFileNode = QueryFile.parse(args.queryFile) if args.queryFile else None
@@ -1025,7 +1029,7 @@ def main(args):
         # When writing the XMLDB to disk, we call ModelInterface separately. When
         # using an in-memory database, GCAM runs the queries for us, so here we
         # just create the XMLDBDriver.properties and batch files and return.
-        if args.prequery and getParamAsBoolean('GCAM.BatchMultipleQueries'):
+        if args.prequery:
             exeDir = getExeDir(args.workspace)
             batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                         regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
@@ -1034,7 +1038,7 @@ def main(args):
             writeXmldbDriverProperties(outputDir=exeDir, batchFile=batchFile)
             continue
 
-        if getParam('GCAM.BatchMultipleQueries'):
+        if getParamAsBoolean('GCAM.BatchMultipleQueries'):
             runBatchQueries(scenario, xmldb, queries, queryPath=queryPath, outputDir=outputDir,
                             miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                             rewriteParser=rewriteParser, noRun=args.noRun, noDelete=noDelete)
