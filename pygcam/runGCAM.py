@@ -102,7 +102,8 @@ def setupWorkspace(runWorkspace):
     workspaceSymlink('libs')
 
     # Add links to libs for basex stuff and (on Windows) xerces-c_3_1.dll
-    for filename in ['WriteLocalBaseXDB.class', 'xerces-c_3_1.dll', 'XMLDBDriver.jar']:
+    for filename in ['WriteLocalBaseXDB.class', 'xerces-c_3_1.dll',
+                     'XMLDBDriver.properties', 'XMLDBDriver.jar']:
         if os.path.lexists(os.path.join(refWorkspace, 'exe', filename)):
             workspaceSymlink(os.path.join('exe', filename))
 
