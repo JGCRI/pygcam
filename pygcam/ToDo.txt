@@ -17,8 +17,12 @@ Test
 - Finish implementing/testing the queryFile and rewriteSets features
 - setup.py installer: test with full install
 - write more unit tests
-- changes to XML format and validation
-    - pygcam and also gcammcs (results, parameters, scenarios)
+- Test old constraint cmds
+- Test land protection cmd
+    - Simplify to eliminate complicated cmdline opts?
+- Should constraint commands be converted back to plugins?
+    - They're for use by biofuel studies only (maybe a sep plugin dir?)
+    - Perhaps split out generic function from domain-specific
 
 Features
 ========
@@ -114,7 +118,14 @@ Long-term
 
 Document
 ========
+- New project step that runs only if GCAM.InMemoryDatabase
+  - Create batch file to process all batch queries
+  - Create XMLDBDriver.properties file
+
 - New <Parameter active="0"> attribute
+
+- changes to XML format and validation
+    - pygcam and also gcammcs (results, parameters, scenarios)
 
 - queryMapping
   - default "level" set in query itself, can override in query list
@@ -133,33 +144,6 @@ Document
     - Path is value of $PYGCAM_SITE_CONFIG_FILE
 
 - Assumptions behind setup code
-
-- Eliminate the need for *.pth files for scenarios.py files: we can
-  load them directly by pathname.
-
-  # Apparently have to load intermediate module first, as below
-  import imp
-  modDir  = '/Users/rjp/bitbucket/otaq2016/xmlsrc'  # replace with xmlSrcDir
-  modName = 'xmlsrc'
-
-  # load group module level if required
-  if args.groupDir:
-     modDir  += '/' + args.groupDir
-     modName += '.' + args.groupDir
-     imp.load_source(modName, modDir)
-
-  mod = imp.load_source(modName + '.scenarios', modDir + '/scenarios.py')
-
-
-Tasks
-=====
-- Validate diff cmd
-- Test old constraint cmds
-- Test land protection cmd
-    - Simplify to eliminate complicated cmdline opts?
-- Should constraint commands be converted back to plugins?
-    - They're for use by biofuel studies only (maybe a sep plugin dir?)
-    - Perhaps split out generic function from domain-specific
 
 
 MCS Integration
@@ -184,7 +168,7 @@ MCS Cleanup
     find . -type f -print0 | xargs -0 chmod -w
 
 - Optionally Use delta method from SALib instead of the CB method.
-- Incorporate SALib sampling as alternative. (Or just use external input files) 
+- Incorporate SALib sampling as alternative. (Or just use external input files)
 
 MCS Notes
 ---------
