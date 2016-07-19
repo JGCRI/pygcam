@@ -525,7 +525,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         not deleted (use for debugging)
     :return: (str) the generated batch command string
     """
-    _logger.debug("_createBatchCommandElement('%s','%s',...)", scenario, queryName)
+    #_logger.debug("_createBatchCommandElement('%s','%s',...)", scenario, queryName)
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
@@ -1069,7 +1069,9 @@ def main(args):
 
     regionMap = readRegionMap(regionFile) if regionFile else None
 
-    # TBD: doesn't actually work for multiple scenarios: workspace is scenario-specific
+    exeDir = getExeDir(args.workspace, chdir=True)
+
+    # TBD: doesn't actually work for multiple scenarios since workspace is scenario-specific
     for scenario in scenarios:
         queries = queryNames + queryNodes
 

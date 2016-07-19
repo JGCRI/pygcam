@@ -40,7 +40,7 @@ def readScenarioName(configFile):
     scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
     return scenarioName.text
 
-def setupWorkspace(runWorkspace):
+def setupWorkspace(runWorkspace, forceCreate=False):
     refWorkspace = getParam('GCAM.RefWorkspace')
 
     if os.path.lexists(runWorkspace) and os.path.samefile(runWorkspace, refWorkspace):
@@ -78,6 +78,9 @@ def setupWorkspace(runWorkspace):
                 os.symlink(srcPath, dstPath)
 
     _logger.info("Setting up GCAM workspace '%s'", runWorkspace)
+
+    if forceCreate:
+        shutil.rmtree(runWorkspace, ignore_errors=True)
 
     # Create a local output dir
     outDir = os.path.join(runWorkspace, 'output')
@@ -165,22 +168,24 @@ def gcamWrapper(args):
     return status
 
 
-def getExeDir(workspace, forceCreate=False):
+def getExeDir(workspace, chdir=False):
     workspace = workspace  or getParam('GCAM.SandboxDir')
     workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
+    exeDir    = os.path.join(workspace, 'exe')
 
-    if not os.path.lexists(workspace) or forceCreate:         # TBD: maybe rmtree first?
-        setupWorkspace(workspace)
+    if chdir:
+        _logger.info("cd %s", exeDir)
+        os.chdir(exeDir)
 
-    exeDir = os.path.join(workspace, 'exe')
     return exeDir
+
 
 def runGCAM(args):
     scenario  = args.scenario
-    exeDir = getExeDir(args.workspace, forceCreate=args.forceCreate)
+    workspace = args.workspace
+    setupWorkspace(workspace, forceCreate=args.forceCreate)
 
-    _logger.info("cd %s", exeDir)
-    os.chdir(exeDir)        # if isQsubbed, this is redundant but harmless
+    exeDir = getExeDir(workspace, chdir=1)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
 
     # TBD: test multiple scenarios; seems each should be run in own 'exe' dir
