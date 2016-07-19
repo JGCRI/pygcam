@@ -525,7 +525,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         not deleted (use for debugging)
     :return: (str) the generated batch command string
     """
-    _logger.debug('_createBatchCommandElement(%s,%s,...)', scenario, queryName)
+    _logger.debug("_createBatchCommandElement('%s','%s',...)", scenario, queryName)
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
@@ -642,9 +642,9 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     return batchFile
 
 
-def runBatchQueries(scenario, queries, xmldb='', queryPath=None, outputDir=None,
-                    miLogFile=None, regions=None, regionMap=None, rewriteParser=None,
-                    noRun=False, noDelete=False):
+def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=None,
+                       miLogFile=None, regions=None, regionMap=None, rewriteParser=None,
+                       noRun=False, noDelete=False):
     """
     Create a single GCAM XML batch file that runs multiple queries, placing the
     each query's results in a file named of the form {queryName}-{scenario}.csv.
@@ -693,7 +693,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
                   csvFile=None, miLogFile=None, regions=None, regionMap=None,
                   rewriters=None, rewriteParser=None, noRun=False, noDelete=False):
     """
-    Run a query against GCAM's XML database given by `xmldb` (or computed
+    Run a single query against GCAM's XML database given by `xmldb` (or computed
     from other parameters), optionally saving the results into `outfile`.
 
     :param scenario: (str) the name of the scenario to perform the query on
@@ -797,6 +797,34 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
             TempFile.remove(filename,  raiseError=False)
             TempFile.remove(batchFile, raiseError=False)
 
+# Deprecated: there no need for this once multiple queries is working
+def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], queryPath=None,
+                        outputDir=None, rewriteParser=None, miLogFile=None, regions=None,
+                        regionMap=None, noRun=False, noDelete=False):
+    for queryName in queryNames:
+        queryName = queryName.strip()
+
+        if not queryName or queryName[0] == '#':    # allow blank lines and comments
+            continue
+
+        if queryName == 'exit':
+            _logger.warn('Found "exit"; exiting batch query processing')
+            return
+
+        _logger.info("Processing query '%s'", queryName)
+
+        runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
+                      miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                      noRun=noRun, noDelete=noDelete)
+
+    for queryNode in queryNodes:
+        queryName = queryNode.name
+        rewriters = queryNode.rewriters
+
+        runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
+                      miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                      rewriters=rewriters, rewriteParser=rewriteParser,
+                      noRun=noRun, noDelete=noDelete)
 
 def ensureCSV(file):
     """
@@ -1001,16 +1029,25 @@ def main(args):
     scenarios   = args.scenario.split(',')
     queryNames  = args.queryName
     noDelete    = args.noDelete
+    prequery    = args.prequery
     inMemory    = getParamAsBoolean('GCAM.InMemoryDatabase')
+    internalQueries = inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM')
+    batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
-    multiBatch  = inMemory or getParamAsBoolean('GCAM.BatchMultipleQueries')
 
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
     # by GCAM to query the in-memory database before exiting.
-    if getParamAsBoolean('GCAM.InMemoryDatabase') and not args.prequery:
-        _logger.info('Skipping query step: using in-memory database')
+    if inMemory and not prequery:
+        _logger.info('Skipping post-GCAM query step: using in-memory database')
         return
+
+    if internalQueries and not prequery:
+        _logger.info('Skipping post-GCAM query step: GCAM runs queries internally')
+        return
+
+    if not (xmldb or inMemory):
+        raise CommandlineError('Must specify xmldb if not using in-memory database')
 
     _logger.debug("Query names: %s", queryNames)
 
@@ -1027,7 +1064,8 @@ def main(args):
         if os.path.lexists(miLogFile):
             os.unlink(miLogFile)       # remove it, if any, to start fresh
 
-    xmldb = os.path.abspath(xmldb)
+    if xmldb:
+        xmldb = os.path.abspath(xmldb)
 
     regionMap = readRegionMap(regionFile) if regionFile else None
 
@@ -1043,40 +1081,25 @@ def main(args):
             exeDir = getExeDir(args.workspace)
             batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                         regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
-                                        tmpFiles=False, noDelete=noDelete)
+                                        tmpFiles=False, noDelete=noDelete) if batchMultiple else ''
 
             writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, batchFile=batchFile)
             continue
 
-        if multiBatch:
-            runBatchQueries(scenario, xmldb, queries, queryPath=queryPath, outputDir=outputDir,
-                            miLogFile=miLogFile, regions=regions, regionMap=regionMap,
-                            rewriteParser=rewriteParser, noRun=args.noRun, noDelete=noDelete)
+        # If not a prequery step, we're running queries post-GCAM, which means a database on disk
+        # For now, we support running multiple queries in a single batch file, or the old way,
+        # running each one individually. The latter is probably deprecated.
+        if batchMultiple:
+            runMultiQueryBatch(scenario, queries, xmldb=xmldb, queryPath=queryPath, outputDir=outputDir,
+                               miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                               rewriteParser=rewriteParser, noRun=args.noRun, noDelete=noDelete)
         else:
-            for queryName in queryNames:
-                queryName = queryName.strip()
+            # (Deprecated) Otherwise run them individually.
+            _runSingleQueryBatch(scenario, xmldb=xmldb, queryNames=queryNames, queryNodes=queryNodes,
+                                 queryPath=queryPath, outputDir=outputDir, rewriteParser=rewriteParser,
+                                 miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                                 noRun=args.noRun, noDelete=args.noDelete)
 
-                if not queryName or queryName[0] == '#':    # allow blank lines and comments
-                    continue
-
-                if queryName == 'exit':
-                    _logger.warn('Found "exit"; exiting batch query processing')
-                    return
-
-                _logger.info("Processing query '%s'", queryName)
-
-                runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
-                              miLogFile=miLogFile, regions=regions, regionMap=regionMap,
-                              noRun=args.noRun, noDelete=args.noDelete)
-
-            for queryNode in queryNodes:
-                queryName = queryNode.name
-                rewriters = queryNode.rewriters
-
-                runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
-                              miLogFile=miLogFile, regions=regions, regionMap=regionMap,
-                              rewriters=rewriters, rewriteParser=rewriteParser,
-                              noRun=args.noRun, noDelete=args.noDelete)
 
 class QueryCommand(SubcommandABC):
     def __init__(self, subparsers):

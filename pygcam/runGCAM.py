@@ -77,11 +77,7 @@ def setupWorkspace(runWorkspace):
             else:
                 os.symlink(srcPath, dstPath)
 
-    # Create the workspace if needed
-    # We check for 'exe' dir since top-level dir is created by prequery
-    exeDir = getExeDir(runWorkspace)
-    if not os.path.isdir(exeDir):
-        _logger.info("Creating GCAM workspace '%s'", runWorkspace)
+    _logger.info("Setting up GCAM workspace '%s'", runWorkspace)
 
     # Create a local output dir
     outDir = os.path.join(runWorkspace, 'output')
