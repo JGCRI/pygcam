@@ -218,6 +218,42 @@ described in <a class="reference internal" href="query-xml.html"><em>queries.xml
 <span id="api"></span><h3>API<a class="headerlink" href="#module-pygcam.query" title="Permalink to this headline">¶</a></h3>
 <p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
 <dl class="function">
+<dt id="pygcam.query.createBatchFile">
+<code class="descclassname">pygcam.query.</code><code class="descname">createBatchFile</code><span class="sig-paren">(</span><em>scenario</em>, <em>queries</em>, <em>xmldb=''</em>, <em>queryPath=None</em>, <em>outputDir=None</em>, <em>regions=None</em>, <em>regionMap=None</em>, <em>rewriteParser=None</em>, <em>tmpFiles=True</em>, <em>noDelete=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.createBatchFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an optionally-temporary XML file that will run multiple queries, by extracting
+queries into separate temp files and referencing them from the batch query file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scenario</strong> &#8211; (str) the name of the scenario to perform the query on</li>
+<li><strong>queries</strong> &#8211; </li>
+<li><strong>xmldb</strong> &#8211; </li>
+<li><strong>queryPath</strong> &#8211; (str) a list of directories or XML filenames, separated
+by a colon (on Unix) or a semi-colon (on Windows)</li>
+<li><strong>outputDir</strong> &#8211; (str) the directory in which to write the .CSV
+with query results, default is value of GCAM.OutputDir.</li>
+<li><strong>regions</strong> &#8211; (iterable of str) the regions you want to include in the query</li>
+<li><strong>regionMap</strong> &#8211; (dict-like) keys are the names of regions that should be rewritten.
+The value is the name of the aggregate region to map into.</li>
+<li><strong>rewriteParser</strong> &#8211; (RewriteSetParser instance) parsed representation of
+rewriteSets.xml</li>
+<li><strong>tmpFiles</strong> &#8211; (bool) if True temporary files are used and deleted when the
+program exits, otherwise normal files are create in outputDir.</li>
+<li><strong>noDelete</strong> &#8211; (bool) if True, temporary files created by this function are
+not deleted (use for debugging)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the pathname of the temporary batch query file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pygcam.query.csv2xlsx">
 <code class="descclassname">pygcam.query.</code><code class="descname">csv2xlsx</code><span class="sig-paren">(</span><em>inFiles</em>, <em>outFile</em>, <em>skiprows=0</em>, <em>interpolate=False</em>, <em>years=None</em>, <em>startYear=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.csv2xlsx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a set of CSV files representing GCAM query results into an XLSX file
@@ -428,9 +464,8 @@ existing GCAM region or a new name defined by the user.</p>
 <dl class="function">
 <dt id="pygcam.query.runBatchQuery">
 <code class="descclassname">pygcam.query.</code><code class="descname">runBatchQuery</code><span class="sig-paren">(</span><em>scenario</em>, <em>queryName</em>, <em>queryPath</em>, <em>outputDir</em>, <em>xmldb=None</em>, <em>csvFile=None</em>, <em>miLogFile=None</em>, <em>regions=None</em>, <em>regionMap=None</em>, <em>rewriters=None</em>, <em>rewriteParser=None</em>, <em>noRun=False</em>, <em>noDelete=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.runBatchQuery" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a query against GCAM&#8217;s XML database given by <cite>xmldb</cite> (or computed
-from other parameters), optionally saving the results into <cite>outfile</cite>.
-Return the data in a pandas <cite>DataFrame</cite>.</p>
+<dd><p>Run a single query against GCAM&#8217;s XML database given by <cite>xmldb</cite> (or computed
+from other parameters), optionally saving the results into <cite>outfile</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -460,6 +495,36 @@ not deleted (use for debugging)</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the absolute path to the generated .CSV file, or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.query.runMultiQueryBatch">
+<code class="descclassname">pygcam.query.</code><code class="descname">runMultiQueryBatch</code><span class="sig-paren">(</span><em>scenario</em>, <em>queries</em>, <em>xmldb=''</em>, <em>queryPath=None</em>, <em>outputDir=None</em>, <em>miLogFile=None</em>, <em>regions=None</em>, <em>regionMap=None</em>, <em>rewriteParser=None</em>, <em>noRun=False</em>, <em>noDelete=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.query.runMultiQueryBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a single GCAM XML batch file that runs multiple queries, placing the
+each query&#8217;s results in a file named of the form {queryName}-{scenario}.csv.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>scenario</strong> &#8211; </li>
+<li><strong>queries</strong> &#8211; (list of str query names and/or Query instances)</li>
+<li><strong>xmldb</strong> &#8211; (str) path to XMLDB, or &#8216;&#8217; to use in-memory DB</li>
+<li><strong>queryPath</strong> &#8211; </li>
+<li><strong>outputDir</strong> &#8211; </li>
+<li><strong>miLogFile</strong> &#8211; </li>
+<li><strong>regions</strong> &#8211; </li>
+<li><strong>regionMap</strong> &#8211; </li>
+<li><strong>noRun</strong> &#8211; </li>
+<li><strong>noDelete</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
 </td>
 </tr>
 </tbody>

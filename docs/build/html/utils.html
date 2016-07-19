@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pygcam.common &mdash; pygcam 0.1a1 documentation</title>
+  <title>pygcam.utils &mdash; pygcam 0.1a1 documentation</title>
   
 
   
@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
@@ -140,7 +140,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li><code class="docutils literal"><span class="pre">pygcam.common</span></code></li>
+    <li><code class="docutils literal"><span class="pre">pygcam.utils</span></code></li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -154,16 +154,100 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pygcam-common">
-<h1><code class="docutils literal"><span class="pre">pygcam.common</span></code><a class="headerlink" href="#pygcam-common" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="pygcam-utils">
+<h1><code class="docutils literal"><span class="pre">pygcam.utils</span></code><a class="headerlink" href="#pygcam-utils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains constants, functions, and classes that are used by various
 other modules of the pygcam toolkit.</p>
-<div class="section" id="module-pygcam.common">
-<span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.common" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-pygcam.utils">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.utils" title="Permalink to this headline">¶</a></h2>
 <p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
+<dl class="class">
+<dt id="pygcam.utils.TempFile">
+<em class="property">class </em><code class="descclassname">pygcam.utils.</code><code class="descname">TempFile</code><span class="sig-paren">(</span><em>path=None</em>, <em>suffix=''</em>, <em>tmpDir=None</em>, <em>delete=True</em>, <em>openFile=False</em>, <em>text=True</em>, <em>createDir=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.TempFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to create and track temporary files in one place
+so they can be deleted before an application exits.</p>
+<dl class="method">
+<dt id="pygcam.utils.TempFile.deleteFile">
+<code class="descname">deleteFile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.TempFile.deleteFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the file for a TempFile instance if self.delete is True. In either
+case, delete the instance from the class instance dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">none</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">PygcamException if the path is not related to a TempFile instance.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pygcam.utils.TempFile.remove">
+<em class="property">classmethod </em><code class="descname">remove</code><span class="sig-paren">(</span><em>filename</em>, <em>raiseError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.TempFile.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a temporary file and delete the TempFile instance from the dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; (str) the name of a temp file created by this class</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>:param raiseError (bool) if True, raise an exception if the filename is</dt>
+<dd>not a known TempFile.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">none</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">PygcamException if the path is not related to a TempFile instance.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pygcam.utils.XMLFile">
+<em class="property">class </em><code class="descclassname">pygcam.utils.</code><code class="descname">XMLFile</code><span class="sig-paren">(</span><em>xmlFile</em>, <em>schemaFile=None</em>, <em>raiseError=True</em>, <em>rootClass=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.XMLFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an XML file, which is parsed by lxml.etree and stored internally.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>xmlFile</strong> &#8211; pathname of the XML file</li>
+<li><strong>schemaFile</strong> &#8211; optional XMLSchema file (or stream) to use for validation</li>
+<li><strong>raiseError</strong> &#8211; if True, raise an error if validation fails</li>
+<li><strong>rootClass</strong> &#8211; optional root class, which is instantiated for the parsed
+tree and stored internally</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">FileFormatError</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="function">
-<dt id="pygcam.common.coercible">
-<code class="descclassname">pygcam.common.</code><code class="descname">coercible</code><span class="sig-paren">(</span><em>value</em>, <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.coercible" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.chunkify">
+<code class="descclassname">pygcam.utils.</code><code class="descname">chunkify</code><span class="sig-paren">(</span><em>lst</em>, <em>chunks</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.chunkify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator to turn a list into the number of lists given by chunks.
+In the case that len(lst) % chunksize != 0, all chunks are made as
+close to the same size as possible.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.coercible">
+<code class="descclassname">pygcam.utils.</code><code class="descname">coercible</code><span class="sig-paren">(</span><em>value</em>, <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.coercible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attempt to coerce a value to <cite>type</cite> and raise an error on failure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -180,8 +264,38 @@ other modules of the pygcam toolkit.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.ensureExtension">
-<code class="descclassname">pygcam.common.</code><code class="descname">ensureExtension</code><span class="sig-paren">(</span><em>filename</em>, <em>ext</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.ensureExtension" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.copyResource">
+<code class="descclassname">pygcam.utils.</code><code class="descname">copyResource</code><span class="sig-paren">(</span><em>relpath</em>, <em>dest</em>, <em>overwrite=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.copyResource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy a resource from the &#8216;pygcam&#8217; package to the given destination.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>relpath</strong> &#8211; (str) a path relative to the pygcam package</li>
+<li><strong>dest</strong> &#8211; (str) the pathname of the file to create by copying the resource.</li>
+<li><strong>overwrite</strong> &#8211; (bool) if False, raise an error if the destination
+file already exists.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.createTrialString">
+<code class="descclassname">pygcam.utils.</code><code class="descname">createTrialString</code><span class="sig-paren">(</span><em>lst</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.createTrialString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble a list of numbers into a compact list using hyphens to identify ranges.
+This reverses the operation of parseTrialString</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.ensureExtension">
+<code class="descclassname">pygcam.utils.</code><code class="descname">ensureExtension</code><span class="sig-paren">(</span><em>filename</em>, <em>ext</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.ensureExtension" title="Permalink to this definition">¶</a></dt>
 <dd><p>Force a filename to have the given extension, <cite>ext</cite>, adding it to
 any other extension, if present. That is, if <cite>filename</cite> is <code class="docutils literal"><span class="pre">foo.bar</span></code>,
 and <cite>ext</cite> is <code class="docutils literal"><span class="pre">baz</span></code>, the result will be <code class="docutils literal"><span class="pre">foo.bar.baz</span></code>.
@@ -204,8 +318,8 @@ If <cite>ext</cite> doesn&#8217;t start with a &#8221;.&#8221;, one is added.</p
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.flatten">
-<code class="descclassname">pygcam.common.</code><code class="descname">flatten</code><span class="sig-paren">(</span><em>listOfLists</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.flatten" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.flatten">
+<code class="descclassname">pygcam.utils.</code><code class="descname">flatten</code><span class="sig-paren">(</span><em>listOfLists</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.flatten" title="Permalink to this definition">¶</a></dt>
 <dd><p>Flatten one level of nesting given a list of lists. That is, convert
 [[1, 2, 3], [4, 5, 6]] to [1, 2, 3, 4, 5, 6].</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -221,27 +335,10 @@ If <cite>ext</cite> doesn&#8217;t start with a &#8221;.&#8221;, one is added.</p
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.fuelDensityMjPerGal">
-<code class="descclassname">pygcam.common.</code><code class="descname">fuelDensityMjPerGal</code><span class="sig-paren">(</span><em>fuelname</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.fuelDensityMjPerGal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the fuel energy density of the named fuel.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fuelname</strong> &#8211; the name of a fuel, which must be one of:
-<code class="docutils literal"><span class="pre">{fame,</span> <span class="pre">bd,</span> <span class="pre">biodiesel,</span> <span class="pre">ethanol,</span> <span class="pre">etoh,</span> <span class="pre">corn</span> <span class="pre">ethanol,</span> <span class="pre">cellulosic</span> <span class="pre">ethanol,</span> <span class="pre">sugar</span> <span class="pre">cane</span> <span class="pre">ethanol,</span> <span class="pre">ft,</span> <span class="pre">FT</span> <span class="pre">biofuels,</span> <span class="pre">biogasoline,</span> <span class="pre">bio-gasoline}</span></code>.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">energy density (MJ/gal)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pygcam.common.getBatchDir">
-<code class="descclassname">pygcam.common.</code><code class="descname">getBatchDir</code><span class="sig-paren">(</span><em>scenario</em>, <em>resultsDir</em>, <em>fromMCS=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getBatchDir" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.getBatchDir">
+<code class="descclassname">pygcam.utils.</code><code class="descname">getBatchDir</code><span class="sig-paren">(</span><em>scenario</em>, <em>resultsDir</em>, <em>fromMCS=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getBatchDir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the name of the directory holding batch query results. This differs
-when running in pygcam&#8217;s gcamtool.py or when running in GCAM-MCS.</p>
+when running in pygcam&#8217;s &#8220;gt&#8221; or when running in GCAM-MCS.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -262,8 +359,8 @@ should be created</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.getBooleanXML">
-<code class="descclassname">pygcam.common.</code><code class="descname">getBooleanXML</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getBooleanXML" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.getBooleanXML">
+<code class="descclassname">pygcam.utils.</code><code class="descname">getBooleanXML</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getBooleanXML" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a value from an XML file and convert it into a boolean True or False.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -282,23 +379,42 @@ value is passed.</td>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.getTempFile">
-<code class="descclassname">pygcam.common.</code><code class="descname">getTempFile</code><span class="sig-paren">(</span><em>suffix</em>, <em>text=True</em>, <em>tmpDir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getTempFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct the name of a temporary file.</p>
+<dt id="pygcam.utils.getResource">
+<code class="descclassname">pygcam.utils.</code><code class="descname">getResource</code><span class="sig-paren">(</span><em>relpath</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getResource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract a resource (e.g., file) from the given relative path in
+the pygcam package.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>relpath</strong> &#8211; (str) a path relative to the pygcam package</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the file contents</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.getTempDir">
+<code class="descclassname">pygcam.utils.</code><code class="descname">getTempDir</code><span class="sig-paren">(</span><em>suffix=''</em>, <em>tmpDir=None</em>, <em>delete=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getTempDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function for common use pattern, which is to get the
+name of a temporary directory that needs to be deleted on app exit.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>suffix</strong> &#8211; the extension to give the temporary file</li>
-<li><strong>text</strong> &#8211; True if this will be a text file</li>
-<li><strong>tmpDir</strong> &#8211; the directory in which to create the (defaults to
-the value of configuration file variable &#8216;GCAM.TempDir&#8217;, or &#8216;/tmp&#8217;
-if the variable is not found.</li>
+<li><strong>suffix</strong> &#8211; (str) an extension to give the temporary file</li>
+<li><strong>tmpDir</strong> &#8211; (str) the directory in which to create the new temporary
+directory (Defaults to the value of configuration file variable
+&#8216;GCAM.TempDir&#8217;, or &#8216;/tmp&#8217; if the variable is not found.</li>
+<li><strong>delete</strong> &#8211; (bool) if False, don&#8217;t delete the file on cleanup.
+(This is useful for debugging.)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the name of the temporary file</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) pathname of a new temporary directory</p>
 </td>
 </tr>
 </tbody>
@@ -306,8 +422,35 @@ if the variable is not found.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.getYearCols">
-<code class="descclassname">pygcam.common.</code><code class="descname">getYearCols</code><span class="sig-paren">(</span><em>years</em>, <em>timestep=5</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.getYearCols" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.getTempFile">
+<code class="descclassname">pygcam.utils.</code><code class="descname">getTempFile</code><span class="sig-paren">(</span><em>suffix=''</em>, <em>tmpDir=None</em>, <em>text=True</em>, <em>delete=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getTempFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function for common use pattern, which is to get
+the name of a temp file that needs to be deleted on app exit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>suffix</strong> &#8211; (str) an extension to give the temporary file</li>
+<li><strong>tmpDir</strong> &#8211; (str) the directory in which to create the file.
+(Defaults to the value of configuration file variable &#8216;GCAM.TempDir&#8217;,
+or &#8216;/tmp&#8217; if the variable is not found.</li>
+<li><strong>text</strong> &#8211; True if this will be a text file</li>
+<li><strong>delete</strong> &#8211; (bool) if False, don&#8217;t delete the file on cleanup.
+(This is useful for debugging.)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) pathname of a new temporary file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.getYearCols">
+<code class="descclassname">pygcam.utils.</code><code class="descname">getYearCols</code><span class="sig-paren">(</span><em>years</em>, <em>timestep=5</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getYearCols" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a list of names of year columns in GCAM result files from a
 string indicating a year range.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -328,8 +471,21 @@ string indicating a year range.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.loadModuleFromPath">
-<code class="descclassname">pygcam.common.</code><code class="descname">loadModuleFromPath</code><span class="sig-paren">(</span><em>modulePath</em>, <em>raiseOnError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.loadModuleFromPath" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.importFrom">
+<code class="descclassname">pygcam.utils.</code><code class="descname">importFrom</code><span class="sig-paren">(</span><em>modname</em>, <em>objname</em>, <em>asTuple=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.importFrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import <cite>modname</cite> and return reference to <code class="docutils literal"><span class="pre">modname.objname</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.importFromDotSpec">
+<code class="descclassname">pygcam.utils.</code><code class="descname">importFromDotSpec</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.importFromDotSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import object x from arbitrary dotted sequence of packages, e.g.,
+&#8220;a.b.c.x&#8221; by splitting this into &#8220;a.b.c&#8221; and &#8220;x&#8221; and calling importFrom.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.loadModuleFromPath">
+<code class="descclassname">pygcam.utils.</code><code class="descname">loadModuleFromPath</code><span class="sig-paren">(</span><em>modulePath</em>, <em>raiseOnError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.loadModuleFromPath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a module from a &#8216;.py&#8217; or &#8216;.pyc&#8217; file from a path that ends in the
 module name, i.e., from &#8220;foo/bar/Baz.py&#8221;, the module name is &#8216;Baz&#8217;.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -354,8 +510,8 @@ be loaded</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.loadObjectFromPath">
-<code class="descclassname">pygcam.common.</code><code class="descname">loadObjectFromPath</code><span class="sig-paren">(</span><em>objName</em>, <em>modulePath</em>, <em>required=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.loadObjectFromPath" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.loadObjectFromPath">
+<code class="descclassname">pygcam.utils.</code><code class="descname">loadObjectFromPath</code><span class="sig-paren">(</span><em>objName</em>, <em>modulePath</em>, <em>required=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.loadObjectFromPath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a module and return a reference to a named object in that module.
 If &#8216;required&#8217; and the object is not found, an error is raised, otherwise,
 None is returned if the object is not found.</p>
@@ -383,8 +539,8 @@ an error.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.mkdirs">
-<code class="descclassname">pygcam.common.</code><code class="descname">mkdirs</code><span class="sig-paren">(</span><em>newdir</em>, <em>mode=504</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.mkdirs" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.mkdirs">
+<code class="descclassname">pygcam.utils.</code><code class="descname">mkdirs</code><span class="sig-paren">(</span><em>newdir</em>, <em>mode=504</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.mkdirs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Try to create the full path <cite>newdir</cite> and ignore the error if it already exists.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -399,8 +555,15 @@ an error.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.printSeries">
-<code class="descclassname">pygcam.common.</code><code class="descname">printSeries</code><span class="sig-paren">(</span><em>series</em>, <em>label</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.printSeries" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.parseTrialString">
+<code class="descclassname">pygcam.utils.</code><code class="descname">parseTrialString</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.parseTrialString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a comma-separated list of ranges into a list of numbers.
+Ex. 1,3,4-6,2 becomes [1,3,4,5,6,2]. Duplicates are deleted.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.printSeries">
+<code class="descclassname">pygcam.utils.</code><code class="descname">printSeries</code><span class="sig-paren">(</span><em>series</em>, <em>label</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.printSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print a <cite>series</cite> of values, with a give <cite>label</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -420,8 +583,25 @@ an error.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.saveToFile">
-<code class="descclassname">pygcam.common.</code><code class="descname">saveToFile</code><span class="sig-paren">(</span><em>txt</em>, <em>dirname=''</em>, <em>filename=''</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.saveToFile" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.resourceStream">
+<code class="descclassname">pygcam.utils.</code><code class="descname">resourceStream</code><span class="sig-paren">(</span><em>relpath</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.resourceStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a stream on the resource found on the given path relative
+to the pygcam package.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>relpath</strong> &#8211; (str) a path relative to the pygcam package</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(file-like stream) a file-like buffer opened on the desired resource.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.saveToFile">
+<code class="descclassname">pygcam.utils.</code><code class="descname">saveToFile</code><span class="sig-paren">(</span><em>txt</em>, <em>dirname=''</em>, <em>filename=''</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.saveToFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the given text to a file in the given directory.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -442,8 +622,8 @@ an error.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.shellCommand">
-<code class="descclassname">pygcam.common.</code><code class="descname">shellCommand</code><span class="sig-paren">(</span><em>command</em>, <em>shell=True</em>, <em>raiseError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.shellCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.shellCommand">
+<code class="descclassname">pygcam.utils.</code><code class="descname">shellCommand</code><span class="sig-paren">(</span><em>command</em>, <em>shell=True</em>, <em>raiseError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.shellCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a shell command and optionally raise PygcamException error.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -468,8 +648,8 @@ either as a string or as a list of strings.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.simpleFormat">
-<code class="descclassname">pygcam.common.</code><code class="descname">simpleFormat</code><span class="sig-paren">(</span><em>s</em>, <em>varDict</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.simpleFormat" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.simpleFormat">
+<code class="descclassname">pygcam.utils.</code><code class="descname">simpleFormat</code><span class="sig-paren">(</span><em>s</em>, <em>varDict</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.simpleFormat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple version of str.format that does not treat &#8216;.&#8217; as
 an attribute reference.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -490,8 +670,8 @@ an attribute reference.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pygcam.common.unixPath">
-<code class="descclassname">pygcam.common.</code><code class="descname">unixPath</code><span class="sig-paren">(</span><em>path</em>, <em>rmFinalSlash=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.common.unixPath" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.utils.unixPath">
+<code class="descclassname">pygcam.utils.</code><code class="descname">unixPath</code><span class="sig-paren">(</span><em>path</em>, <em>rmFinalSlash=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.unixPath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a path to use Unix-style slashes, optionally
 removing the final slash, if present.</p>
 <table class="docutils field-list" frame="void" rules="none">

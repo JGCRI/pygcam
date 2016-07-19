@@ -99,7 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
@@ -168,6 +168,7 @@
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
@@ -220,7 +221,11 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.coercible">coercible() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.chunkify">chunkify() (in module pygcam.utils)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.coercible">coercible() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -235,18 +240,30 @@
   <dt><a href="error.html#pygcam.error.ConfigFileError">ConfigFileError</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="log.html#pygcam.log.configureLogs">configureLogs() (in module pygcam.log)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="xmlEditor.html#pygcam.xmlEditor.copyIfMissing">copyIfMissing() (in module pygcam.xmlEditor)</a>
   </dt>
 
       
+  <dt><a href="utils.html#pygcam.utils.copyResource">copyResource() (in module pygcam.utils)</a>
+  </dt>
+
+      
+  <dt><a href="query.html#pygcam.query.createBatchFile">createBatchFile() (in module pygcam.query)</a>
+  </dt>
+
+      
   <dt><a href="landProtection.html#pygcam.landProtection.createProtected">createProtected() (in module pygcam.landProtection)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.createTrialString">createTrialString() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -260,15 +277,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.delMarketConstraint">delMarketConstraint() (pygcam.xmlEditor.XMLEditor method)</a>
+  <dt><a href="utils.html#pygcam.utils.TempFile.deleteFile">deleteFile() (pygcam.utils.TempFile method)</a>
   </dt>
 
       
-  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.delScenarioComponent">delScenarioComponent() (pygcam.xmlEditor.XMLEditor method)</a>
+  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.delMarketConstraint">delMarketConstraint() (pygcam.xmlEditor.XMLEditor method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.delScenarioComponent">delScenarioComponent() (pygcam.xmlEditor.XMLEditor method)</a>
+  </dt>
+
       
   <dt><a href="query.html#pygcam.query.dropExtraCols">dropExtraCols() (in module pygcam.query)</a>
   </dt>
@@ -284,7 +305,7 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.ensureExtension">ensureExtension() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.ensureExtension">ensureExtension() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -315,18 +336,14 @@
   <dt><a href="error.html#pygcam.error.FileFormatError">FileFormatError</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="error.html#pygcam.error.FileMissingError">FileMissingError</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="utils.html#pygcam.common.flatten">flatten() (in module pygcam.common)</a>
-  </dt>
-
-      
-  <dt><a href="utils.html#pygcam.common.fuelDensityMjPerGal">fuelDensityMjPerGal() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.flatten">flatten() (in module pygcam.utils)</a>
   </dt>
 
   </dl></td>
@@ -336,15 +353,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="error.html#pygcam.error.GcamRuntimeError">GcamRuntimeError</a>
+  </dt>
+
+      
   <dt><a href="project.html#pygcam.project.getBaseline">getBaseline() (in module pygcam.project)</a>
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.getBatchDir">getBatchDir() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.getBatchDir">getBatchDir() (in module pygcam.utils)</a>
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.getBooleanXML">getBooleanXML() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.getBooleanXML">getBooleanXML() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -406,11 +427,19 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.getTempFile">getTempFile() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.getResource">getResource() (in module pygcam.utils)</a>
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.getYearCols">getYearCols() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.getTempDir">getTempDir() (in module pygcam.utils)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.getTempFile">getTempFile() (in module pygcam.utils)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.getYearCols">getYearCols() (in module pygcam.utils)</a>
   </dt>
 
   </dl></td>
@@ -420,11 +449,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.insertScenarioComponent">insertScenarioComponent() (pygcam.xmlEditor.XMLEditor method)</a>
+  <dt><a href="utils.html#pygcam.utils.importFrom">importFrom() (in module pygcam.utils)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.importFromDotSpec">importFromDotSpec() (in module pygcam.utils)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.insertScenarioComponent">insertScenarioComponent() (pygcam.xmlEditor.XMLEditor method)</a>
+  </dt>
+
       
   <dt><a href="query.html#pygcam.query.interpolateYears">interpolateYears() (in module pygcam.query)</a>
   </dt>
@@ -444,11 +481,11 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.loadModuleFromPath">loadModuleFromPath() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.loadModuleFromPath">loadModuleFromPath() (in module pygcam.utils)</a>
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.loadObjectFromPath">loadObjectFromPath() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.loadObjectFromPath">loadObjectFromPath() (in module pygcam.utils)</a>
   </dt>
 
   </dl></td>
@@ -486,7 +523,7 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.mkdirs">mkdirs() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.mkdirs">mkdirs() (in module pygcam.utils)</a>
   </dt>
 
   </dl></td>
@@ -500,7 +537,11 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.printSeries">printSeries() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.parseTrialString">parseTrialString() (in module pygcam.utils)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.printSeries">printSeries() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -523,10 +564,6 @@
       </dl></dd>
       
   <dt><a href="xmlEditor.html#pygcam.sectorEditors.BioenergyEditor.purposeGrownOffRegional">purposeGrownOffRegional() (pygcam.sectorEditors.BioenergyEditor method)</a>
-  </dt>
-
-      
-  <dt><a href="utils.html#module-pygcam.common">pygcam.common (module)</a>
   </dt>
 
       
@@ -568,6 +605,10 @@
   </dt>
 
       
+  <dt><a href="utils.html#module-pygcam.utils">pygcam.utils (module)</a>
+  </dt>
+
+      
   <dt><a href="xmlEditor.html#module-pygcam.xmlEditor">pygcam.xmlEditor (module)</a>
   </dt>
 
@@ -601,6 +642,10 @@
   <dt><a href="xmlEditor.html#pygcam.sectorEditors.RefiningEditor">RefiningEditor (class in pygcam.sectorEditors)</a>
   </dt>
 
+      
+  <dt><a href="utils.html#pygcam.utils.TempFile.remove">remove() (pygcam.utils.TempFile class method)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
@@ -609,6 +654,10 @@
 
       
   <dt><a href="log.html#pygcam.log.resetLogLevel">resetLogLevel() (in module pygcam.log)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.resourceStream">resourceStream() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -625,6 +674,10 @@
   <dt><a href="query.html#pygcam.query.runBatchQuery">runBatchQuery() (in module pygcam.query)</a>
   </dt>
 
+      
+  <dt><a href="query.html#pygcam.query.runMultiQueryBatch">runMultiQueryBatch() (in module pygcam.query)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -632,7 +685,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="utils.html#pygcam.common.saveToFile">saveToFile() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.saveToFile">saveToFile() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -714,11 +767,11 @@
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.shellCommand">shellCommand() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.shellCommand">shellCommand() (in module pygcam.utils)</a>
   </dt>
 
       
-  <dt><a href="utils.html#pygcam.common.simpleFormat">simpleFormat() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.simpleFormat">simpleFormat() (in module pygcam.utils)</a>
   </dt>
 
       
@@ -748,19 +801,33 @@
   </dl></td>
 </tr></table>
 
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="utils.html#pygcam.utils.TempFile">TempFile (class in pygcam.utils)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="utils.html#pygcam.common.unixPath">unixPath() (in module pygcam.common)</a>
+  <dt><a href="utils.html#pygcam.utils.unixPath">unixPath() (in module pygcam.utils)</a>
   </dt>
 
       
-  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.updateConfigComponent">updateConfigComponent() (pygcam.xmlEditor.XMLEditor method)</a>
+  <dt><a href="landProtection.html#pygcam.landProtection.unProtectLand">unProtectLand() (in module pygcam.landProtection)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.updateConfigComponent">updateConfigComponent() (pygcam.xmlEditor.XMLEditor method)</a>
+  </dt>
+
       
   <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor.updateScenarioComponent">updateScenarioComponent() (pygcam.xmlEditor.XMLEditor method)</a>
   </dt>
@@ -821,6 +888,10 @@
 
       
   <dt><a href="xmlEditor.html#pygcam.xmlEditor.XMLEditor">XMLEditor (class in pygcam.xmlEditor)</a>
+  </dt>
+
+      
+  <dt><a href="utils.html#pygcam.utils.XMLFile">XMLFile (class in pygcam.utils)</a>
   </dt>
 
   </dl></td>

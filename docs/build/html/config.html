@@ -472,7 +472,10 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># The location of the ModelInterface to use.</span>
 <span class="na">GCAM.ModelInterface</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/ModelInterface</span>
 
-<span class="na">GCAM.ModelInterfaceLogFile</span> <span class="o">=</span> <span class="s">%(GCAM.TempDir)s/mi.log</span>
+<span class="c1"># Name of log file to catch verbose ModelInterface output. A relative</span>
+<span class="c1"># path is written to the batch output dir. An absolute pathname is</span>
+<span class="c1"># used as is. Set this to /dev/null on Unix to trash the output.</span>
+<span class="na">GCAM.ModelInterfaceLogFile</span> <span class="o">=</span> <span class="s">mi.log</span>
 
 <span class="c1"># QueryPath is string with one or more colon-delimited elements that</span>
 <span class="c1"># identify directories or XML files in which to find batch query</span>
@@ -562,6 +565,28 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># are created relative to this directory.</span>
 <span class="na">GCAM.BatchLogDir</span>    <span class="o">=</span> <span class="s">%(GCAM.SandboxRoot)s/log</span>
 
+<span class="c1"># Set to True to keep XML database in memory, running queries defined</span>
+<span class="c1"># in the generated XMLDBDriver.properties file based on list of queries</span>
+<span class="c1"># defined in project. Setting GCAM.InMemoryDatabase to True implies that</span>
+<span class="c1"># both GCAM.MultipleBatchQueries and GCAM.RunQueriesInGCAM are True.</span>
+<span class="na">GCAM.InMemoryDatabase</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="c1"># Set to False to use old method of running ModelInterface anew for each query.</span>
+<span class="c1"># Default creates a single batch file with multiple queries, invoking MI once.</span>
+<span class="c1"># Setting GCAM.InMemoryDatabase to True implies that GCAM.MultipleBatchQueries</span>
+<span class="c1"># is True since this is the only way to extract results from GCAM.</span>
+<span class="na">GCAM.BatchMultipleQueries</span> <span class="o">=</span> <span class="s">True</span>
+
+<span class="c1"># If True, we expect GCAM to run batch queries before exiting. This is</span>
+<span class="c1"># typically used with the in-memory database, but works otherwise, too.</span>
+<span class="c1"># When False, an XMLDBDriver.properties file is written with an empty</span>
+<span class="c1"># batch-query element. Setting GCAM.InMemoryDatabase to True implies</span>
+<span class="c1"># that GCAM.RunQueriesInGCAM is True, but queries can still be run in</span>
+<span class="c1"># GCAM when the XML database is written to disk. Setting this parameter</span>
+<span class="c1"># to True implies that GCAM.BatchMultipleQueries is True since this is</span>
+<span class="c1"># the only way to run multiple queries internally in GCAM.</span>
+<span class="na">GCAM.RunQueriesInGCAM</span> <span class="o">=</span> <span class="s">False</span>
+
 <span class="c1"># Show log messages on the console (terminal)</span>
 <span class="na">GCAM.LogConsole</span> <span class="o">=</span> <span class="s">True</span>
 
@@ -625,6 +650,18 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># If set, this format is applied to columns holding values for years</span>
 <span class="c1"># when combining CSV files into XLSX files.</span>
 <span class="na">GCAM.ExcelNumberFormat</span> <span class="o">=</span> <span class="s">0.000</span>
+
+<span class="c1"># By default, GCAM output is unbuffered. Set to True for buffering</span>
+<span class="c1"># (which may improve performance on HPC systems.)</span>
+<span class="na">GCAM.BufferedWrapperOutput</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="c1">#</span>
+<span class="c1"># Jug-related</span>
+<span class="c1">#</span>
+<span class="na">GCAM.JugCommand</span>         <span class="o">=</span> <span class="s">jug</span>
+<span class="na">GCAM.JugScript</span>          <span class="o">=</span> <span class="s">jugMain.py</span>
+<span class="na">GCAM.JugDir</span>             <span class="o">=</span> <span class="s">%(Home)s/jugdir</span>
+<span class="na">GCAM.JugTasksPerNode</span>    <span class="o">=</span> <span class="s">4</span>
 </pre></div>
 </div>
 </div>
