@@ -419,12 +419,13 @@ def _findOrCreateQueryFile(title, queryPath, regions, outputDir=None, tmpFiles=T
                 _addRewriteSet(rewriteSetList, rewriteParser, rewriteList, title)
 
         # Extract the query into a file to submit to ModelInterface
-        if outputDir:
+        if tmpFiles:
+            path = getTempFile(suffix='.query.xml', delete=delete)
+        else:
+            outputDir = outputDir or getParam('GCAM.OutputDir')
             queryDir = os.path.join(outputDir, 'queries')
             mkdirs(queryDir)
             path = os.path.join(queryDir, title + '.xml')
-        else:
-            path = getTempFile(suffix='.query.xml', delete=delete)
 
         _logger.debug("Writing extracted query for '%s' to '%s'", title, path)
         tree = ET.ElementTree(root)
@@ -524,6 +525,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         not deleted (use for debugging)
     :return: (str) the generated batch command string
     """
+    _logger.debug('_createBatchCommandElement(%s,%s,...)', scenario, queryName)
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
@@ -534,10 +536,10 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
     # Look for both the literal name as given as well as the name with "-" and "_" replaced with " "
     queryFile = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap,
                                        rewriteSetList=rewriters, rewriteParser=rewriteParser,
-                                       outputDir=outputDir, delete=delete)
+                                       outputDir=outputDir, tmpFiles=tmpFiles, delete=delete)
 
     if not queryFile:
-        raise PygcamException("Error: file for query '%s' was not found." % basename)
+        raise PygcamException("_createBatchCommand: file for query '%s' was not found." % basename)
 
     if not csvFile:
         csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
@@ -727,7 +729,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
                                       delete=delete)
 
     if not filename:
-        raise PygcamException("Error: file for query '%s' was not found." % basename)
+        raise PygcamException("runBatchQuery: file for query '%s' was not found." % basename)
 
     if not csvFile:
         csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
@@ -997,13 +999,14 @@ def main(args):
     scenarios   = args.scenario.split(',')
     queryNames  = args.queryName
     noDelete    = args.noDelete
+    inMemory    = getParamAsBoolean('GCAM.InMemoryDatabase')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
 
     if getParamAsBoolean('GCAM.InMemoryDatabase') and not args.prequery:
         _logger.info('Skipping query step: using in-memory database')
         return
 
-    _logger.debug("Query names: '%s'", queryNames)
+    _logger.debug("Query names: %s", queryNames)
 
     queryFileNode = QueryFile.parse(args.queryFile) if args.queryFile else None
     queryNodes = queryFileNode.queries if queryFileNode else []
@@ -1036,7 +1039,7 @@ def main(args):
                                         regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
                                         tmpFiles=False, noDelete=noDelete)
 
-            writeXmldbDriverProperties(outputDir=exeDir, batchFile=batchFile)
+            writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, batchFile=batchFile)
             continue
 
         if getParamAsBoolean('GCAM.BatchMultipleQueries'):
