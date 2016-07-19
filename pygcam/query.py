@@ -568,6 +568,8 @@ def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batc
     path = os.path.join(outputDir, 'XMLDBDriver.properties')
     memFlag = 'true' if inMemory else 'false'
     content = XMLDBPropertiesTemplate.format(inMemory=memFlag, filterFile=filterFile, batchFile=batchFile)
+
+    _deleteFile(path) # avoid writing through symlinks to ref workspace
     with open(path, 'w') as f:
         f.write(content)
 
@@ -1001,7 +1003,11 @@ def main(args):
     noDelete    = args.noDelete
     inMemory    = getParamAsBoolean('GCAM.InMemoryDatabase')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
+    multiBatch  = inMemory or getParamAsBoolean('GCAM.BatchMultipleQueries')
 
+    # Post-GCAM queries are not possible when using in-memory database.
+    # The 'prequery' step writes the XMLDBDriver.properties file used
+    # by GCAM to query the in-memory database before exiting.
     if getParamAsBoolean('GCAM.InMemoryDatabase') and not args.prequery:
         _logger.info('Skipping query step: using in-memory database')
         return
@@ -1042,7 +1048,7 @@ def main(args):
             writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, batchFile=batchFile)
             continue
 
-        if getParamAsBoolean('GCAM.BatchMultipleQueries'):
+        if multiBatch:
             runBatchQueries(scenario, xmldb, queries, queryPath=queryPath, outputDir=outputDir,
                             miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                             rewriteParser=rewriteParser, noRun=args.noRun, noDelete=noDelete)
