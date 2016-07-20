@@ -391,19 +391,15 @@ def _main(argv=None):
 
     tool = GcamTool()
 
-    try:
-        if ns.batch:
-            run = not ns.showBatch
-            if ns.configSection:        # add these back in for the batch script
-                otherArgs = ['-P', ns.configSection] + otherArgs
+    if ns.batch:
+        run = not ns.showBatch
+        if ns.configSection:        # add these back in for the batch script
+            otherArgs = ['-P', ns.configSection] + otherArgs
 
-            tool.runBatch(otherArgs, run=run)
-        else:
-            args = tool.parser.parse_args(args=otherArgs)
-            tool.run(args=args)
-    finally:
-        # Delete any temporary files that were created
-        TempFile.deleteAll()
+        tool.runBatch(otherArgs, run=run)
+    else:
+        args = tool.parser.parse_args(args=otherArgs)
+        tool.run(args=args)
 
 
 def main(argv=None, raiseError=False):
@@ -423,5 +419,9 @@ def main(argv=None, raiseError=False):
         if not getSection() or getParamAsBoolean('GCAM.ShowStackTrace'):
             import traceback
             traceback.print_exc()
+
+    finally:
+        # Delete any temporary files that were created
+        TempFile.deleteAll()
 
     return 1
