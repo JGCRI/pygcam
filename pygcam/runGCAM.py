@@ -13,7 +13,7 @@ import platform
 import shutil
 from lxml import etree as ET
 from .error import ProgramExecutionError, GcamRuntimeError
-from .utils import mkdirs
+from .utils import mkdirs, writeXmldbDriverProperties
 from .config import getParam, getParamAsBoolean
 from .log import getLogger
 from .windows import setJavaPath, removeSymlink, IsWindows
@@ -187,6 +187,10 @@ def runGCAM(args):
 
     exeDir = getExeDir(workspace, chdir=1)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
+
+    if not getParamAsBoolean('GCAM.RunQueriesInGCAM'):
+        # Write a "no-op" XMLDBDriver.properties file
+        writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
     # TBD: test multiple scenarios; seems each should be run in own 'exe' dir
     if scenario:
