@@ -473,16 +473,16 @@ BatchCommandElement = """
         </command>
 """
 
-def _createJavaCommand(batchFile, redirect):
-    jarFile = os.path.normpath(getParam('GCAM.JarFile'))
-    javaArgs = getParam('GCAM.JavaArgs')
-    javaLibPath = getParam('GCAM.JavaLibPath')
-    if javaLibPath:
-        javaLibPath = os.path.normpath(javaLibPath) # do this separately to avoid turning "" into "."
+def _createJavaCommand(batchFile, miLogFile):
+    # javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
+    # command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
 
-    javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
+    # e.g., java %(GCAM.MI.JavaArgs)s -cp %(GCAM.MI.ClassPath)s ModelInterface/InterfaceMain -b "{batchFile}"
+    template = getParam('GCAM.MI.BatchCommand')
+    command = template.format(batchFile=batchFile)
+    if miLogFile:
+        command += ">> %s 2>&1" % miLogFile
 
-    command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
     return command
 
 def _copyToLogFile(logFile, filename, msg=''):
@@ -638,14 +638,11 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
     batchFile = createBatchFile(scenario, queries, xmldb=xmldb, queryPath=queryPath,
                                 outputDir=outputDir, regions=regions, regionMap=regionMap,
                                 rewriteParser=rewriteParser, noDelete=noDelete)
-
-    redirect = ">> %s 2>&1" % miLogFile if miLogFile else ''
-
     if miLogFile:
         mkdirs(os.path.dirname(miLogFile))
         _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
 
-    command = _createJavaCommand(batchFile, redirect)
+    command = _createJavaCommand(batchFile, miLogFile)
 
     if noRun:
         print(command)
@@ -654,7 +651,7 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
     _logger.debug(command)
 
     try:
-        if getParamAsBoolean('GCAM.UseVirtualBuffer'):      # deprecated in next release of GCAM
+        if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):      # deprecated in next release of GCAM
             with Xvfb():
                 subprocess.call(command, shell=True)
         else:
@@ -724,14 +721,12 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
 
     _logger.debug("Writing results to: %s", csvPath)
 
-    redirect = ">> %s 2>&1" % miLogFile if miLogFile else ''
-
     if miLogFile:
         mkdirs(os.path.dirname(miLogFile))
         _copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
         _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
 
-    command = _createJavaCommand(batchFile, redirect)
+    command = _createJavaCommand(batchFile, miLogFile)
 
     if noRun:
         print(command)
@@ -740,7 +735,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
 
     if not noRun:
         try:
-            if getParamAsBoolean('GCAM.UseVirtualBuffer'):
+            if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):
                 with Xvfb():
                     subprocess.call(command, shell=True)
             else:
@@ -994,7 +989,7 @@ def main(args):
     # :param args:
     # :return: none
     # """
-    miLogFile   = getParam('GCAM.ModelInterfaceLogFile')
+    miLogFile   = getParam('GCAM.MI.LogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
     workspace   = args.workspace or getParam('GCAM.SandboxDir')
     xmldb       = args.xmldb     or os.path.join(workspace, 'output', getParam('GCAM.DbFile'))

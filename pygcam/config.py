@@ -61,8 +61,8 @@ def _getCommentedDefaults(systemDefaults):
     # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
     result += "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
     result += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
-    result += "# Location of ModelInterface jar file\n# GCAM.JarFile = %s\n\n" % getParam('GCAM.JarFile', raw=True)
-    result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.UseVirtualBuffer = %s\n\n" % getParam('GCAM.UseVirtualBuffer', raw=True)
+    result += "# Location of ModelInterface jar file\n# GCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
+    result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
     result += "# Editor command to invoke by 'gt config -e'\n# GCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
 
     if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n'
@@ -118,23 +118,23 @@ def readConfigFiles():
         home = os.getenv('HOME')
 
     if PlatformName == 'Darwin':
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
+        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
         exeFile = 'Release/objects'
         useXvfb = 'False'
         editor  = 'open -e'
     elif PlatformName == 'Linux':
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
+        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.jar'
         exeFile = './gcam.exe'
         useXvfb = 'True'
         editor  = os.getenv('EDITOR', 'vi')
     elif PlatformName == 'Windows':
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
+        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.jar'
         exeFile = 'Objects-Main.exe'
         useXvfb = 'False'
         editor  = os.getenv('EDITOR', 'notepad.exe')
     else:
         # unknown what this might be, but just in case
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
+        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.jar'
         exeFile = 'gcam.exe'
         useXvfb = 'False'
         editor  = os.getenv('EDITOR', 'vi')
@@ -153,8 +153,8 @@ def readConfigFiles():
 
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.JarFile', jarFile)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
+    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.MI.JarFile', jarFile)
+    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.MI.UseVirtualBuffer', useXvfb)
     _ConfigParser.set(DEFAULT_SECTION, 'GCAM.TextEditor', editor)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
