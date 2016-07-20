@@ -493,7 +493,7 @@ def _copyToLogFile(logFile, filename, msg=''):
 
 
 def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, tmpFiles=True,
-                               xmldb=None, csvFile=None, regions=None, regionMap=None,
+                               xmldb='', csvFile=None, regions=None, regionMap=None,
                                rewriters=None, rewriteParser=None, noDelete=False):
     """
     Generate a <command> element for use in a multi-query batch file. The indicated
@@ -520,7 +520,6 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         not deleted (use for debugging)
     :return: (str) the generated batch command string
     """
-    #_logger.debug("_createBatchCommandElement('%s','%s',...)", scenario, queryName)
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
@@ -769,8 +768,9 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
             raise
 
         finally:
-            TempFile.remove(filename,  raiseError=False)
-            TempFile.remove(batchFile, raiseError=False)
+            if delete:
+                TempFile.remove(filename,  raiseError=False)
+                TempFile.remove(batchFile, raiseError=False)
 
 # Deprecated: there no need for this once multiple queries is working
 def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], queryPath=None,
@@ -1046,13 +1046,13 @@ def main(args):
         setupWorkspace(args.workspace)
         batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                     regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
-                                    tmpFiles=False, noDelete=noDelete) if batchMultiple else ''
+                                    tmpFiles=False, noDelete=noDelete) \
+            if batchMultiple else ''
 
         writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, batchFile=batchFile)
         return
 
-    if xmldb:
-        xmldb = os.path.abspath(xmldb)
+    xmldb = os.path.abspath(xmldb)
 
     if miLogFile:
         miLogFile = os.path.abspath(os.path.join(outputDir, miLogFile))

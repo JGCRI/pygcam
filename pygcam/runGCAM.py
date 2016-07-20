@@ -188,7 +188,8 @@ def runGCAM(args):
     exeDir = getExeDir(workspace, chdir=1)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
 
-    if not getParamAsBoolean('GCAM.RunQueriesInGCAM'):
+    if not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
+            getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
