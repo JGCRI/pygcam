@@ -115,65 +115,28 @@ def parseStringPairs(argString, datatype=float):
 
 cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-	<output-meta-data>
-		<summary>
-		  Cellulosic ethanol constraints.
-          This is a generated constraint file. Edits will be overwritten!
-		</summary>
-	</output-meta-data>
-	<world>
-		<region name="USA">
-			<policy-portfolio-standard name="cellulosic-etoh-{cellEtohPolicyType}">
-				<market>USA</market>
-				<policyType>{cellEtohPolicyType}</policyType>
-				<constraint year="2020">{level2020}</constraint>
-				<constraint year="2025">{level2025}</constraint>
-				<constraint year="2030">{level2030}</constraint>
-				<constraint year="2035">{level2035}</constraint>
-				<constraint year="2040">{level2040}</constraint>
-				<constraint year="2045">{level2045}</constraint>
-				<constraint year="2050">{level2050}</constraint>
-			</policy-portfolio-standard>
-		</region>
-	</world>
-</scenario>
-'''
-
-cellEtohComboConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
-<scenario>
-	<output-meta-data>
-		<summary>
-		  Combined cellulosic ethanol.
-          This is a generated constraint file. Edits will be overwritten!
-		</summary>
-	</output-meta-data>
-	<world>
-		<region name="USA">
-			<policy-portfolio-standard name="cellulosic-etoh-tax">
-				<market>USA</market>
-				<policyType>tax</policyType>
-				<constraint year="2020">{level2020}</constraint>
-				<constraint year="2025">{level2025}</constraint>
-				<constraint year="2030">{level2030}</constraint>
-				<constraint year="2035">{level2035}</constraint>
-				<constraint year="2040">{level2040}</constraint>
-				<constraint year="2045">{level2045}</constraint>
-				<constraint year="2050">{level2050}</constraint>
-			</policy-portfolio-standard>
-
-			<policy-portfolio-standard name="cellulosic-etoh-subsidy">
-				<market>USA</market>
-				<policyType>subsidy</policyType>
-				<constraint year="2020">{level2020}</constraint>
-				<constraint year="2025">{level2025}</constraint>
-				<constraint year="2030">{level2030}</constraint>
-				<constraint year="2035">{level2035}</constraint>
-				<constraint year="2040">{level2040}</constraint>
-				<constraint year="2045">{level2045}</constraint>
-				<constraint year="2050">{level2050}</constraint>
-			</policy-portfolio-standard>
-		</region>
-	</world>
+  <output-meta-data>
+    <summary>
+      Cellulosic ethanol constraints.
+      This is a generated constraint file. Edits will be overwritten!
+    </summary>
+  </output-meta-data>
+  <world>
+    <region name="USA">
+      <policy-portfolio-standard name="cellulosic-etoh-{cellEtohPolicyType}">
+        <policyType>{cellEtohPolicyType}</policyType>
+        <market>USA</market>
+        <min-price year="1975" fillout="1">-1e6</min-price>
+        <constraint year="2020">{level2020}</constraint>
+        <constraint year="2025">{level2025}</constraint>
+        <constraint year="2030">{level2030}</constraint>
+        <constraint year="2035">{level2035}</constraint>
+        <constraint year="2040">{level2040}</constraint>
+        <constraint year="2045">{level2045}</constraint>
+        <constraint year="2050">{level2050}</constraint>
+      </policy-portfolio-standard>
+    </region>
+  </world>
 </scenario>
 '''
 
@@ -256,9 +219,7 @@ def genBioConstraints(**kwargs):
     xmlArgs = {"level" + year : value for year, value in desiredCellEtoh.iteritems()}
     xmlArgs['cellEtohPolicyType'] = 'subsidy' if cellEtohPolicyType == 'subs' else cellEtohPolicyType
 
-    template = cellEtohComboConstraintTemplate if cellEtohPolicyType == 'combo' else cellEtohConstraintTemplate
-    xml = template.format(**xmlArgs)
-
+    xml = cellEtohConstraintTemplate.format(**xmlArgs)
     saveConstraintFile(xml, xmlOutputDir, 'cell-etoh', cellEtohPolicyType, policy,
                        subdir=subdir, fromMCS=fromMCS)
 
@@ -267,25 +228,26 @@ def bioMain(args):
     genBioConstraints(**vars(args))
 
 
-yearConstraintTemplate = '''                <constraint year="{year}">{level}</constraint>'''
+yearConstraintTemplate = '''        <constraint year="{year}">{level}</constraint>'''
 
 fuelConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-	<output-meta-data>
-		<summary>
-		  Define fuel constraints.
-          This is a generated constraint file. Edits will be overwritten!
-		</summary>
-	</output-meta-data>
-	<world>
-		<region name="USA">
-			<policy-portfolio-standard name="{fuelTag}-{fuelPolicyType}">
-				<market>USA</market>
-				<policyType>{fuelPolicyType}</policyType>
+  <output-meta-data>
+    <summary>
+      Define fuel constraints.
+      This is a generated constraint file. Edits will be overwritten!
+    </summary>
+  </output-meta-data>
+  <world>
+    <region name="USA">
+      <policy-portfolio-standard name="{fuelTag}-{fuelPolicyType}">
+        <policyType>{fuelPolicyType}</policyType>
+        <market>USA</market>
+        <min-price year="1975" fillout="1">-1e6</min-price>
 {yearConstraints}
-			</policy-portfolio-standard>
-		</region>
-	</world>
+      </policy-portfolio-standard>
+    </region>
+  </world>
 </scenario>
 '''
 
@@ -384,11 +346,6 @@ def genDeltaConstraints(**kwargs):
 
         saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
                            subdir=subdir, fromMCS=fromMCS)
-
-
-# def deltaMain(program, version):
-#     args = parseDeltaArgs(program, version)
-#     genDeltaConstraints(**vars(args))
 
 
 class BioConstraintsCommand(SubcommandABC):
@@ -532,25 +489,6 @@ class DeltaConstraintsCommand(SubcommandABC):
 
 
 if __name__ == '__main__':
-    # <?xml version="1.0" encoding="UTF-8"?>
-    # <scenario>
-    #     <world>
-    #         <region name="USA">
-    #             <ghgpolicy name="ElecCO2">
-    #                 <market>USA</market>
-    #                 <fixedTax year="2015">0</fixedTax>
-    #                 <constraint year="2020">583</constraint>
-    #                 <constraint year="2025">512</constraint>
-    #                 <constraint year="2030">442</constraint>
-    #                 <constraint year="2035">442</constraint>
-    #                 <constraint year="2040">442</constraint>
-    #                 <constraint year="2045">442</constraint>
-    #                 <constraint year="2050">442</constraint>
-    #             </ghgpolicy>
-    #         </region>
-    #     </world>
-    # </scenario>
-
     import pandas as pd
 
     # Generate the XML above
