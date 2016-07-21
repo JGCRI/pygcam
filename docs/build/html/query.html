@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
@@ -195,8 +195,20 @@ query, the <code class="docutils literal"><span class="pre">title</span></code> 
 in a text file, with one query name per line, or in an XML file that offers additional
 features. See <a class="reference internal" href="query-xml.html"><em>queries.xml</em></a> for information on the XML file format.</p>
 </div>
-<div class="section" id="extracting-queries">
-<h2>Extracting queries<a class="headerlink" href="#extracting-queries" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="controlling-how-queries-are-executed">
+<h2>Controlling how queries are executed<a class="headerlink" href="#controlling-how-queries-are-executed" title="Permalink to this headline">¶</a></h2>
+<p>Queries can be executed one-at-a-time or all together in a single XML batch file.
+This behavior is controlled by configuration parameter <code class="docutils literal"><span class="pre">GCAM.BatchMultipleQueries</span></code>,
+which, if set to <code class="docutils literal"><span class="pre">True</span></code>, runs all queries in one file.</p>
+<p>A new version of GCAM (available only internally at JGCRI currently) allows the XML
+database to be stored in memory rather than being written to disk, saving both time
+and disk space. GCAM will run designated queries against this in-memory database to
+generate CSV files prior to exiting. In addition, GCAM can run queries automatically
+even if the database is written to disk. Two additional config parameters control
+this behavior in <code class="docutils literal"><span class="pre">pygcam</span></code>: <code class="docutils literal"><span class="pre">GCAM.InMemoryDatabase</span></code> and <code class="docutils literal"><span class="pre">GCAM.RunQueriesInGCAM</span></code>,
+whose meanings should be obvious. Setting <code class="docutils literal"><span class="pre">GCAM.InMemoryDatabase</span></code> implies both
+<code class="docutils literal"><span class="pre">GCAM.RunQueriesInGCAM</span></code> and <code class="docutils literal"><span class="pre">GCAM.BatchMultipleQueries</span></code> are <code class="docutils literal"><span class="pre">True</span></code>, since this
+is the only way to get data out of the model.</p>
 </div>
 <div class="section" id="generating-label-rewrites-to-aggregate-and-filter-results">
 <h2>Generating label rewrites to aggregate and filter results<a class="headerlink" href="#generating-label-rewrites-to-aggregate-and-filter-results" title="Permalink to this headline">¶</a></h2>
@@ -228,8 +240,8 @@ queries into separate temp files and referencing them from the batch query file.
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>scenario</strong> &#8211; (str) the name of the scenario to perform the query on</li>
-<li><strong>queries</strong> &#8211; </li>
-<li><strong>xmldb</strong> &#8211; </li>
+<li><strong>queries</strong> &#8211; (list of str query names and/or Query instances)</li>
+<li><strong>xmldb</strong> &#8211; (str) path to XMLDB, or &#8216;&#8217; to use in-memory DB</li>
 <li><strong>queryPath</strong> &#8211; (str) a list of directories or XML filenames, separated
 by a colon (on Unix) or a semi-colon (on Windows)</li>
 <li><strong>outputDir</strong> &#8211; (str) the directory in which to write the .CSV
@@ -511,20 +523,24 @@ each query&#8217;s results in a file named of the form {queryName}-{scenario}.cs
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>scenario</strong> &#8211; </li>
+<li><strong>scenario</strong> &#8211; (str) the name of the scenario to perform the query on</li>
 <li><strong>queries</strong> &#8211; (list of str query names and/or Query instances)</li>
 <li><strong>xmldb</strong> &#8211; (str) path to XMLDB, or &#8216;&#8217; to use in-memory DB</li>
-<li><strong>queryPath</strong> &#8211; </li>
-<li><strong>outputDir</strong> &#8211; </li>
-<li><strong>miLogFile</strong> &#8211; </li>
-<li><strong>regions</strong> &#8211; </li>
-<li><strong>regionMap</strong> &#8211; </li>
-<li><strong>noRun</strong> &#8211; </li>
-<li><strong>noDelete</strong> &#8211; </li>
+<li><strong>queryPath</strong> &#8211; (str) a list of directories or XML filenames, separated
+by a colon (on Unix) or a semi-colon (on Windows)</li>
+<li><strong>outputDir</strong> &#8211; (str) the directory in which to write the .CSV
+with query results, default is value of GCAM.OutputDir.</li>
+<li><strong>regions</strong> &#8211; (iterable of str) the regions you want to include in the query</li>
+<li><strong>regionMap</strong> &#8211; (dict-like) keys are the names of regions that should be rewritten.
+The value is the name of the aggregate region to map into.</li>
+<li><strong>noRun</strong> &#8211; (bool) if True, print the command that would be executed, but
+don&#8217;t run it.</li>
+<li><strong>noDelete</strong> &#8211; (bool) if True, temporary files created by this function are
+not deleted (use for debugging)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
 </td>
 </tr>
 </tbody>

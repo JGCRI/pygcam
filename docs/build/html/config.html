@@ -32,7 +32,7 @@
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
         <link rel="next" title="pygcam.diff" href="diff.html"/>
-        <link rel="prev" title="pygcam.common" href="utils.html"/> 
+        <link rel="prev" title="pygcam.utils" href="utils.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
@@ -173,26 +173,33 @@ configuration file and the API to access it are described below.</p>
 </div>
 <div class="section" id="the-configuration-files">
 <span id="pygcam-cfg"></span><h2>The configuration files<a class="headerlink" href="#the-configuration-files" title="Permalink to this headline">¶</a></h2>
-<p>There are three configuration files, two of which the user can modify:</p>
+<p>There are up to 4 configuration files read, two of which are user-modifiable:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li>First, <code class="docutils literal"><span class="pre">system.cfg</span></code> is read from within the <code class="docutils literal"><span class="pre">pygcam</span></code> package. This defines all
-known config variables and provides their default values as described below.
+<li>First, <code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code> is read from within the <code class="docutils literal"><span class="pre">pygcam</span></code> package. This
+defines all known config variables and provides their default values as described
+below. The values in this file are the appropriate values for Linux and similar systems.
 <em>This file should not be modified by the user.</em></li>
+<li>Next, a platform-specific file is read, if it exists. Currently, the only such
+files are <code class="docutils literal"><span class="pre">pygcam/etc/Windows.cfg</span></code> and <code class="docutils literal"><span class="pre">pygcam/etc/Darwin.cfg</span></code>, read on Windows
+and Macintosh systems, respectively. (N.B. &#8220;Darwin&#8221; is the official platform name
+for the Macintosh operating system.) <em>These files should not be modified by the user.</em></li>
 <li>Next, if the environment variable <code class="docutils literal"><span class="pre">PYGCAM_SITE_CONFIG</span></code> is defined, it should
-refer to a configuration file in the same format as the <code class="docutils literal"><span class="pre">system.cfg</span></code>. This overrides
-system defaults to provide site-level default values. The site configuration file is
-optional and may not be needed in most cases. It is provided  to allow an administrator
-to set site-specific values for a set of users to simplify configuration.</li>
-<li>Finally, <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> is read if it exists; otherwise the file is created
-with the initial contents being a commented-out version of <code class="docutils literal"><span class="pre">system.cfg</span></code>, which
-provides a handy reference to the available parameters and their default values.</li>
+refer to a configuration file that defines site-specific settings. This file is
+optional; it allows an administrator to consolidate site-specific values to
+simplify configuration for users.</li>
+<li>Finally, the user&#8217;s own <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> is read if it exists; otherwise the
+file is created with the initial contents being a commented-out version of
+<code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code>. This provides a handy reference to the available parameters
+and their default values.</li>
 </ol>
 </div></blockquote>
-<p>Values in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> override defaults set in either of the <code class="docutils literal"><span class="pre">system.cfg</span></code> or
-site config files and become the default for all projects. Values can also be set in
-project-specific sections with names chosen by the user. This name should match the name
-of the corresponding project in the <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file.</p>
+<p>The values in each successive configuration file override default values for
+variables of the same name that are set in files read earlier. Values can also be set in
+project-specific sections whose names should match project names defined in the
+<a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file. Thus when a user specifies a project to operate on, either on the
+command-line to <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> or as the value of <code class="docutils literal"><span class="pre">GCAM.DefaultProject</span></code> in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>,
+the project-specific values override any values set in <code class="docutils literal"><span class="pre">[DEFAULT]</span></code> sections.</p>
 <p>For example, consider the following values in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>:</p>
 <blockquote>
 <div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
@@ -232,21 +239,23 @@ this line to <code class="docutils literal"><span class="pre">~/.pygcam.cfg</spa
 </div>
 </div></blockquote>
 <p>will cause the command <code class="docutils literal"><span class="pre">emacs</span> <span class="pre">$HOME/.pygcam.cfg</span></code> to be run.</p>
+</div>
 <div class="section" id="referencing-configuration-variables">
-<h4>Referencing configuration variables<a class="headerlink" href="#referencing-configuration-variables" title="Permalink to this headline">¶</a></h4>
-<p>Within the configuration file, variables are often defined in terms of other variables.
-The syntax for referencing the value of a variable is the precede the variable name with
-<code class="docutils literal"><span class="pre">%(</span></code> and follow it with <code class="docutils literal"><span class="pre">)s</span></code>. This to reference variable <code class="docutils literal"><span class="pre">GCAM.QueryDir</span></code>, you
-would write <code class="docutils literal"><span class="pre">%(GCAM.QueryDir)</span></code>. Note that variable names are case-sensitive.</p>
-<p>Variables&#8217; values are substituted when a variable&#8217;s value is requested, not when the
-variable is defined. The difference is that if variable <code class="docutils literal"><span class="pre">A</span></code> is defined in terms of
-variable <code class="docutils literal"><span class="pre">B</span></code>, (e.g., <code class="docutils literal"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">%(B)s/something/else</span></code>), you can subsequently change
-<code class="docutils literal"><span class="pre">B</span></code> and the value of <code class="docutils literal"><span class="pre">A</span></code> will show this when <code class="docutils literal"><span class="pre">A</span></code> is accessed by <code class="docutils literal"><span class="pre">pygcam</span></code>.</p>
+<h3>Referencing configuration variables<a class="headerlink" href="#referencing-configuration-variables" title="Permalink to this headline">¶</a></h3>
+<p>A powerful feature of the configuration system is that variables can be defined in
+terms of other variables. The syntax for referencing the value of a variable is to
+precede the variable name with <code class="docutils literal"><span class="pre">%(</span></code> and follow it with <code class="docutils literal"><span class="pre">)s</span></code>. This to reference
+variable <code class="docutils literal"><span class="pre">GCAM.QueryDir</span></code>, you would write <code class="docutils literal"><span class="pre">%(GCAM.QueryDir)s</span></code>. Note that variable
+names are case-sensitive.</p>
+<p>Note that variable values are substituted when a variable&#8217;s value is requested, not
+when the configuration file is read. The difference is that if variable <code class="docutils literal"><span class="pre">A</span></code> is
+defined in terms of variable <code class="docutils literal"><span class="pre">B</span></code>, (e.g., <code class="docutils literal"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">%(B)s/something/else</span></code>), you can
+subsequently change <code class="docutils literal"><span class="pre">B</span></code> and the value of <code class="docutils literal"><span class="pre">A</span></code> will reflect this when <code class="docutils literal"><span class="pre">A</span></code> is
+accessed by <code class="docutils literal"><span class="pre">pygcam</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">When de-referencing a variable in the config file, you must include the
 trailing &#8216;s&#8217; after the closing parenthesis, or a Python exception will be raised.</p>
-</div>
 </div>
 </div>
 <div class="section" id="validating-configuration-settings">
@@ -279,7 +288,7 @@ and whether their value must be a file or directory.</p>
 <td>yes</td>
 <td>directory</td>
 </tr>
-<tr class="row-odd"><td>GCAM.ModelInterface</td>
+<tr class="row-odd"><td>GCAM.MI.Dir</td>
 <td>yes</td>
 <td>directory</td>
 </tr>
@@ -299,7 +308,7 @@ and whether their value must be a file or directory.</p>
 <td>yes</td>
 <td>file</td>
 </tr>
-<tr class="row-even"><td>GCAM.JarFile</td>
+<tr class="row-even"><td>GCAM.MI.JarFile</td>
 <td>yes</td>
 <td>file</td>
 </tr>
@@ -323,17 +332,19 @@ the config file, run the command <code class="docutils literal"><span class="pre
 check that project&#8217;s variables. For example, I can test the values set for project
 <code class="docutils literal"><span class="pre">Paper1</span></code> with the following command, shown with command output:</p>
 <blockquote>
-<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>gt -P Paper1 config -t
-OK: GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws/paper1
-OK: GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket/paper1
+<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>gt -P paper1 config -t
+OK: GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws
+OK: GCAM.SandboxDir <span class="o">=</span> /Users/rjp/ws/paper1
+OK: GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket
+OK: GCAM.ProjectDir <span class="o">=</span> /Users/rjp/bitbucket/paper1
 OK: GCAM.QueryDir <span class="o">=</span> /Users/rjp/bitbucket/paper1/queries
-OK: GCAM.ModelInterface <span class="o">=</span> /Users/rjp/GCAM/current/ModelInterface
+OK: GCAM.MI.Dir <span class="o">=</span> /Users/rjp/GCAM/current/ModelInterface
 OK: GCAM.RefWorkspace <span class="o">=</span> /Users/rjp/GCAM/current/Main_User_Workspace
 OK: GCAM.TempDir <span class="o">=</span> /tmp
 OK: GCAM.UserTempDir <span class="o">=</span> /Users/rjp/tmp
 OK: GCAM.ProjectXmlFile <span class="o">=</span> /Users/rjp/bitbucket/paper1/etc/project.xml
 OK: GCAM.RefConfigFile <span class="o">=</span> /Users/rjp/GCAM/current/Main_User_Workspace/exe/configuration_ref.xml
-OK: GCAM.JarFile <span class="o">=</span> /Users/rjp/bitbucket/gcam-proj/ModelInterface/ModelInterface.jar
+OK: GCAM.MI.JarFile <span class="o">=</span> /Users/rjp/bitbucket/gcam-proj/ModelInterface/ModelInterface.jar
 OK: GCAM.RegionMapFile <span class="o">=</span> /Users/rjp/bitbucket/paper1/etc/Regions.txt
 </pre></div>
 </div>
@@ -343,94 +354,64 @@ OK: GCAM.RegionMapFile <span class="o">=</span> /Users/rjp/bitbucket/paper1/etc/
 <h3>Location of GCAM program and data files<a class="headerlink" href="#location-of-gcam-program-and-data-files" title="Permalink to this headline">¶</a></h3>
 <p>The configuration variable <code class="docutils literal"><span class="pre">GCAM.RefWorkspace</span></code> must point to a directory
 structured like the standard GCAM <code class="docutils literal"><span class="pre">Main_User_Workspace</span></code>, with sub-directories
-for <code class="docutils literal"><span class="pre">input</span></code>, <code class="docutils literal"><span class="pre">output</span></code>, <code class="docutils literal"><span class="pre">libs</span></code>, and <code class="docutils literal"><span class="pre">exe</span></code>.</p>
-<p>The variable <code class="docutils literal"><span class="pre">GCAM.ModelInterface</span></code> should point to a directory holding the
-ModelInterface program.</p>
-<p>Note that <code class="docutils literal"><span class="pre">pygcam</span></code> does not run GCAM in the reference workspace&#8217;s <code class="docutils literal"><span class="pre">exe</span></code> directory;
-it uses the files there to create new workspaces as required.
-Creating separate workspaces for each scenario allows multiple
-scenarios to be run simultaneously without contention for the XML database
-which is created at the end of the model run.</p>
+for <code class="docutils literal"><span class="pre">input</span></code>, <code class="docutils literal"><span class="pre">output</span></code>, <code class="docutils literal"><span class="pre">libs</span></code>, and <code class="docutils literal"><span class="pre">exe</span></code>. These files are the reference
+files used by <a class="reference internal" href="gcamtool.html"><em>gt (GCAM tool)</em></a> to set up &#8220;sandbox&#8221; workspaces in which to run GCAM.</p>
+<p><code class="docutils literal"><span class="pre">pygcam</span></code> does not run GCAM in the reference workspace&#8217;s <code class="docutils literal"><span class="pre">exe</span></code> directory;
+it uses the files there to create new workspaces as required. Creating separate
+workspaces for each scenario allows multiple scenarios to be run simultaneously
+without contention for the XML database which is created at the end of the model
+run. This is essential when running on a computing cluster.</p>
+<p>The variable <code class="docutils literal"><span class="pre">GCAM.MI.Dir</span></code> should point to a directory holding the ModelInterface
+program. This is used to execute batch queries to extract results from GCAM.</p>
 </div>
 <div class="section" id="default-values">
 <h3>Default values<a class="headerlink" href="#default-values" title="Permalink to this headline">¶</a></h3>
-<p>The system default values are provided in the <code class="docutils literal"><span class="pre">pygcam</span></code> package in a file called
-<code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code>, which is listed below.</p>
-<p>In addition to these values, several values are set dynamically based on the
-operating system being used, as shown in the tables below.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="31%" />
-<col width="16%" />
-<col width="23%" />
-<col width="16%" />
-<col width="14%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Variable</th>
-<th class="head">Linux</th>
-<th class="head">Mac OS X</th>
-<th class="head">Windows</th>
-<th class="head">Other</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>Home</td>
-<td>$HOME</td>
-<td>$HOME</td>
-<td>%HOMEPATH%</td>
-<td>$HOME</td>
-</tr>
-<tr class="row-odd"><td>GCAM.Executable</td>
-<td>./gcam.exe</td>
-<td>Release/objects</td>
-<td>gcam.exe</td>
-<td>gcam.exe</td>
-</tr>
-<tr class="row-even"><td>GCAM.UseVirtualBuffer</td>
-<td>True</td>
-<td>False</td>
-<td>False</td>
-<td>False</td>
-</tr>
-<tr class="row-odd"><td>GCAM.TextEditor</td>
-<td>vi</td>
-<td>open -e</td>
-<td>notepad.exe</td>
-<td>vi</td>
-</tr>
-</tbody>
-</table>
-<p>In addition, the variable <code class="docutils literal"><span class="pre">GCAM.JarFile</span></code> provides the location of the jar file.
-The variable is initialized differently on Windows, OS X, and Linux as follows:</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="9%" />
-<col width="91%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">System</th>
-<th class="head">Default definition of GCAM.JarFile</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>Windows</td>
-<td>%(GCAM.ModelInterface)s/ModelInterface.jar</td>
-</tr>
-<tr class="row-odd"><td>Linux</td>
-<td>%(GCAM.ModelInterface)s/ModelInterface.jar</td>
-</tr>
-<tr class="row-even"><td>OS X</td>
-<td>%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</td>
-</tr>
-</tbody>
-</table>
+<p>The system default values are provided in the <code class="docutils literal"><span class="pre">pygcam</span></code> package in the file
+<code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code>, which is listed below. In addition to these values,
+several values are read from platform-specific files, as noted above. These
+values are shown below.</p>
+<div class="section" id="for-windows">
+<h4>For Windows:<a class="headerlink" href="#for-windows" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-cfg"><div class="highlight"><pre><span class="c1"># Windows-specific default values</span>
+<span class="k">[DEFAULT]</span>
+<span class="na">GCAM.Executable</span> <span class="o">=</span> <span class="s">Objects-Main.exe</span>
+<span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">notepad.exe</span>
+<span class="na">GCAM.MI.UseVirtualBuffer</span> <span class="o">=</span> <span class="s">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="for-macintosh-os-x">
+<h4>For Macintosh OS X:<a class="headerlink" href="#for-macintosh-os-x" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-cfg"><div class="highlight"><pre><span class="c1"># Macintosh-specific default values</span>
+<span class="k">[DEFAULT]</span>
+<span class="na">GCAM.MI.Dir</span>     <span class="o">=</span> <span class="s">%(GCAM.MI.Dir)s/ModelInterface.app/Contents/Resources/Java</span>
+<span class="na">GCAM.Executable</span> <span class="o">=</span> <span class="s">Release/objects</span>
+<span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">open -e</span>
+<span class="na">GCAM.MI.UseVirtualBuffer</span> <span class="o">=</span> <span class="s">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-configuration-variable-dependencies">
+<h4>Default configuration variable dependencies<a class="headerlink" href="#default-configuration-variable-dependencies" title="Permalink to this headline">¶</a></h4>
+<p>The following figure shows variable dependencies according to the default
+definitions. Variables lower in the figure depend on those above them. Thus,
+if you change a variable with &#8220;descendants&#8221;, you affect the definition of
+everything below it in the figure.</p>
+<blockquote>
+<div><img alt="_images/ConfigVarStructure.jpg" src="_images/ConfigVarStructure.jpg" />
+</div></blockquote>
+</div>
 <div class="section" id="the-system-defaults-file">
 <h4>The system defaults file<a class="headerlink" href="#the-system-defaults-file" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
 
 <span class="c1"># This project is used if &#39;-P&#39; flag not given to the &#39;gt&#39; command</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span>
+
+<span class="c1"># Linux default is defined here. Can be overridden in</span>
+<span class="c1"># platform-specific config file (e.g., etc/Darwin.cfg,</span>
+<span class="c1"># etc/Windows.cfg).</span>
+<span class="na">GCAM.Executable</span> <span class="o">=</span> <span class="s">gcam.exe</span>
 
 <span class="c1"># This defines the variable for documentation purposes. The value</span>
 <span class="c1"># is set automatically in each project section to the name of that</span>
@@ -468,14 +449,6 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 
 <span class="c1"># The reference config file to use as a starting point for &quot;setup&quot;</span>
 <span class="na">GCAM.RefConfigFile</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/exe/configuration_ref.xml</span>
-
-<span class="c1"># The location of the ModelInterface to use.</span>
-<span class="na">GCAM.ModelInterface</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/ModelInterface</span>
-
-<span class="c1"># Name of log file to catch verbose ModelInterface output. A relative</span>
-<span class="c1"># path is written to the batch output dir. An absolute pathname is</span>
-<span class="c1"># used as is. Set this to /dev/null on Unix to trash the output.</span>
-<span class="na">GCAM.ModelInterfaceLogFile</span> <span class="o">=</span> <span class="s">mi.log</span>
 
 <span class="c1"># QueryPath is string with one or more colon-delimited elements that</span>
 <span class="c1"># identify directories or XML files in which to find batch query</span>
@@ -525,12 +498,28 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># Default location in which to look for scenario directories</span>
 <span class="na">GCAM.ScenariosDir</span> <span class="o">=</span>
 
-<span class="c1"># The location of the libraries needed by ModelInterface</span>
-<span class="na">GCAM.JavaLibPath</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/libs/basex</span>
+<span class="c1"># The ModelInterface directory for the version to use.</span>
+<span class="na">GCAM.MI.Dir</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/ModelInterface</span>
 
-<span class="c1"># Arguments to java to ensure that ModelInterface has enough</span>
-<span class="c1"># heap space.</span>
-<span class="na">GCAM.JavaArgs</span> <span class="o">=</span> <span class="s">-Xms512m -Xmx2g</span>
+<span class="c1"># This is defined dynamically in config.py. On the Mac, it&#39;s here:</span>
+<span class="c1"># %(GCAM.MI.Dir)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</span>
+<span class="na">GCAM.MI.JarFile</span> <span class="o">=</span> <span class="s">%(GCAM.MI.Dir)s/ModelInterface.jar</span>
+
+<span class="c1"># This is set dynamically to True on Linux (deprecated in next release)</span>
+<span class="na">GCAM.MI.UseVirtualBuffer</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="c1"># The location of the libraries needed by ModelInterface</span>
+<span class="na">GCAM.MI.ClassPath</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/libs/basex/BaseX.jar:%(GCAM.MI.JarFile)s</span>
+
+<span class="c1"># Arguments to java to ensure that ModelInterface has enough heap space.</span>
+<span class="na">GCAM.MI.JavaArgs</span> <span class="o">=</span> <span class="s">-Xms512m -Xmx2g</span>
+
+<span class="na">GCAM.MI.BatchCommand</span> <span class="o">=</span> <span class="s">java %(GCAM.MI.JavaArgs)s -cp %(GCAM.MI.ClassPath)s ModelInterface/InterfaceMain -b &quot;{batchFile}&quot;</span>
+
+<span class="c1"># Name of log file to catch verbose ModelInterface output. A relative</span>
+<span class="c1"># path is written to the batch output dir. An absolute pathname is</span>
+<span class="c1"># used as is. Set this to /dev/null on Unix to trash the output.</span>
+<span class="na">GCAM.MI.LogFile</span> <span class="o">=</span> <span class="s">mi.log</span>
 
 <span class="c1"># The name of the database file (or directory, for BaseX)</span>
 <span class="na">GCAM.DbFile</span>	  <span class="o">=</span> <span class="s">database_basexdb</span>
@@ -655,6 +644,9 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <span class="c1"># (which may improve performance on HPC systems.)</span>
 <span class="na">GCAM.BufferedWrapperOutput</span> <span class="o">=</span> <span class="s">False</span>
 
+<span class="c1"># TextEditor to open via the --edit option to the &#39;config&#39; sub-command</span>
+<span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">vi</span>
+
 <span class="c1">#</span>
 <span class="c1"># Jug-related</span>
 <span class="c1">#</span>
@@ -676,7 +668,9 @@ The variable is initialized differently on Windows, OS X, and Linux as follows:<
 <code class="descclassname">pygcam.config.</code><code class="descname">getConfig</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the configuration object. If one has been created already via
 <cite>readConfigFiles</cite>, it is returned; otherwise a new one is created
-and the configuration files are read.</p>
+and the configuration files are read. Applications generally do not
+need to use this object directly since the single instance is stored
+internally and referenced by the other API functions.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -811,9 +805,11 @@ defaults to the value used in the first call to <code class="docutils literal"><
 <dl class="function">
 <dt id="pygcam.config.readConfigFiles">
 <code class="descclassname">pygcam.config.</code><code class="descname">readConfigFiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.readConfigFiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the pygcam configuration file, <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>. &#8220;Sensible&#8221; default values are
-established first, which overwritten by values found in the user&#8217;s configuration
-file.</p>
+<dd><p>Read the pygcam configuration files, starting with <code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code>,
+followed by <code class="docutils literal"><span class="pre">pygcam/etc/{platform}.cfg</span></code> if present. If the environment variable
+<code class="docutils literal"><span class="pre">PYGCAM_SITE_CONFIG</span></code> is defined, its value should be a config file, which is
+read next. Finally, the user&#8217;s config file, <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>, is read. Each
+successive file overrides values for any variable defined in an earlier file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -877,7 +873,7 @@ If not given, the value is set in the DEFAULT section.</li>
         <a href="diff.html" class="btn btn-neutral float-right" title="pygcam.diff" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="utils.html" class="btn btn-neutral" title="pygcam.common" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="utils.html" class="btn btn-neutral" title="pygcam.utils" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

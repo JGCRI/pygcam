@@ -139,7 +139,7 @@ the code using ``git``.
 
 Unix-like platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You probably have ``git`` already. Otherwise, find
+Unix-like platforms generally have ``git`` installed. Otherwise, install
 a current version for your platform. Do the following:
 
   - Open a terminal window. (Mac users can find this in

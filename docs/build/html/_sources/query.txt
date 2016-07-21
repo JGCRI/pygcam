@@ -42,8 +42,21 @@ The :ref:`query sub-command <query-label>` allows a set of queries to be identif
 in a text file, with one query name per line, or in an XML file that offers additional
 features. See :doc:`query-xml` for information on the XML file format.
 
-Extracting queries
-^^^^^^^^^^^^^^^^^^^
+Controlling how queries are executed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Queries can be executed one-at-a-time or all together in a single XML batch file.
+This behavior is controlled by configuration parameter ``GCAM.BatchMultipleQueries``,
+which, if set to ``True``, runs all queries in one file.
+
+A new version of GCAM (available only internally at JGCRI currently) allows the XML
+database to be stored in memory rather than being written to disk, saving both time
+and disk space. GCAM will run designated queries against this in-memory database to
+generate CSV files prior to exiting. In addition, GCAM can run queries automatically
+even if the database is written to disk. Two additional config parameters control
+this behavior in ``pygcam``: ``GCAM.InMemoryDatabase`` and ``GCAM.RunQueriesInGCAM``,
+whose meanings should be obvious. Setting ``GCAM.InMemoryDatabase`` implies both
+``GCAM.RunQueriesInGCAM`` and ``GCAM.BatchMultipleQueries`` are ``True``, since this
+is the only way to get data out of the model.
 
 
 Generating label rewrites to aggregate and filter results
