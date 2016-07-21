@@ -556,8 +556,8 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     queries into separate temp files and referencing them from the batch query file.
 
     :param scenario: (str) the name of the scenario to perform the query on
-    :param queries:
-    :param xmldb:
+    :param queries: (list of str query names and/or Query instances)
+    :param xmldb: (str) path to XMLDB, or '' to use in-memory DB
     :param queryPath: (str) a list of directories or XML filenames, separated
         by a colon (on Unix) or a semi-colon (on Windows)
     :param outputDir: (str) the directory in which to write the .CSV
@@ -623,17 +623,21 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
     Create a single GCAM XML batch file that runs multiple queries, placing the
     each query's results in a file named of the form {queryName}-{scenario}.csv.
 
-    :param scenario:
+    :param scenario: (str) the name of the scenario to perform the query on
     :param queries: (list of str query names and/or Query instances)
     :param xmldb: (str) path to XMLDB, or '' to use in-memory DB
-    :param queryPath:
-    :param outputDir:
-    :param miLogFile:
-    :param regions:
-    :param regionMap:
-    :param noRun:
-    :param noDelete:
-    :return:
+    :param queryPath: (str) a list of directories or XML filenames, separated
+        by a colon (on Unix) or a semi-colon (on Windows)
+    :param outputDir: (str) the directory in which to write the .CSV
+        with query results, default is value of GCAM.OutputDir.
+    :param regions: (iterable of str) the regions you want to include in the query
+    :param regionMap: (dict-like) keys are the names of regions that should be rewritten.
+        The value is the name of the aggregate region to map into.
+    :param noRun: (bool) if True, print the command that would be executed, but
+        don't run it.
+    :param noDelete: (bool) if True, temporary files created by this function are
+        not deleted (use for debugging)
+    :return: none
     """
     batchFile = createBatchFile(scenario, queries, xmldb=xmldb, queryPath=queryPath,
                                 outputDir=outputDir, regions=regions, regionMap=regionMap,
