@@ -94,17 +94,34 @@ def getConfig():
     """
     Return the configuration object. If one has been created already via
     `readConfigFiles`, it is returned; otherwise a new one is created
-    and the configuration files are read.
+    and the configuration files are read. Applications generally do not
+    need to use this object directly since the single instance is stored
+    internally and referenced by the other API functions.
 
     :return: a `SafeConfigParser` instance.
     """
     return _ConfigParser or readConfigFiles()
 
+
+def _readConfigResourceFile(filename, raiseError=True):
+    try:
+        data = resource_string('pygcam', filename)
+    except IOError:
+        if raiseError:
+            raise
+        else:
+            return None
+
+    _ConfigParser.readfp(io.BytesIO(data))
+    return data
+
 def readConfigFiles():
     """
-    Read the pygcam configuration file, ``~/.pygcam.cfg``. "Sensible" default values are
-    established first, which overwritten by values found in the user's configuration
-    file.
+    Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
+    followed by ``pygcam/etc/{platform}.cfg`` if present. If the environment variable
+    ``PYGCAM_SITE_CONFIG`` is defined, its value should be a config file, which is
+    read next. Finally, the user's config file, ``~/.pygcam.cfg``, is read. Each
+    successive file overrides values for any variable defined in an earlier file.
 
     :return: a populated SafeConfigParser instance
     """
@@ -117,45 +134,15 @@ def readConfigFiles():
     else:
         home = os.getenv('HOME')
 
-    if PlatformName == 'Darwin':
-        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
-        exeFile = 'Release/objects'
-        useXvfb = 'False'
-        editor  = 'open -e'
-    elif PlatformName == 'Linux':
-        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.jar'
-        exeFile = './gcam.exe'
-        useXvfb = 'True'
-        editor  = os.getenv('EDITOR', 'vi')
-    elif PlatformName == 'Windows':
-        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.jar'
-        exeFile = 'Objects-Main.exe'
-        useXvfb = 'False'
-        editor  = os.getenv('EDITOR', 'notepad.exe')
-    else:
-        # unknown what this might be, but just in case
-        jarFile = '%(GCAM.MI.Dir)s/ModelInterface.jar'
-        exeFile = 'gcam.exe'
-        useXvfb = 'False'
-        editor  = os.getenv('EDITOR', 'vi')
-
-    # Initialize config parser with default values
     _ConfigParser = SafeConfigParser()
-
     _ConfigParser.optionxform = str     # don't force all names to lower-case
 
-    def readConfigResourceFile(filename):
-        data = resource_string('pygcam', filename)
-        _ConfigParser.readfp(io.BytesIO(data))
-        return data
-
-    systemDefaults = readConfigResourceFile('etc/system.cfg')
-
+    # Initialize config parser with default values
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.MI.JarFile', jarFile)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.MI.UseVirtualBuffer', useXvfb)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.TextEditor', editor)
+    systemDefaults = _readConfigResourceFile('etc/system.cfg')
+
+    # Read platform-specific defaults, if defined. No error if file is missing.
+    _readConfigResourceFile('etc/%s.cfg' % PlatformName, raiseError=False)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:
@@ -342,8 +329,8 @@ class ConfigCommand(SubcommandABC):
 
     def testConfig(self, section):
         requiredDirs = ['SandboxRoot', 'SandboxDir', 'ProjectRoot', 'ProjectDir',
-                        'QueryDir', 'ModelInterface', 'RefWorkspace', 'TempDir']
-        requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'JarFile']
+                        'QueryDir', 'MI.Dir', 'RefWorkspace', 'TempDir']
+        requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'MI.JarFile']
         optionalDirs  = ['UserTempDir']
         optionalFiles = ['RegionMapFile', 'RewriteSetsFile']
 
@@ -370,7 +357,7 @@ class ConfigCommand(SubcommandABC):
             elif not os.path.isdir(value) and item in dirVars:
                 print("Config variable %s does not refer to a directory (%s)" % (var, value))
 
-            print('OK:', var, '=', value)
+            print 'OK:', var, '=', value
 
     def run(self, args, tool):
         if args.edit:
