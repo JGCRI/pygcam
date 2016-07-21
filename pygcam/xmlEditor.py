@@ -223,7 +223,8 @@ class XMLEditor(object):
     Represents the information required to setup a scenario, i.e., to
     generate and/or copy the required XML files into the XML output dir.
     '''
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace, subdir, parent=None):
+    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
+                 groupDir, subdir, parent=None):
         self.name = name = scenario or baseline # if no scenario stated, assume it's the baseline
         self.parent = parent
         self.refWorkspace = refWorkspace
@@ -239,14 +240,15 @@ class XMLEditor(object):
         # Allow scenario name to have arbitrary subdirs between "../local-xml" and
         # the scenario name, e.g., "../local-xml/client/scenario"
         self.subdir = subdir or ''
+        self.groupDir = groupDir
 
         # N.B. join helpfully drops out "" components
-        self.scenario_dir_abs = makeDirPath((self.local_xml_abs, subdir, name), create=True)
-        self.scenario_dir_rel = pathjoin(self.local_xml_rel, subdir, name)
-        self.baseline_dir_rel = pathjoin(self.local_xml_rel, subdir, self.parent.name) if self.parent else None
+        self.scenario_dir_abs = makeDirPath((self.local_xml_abs, groupDir, name), create=True)
+        self.scenario_dir_rel = pathjoin(self.local_xml_rel, groupDir, name)
+        self.baseline_dir_rel = pathjoin(self.local_xml_rel, groupDir, self.parent.name) if self.parent else None
 
-        self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, subdir, name), create=True)
-        self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, subdir, name)
+        self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, groupDir, name), create=True)
+        self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, groupDir, name)
 
         # Store commonly-used paths
         gcam_xml = "input/gcam-data-system/xml"
@@ -293,11 +295,11 @@ class XMLEditor(object):
         mkdirs(scenDir)
         mkdirs(dynDir)
 
-        xmlSubdir = pathjoin(self.xmlSourceDir, self.subdir, self.name, 'xml')
+        xmlSubdir = pathjoin(self.xmlSourceDir, self.groupDir, self.subdir or self.name, 'xml')
         xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
-            _logger.info("Copy %d static XML files to %s" % (len(xmlFiles), scenDir))
+            _logger.info("Copy %d static XML files to %s", len(xmlFiles), scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
@@ -310,6 +312,8 @@ class XMLEditor(object):
                     dst = os.path.join(dynDir, base)
                     src = os.path.join(scenDir, base)
                     os.symlink(src, dst)
+        else:
+            _logger.info("No XML files to copy in %s", os.path.abspath(xmlSubdir))
 
         configPath = self.cfgPath()
 

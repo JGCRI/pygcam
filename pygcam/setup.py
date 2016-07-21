@@ -121,6 +121,6 @@ class SetupCommand(SubcommandABC):
 
         # TBD: Ensure that all setup classes conform to this protocol
         obj = scenClass(args.baseline, args.scenario, args.xmlOutputRoot,
-                        args.xmlSourceDir, args.workspace, groupDir)
+                        args.xmlSourceDir, args.workspace, groupDir, subdir)
 
         obj.setup(args)

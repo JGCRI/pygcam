@@ -21,9 +21,9 @@ class RefiningEditor(XMLEditor):
     RefiningEditor add methods that deal with the refinery sector.
     """
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
-                 subdir, parent=None):
+                 groupDir, subdir, parent=None):
         super(RefiningEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
-                                             refWorkspace, subdir, parent=parent)
+                                             refWorkspace, groupDir, subdir, parent=parent)
 
     def setup(self, args):
         super(RefiningEditor, self).setup(args)
@@ -60,9 +60,9 @@ class BioenergyEditor(RefiningEditor):
     BioenergyEditor adds knowledge of biomass and biofuels.
     """
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, workspaceDir,
-                 subdir, parent=None):
+                 groupDir, subdir, parent=None):
         super(BioenergyEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
-                                              workspaceDir, subdir, parent=parent)
+                                              workspaceDir, groupDir, subdir, parent=parent)
 
         cornEthanolUsaFile = 'cornEthanolUSA.xml'
         self.cornEthanolUsaAbs = path.join(self.scenario_dir_abs, cornEthanolUsaFile)
