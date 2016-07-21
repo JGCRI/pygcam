@@ -75,7 +75,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
     constraintFile = basename + '-constraint.xml'
     policyFile     = basename + '.xml'
 
-    dirname = os.path.join(dirname, subdir, scenario)
+    dirname = os.path.join(dirname, scenario)
     mkdirs(dirname)
 
     pathname = os.path.join(dirname, constraintFile)
@@ -86,11 +86,13 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
     # compute relative location of local-xml directory
     levels = 2
     levels += 2 if fromMCS else 0
-    levels += 1 if subdir else 0
+    #levels += 1 if subdir else 0           # TBD: test this
 
     localxml = '../' * levels + 'local-xml'
 
-    source   = os.path.join(localxml, subdir, scenario, policyFile)
+    # ToDo: replace subdir with groupDir?
+    #source   = os.path.join(localxml, subdir, scenario, policyFile)
+    source   = os.path.join(localxml, scenario, policyFile)
     linkname = os.path.join(dirname, policyFile)
 
     _logger.debug("Linking to: %s", source)
