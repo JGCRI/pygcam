@@ -1031,7 +1031,6 @@ def main(args):
     rewriteParser = RewriteSetParser.parse(rewriteSetsFile) if rewriteSetsFile else None
     regionMap = readRegionMap(regionFile) if regionFile else None
 
-    exeDir = getExeDir(args.workspace, chdir=True)
     mkdirs(outputDir)
 
     # When writing the XMLDB to disk, we call ModelInterface separately. When
@@ -1039,6 +1038,7 @@ def main(args):
     # just create the XMLDBDriver.properties and batch files and return.
     if args.prequery:
         setupWorkspace(args.workspace)
+        exeDir = getExeDir(args.workspace, chdir=True)
         batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                     regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
                                     tmpFiles=False, noDelete=noDelete) \
