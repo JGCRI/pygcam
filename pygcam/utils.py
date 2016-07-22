@@ -213,6 +213,16 @@ def ensureExtension(filename, ext):
 
     return filename
 
+def ensureCSV(file):
+    """
+    Ensure that the file has a '.csv' extension by replacing or adding
+    the extension, as required.
+
+    :param file: (str) a filename
+    :return: (str) the filename with a '.csv' extension.
+    """
+    return ensureExtension(file, '.csv')
+
 def getYearCols(years, timestep=5):
     """
     Generate a list of names of year columns in GCAM result files from a
@@ -368,7 +378,6 @@ def importFromDotSpec(spec):
     except ImportError:
         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
 
-# TBD: move to common once debugged; use it in project.py as well.
 class XMLFile(object):
     """
     Represents an XML file, which is parsed by lxml.etree and stored internally.

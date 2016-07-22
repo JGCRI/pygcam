@@ -14,11 +14,11 @@ from .diff import (DiffCommand, computeDifference, writeDiffsToCSV,
 from .sectorEditors import (REFINING_SECTOR, BIOMASS_LIQUIDS,
                             RefiningEditor, BioenergyEditor)
 
-from .query import (QueryCommand, GCAM_32_REGIONS, ensureCSV, sumYears,
+from .query import (QueryCommand, GCAM_32_REGIONS, sumYears,
                     sumYearsByGroup, csv2xlsx, readCsv, writeCsv)
 
 from .utils import (simpleFormat, getBooleanXML, unixPath, coercible, shellCommand,
-                    flatten, ensureExtension, getYearCols, saveToFile, getTempFile,
+                    flatten, ensureExtension, ensureCSV, getYearCols, saveToFile, getTempFile,
                     TempFile, getBatchDir, loadModuleFromPath, loadObjectFromPath,
                     mkdirs, printSeries, XMLFile)
 

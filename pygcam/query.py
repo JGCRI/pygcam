@@ -11,8 +11,8 @@ import os
 import re
 import subprocess
 from lxml import etree as ET
-from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, saveToFile,
-                    XMLFile, getBooleanXML, resourceStream, writeXmldbDriverProperties)
+from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
+                    saveToFile, XMLFile, getBooleanXML, resourceStream, writeXmldbDriverProperties)
 from .queryFile import QueryFile
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
@@ -799,16 +799,6 @@ def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], query
                       miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                       rewriters=rewriters, rewriteParser=rewriteParser,
                       noRun=noRun, noDelete=noDelete)
-
-def ensureCSV(file):
-    """
-    Ensure that the file has a '.csv' extension by replacing or adding
-    the extension, as required.
-
-    :param file: (str) a filename
-    :return: (str) the filename with a '.csv' extension.
-    """
-    return ensureExtension(file, '.csv')
 
 def sumYears(files, skiprows=1, interpolate=False):
     """

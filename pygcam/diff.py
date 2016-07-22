@@ -1,9 +1,9 @@
 import os
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs
+from .utils import mkdirs, ensureCSV
 from .subcommand import SubcommandABC
-from .query import readCsv, ensureCSV, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
+from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
 
 _logger = getLogger(__name__)
 
