@@ -29,7 +29,7 @@ from .newProject import NewProjectCommand
 from .setup import SetupCommand
 from .jugCmd import JugCommand
 from .log import getLogger, setLogLevel, configureLogs
-from .windows import IsWindows
+from .windows import IsWindows, removeSymlink
 
 _logger = getLogger(__name__)
 
@@ -355,9 +355,28 @@ def catchSignals():
     for sig in signals:
         signal.signal(sig, _sigHandler)
 
+# TBD: test on Windows
+def checkWindowsSymlinks():
+    '''
+    If running on Windows and GCAM.CopyAllFiles is not set, and
+    we fail to create a test symlink, set GCAM.CopyAllFiles to True.
+    '''
+    if IsWindows and not getParamAsBoolean('GCAM.CopyAllFiles'):
+        src = getTempFile()
+        dst = getTempFile()
+
+        try:
+            os.symlink(src, dst)
+        except:
+            _logger.info('No symlink permission; setting GCAM.CopyAllFiles = True')
+            setParam('GCAM.CopyAllFiles', 'True')
+
+
 def _main(argv=None):
     getConfig()
     configureLogs()
+
+    checkWindowsSymlinks()
 
     # This parser handles only --batch, --showBatch, and --projectName args.
     # If --batch is given, we need to create a script and call the GCAM.BatchCommand
