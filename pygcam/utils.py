@@ -113,14 +113,16 @@ XMLDBPropertiesTemplate = """<?xml version="1.0" encoding="UTF-8"?>
 <properties>
 	<entry key="in-memory">{inMemory}</entry>
 	<entry key="filter-script">{filterFile}</entry>
+	<entry key="batch-logfile">{batchLog}</entry>
 	<entry key="batch-queries">{batchFile}</entry>
 </properties>
 """
 
-def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batchFile=''):
+def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batchFile='', batchLog=''):
     path = os.path.join(outputDir, 'XMLDBDriver.properties')
     memFlag = 'true' if inMemory else 'false'
-    content = XMLDBPropertiesTemplate.format(inMemory=memFlag, filterFile=filterFile, batchFile=batchFile)
+    content = XMLDBPropertiesTemplate.format(inMemory=memFlag, filterFile=filterFile,
+                                             batchFile=batchFile, batchLog=batchLog)
 
     deleteFile(path) # avoid writing through symlinks to ref workspace
     with open(path, 'w') as f:

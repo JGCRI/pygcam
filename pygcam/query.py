@@ -1038,7 +1038,8 @@ def main(args):
                                     tmpFiles=False, noDelete=noDelete) \
             if batchMultiple else ''
 
-        writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, batchFile=batchFile)
+        writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir,
+                                   batchFile=batchFile, batchLog='batchQuery.log')
         return
 
     xmldb = os.path.abspath(xmldb)
