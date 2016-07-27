@@ -94,13 +94,9 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="query-xml.html">queries.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="query-xml.html#rewritesets-xml">rewriteSets.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xmlFiles.html">XML File Formats</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.common</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
@@ -109,6 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 
@@ -209,7 +206,7 @@ sub-command specific options must follow it.</p>
 usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
           [-m MINUTES] [-P name] [-q QUEUENAME] [-r RESOURCES]
           [--set name=value] [-v] [--version]
-          {bioConstraint,deltaConstraint,chart,config,diff,gcam,new,run,protect,query,setup,ws}
+          {bioConstraint,deltaConstraint,chart,config,diff,gcam,jug,new,run,protect,query,setup,ws}
           ...
 </pre>
 <dl class="docutils">
@@ -923,7 +920,7 @@ users.)</p>
 <code class="docutils literal"><span class="pre">~/MyProject/scenarios/MyScenario/config.xml</span></code>.</p>
 <pre class="literal-block">
 usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-s SCENARIO] [-S SCENARIOSDIR]
-               [--version] [-w WORKSPACE]
+               [--version] [-w WORKSPACE] [-W]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -944,14 +941,12 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-s SCENARIO] [-S SCENARIOSDIR]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Specify the scenario(s) to run. Can be a comma-delimited list of scenario
-                            names. The scenarios will be run serially in a single batch job, with an allocated
-                            time = GCAM.Minutes * {the number of scenarios}.</td></tr>
+<tr><td>&nbsp;</td><td>The scenario to run.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-S=</span>, <span class="option">--scenariosDir=</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Specify the directory holding scenarios. Default is the value of config file
-                            param GCAM.ScenariosDir, if set, otherwise it&#8217;s the current directory.</td></tr>
+<tr><td>&nbsp;</td><td>Specify the directory holding scenarios. Default is the value of config
+                            file param GCAM.ScenariosDir, if set, otherwise it&#8217;s the current directory.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
@@ -961,6 +956,59 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-s SCENARIO] [-S SCENARIOSDIR]
 <tr><td>&nbsp;</td><td>Specify the path to the GCAM workspace to use. If it doesn&#8217;t exist, the named
                             workspace will be created. If not specified on the command-line, the value of config
                             file parameter GCAM.Workspace is used, i.e., the &#8220;standard&#8221; workspace.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-W=False</span>, <span class="option">--noWrapper=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Do not run gcam within a wrapper that detects errors as early as possible
+                            and terminates the model run. By default, the wrapper is used.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>jug</strong></dt>
+<dd><p class="first">Run jug to queue worker processes to run a Monte Carlo simulation.</p>
+<pre class="literal-block">
+usage: gt jug [-h] --baseline BASELINE --scenario SCENARIO -s SIMID [-n]
+              [-N NODES] [--ntasksPerNode NTASKSPERNODE] [-t TRIALS]
+              [--version]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--baseline</span></kbd></td>
+<td>The name of the baseline scenario to run</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--scenario</span></kbd></td>
+<td>Specify the scenario(s) to run. Can be a comma-delimited list of
+                            scenario names.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--simId</span></kbd></td>
+<td>The id of the simulation</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Show the commands that would be executed, but don&#8217;t run them</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-N=1</span>, <span class="option">--nodes=1</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Request that at least this many nodes are allocated for jug workers</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--ntasksPerNode</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The number of worker tasks to run per compute node (default is the value
+                            config variable GCAM.JugTasksPerNode)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-t</span>, <span class="option">--trials</span></kbd></td>
+<td>Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
+                             Defaults to running all trials for the given simulation.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1269,7 +1317,7 @@ an XML file, a query with a title matching the query name (first literally, then
 replacing <code class="docutils literal"><span class="pre">'_'</span></code> and <code class="docutils literal"><span class="pre">'-'</span></code> characters with spaces) is sought. Note that query names are
 case-sensitive.</p>
 <pre class="literal-block">
-usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-q QUERYFILE]
+usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
                 [-Q QUERYPATH] [-r REGIONS] [-R REGIONMAP] [-s SCENARIO]
                 [-S REWRITESETSFILE] [--version] [-w WORKSPACE]
                 [queryName [queryName ...]]
@@ -1312,6 +1360,11 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-q QUERYFILE]
 </tr>
 <tr><td>&nbsp;</td><td>Where to output the result (default taken from config parameter &#8220;GCAM.OutputDir&#8221;)</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=False</span>, <span class="option">--prequery=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Generate the XMLDBDriver.properties file and associated batch file to be
+                                 run by GCAM when GCAM.InMemoryDatabase is True.</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">-q</span>, <span class="option">--queryFile</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>An XML file holding a list of queries to run, with optional mappings specified to
@@ -1335,8 +1388,8 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-q QUERYFILE]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-s=Reference</span>, <span class="option">--scenario=Reference</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>A comma-separated list of scenarios to run the query/queries for (default is &#8220;Reference&#8221;)
-                                    Note that these refer to a scenarios in the XML database.</td></tr>
+<tr><td>&nbsp;</td><td>The scenario to run the query/queries for (default is &#8220;Reference&#8221;)
+                                    Note that this must refers to a scenarios in the XML database.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-S</span>, <span class="option">--rewriteSetsFile</span></kbd></td>
 </tr>
@@ -1374,7 +1427,8 @@ usage: gt setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
 <tbody valign="top">
 <tr><td class="option-group">
 <kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
-<td>Identify the baseline the selected scenario is based on.</td></tr>
+<td>Identify the baseline the selected scenario is based on.
+                                 Note: at least one of &#8211;baseline (-b) / &#8211;scenario (-s) must be used.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
 <td>The scenario group to process. Defaults to the group labeled default=&#8221;1&#8221;.</td></tr>
@@ -1387,8 +1441,8 @@ usage: gt setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
 <td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
                             a function called &#8216;scenarioClass&#8217; or a dictionary called &#8216;ClassMap&#8217; which map
                             scenario names to classes. If the function &#8216;scenarioClass&#8217; exists, it is
-                            used. If not, the &#8216;ClassMap&#8217; is used. Default is &#8220;xmlsrc.subdir.scenarios&#8221; (if
-                            subdir is defined) or &#8220;xmlsrc.scenarios&#8221; (if subdir is undefined) under the
+                            used. If not, the &#8216;ClassMap&#8217; is used. Default is &#8220;{xmlsrc}/subdir/scenarios.py&#8221; (if
+                            subdir is defined) or &#8220;{xmlsrc}/scenarios.py&#8221; (if subdir is undefined) under the
                             current ProjectRoot.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-p</span>, <span class="option">--stop</span></kbd></td>
@@ -1399,7 +1453,8 @@ usage: gt setup [-h] [-b BASELINE] [-g GROUP] [-G] [-m MODULE]
 <tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-s</span>, <span class="option">--scenario</span></kbd></td>
-<td>Identify the scenario to run.</td></tr>
+<td>Identify the scenario to run.
+                            Note: at least one of &#8211;baseline (-b) / &#8211;scenario (-s) must be used.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
 <td>A sub-directory to use instead of scenario name</td></tr>
@@ -1440,8 +1495,8 @@ automatically creates workspaces as needed.</p>
 operations to be sure of the directory that will be operated on, or use the
 <code class="docutils literal"><span class="pre">--noExecute</span></code> option to show the command that would be executed by <code class="docutils literal"><span class="pre">--run</span></code>.</p>
 <pre class="literal-block">
-usage: gt ws [-h] [--create] [--delete] [-n] [-p] [-r RUN] [-s SCENARIO]
-             [--version]
+usage: gt ws [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n] [-p]
+             [-r RUN] [-s SCENARIO] [--version]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1457,6 +1512,15 @@ usage: gt ws [-h] [--create] [--delete] [-n] [-p] [-r RUN] [-s SCENARIO]
 <kbd><span class="option">--delete=False</span></kbd></td>
 <td>Delete the identified workspace&#8217; If used with &#8211;create, the
                             deletion occurs first.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--recreate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Recreate the identified workspace. Equivalent to using the
+                            &#8211;delete and &#8211;create options together.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=</span>, <span class="option">--groupDir=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The name of the scenario group subdir</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-n=False</span>, <span class="option">--noExecute=False</span></kbd></td>
 </tr>

@@ -100,6 +100,7 @@ This is an example of a query specification file.
         <query name="Global_mean_temperature"/>
      </queries>
 
+.. _rewriteSets-label:
 
 rewriteSets.xml
 =================

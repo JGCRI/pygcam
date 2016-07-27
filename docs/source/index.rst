@@ -10,8 +10,7 @@ Contents
    intro
    install
    windows
-   setup
-
+   tutorial
 
 The ``gt`` workflow management script
 --------------------------------------------------
@@ -19,25 +18,8 @@ The ``gt`` workflow management script
   .. toctree::
    :maxdepth: 1
 
+   setup
    gcamtool
-
-Tutorial
-----------
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorial
-
-XML input file formats for ``gt`` sub-commands
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. toctree::
-   :maxdepth: 1
-
-   project-xml
-   query-xml
-   landProtection-xml
 
 
 Application Programming Interface (API)
@@ -46,7 +28,6 @@ Application Programming Interface (API)
   .. toctree::
    :maxdepth: 1
 
-   utils
    config
    diff
    error
@@ -55,4 +36,6 @@ Application Programming Interface (API)
    project
    query
    subcommand
+   utils
    xmlEditor
+   xmlFiles
