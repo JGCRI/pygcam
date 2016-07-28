@@ -561,7 +561,7 @@ class TempFile(object):
 
         :param filename: (str) the name of a temp file created by this class
         :param raiseError (bool) if True, raise an exception if the filename is
-          not a known TempFile.
+               not a known TempFile.
         :return: none
         :raises: PygcamException if the path is not related to a TempFile instance.
         """
