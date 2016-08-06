@@ -1,5 +1,71 @@
+Config changes
+===============
+- Renamed:
+  GCAM.ModelInterface => GCAM.MI.Dir
+  GCAM.JavaArgs       => GCAM.MI.JavaArgs
+  GCAM.JavaLibPath    => GCAM.MI.ClassPath
+  GCAM.ModelInterfaceLogFile => GCAM.MI.LogFile
+  GCAM.UseVirtualBuffer => GCAM.MI.UseVirtualBuffer
+
+- New:
+  GCAM.MI.JarFile      = %(GCAM.MI.Dir)s/ModelInterface.jar
+  GCAM.MI.BatchCommand = java %(GCAM.JavaArgs)s -cp %(GCAM.ClassPath)s ModelInterface/InterfaceMain -b {batchFile}
+
+  GCAM.MI.ClassPath
+
+  GCAM.SandboxProjectDir
+  GCAM.SandboxRefWorkspace
+  GCAM.SandboxDir is now populated using GCAM.ScenarioGroup, which may be empty
+
+- Code:
+Rather than setting vars opaquely in config.py, created files per OS with
+OS-specific values, at most one of which is read after reading system.cfg.
+
+On PIC: Add XMLDBDriver.jar to .../libs/jars. No sense treating this differently.
+
+-------------
+AUGUST 2 2016
+-------------
+New rule simplification:
+1. Sources are located using GCAM.ProjectDir (e.g., GCAM.ProjectSandbox = {projectDir}/sandbox)
+2. {projectDir}/sandbox is source for setupWorkspace(), whether single run or MCS.
+3. In non-MCS, links back to GCAM.ProjectSandbox are used where appropriate (if possible)
+4. "run" sub-command uses --workspace arg to set GCAM.RunWorkspace for all sub-commands to see
+5. {GCAM.RunWorkspace}/xmlsrc is source used by setup, with results written to
+
+From gcammcs:
+
+    gt run --mcs --workspace
+or
+    gt --mcs --workspace=x run
+
+Issue is whether other commands, like "gt chart", "gt diff" and so on can be used on
+specific MCS workspaces by passing --workspace to gt, or if all commands need to
+have this parameters, which seems burdensome.
+
+Process in MCS:
+1. gcammcs new: creates {GCAM.MCS.ProjectSandbox} by copying/linking {GCAM.ProjectSandbox}
+2. gcammcs queue: runGCAM() calls gcamtool for individual steps, with --workspace={expDir}
+3.
+
+- Finish testing non-MCS mode, including on otaq2016 (has groupDir)
+- Finish developing MCS mode
+
+- Modify gcammcs to:
+  - link {expDir}/local-xml to {simDir}/local-xml (already created)
+  - create {expDir}/dyn-xml for per-trial generation
+
+- Eliminate generators from scenarios.py and use project.xml @setup instead.
+
+- In generators, expect baseline to be in ../../{baseline}, relative to "exe".
+
 Bugs
 ====
+- Need fix on Windows for calling "java WriteLocalBaseXDB" to get jre path
+  using the new XMLDBDriver.jar, since Write... no longer has a main.
+
+- Several tables didn't populate: output, program, code, region. Anomaly or bug?
+
 - Diff without -i is still interpolating.
 
 - There's a subtle problem with repeated use of GcamTool as top-level call.
@@ -11,15 +77,29 @@ Bugs
 - To try:
   - Move run dir back to /pic/scratch/plev920
 
+Cleanup
+=======
+- @setup should call the prequery when GCAM.BatchMultipleQueries
+  so this is done just once for all trials
+
+- "batch" is confusing: used for SLURM batch and XML query batch
+
+- Rationalize batchQuery.log and GCAM.MI.LogFile in query.py
+
+- Handling of subdir and groupDir is confusing and needs to be rationalized
+  - constraint generation
+  - queries
+  - setup
+
+- Modify log_conf.xml in main wkspc to not create 100MB log data per run
+  - tried setting calibration and solver entries to 1 rather than 0 in trial 0, base-0
 
 Test
 ====
 - Finish implementing/testing the queryFile and rewriteSets features
 - setup.py installer: test with full install
 - write more unit tests
-- Test old constraint cmds
-- Test land protection cmd
-    - Simplify to eliminate complicated cmdline opts?
+- Test constraint cmds
 - Should constraint commands be converted back to plugins?
     - They're for use by biofuel studies only (maybe a sep plugin dir?)
     - Perhaps split out generic function from domain-specific
@@ -29,9 +109,8 @@ Features
 
 Near-term
 ---------
-- Finish checkConstraint.py
-
 - Set CopyAllFiles to True automatically if linking fails on Windows.
+  (Implemented; needs testing.)
 
 Medium-term
 -----------
@@ -49,7 +128,7 @@ Medium-term
     - Use stopYear to limit run
 
     - A "simple" project either:
-        - Has manually creates sandboxes
+        - Has manually created sandboxes
         - Has generated sandboxes, but the project only adds to and
           removes from configuration.xml with references to local files.
         - Code doesn't use XmlEditor
@@ -118,9 +197,18 @@ Long-term
 
 Document
 ========
+- Plug-ins are now loaded on demand, including if a -h flag is used.
+  - if a plug-in isn't required, it isn't loaded.
+  OPTIMIZATION (later):
+  - move constraint, protection, jug, and chart stuff to internal plugins
+    to reduce startup time
+  - however, need to load internal plugins for auto doc purposes!
+
 - New project step that runs only if GCAM.InMemoryDatabase
   - Create batch file to process all batch queries
   - Create XMLDBDriver.properties file
+
+- New config vars controlling query processing
 
 - New <Parameter active="0"> attribute
 
@@ -131,7 +219,7 @@ Document
   - default "level" set in query itself, can override in query list
   - append-values="false" unless any of the queries sets it to "true"
 
-- In project.xml, <defaults> section is optional
+- In project.xml, <defaults> section is now optional
 
 - Document the Subcommand (plugin) protocol
     - class 'Plugin' or variable PluginClass which identifies classname
@@ -139,9 +227,6 @@ Document
     - run(args, tool)
     - when it gets loaded and run
     - other suggestions, e.g., plugins should use logging
-
-- Use of pygcam/etc/site.cfg
-    - Path is value of $PYGCAM_SITE_CONFIG_FILE
 
 - Assumptions behind setup code
 

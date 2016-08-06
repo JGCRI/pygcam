@@ -1,7 +1,7 @@
 import os
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs, ensureCSV
+from .utils import mkdirs, ensureCSV, QueryResultsDir
 from .subcommand import SubcommandABC
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
 
@@ -173,7 +173,7 @@ def main(args):
         baseline, policy = args.csvFiles
 
         def makePath(query, scenario):
-            return os.path.join(scenario, "batch-" + scenario, '%s-%s.csv' % (query, scenario))
+            return os.path.join(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
 
         with open(args.queryFile, 'rU') as f:    # 'U' converts line separators to '\n' on Windows
             lines = f.read()

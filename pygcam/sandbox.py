@@ -10,11 +10,12 @@
 import os
 import shutil
 import subprocess
+
 from .config import getParam
 from .error import CommandlineError
-from .subcommand import SubcommandABC
 from .log import getLogger
-from .runGCAM import setupWorkspace
+from .setup import createSandbox
+from .subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -22,62 +23,63 @@ def driver(args, tool):
     project = args.configSection or getParam('GCAM.DefaultProject')
 
     if not project:
-        raise CommandlineError("ws: must specify project name")
+        raise CommandlineError("ws: must specify project name or set config parameter GCAM.DefaultProject")
 
-    workspace = getParam('GCAM.SandboxDir')
-    if args.scenario or args.groupDir:
-        workspace = os.path.join(workspace, args.groupDir, args.scenario)
+    if not args.scenario or args.groupDir:
+        raise CommandlineError("ws: must specify scenario and/or group name")
 
-    workspace = os.path.normpath(os.path.abspath(os.path.expanduser(workspace)))     # handle ~ in pathname
+    sandboxProjectDir = getParam('GCAM.SandboxProjectDir')
+    sandbox = os.path.join(sandboxProjectDir, args.groupDir, args.scenario)
+
+    sandbox = os.path.normpath(os.path.abspath(os.path.expanduser(sandbox)))     # handle ~ in pathname
 
     if args.path:
-        print(workspace)
+        print(sandbox)
 
     if args.recreate:
         args.delete = args.create = True
 
     if args.delete:
-        _logger.info('removing ' + workspace)
+        _logger.info('removing ' + sandbox)
         try:
             if not args.noExecute:
-                if os.path.islink(workspace):
-                    os.remove(workspace)
+                if os.path.islink(sandbox):
+                    os.remove(sandbox)
                 else:
-                    shutil.rmtree(workspace)
+                    shutil.rmtree(sandbox)
         except Exception as e:
-            _logger.warn("Can't remove '%s': %s" % (workspace, e))
+            _logger.warn("Can't remove '%s': %s" % (sandbox, e))
 
     if args.create:
-        setupWorkspace(workspace)
+        createSandbox(sandbox)
 
     if args.run:
-        cmdStr = 'cd ' + workspace + '; ' + args.run
+        cmdStr = 'cd ' + sandbox + '; ' + args.run
         if args.noExecute:
-            print cmdStr
+            print(cmdStr)
         else:
             _logger.info(cmdStr)
-            os.chdir(workspace)
+            os.chdir(sandbox)
             subprocess.call(args.run, shell=True)
 
-
-class WorkspaceCommand(SubcommandABC):
+class SandboxCommand(SubcommandABC):
     __version__ = '0.2'
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Perform operations on a workspace.'''}
-        super(WorkspaceCommand, self).__init__('ws', subparsers, kwargs)
+        kwargs = {'help' : '''Perform operations on a sandbox.'''}
+        super(SandboxCommand, self).__init__('sandbox', subparsers, kwargs)
 
     def addArgs(self, parser):
         parser.add_argument('--create', action='store_true',
-                            help='''Create the identified workspace. If used with --delete,
+                            help='''Create the identified sandbox. If used with --delete,
                             the deletion occurs first.''')
 
         parser.add_argument('--delete', action='store_true',
-                            help='''Delete the identified workspace' If used with --create, the
+                            help='''Delete the identified sandbox' If used with --create, the
                             deletion occurs first.''')
 
         parser.add_argument('--recreate', action='store_true',
-                            help='''Recreate the identified workspace. Equivalent to using the
+                            help='''Recreate the identified sandbox. Equivalent to using the
                             --delete and --create options together.''')
 
         parser.add_argument('-g', '--groupDir', default='',
@@ -88,13 +90,13 @@ class WorkspaceCommand(SubcommandABC):
                             don't execute it.''')
 
         parser.add_argument('-p', '--path', action='store_true',
-                            help='''Print the absolute path to the identified workspace.''')
+                            help='''Print the absolute path to the identified sandbox.''')
 
         parser.add_argument('-r', '--run',
-                            help='''Run the given command in the identified workspace.''')
+                            help='''Run the given command in the identified sandbox.''')
 
         parser.add_argument('-s', '--scenario', default='',
-                            help='''The scenario for the computed workspace root.''')
+                            help='''The scenario for the computed sandbox root.''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
 

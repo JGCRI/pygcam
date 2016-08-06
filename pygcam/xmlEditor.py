@@ -19,23 +19,25 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import glob
 import os
+import re
 import shutil
 import subprocess
-import glob
-import re
+
+from .config import getParam, getParamAsBoolean
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
-from .landProtection import protectLand, UnmanagedLandClasses
-from .config import getConfig, getParam, getParamAsBoolean, setSection
+from .landProtection import protectLand
+from .log import getLogger
 from .utils import coercible, mkdirs, unixPath
-from .log import getLogger, setLogLevel, configureLogs
+
+# Set to True to see all xmlstarlet commands
+Verbose = False
 
 _logger = getLogger(__name__)
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
-
-LOCAL_XML_NAME = "local-xml"
-DYN_XML_NAME   = "dyn-xml"
 
 def makeDirPath(elements, require=False, create=False, mode=0o775):
     """
@@ -94,7 +96,8 @@ def xmlStarlet(*args):
     args = map(str, args)
     args.insert(0, getParam('GCAM.XmlStarlet'))
 
-    _logger.debug(' '.join(args))
+    if Verbose:
+        _logger.debug(' '.join(args))
 
     return subprocess.call(args, shell=False) == 0
 
@@ -209,7 +212,7 @@ def expandYearRanges(seq):
             endYear   = int(m.group(2))
             stepStr = m.group(4)
             step = int(stepStr) if stepStr else 5
-            expanded = map(lambda y: [y, value], xrange(startYear, endYear+step, step))
+            expanded = map(lambda y: [y, value], range(startYear, endYear+step, step))
             result.extend(expanded)
         else:
             result.append((year, value))
@@ -226,9 +229,18 @@ class XMLEditor(object):
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
                  groupDir, subdir, parent=None):
         self.name = name = scenario or baseline # if no scenario stated, assume it's the baseline
-        self.parent = parent
+        self.baseline = baseline
+        self.scenario = scenario
+        self.xmlOutputRoot = xmlOutputRoot
         self.refWorkspace = refWorkspace
         self.xmlSourceDir = xmlSourceDir
+        self.parent = parent
+
+        # Allow scenario name to have arbitrary subdirs between "../local-xml" and
+        # the scenario name, e.g., "../local-xml/client/scenario"
+        self.subdir = subdir or ''
+        self.groupDir = groupDir
+
         self.configPath = None
 
         self.local_xml_abs = makeDirPath((xmlOutputRoot, LOCAL_XML_NAME), create=True)
@@ -236,11 +248,6 @@ class XMLEditor(object):
 
         self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
         self.dyn_xml_rel   = pathjoin("..", DYN_XML_NAME)
-
-        # Allow scenario name to have arbitrary subdirs between "../local-xml" and
-        # the scenario name, e.g., "../local-xml/client/scenario"
-        self.subdir = subdir or ''
-        self.groupDir = groupDir
 
         # N.B. join helpfully drops out "" components
         self.scenario_dir_abs = makeDirPath((self.local_xml_abs, groupDir, name), create=True)
@@ -273,45 +280,74 @@ class XMLEditor(object):
         # do this last so mixins can access the instance variables set above
         super(XMLEditor, self).__init__()
 
-    def setup(self, args):
-        """
-        Set-up a scenario based on a "parent" scenario. If dynamic is True (or True-like),
-        symlinks are created in the dyn-xml directory to all the XML files in the local-xml
-        directory for this scenario so that files generated into the dyn-xml directory can
-        refer to them.
+    def setupStatic(self, args):
+        pass
 
-        :param stopPeriod: (coercible to int) a period number or a year at which to stop
-           running GCAM
-        :param args: (argparse.Namespace) arguments passed from the top-level call to setup
+    @staticmethod
+    def recreateDir(path):
+        shutil.rmtree(path)
+        mkdirs(path)
+
+    def setupDynamic(self, args):
+        """
+        Create dynamic XML files in dyn-xml. These files are generated for policy
+        scenarios when XML file contents must be computed from baseline results.
+
+        :param args: (argparse.Namespace) arguments passed from the top-level call
+            to setup sub-command
         :return: none
         """
-        _logger.info("Generating scenario %s" % self.name)
+        from .windows import removeSymlink
+
+        _logger.info("Generating dyn-xml for scenario %s" % self.name)
+
+        # Delete old generated scenario files
+        dynDir = self.scenario_dyn_dir_abs
+        self.recreateDir(dynDir)
+
+        scenDir = self.scenario_dir_abs
+        xmlFiles = glob.glob("%s/*.xml" % scenDir)
+
+        if xmlFiles:
+            _logger.info("Link static XML files in %s to %s", scenDir, dynDir)
+            for xml in xmlFiles:
+                base = os.path.basename(xml)
+                dst = os.path.join(dynDir, base)
+                src = os.path.join(scenDir, base)
+                # if os.path.islink(dst):           # recreateDir wipes it all out...
+                #     removeSymlink(dst)
+                os.symlink(src, dst)
+        else:
+            _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
+
+
+    def setupStatic(self, args):
+        """
+        Create static XML files in local-xml. By "static", we mean files whose contents are
+        independent of baseline results. In comparison, policy scenarios may generate dynamic
+        XML files whose contents are computed from baseline results.
+
+        :param args: (argparse.Namespace) arguments passed from the top-level call to setup
+            sub-command.
+        :return: none
+        """
+        _logger.info("Generating local-xml for scenario %s" % self.name)
 
         # Delete old generated scenario files
         scenDir = self.scenario_dir_abs
-        dynDir  = self.scenario_dyn_dir_abs
-        shutil.rmtree(scenDir)
-        shutil.rmtree(dynDir)
+        dynDir = self.scenario_dyn_dir_abs
+
+        #self.recreateDir(scenDir)  # this trashed symlinks to Workspace/local-xml
         mkdirs(scenDir)
-        mkdirs(dynDir)
 
         xmlSubdir = pathjoin(self.xmlSourceDir, self.groupDir, self.subdir or self.name, 'xml')
-        xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
+        xmlFiles = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
             _logger.info("Copy %d static XML files to %s", len(xmlFiles), scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
-
-            dynamic = 'dynamic' in args and args.dynamic
-
-            if dynamic:
-                for xml in xmlFiles:
-                    base = os.path.basename(xml)
-                    dst = os.path.join(dynDir, base)
-                    src = os.path.join(scenDir, base)
-                    os.symlink(src, dst)
         else:
             _logger.info("No XML files to copy in %s", os.path.abspath(xmlSubdir))
 
@@ -319,6 +355,7 @@ class XMLEditor(object):
 
         parent = self.parent
         parentConfigPath = parent.cfgPath() if parent else getParam('GCAM.RefConfigFile')
+        #mkdirs(os.path.dirname(parentConfigPath))
 
         _logger.info("Copy %s\n      to %s" % (parentConfigPath, configPath))
         shutil.copy(parentConfigPath, configPath)
@@ -353,6 +390,19 @@ class XMLEditor(object):
             self.updateConfigComponent('Files', 'outFileName', value=None,
                                        writeOutput=getParamAsBoolean('GCAM.WriteOutputCsv'))
 
+    def setup(self, args):
+        """
+        Calls setupStatic and/or setupDynamic, depending on flags set in args.
+
+        :param args: (argparse.Namespace) arguments passed from the top-level call
+            to setup
+        :return: none
+        """
+        if not args.dynamicOnly:
+            self.setupStatic(args)
+
+        if not args.staticOnly:
+            self.setupDynamic(args)
 
     def makeScenarioComponentsUnique(self):
         """

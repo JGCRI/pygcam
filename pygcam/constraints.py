@@ -5,11 +5,12 @@ Created on 4/26/15
 @author: rjp
 '''
 import os
-#import pandas as pd    # moved inside functions to speed startup
+
+from .constants import LOCAL_XML_NAME
 from .log import getLogger
+from .query import readQueryResult, readCsv
 from .subcommand import SubcommandABC
 from .utils import mkdirs, getBatchDir, getYearCols, printSeries
-from .query import readQueryResult, readCsv
 
 _logger = getLogger(__name__)
 
@@ -70,9 +71,9 @@ def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=No
     return xml
 
 
-def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdir='', fromMCS=False):
+def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName=''): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
-    constraintFile = basename + '-constraint.xml'
+    constraintFile = basename + '-constraint.xml'       # TBD: document this naming convention
     policyFile     = basename + '.xml'
 
     dirname = os.path.join(dirname, scenario)
@@ -84,11 +85,14 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
         f.write(xml)
 
     # compute relative location of local-xml directory
-    levels = 2
-    levels += 2 if fromMCS else 0
-    #levels += 1 if subdir else 0           # TBD: test this
+    # levels = 2
+    # levels += 2 if fromMCS else 0
+    # #levels += 1 if subdir else 0
+    # localxml = '../' * levels + LOCAL_XML_NAME
 
-    localxml = '../' * levels + 'local-xml'
+    # TBD: test this
+    prefix = '../../../' if groupName else '../../'
+    localxml = prefix + LOCAL_XML_NAME
 
     # ToDo: replace subdir with groupDir?
     #source   = os.path.join(localxml, subdir, scenario, policyFile)
@@ -145,7 +149,7 @@ US_REGION_QUERY = 'region in ["USA", "United States"]'
 def genBioConstraints(**kwargs):
     import pandas as pd
 
-    fromMCS = kwargs.get('fromMCS', False)
+    #fromMCS = kwargs.get('fromMCS', False)
     resultsDir = kwargs['resultsDir']
     baseline = kwargs['baseline']
     policy = kwargs['policy']
@@ -158,9 +162,7 @@ def genBioConstraints(**kwargs):
     coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
-    leafDir = 'queryResults' if fromMCS else 'batch-{baseline}'.format(baseline=baseline)
-    batchDir = os.path.join(resultsDir, baseline, leafDir)
-    #'{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
+    batchDir = getBatchDir(baseline, resultsDir)
     totalBiomassFile   = os.path.join(batchDir, 'Total_biomass_consumption-%s.csv' % baseline)
     refinedLiquidsFile = os.path.join(batchDir, 'refined-liquids-prod-by-tech-USA-%s.csv' % baseline)
     purposeGrownFile   = os.path.join(batchDir, 'Purpose-grown_biomass_production-%s.csv' % baseline)
@@ -198,7 +200,7 @@ def genBioConstraints(**kwargs):
     xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint,
                                 policyType=biomassPolicyType, summary='Regional biomass constraint.')
     saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=subdir)#, fromMCS=fromMCS)
 
     # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
     # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
@@ -213,7 +215,7 @@ def genBioConstraints(**kwargs):
     xml = generateConstraintXML('purpose-grown-constraint', constraint, policyType=purposeGrownPolicyType,
                                 summary='Purpose-grown biomass constraint.')
     saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=subdir)#, fromMCS=fromMCS)
 
     # Create dictionary to use for template processing
     xmlArgs = {"level" + year : value for year, value in desiredCellEtoh.iteritems()}
@@ -221,7 +223,7 @@ def genBioConstraints(**kwargs):
 
     xml = cellEtohConstraintTemplate.format(**xmlArgs)
     saveConstraintFile(xml, xmlOutputDir, 'cell-etoh', cellEtohPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=subdir)#, fromMCS=fromMCS)
 
 
 def bioMain(args):
@@ -254,12 +256,12 @@ fuelConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 def genDeltaConstraints(**kwargs):
     import pandas as pd
 
-    fromMCS  = kwargs.get('fromMCS', False)
-    baseline = kwargs['baseline']
-    policy   = kwargs['policy']
-    subdir   = kwargs.get('subdir', '')
-    fuelTag  = kwargs.get('fuelTag')
-    fuelName = kwargs.get('fuelName')
+    #fromMCS  = kwargs.get('fromMCS', False)
+    baseline  = kwargs['baseline']
+    policy    = kwargs['policy']
+    groupName = kwargs.get('groupName', '')
+    fuelTag   = kwargs.get('fuelTag')
+    fuelName  = kwargs.get('fuelName')
     resultsDir  = kwargs['resultsDir']
     switchgrass = kwargs.get('switchgrass', False)
     defaultDelta = float(kwargs.get('defaultDelta', 0))
@@ -270,7 +272,7 @@ def genDeltaConstraints(**kwargs):
     biomassPolicyType = kwargs.get('biomassPolicyType', None)
     purposeGrownPolicyType = kwargs.get('purposeGrownPolicyType', None)
 
-    batchDir = getBatchDir(baseline, resultsDir, fromMCS=fromMCS)
+    batchDir = getBatchDir(baseline, resultsDir)
     refinedLiquidsDF = readQueryResult(batchDir, baseline, 'refined-liquids-prod-by-tech-USA')
 
     yearCols = getYearCols(kwargs['years'])
@@ -304,7 +306,7 @@ def genDeltaConstraints(**kwargs):
     xml = fuelConstraintTemplate.format(**xmlArgs)
 
     saveConstraintFile(xml, xmlOutputDir, fuelTag, fuelPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=groupName)#, fromMCS=fromMCS)
 
     if switchgrass:
         # Calculate additional biomass required to meet required delta
@@ -337,7 +339,7 @@ def genDeltaConstraints(**kwargs):
                                     summary='Regional biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                           subdir=subdir, fromMCS=fromMCS)
+                           groupName=groupName)#, fromMCS=fromMCS)
 
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
 
@@ -345,7 +347,7 @@ def genDeltaConstraints(**kwargs):
                                     summary='Purpose-grown biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                           subdir=subdir, fromMCS=fromMCS)
+                           groupName=groupName)#, fromMCS=fromMCS)
 
 
 class BioConstraintsCommand(SubcommandABC):
@@ -380,8 +382,8 @@ class BioConstraintsCommand(SubcommandABC):
                             given in EJ. If -l is not used to set default for all years, you must
                             specify values for all years using this option.''')
 
-        parser.add_argument('-m', '--fromMCS', action='store_true',
-                             help="Used when calling from gcammcs so correct pathnames are computed.")
+        # parser.add_argument('-m', '--fromMCS', action='store_true',
+        #                      help="Used when calling from gcammcs so correct pathnames are computed.")
 
         parser.add_argument('-p', '--policy',
                             help='The policy scenario name')
@@ -451,8 +453,8 @@ class DeltaConstraintsCommand(SubcommandABC):
                             If -l is not used to set default for all years, you must specify
                             values for all years using this option.''')
 
-        parser.add_argument('-m', '--fromMCS', action='store_true',
-                             help="Used when calling from gcammcs so correct pathnames are computed.")
+        # parser.add_argument('-m', '--fromMCS', action='store_true',
+        #                      help="Used when calling from gcammcs so correct pathnames are computed.")
 
         parser.add_argument('-p', '--policy', required=True,
                             help='The policy scenario name')

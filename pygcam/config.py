@@ -194,17 +194,18 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
     d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
     return d
 
-def setParam(name, value, section=DEFAULT_SECTION):
+def setParam(name, value, section=None):
     """
-    Set a configuration parameter in memory. The new value is not
-    written to the config file.
+    Set a configuration parameter in memory.
 
     :param name: (str) parameter name
     :param value: (any, coerced to str) parameter value
     :param section: (str) if given, the name of the section in which to set the value.
-       If not given, the value is set in the DEFAULT section.
+       If not given, the value is set in the established project section, or DEFAULT
+       if no project section has been set.
     :return: none
     """
+    section = section or getSection()
     _ConfigParser.set(section, name, value)
 
 def getParam(name, section=None, raw=False):

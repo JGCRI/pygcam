@@ -10,16 +10,19 @@
 import os
 import re
 import subprocess
+
 from lxml import etree as ET
-from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
-                    saveToFile, XMLFile, getBooleanXML, resourceStream, writeXmldbDriverProperties)
-from .queryFile import QueryFile
-from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
-from .log import getLogger
+
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean
+from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
+from .log import getLogger
+from .queryFile import QueryFile
+#from .setup import setupWorkspace
 from .subcommand import SubcommandABC
-from .runGCAM import getExeDir, setupWorkspace
+from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
+                    saveToFile, XMLFile, getBooleanXML, resourceStream, getExeDir,
+                    writeXmldbDriverProperties)
 
 _logger = getLogger(__name__)
 
@@ -985,8 +988,8 @@ def main(args):
     # """
     miLogFile   = getParam('GCAM.MI.LogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
-    workspace   = args.workspace or getParam('GCAM.SandboxDir')
-    xmldb       = args.xmldb     or os.path.join(workspace, 'output', getParam('GCAM.DbFile'))
+    sandbox     = args.workspace or getParam('GCAM.Sandbox')
+    xmldb       = args.xmldb     or os.path.join(sandbox, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
     regions     = args.regions.split(',') if args.regions else GCAM_32_REGIONS
@@ -1027,12 +1030,12 @@ def main(args):
 
     mkdirs(outputDir)
 
+    # TBD: if setupWorkspace is performed in 'setup' step, can be removed from here
     # When writing the XMLDB to disk, we call ModelInterface separately. When
     # using an in-memory database, GCAM runs the queries for us, so here we
     # just create the XMLDBDriver.properties and batch files and return.
     if args.prequery:
-        setupWorkspace(args.workspace)
-        exeDir = getExeDir(args.workspace, chdir=True)
+        exeDir = getExeDir(sandbox, chdir=True)
         batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                     regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
                                     tmpFiles=False, noDelete=noDelete) \

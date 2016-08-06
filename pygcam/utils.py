@@ -7,17 +7,19 @@
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-import os
-import sys
-import re
-import subprocess
-import shutil
 import io
+import os
 import pkgutil
+import re
+import shutil
+import subprocess
+import sys
+from contextlib import contextmanager
 from itertools import chain
 from tempfile import mkstemp, mkdtemp
+
 from .config import getParam
-from .error import PygcamException, FileFormatError, FileExistsError
+from .error import PygcamException, FileFormatError
 from .log import getLogger, getLogLevel
 
 _logger = getLogger(__name__)
@@ -47,6 +49,15 @@ def simpleFormat(s, varDict):
         return result
     except KeyError as e:
         raise FileFormatError('Unknown parameter %s in project XML template' % e)
+
+@contextmanager
+def pushd(directory):
+    owd = os.getcwd()
+    try:
+        os.chdir(directory)
+        yield directory
+    finally:
+        os.chdir(owd)
 
 def getResource(relpath):
     """
@@ -128,12 +139,43 @@ def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batc
     with open(path, 'w') as f:
         f.write(content)
 
-
 def deleteFile(filename):
+    """
+    Delete the given filename, but ignore errors, like "rm -f"
+
+    :param filename: (str) the file to remove
+    :return: none
+    """
     try:
         os.remove(filename)
     except:
         pass    # ignore errors, like "rm -f"
+
+def copyFileOrTree(src, dst):
+    if os.path.islink(src):
+        src = os.readlink(src)      # TBD: test on Windows
+
+    if os.path.isdir(src):
+        shutil.copytree(src, dst)
+    else:
+        shutil.copy2(src, dst)
+
+def removeFileOrTree(path, raiseError=True):
+    from .windows import removeSymlink
+
+    try:
+        if os.path.islink(path):
+            # Windows treats links to files and dirs differently.
+            # NB: if not on Windows, just calls os.remove()
+            removeSymlink(path)
+        else:
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
+    except Exception as e:
+        if raiseError:
+            raise
 
 def coercible(value, type):
     """
@@ -178,7 +220,7 @@ def shellCommand(command, shell=True, raiseError=True):
     :raises: ToolError
     """
     exitStatus = subprocess.call(command, shell=shell)
-    if exitStatus <> 0:
+    if exitStatus != 0:
         if raiseError:
             raise PygcamException("\n*** Command failed: %s\n*** Command exited with status %s\n" % (command, exitStatus))
 
@@ -263,7 +305,9 @@ def saveToFile(txt, dirname='', filename=''):
     with open(pathname, 'w') as f:
         f.write(txt)
 
-def getBatchDir(scenario, resultsDir, fromMCS=False):
+QueryResultsDir = 'queryResults'
+
+def getBatchDir(scenario, resultsDir):
     """
     Get the name of the directory holding batch query results. This differs
     when running in pygcam's "gt" or when running in GCAM-MCS.
@@ -271,12 +315,9 @@ def getBatchDir(scenario, resultsDir, fromMCS=False):
     :param scenario: (str) the name of a scenario
     :param resultsDir: (str) the directory in which the batch results directory
            should be created
-    :param fromMCS: (bool) True if being called from GCAM-MCS
     :return: (str) the pathname to the batch results directory
     """
-    leafDir = 'queryResults' if fromMCS else 'batch-{scenario}'.format(scenario=scenario)
-    pathname = os.path.join(resultsDir, scenario, leafDir)
-    # '{resultsDir}/{scenario}/{leafDir}'.format(resultsDir=resultsDir, scenario=scenario, leafDir=leafDir)
+    pathname = os.path.join(resultsDir, scenario, QueryResultsDir)
     return pathname
 
 
@@ -291,9 +332,19 @@ def mkdirs(newdir, mode=0o770):
 
     try:
         os.makedirs(newdir, mode)
-    except OSError, e:
+    except OSError as e:
         if e.errno != EEXIST:
             raise
+
+def getExeDir(workspace, chdir=False):
+    workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
+    exeDir    = os.path.join(workspace, 'exe')
+
+    if chdir:
+        _logger.info("cd %s", exeDir)
+        os.chdir(exeDir)
+
+    return exeDir
 
 def loadModuleFromPath(modulePath, raiseOnError=True):
     """
@@ -312,7 +363,7 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
     base       = os.path.basename(modulePath)
     moduleName = base.split('.')[0]
 
-    _logger.debug('loading module %s' % base)
+    _logger.debug('loading module %s' % modulePath)
 
     # Load the compiled code if it's a '.pyc', otherwise load the source code
     module = None
@@ -325,7 +376,7 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
         else:
             raise Exception('Unknown module type (%s): file must must be .py or .pyc' % modulePath)
 
-    except Exception, e:
+    except Exception as e:
         errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
         if raiseOnError:
             #logger.error(errorString)
@@ -380,6 +431,21 @@ def importFromDotSpec(spec):
     except ImportError:
         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
 
+def readScenarioName(configFile):
+    """
+    Read the file `configFile` and extract the scenario name.
+
+    :param configFile: (str) the path to a GCAM configuration file
+    :return: (str) the name of the scenario defined in `configFile`
+    """
+    from lxml import etree as ET
+
+    parser = ET.XMLParser(remove_blank_text=True)
+    tree   = ET.parse(configFile, parser)
+    scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
+    return scenarioName.text
+
+
 class XMLFile(object):
     """
     Represents an XML file, which is parsed by lxml.etree and stored internally.
@@ -409,7 +475,7 @@ class XMLFile(object):
             except ET.DocumentInvalid as e:
                 raise FileFormatError("Validation of '%s'\n  using schema '%s' failed:\n  %s" % (xmlFile, schemaFile, e))
         else:
-            return schema.validate(self.tree)
+            schema.validate(self.tree)
 
         self.root = rootClass(self.tree) if rootClass else None
 
@@ -431,7 +497,7 @@ def printSeries(series, label):
         df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
         df.columns = [label]
         pd.set_option('precision', 5)
-        print df.T
+        print(df.T)
 
 def getTempFile(suffix='', tmpDir=None, text=True, delete=True):
     """
@@ -560,10 +626,10 @@ class TempFile(object):
         Remove a temporary file and delete the TempFile instance from the dict.
 
         :param filename: (str) the name of a temp file created by this class
-        :param raiseError (bool) if True, raise an exception if the filename is
-               not a known TempFile.
+        :param raiseError: (bool) if True, raise an exception if the filename is
+            not a known TempFile.
         :return: none
-        :raises: PygcamException if the path is not related to a TempFile instance.
+        :raises PygcamException: if the path is not related to a TempFile instance.
         """
         try:
             obj = cls.Instances[filename]

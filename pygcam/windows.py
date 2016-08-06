@@ -3,15 +3,16 @@
 '''
 import os
 import platform
+from errno import EEXIST
 
 IsWindows = platform.system() == 'Windows'
+
 
 if IsWindows:
     # print "Loading Windows support functions..."
 
     import ctypes
     import win32file
-    from .utils import mkdirs
     from .error import PygcamException
     from .log import getLogger
 
@@ -56,23 +57,31 @@ if IsWindows:
          index_hi, index_lo) = win32file.GetFileInformationByHandle(hFile)
         return volume, index_hi, index_lo
 
+    def makeParents(path):
+        path = os.path.abspath(path)
+        try:
+            os.makedirs(os.path.dirname(path), 0o770)
+        except OSError as e:
+            if e.errno != EEXIST:
+                raise
+
     def samefileWindows(filename1, filename2):
         # If either of the files does not exist, create it and close
         # it to use get_read_handle(), then remove the files we created.
         # Yes, there's a race condition here, and this has the side-effect
         # of possibly creating directories that aren't deleted, but
         # Windows is lame, so we do what we can.
+        f1 = f2 = None
+        hFile1 = hFile2 = None
         try:
-            f1 = f2 = None
-            hFile1 = hFile2 = None
 
             if not os.path.lexists(filename1):
-                mkdirs(os.path.dirname(os.path.abspath(filename1)))
+                makeParents(filename1)
                 f1 = open(filename1, 'w')
                 f1.close()
 
             if not os.path.lexists(filename2):
-                mkdirs(os.path.dirname(os.path.abspath(filename2)))
+                makeParents(filename2)
                 f2 = open(filename2, 'w')
                 f2.close()
 

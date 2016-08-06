@@ -40,7 +40,7 @@ class Policy(XMLEditor):
         scenario = args.scenario
         years = args.years
         generate = not args.noGenerate
-        resultsDir = args.resultsDir or getParam('GCAM.SandboxRoot')
+        resultsDir = args.resultsDir or getParam('GCAM.SandboxDir')
         dynamic = args.dynamic
 
         # do stuff ...

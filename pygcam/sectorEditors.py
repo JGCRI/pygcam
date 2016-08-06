@@ -25,9 +25,6 @@ class RefiningEditor(XMLEditor):
         super(RefiningEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
                                              refWorkspace, groupDir, subdir, parent=parent)
 
-    def setup(self, args):
-        super(RefiningEditor, self).setup(args)
-
     # TBD: redefine this as follows, or just call setGlobalTechShutdownRate directly?
     def _setRefinedFuelShutdownRate(self, fuel, year, rate):
         self.setGlobalTechShutdownRate(self, REFINING_SECTOR, BIOMASS_LIQUIDS, fuel, year, rate)
@@ -88,9 +85,6 @@ class BioenergyEditor(RefiningEditor):
         biodieselUsaFile2 = 'biodieselUSA2.xml'
         self.biodieselUsaAbs2 = path.join(self.scenario_dir_abs, biodieselUsaFile2)
         self.biodieselUsaRel2 = path.join(self.scenario_dir_rel, biodieselUsaFile2)
-
-    def setup(self, args):
-        super(BioenergyEditor, self).setup(args)
 
     def adjustResidueSupply(self, loTarget, loPrice, loFract, hiTarget, hiPrice, hiFract, target):
         """

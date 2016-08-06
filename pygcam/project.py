@@ -8,19 +8,23 @@
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-import os
-import sys
-import shlex
-import re
 import glob
+import os
+import re
+import shlex
+import sys
 from os.path import join
+
 from lxml import etree as ET
-from .config import getParam, getConfigDict
-from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
-                    resourceStream)
+
+from .config import getParam, getConfigDict, setParam
+from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .subcommand import SubcommandABC
+from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
+                    resourceStream, QueryResultsDir)
+
 #from .queryFile import QueryFile
 
 __version__ = '0.2'
@@ -182,7 +186,6 @@ class Step(object):
             return
 
         try:
-            # command = self.command.format(**argDict)    # replace vars in template
             command = simpleFormat(self.command, argDict)    # replace vars in template
         except KeyError as e:
             raise FileFormatError("%s -- No such variable exists in the project XML file" % e)
@@ -356,7 +359,7 @@ class Project(object):
             if header:
                 print(header)
             for s in strings:
-                print('  ', s)
+                print('  ' + s)
 
         if args.listGroups:
             showList(knownGroups, 'Scenario groups:')
@@ -442,32 +445,39 @@ class Project(object):
 
         return scenarios
 
-
     def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool):
         """
         Command templates can include keywords curly braces that are substituted
         to create the command to execute in the shell. Variables are defined in
         the <vars> section of the project XML file.
         """
+        projectName = self.projectName
+        scenarioGroupName = self.scenarioGroupName
+        groupDir = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
+
+        # Push the groupName back into config system so vars can use it
+        setParam('GCAM.ScenarioGroup', groupDir, section=projectName)
+        #setParam('GCAM.ScenarioGroup', scenarioGroupName, section=projectName)
+
         # Get the text values for all config variables, allowing variables
         # defined in the project to override them.
-        cfgDict = getConfigDict(section=self.projectName)
+        cfgDict = getConfigDict(section=projectName)
         for name, value in cfgDict.items():
             SimpleVariable(name, value)
 
         self.argDict = argDict = Variable.getDict()
 
-        scenarioGroupName  = self.scenarioGroupName
-        groupDir = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
-
         # Add standard variables from project XML file itself
-        argDict['project']       = self.projectName
+        argDict['project']       = projectName
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
-        argDict['scenarioGroup'] = self.scenarioGroupName
+        argDict['scenarioGroup'] = scenarioGroupName
 
-        argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
-        argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
+        # argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
+        # argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
+
+        argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   groupDir, subdir), rmFinalSlash=True)
+        argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir, subdir), rmFinalSlash=True)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows
@@ -497,15 +507,18 @@ class Project(object):
                 _logger.debug("Skipping inactive scenario: %s", scenarioName)
                 continue
 
+            sandboxRoot = argDict['GCAM.SandboxRoot']
+
             # These get reset as each scenario is processed
             argDict['scenario']       = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
-            argDict['sandboxRoot']    = argDict['GCAM.SandboxRoot']
-            argDict['sandboxDir']     = sandboxDir  = argDict['GCAM.SandboxDir']
-            argDict['sandboxGroupDir']= groupDir = unixPath(join(sandboxDir, groupDir))
-            argDict['scenarioDir']    = scenarioDir = unixPath(join(groupDir, scenarioName))
+            argDict['sandboxDir']     = sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
+            # was: unixPath(join(sandboxRoot, projectName, groupDir), rmFinalSlash=True), but now set in config
+            argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, scenarioName))
             argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
-            argDict['batchDir']       = unixPath(join(scenarioDir, 'batch-' + scenarioName))
+            argDict['batchDir']       = unixPath(join(scenarioDir, QueryResultsDir))     # used to be batch-{scenario}
+
+            setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
             # variables indicated in <tmpFile>. This is in the scenario loop so run-time
@@ -537,7 +550,7 @@ class Project(object):
             print("  %15s : %s" % (name, var.getValue()))
         print('\nTmpFiles:')
         for t in self.tmpFiles:
-            print("  ", t.varName)
+            print("  " + t.varName)
 
 
 def driver(args, tool, cmdClass=Project):
@@ -547,11 +560,14 @@ def driver(args, tool, cmdClass=Project):
     if not args.project:
         raise CommandlineError("run: must specify project name")
 
-    steps = flatten(map(lambda s: s.split(','), args.steps)) if args.steps else None
-    skipSteps = flatten(map(lambda s: s.split(','), args.skipSteps)) if args.skipSteps else None
+    def listify(items):
+        '''Convert a list of comma-delimited strings to a single list of strings'''
+        return flatten(map(lambda s: s.split(','), items)) if items else None
 
-    scenarios = args.scenarios and flatten(map(lambda s: s.split(','), args.scenarios))
-    skipScenarios = flatten(map(lambda s: s.split(','), args.skipScenarios)) if args.skipScenarios else None
+    steps     = listify(args.steps)
+    skipSteps = listify(args.skipSteps)
+    scenarios = listify(args.scenarios)
+    skipScens = listify(args.skipScenarios)
 
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
@@ -559,7 +575,7 @@ def driver(args, tool, cmdClass=Project):
     tree    = ET.parse(projectFile, parser)
     project = cmdClass(tree, args.project, args.group)
 
-    project.run(scenarios, skipScenarios, steps, skipSteps, args, tool)
+    project.run(scenarios, skipScens, steps, skipSteps, args, tool)
 
 
 class ProjectCommand(SubcommandABC):
@@ -593,18 +609,19 @@ class ProjectCommand(SubcommandABC):
                             (comma-delimited) argument, or the -K flag can be repeated to indicate
                             additional scenarios. By default, all scenarios are run.''')
 
-        parser.add_argument('-l', '--listSteps', action='store_true', default=False,
+        parser.add_argument('-l', '--listSteps', action='store_true',
                             help='''List the steps defined for the given project and exit.
                             Dynamic variables (created at run-time) are not displayed.''')
 
-        parser.add_argument('-L', '--listScenarios', action='store_true', default=False,
+        parser.add_argument('-L', '--listScenarios', action='store_true',
                             help='''List the scenarios defined for the given project and exit.
                             Dynamic variables (created at run-time) are not displayed.''')
 
-        parser.add_argument('-n', '--noRun', action='store_true', default=False,
+        parser.add_argument('-n', '--noRun', action='store_true',
                             help='''Display the commands that would be run, but don't run them.''')
 
-        parser.add_argument('-p', '--project', help='''The name of the project to run.''')
+        parser.add_argument('-p', '--project',
+                            help='''The name of the project to run.''')
 
         parser.add_argument('-q', '--quit', action='store_true',
                             help='''Quit if an error occurs when processing a scenario. By default, the
@@ -625,6 +642,10 @@ class ProjectCommand(SubcommandABC):
         parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
+
+        parser.add_argument('-x', '--sandboxDir',
+                            help='''The directory in which to create the run-time sandbox workspace.
+                            Defaults to value of {GCAM.SandboxProjectDir}/{scenarioGroup}.''')
 
         return parser   # for auto-doc generation
 
