@@ -9,7 +9,6 @@ Contents
 
    intro
    install
-   windows
    tutorial
 
 The ``gt`` workflow management script
@@ -19,6 +18,7 @@ The ``gt`` workflow management script
    :maxdepth: 1
 
    setup
+   config
    gcamtool
 
 
@@ -27,15 +27,14 @@ Application Programming Interface (API)
 
   .. toctree::
    :maxdepth: 1
+   :glob:
 
-   config
-   diff
-   error
-   landProtection
-   log
-   project
-   query
-   subcommand
-   utils
-   xmlEditor
+   pygcam.*
+
+XML File Formats
+------------------
+
+  .. toctree::
+   :maxdepth: 2
+
    xmlFiles

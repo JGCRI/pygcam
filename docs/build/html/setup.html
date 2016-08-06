@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
-        <link rel="next" title="gt (GCAM tool)" href="gcamtool.html"/>
-        <link rel="prev" title="Using pygcam under Windows" href="windows.html"/> 
+        <link rel="next" title="Configuration System" href="config.html"/>
+        <link rel="prev" title="Tutorial" href="tutorial.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,32 +81,30 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">GCAM XML-Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="xmlFiles.html">XML File Formats</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 
             
@@ -154,7 +152,7 @@
   <div class="section" id="gcam-xml-setup">
 <h1>GCAM XML-Setup<a class="headerlink" href="#gcam-xml-setup" title="Permalink to this headline">¶</a></h1>
 <p>This page provides an introduction to the XML-Setup system. The
-API is documented with the <a class="reference internal" href="xmlEditor.html"><em>pygcam.xmlEditor</em></a> module. See also the
+API is documented with the <a class="reference internal" href="pygcam.xmlEditor.html"><em>pygcam.xmlEditor</em></a> module. See also the
 <a class="reference internal" href="gcamtool.html#setup-label"><em>setup</em></a> sub-command.</p>
 <p>The XML-Setup system provides a Python API to the XML input files
 that control much of GCAM&#8217;s behavior.
@@ -165,7 +163,7 @@ modifications to the main GCAM <code class="docutils literal"><span class="pre">
 constitute the &#8220;source code&#8221; used to generate XML data and
 configuration files described by the scripts. The generated XML files
 are written to a <code class="docutils literal"><span class="pre">local-xml</span></code> folder identified by the user&#8217;s script.</p>
-<p>The module includes the <a class="reference internal" href="xmlEditor.html"><em>pygcam.xmlEditor</em></a> class that provides core XML
+<p>The module includes the <a class="reference internal" href="pygcam.xmlEditor.html"><em>pygcam.xmlEditor</em></a> class that provides core XML
 editing functionality and identifies scenarios relationships, i.e., that
 a given policy scenario is based on a particular baseline scenario. The
 structure can have an arbitrary number of layers. For example, a
@@ -173,7 +171,11 @@ structure can have an arbitrary number of layers. For example, a
 of which refines the shared scenario to create a baseline specific to the analysis.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <a class="reference internal" href="xmlEditor.html"><em>pygcam.xmlEditor</em></a> module relies on the <em>XML Starlet</em> program, a command-line tool that can search and edit XML files (among other tricks.) It is available for all three GCAM platforms. <a class="reference external" href="http://xmlstar.sourceforge.net/download.php">Download XML Starlet</a>. It should be included on all modern Linux systems. It is available in binary (executable) form for Windows, but must be compiled on Mac OS X.</p>
+<p class="last">The <a class="reference internal" href="pygcam.xmlEditor.html"><em>pygcam.xmlEditor</em></a> module relies on the <em>XML Starlet</em> program, a
+command-line tool that can search and edit XML files (among other tricks.) It is available
+for all three GCAM platforms. <a class="reference external" href="http://xmlstar.sourceforge.net/download.php">Download XML Starlet</a>.
+It should be included on all modern Linux systems. It is available in binary (executable)
+form for Windows, but must be compiled on Mac OS X.</p>
 </div>
 <div class="section" id="core-features">
 <h2>Core features<a class="headerlink" href="#core-features" title="Permalink to this headline">¶</a></h2>
@@ -263,10 +265,10 @@ therefore error-prone.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="gcamtool.html" class="btn btn-neutral float-right" title="gt (GCAM tool)" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="config.html" class="btn btn-neutral float-right" title="Configuration System" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="windows.html" class="btn btn-neutral" title="Using pygcam under Windows" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="tutorial.html" class="btn btn-neutral" title="Tutorial" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

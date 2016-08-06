@@ -8,7 +8,7 @@ the two XML files.
 
     .. seealso::
 
-       See :doc:`query` for more information about run-time behavior.
+       See :doc:`pygcam.query` for more information about run-time behavior.
        Command-line usage is described on the :ref:`gt query<query-label>` page.
 
 

@@ -83,31 +83,29 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="xmlFiles.html">XML File Formats</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 
             
@@ -154,7 +152,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <p id="query-xml">The <code class="docutils literal"><span class="pre">query</span></code> sub-command and the underlying <a class="reference internal" href="query.html#pygcam.query.runBatchQuery" title="pygcam.query.runBatchQuery"><code class="xref py py-func docutils literal"><span class="pre">pygcam.query.runBatchQuery()</span></code></a>
+  <p id="query-xml">The <code class="docutils literal"><span class="pre">query</span></code> sub-command and the underlying <a class="reference internal" href="pygcam.query.html#pygcam.query.runBatchQuery" title="pygcam.query.runBatchQuery"><code class="xref py py-func docutils literal"><span class="pre">pygcam.query.runBatchQuery()</span></code></a>
 function allow you to specify an XML file that describes a sequence of query
 to execute. The queries can reference named sets of label rewrite statements that
 allow results to be renamed, aggregated, or ignored. Here we document the format of
@@ -162,7 +160,7 @@ the two XML files.</p>
 <blockquote>
 <div><div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last">See <a class="reference internal" href="query.html"><em>pygcam.query</em></a> for more information about run-time behavior.
+<p class="last">See <a class="reference internal" href="pygcam.query.html"><em>pygcam.query</em></a> for more information about run-time behavior.
 Command-line usage is described on the <a class="reference internal" href="gcamtool.html#query-label"><em>gt query</em></a> page.</p>
 </div>
 </div></blockquote>
@@ -214,7 +212,7 @@ elements.</p>
 <h3>&lt;rewriter&gt;<a class="headerlink" href="#rewriter" title="Permalink to this headline">¶</a></h3>
 <p>This element identifies a rewrite set by name. The rewrite
 set must be defined in a file identified as an argument
-to the <a class="reference internal" href="query.html#pygcam.query.runBatchQuery" title="pygcam.query.runBatchQuery"><code class="xref py py-func docutils literal"><span class="pre">pygcam.query.runBatchQuery()</span></code></a>, on the command-line to
+to the <a class="reference internal" href="pygcam.query.html#pygcam.query.runBatchQuery" title="pygcam.query.runBatchQuery"><code class="xref py py-func docutils literal"><span class="pre">pygcam.query.runBatchQuery()</span></code></a>, on the command-line to
 the <a class="reference internal" href="gcamtool.html#query-label"><em>query sub-command</em></a>, or by the value of
 the config variable <code class="docutils literal"><span class="pre">GCAM.RewriteSetsFile</span></code>, which defaults to
 <code class="docutils literal"><span class="pre">%(GCAM.ProjectRoot)/etc/rewriteSets.xml</span></code>.</p>

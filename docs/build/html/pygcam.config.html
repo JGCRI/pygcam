@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pygcam.config &mdash; pygcam 0.1a1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
+        <link rel="next" title="pygcam.diff" href="pygcam.diff.html"/>
+        <link rel="prev" title="GCAM tool (gt)" href="gcamtool.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pygcam
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xmlFiles.html">XML File Formats</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pygcam</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">pygcam.config</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pygcam.config.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pygcam-config">
+<h1><code class="docutils literal"><span class="pre">pygcam.config</span></code><a class="headerlink" href="#pygcam-config" title="Permalink to this headline">¶</a></h1>
+<p>See the <a class="reference internal" href="config.html"><em>configuration system</em></a> page for a detailed
+description of available configuration variables. This page documents
+the API to the configuration system.</p>
+<div class="section" id="module-pygcam.config">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.config" title="Permalink to this headline">¶</a></h2>
+<p><em>Code author: Richard Plevin</em></p>
+<dl class="function">
+<dt id="pygcam.config.getConfig">
+<code class="descclassname">pygcam.config.</code><code class="descname">getConfig</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the configuration object. If one has been created already via
+<cite>readConfigFiles</cite>, it is returned; otherwise a new one is created
+and the configuration files are read. Applications generally do not
+need to use this object directly since the single instance is stored
+internally and referenced by the other API functions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a <cite>SafeConfigParser</cite> instance.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.getConfigDict">
+<code class="descclassname">pygcam.config.</code><code class="descname">getConfigDict</code><span class="sig-paren">(</span><em>section='DEFAULT'</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getConfigDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all variables defined in <cite>section</cite> as a dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> &#8211; (str) the name of a section in the config file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(dict) all variables defined in the section (which includes
+those defined in DEFAULT.)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.getParam">
+<code class="descclassname">pygcam.config.</code><code class="descname">getParam</code><span class="sig-paren">(</span><em>name</em>, <em>section=None</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getParam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the configuration parameter <cite>name</cite>. Calls
+<a class="reference internal" href="#pygcam.config.getConfig" title="pygcam.config.getConfig"><code class="xref py py-func docutils literal"><span class="pre">getConfig()</span></code></a> if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> &#8211; (str) the name of a configuration parameters. Note
+that variable names are case-insensitive.</li>
+<li><strong>section</strong> &#8211; (str) the name of the section to read from, which
+defaults to the value used in the first call to <code class="docutils literal"><span class="pre">getConfig</span></code>,
+<code class="docutils literal"><span class="pre">readConfigFiles</span></code>, or any of the <code class="docutils literal"><span class="pre">getParam</span></code> variants.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the value of the variable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.getParamAsBoolean">
+<code class="descclassname">pygcam.config.</code><code class="descname">getParamAsBoolean</code><span class="sig-paren">(</span><em>name</em>, <em>section=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getParamAsBoolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the configuration parameter <cite>name</cite>, coerced
+into a boolean value, where any (case-insensitive) value in the
+set <code class="docutils literal"><span class="pre">{'true','yes','on','1'}</span></code> are converted to <code class="docutils literal"><span class="pre">True</span></code>, and
+any value in the set <code class="docutils literal"><span class="pre">{'false','no','off','0'}</span></code> is converted to
+<code class="docutils literal"><span class="pre">False</span></code>. Any other value raises an exception.
+Calls <a class="reference internal" href="#pygcam.config.getConfig" title="pygcam.config.getConfig"><code class="xref py py-func docutils literal"><span class="pre">getConfig()</span></code></a> if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> &#8211; (str) the name of a configuration parameters.</li>
+<li><strong>section</strong> &#8211; (str) the name of the section to read from, which
+defaults to the value used in the first call to <code class="docutils literal"><span class="pre">getConfig</span></code>,
+<code class="docutils literal"><span class="pre">readConfigFiles</span></code>, or any of the <code class="docutils literal"><span class="pre">getParam</span></code> variants.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(bool) the value of the variable</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="pygcam.error.html#pygcam.error.ConfigFileError" title="pygcam.error.ConfigFileError"><code class="xref py py-exc docutils literal"><span class="pre">pygcam.error.ConfigFileError</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.getParamAsFloat">
+<code class="descclassname">pygcam.config.</code><code class="descname">getParamAsFloat</code><span class="sig-paren">(</span><em>name</em>, <em>section=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getParamAsFloat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the configuration parameter <cite>name</cite> as a
+float. Calls <a class="reference internal" href="#pygcam.config.getConfig" title="pygcam.config.getConfig"><code class="xref py py-func docutils literal"><span class="pre">getConfig()</span></code></a> if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> &#8211; (str) the name of a configuration parameters.</li>
+<li><strong>section</strong> &#8211; (str) the name of the section to read from, which
+defaults to the value used in the first call to <code class="docutils literal"><span class="pre">getConfig</span></code>,
+<code class="docutils literal"><span class="pre">readConfigFiles</span></code>, or any of the <code class="docutils literal"><span class="pre">getParam</span></code> variants.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(float) the value of the variable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.getParamAsInt">
+<code class="descclassname">pygcam.config.</code><code class="descname">getParamAsInt</code><span class="sig-paren">(</span><em>name</em>, <em>section=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getParamAsInt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the configuration parameter <cite>name</cite>, coerced
+to an integer. Calls <a class="reference internal" href="#pygcam.config.getConfig" title="pygcam.config.getConfig"><code class="xref py py-func docutils literal"><span class="pre">getConfig()</span></code></a> if needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> &#8211; (str) the name of a configuration parameters.</li>
+<li><strong>section</strong> &#8211; (str) the name of the section to read from, which
+defaults to the value used in the first call to <code class="docutils literal"><span class="pre">getConfig</span></code>,
+<code class="docutils literal"><span class="pre">readConfigFiles</span></code>, or any of the <code class="docutils literal"><span class="pre">getParam</span></code> variants.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(int) the value of the variable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.readConfigFiles">
+<code class="descclassname">pygcam.config.</code><code class="descname">readConfigFiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.readConfigFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the pygcam configuration files, starting with <code class="docutils literal"><span class="pre">pygcam/etc/system.cfg</span></code>,
+followed by <code class="docutils literal"><span class="pre">pygcam/etc/{platform}.cfg</span></code> if present. If the environment variable
+<code class="docutils literal"><span class="pre">PYGCAM_SITE_CONFIG</span></code> is defined, its value should be a config file, which is
+read next. Finally, the user&#8217;s config file, <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>, is read. Each
+successive file overrides values for any variable defined in an earlier file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a populated SafeConfigParser instance</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.setParam">
+<code class="descclassname">pygcam.config.</code><code class="descname">setParam</code><span class="sig-paren">(</span><em>name</em>, <em>value</em>, <em>section=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.setParam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a configuration parameter in memory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> &#8211; (str) parameter name</li>
+<li><strong>value</strong> &#8211; (any, coerced to str) parameter value</li>
+<li><strong>section</strong> &#8211; (str) if given, the name of the section in which to set the value.
+If not given, the value is set in the established project section, or DEFAULT
+if no project section has been set.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.config.setSection">
+<code class="descclassname">pygcam.config.</code><code class="descname">setSection</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.setSection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the name of the default config file section to read from.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> &#8211; (str) a config file section name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pygcam.diff.html" class="btn btn-neutral float-right" title="pygcam.diff" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gcamtool.html" class="btn btn-neutral" title="GCAM tool (gt)" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Plevin.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

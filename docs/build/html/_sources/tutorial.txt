@@ -1,5 +1,5 @@
-Tutorial -- Using ``pygcam``
-=============================
+Tutorial
+=========
 
 .. note::
 
@@ -19,7 +19,7 @@ detail in the sections that follow.
 
 Before using ``pygcam``, you must install a Python 2.7 environment and then
 install the ``pygcam`` package. See the :doc:`install` page for details.
-Windows users should also refer to :doc:`windows`.
+Windows users should also see :ref:`windows-label`.
 
 2. Configure pygcam
 ^^^^^^^^^^^^^^^^^^^^
@@ -91,7 +91,7 @@ simply remove the leading '#' character.
 Edit the configuration file with any editor capable of
 working with plain text---not a word-processor such as Word. You can use
 the command ``gt config -e`` to invoke a system-appropriate editor on the
-configuration file. See :doc:`config` for details.
+configuration file. See the :doc:`config` page for details.
 
 Configuration file sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,34 +163,6 @@ prefix desired, or none at all.
 
 ------------------------------------------------
 
-Project structure
-------------------
-
-The :doc:`setup` system provides programmatic methods (i.e., Python functions) that
-automatic common edits to GCAM XML input and configuration files. The output of the
-setup system is thus a set of modified XML input and configuration files. These files
-should not be edited manually as the changes will be overwritten the next time the
-setup system is run.
-
-The files defining a project are stored in the directory identified by the configuration
-parameter ``GCAM.XmlSrc``, which defaults to ``%(GCAM.ProjectDir)s/xmlsrc``, i.e., the
-directory ``xmlsrc`` within your project directory. Included under ``xmlsrc`` are
-
-  * Custom XML files
-  * A Python file that defines baseline and policy scenarios, and calls the setup
-    functions as needed to modify standard input files or included custom one.
-
-The gcamtool :ref:`setup <setup-label>` sub-command loads the Python file and calls the
-setup functions corresponding to the requires baseline and policy scenarios. This
-modifies reference XML files and copies custom XML files to a directory identified by the
-config parameter ``GCAM.LocalXml``, which default to ``%(GCAM.ProjectDir)s/local-xml``.
-Dynamically generated constraints (i.e., those that depend on the output of the baseline
-scenario) are written to the directory indicated by ``GCAM.DynXml``, which defaults to
-``%(GCAM.ProjectDir)s/dyn-xml``. See the :doc:`setup` page for further details.
-
-N.B. a system for defining projects without writing any Python code is currently in development.
-
-------------------------------------------------
 
 Running a GCAM experiment
 ----------------------------
@@ -203,36 +175,4 @@ The :doc:`project-xml` file describes all the workflow steps required to setup, 
 analyze the scenarios. The entire workflow or select steps can be run using the gcamtool
 `:ref: run <run-label>` sub-command.
 
-Run-time structure
-^^^^^^^^^^^^^^^^^^^^
-In ``pygcam``, each GCAM scenario is run in a separate copy of the standard GCAM
-workspace. On Unix-like systems (and on Windows if
-the user has adequate administrative privileges), the read-only files are symbolically
-linked to the scenario workspace, avoiding copying of many megabytes of data.
-
-Windows users lacking permission to create symbolic links should can the following
-configuration parameter to cause copying rather than linking to occur:
-
-.. code-block:: cfg
-
-   GCAM.CopyAllFiles = True
-
-To avoid ambiguity between the reference GCAM workspace (i.e., ``Main_User_Workspace``)
-and the per-scenario, generated workspaces, we refer to the latter as `sandboxes`, which
-is a computing term that refers to isolation areas in which programs are run to avoid
-interactions with other programs.
-
-The default ``pygcam`` structure assumes there is a directory under which you want all
-sandboxes to be created. This is defined by the config parameter ``GCAM.SandboxRoot``,
-which defaults to ``%(GCAM.Root)s/ws``. ``GCAM.Root`` in turn defaults to
-``%(Home)s/GCAM``, thus the default sandbox root is ``%(Home)s/GCAM/ws``. You can change
-``GCAM.Root`` or ``GCAM.SandboxRoot`` to any desired directory. The sandbox for an
-individual project is defined by ``GCAM.SandboxDir``, which defaults
-to ``%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s``.
-
-With the project's sandbox directory are the standard GCAM workspace folders, i.e.,
-``input``, ``libs``, ``exe`` (which are symbolic links when possible), and ``output``,
-which is always created locally in the sandbox to hold the GCAM output files.
-
-*Create a figure showing file structure*
 

@@ -1,5 +1,5 @@
-``gt`` (GCAM tool)
-==================
+GCAM tool (``gt``)
+===================
 
 The gt script unifies GCAM workflow managment functionality into a
 single script with sub-commands. Generic sub-commands are implemented directly
@@ -319,4 +319,4 @@ file variable ``GCAM.PluginPath``. The value of ``GCAM.PluginPath`` must
 be a sequence of directory names separated by colons (``:``) on Unix-like
 systems or by semi-colons (``;``) on Windows.
 
-See :doc:`subcommand` for documentation of the plug-in API.
+See :doc:`pygcam.subcommand` for documentation of the plug-in API.

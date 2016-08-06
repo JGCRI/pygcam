@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
-        <link rel="next" title="pygcam.xmlEditor" href="xmlEditor.html"/>
-        <link rel="prev" title="pygcam.subcommand" href="subcommand.html"/> 
+        <link rel="next" title="pygcam.xmlEditor" href="pygcam.xmlEditor.html"/>
+        <link rel="prev" title="pygcam.subcommand" href="pygcam.subcommand.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,31 +82,29 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="windows.html">Using pygcam under Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="gcamtool.html"><code class="docutils literal"><span class="pre">gt</span></code> (GCAM tool)</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial &#8211; Using <code class="docutils literal"><span class="pre">pygcam</span></code></a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="xmlFiles.html">XML File Formats</a></li>
-</ul>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
 </ul>
 
             
@@ -141,7 +139,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/utils.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/pygcam.utils.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -188,21 +186,19 @@ case, delete the instance from the class instance dict.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; (str) the name of a temp file created by this class</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; (str) the name of a temp file created by this class</li>
+<li><strong>raiseError</strong> &#8211; (bool) if True, raise an exception if the filename is
+not a known TempFile.</li>
+</ul>
+</td>
 </tr>
-</tbody>
-</table>
-<dl class="docutils">
-<dt>:param raiseError (bool) if True, raise an exception if the filename is</dt>
-<dd>not a known TempFile.</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">none</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">none</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">PygcamException if the path is not related to a TempFile instance.</td>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises PygcamException:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">if the path is not related to a TempFile instance.</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -291,6 +287,22 @@ This reverses the operation of parseTrialString</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pygcam.utils.deleteFile">
+<code class="descclassname">pygcam.utils.</code><code class="descname">deleteFile</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.deleteFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the given filename, but ignore errors, like &#8220;rm -f&#8221;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; (str) the file to remove</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pygcam.utils.ensureCSV">
 <code class="descclassname">pygcam.utils.</code><code class="descname">ensureCSV</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.ensureCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ensure that the file has a &#8216;.csv&#8217; extension by replacing or adding
@@ -350,7 +362,7 @@ If <cite>ext</cite> doesn&#8217;t start with a &#8221;.&#8221;, one is added.</p
 
 <dl class="function">
 <dt id="pygcam.utils.getBatchDir">
-<code class="descclassname">pygcam.utils.</code><code class="descname">getBatchDir</code><span class="sig-paren">(</span><em>scenario</em>, <em>resultsDir</em>, <em>fromMCS=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getBatchDir" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.utils.</code><code class="descname">getBatchDir</code><span class="sig-paren">(</span><em>scenario</em>, <em>resultsDir</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.getBatchDir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the name of the directory holding batch query results. This differs
 when running in pygcam&#8217;s &#8220;gt&#8221; or when running in GCAM-MCS.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -361,7 +373,6 @@ when running in pygcam&#8217;s &#8220;gt&#8221; or when running in GCAM-MCS.</p>
 <li><strong>scenario</strong> &#8211; (str) the name of a scenario</li>
 <li><strong>resultsDir</strong> &#8211; (str) the directory in which the batch results directory
 should be created</li>
-<li><strong>fromMCS</strong> &#8211; (bool) True if being called from GCAM-MCS</li>
 </ul>
 </td>
 </tr>
@@ -597,6 +608,22 @@ Ex. 1,3,4-6,2 becomes [1,3,4,5,6,2]. Duplicates are deleted.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pygcam.utils.readScenarioName">
+<code class="descclassname">pygcam.utils.</code><code class="descname">readScenarioName</code><span class="sig-paren">(</span><em>configFile</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.readScenarioName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the file <cite>configFile</cite> and extract the scenario name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>configFile</strong> &#8211; (str) the path to a GCAM configuration file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str) the name of the scenario defined in <cite>configFile</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pygcam.utils.resourceStream">
 <code class="descclassname">pygcam.utils.</code><code class="descname">resourceStream</code><span class="sig-paren">(</span><em>relpath</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.resourceStream" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a stream on the resource found on the given path relative
@@ -716,10 +743,10 @@ be removed, if present.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="xmlEditor.html" class="btn btn-neutral float-right" title="pygcam.xmlEditor" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pygcam.xmlEditor.html" class="btn btn-neutral float-right" title="pygcam.xmlEditor" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="subcommand.html" class="btn btn-neutral" title="pygcam.subcommand" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pygcam.subcommand.html" class="btn btn-neutral" title="pygcam.subcommand" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

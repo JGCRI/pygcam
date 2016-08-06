@@ -1,4 +1,4 @@
-``pygcam.config``
+Configuration System
 =============================
 
 The ``pygcam`` scripts and libraries rely on a configuration file to:
@@ -7,7 +7,7 @@ The ``pygcam`` scripts and libraries rely on a configuration file to:
   * allow the user to set defaults for many command-line arguments to scripts, and
   * define both global default and project-specific values for all parameters
 
-The ``pygcam.config`` module provides access to configuration parameters. The
+The :doc:`pygcam.config` module provides access to configuration parameters. The
 configuration file and the API to access it are described below.
 
 .. seealso::
@@ -215,11 +215,3 @@ The system defaults file
 ~~~~~~~~~~~~~~~~~~~~~~~~
 .. literalinclude:: ../../pygcam/etc/system.cfg
    :language: cfg
-
----------------------------------------------------------
-
-API
----
-
-.. automodule:: pygcam.config
-   :members:

@@ -2,7 +2,7 @@ GCAM XML-Setup
 =======================
 
 This page provides an introduction to the XML-Setup system. The
-API is documented with the :doc:`xmlEditor` module. See also the
+API is documented with the :doc:`pygcam.xmlEditor` module. See also the
 :ref:`setup <setup-label>` sub-command.
 
 The XML-Setup system provides a Python API to the XML input files
@@ -16,14 +16,18 @@ constitute the "source code" used to generate XML data and
 configuration files described by the scripts. The generated XML files
 are written to a ``local-xml`` folder identified by the user's script.
 
-The module includes the :doc:`xmlEditor` class that provides core XML
+The module includes the :doc:`pygcam.xmlEditor` class that provides core XML
 editing functionality and identifies scenarios relationships, i.e., that
 a given policy scenario is based on a particular baseline scenario. The
 structure can have an arbitrary number of layers. For example, a
 "bioenergy baseline" scenario may be shared across several analyses, each
 of which refines the shared scenario to create a baseline specific to the analysis.
 
-.. note:: The :doc:`xmlEditor` module relies on the *XML Starlet* program, a command-line tool that can search and edit XML files (among other tricks.) It is available for all three GCAM platforms. `Download XML Starlet <http://xmlstar.sourceforge.net/download.php>`_. It should be included on all modern Linux systems. It is available in binary (executable) form for Windows, but must be compiled on Mac OS X.
+.. note:: The :doc:`pygcam.xmlEditor` module relies on the *XML Starlet* program, a
+   command-line tool that can search and edit XML files (among other tricks.) It is available
+   for all three GCAM platforms. `Download XML Starlet <http://xmlstar.sourceforge.net/download.php>`_.
+   It should be included on all modern Linux systems. It is available in binary (executable)
+   form for Windows, but must be compiled on Mac OS X.
 
 
 Core features

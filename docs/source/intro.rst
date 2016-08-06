@@ -1,5 +1,5 @@
-Introduction to ``pygcam``
-==================================
+Introduction
+==============
 
 *This package is currently under development.*
 
@@ -49,7 +49,7 @@ configuration file is created, with all configuration options commented out and
 showing their default values.
 
 The main script (:doc:`gcamtool`) implements several "subcommands" that perform various
-steps in a typical GCAM analysis. The script implements a :doc:`plug-in <subcommand>`
+steps in a typical GCAM analysis. The script implements a :doc:`plug-in <pygcam.subcommand>`
 architecture allowing users to customize :doc:`gt <gcamtool>` and avoid a proliferation
 of scripts. The available subcommands include:
 
@@ -80,6 +80,73 @@ of scripts. The available subcommands include:
 
 Also see the :doc:`setup` documentation to for information on programmatically modifying
 copies of GCAM XML files. This "setup" step can be one of the commands called by ``run``.
+
+
+Guiding Principles
+--------------------
+
+The following general principles underlie the design of ``pygcam``:
+
+  * **Common tasks should be easy to accomplish but flexible.**
+
+    In general, this run-time simplicity requires a bit of setup-time complexity.
+    That is, simplicity at run-time is achieved by relying on the `project.xml`
+    file, which defines all key aspects of a project. Fortunately, the project
+    file need only be created once.
+
+    For example, with a typical `project.xml`
+    file, a user can setup and run all scenarios for the default project,
+    compute differences between
+    policy and baseline scenarios, run custom computations on results, and
+    generate figures with the simple command ``gt run``. And the user can also
+    identify which projects, scenario groups, scenarios, and/or steps to operate
+    on, as needed.
+
+  ..
+
+  * **The user should be able to customize virtually all aspects of the system.**
+
+    Projects based on GCAM will have a variety of requirements and use patterns
+    that are difficult to anticipate. The :doc:`config`
+    defines "reasonable" defaults for all parameters, while allowing the user to modify
+    virtually all file and directory locations, command arguments, and other key
+    aspects of the system. There are very few hardcoded aspects to the system.
+
+  ..
+
+
+  * **Projects should be able to isolated from one another.**
+
+    By default, ``pygcam`` uses symbol link (symlinks) to avoid unnecessary copying
+    sets of large files such as the entire `input` directory. However, files that
+    are constant across projects in one environment might be changed between projects
+    in another environment. For example, your projects might involve different versions
+    of the GCAM executable, which in most projects (outside of JGCRI) is unchanged
+    across projects. To avoid having changes in shared files inadvertently
+    "pollute" another project, the user can choose which files from the reference
+    workspace (more on this below) to copy and which to link, thereby optimizing the
+    trade-off between complete isolation and avoiding unnecessary copying. (Note that
+    Windows prevents users from creating symlinks by default; ``pygcam`` will copy
+    all files on Windows when symlink creation fails.)
+
+  ..
+
+  * **Manual editing of XML files should be avoided whenever possible.**
+
+    Manual modifications to XML files are difficult to document effectively and
+    error-prone. Generating required files using a short Python script based on
+    the ``pygcam`` library ensures consistency and serves as complete documentation
+    of changes made to XML files.
+
+  ..
+
+  * **Reference GCAM files should not be modified to generate project scenarios.**
+
+    All modifications to reference GCAM files are made in the project's run-time
+    structure. The reference files are never modified. This allows a set of project
+    files to be used by others without having to provide a copy of an entire GCAM
+    workspace. The only requirement is that both users start from the same reference
+    system, which for most users will be the latest public release of GCAM.
 
 
 Managing Scenarios
@@ -118,3 +185,91 @@ The default file layout is structured to support multiple projects, where each
 project involves one or more baseline and policy scenarios. These project files
 can all be stored within a central GCAM work area, or anywhere you prefer.
 
+Project structure
+------------------
+
+One of the goals of the ``pygcam`` project system is to distill a minimal set
+of instructions for creating and running a GCAM analysis. Automating this
+complex process required developing a consistent structure with computable
+directory locations. There are three main directories of interest:
+
+  Reference workspace
+     The source of original GCAM files,
+     including XML files, the GCAM program itself, and other ancillary files.
+     The configuration variable ``GCAM.RefWorkspace`` identifies this location,
+     which is typically a public GCAM distribution, or a customized version
+     that is the basis for a set of analyses.
+
+  Project directory
+     Where project source files are located.
+     This is identified by the configuration variable ``GCAM.ProjectDir``. By
+     default, the ``pygcam`` framework expects certain directories to be located
+     at known relative locations within the project directory, but in most cases,
+     these locations can be adjusted by modifying configuration file parameters.
+
+  Sandbox directory
+     This is a separate, generated workspace, structured like a standard GCAM
+     "Main_User_Workspace" (i.e., with subdirectories "exe", "input", "output", and
+     other required files) in which GCAM is actually run. This location is identified
+     by the configuration variable ``GCAM.SandboxDir``. The sandbox directory is
+     created by copying or linking files from the reference workspace based on the
+     configuration parameters ``GCAM.WorkspaceFilesToLink`` and ``GCAM.WorkspaceFilesToCopy``.
+     Modified or generated XML files are also placed in the run directory by the
+     :doc:`setup` system.
+
+
+Project directory
+^^^^^^^^^^^^^^^^^^^^^
+
+The :doc:`setup` system provides programmatic methods (i.e., Python functions) that
+automatic common edits to GCAM XML input and configuration files. The output of the
+setup system is thus a set of modified XML input and configuration files. These files
+should not be edited manually as the changes will be overwritten the next time the
+setup system is run.
+
+The files defining a project are stored in the directory identified by the configuration
+parameter ``GCAM.XmlSrc``, which defaults to ``%(GCAM.ProjectDir)s/xmlsrc``, i.e., the
+directory ``xmlsrc`` within your project directory. Included under ``xmlsrc`` are
+
+  * Custom XML files
+  * A Python file (by default, ``scenarios.py``) that modifies or creates XML files to
+    generate baseline and policy scenarios. This module is invoked by the ``setup``
+    sub-command in ``pygcam``.
+
+
+The gcamtool :ref:`setup <setup-label>` sub-command loads the Python file and calls the
+setup functions corresponding to the requires baseline and policy scenarios. This
+modifies reference XML files and copies custom XML files to a directory identified by the
+config parameter ``GCAM.LocalXml``, which default to ``%(GCAM.ProjectDir)s/local-xml``.
+Dynamically generated constraints (i.e., those that depend on the output of the baseline
+scenario) are written to the directory indicated by ``GCAM.DynXml``, which defaults to
+``%(GCAM.ProjectDir)s/dyn-xml``. See the :doc:`setup` page for further details.
+
+N.B. a system for defining projects without writing any Python code is currently in development.
+
+Run-time structure
+^^^^^^^^^^^^^^^^^^^^
+In ``pygcam``, each GCAM scenario is run in a separate copy of the standard GCAM
+workspace. On Unix-like systems (and on Windows if
+the user has adequate administrative privileges), the read-only files are symbolically
+linked to the scenario workspace, avoiding copying of many megabytes of data.
+
+To avoid ambiguity between the reference GCAM workspace (i.e., ``Main_User_Workspace``)
+and the per-scenario, generated workspaces, we refer to the latter as `sandboxes`, which
+is a computing term that refers to isolation areas in which programs are run to avoid
+interactions with other programs.
+
+The default ``pygcam`` structure assumes there is a directory under which you want all
+sandboxes to be created. This is defined by the config parameter ``GCAM.SandboxRoot``,
+which defaults to ``%(GCAM.Root)s/ws``. ``GCAM.Root`` in turn defaults to
+``%(Home)s/GCAM``, thus the default sandbox root is ``%(Home)s/GCAM/ws``. You can change
+``GCAM.Root`` or ``GCAM.SandboxRoot`` to any desired directory. The sandbox for an
+individual project is defined by ``GCAM.SandboxDir``, which defaults
+to ``%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s``. Note that ``GCAM.ProjectName`` is
+set at run-time to the name of the project being operated on.
+
+With the project's sandbox directory are the standard GCAM workspace folders, i.e.,
+``input``, ``libs``, ``exe`` (which are symbolic links when possible), and ``output``,
+which is always created locally in the sandbox to hold the GCAM output files.
+
+*Create a figure showing file structure*
