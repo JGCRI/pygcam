@@ -155,6 +155,8 @@ class Scenario(object):
 
 
 class Step(object):
+    maxStep = 0        # for auto-numbering steps lacking a sequence number
+
     """
     Represents the ``<step>`` element in the projects.xml file.
     """
@@ -167,6 +169,12 @@ class Step(object):
 
         if not self.command:
             raise FileFormatError("<step name='%s'> is missing command text" % self.name)
+
+        if self.seq:
+            Step.maxStep = max(self.seq, self.maxStep)
+        else:
+            Step.maxStep += 1
+            self.seq = Step.maxStep
 
     def __str__(self):
         return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
