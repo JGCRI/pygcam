@@ -134,7 +134,7 @@ takes no attributes. Multiple ``<steps>`` elements are allowed.
 +=============+============+===========+=================================+
 | name        | yes        | (none)    | text                            |
 +-------------+------------+-----------+---------------------------------+
-| seq         | yes        | (none)    | integer                         |
+| seq         | yes        |(see text) | integer                         |
 +-------------+------------+-----------+---------------------------------+
 | runFor      | no         | "all"     | {"baseline", "policy", "all"}   |
 +-------------+------------+-----------+---------------------------------+
@@ -142,10 +142,22 @@ takes no attributes. Multiple ``<steps>`` elements are allowed.
 +-------------+------------+-----------+---------------------------------+
 
 A ``<step>`` describes one step in the workflow. Each step has a name
-and an integer sequence number. Steps (from one or more ``<steps>``
-sections) are sorted by sequence number before execution. By definition,
-steps with the same sequence number are order independent; they can run
-in any order.
+and an integer sequence number. Sequence numbers can be specified using
+the ``seq`` attribute, otherwise the steps are numbered in the order they
+occur in the file, starting with 1. Each step is assigned 1 more than the
+maximum step number already used: this includes automatically generated
+sequence numbers and any that are specified explicitly.
+
+In general, using the generated sequence numbers will suffice. Assigning
+your own sequence numbers allows you to group or order commands in any manner
+while ensuring that the commands are executed in the correct order. The
+other reason to assign sequence numbers is to be able to define optional
+steps in a ``<defaults>`` section that can be overridden in a ``<project>``
+section, as described :ref:`below <sequence-override-label>`.
+
+Steps (from one or more ``<steps>`` sections) are sorted by sequence number
+before execution. By definition, steps with the same sequence number are
+order independent; they can run in any order.
 
 The text value of a step can be any command you want to run. Many of the
 common workflow steps are built into ``gt`` and these can be
@@ -197,11 +209,14 @@ baseline scenarios, plots the individual scenarios and the differences,
 and generates .XLSX files with the differences--one with the values
 directly from GCAM, the other with annually-interpolated values.
 
+  .. _sequence-override-label:
+
 Steps can be defined in the ``<defaults>`` section, in which case they
 apply to all projects. Projects, however, can add, delete, or redefine
 steps. To redefine a step, the project defines a ``<step>`` with the
 same values for the attributes ``name``, ``seq``, and ``runFor``. A
-default step can be deleted by redefining it with no text value, e.g.,
+default step can be effectively deleted by redefining it with no text
+value, e.g.,
 
   .. code-block:: xml
 

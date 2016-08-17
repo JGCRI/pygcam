@@ -151,15 +151,39 @@
             
   <div class="section" id="pygcam-subcommand">
 <h1><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code><a class="headerlink" href="#pygcam-subcommand" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">subcommand</span></code> module provides the interface for subcommand plug-ins.
-Each plugin must provide a class that is a subclass of <code class="docutils literal"><span class="pre">SubcommandABC</span></code>, which
-is an abstract base class. The plugin class must define an <code class="docutils literal"><span class="pre">__init__</span></code>
-and <code class="docutils literal"><span class="pre">run</span></code> methods, as described below.</p>
+<p>Gcamtool can be extended using plug-ins, i.e., python modules that
+are loaded on demand into gcamtool. The <code class="docutils literal"><span class="pre">subcommand</span></code> module provides
+the interface for subcommand plug-ins.</p>
+<p>Each plug-in is implemented as a Python module in a file named
+<code class="docutils literal"><span class="pre">{subcommand}_plugin.py</span></code>, where <code class="docutils literal"><span class="pre">{subcommand}</span></code> matches the
+name of the sub-command specified in the <code class="docutils literal"><span class="pre">__init__</span></code> method,
+described below.</p>
+<p>The plug-in module must provides a class that
+is a subclass of the abstract base class <code class="docutils literal"><span class="pre">SubcommandABC</span></code>, and must
+define define three methods: <code class="docutils literal"><span class="pre">__init__</span></code>, <code class="docutils literal"><span class="pre">addArgs</span></code>, and <code class="docutils literal"><span class="pre">run</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li>The <code class="docutils literal"><span class="pre">__init__</span></code> method should define keyword arguments that provide the
+text used when the help option is specified by the user.</li>
+<li>The <code class="docutils literal"><span class="pre">addArgs</span></code> method should define command-line arguments specific
+to the sub-command, and return the parser instance, which allows Sphinx
+to  generate command-line documentation (i.e., these web pages.)</li>
+<li>The  <code class="docutils literal"><span class="pre">run</span></code> method implements the desired plug-in functionality.</li>
+</ul>
+</div></blockquote>
+<p>The plug-in file must also identify the plug-in class, either by defining the
+variable <code class="docutils literal"><span class="pre">PluginClass</span></code> and assigning to it the class that implements the
+sub-command, or by simply naming the class <code class="docutils literal"><span class="pre">Plugin</span></code>, obviating the need to
+assign to the PluginClass variable.</p>
 <p>Plugins can be stored in any directory or directories that are on the
 &#8220;plugin path&#8221; set using the config file parameter <code class="docutils literal"><span class="pre">GCAM.PluginPath</span></code>. For
 example, you might create a file <code class="docutils literal"><span class="pre">foo_plugin.py</span></code> in the directory <code class="docutils literal"><span class="pre">~/plugins</span></code>.
 You would then set <code class="docutils literal"><span class="pre">GCAM.PluginPath</span> <span class="pre">=</span> <span class="pre">%(Home)s/plugins</span></code> in the <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>
 configuration file.</p>
+<p>Plugins are loaded by <code class="docutils literal"><span class="pre">gt</span></code> on demand, i.e., when the plugin is referenced
+on the <code class="docutils literal"><span class="pre">gt</span></code> command-line, or implicitly when all steps are run. They are
+also loaded when the help (<code class="docutils literal"><span class="pre">--help</span></code> or <code class="docutils literal"><span class="pre">-h</span></code>) options are specified, so
+that the plugins appear in the generated documentation.</p>
 <p>The following template can be used to create new sub-commands. (See also
 <code class="docutils literal"><span class="pre">pygcam.pluginTemplate.py</span></code>, which contains the code shown here.)</p>
 <blockquote>
@@ -174,10 +198,10 @@ configuration file.</p>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;help&#39;</span> <span class="p">:</span> <span class="s">&#39;&#39;&#39;Short help text for main driver&#39;&#39;&#39;</span><span class="p">}</span>
 
         <span class="c"># The first argument is the name of the new sub-command</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">MyNewCommand</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="s">&#39;XXX&#39;</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyNewCommand</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="s">&#39;subCmdName&#39;</span><span class="p">,</span> <span class="n">subparsers</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="c"># process command-line arguments for this sub-command</span>
     <span class="k">def</span> <span class="nf">addArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+       <span class="sd">&#39;&#39;&#39;Process command-line arguments for this sub-command&#39;&#39;&#39;</span>
         <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span>
 
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-n&#39;</span><span class="p">,</span> <span class="s">&#39;--number&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -186,10 +210,13 @@ configuration file.</p>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-V&#39;</span><span class="p">,</span> <span class="s">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;version&#39;</span><span class="p">,</span>
                             <span class="n">version</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(prog)s</span><span class="s"> &#39;</span> <span class="o">+</span> <span class="n">VERSION</span><span class="p">)</span>
 
+        <span class="c"># return the parser to facilitate automatic documentation generation</span>
         <span class="k">return</span> <span class="n">parser</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">tool</span><span class="p">):</span>
-       <span class="c"># implement the sub-command here</span>
+        <span class="c"># Implement the sub-command here. &quot;args&quot; is an argparse.Namespace instance</span>
+        <span class="c"># holding the parsed command-line arguments, and &quot;tool&quot; is a reference to</span>
+        <span class="c"># the running GcamTool instance.</span>
         <span class="k">pass</span>
 
  <span class="c"># An alternative to naming the class &#39;Plugin&#39; is to assign the class to PluginClass</span>

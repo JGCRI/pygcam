@@ -343,7 +343,7 @@ takes no attributes. Multiple <code class="docutils literal"><span class="pre">&
 </tr>
 <tr class="row-odd"><td>seq</td>
 <td>yes</td>
-<td>(none)</td>
+<td>(see text)</td>
 <td>integer</td>
 </tr>
 <tr class="row-even"><td>runFor</td>
@@ -359,10 +359,20 @@ takes no attributes. Multiple <code class="docutils literal"><span class="pre">&
 </tbody>
 </table>
 <p>A <code class="docutils literal"><span class="pre">&lt;step&gt;</span></code> describes one step in the workflow. Each step has a name
-and an integer sequence number. Steps (from one or more <code class="docutils literal"><span class="pre">&lt;steps&gt;</span></code>
-sections) are sorted by sequence number before execution. By definition,
-steps with the same sequence number are order independent; they can run
-in any order.</p>
+and an integer sequence number. Sequence numbers can be specified using
+the <code class="docutils literal"><span class="pre">seq</span></code> attribute, otherwise the steps are numbered in the order they
+occur in the file, starting with 1. Each step is assigned 1 more than the
+maximum step number already used: this includes automatically generated
+sequence numbers and any that are specified explicitly.</p>
+<p>In general, using the generated sequence numbers will suffice. Assigning
+your own sequence numbers allows you to group or order commands in any manner
+while ensuring that the commands are executed in the correct order. The
+other reason to assign sequence numbers is to be able to define optional
+steps in a <code class="docutils literal"><span class="pre">&lt;defaults&gt;</span></code> section that can be overridden in a <code class="docutils literal"><span class="pre">&lt;project&gt;</span></code>
+section, as described <a class="reference internal" href="#sequence-override-label"><em>below</em></a>.</p>
+<p>Steps (from one or more <code class="docutils literal"><span class="pre">&lt;steps&gt;</span></code> sections) are sorted by sequence number
+before execution. By definition, steps with the same sequence number are
+order independent; they can run in any order.</p>
 <p>The text value of a step can be any command you want to run. Many of the
 common workflow steps are built into <code class="docutils literal"><span class="pre">gt</span></code> and these can be
 invoked by using the name of a gt sub-command <em>preceded by the &#64; symbol</em>
@@ -408,11 +418,14 @@ set of XML batch queries, computes differences between policy and
 baseline scenarios, plots the individual scenarios and the differences,
 and generates .XLSX files with the differences&#8211;one with the values
 directly from GCAM, the other with annually-interpolated values.</p>
-<p>Steps can be defined in the <code class="docutils literal"><span class="pre">&lt;defaults&gt;</span></code> section, in which case they
+<blockquote>
+<div></div></blockquote>
+<p id="sequence-override-label">Steps can be defined in the <code class="docutils literal"><span class="pre">&lt;defaults&gt;</span></code> section, in which case they
 apply to all projects. Projects, however, can add, delete, or redefine
 steps. To redefine a step, the project defines a <code class="docutils literal"><span class="pre">&lt;step&gt;</span></code> with the
 same values for the attributes <code class="docutils literal"><span class="pre">name</span></code>, <code class="docutils literal"><span class="pre">seq</span></code>, and <code class="docutils literal"><span class="pre">runFor</span></code>. A
-default step can be deleted by redefining it with no text value, e.g.,</p>
+default step can be effectively deleted by redefining it with no text
+value, e.g.,</p>
 <blockquote>
 <div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;step</span> <span class="na">seq=</span><span class="s">&quot;9&quot;</span> <span class="na">name=</span><span class="s">&quot;xlsx&quot;</span> <span class="na">runFor=</span><span class="s">&quot;baseline&quot;</span><span class="nt">/&gt;</span>
 </pre></div>

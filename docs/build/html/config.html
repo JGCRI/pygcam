@@ -443,9 +443,14 @@ everything below it in the figure.</p>
 <span class="na">GCAM.OtherFilesToCopy</span> <span class="o">=</span> <span class="s">WriteLocalBaseXDB.class</span>
 <span class="na">GCAM.OtherFilesToLink</span> <span class="o">=</span>
 
+<span class="c1"># Files to copy or link into the run-time workspace used to create sandboxes</span>
 <span class="c1"># New version of GCAM (4.3?) requires these: exe/XMLDBDriver.properties exe/XMLDBDriver.jar</span>
 <span class="na">GCAM.WorkspaceFilesToCopy</span> <span class="o">=</span> <span class="s">exe/%(GCAM.Executable)s exe/log_conf.xml %(GCAM.OtherFilesToCopy)s</span>
 <span class="na">GCAM.WorkspaceFilesToLink</span> <span class="o">=</span> <span class="s">input %(GCAM.OtherFilesToLink)s</span>
+
+<span class="c1"># Files to copy or link from the run-time workspace to sandboxes</span>
+<span class="na">GCAM.SandboxFilesToCopy</span> <span class="o">=</span> <span class="s">%(GCAM.OtherFilesToCopy)s</span>
+<span class="na">GCAM.SandboxFilesToLink</span> <span class="o">=</span> <span class="s">input %(GCAM.OtherFilesToLink)s exe/%(GCAM.Executable)s exe/log_conf.xml</span>
 
 <span class="c1"># The reference config file to use as a starting point for &quot;setup&quot;</span>
 <span class="na">GCAM.RefConfigFile</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/exe/configuration_ref.xml</span>
@@ -537,10 +542,24 @@ everything below it in the figure.</p>
 <span class="c1"># The default location in which to find or create GCAM runtime sandboxes</span>
 <span class="na">GCAM.SandboxRoot</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/ws</span>
 
-<span class="c1"># N.B. These are set at run-time in project.py and are available on</span>
-<span class="c1"># with the &quot;run&quot; sub-command</span>
+<span class="na">GCAM.SandboxProjectDir</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s</span>
+
+<span class="c1"># Identifies the location of the workspace copy used to create</span>
+<span class="c1"># new sandboxes. The workspace is created on demand.</span>
+<span class="na">GCAM.SandboxRefWorkspace</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxProjectDir)s/Workspace</span>
+
+<span class="c1"># N.B. These are set at run-time in project.py and are available</span>
+<span class="c1"># with the &quot;run&quot; sub-command. SandboxDir is the directory under</span>
+<span class="c1"># which sandboxes are created</span>
+<span class="c1"># ScenarioGroup is set in project.py if &lt;ScenarioGroup&gt; sets</span>
+<span class="c1"># useGroupDir=&quot;1&quot;. Thus the variable is available only via the</span>
+<span class="c1"># run sub-command.</span>
 <span class="na">GCAM.ScenarioGroup</span> <span class="o">=</span>
-<span class="na">GCAM.SandboxDir</span> <span class="o">=</span>
+
+<span class="c1"># Directory in which new sandboxes are created for current project</span>
+<span class="c1"># and scenario group. ScenarioGroup may be empty, but this doesn&#39;t</span>
+<span class="c1"># affect path construction.</span>
+<span class="na">GCAM.SandboxDir</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxProjectDir)s/%(GCAM.ScenarioGroup)s</span>
 
 <span class="c1"># If set, application logger messages are written here. Note that</span>
 <span class="c1"># this is different than the GCAM.BatchLogFile for batch job output.</span>
@@ -654,19 +673,6 @@ everything below it in the figure.</p>
 
 <span class="c1"># TextEditor to open via the --edit option to the &#39;config&#39; sub-command</span>
 <span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">vi</span>
-
-<span class="c1">#</span>
-<span class="c1"># Monte Carlo Simulation (MCS) related</span>
-<span class="c1">#</span>
-<span class="na">GCAM.MCS.UseTempOutput</span>  <span class="o">=</span> <span class="s">False</span>
-
-<span class="c1">#</span>
-<span class="c1"># Jug-related</span>
-<span class="c1">#</span>
-<span class="na">GCAM.JugCommand</span>         <span class="o">=</span> <span class="s">jug</span>
-<span class="na">GCAM.JugScript</span>          <span class="o">=</span> <span class="s">jugMain.py</span>
-<span class="na">GCAM.JugDir</span>             <span class="o">=</span> <span class="s">%(Home)s/jugdir</span>
-<span class="na">GCAM.JugTasksPerNode</span>    <span class="o">=</span> <span class="s">4</span>
 </pre></div>
 </div>
 </div>
