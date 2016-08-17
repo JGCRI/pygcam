@@ -21,7 +21,7 @@ from .config import (ConfigCommand, getParam, getConfig, getParamAsBoolean, setP
 from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
 from .diff import DiffCommand
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
-from .jugCmd import JugCommand
+#from .jugCmd import JugCommand
 from .landProtection import ProtectLandCommand
 from .log import getLogger, setLogLevel, configureLogs
 from .newProject import NewProjectCommand
@@ -39,8 +39,8 @@ PROGRAM = 'gt'
 __version__ = '0.1'
 
 BuiltinSubcommands = [BioConstraintsCommand, DeltaConstraintsCommand,
-                      ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      JugCommand, NewProjectCommand, ProjectCommand, ProtectLandCommand,
+                      ChartCommand, ConfigCommand, DiffCommand, GcamCommand, #JugCommand,
+                      NewProjectCommand, ProjectCommand, ProtectLandCommand,
                       QueryCommand, SetupCommand, SandboxCommand]
 
 def _writeBatchScript(args, delete=False):
