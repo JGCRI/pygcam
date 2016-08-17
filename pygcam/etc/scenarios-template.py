@@ -17,10 +17,15 @@ class Baseline(XMLEditor):
         super(Baseline, self).setup(args)
 
         # Call methods of XMLEditor to setup the baseline scenario
+        # Examples:
 
+        # Output GHG emissions annually rather than per time-step
         # self.setClimateOutputInterval(1)
-        # self.dropLandProtection()       # Drop default 90% land protection
 
+        # Drop default 90% land protection
+        # self.dropLandProtection()
+
+        # Adjust solver tolerance to reduce stringency
         # self.setupSolver(solutionTolerance=0.01, broydenTolerance=0.001)
 
 
@@ -53,7 +58,9 @@ ClassMap = {
     'scen2' : Policy,
 }
 
-# Use scenarioMapper if the mapping requires some processing.
+# Alternatively define a scenarioMapper function to compute
+# class names based on scenario names.
+#
 # def scenarioMapper(scenario):
 #     return ClassMap[scenario]
 

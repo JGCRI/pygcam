@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
-        <link rel="next" title="pygcam.config" href="pygcam.config.html"/>
+        <link rel="next" title="pygcam.chart" href="pygcam.chart.html"/>
         <link rel="prev" title="Configuration System" href="config.html"/> 
 
   
@@ -92,9 +92,11 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -185,7 +187,7 @@ workflow steps as well as running arbitrary programs of the user&#8217;s choosin
 High-Performance Computing environment by specifying &#8216;-b&#8217; or &#8216;&#8211;batch&#8217;&#8217; on the
 command-line. (Note that this is not available on Mac OS X or Windows.)</p>
 <p>For example, the command:</p>
-<div class="highlight-bash"><div class="highlight"><pre>gt -b -P MyProject run -S MyScenario
+<div class="highlight-bash"><div class="highlight"><pre><span></span>gt -b -P MyProject run -S MyScenario
 </pre></div>
 </div>
 <p>runs all steps for scenario <code class="docutils literal"><span class="pre">MyScenario</span></code> in the project <code class="docutils literal"><span class="pre">MyProject</span></code> by
@@ -202,10 +204,9 @@ sub-command specific options must follow it.</p>
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <pre class="literal-block">
 usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
-          [-m MINUTES] [--mcs] [-P name] [-q QUEUENAME] [-r RESOURCES]
-          [--set name=value] [-v] [--version]
-          {bioConstraint,deltaConstraint,chart,config,diff,gcam,jug,new,run,protect,query,setup,ws}
-          ...
+          [-m MINUTES] [--mcs {trial,gensim}] [-P name] [-q QUEUENAME]
+          [-r RESOURCES] [--set name=value] [-v] [--version]
+          {chart,config,diff,gcam,new,run,protect,query,setup,sandbox} ...
 </pre>
 <dl class="docutils">
 <dt>Options:</dt>
@@ -248,8 +249,10 @@ usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
 <td>Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)</td></tr>
 <tr><td class="option-group">
-<kbd><span class="option">--mcs=False</span></kbd></td>
-<td>Used when running gcamtool from gcammcs</td></tr>
+<kbd><span class="option">--mcs</span></kbd></td>
+<td><p class="first">Used only when running gcamtool from gcammcs.</p>
+<p class="last">Possible choices: trial, gensim</p>
+</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-P</span>, <span class="option">--projectName</span></kbd></td>
 </tr>
@@ -284,191 +287,6 @@ usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
 </dd>
 <dt>Sub-commands:</dt>
 <dd><dl class="first last docutils">
-<dt><strong>bioConstraint</strong></dt>
-<dd><p class="first">Bioenergy constraint generator</p>
-<pre class="literal-block">
-usage: gt bioConstraint [-h] [-b BASELINE] [-B {tax,subsidy}]
-                        [-c COEFFICIENTS] [-e {tax,subsidy}] [-l DEFAULTLEVEL]
-                        [-L ANNUALLEVELS] [-m] [-p POLICY] [-P {tax,subsidy}]
-                        [-R RESULTSDIR] [-s] [-S SUBDIR] [-V]
-                        [-x XMLOUTPUTDIR] [-y YEARS]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group">
-<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
-<td>The baseline on which the policy scenario is based</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-B=tax</span>, <span class="option">--biomassPolicyType=tax</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
-                            sets the cellulosic ethanol conversion coefficients. Defaults to
-                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-e=tax</span>, <span class="option">--cellEtohPolicyType=tax</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Cellulosic ethanol policy type</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultLevel=0.0</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Target cellulosic biofuel level (EJ). All or individual years
-                            values can be set (overriding -l flag values) using the -L flag.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-L</span>, <span class="option">--annualLevels</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Optional cellulosic biofuel production levels by year. Value
-                            must be a comma-delimited string of year:level pairs, where level is
-                            given in EJ. If -l is not used to set default for all years, you must
-                            specify values for all years using this option.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-p</span>, <span class="option">--policy</span></kbd></td>
-<td>The policy scenario name</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-P=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-R</span>, <span class="option">--resultsDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-s=False</span>, <span class="option">--switchgrass=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Generate constraints for switchgrass</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
-<td>Sub-directory for local-xml files, if any</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The directory into which to generate XML files. Defaults to
-                             policy name in the current directory.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
-<dt><strong>deltaConstraint</strong></dt>
-<dd><p class="first">Specify incremental values to add to the production of a given fuel,
-                              by year, and generate the corresponding constraint file.</p>
-<pre class="literal-block">
-usage: gt deltaConstraint [-h] [-c COEFFICIENTS] -b BASELINE
-                          [-B {tax,subsidy}] [-f FUELNAME] [-l DEFAULTDELTA]
-                          [-L ANNUALDELTAS] [-m] -p POLICY [-P {tax,subsidy}]
-                          [-R RESULTSDIR] [-S SUBDIR] [-t FUELTAG]
-                          [-T {tax,subsidy}] [-V] [-x XMLOUTPUTDIR] [-y YEARS]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-c</span>, <span class="option">--coefficients</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>A comma-separated string of year:coefficient pairs. This
-                            sets the cellulosic ethanol conversion coefficients. Defaults to
-                            standard GCAM values: 2010:2.057,2015:2.057,2020:2.057,2025:2.039,2030:2.021,2035:2.003,2040:1.986,2045:1.968,2050:1.950,2055:1.932,2060:1.914.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-b</span>, <span class="option">--baseline</span></kbd></td>
-<td>The baseline on which the policy scenario is based</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-B=subsidy</span>, <span class="option">--biomassPolicyType=subsidy</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Regional biomass policy type. Default is subsidy.</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-f=cellulosic ethanol</span>, <span class="option">--fuelName=cellulosic ethanol</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The fuel to generate constraints for. Default is cellulosic ethanol</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-l=0.0</span>, <span class="option">--defaultDelta=0.0</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Default increment to add to each year (EJ). All or individual
-                            years values can be set (overriding -l flag values) using the -L flag.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-L=</span>, <span class="option">--annualDeltas=</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Optional production increments by year. Value must be a
-                            comma-delimited string of year:level pairs, where level in is EJ.
-                            If -l is not used to set default for all years, you must specify
-                            values for all years using this option.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-m=False</span>, <span class="option">--fromMCS=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Used when calling from gcammcs so correct pathnames are computed.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-p</span>, <span class="option">--policy</span></kbd></td>
-<td>The policy scenario name</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-P=subsidy</span>, <span class="option">--purposeGrownPolicyType=subsidy</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Purpose-grown biomass policy type. Default is subsidy.</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-R=.</span>, <span class="option">--resultsDir=.</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The parent directory holding the GCAM output workspaces</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
-<td>Sub-directory for local-xml files, if any</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-t=cell-etoh</span>, <span class="option">--fuelTag=cell-etoh</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The fuel tag to generate constraints for. Default is cell-etoh</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-T=tax</span>, <span class="option">--policyType=tax</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td><p class="first">Type of policy to use for the fuel. Default is tax.</p>
-<p class="last">Possible choices: tax, subsidy</p>
-</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-x</span>, <span class="option">--xmlOutputDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The directory into which to generate XML files.
-                             Defaults to policy name in the current directory.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-y=2020-2050</span>, <span class="option">--years=2020-2050</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is &#8220;2020-2050&#8221;</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
 <dt><strong>chart</strong></dt>
 <dd><p class="first" id="chart-label">The <code class="docutils literal"><span class="pre">chart</span></code> sub-command generates plots from GCAM-style &#8221;.csv&#8221; files.
 Two types of plots are currently supported: (i) stacked bar plots based on summing values
@@ -481,12 +299,13 @@ be customized.</p>
 usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
                 [-D WORKINGDIR] [-e] [-f FROMFILE] [-F DIVISORFILE]
                 [--format FORMAT] [-g] [-i] [-I INDEXCOL] [-k] [-l]
-                [-L LABELCOLOR] [-m MULTIPLIER] [-n NCOL] [-N SCENARIO]
-                [--negate] [-o OUTFILE] [-O] [-p PALETTE] [-r ROTATION]
-                [-R REFERENCE] [-s SKIPROWS] [-S] [-t YEARSTEP] [-T TITLE]
-                [--timeseries] [--transparent] [-u UNSTACKED] [-v VALUECOL]
-                [-x SUFFIX] [-X XLABEL] [-Y YLABEL] [-y YEARS] [--ymax YMAX]
-                [--ymin YMIN] [-V] [-z] [--legendY LEGENDY]
+                [-L LABELCOLOR] [-m MULTIPLIER] [-M MULTIPLIERFILE] [-n NCOL]
+                [-N SCENARIO] [--negate] [-o OUTFILE] [-O] [-p PALETTE]
+                [-r ROTATION] [-R REFERENCE] [--region REGION] [-s SKIPROWS]
+                [-S] [-t YEARSTEP] [-T TITLE] [--timeseries] [--transparent]
+                [-u UNSTACKED] [-U UNSTACKEDREGION] [-v VALUECOL] [-V DIVISOR]
+                [--version] [-x SUFFIX] [-X XLABEL] [-Y YLABEL] [-y YEARS]
+                [--ymax YMAX] [--ymin YMIN] [-z] [--legendY LEGENDY]
                 [--barWidth BARWIDTH]
                 [csvFile]
 </pre>
@@ -549,9 +368,8 @@ usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-F</span>, <span class="option">--divisorFile</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>A file containing the number of EJ of fuel that constitute the shock
-                            the differences represent. If provided, the difference values are divided by
-                            the quantity given.</td></tr>
+<tr><td>&nbsp;</td><td>A file containing a floating point value to divide data by
+                            before plotting. See also -V.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--format</span></kbd></td>
 <td>Specify a format for the Y-axis. Possible values are &#8216;.&#8217; for float,
@@ -585,9 +403,15 @@ usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-m</span>, <span class="option">--multiplier</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>A value to multiply results by before generating the plot.
-                            This is useful for unit conversions, e.g., &#8220;-m 3.667&#8221; converts Tg C to Tg CO2.
-                            Be sure to set Y axis label.</td></tr>
+<tr><td>&nbsp;</td><td>A value to multiply data by before generating the plot. The argument can
+                            be a floating point number or the name of any variable in pygcam.unitConversion.py.
+                            For example, &#8220;-m 3.667&#8221; and &#8220;-m C_to_CO2&#8221; are equivalent, and effectively convert
+                            values from Tg C to Tg CO2. Be sure to adjust the Y axis label. See also -M.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-M</span>, <span class="option">--multiplierFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A file containing a floating point value to multiply data
+                            by before plotting. See also -m.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-n=5</span>, <span class="option">--ncol=5</span></kbd></td>
 <td>The number of columns with which to display the legend. Default is 5.</td></tr>
@@ -631,6 +455,9 @@ usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
                             These are substituted into each line read from the file as the value for &#8220;{scenario}&#8221;
                             and &#8220;{reference}&#8221; (without the quotes) wherever they appear on each line read
                             from the &#8216;fromFile&#8217;. Defaults to &#8220;reference&#8221;</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--region</span></kbd></td>
+<td>Plot values only for the given region.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-s=1</span>, <span class="option">--skiprows=1</span></kbd></td>
 </tr>
@@ -670,10 +497,23 @@ usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
 </tr>
 <tr><td>&nbsp;</td><td>Draw an unstacked bar plot for the column given as an argument to this
                             option, showing three groups of bars: the region, all other regions, and the total.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-U</span>, <span class="option">--unstackedRegion</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The region to plot separately from Rest of World in an unstacked plot.
+                            Ignored if &#8211;byRegion is specified, in which case a plot is created for all regions.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-v</span>, <span class="option">--valueCol</span></kbd></td>
-<td>Identify a column to plot for unstacked bar plots. If not specified,
-                            values are summed across years.</td></tr>
+<td>Identify a single column (e.g., a year) to plot for bar plots.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-V=0.0</span>, <span class="option">--divisor=0.0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A value to divide year column values by before plotting. The argument can
+                            be a floating point number or the name of any variable in pygcam.unitConversion.py.
+                            See also -F.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-x</span>, <span class="option">--suffix</span></kbd></td>
 <td>A suffix to append to the basename of the input csv file to create the
@@ -700,9 +540,6 @@ usage: gt chart [-h] [-b] [-B] [-c COLUMNS] [-C CONSTRAINT] [-d OUTPUTDIR]
 <kbd><span class="option">--ymin</span></kbd></td>
 <td>Set the scale of a figure by indicating the value (given as abs(value),
                             but used as -value) to show as the minimum Y value</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-V</span>, <span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-z=False</span>, <span class="option">--zeroLine=False</span></kbd></td>
 </tr>
@@ -732,20 +569,20 @@ are displayed with their values. The match is case-insensitive.</p>
 variable name (case-sensitive) and only the value is printed. This is useful mainly
 for scripting. For general use the substring matching is more convenient.</p>
 <p>Examples:</p>
-<div class="highlight-bash"><div class="highlight"><pre> <span class="nv">$ </span>gt config project
+<div class="highlight-bash"><div class="highlight"><pre><span></span> $ gt config project
  <span class="o">[</span>MyProject<span class="o">]</span>
  GCAM.DefaultProject <span class="o">=</span> MyProject
  GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket/myProject
  GCAM.ProjectXmlFile <span class="o">=</span> /Users/rjp/bitbucket/myProject/etc/project.xml
 
- <span class="nv">$ </span>gt config -x GCAM.DefaultProject
+ $ gt config -x GCAM.DefaultProject
  MyProject
 
- <span class="nv">$ </span>gt config sand
+ $ gt config sand
 <span class="o">[</span>MyProject<span class="o">]</span>
       GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws/myProject
 
- <span class="nv">$ </span>gt config sand -d
+ $ gt config sand -d
  <span class="o">[</span>DEFAULT<span class="o">]</span>
       GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws
 </pre></div>
@@ -820,8 +657,8 @@ computed; rather, the .csv file contents are combined into a single .xlsx file.<
             </p>
 <pre class="literal-block">
 usage: gt diff [-h] [-D WORKINGDIR] [-g GROUPSUM] [-i] [-o OUTFILE] [-c]
-               [-q QUERYFILE] [-S] [-s SKIPROWS] [--version] [-y YEARS]
-               [-Y STARTYEAR]
+               [-q QUERYFILE] [-r REWRITESETSFILE] [-S] [-s SKIPROWS]
+               [--version] [-y YEARS] [-Y STARTYEAR]
                csvFiles [csvFiles ...]
 </pre>
 <dl class="last docutils">
@@ -869,9 +706,17 @@ usage: gt diff [-h] [-D WORKINGDIR] [-g GROUPSUM] [-i] [-o OUTFILE] [-c]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-q=</span>, <span class="option">--queryFile=</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>A file from which to take the names of queries to process. When &#8211;queryFile
-                            is specified, the two positional arguments are the names of the baseline and policy
-                            scenarios, in that order.</td></tr>
+<tr><td>&nbsp;</td><td>If the extension is &#8221;.xml&#8221; (case insensitive), the argument must be an XML file
+                            holding a list of queries to run, with optional mappings specified to rewrite output.
+                            This file has the same structure as the &lt;queries&gt; element in project.xml. If the file
+                            doesn&#8217;t end in &#8221;.xml&#8221;, it must be a text file listing the names of queries to process,
+                            one per line. NOTE: When &#8211;queryFile is specified, the two positional arguments are
+                            required: the names of the baseline and policy scenarios, in that order.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-r</span>, <span class="option">--rewriteSetsFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>An XML file defining query maps by name (default taken from
+                            config parameter &#8220;GCAM.RewriteSetsFile&#8221;)</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-S=False</span>, <span class="option">--sum=False</span></kbd></td>
 </tr>
@@ -903,25 +748,30 @@ file, scenario, or workspace. Typical use (e.g., from a <code class="docutils li
 be to run GCAM by referencing a directory named the same as a scenario, holding a
 file called <code class="docutils literal"><span class="pre">config.xml</span></code>, as is generated by the <code class="docutils literal"><span class="pre">setup</span></code> sub-command. (See
 <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a>.)</p>
+<p>If a <cite>workspace</cite> is specified on the command-line, it is used. Otherwise, if a
+<cite>scenario</cite> is specified, the workspace defined by {GCAM.SandboxDir}/{scenario}
+is used. If neither <cite>workspace</cite> nor <cite>scenario</cite> are defined, the value of config
+variable <code class="docutils literal"><span class="pre">GCAM.RefWorkspace</span></code> is used, i.e., GCAM is run in the reference
+workspace.</p>
 <p>If the workspace doesn&#8217;t exist, it is created based on the reference GCAM workspace,
 defined by the configuration variable <code class="docutils literal"><span class="pre">GCAM.RefWorkspace</span></code>. By default, read-only
 directories (e.g., input and libs) are symbolically linked from the new workspace to
-the reference one. Windows users without permission to create symlinks should set the
-configuration variable <code class="docutils literal"><span class="pre">GCAM.CopyAllFiles</span></code> to <code class="docutils literal"><span class="pre">True</span></code>, resulting in copies of the
-reference files rather than symbolic links. Directories into which GCAM writes results
+the reference one. (See the <a class="reference internal" href="#new-label"><em>new</em></a> sub-command for more information
+on the creation of workspaces.)</p>
+<p>Directories into which GCAM writes results
 (e.g., output and exe) are created in the new workspace, but read-only files within exe
 (e.g., the GCAM executable) are symbolically linked (with the same caveat for Windows
 users.)</p>
-<p>For example:</p>
-<div class="highlight-bash"><div class="highlight"><pre>gt gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
+<p>Usage example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>gt gcam -S ~/MyProject/scenarios -s MyScenario -w ~/sandboxes/MyProject/MyScenario
 </pre></div>
 </div>
 <p>would run the scenario <code class="docutils literal"><span class="pre">MyScenario</span></code> in the newly created sandbox (workspace)
 <code class="docutils literal"><span class="pre">~/sandboxes/MyProject/MyScenario</span></code> using the configuration file
 <code class="docutils literal"><span class="pre">~/MyProject/scenarios/MyScenario/config.xml</span></code>.</p>
 <pre class="literal-block">
-usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-s SCENARIO] [-S SCENARIOSDIR]
-               [--version] [-w WORKSPACE] [-W]
+usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-g GROUPDIR] [-n] [-r REFWORKSPACE]
+               [-s SCENARIO] [-S SCENARIOSDIR] [--version] [-w WORKSPACE] [-W]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -940,76 +790,42 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-s SCENARIO] [-S SCENARIOSDIR]
 </tr>
 <tr><td>&nbsp;</td><td>Re-create the workspace, even if it already exists.</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=</span>, <span class="option">--groupDir=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The scenario group directory name, if any.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Don&#8217;t run GCAM; just print the command that would be run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-r</span>, <span class="option">--refWorkspace</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The reference workspace to use to create the new sandbox. This is
+                            used only if the indicated or implied workspace doesn&#8217;t exist. Defaults
+                            to the value of GCAM.RefWorkspace.</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>The scenario to run.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-S=</span>, <span class="option">--scenariosDir=</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Specify the directory holding scenarios. Default is the value of config
-                            file param GCAM.ScenariosDir, if set, otherwise it&#8217;s the current directory.</td></tr>
+<tr><td>&nbsp;</td><td>Specify the directory holding scenario files. Default is the value of
+                            config variable GCAM.ScenariosDir, if set, otherwise it&#8217;s the current directory.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-w</span>, <span class="option">--workspace</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Specify the path to the GCAM workspace to use. If it doesn&#8217;t exist, the named
-                            workspace will be created. If not specified on the command-line, the value of config
-                            file parameter GCAM.Workspace is used, i.e., the &#8220;standard&#8221; workspace.</td></tr>
+<tr><td>&nbsp;</td><td>Specify the path to the GCAM workspace to use. If it doesn&#8217;t exist, the
+                            named workspace will be created. If not specified on the command-line, the path
+                            constructed as {GCAM.SandboxDir}/{scenario} is used.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-W=False</span>, <span class="option">--noWrapper=False</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Do not run gcam within a wrapper that detects errors as early as possible
                             and terminates the model run. By default, the wrapper is used.</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
-<dt><strong>jug</strong></dt>
-<dd><p class="first">Run jug to queue worker processes to run a Monte Carlo simulation.</p>
-<pre class="literal-block">
-usage: gt jug [-h] --baseline BASELINE --scenario SCENARIO -s SIMID [-n]
-              [-N NODES] [--ntasksPerNode NTASKSPERNODE] [-t TRIALS]
-              [--version]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group">
-<kbd><span class="option">--baseline</span></kbd></td>
-<td>The name of the baseline scenario to run</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--scenario</span></kbd></td>
-<td>Specify the scenario(s) to run. Can be a comma-delimited list of
-                            scenario names.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-s</span>, <span class="option">--simId</span></kbd></td>
-<td>The id of the simulation</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Show the commands that would be executed, but don&#8217;t run them</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-N=1</span>, <span class="option">--nodes=1</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Request that at least this many nodes are allocated for jug workers</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--ntasksPerNode</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The number of worker tasks to run per compute node (default is the value
-                            config variable GCAM.JugTasksPerNode)</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-t</span>, <span class="option">--trials</span></kbd></td>
-<td>Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
-                             Defaults to running all trials for the given simulation.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1026,6 +842,32 @@ be edited to fit the needs of your project.</p>
 <p>If the <code class="docutils literal"><span class="pre">-c</span></code> flag is given, a basic entry for the new project is added to the
 users configuration file, <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>. Before modifying this file, a
 backup is created in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg~</span></code>.</p>
+<p><strong>Variables controlling linking vs copying</strong></p>
+<p>Several configuration variables control which files are copied versus linked (on systems
+on which the user has the ability to create symlinks; if not all files are copied):</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">GCAM.WorkspaceFilesToCopy</span></code></dt>
+<dd>A list of paths relative to GCAM.RefWorkspace that should be copied to the same
+relative location under {GCAM.SandboxDir}/Workspace.</dd>
+<dt><code class="docutils literal"><span class="pre">GCAM.WorkspaceFilesToLink</span></code></dt>
+<dd>A list of paths relative to GCAM.RefWorkspace that should be symlinked to same
+relative location under {GCAM.SandboxDir}/Workspace.</dd>
+<dt><code class="docutils literal"><span class="pre">GCAM.SandboxFilesToCopy</span></code></dt>
+<dd>A list of paths relative to {GCAM.SandboxDir}/Workspace that should be copied
+to the same relative location in the current scenario directory.</dd>
+<dt><code class="docutils literal"><span class="pre">GCAM.SandboxFilesToLink</span></code></dt>
+<dd>A list of paths relative to {GCAM.SandboxDir}/Workspace that should be symlinked
+to the same relative location in the current scenario directory.</dd>
+<dt><code class="docutils literal"><span class="pre">GCAM.OtherFilesToCopy</span></code></dt>
+<dd>This variable is provided to allow the user to specify additional files to copy.
+Its value is appended to both GCAM.WorkspaceFilesToCopy and GCAM.SandboxFilesToCopy.</dd>
+<dt><code class="docutils literal"><span class="pre">GCAM.OtherFilesToLink</span></code></dt>
+<dd>This variable is provided to allow the user to specify additional files to symlink.
+Its value is appended to both GCAM.WorkspaceFilesToLink and GCAM.SandboxFilesToLink.</dd>
+</dl>
+<p>Note that when running on Windows, if pygcam detects that the user does not
+have permission to create symlinks, it sets the configuration variable <code class="docutils literal"><span class="pre">GCAM.CopyAllFiles</span></code>
+to <code class="docutils literal"><span class="pre">True</span></code>, resulting in copies of the reference files rather than symbolic links.</p>
 <pre class="literal-block">
 usage: gt new [-h] [-c] [-r PATH] [--version] name
 </pre>
@@ -1037,7 +879,8 @@ usage: gt new [-h] [-c] [-r PATH] [--version] name
 <tbody valign="top">
 <tr><td class="option-group">
 <kbd>name</kbd></td>
-<td>Create the structure for the named project.</td></tr>
+<td>Create the structure for the named project, and copy example
+                            XML files into the &#8220;etc&#8221; directory.</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1054,8 +897,8 @@ usage: gt new [-h] [-c] [-r PATH] [--version] name
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-r</span>, <span class="option">--projectRoot</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>The directory in which to create the a subdirectory for the named project.
-                            Default is the value of config variable GCAM.ProjectRoot</td></tr>
+<tr><td>&nbsp;</td><td>The directory in which to create a subdirectory for the named
+                            project. Default is the value of config variable GCAM.ProjectRoot</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
@@ -1071,31 +914,31 @@ The workflow steps indicated in the XML file and command-line determine which
 commands to run.</p>
 <p>Examples:</p>
 <p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run
 </pre></div>
 </div>
 <p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
 scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -g test -S baseline,policy1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -g test -S baseline,policy1
 </pre></div>
 </div>
 <p>or, equivalently:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run --group test --scenario baseline --step policy1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run --group test --scenario baseline --step policy1
 </pre></div>
 </div>
 <p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
 default scenario group:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1
 </pre></div>
 </div>
 <p>Same as above, but queue a batch job to run these commands on the queue
 &#8216;short&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
 </pre></div>
 </div>
 <p>Show the commands that would be executed for the above command, but
 don&#8217;t run them:</p>
-<div class="highlight-python"><div class="highlight"><pre>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
 </pre></div>
 </div>
 <pre class="literal-block">
@@ -1180,7 +1023,7 @@ usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
 <kbd><span class="option">-x</span>, <span class="option">--sandboxDir</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>The directory in which to create the run-time sandbox workspace.
-                            Defaults to value of GCAM.SandboxDir/{scenarioGroup}.</td></tr>
+                            Defaults to value of {GCAM.SandboxProjectDir}/{scenarioGroup}.</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1194,21 +1037,21 @@ land allocations.</p>
 <p>Simple protection scenarios can be specified on the command-line. More complex
 scenarios can be specified in an XML file, <a class="reference internal" href="landProtection-xml.html#protect-xml"><em>landProtection.xml</em></a>.</p>
 <p>Examples:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Create and modify copies of the reference land files, renaming them with</span>
-<span class="c"># &quot;prot\_&quot; prefix. Protect 80% of the &quot;UnmanagedForest&quot; and &quot;UnmanagedPasture&quot;</span>
-<span class="c"># land classes in the specified regions only.</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># Create and modify copies of the reference land files, renaming them with</span>
+<span class="c1"># &quot;prot\_&quot; prefix. Protect 80% of the &quot;UnmanagedForest&quot; and &quot;UnmanagedPasture&quot;</span>
+<span class="c1"># land classes in the specified regions only.</span>
 
 <span class="nv">CLASSES</span><span class="o">=</span>UnmanagedForest,UnmanagedPasture
 <span class="nv">REGIONS</span><span class="o">=</span><span class="s1">&#39;Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA&#39;</span>
-<span class="nv">OUTDIR</span><span class="o">=</span><span class="s2">&quot;$HOME/tmp/xml&quot;</span>
+<span class="nv">OUTDIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/tmp/xml&quot;</span>
 
-gt protect -f 0.8 <span class="s2">&quot;$INFILES&quot;</span> -l <span class="s2">&quot;$CLASSES&quot;</span> -r <span class="s2">&quot;$REGIONS&quot;</span> -o <span class="s2">&quot;$OUTDIR&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
+gt protect -f 0.8 <span class="s2">&quot;</span><span class="nv">$INFILES</span><span class="s2">&quot;</span> -l <span class="s2">&quot;</span><span class="nv">$CLASSES</span><span class="s2">&quot;</span> -r <span class="s2">&quot;</span><span class="nv">$REGIONS</span><span class="s2">&quot;</span> -o <span class="s2">&quot;</span><span class="nv">$OUTDIR</span><span class="s2">&quot;</span> -t <span class="s1">&#39;prot_{filename}&#39;</span>
 </pre></div>
 </div>
-<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Run the land protection scenario &quot;s1&quot;, described in the file ``$HOME/protect.xml``,</span>
-<span class="c"># placing the results in the directory ``$HOME/ws/workspace1``</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># Run the land protection scenario &quot;s1&quot;, described in the file ``$HOME/protect.xml``,</span>
+<span class="c1"># placing the results in the directory ``$HOME/ws/workspace1``</span>
 
-gt protect -s s1 -S <span class="s2">&quot;$HOME/protect.xml&quot;</span> -w <span class="s2">&quot;$HOME/ws/workspace1&quot;</span>
+gt protect -s s1 -S <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/protect.xml&quot;</span> -w <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/ws/workspace1&quot;</span>
 </pre></div>
 </div>
 <pre class="literal-block">
@@ -1307,7 +1150,7 @@ usage: gt protect [-h] [-b] [-f FRACTION] [--inPlace] [-l LANDCLASSES] [-m]
 named XML queries. The results are placed in a file in the specified
 output directory with a name composed of the basename of the
 XML query file plus the scenario name. For example,</p>
-<div class="highlight-bash"><div class="highlight"><pre>gt query -o. -s MyReference,MyPolicyCase liquids-by-region
+<div class="highlight-bash"><div class="highlight"><pre><span></span>gt query -o. -s MyReference,MyPolicyCase liquids-by-region
 </pre></div>
 </div>
 <p>would run the <code class="docutils literal"><span class="pre">liquids-by-region</span></code> query on two scenarios, MyReference and
@@ -1323,9 +1166,9 @@ an XML file, a query with a title matching the query name (first literally, then
 replacing <code class="docutils literal"><span class="pre">'_'</span></code> and <code class="docutils literal"><span class="pre">'-'</span></code> characters with spaces) is sought. Note that query names are
 case-sensitive.</p>
 <pre class="literal-block">
-usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
-                [-Q QUERYPATH] [-r REGIONS] [-R REGIONMAP] [-s SCENARIO]
-                [-S REWRITESETSFILE] [--version] [-w WORKSPACE]
+usage: gt query [-h] [-d XMLDB] [-D] [-g GROUPDIR] [-n] [-o OUTPUTDIR] [-p]
+                [-q QUERYXMLFILE] [-Q QUERYPATH] [-r REGIONS] [-R REGIONMAP]
+                [-s SCENARIO] [-S REWRITESETSFILE] [--version] [-w WORKSPACE]
                 [queryName [queryName ...]]
 </pre>
 <dl class="last docutils">
@@ -1336,10 +1179,11 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
 <tbody valign="top">
 <tr><td class="option-group">
 <kbd>queryName</kbd></td>
-<td>A file or files, each holding an XML query to run. (The &#8221;.xml&#8221; suffix will be added if needed.)
-                                    If an argument is preceded by the &#8220;&#64;&#8221; sign, it is read and its contents substituted as the
-                                    values for this argument. That means you can store queries to run in a file (one per line) and
-                                    just reference the file by preceding the filename argument with &#8220;&#64;&#8221;.</td></tr>
+<td>A file or files, each holding an XML query to run. (The &#8221;.xml&#8221; suffix will be
+                            added if needed.) If an argument is preceded by the &#8220;&#64;&#8221; sign, it is read and its
+                            contents substituted as the values for this argument. That means you can store queries
+                            to run in a file (one per line) and just reference the file by preceding the filename
+                            argument with &#8220;&#64;&#8221;.</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1350,13 +1194,18 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
 <tbody valign="top">
 <tr><td class="option-group">
 <kbd><span class="option">-d</span>, <span class="option">--xmldb</span></kbd></td>
-<td>The XML database to query (default is value of GCAM.DbFile, in the GCAM.Workspace&#8217;s
-                             &#8220;output&#8221; directory. Overrides the -w flag.</td></tr>
+<td>The XML database to query (default is computed as
+                             {GCAM.SandboxDir}/output/{GCAM.DbFile}. Overrides the -w flag.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-D=False</span>, <span class="option">--noDelete=False</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Don&#8217;t delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=</span>, <span class="option">--groupDir=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The scenario group directory name, if any. Used with to compute default
+                            for &#8211;workspace argument.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
 </tr>
@@ -1369,9 +1218,9 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
 <kbd><span class="option">-p=False</span>, <span class="option">--prequery=False</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Generate the XMLDBDriver.properties file and associated batch file to be
-                                 run by GCAM when GCAM.InMemoryDatabase is True.</td></tr>
+                                 run by GCAM when GCAM.BatchMultipleQueries or GCAM.InMemoryDatabase are True.</td></tr>
 <tr><td class="option-group" colspan="2">
-<kbd><span class="option">-q</span>, <span class="option">--queryFile</span></kbd></td>
+<kbd><span class="option">-q</span>, <span class="option">--queryXmlFile</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>An XML file holding a list of queries to run, with optional mappings specified to
                             rewrite output. This file has the same structure as the &lt;queries&gt; element in project.xml.</td></tr>
@@ -1408,7 +1257,7 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
 <kbd><span class="option">-w=</span>, <span class="option">--workspace=</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>The workspace directory in which to find the XML database.
-                                    Defaults to value of config file parameter GCAM.Workspace.
+                                    Defaults computed as {GCAM.SandboxDir}/{groupDir}/{scenario}.
                                     Overridden by the -d flag.</td></tr>
 </tbody>
 </table>
@@ -1420,10 +1269,11 @@ usage: gt query [-h] [-d XMLDB] [-D] [-n] [-o OUTPUTDIR] [-p] [-q QUERYFILE]
 files and construction of a corresponding configuration XML file.
 See <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> for a detailed description.</p>
 <pre class="literal-block">
-usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G] [-m MODULE]
-                [-p period-or-year] [-r REFWORKSPACE] [-R RESULTSDIR]
-                [-s SCENARIO] [-S SUBDIR] [-u] [-x XMLSOURCEDIR]
-                [-X XMLOUTPUTROOT] [-w WORKSPACE] [-y YEARS]
+usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G]
+                [-m MODULEPATH | -M MODULESPEC] [-p period-or-year]
+                [-r REFWORKSPACE] [-R RESULTSDIR] [-s SCENARIO] [-S SUBDIR]
+                [-u] [-x XMLSOURCEDIR] [-X XMLOUTPUTROOT] [-w WORKSPACE]
+                [-y YEARS]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1450,9 +1300,14 @@ usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G] [-m MODULE]
 <kbd><span class="option">-G=False</span>, <span class="option">--staticOnly=False</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>Generate only static XML for local-xml: don&#8217;t create dynamic XML.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-m</span>, <span class="option">--module</span></kbd></td>
-<td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m</span>, <span class="option">--modulePath</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The path to a scenario definition module. See -M flag for more info.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-M</span>, <span class="option">--moduleSpec</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
                             a function called &#8216;scenarioClass&#8217; or a dictionary called &#8216;ClassMap&#8217; which map
                             scenario names to classes. If the function &#8216;scenarioClass&#8217; exists, it is
                             used. If not, the &#8216;ClassMap&#8217; is used. Default is &#8220;{xmlsrc}/subdir/scenarios.py&#8221; (if
@@ -1502,19 +1357,11 @@ usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G] [-m MODULE]
 </dd>
 </dl>
 </dd>
-<dt><strong>ws</strong></dt>
-<dd><p class="first" id="ws-label">The <code class="docutils literal"><span class="pre">ws</span></code> sub-command allows you to create, delete, show the path of, or run a shell
-command in a workspace. If the <code class="docutils literal"><span class="pre">--scenario</span></code> argument is given, the operation is
-performed on a scenario-specific workspace within a project directory. If <code class="docutils literal"><span class="pre">--scenario</span></code>
-is not specified, the operation is performed on the project directory that contains
-individual scenario workspaces. Note that the <a class="reference internal" href="#gcam-label"><em>gcam</em></a> sub-command
-automatically creates workspaces as needed.</p>
-<p>N.B. You can run <code class="docutils literal"><span class="pre">ws</span></code> with the the <code class="docutils literal"><span class="pre">--path</span></code> option before performing any
-operations to be sure of the directory that will be operated on, or use the
-<code class="docutils literal"><span class="pre">--noExecute</span></code> option to show the command that would be executed by <code class="docutils literal"><span class="pre">--run</span></code>.</p>
+<dt><strong>sandbox</strong></dt>
+<dd><p class="first">Perform operations on a sandbox.</p>
 <pre class="literal-block">
-usage: gt ws [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n] [-p]
-             [-r RUN] [-s SCENARIO] [--version]
+usage: gt sandbox [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n]
+                  [-p] [-r RUN] [-s SCENARIO] [--version]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1524,16 +1371,16 @@ usage: gt ws [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n] [-p]
 <tbody valign="top">
 <tr><td class="option-group">
 <kbd><span class="option">--create=False</span></kbd></td>
-<td>Create the identified workspace. If used with &#8211;delete,
+<td>Create the identified sandbox. If used with &#8211;delete,
                             the deletion occurs first.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--delete=False</span></kbd></td>
-<td>Delete the identified workspace&#8217; If used with &#8211;create, the
+<td>Delete the identified sandbox&#8217; If used with &#8211;create, the
                             deletion occurs first.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">--recreate=False</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Recreate the identified workspace. Equivalent to using the
+<tr><td>&nbsp;</td><td>Recreate the identified sandbox. Equivalent to using the
                             &#8211;delete and &#8211;create options together.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-g=</span>, <span class="option">--groupDir=</span></kbd></td>
@@ -1547,14 +1394,14 @@ usage: gt ws [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n] [-p]
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-p=False</span>, <span class="option">--path=False</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>Print the absolute path to the identified workspace.</td></tr>
+<tr><td>&nbsp;</td><td>Print the absolute path to the identified sandbox.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-r</span>, <span class="option">--run</span></kbd></td>
-<td>Run the given command in the identified workspace.</td></tr>
+<td>Run the given command in the identified sandbox.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
 </tr>
-<tr><td>&nbsp;</td><td>The scenario for the computed workspace root.</td></tr>
+<tr><td>&nbsp;</td><td>The scenario for the computed sandbox root.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
@@ -1587,7 +1434,7 @@ systems or by semi-colons (<code class="docutils literal"><span class="pre">;</s
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pygcam.config.html" class="btn btn-neutral float-right" title="pygcam.config" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pygcam.chart.html" class="btn btn-neutral float-right" title="pygcam.chart" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="config.html" class="btn btn-neutral" title="Configuration System" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

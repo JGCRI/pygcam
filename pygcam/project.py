@@ -21,11 +21,8 @@ from .config import getParam, getConfigDict, setParam
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
-from .subcommand import SubcommandABC
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
                     resourceStream, QueryResultsDir)
-
-#from .queryFile import QueryFile
 
 __version__ = '0.2'
 
@@ -56,31 +53,67 @@ def getDefaultGroup(groups):
 
     raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
+def decacheVariables():
+    SimpleVariable.decache()
+    _TmpFileBase.decache()
 
-class _TmpFile(object):
+class _TmpFileBase(object):
+    """
+    Defines features common to _TmpFile and Queries.
+    """
+    Instances = {}
+
+    def __init__(self, node):
+        self.varName = node.get('varName')
+        self.delete  = getBooleanXML(node.get('delete',  '1'))
+
+    # Methods to allow subclasses to use superclass' Instances dict.
+    # N.B. can't use cls.Instances or each subclass gets own dict.
+    @classmethod
+    def setInstance(cls, key, value):
+        _TmpFileBase.Instances[key] = value
+
+    @classmethod
+    def getInstance(cls, key):
+        return cls.Instances.get(key)
+
+    @classmethod
+    def decache(cls):
+        _TmpFileBase.Instances = {}
+
+    @classmethod
+    def writeFiles(cls, argDict):
+        """
+        Write the files and set the associated variables to the generated filenames.
+        """
+        for obj in cls.Instances.values():
+            path = obj.write(argDict)
+            argDict[obj.varName] = path
+
+    def write(self, argDict):
+        # subclass responsibility
+        pass
+
+class _TmpFile(_TmpFileBase):
     """
     Represents the ``<tmpFile>`` element in the projects.xml file.
     """
-    Instances = {}  # keyed by name
-
     def __init__(self, node):
         """
         defaults is an optional _TmpFile instance from which to
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
-        name = node.get('varName')  # required by schema
+        super(_TmpFile, self).__init__(node)
 
-        self.delete  = getBooleanXML(node.get('delete',  '1'))
         self.replace = getBooleanXML(node.get('replace', '0'))
         self.eval    = getBooleanXML(node.get('eval',    '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
-        self.varName = name
         self.path    = None
 
-        default = self.Instances.get(name)  # save default node of the same name, if any
-        self.Instances[name] = self         # replace default with our own definition
+        name = self.varName
+        default = self.getInstance(name)  # save default node of the same name, if any
+        self.setInstance(name, self)      # replace default with our own definition
 
         textNodes = node.findall('text')
         defaults = []
@@ -98,19 +131,6 @@ class _TmpFile(object):
 
         self.textNodes = defaults + textNodes
 
-    @classmethod
-    def decache(cls):
-        cls.Instances = {}
-
-    @classmethod
-    def writeFiles(cls, argDict):
-        """
-        Write the files and set the associated variables to the generated filenames.
-        """
-        for tmpFile in cls.Instances.values():
-            path = tmpFile.write(argDict)
-            argDict[tmpFile.varName] = path
-
     def write(self, argDict):
         # Note: TempFiles are deleted in the main driver (tool.py)
         path = getTempFile(suffix='.project.txt', tmpDir=self.dir, delete=self.delete)
@@ -125,6 +145,25 @@ class _TmpFile(object):
         self.path = path
         return path
 
+class Queries(_TmpFileBase):
+    """
+    Represents the ``<queries>`` element in the projects.xml file. We don't process the
+    <queries> element here; we just store it so we can write it to a temp file as needed.
+    Actual reading/processing of contents is handled in queryFile.py.
+    """
+    def __init__(self, node):
+        super(Queries, self).__init__(node)
+        self.tree = ET.ElementTree(node)
+        self.setInstance(self.varName, self)      # replace default with our own definition
+
+    def write(self, _argDict):
+        # Note: TempFiles are deleted in the main driver (tool.py)
+        path = getTempFile(suffix='.queries.xml', delete=self.delete)
+        path = unixPath(path)
+        self.path = path
+
+        self.tree.write(path, xml_declaration=True, pretty_print=True)
+        return path
 
 class ScenarioGroup(object):
     """
@@ -155,6 +194,8 @@ class Scenario(object):
 
 
 class Step(object):
+    maxStep = 0        # for auto-numbering steps lacking a sequence number
+
     """
     Represents the ``<step>`` element in the projects.xml file.
     """
@@ -167,6 +208,12 @@ class Step(object):
 
         if not self.command:
             raise FileFormatError("<step name='%s'> is missing command text" % self.name)
+
+        if self.seq:
+            Step.maxStep = max(self.seq, self.maxStep)
+        else:
+            Step.maxStep += 1
+            self.seq = Step.maxStep
 
     def __str__(self):
         return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
@@ -328,6 +375,10 @@ class Project(object):
             map(Variable, defaultsNode.findall('./vars/var'))
 
         map(Variable,  projectNode.findall('./vars/var'))
+
+        dfltQueriesNodes = defaultsNode.findall('queries') if hasDefaults else []
+        projQueriesNodes = projectNode.findall('queries')
+        self.queryFiles  = map(Queries, dfltQueriesNodes + projQueriesNodes)
 
         dfltTmpFileNodes = defaultsNode.findall('tmpFile') if hasDefaults else []
         projTmpFileNodes = projectNode.findall('tmpFile')
@@ -521,11 +572,11 @@ class Project(object):
             setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
-            # variables indicated in <tmpFile>. This is in the scenario loop so run-time
-            # variables are handled correctly, though it does result in the files being
-            # written multiple times (though with different values.)
+            # variables indicated in <tmpFile> or <queries> elements. This is in the scenario
+            # loop so run-time variables are handled correctly, though it does result in the
+            # files being written multiple times (though with different values.)
             Variable.evaluateVars(argDict)
-            _TmpFile.writeFiles(argDict)
+            _TmpFileBase.writeFiles(argDict)
 
             try:
                 # Loop over all steps and run those that user has requested
@@ -553,7 +604,7 @@ class Project(object):
             print("  " + t.varName)
 
 
-def driver(args, tool, cmdClass=Project):
+def projectMain(args, tool, cmdClass=Project):
     if not args.project:
         args.project = args.configSection or getParam('GCAM.DefaultProject')
 
@@ -576,79 +627,3 @@ def driver(args, tool, cmdClass=Project):
     project = cmdClass(tree, args.project, args.group)
 
     project.run(scenarios, skipScens, steps, skipSteps, args, tool)
-
-
-class ProjectCommand(SubcommandABC):
-    def __init__(self, subparsers, name='run', help='Run the steps for a project defined in a project.xml file'):
-        kwargs = {'help' : help}
-        super(ProjectCommand, self).__init__(name, subparsers, kwargs)
-
-    def addArgs(self, parser):
-
-        parser.add_argument('-f', '--projectFile',
-                            help='''The XML file describing the project. If set, command-line
-                            argument takes precedence. Otherwise, value is taken from config file
-                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
-                            is './project.xml'.''')
-
-        parser.add_argument('-g', '--group',
-                            help='''The name of the scenario group to process. If not specified,
-                            the group with attribute default="1" is processed.''')
-
-        parser.add_argument('-G', '--listGroups', action='store_true',
-                            help='''List the scenario groups defined in the project file and exit.''')
-
-        parser.add_argument('-k', '--skipStep', dest='skipSteps', action='append',
-                            help='''Steps to skip. These must be names of steps defined in the
-                            project.xml file. Multiple steps can be given in a single (comma-delimited)
-                            argument, or the -k flag can be repeated to indicate additional steps.
-                            By default, all steps are run.''')
-
-        parser.add_argument('-K', '--skipScenario', dest='skipScenarios', action='append',
-                            help='''Scenarios to skip. Multiple scenarios can be given in a single
-                            (comma-delimited) argument, or the -K flag can be repeated to indicate
-                            additional scenarios. By default, all scenarios are run.''')
-
-        parser.add_argument('-l', '--listSteps', action='store_true',
-                            help='''List the steps defined for the given project and exit.
-                            Dynamic variables (created at run-time) are not displayed.''')
-
-        parser.add_argument('-L', '--listScenarios', action='store_true',
-                            help='''List the scenarios defined for the given project and exit.
-                            Dynamic variables (created at run-time) are not displayed.''')
-
-        parser.add_argument('-n', '--noRun', action='store_true',
-                            help='''Display the commands that would be run, but don't run them.''')
-
-        parser.add_argument('-p', '--project',
-                            help='''The name of the project to run.''')
-
-        parser.add_argument('-q', '--quit', action='store_true',
-                            help='''Quit if an error occurs when processing a scenario. By default, the
-                            next scenario (if any) is run when an error occurs in a scenario.''')
-
-        parser.add_argument('-s', '--step', dest='steps', action='append',
-                            help='''The steps to run. These must be names of steps defined in the
-                            project.xml file. Multiple steps can be given in a single (comma-delimited)
-                            argument, or the -s flag can be repeated to indicate additional steps.
-                            By default, all steps are run.''')
-
-        parser.add_argument('-S', '--scenario', dest='scenarios', action='append',
-                            help='''Which of the scenarios defined for the given project should
-                            be run. Multiple scenarios can be given in a single (comma-delimited)
-                            argument, or the -S flag can be repeated to indicate additional scenarios.
-                            By default, all active scenarios are run.''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-
-        parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
-
-        parser.add_argument('-x', '--sandboxDir',
-                            help='''The directory in which to create the run-time sandbox workspace.
-                            Defaults to value of {GCAM.SandboxProjectDir}/{scenarioGroup}.''')
-
-        return parser   # for auto-doc generation
-
-
-    def run(self, args, tool):
-        driver(args, tool)

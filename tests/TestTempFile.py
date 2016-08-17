@@ -2,7 +2,9 @@ import unittest
 import os
 from glob import glob
 import shutil
-from .context.utils import TempFile, getTempFile
+import time
+
+from pygcam.utils import TempFile, getTempFile
 
 class TestTempFile(unittest.TestCase):
     def setUp(self):
@@ -35,9 +37,11 @@ class TestTempFile(unittest.TestCase):
 
         files = glob(os.path.join(self.tmpDir, '*'))
         self.assertEqual(len(files), fileCount)
-        import time
-        print 'sleeping 3'
-        time.sleep(3)
+
+        # duration = 2
+        # print 'sleeping %.2f' % duration
+        # time.sleep(duration)
+
         TempFile.deleteAll()
 
         files = glob(os.path.join(self.tmpDir, '*'))
@@ -56,7 +60,7 @@ class TestTempFile(unittest.TestCase):
 
         files = glob(os.path.join(self.tmpDir, '*'))
         self.assertEqual(len(files), fileCount)
-        print "tmpDir has files:", files
+        # print "tmpDir has files:", files
 
 
 if __name__ == "__main__":

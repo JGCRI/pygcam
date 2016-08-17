@@ -32,7 +32,7 @@
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
         <link rel="next" title="pygcam.diff" href="pygcam.diff.html"/>
-        <link rel="prev" title="GCAM tool (gt)" href="gcamtool.html"/> 
+        <link rel="prev" title="pygcam.chart" href="pygcam.chart.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -194,7 +196,7 @@ those defined in DEFAULT.)</td>
 
 <dl class="function">
 <dt id="pygcam.config.getParam">
-<code class="descclassname">pygcam.config.</code><code class="descname">getParam</code><span class="sig-paren">(</span><em>name</em>, <em>section=None</em>, <em>raw=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getParam" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.config.</code><code class="descname">getParam</code><span class="sig-paren">(</span><em>name</em>, <em>section=None</em>, <em>raw=False</em>, <em>raiseError=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.config.getParam" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of the configuration parameter <cite>name</cite>. Calls
 <a class="reference internal" href="#pygcam.config.getConfig" title="pygcam.config.getConfig"><code class="xref py py-func docutils literal"><span class="pre">getConfig()</span></code></a> if needed.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -210,7 +212,13 @@ defaults to the value used in the first call to <code class="docutils literal"><
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str) the value of the variable</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(str) the value of the variable, or None if the variable
+doesn&#8217;t exist and raiseError is False.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises NoOptionError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">if the variable is not found in the given
+section and raiseError is True</p>
 </td>
 </tr>
 </tbody>
@@ -367,7 +375,7 @@ if no project section has been set.</li>
         <a href="pygcam.diff.html" class="btn btn-neutral float-right" title="pygcam.diff" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gcamtool.html" class="btn btn-neutral" title="GCAM tool (gt)" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pygcam.chart.html" class="btn btn-neutral" title="pygcam.chart" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

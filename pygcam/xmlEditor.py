@@ -277,12 +277,6 @@ class XMLEditor(object):
         self.solution_prefix_abs = pathjoin(refWorkspace, "input", "solution")
         self.solution_prefix_rel = pathjoin("..", "input", "solution")
 
-        # do this last so mixins can access the instance variables set above
-        super(XMLEditor, self).__init__()
-
-    def setupStatic(self, args):
-        pass
-
     @staticmethod
     def recreateDir(path):
         shutil.rmtree(path)
@@ -320,7 +314,6 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
 
-
     def setupStatic(self, args):
         """
         Create static XML files in local-xml. By "static", we mean files whose contents are
@@ -335,7 +328,7 @@ class XMLEditor(object):
 
         # Delete old generated scenario files
         scenDir = self.scenario_dir_abs
-        dynDir = self.scenario_dyn_dir_abs
+        # dynDir = self.scenario_dyn_dir_abs
 
         #self.recreateDir(scenDir)  # this trashed symlinks to Workspace/local-xml
         mkdirs(scenDir)
@@ -406,7 +399,10 @@ class XMLEditor(object):
 
     def makeScenarioComponentsUnique(self):
         """
-        Give all reference scenario components a unique "name" tag to facilitate manipulation via xmlstarlet.
+        Give all reference ScenarioComponents a unique "name" tag to facilitate
+        manipulation via xmlstarlet.
+
+        :return: none
         """
         self.renameScenarioComponent("socioeconomics_1", pathjoin(self.socioeconomics_dir_rel, "interest_rate.xml"))
         self.renameScenarioComponent("socioeconomics_2", pathjoin(self.socioeconomics_dir_rel, "socioeconomics_GCAM3.xml"))
@@ -434,10 +430,13 @@ class XMLEditor(object):
         return self.configPath
 
     def _splitPath(self, path):
-        '''
+        """
         See if the path refers to a file in our scenario space, and if so,
         return the tail, i.e., the scenario-relative path.
-        '''
+
+        :param path: (str) a pathname
+        :return: (str or None) the scenario-relative version of `path`
+        """
         def _split(path, prefix):
             '''
             Split off the tail of path relative to prefix, and return the tail
@@ -464,10 +463,14 @@ class XMLEditor(object):
         return result
 
     def _closestCopy(self, tail):
-        '''
-        See if the path refers to a file in our scenario space, and if so,
-        return the tail, i.e., the scenario-relative path.
-        '''
+        """
+        Find the "closest" copy of the given relative path, `tail`,
+        by looking in the current scenario directory and checking
+        recursively through parent scenarios.
+
+        :param tail: (str) a relative pathname of an XML file
+        :return: (str) absolute path of the closest version of the file
+        """
         def _check(absDir):
             absPath = pathjoin(absDir, tail)
             return absPath if os.path.lexists(absPath) else None
@@ -484,6 +487,7 @@ class XMLEditor(object):
 
         return absPath
 
+    # deprecated?
     def parseRelPath(self, relPath):
         '''
         Parse a relative pathname and return a tuple with the scenario prefix, the
@@ -493,6 +497,7 @@ class XMLEditor(object):
         is checked, and if not present, and error is raised.
 
         :param relPath: (str) a relative pathname
+        :return" (str)
         '''
         tail = self._splitPath(relPath)
         if not tail:
@@ -502,13 +507,18 @@ class XMLEditor(object):
         if not result:
             raise SetupException('File "%s" was not found in any scenario directory' % relPath)
 
-        return result   # returns (relDir, absDir)
+        return result
 
     def getLocalCopy(self, pathname):
-        '''
+        """
         Get the filename for the most local version (in terms of scenario hierarchy)
-        of an XML file, and copy the file to our scenario dir if not already there.
-        '''
+        of the XML file `pathname`, and copy the file to our scenario dir if not
+        already there.
+
+        :param pathname: (str) the pathname of an XML file
+        :return: (str, str) a tuple of the relative and absolute path of the
+        local (i.e., within the current scenario) copy of the file.
+        """
         tail = self._splitPath(pathname)
         if not tail:
             raise SetupException('File "%s" was not recognized by any scenario' % pathname)
@@ -538,12 +548,13 @@ class XMLEditor(object):
         ``<Value write-output="1" append-scenario-name="0" name="outFileName">outFile.csv</Value>``
         Values for the optional args can be passed as any of ``[0, 1, "0", "1", True, False]``.
 
-        :param group: the name of a group of config elements in GCAM's configuration.xml
-        :param name: the name of the element to be updated
-        :param value: the value to set between the ``<Value></Value>`` elements
-        :param writeOutput: for ``<Files>`` group, this sets the optional ``write-output`` attribute
-        :param appendScenarioName: for ``<Files>`` group, this sets the optional ``append-scenario-name``
-          attribute.
+        :param group: (str) the name of a group of config elements in GCAM's configuration.xml
+        :param name: (str) the name of the element to be updated
+        :param value: (str) the value to set between the ``<Value></Value>`` elements
+        :param writeOutput: (coercible to int) for ``<Files>`` group, this sets the optional ``write-output``
+           attribute
+        :param appendScenarioName: (coercible to int) for ``<Files>`` group, this sets the optional
+          ``append-scenario-name`` attribute.
         :return: none
         """
         textArgs = "name='%s'" % name
@@ -579,7 +590,8 @@ class XMLEditor(object):
         outputs are saved to the XML database) to the given number of years,
         e.g., ``<Value name="climateOutputInterval">1</Value>``.
 
-        :param years: (coercable to int) the number of years
+        :param years: (coercible to int) the number of years to set as the climate (GHG)
+           output interval
         :return: none
         """
         self.updateConfigComponent('Ints', 'climateOutputInterval', coercible(years, int))
@@ -589,8 +601,8 @@ class XMLEditor(object):
         Add a new ``<ScenarioComponent>`` to the configuration file, at the end of the list
         of components.
 
-        :param name: the name to assign to the new scenario component
-        :param xmlfile: the location of the XML file, relative to the `exe` directory
+        :param name: (str) the name to assign to the new scenario component
+        :param xmlfile: (str) the location of the XML file, relative to the `exe` directory
         :return: none
         """
         xmlfile = unixPath(xmlfile)
@@ -616,9 +628,9 @@ class XMLEditor(object):
         Insert a ``<ScenarioComponent>`` to the configuration file, following the
         entry named by ``after``.
 
-        :param name: the name to assign to the new scenario component
-        :param xmlfile: the location of the XML file, relative to the `exe` directory
-        :param after: the name of the element after which to insert the new component
+        :param name: (str) the name to assign to the new scenario component
+        :param xmlfile: (str) the location of the XML file, relative to the `exe` directory
+        :param after: (str) the name of the element after which to insert the new component
         :return: none
         """
         xmlfile = unixPath(xmlfile)
@@ -643,8 +655,8 @@ class XMLEditor(object):
         """
         Set a new filename for a ScenarioComponent identified by the ``<Value>`` element name.
 
-        :param name: the name of the scenario component to update
-        :param xmlfile: the location of the XML file, relative to the `exe` directory, that
+        :param name: (str) the name of the scenario component to update
+        :param xmlfile: (str) the location of the XML file, relative to the `exe` directory, that
            should replace the existing value
         :return: none
         """
@@ -657,7 +669,7 @@ class XMLEditor(object):
         """
         Delete a ``<ScenarioComponent>`` identified by the ``<Value>`` element name.
 
-        :param name: the name of the component to delete
+        :param name: (str) the name of the ScenarioComponent to delete
         :return: none
         """
         _logger.info("Delete ScenarioComponent name='%s' for scenario" % name)
@@ -672,8 +684,8 @@ class XMLEditor(object):
         for all scenario components, which allows all further modifications to refer
         only to the (now unique) names.
 
-        :param name: the new name for the scenario component
-        :param xmlfile: the XML file path used to locate the scenario component
+        :param name: (str) the new name for the scenario component
+        :param xmlfile: (str) the XML file path used to locate the scenario component
         :return: none
         """
         xmlfile = unixPath(xmlfile)
@@ -690,18 +702,15 @@ class XMLEditor(object):
         file and a constraint file. References to the two files--assumed to be named ``XXX-{subsidy,tax}.xml``
         and ``XXX-{subsidy,tax}-constraint.xml`` for policy `target` ``XXX``--are added to the configuration file.
 
-        :param target: the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
-        :param policy: one of ``subsidy`` or ``tax``
-        :param dynamic: True if the XML file was dynamically generated, and thus found in ``dyn-xml``
+        :param target: (str) the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
+        :param policy: (str) one of ``subsidy`` or ``tax``
+        :param dynamic: (str) True if the XML file was dynamically generated, and thus found in ``dyn-xml``
            rather than ``local-xml``
         :return: none
         """
         _logger.info("Add market constraint: %s %s for %s" % (target, policy, self.name))
 
         cfg = self.cfgPath()
-
-        # if policy == "subsidy":
-        #     policy="subs"	# use shorthand in filename
 
         basename = "%s-%s" % (target, policy)	# e.g., corn-etoh-subsidy
 
@@ -718,22 +727,26 @@ class XMLEditor(object):
 
         # If we've already added files for policy/constraint on this target,
         # we replace the old values with new ones. Otherwise, we add them.
-        if xmlSel(cfg, *args):
-            # found it; update the elements
-            self.updateScenarioComponent(policyTag, policyXML)
-            self.updateScenarioComponent(constraintTag, constraintXML)
-        else:
-            # didn't find it; add the elements
-            self.addScenarioComponent(policyTag, policyXML)
-            self.addScenarioComponent(constraintTag, constraintXML)
+        addOrUpdate = self.updateScenarioComponent if xmlSel(cfg, *args) else self.addScenarioComponent
+        addOrUpdate(policyTag, policyXML)
+        addOrUpdate(constraintTag, constraintXML)
+
+        # if xmlSel(cfg, *args):
+        #     # found it; update the elements
+        #     self.updateScenarioComponent(policyTag, policyXML)
+        #     self.updateScenarioComponent(constraintTag, constraintXML)
+        # else:
+        #     # didn't find it; add the elements
+        #     self.addScenarioComponent(policyTag, policyXML)
+        #     self.addScenarioComponent(constraintTag, constraintXML)
 
     def delMarketConstraint(self, target, policy):
         """
         Delete the two elements defining a market constraint from the configuration file. The filenames
         are constructed as indicated in
 
-        :param target: the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
-        :param policy: one of ``subsidy`` or ``tax``
+        :param target: (str) the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
+        :param policy: (str) one of ``subsidy`` or ``tax``
         :return: none
         """
         _logger.info("Delete market constraint: %s %s for %s" % (target, policy, self.name))

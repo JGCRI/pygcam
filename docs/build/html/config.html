@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -164,7 +166,8 @@ configuration file and the API to access it are described below.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">Usage of the <code class="docutils literal"><span class="pre">config</span></code> sub-command is described on the
-<a class="reference internal" href="gcamtool.html#config-label"><em>gt config</em></a> page.</p>
+<a class="reference internal" href="gcamtool.html#config-label"><em>gt config</em></a> page. See <a class="reference internal" href="pygcam.config.html"><em>pygcam.config</em></a>
+for documentation of the API to the configuration system.</p>
 </div>
 <div class="section" id="the-configuration-files">
 <span id="pygcam-cfg"></span><h2>The configuration files<a class="headerlink" href="#the-configuration-files" title="Permalink to this headline">¶</a></h2>
@@ -197,7 +200,7 @@ command-line to <a class="reference internal" href="gcamtool.html"><em>GCAM tool
 the project-specific values override any values set in <code class="docutils literal"><span class="pre">[DEFAULT]</span></code> sections.</p>
 <p>For example, consider the following values in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>:</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
 <span class="na">GCAM.Root</span> <span class="o">=</span> <span class="s">%(Home)s/GCAM</span>
 
 <span class="k">[Project1]</span>
@@ -223,13 +226,13 @@ value shown in the table below. Set this value in the configuration file to invo
 your preferred editor. For example, if you prefer the <code class="docutils literal"><span class="pre">emacs</span></code> editor, you can add
 this line to <code class="docutils literal"><span class="pre">~/.pygcam.cfg</span></code>:</p>
 <blockquote>
-<div><div class="highlight-cfg"><div class="highlight"><pre><span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">emacs</span>
+<div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">emacs</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Then, invoking the command:</p>
 <blockquote>
-<div><div class="highlight-bash"><div class="highlight"><pre>gt config -e
+<div><div class="highlight-bash"><div class="highlight"><pre><span></span>gt config -e
 </pre></div>
 </div>
 </div></blockquote>
@@ -327,7 +330,7 @@ the config file, run the command <code class="docutils literal"><span class="pre
 check that project&#8217;s variables. For example, I can test the values set for project
 <code class="docutils literal"><span class="pre">Paper1</span></code> with the following command, shown with command output:</p>
 <blockquote>
-<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>gt -P paper1 config -t
+<div><div class="highlight-bash"><div class="highlight"><pre><span></span>$ gt -P paper1 config -t
 OK: GCAM.SandboxRoot <span class="o">=</span> /Users/rjp/ws
 OK: GCAM.SandboxDir <span class="o">=</span> /Users/rjp/ws/paper1
 OK: GCAM.ProjectRoot <span class="o">=</span> /Users/rjp/bitbucket
@@ -367,7 +370,7 @@ several values are read from platform-specific files, as noted above. These
 values are shown below.</p>
 <div class="section" id="for-windows">
 <h4>For Windows:<a class="headerlink" href="#for-windows" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-cfg"><div class="highlight"><pre><span class="c1"># Windows-specific default values</span>
+<div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="c1"># Windows-specific default values</span>
 <span class="k">[DEFAULT]</span>
 <span class="na">GCAM.Executable</span> <span class="o">=</span> <span class="s">Objects-Main.exe</span>
 <span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">notepad.exe</span>
@@ -379,7 +382,7 @@ values are shown below.</p>
 </div>
 <div class="section" id="for-macintosh-os-x">
 <h4>For Macintosh OS X:<a class="headerlink" href="#for-macintosh-os-x" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-cfg"><div class="highlight"><pre><span class="c1"># Macintosh-specific default values</span>
+<div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="c1"># Macintosh-specific default values</span>
 <span class="k">[DEFAULT]</span>
 <span class="na">GCAM.MI.JarFile</span>     <span class="o">=</span> <span class="s">%(GCAM.MI.Dir)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar</span>
 <span class="na">GCAM.Executable</span> <span class="o">=</span> <span class="s">Release/objects</span>
@@ -400,7 +403,7 @@ everything below it in the figure.</p>
 </div>
 <div class="section" id="the-system-defaults-file">
 <h4>The system defaults file<a class="headerlink" href="#the-system-defaults-file" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-cfg"><div class="highlight"><pre><span class="k">[DEFAULT]</span>
+<div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
 
 <span class="c1"># This project is used if &#39;-P&#39; flag not given to the &#39;gt&#39; command</span>
 <span class="na">GCAM.DefaultProject</span> <span class="o">=</span>
@@ -443,9 +446,14 @@ everything below it in the figure.</p>
 <span class="na">GCAM.OtherFilesToCopy</span> <span class="o">=</span> <span class="s">WriteLocalBaseXDB.class</span>
 <span class="na">GCAM.OtherFilesToLink</span> <span class="o">=</span>
 
+<span class="c1"># Files to copy or link into the run-time workspace used to create sandboxes</span>
 <span class="c1"># New version of GCAM (4.3?) requires these: exe/XMLDBDriver.properties exe/XMLDBDriver.jar</span>
 <span class="na">GCAM.WorkspaceFilesToCopy</span> <span class="o">=</span> <span class="s">exe/%(GCAM.Executable)s exe/log_conf.xml %(GCAM.OtherFilesToCopy)s</span>
 <span class="na">GCAM.WorkspaceFilesToLink</span> <span class="o">=</span> <span class="s">input %(GCAM.OtherFilesToLink)s</span>
+
+<span class="c1"># Files to copy or link from the run-time workspace to sandboxes</span>
+<span class="na">GCAM.SandboxFilesToCopy</span> <span class="o">=</span> <span class="s">%(GCAM.OtherFilesToCopy)s</span>
+<span class="na">GCAM.SandboxFilesToLink</span> <span class="o">=</span> <span class="s">input %(GCAM.OtherFilesToLink)s exe/%(GCAM.Executable)s exe/log_conf.xml</span>
 
 <span class="c1"># The reference config file to use as a starting point for &quot;setup&quot;</span>
 <span class="na">GCAM.RefConfigFile</span> <span class="o">=</span> <span class="s">%(GCAM.RefWorkspace)s/exe/configuration_ref.xml</span>
@@ -537,10 +545,24 @@ everything below it in the figure.</p>
 <span class="c1"># The default location in which to find or create GCAM runtime sandboxes</span>
 <span class="na">GCAM.SandboxRoot</span> <span class="o">=</span> <span class="s">%(GCAM.Root)s/ws</span>
 
-<span class="c1"># N.B. These are set at run-time in project.py and are available on</span>
-<span class="c1"># with the &quot;run&quot; sub-command</span>
+<span class="na">GCAM.SandboxProjectDir</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s</span>
+
+<span class="c1"># Identifies the location of the workspace copy used to create</span>
+<span class="c1"># new sandboxes. The workspace is created on demand.</span>
+<span class="na">GCAM.SandboxRefWorkspace</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxProjectDir)s/Workspace</span>
+
+<span class="c1"># N.B. These are set at run-time in project.py and are available</span>
+<span class="c1"># with the &quot;run&quot; sub-command. SandboxDir is the directory under</span>
+<span class="c1"># which sandboxes are created</span>
+<span class="c1"># ScenarioGroup is set in project.py if &lt;ScenarioGroup&gt; sets</span>
+<span class="c1"># useGroupDir=&quot;1&quot;. Thus the variable is available only via the</span>
+<span class="c1"># run sub-command.</span>
 <span class="na">GCAM.ScenarioGroup</span> <span class="o">=</span>
-<span class="na">GCAM.SandboxDir</span> <span class="o">=</span>
+
+<span class="c1"># Directory in which new sandboxes are created for current project</span>
+<span class="c1"># and scenario group. ScenarioGroup may be empty, but this doesn&#39;t</span>
+<span class="c1"># affect path construction.</span>
+<span class="na">GCAM.SandboxDir</span> <span class="o">=</span> <span class="s">%(GCAM.SandboxProjectDir)s/%(GCAM.ScenarioGroup)s</span>
 
 <span class="c1"># If set, application logger messages are written here. Note that</span>
 <span class="c1"># this is different than the GCAM.BatchLogFile for batch job output.</span>
@@ -648,25 +670,8 @@ everything below it in the figure.</p>
 <span class="c1"># when combining CSV files into XLSX files.</span>
 <span class="na">GCAM.ExcelNumberFormat</span> <span class="o">=</span> <span class="s">0.000</span>
 
-<span class="c1"># By default, GCAM output is unbuffered. Set to True for buffering</span>
-<span class="c1"># (which may improve performance on HPC systems.)</span>
-<span class="na">GCAM.BufferedWrapperOutput</span> <span class="o">=</span> <span class="s">False</span>
-
 <span class="c1"># TextEditor to open via the --edit option to the &#39;config&#39; sub-command</span>
 <span class="na">GCAM.TextEditor</span> <span class="o">=</span> <span class="s">vi</span>
-
-<span class="c1">#</span>
-<span class="c1"># Monte Carlo Simulation (MCS) related</span>
-<span class="c1">#</span>
-<span class="na">GCAM.MCS.UseTempOutput</span>  <span class="o">=</span> <span class="s">False</span>
-
-<span class="c1">#</span>
-<span class="c1"># Jug-related</span>
-<span class="c1">#</span>
-<span class="na">GCAM.JugCommand</span>         <span class="o">=</span> <span class="s">jug</span>
-<span class="na">GCAM.JugScript</span>          <span class="o">=</span> <span class="s">jugMain.py</span>
-<span class="na">GCAM.JugDir</span>             <span class="o">=</span> <span class="s">%(Home)s/jugdir</span>
-<span class="na">GCAM.JugTasksPerNode</span>    <span class="o">=</span> <span class="s">4</span>
 </pre></div>
 </div>
 </div>

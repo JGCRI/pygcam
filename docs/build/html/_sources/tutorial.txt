@@ -5,13 +5,22 @@ Tutorial
 
    *This tutorial is currently under development.*
 
+
+Elements to understand:
+
+  * Configuration file
+  * gt command and sub-commands
+  * project.xml
+  * rewrite sets
+  * query specifications (two forms -- move doc from pygcam.query to non-programmer page)
+  * setup -- the most challenging bit still
+
+
 Overview
 ----------
 Here we provide a brief introduction to the elements of this tutorial. The tutorial
-explains how to setup ``pygcam`` and manage the GCAM workflow. A separate tutorial
-will (eventually) be developed to describe how to use ``pygcam`` programmatically.
-
-The steps involved in using ``pygcam`` are explained briefly here, and in more
+explains how to setup ``pygcam`` and manage the GCAM workflow. The steps involved
+in using ``pygcam`` are explained briefly here, and in more
 detail in the sections that follow.
 
 1. Install pygcam

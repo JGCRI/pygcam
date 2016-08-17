@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -207,12 +209,6 @@ is the only way to get data out of the model.</p>
 </div>
 <div class="section" id="generating-label-rewrites-to-aggregate-and-filter-results">
 <h2>Generating label rewrites to aggregate and filter results<a class="headerlink" href="#generating-label-rewrites-to-aggregate-and-filter-results" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This section describes a new feature that is subject to change</p>
-</div>
-</div></blockquote>
 <p>The user can define a set of queries in an XML file. The query elements are processed
 in order, adding any designated label rewrites to the query.</p>
 <p>The <a class="reference internal" href="gcamtool.html#query-label"><em>query sub-command</em></a> runs the batch query in ModelInterfaces and saves
@@ -511,6 +507,8 @@ with query results, default is value of GCAM.OutputDir.</li>
 <li><strong>regions</strong> &#8211; (iterable of str) the regions you want to include in the query</li>
 <li><strong>regionMap</strong> &#8211; (dict-like) keys are the names of regions that should be rewritten.
 The value is the name of the aggregate region to map into.</li>
+<li><strong>rewriteParser</strong> &#8211; (RewriteSetParser instance) parsed representation of
+rewriteSets.xml</li>
 <li><strong>noRun</strong> &#8211; (bool) if True, print the command that would be executed, but
 don&#8217;t run it.</li>
 <li><strong>noDelete</strong> &#8211; (bool) if True, temporary files created by this function are

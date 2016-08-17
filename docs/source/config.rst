@@ -12,7 +12,8 @@ configuration file and the API to access it are described below.
 
 .. seealso::
    Usage of the ``config`` sub-command is described on the
-   :ref:`gt config <config-label>` page.
+   :ref:`gt config <config-label>` page. See :doc:`pygcam.config`
+   for documentation of the API to the configuration system.
 
 .. _pygcam-cfg:
 
@@ -198,7 +199,7 @@ For Windows:
    :language: cfg
 
 For Macintosh OS X:
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 .. literalinclude:: ../../pygcam/etc/Darwin.cfg
    :language: cfg
 

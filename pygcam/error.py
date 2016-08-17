@@ -53,6 +53,9 @@ class CommandlineError(Exception):
     pass
 
 class ProgramExecutionError(PygcamException):
+    """
+    Raised when attempt to execute a program (e.g., the GCAM model or ModelInterface) fails.
+    """
     def __init__(self, command, exitCode):
         self.command = command
         self.exitCode = exitCode

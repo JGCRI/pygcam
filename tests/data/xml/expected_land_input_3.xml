@@ -403,7 +403,7 @@
             </LandNode>
           </LandNode>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedForestAEZ01" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedForestAEZ01" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedForestAEZ01">
             <land-use-history>
               <allocation year="1700">0.0</allocation>
@@ -429,7 +429,7 @@
             <minBelowGroundCDensity>0</minBelowGroundCDensity>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedShrublandAEZ01" fraction="0.9">
+        <LandNode name="ProtectedShrublandAEZ01" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedShrublandAEZ01">
             <land-use-history>
               <allocation year="1700">8.44272603</allocation>
@@ -455,7 +455,7 @@
             </land-carbon-densities>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedForestAEZ02" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedForestAEZ02" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedForestAEZ02">
             <land-use-history>
               <allocation year="1700">1.51486524</allocation>
@@ -481,7 +481,7 @@
             <minBelowGroundCDensity>0</minBelowGroundCDensity>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedShrublandAEZ02" fraction="0.9">
+        <LandNode name="ProtectedShrublandAEZ02" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedShrublandAEZ02">
             <land-use-history>
               <allocation year="1700">81.93414762</allocation>
@@ -861,7 +861,7 @@
             </LandNode>
           </LandNode>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedForestAEZ07" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedForestAEZ07" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedForestAEZ07">
             <land-use-history>
               <allocation year="1700">161.68123152</allocation>
@@ -887,7 +887,7 @@
             <minBelowGroundCDensity>0</minBelowGroundCDensity>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedShrublandAEZ07" fraction="0.9">
+        <LandNode name="ProtectedShrublandAEZ07" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedShrublandAEZ07">
             <land-use-history>
               <allocation year="1700">1150.34205834</allocation>
@@ -913,7 +913,7 @@
             </land-carbon-densities>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedForestAEZ08" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedForestAEZ08" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedForestAEZ08">
             <land-use-history>
               <allocation year="1700">195.54654843</allocation>
@@ -939,7 +939,7 @@
             <minBelowGroundCDensity>0</minBelowGroundCDensity>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedShrublandAEZ08" fraction="0.9">
+        <LandNode name="ProtectedShrublandAEZ08" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedShrublandAEZ08">
             <land-use-history>
               <allocation year="1700">97.26797646</allocation>

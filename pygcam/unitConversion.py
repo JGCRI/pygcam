@@ -36,8 +36,8 @@ E_to_G = 1e9
 G_to_E = 1e-9
 
 # Carbon <--> CO2
-C_to_CO2 = 44/12
-CO2_to_C = 12/44
+C_to_CO2 = 44./12
+CO2_to_C = 12./44
 
 # mass conversions
 kg_to_g = k_to_ones
@@ -46,7 +46,7 @@ g_to_kg = ones_to_k
 Mg_to_kg = M_to_k
 kg_to_Mg = k_to_M
 
-Mg_to_ton = 1000/908
+Mg_to_ton = 1000./908
 ton_to_Mg = 0.908
 
 Mt_to_ton = Mg_to_ton   # aliases
@@ -104,7 +104,7 @@ year_to_day = 365.25
 day_to_year = 1 / year_to_day
 
 day_to_hour = 24
-hour_to_day = 1 / day_to_hour
+hour_to_day = 1. / day_to_hour
 year_to_hour = year_to_day * day_to_hour
 
 # energy unit conversions
@@ -141,7 +141,7 @@ MJ_to_MMBtu = MJ_to_MMbtu   # alternate spelling
 MMBtu_to_MJ = MMbtu_to_MJ
 
 quad_to_EJ = btu_to_kJ
-EJ_to_quad = 1/quad_to_EJ
+EJ_to_quad = 1 / quad_to_EJ
 
 Tbtu_to_EJ = 0.0010551         # trillion btu to EJ
 kbtu_to_EJ = 1.0551e-12        # thousand btu to EJ

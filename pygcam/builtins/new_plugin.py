@@ -7,18 +7,19 @@
 .. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-import os
-import shutil
-from .config import getParam, USR_CONFIG_FILE
-from .utils import mkdirs, copyResource
-from .error import CommandlineError
-from .subcommand import SubcommandABC
-from .log import getLogger
+from ..subcommand import SubcommandABC
+from ..log import getLogger
 
 _logger = getLogger(__name__)
 
-
 def driver(args, tool):
+    # lazy imports
+    import os
+    import shutil
+    from ..config import getParam, USR_CONFIG_FILE
+    from ..utils import mkdirs, copyResource
+    from ..error import CommandlineError
+
     projectName = args.name
     projectRoot = args.root or getParam('GCAM.ProjectRoot')
     projectDir  = os.path.join(projectRoot, projectName)
@@ -57,10 +58,9 @@ def driver(args, tool):
     # Provide example XML files
     xmlFilesToCopy = ['rewriteSets', 'project', 'protection', 'queries']
     for name in xmlFilesToCopy:
-        src = 'etc/%s-example.xml' % name       # e.g., pygcam/etc/project-example.xml
-        dst = 'etc/%s.xml' % name               # e.g., <projectDir>/etc/project.xml
+        path = 'etc/%s-example.xml' % name       # e.g., pygcam/etc/project-example.xml
         _logger.debug('Creating %s/%s', projectDir, dst)
-        copyResource(src, dst, overwrite=False)
+        copyResource(path, path, overwrite=False)
 
     if args.addToConfig:
         _logger.debug('Adding [%s] to %s', projectName, USR_CONFIG_FILE)
@@ -91,15 +91,16 @@ class NewProjectCommand(SubcommandABC):
     def addArgs(self, parser):
         # Positional args
         parser.add_argument('name',
-                            help='''Create the structure for the named project.''')
+                            help='''Create the structure for the named project, and copy example
+                            XML files into the "etc" directory.''')
 
         parser.add_argument('-c', '--addToConfig', action='store_true',
                             help='''Add a section for the new project to $HOME/.pygcam.cfg after
                             making a backup of the file in $HOME/.pygcam.cfg~''')
 
         parser.add_argument('-r', '--projectRoot', dest='root', metavar='PATH',
-                            help='''The directory in which to create the a subdirectory for the named project.
-                            Default is the value of config variable GCAM.ProjectRoot''')
+                            help='''The directory in which to create a subdirectory for the named
+                            project. Default is the value of config variable GCAM.ProjectRoot''')
 
         parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
 

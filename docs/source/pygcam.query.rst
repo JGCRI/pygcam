@@ -62,10 +62,6 @@ is the only way to get data out of the model.
 Generating label rewrites to aggregate and filter results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  .. note::
-
-        This section describes a new feature that is subject to change
-
 The user can define a set of queries in an XML file. The query elements are processed
 in order, adding any designated label rewrites to the query.
 

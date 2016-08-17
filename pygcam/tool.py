@@ -15,33 +15,36 @@ import signal
 import subprocess
 from glob import glob
 
-from .chart import ChartCommand
-from .config import (ConfigCommand, getParam, getConfig, getParamAsBoolean, setParam,
+from .builtins.chart_plugin import ChartCommand
+from .builtins.config_plugin import ConfigCommand
+from .builtins.diff_plugin import DiffCommand
+from .builtins.gcam_plugin import GcamCommand
+from .builtins.new_plugin import NewProjectCommand
+from .builtins.protect_plugin import ProtectLandCommand
+from .builtins.query_plugin import QueryCommand
+from .builtins.run_plugin import ProjectCommand
+from .builtins.sandbox_plugin import SandboxCommand
+from .builtins.setup_plugin import SetupCommand
+
+from .config import (getParam, getConfig, getParamAsBoolean, setParam,
                      getSection, setSection, DEFAULT_SECTION)
-from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
-from .diff import DiffCommand
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
-from .jugCmd import JugCommand
-from .landProtection import ProtectLandCommand
 from .log import getLogger, setLogLevel, configureLogs
-from .newProject import NewProjectCommand
-from .project import ProjectCommand, _TmpFile, SimpleVariable
-from .query import QueryCommand
-from .runGCAM import GcamCommand
-from .setup import SetupCommand
+from .project import decacheVariables
 from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
 from .windows import IsWindows
-from .sandbox import SandboxCommand
 
 _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
 __version__ = '0.1'
 
-BuiltinSubcommands = [BioConstraintsCommand, DeltaConstraintsCommand,
-                      ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      JugCommand, NewProjectCommand, ProjectCommand, ProtectLandCommand,
+BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
+                      NewProjectCommand, ProjectCommand, ProtectLandCommand,
                       QueryCommand, SetupCommand, SandboxCommand]
+
+# For now, these are not offered as command-line options. Needs more testing.
+# BioConstraintsCommand, DeltaConstraintsCommand,
 
 def _writeBatchScript(args, delete=False):
     """
@@ -158,12 +161,11 @@ class GcamTool(object):
     def __init__(self, loadPlugins=True):
 
         # TODO: This is a patch to so address re-entry issue, prior to proper integration
-        _TmpFile.decache()
-        SimpleVariable.decache()
+        decacheVariables()
 
         self.mcsMode = ''
 
-        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM) #, add_help=False)
+        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
 
         parser.add_argument('-b', '--batch', action='store_true',
                             help='''Run the commands by submitting a batch job using the command
@@ -175,10 +177,6 @@ class GcamTool(object):
         parser.add_argument('-e', '--enviroVars',
                             help='''Comma-delimited list of environment variable assignments to pass
                             to queued batch job, e.g., -E "FOO=1,BAR=2". (Linux only)''')
-
-        # Add help manually so we can load all plugins first
-        # parser.add_argument('-h', '--help', action="store_true",
-        #                     help='''show this help message and exit''')
 
         parser.add_argument('-j', '--jobName', default='gt',
                             help='''Specify a name for the queued batch job. Default is "gt".
@@ -311,16 +309,6 @@ class GcamTool(object):
             if args.batch:
                 args.batch = False
 
-            args.configSection = section = args.configSection or getParam('GCAM.DefaultProject')
-            if section:
-                 setSection(section)
-
-            logLevel = args.logLevel or getParam('GCAM.LogLevel')
-            if logLevel:
-                setLogLevel(logLevel)
-
-            configureLogs(force=True)
-
         # Get the sub-command and run it with the given args
         obj = self.getPlugin(args.subcommand)
 
@@ -436,12 +424,29 @@ def checkWindowsSymlinks():
             _logger.info('No symlink permission; setting GCAM.CopyAllFiles = True')
             setParam('GCAM.CopyAllFiles', 'True')
 
+def _setupLogging(argv):
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+    parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+    parser.add_argument('-l', '--logLevel')
+
+    ns, otherArgs = parser.parse_known_args(args=argv)
+
+    ns.configSection = section = ns.configSection or getParam('GCAM.DefaultProject')
+    if section:
+        setSection(section)
+
+    logLevel = ns.logLevel or getParam('GCAM.LogLevel')
+    if logLevel:
+        setLogLevel(logLevel)
+
+    configureLogs(force=True)
 
 def _main(argv=None):
     getConfig()
-
     configureLogs()
     checkWindowsSymlinks()
+
+    _setupLogging(argv)     # so loading plugins recognize desired logLevel
 
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
@@ -460,10 +465,6 @@ def _main(argv=None):
     ns, otherArgs = parser.parse_known_args(args=argv)
 
     tool.setMcsMode(ns.mcs)
-
-    if ns.configSection:
-        setParam('GCAM.DefaultProject', ns.configSection, section=DEFAULT_SECTION)
-        setSection(ns.configSection)
 
     # Set specified config vars
     for arg in ns.configVars:

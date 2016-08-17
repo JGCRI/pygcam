@@ -115,7 +115,7 @@
             </LandLeaf>
           </LandNode>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedPastureAEZ04" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedPastureAEZ04" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedPastureAEZ04">
             <land-use-history>
               <allocation year="1700">0.94907619</allocation>
@@ -141,7 +141,7 @@
             </land-carbon-densities>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedPastureAEZ05" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedPastureAEZ05" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedPastureAEZ05">
             <land-use-history>
               <allocation year="1700">4.63969503</allocation>
@@ -283,7 +283,7 @@
             </LandLeaf>
           </LandNode>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedPastureAEZ07" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedPastureAEZ07" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedPastureAEZ07">
             <land-use-history>
               <allocation year="1700">5.85363447</allocation>
@@ -309,7 +309,7 @@
             </land-carbon-densities>
           </UnmanagedLandLeaf>
         </LandNode>
-        <LandNode name="ProtectedUnmanagedPastureAEZ08" fraction="0.9">
+        <LandNode name="ProtectedUnmanagedPastureAEZ08" fraction="0.9000">
           <UnmanagedLandLeaf name="ProtectedUnmanagedPastureAEZ08">
             <land-use-history>
               <allocation year="1700">1.53189315</allocation>

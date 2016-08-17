@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -192,9 +194,9 @@ and <code class="docutils literal"><span class="pre">XXX-{subsidy,tax}-constrain
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>target</strong> &#8211; the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel</li>
-<li><strong>policy</strong> &#8211; one of <code class="docutils literal"><span class="pre">subsidy</span></code> or <code class="docutils literal"><span class="pre">tax</span></code></li>
-<li><strong>dynamic</strong> &#8211; True if the XML file was dynamically generated, and thus found in <code class="docutils literal"><span class="pre">dyn-xml</span></code>
+<li><strong>target</strong> &#8211; (str) the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel</li>
+<li><strong>policy</strong> &#8211; (str) one of <code class="docutils literal"><span class="pre">subsidy</span></code> or <code class="docutils literal"><span class="pre">tax</span></code></li>
+<li><strong>dynamic</strong> &#8211; (str) True if the XML file was dynamically generated, and thus found in <code class="docutils literal"><span class="pre">dyn-xml</span></code>
 rather than <code class="docutils literal"><span class="pre">local-xml</span></code></li>
 </ul>
 </td>
@@ -216,8 +218,8 @@ of components.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> &#8211; the name to assign to the new scenario component</li>
-<li><strong>xmlfile</strong> &#8211; the location of the XML file, relative to the <cite>exe</cite> directory</li>
+<li><strong>name</strong> &#8211; (str) the name to assign to the new scenario component</li>
+<li><strong>xmlfile</strong> &#8211; (str) the location of the XML file, relative to the <cite>exe</cite> directory</li>
 </ul>
 </td>
 </tr>
@@ -252,8 +254,8 @@ are constructed as indicated in</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>target</strong> &#8211; the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel</li>
-<li><strong>policy</strong> &#8211; one of <code class="docutils literal"><span class="pre">subsidy</span></code> or <code class="docutils literal"><span class="pre">tax</span></code></li>
+<li><strong>target</strong> &#8211; (str) the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel</li>
+<li><strong>policy</strong> &#8211; (str) one of <code class="docutils literal"><span class="pre">subsidy</span></code> or <code class="docutils literal"><span class="pre">tax</span></code></li>
 </ul>
 </td>
 </tr>
@@ -272,7 +274,7 @@ are constructed as indicated in</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; the name of the component to delete</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; (str) the name of the ScenarioComponent to delete</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
 </tr>
@@ -284,7 +286,19 @@ are constructed as indicated in</p>
 <dt id="pygcam.xmlEditor.XMLEditor.getLocalCopy">
 <code class="descname">getLocalCopy</code><span class="sig-paren">(</span><em>pathname</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.getLocalCopy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the filename for the most local version (in terms of scenario hierarchy)
-of an XML file, and copy the file to our scenario dir if not already there.</p>
+of the XML file <cite>pathname</cite>, and copy the file to our scenario dir if not
+already there.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pathname</strong> &#8211; (str) the pathname of an XML file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str, str) a tuple of the relative and absolute path of the</td>
+</tr>
+</tbody>
+</table>
+<p>local (i.e., within the current scenario) copy of the file.</p>
 </dd></dl>
 
 <dl class="method">
@@ -297,9 +311,9 @@ entry named by <code class="docutils literal"><span class="pre">after</span></co
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> &#8211; the name to assign to the new scenario component</li>
-<li><strong>xmlfile</strong> &#8211; the location of the XML file, relative to the <cite>exe</cite> directory</li>
-<li><strong>after</strong> &#8211; the name of the element after which to insert the new component</li>
+<li><strong>name</strong> &#8211; (str) the name to assign to the new scenario component</li>
+<li><strong>xmlfile</strong> &#8211; (str) the location of the XML file, relative to the <cite>exe</cite> directory</li>
+<li><strong>after</strong> &#8211; (str) the name of the element after which to insert the new component</li>
 </ul>
 </td>
 </tr>
@@ -313,7 +327,16 @@ entry named by <code class="docutils literal"><span class="pre">after</span></co
 <dl class="method">
 <dt id="pygcam.xmlEditor.XMLEditor.makeScenarioComponentsUnique">
 <code class="descname">makeScenarioComponentsUnique</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.makeScenarioComponentsUnique" title="Permalink to this definition">¶</a></dt>
-<dd><p>Give all reference scenario components a unique &#8220;name&#8221; tag to facilitate manipulation via xmlstarlet.</p>
+<dd><p>Give all reference ScenarioComponents a unique &#8220;name&#8221; tag to facilitate
+manipulation via xmlstarlet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">none</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -332,6 +355,7 @@ is checked, and if not present, and error is raised.</p>
 </tr>
 </tbody>
 </table>
+<p>:return&#8221; (str)</p>
 </dd></dl>
 
 <dl class="method">
@@ -371,8 +395,8 @@ only to the (now unique) names.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> &#8211; the new name for the scenario component</li>
-<li><strong>xmlfile</strong> &#8211; the XML file path used to locate the scenario component</li>
+<li><strong>name</strong> &#8211; (str) the new name for the scenario component</li>
+<li><strong>xmlfile</strong> &#8211; (str) the XML file path used to locate the scenario component</li>
 </ul>
 </td>
 </tr>
@@ -393,7 +417,8 @@ e.g., <code class="docutils literal"><span class="pre">&lt;Value</span> <span cl
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>years</strong> &#8211; (coercable to int) the number of years</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>years</strong> &#8211; (coercible to int) the number of years to set as the climate (GHG)
+output interval</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
 </tr>
@@ -674,12 +699,13 @@ Values for the optional args can be passed as any of <code class="docutils liter
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>group</strong> &#8211; the name of a group of config elements in GCAM&#8217;s configuration.xml</li>
-<li><strong>name</strong> &#8211; the name of the element to be updated</li>
-<li><strong>value</strong> &#8211; the value to set between the <code class="docutils literal"><span class="pre">&lt;Value&gt;&lt;/Value&gt;</span></code> elements</li>
-<li><strong>writeOutput</strong> &#8211; for <code class="docutils literal"><span class="pre">&lt;Files&gt;</span></code> group, this sets the optional <code class="docutils literal"><span class="pre">write-output</span></code> attribute</li>
-<li><strong>appendScenarioName</strong> &#8211; for <code class="docutils literal"><span class="pre">&lt;Files&gt;</span></code> group, this sets the optional <code class="docutils literal"><span class="pre">append-scenario-name</span></code>
-attribute.</li>
+<li><strong>group</strong> &#8211; (str) the name of a group of config elements in GCAM&#8217;s configuration.xml</li>
+<li><strong>name</strong> &#8211; (str) the name of the element to be updated</li>
+<li><strong>value</strong> &#8211; (str) the value to set between the <code class="docutils literal"><span class="pre">&lt;Value&gt;&lt;/Value&gt;</span></code> elements</li>
+<li><strong>writeOutput</strong> &#8211; (coercible to int) for <code class="docutils literal"><span class="pre">&lt;Files&gt;</span></code> group, this sets the optional <code class="docutils literal"><span class="pre">write-output</span></code>
+attribute</li>
+<li><strong>appendScenarioName</strong> &#8211; (coercible to int) for <code class="docutils literal"><span class="pre">&lt;Files&gt;</span></code> group, this sets the optional
+<code class="docutils literal"><span class="pre">append-scenario-name</span></code> attribute.</li>
 </ul>
 </td>
 </tr>
@@ -699,8 +725,8 @@ attribute.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> &#8211; the name of the scenario component to update</li>
-<li><strong>xmlfile</strong> &#8211; the location of the XML file, relative to the <cite>exe</cite> directory, that
+<li><strong>name</strong> &#8211; (str) the name of the scenario component to update</li>
+<li><strong>xmlfile</strong> &#8211; (str) the location of the XML file, relative to the <cite>exe</cite> directory, that
 should replace the existing value</li>
 </ul>
 </td>

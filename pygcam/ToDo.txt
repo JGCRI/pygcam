@@ -5,40 +5,18 @@ Document
 --------
 - Documentation, including tutorial
   - Release on ReadTheDocs.org
-- PPT slides
 
-- Plug-ins are now loaded on demand, including if a -h flag is used.
-  - if a plug-in isn't required, it isn't loaded.
-  OPTIMIZATION (later):
-  - move constraint, protection, jug, and chart stuff to internal plugins
-    to reduce startup time
-  - however, need to load internal plugins for auto doc purposes!
-
-- New project step that runs only if GCAM.InMemoryDatabase
-  - Create batch file to process all batch queries
-  - Create XMLDBDriver.properties file
-
-- New config vars controlling query processing
-
-- New <Parameter active="0"> attribute
-
-- changes to XML format and validation
-    - pygcam and also gcammcs (results, parameters, scenarios)
+- PPT slides for October
 
 - queryMapping
   - default "level" set in query itself, can override in query list
   - append-values="false" unless any of the queries sets it to "true"
 
-- In project.xml, <defaults> section is now optional
-
-- Document the Subcommand (plugin) protocol
-    - class 'Plugin' or variable PluginClass which identifies classname
-    - addArgs()
-    - run(args, tool)
-    - when it gets loaded and run
-    - other suggestions, e.g., plugins should use logging
-
 - Assumptions behind setup code
+
+- Update figure on config.rst page showing relationships among variables
+
+- QueryFile.xml and new delete=0 option
 
 Cleanup
 -------
@@ -46,34 +24,53 @@ Cleanup
 - Maybe convert other big modules to internal plugins, loaded on demand
     - They're for use by biofuel studies only (maybe a sep plugin dir?)
     - Perhaps split out generic function from domain-specific
+    - could add __init__.py to plugins, allowing plugins to import others
 - Review ToDos in XmlEditor: normalize to have all fns use the same style of
   lists of tuples with years and values.
-- Diff without -i is still interpolating.
 - Update files: etc/*-example.xml
+- Post xsd files on bitbucket or github and reference them in the XML files
+
+- Consolidate generic code from sectorEditors and xmlEditor
 
 Features
 --------
+- Provide a way to run a query with different rewrites to produce different
+  csv files.
+
 - Be able to specify a simple project without writing custom python code.
   - see more info below
 
-- If scenario has unique name among groups, run it even if group isn't specified?
-    - Will require restructuring since it's assumed there's one group name
-    - Create a hash of scenario names to group names, or to tuples of the scenario
-      name appears in multiple groups. If not, the mapping is straightforward.
-
-- Add symbolic numeric conversions for chart command
-  - see below.
-
-- Make seq="x" optional in project <step> definitions; use order as defined.
+- Have "gt new" copy a file structure as coremcs does
+  - Config var defaults to this structure
+  - User can copy this template, modify it, point to it
+  - Admin can set up custom structure for a project team and use that instead
 
 Testing
 -------
+- test all subcommands
+  - config (ok)
+  - diff
+  - gcam
+    Modes to test
+    - run using ref workspace, from anywhere (ok)
+    - standard project.xml mode (ok)
+    - standalone, but with new sandbox (ok)
+    - MCS mode
+  - new (ok)
+  - run (retest batch command and args)
+  - protect
+  - query
+  - setup
+  - sandbox (mostly ok, but setup.createSandbox might be broken for groupDir case)
+
 - Finish implementing/testing the queryFile and rewriteSets features
+  - Looks good, but need to test interaction with old form
 - setup.py installer: test with full install
 - On Windows: test that CopyAllFiles is set to True automatically if linking fails.
 - Host the xsd files on github or bb so they can be referenced in XML
   files, allowing smart editing.
 - Test / update "new project" command
+- Test bioconstraint command -- maybe move out?
 
 Config changes
 ===============
@@ -96,9 +93,6 @@ Config changes
 
 On PIC: Add XMLDBDriver.jar to .../libs/jars. No sense treating this differently.
 
-- Finish testing non-MCS mode, including on otaq2016 (has groupDir)
-- Finish developing MCS mode
-
 - Eliminate generators from scenarios.py and use project.xml @setup instead.
 - In generators, expect baseline to be in ../../{baseline}, relative to "exe".
 
@@ -106,8 +100,7 @@ Bugs
 ====
 - Need fix on Windows for calling "java WriteLocalBaseXDB" to get jre path
   using the new XMLDBDriver.jar, since Write... no longer has a main.
-
-- Diff without -i is still interpolating.
+  - Fixed, but not clear if Pralit is accepting the changes
 
 - There's a subtle problem with repeated use of GcamTool as top-level call.
   First symptom is query list is repeated. Seems to be stale state from
@@ -115,16 +108,11 @@ Bugs
   called from top-level.
   - in any case, all the start-up stuff is rerun needlessly, currently
 
-MCS-only
---------
-- Several tables didn't populate: output, program, code, region. Anomaly or bug?
 
-- To try:
-  - Move run dir back to /pic/scratch/plev920
 
 Cleanup
 =======
-- "batch" is confusing: used for SLURM batch and XML query batch
+- the term "batch" is confusing since used for SLURM batch and XML query batch
 
 - Rationalize batchQuery.log and GCAM.MI.LogFile in query.py
 
@@ -219,13 +207,6 @@ Long-term
 - Modify handling of named batchfile so it is copied to the tmp file and the
   rest proceeds as with query definition files.
 
-- Make seq="x" optional in project <step> definitions; use order as defined.
-  If user is not overriding any steps (most common use case), explicit seq
-  nums are not needed.
-  - Just run in the order listed
-  - Another option is to have an explicit <step after="stepname">, to create
-    dependence DAG, which leads toward gcam-driver type of functionality.
-
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
 
@@ -235,11 +216,15 @@ Long-term
 - Host the xsd files somewhere so they can be referenced in XML
   files, allowing smart editing.
 
+===========
+=== MCS ===
+===========
+- To try:
+  - Move run dir back to /pic/scratch/plev920
 
 MCS Integration
-===============
+---------------
 - Test pyfunc capability and use it to generate protected areas based on distro.
-
 - Failure to run diffs is being reported by Runner.py as success
 
 
@@ -259,6 +244,13 @@ MCS Cleanup
 
 - Optionally Use delta method from SALib instead of the CB method.
 - Incorporate SALib sampling as alternative. (Or just use external input files)
+
+MCS docs
+--------
+- New <Parameter active="0"> attribute
+
+- changes to XML format and validation
+    - pygcam and also gcammcs (results, parameters, scenarios)
 
 MCS Notes
 ---------
