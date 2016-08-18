@@ -325,8 +325,6 @@ def _addRewrites(levelElt, rewriteSet):
             _appendRewrite(From, to)
 
 def _addRewriteSet(rewriteSetList, rewriteParser, rewriteList, title):
-    _logger.debug("Applying rewriteSets to query '%s'", title)
-
     # TBD: Verify with Pralit.
     # Set to True if any of the mappings requires this, since it apparently we
     # cannot set these independently in different rewrite lists.
@@ -339,7 +337,7 @@ def _addRewriteSet(rewriteSetList, rewriteParser, rewriteList, title):
         _removeLevelByName(rewriteList, levelName)
         levelElt = ET.Element('level', name=levelName)
 
-        _logger.debug("Applying rewriteSet '%s', level '%s'", rewriteSetName, levelName)
+        _logger.debug("Applying rewriteSet '%s', level '%s' for '%s'", rewriteSetName, levelName, title)
 
         rewriteList.append(levelElt)
         _addRewrites(levelElt, rewriteSet)
@@ -590,7 +588,9 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
 
         queryName = queryName.strip()
 
-        if not queryName or queryName[0] == '#':    # allow blank lines and comments
+        # N.B. A side-effect of this is that QueryFile elements can be commented out
+        # by inserting a "#" at the start of the name, e.g., <query name="#foo" ...>
+        if not queryName or queryName[0] == '#':    # ignore blank lines and comments
             continue
 
         # Extracts the named query into a temp file and returns XML text referencing the file.
@@ -636,6 +636,8 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
     :param regions: (iterable of str) the regions you want to include in the query
     :param regionMap: (dict-like) keys are the names of regions that should be rewritten.
         The value is the name of the aggregate region to map into.
+    :param rewriteParser: (RewriteSetParser instance) parsed representation of
+        rewriteSets.xml
     :param noRun: (bool) if True, print the command that would be executed, but
         don't run it.
     :param noDelete: (bool) if True, temporary files created by this function are
@@ -991,6 +993,7 @@ def main(args):
     sandbox     = args.workspace or getParam('GCAM.Sandbox')
     xmldb       = args.xmldb     or os.path.join(sandbox, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
+    queryFile   = args.queryXmlFile
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
     regions     = args.regions.split(',') if args.regions else GCAM_32_REGIONS
     scenario    = args.scenario
@@ -1018,11 +1021,11 @@ def main(args):
 
     _logger.debug("Query names: %s", queryNames)
 
-    queryFileNode = QueryFile.parse(args.queryFile) if args.queryFile else None
-    queryNodes = queryFileNode.queries if queryFileNode else []
+    queryFileObj = QueryFile.parse(queryFile) if queryFile else None
+    queryNodes = queryFileObj.queries if queryFileObj else []
     queries = queryNames + queryNodes
 
-    if not (queryNames or queryFileNode):
+    if not (queryNames or queryFileObj):
         raise CommandlineError("Error: At least one query name or a query XML file must be specified")
 
     rewriteParser = RewriteSetParser.parse(rewriteSetsFile) if rewriteSetsFile else None
@@ -1053,7 +1056,7 @@ def main(args):
 
     # If not a prequery step, we're running queries post-GCAM, which means a database on disk
     # For now, we support running multiple queries in a single batch file, or the old way,
-    # running each one individually. The latter is probably deprecated.
+    # running each one individually. The latter is probably not needed, except for debugging.
     if batchMultiple:
         runMultiQueryBatch(scenario, queries, xmldb=xmldb, queryPath=queryPath, outputDir=outputDir,
                            miLogFile=miLogFile, regions=regions, regionMap=regionMap,
@@ -1097,9 +1100,9 @@ class QueryCommand(SubcommandABC):
 
         parser.add_argument('-p', '--prequery', action="store_true",
                             help='''Generate the XMLDBDriver.properties file and associated batch file to be
-                                 run by GCAM when GCAM.InMemoryDatabase is True.''')
+                                 run by GCAM when GCAM.BatchMultipleQueries or GCAM.InMemoryDatabase are True.''')
 
-        parser.add_argument('-q', '--queryFile',
+        parser.add_argument('-q', '--queryXmlFile',
                             help='''An XML file holding a list of queries to run, with optional mappings specified to
                             rewrite output. This file has the same structure as the <queries> element in project.xml.''')
 

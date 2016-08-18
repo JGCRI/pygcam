@@ -25,7 +25,7 @@ from .error import PygcamException, ProgramExecutionError, ConfigFileError, Comm
 from .landProtection import ProtectLandCommand
 from .log import getLogger, setLogLevel, configureLogs
 from .newProject import NewProjectCommand
-from .project import ProjectCommand, _TmpFile, SimpleVariable
+from .project import ProjectCommand, decacheVariables
 from .query import QueryCommand
 from .runGCAM import GcamCommand
 from .setup import SetupCommand
@@ -158,12 +158,11 @@ class GcamTool(object):
     def __init__(self, loadPlugins=True):
 
         # TODO: This is a patch to so address re-entry issue, prior to proper integration
-        _TmpFile.decache()
-        SimpleVariable.decache()
+        decacheVariables()
 
         self.mcsMode = ''
 
-        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM) #, add_help=False)
+        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
 
         parser.add_argument('-b', '--batch', action='store_true',
                             help='''Run the commands by submitting a batch job using the command
@@ -175,10 +174,6 @@ class GcamTool(object):
         parser.add_argument('-e', '--enviroVars',
                             help='''Comma-delimited list of environment variable assignments to pass
                             to queued batch job, e.g., -E "FOO=1,BAR=2". (Linux only)''')
-
-        # Add help manually so we can load all plugins first
-        # parser.add_argument('-h', '--help', action="store_true",
-        #                     help='''show this help message and exit''')
 
         parser.add_argument('-j', '--jobName', default='gt',
                             help='''Specify a name for the queued batch job. Default is "gt".

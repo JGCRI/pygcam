@@ -3,7 +3,7 @@ from .log import getLogger
 from .error import CommandlineError, FileFormatError
 from .utils import mkdirs, ensureCSV, QueryResultsDir
 from .subcommand import SubcommandABC
-from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
+from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
 
@@ -159,25 +159,32 @@ def main(args):
     interpolate = args.interpolate
     groupSum    = args.groupSum
     sum         = args.sum
+    queryFile   = args.queryFile
+    yearStrs    = args.years.split('-')
 
-    yearStrs = args.years.split('-')
     if len(yearStrs) == 2:
         years = yearStrs
         startYear = args.startYear
 
-    # If a queryFile is given, we loop over the query names, computing required arguments to performDiff().
-    if args.queryFile:
+    # If a query file is given, we loop over the query names, computing required arguments to performDiff().
+    if queryFile:
         if len(args.csvFiles) != 2:
-            raise Exception, "When --queryFile is specified, 2 positional arguments--the baseline and policy names--are required."
+            raise CommandlineError("When --queryFile is specified, 2 positional arguments--the baseline and policy names--are required.")
 
         baseline, policy = args.csvFiles
 
         def makePath(query, scenario):
             return os.path.join(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
 
-        with open(args.queryFile, 'rU') as f:    # 'U' converts line separators to '\n' on Windows
-            lines = f.read()
-            queries = filter(None, lines.split('\n'))   # eliminates blank lines
+        mainPart, extension = os.path.splitext(queryFile)
+
+        if extension.lower() == '.xml':
+            queryFileObj = QueryFile.parse(queryFile)
+            queries = queryFileObj.queryNames()
+        else:
+            with open(queryFile, 'rU') as f:    # 'U' converts line separators to '\n' on Windows
+                lines = f.read()
+                queries = filter(None, lines.split('\n'))   # eliminates blank lines
 
         for query in queries:
             baselineFile = makePath(query, baseline)
@@ -254,9 +261,16 @@ class DiffCommand(SubcommandABC):
                             help='''Convert the given CSV files into an Excel workbook, one sheet per CSV file.''')
 
         parser.add_argument('-q', '--queryFile', default='',
-                            help='''A file from which to take the names of queries to process. When --queryFile
-                            is specified, the two positional arguments are the names of the baseline and policy
-                            scenarios, in that order.''')
+                            help='''If the extension is ".xml" (case insensitive), the argument must be an XML file
+                            holding a list of queries to run, with optional mappings specified to rewrite output.
+                            This file has the same structure as the <queries> element in project.xml. If the file
+                            doesn't end in ".xml", it must be a text file listing the names of queries to process,
+                            one per line. NOTE: When --queryFile is specified, the two positional arguments are
+                            required: the names of the baseline and policy scenarios, in that order.''')
+
+        parser.add_argument('-r', '--rewriteSetsFile',
+                            help='''An XML file defining query maps by name (default taken from
+                            config parameter "GCAM.RewriteSetsFile")''')
 
         parser.add_argument('-S', '--sum', default=False, action="store_true",
                             help='''Sum all timestep (or interpolated annual values) to produce a single time-series.''')

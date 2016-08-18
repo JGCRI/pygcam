@@ -135,6 +135,7 @@
             </xs:sequence>
             <xs:attribute name='varName' use='required' type='xs:string'/>
             <xs:attribute name='defaultMap' type='xs:string'/>
+            <xs:attribute name='delete' type='xs:boolean'/>
         </xs:complexType>
     </xs:element>
 

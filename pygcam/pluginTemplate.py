@@ -11,10 +11,11 @@ class MyNewCommand(SubcommandABC):
                   'description' : '''Longer description for sub-command'''}
 
         # The first argument is the name of the new sub-command
-        super(MyNewCommand, self).__init__('XXX', subparsers, kwargs)
+        super(MyNewCommand, self).__init__('subCmdName', subparsers, kwargs)
 
-    # process command-line arguments for this sub-command
     def addArgs(self):
+        '''Process command-line arguments for this sub-command'''
+
         parser = self.parser
 
         parser.add_argument('-n', '--number', type=int, default=0,
@@ -24,8 +25,12 @@ class MyNewCommand(SubcommandABC):
 
         return parser
 
-    # implement the sub-command
     def run(self, args, tool):
+        '''
+        Implement the sub-command here. "args" is an `argparse.Namespace` instance
+        holding the parsed command-line arguments, and "tool" is a reference to
+        the running GcamTool instance.
+        '''
         pass
 
 # An alternative to naming the class 'Plugin' is to assign the class to PluginClass

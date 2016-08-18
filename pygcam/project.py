@@ -21,11 +21,10 @@ from .config import getParam, getConfigDict, setParam
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
+from .queryFile import QueryFile
 from .subcommand import SubcommandABC
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
                     resourceStream, QueryResultsDir)
-
-#from .queryFile import QueryFile
 
 __version__ = '0.2'
 
@@ -56,31 +55,67 @@ def getDefaultGroup(groups):
 
     raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
+def decacheVariables():
+    SimpleVariable.decache()
+    _TmpFileBase.decache()
 
-class _TmpFile(object):
+class _TmpFileBase(object):
+    """
+    Defines features common to _TmpFile and Queries.
+    """
+    Instances = {}
+
+    def __init__(self, node):
+        self.varName = node.get('varName')
+        self.delete  = getBooleanXML(node.get('delete',  '1'))
+
+    # Methods to allow subclasses to use superclass' Instances dict.
+    # N.B. can't use cls.Instances or each subclass gets own dict.
+    @classmethod
+    def setInstance(cls, key, value):
+        _TmpFileBase.Instances[key] = value
+
+    @classmethod
+    def getInstance(cls, key):
+        return cls.Instances.get(key)
+
+    @classmethod
+    def decache(cls):
+        _TmpFileBase.Instances = {}
+
+    @classmethod
+    def writeFiles(cls, argDict):
+        """
+        Write the files and set the associated variables to the generated filenames.
+        """
+        for obj in cls.Instances.values():
+            path = obj.write(argDict)
+            argDict[obj.varName] = path
+
+    def write(self, argDict):
+        # subclass responsibility
+        pass
+
+class _TmpFile(_TmpFileBase):
     """
     Represents the ``<tmpFile>`` element in the projects.xml file.
     """
-    Instances = {}  # keyed by name
-
     def __init__(self, node):
         """
         defaults is an optional _TmpFile instance from which to
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        # e.g., <tmpFile varName="scenPlots" dir="/tmp/runProject" delete="1" replace="0" eval="1">
-        name = node.get('varName')  # required by schema
+        super(_TmpFile, self).__init__(node)
 
-        self.delete  = getBooleanXML(node.get('delete',  '1'))
         self.replace = getBooleanXML(node.get('replace', '0'))
         self.eval    = getBooleanXML(node.get('eval',    '1'))    # convert {args} before writing file
         self.dir     = node.get('dir')
-        self.varName = name
         self.path    = None
 
-        default = self.Instances.get(name)  # save default node of the same name, if any
-        self.Instances[name] = self         # replace default with our own definition
+        name = self.varName
+        default = self.getInstance(name)  # save default node of the same name, if any
+        self.setInstance(name, self)      # replace default with our own definition
 
         textNodes = node.findall('text')
         defaults = []
@@ -98,19 +133,6 @@ class _TmpFile(object):
 
         self.textNodes = defaults + textNodes
 
-    @classmethod
-    def decache(cls):
-        cls.Instances = {}
-
-    @classmethod
-    def writeFiles(cls, argDict):
-        """
-        Write the files and set the associated variables to the generated filenames.
-        """
-        for tmpFile in cls.Instances.values():
-            path = tmpFile.write(argDict)
-            argDict[tmpFile.varName] = path
-
     def write(self, argDict):
         # Note: TempFiles are deleted in the main driver (tool.py)
         path = getTempFile(suffix='.project.txt', tmpDir=self.dir, delete=self.delete)
@@ -125,6 +147,25 @@ class _TmpFile(object):
         self.path = path
         return path
 
+class Queries(_TmpFileBase):
+    """
+    Represents the ``<queries>`` element in the projects.xml file. We don't process the
+    <queries> element here; we just store it so we can write it to a temp file as needed.
+    Actual reading/processing of contents is handled in queryFile.py.
+    """
+    def __init__(self, node):
+        super(Queries, self).__init__(node)
+        self.tree = ET.ElementTree(node)
+        self.setInstance(self.varName, self)      # replace default with our own definition
+
+    def write(self, _argDict):
+        # Note: TempFiles are deleted in the main driver (tool.py)
+        path = getTempFile(suffix='.queries.xml', delete=self.delete)
+        path = unixPath(path)
+        self.path = path
+
+        self.tree.write(path, xml_declaration=True, pretty_print=True)
+        return path
 
 class ScenarioGroup(object):
     """
@@ -337,6 +378,10 @@ class Project(object):
 
         map(Variable,  projectNode.findall('./vars/var'))
 
+        dfltQueriesNodes = defaultsNode.findall('queries') if hasDefaults else []
+        projQueriesNodes = projectNode.findall('queries')
+        self.queryFiles  = map(Queries, dfltQueriesNodes + projQueriesNodes)
+
         dfltTmpFileNodes = defaultsNode.findall('tmpFile') if hasDefaults else []
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(_TmpFile, dfltTmpFileNodes + projTmpFileNodes)
@@ -529,11 +574,11 @@ class Project(object):
             setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
-            # variables indicated in <tmpFile>. This is in the scenario loop so run-time
-            # variables are handled correctly, though it does result in the files being
-            # written multiple times (though with different values.)
+            # variables indicated in <tmpFile> or <queries> elements. This is in the scenario
+            # loop so run-time variables are handled correctly, though it does result in the
+            # files being written multiple times (though with different values.)
             Variable.evaluateVars(argDict)
-            _TmpFile.writeFiles(argDict)
+            _TmpFileBase.writeFiles(argDict)
 
             try:
                 # Loop over all steps and run those that user has requested

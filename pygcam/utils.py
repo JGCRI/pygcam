@@ -48,7 +48,7 @@ def simpleFormat(s, varDict):
         result = re.sub(pat, lookup, s)
         return result
     except KeyError as e:
-        raise FileFormatError('Unknown parameter %s in project XML template' % e)
+        raise FileFormatError('Unknown parameter %s in project XML template string' % e)
 
 @contextmanager
 def pushd(directory):

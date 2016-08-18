@@ -15,14 +15,23 @@ from .utils import XMLFile, getBooleanXML, resourceStream
 class Query(object):
     def __init__(self, node, defaultMap):
         self.name = node.get('name')
-        self.useDefault = getBooleanXML(node.get('useDefault', '1'))
+        self.delete = getBooleanXML(node.get('delete', '1'))
+        self.useDefault = useDefault = getBooleanXML(node.get('useDefault', '1'))
+
+        # see if the user provided the attribute, or we defaulted to 1
+        explicitUseDefault = node.get('useDefault', None) and useDefault
 
         # Create a list of tuples with (mapName, level) where level may be None
         rewriters = node.findall('rewriter')
         self.rewriters = map(lambda obj: (obj.get('name'), obj.get('level')), rewriters)
 
-        if defaultMap and self.useDefault:
-            rewriters.append((defaultMap, None))
+        # We add the default map in two cases: (i) user specified some rewriters and explicitly
+        # set useDefault="1", or (ii) there are no rewriters and useDefault has not been set to "0".
+        if defaultMap and ((rewriters and explicitUseDefault) or (not rewriters and useDefault)):
+            self.rewriters.append((defaultMap, None))
+
+    def getName(self):
+        return self.name
 
 class QueryFile(object):
     def __init__(self, node):
@@ -30,6 +39,10 @@ class QueryFile(object):
 
         nodes = node.findall('query')
         self.queries = [Query(node, defaultMap) for node in nodes]
+
+    def queryNames(self):
+        names = map(Query.getName, self.queries)
+        return names
 
     @classmethod
     def parse(cls, filename):
