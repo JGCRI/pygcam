@@ -20,6 +20,9 @@ _logger = getLogger(__name__)
 TIMESTEP = 5            # 5 year time-step
 __version__  = "0.3"
 
+# TBD: document this default
+DFLT_UNSTACKED_REGION = 'USA'
+
 #%matplotlib inline
 
 _importedMPL = False
@@ -80,6 +83,7 @@ def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='U
 
     df = df.drop(yearCols, axis=1)          # copy to not affect caller's df
 
+    # TBD: make this generic
     USA = ['US', 'USA', 'United States']
     reg = df.query('region in %s' % USA)
     other = df.query('region not in %s' % USA)
@@ -239,6 +243,7 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
     return (fig, ax)
 
 
+# TBD: eliminate this by adding extra lines to chartGCAM?
 def plotStackedSums(df, indexCol=None, columns=None, xlabel='', ylabel='', rotation=90,
                     ncol=5, box=False, zeroLine=False, ygrid=False, yticks=False,
                     ymin=None, ymax=None, barWidth=0.5, legendY=None, title="", palette=None):
@@ -341,28 +346,30 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
     byRegion   = args.byRegion
     constraint = args.constraint
     timeseries = args.timeseries
-    unstacked  = args.unstacked
     palette    = args.palette
     yFormat    = args.format
     valueCol   = args.valueCol
+    unstacked  = args.unstacked
+    unStackedRegion = args.unstackedRegion
+
+    # use outputDir if provided, else use parent dir of outFile
+    outputDir = outputDir or os.path.dirname(outFile)
 
     if not os.path.lexists(outputDir):
         os.mkdir(outputDir, 0o755)
 
-    # use dirname if user provided one; else use outputDir
-    if not os.path.dirname(outFile):
-        if outFile:
-            imgFile = outFile
-        else:
-            # otherwise compute output filename using outputDir and suffix
-            suffix = args.suffix or '.png'
-            suffix = '-' + suffix if suffix[0] not in ['.', '-', '_'] else suffix
-            filename = os.path.basename(csvFile)
-            root, ext = os.path.splitext(filename)
-            prefix = "%d-" % num if num else ""
-            imgFile = prefix + root + suffix
+    if outFile:
+        imgFile = os.path.basename(outFile)
+    else:
+        # otherwise compute output filename using outputDir and suffix
+        suffix = args.suffix or '.png'
+        suffix = '-' + suffix if suffix[0] not in ['.', '-', '_'] else suffix
+        filename = os.path.basename(csvFile)
+        root, ext = os.path.splitext(filename)
+        prefix = "%d-" % num if num else ""
+        imgFile = prefix + root + suffix
 
-        outFile = os.path.join(outputDir, imgFile)
+    outFile = os.path.join(outputDir, imgFile)
 
     _logger.debug("Generating %s", os.path.abspath(outFile))
 
@@ -378,8 +385,8 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
     if constraint:
         try:
             df = df.query(constraint)
-        except Exception, e:
-            raise Exception("Failed to apply constraint: %s\n  -- %s" % (constraint, e))
+        except Exception as e:
+            raise CommandlineError("Failed to apply constraint: %s\n  -- %s" % (constraint, e))
 
     yearCols = filter(str.isdigit, df.columns)
 
@@ -388,7 +395,7 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
         df[yearCols] *= multiplier
 
     if divisor:
-        df[yearCols] /= divisor
+        df[yearCols] /= divisor # TBD: document or rethink the assumption below
         sumYears = True         # dividing by total fuel makes sense only for totals
 
     if negate:
@@ -396,25 +403,26 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
         imgFile = amendFilename(imgFile, 'negated')
         df[yearCols] *= -1
 
-    # If region is None, it's treated as not by region, allowing loop to handle both cases
+    # allow loop to handle both byRegion and not
     regions = df.region.unique() if byRegion else [None]
 
     outFileOrig = outFile
     imgFileOrig = imgFile
 
+    # TBD: organize this better to remove redundancy and to allow all forms to be --byRegion
     for region in regions:
 
-        setupPlot(context="talk", style="white")
+        setupPlot(context="talk", style="white")    # TBD: test whether this needs to be in loop
 
         if unstacked:
-            region = 'USA'
             otherRegion = 'Rest of world'
-            fig, ax = plotUnstackedRegionComparison(df, categoryCol=unstacked, valueCol=valueCol, region=region,
+            fig, ax = plotUnstackedRegionComparison(df, categoryCol=unstacked, valueCol=valueCol, region=unStackedRegion,
                                                     otherRegion=otherRegion, box=box, title=title, ncol=ncol,
                                                     xlabel=xlabel, ylabel=ylabel, ygrid=ygrid, yticks=yticks,
                                                     ymin=ymin, ymax=ymax, legendY=legendY, palette=palette)
 
         elif region:
+            # i.e., if "--byRegion" was specified and we're looping over all regions
             slice = df.query('region == "%s"' % region)
             sliceTitle = title + " (%s)" % region
             outFile = amendFilename(outFileOrig, region)
@@ -430,10 +438,12 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
                                       box=box, xlabel=xlabel, ylabel=ylabel, ymin=ymin, ymax=ymax,
                                       ncol=ncol, barWidth=barWidth, palette=palette)
         elif timeseries:
+            # TBD: reasonable to plot this for a single region (i.e., should be usable byRegion)
             fig, ax = plotTimeSeries(df, xlabel=xlabel, ylabel=ylabel, box=box, zeroLine=zeroLine, title=title, ygrid=ygrid,
                                      yticks=yticks, ymin=ymin, ymax=ymax, legend=False, legendY=legendY, yearStep=yearStep)
 
         else:
+            # Merge this with sumYears branch
             fig, ax = plotStackedTimeSeries(df, index=indexCol, yearStep=yearStep, ygrid=ygrid, yticks=yticks,
                                             ymin=ymin, ymax=ymax, zeroLine=zeroLine, title=title, legendY=legendY,
                                             box=box, xlabel=xlabel, ylabel=ylabel, ncol=ncol, barWidth=barWidth,
@@ -528,14 +538,16 @@ def main(mainArgs, tool, parser):
                 allArgs = parser.parse_args(args=fileArgs, namespace=argsNS)
                 divisor = getDivisor(allArgs.divisorFile)
 
-                # do this in addition to standard figure. Don't *also* negate since divisor may be + or -.
-                chartGCAM(allArgs, num=(num if enumerate else None), divisor=divisor)
+                nextNum = num if enumerate else None
+                num += 1
+
+                chartGCAM(allArgs, num=nextNum, divisor=divisor)
 
                 if negate:
-                    # do this in addition to standard figure
-                    chartGCAM(allArgs, num=(num if enumerate else None), divisor=divisor, negate=True)
+                    # Do this in addition to standard figure, but don't *also*
+                    # negate since divisor may be + or -.
+                    chartGCAM(allArgs, num=nextNum, divisor=divisor, negate=True)
 
-                num += 1
     else:
         divisor = getDivisor(mainArgs.divisorFile)
         chartGCAM(mainArgs, divisor=divisor)
@@ -687,6 +699,10 @@ class ChartCommand(SubcommandABC):
         parser.add_argument('-u', '--unstacked',
                             help='''Draw an unstacked bar plot for the column given as an argument to this
                             option, showing three groups of bars: the region, all other regions, and the total.''')
+
+        parser.add_argument('-U', '--unstackedRegion', default=DFLT_UNSTACKED_REGION,
+                            help='''The region to plot separately from Rest of World in an unstacked plot.
+                            Default is %s.''' % DFLT_UNSTACKED_REGION)
 
         parser.add_argument('-v', '--valueCol',
                             help='''Identify a column to plot for unstacked bar plots. If not specified,
