@@ -14,7 +14,7 @@
   the innards, keeping the same API.
 -->
 
-<setup>
+<setup name="uniqueName">
     <vars>
         <!-- results in variables from the set {0.0, 0.2, 0.4, 0.6, 0.8, 1.0} -->
         <iterator name="fraction" type="float" min="0.0" max="1.0" incr="0.2"/>

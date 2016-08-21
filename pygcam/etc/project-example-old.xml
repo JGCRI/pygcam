@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file defines one or more "projects" that are run using the "gt" script.
+-->
+<projects> <!-- <projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="../pygcam/pygcam/etc/project-schema.xsd"> -->
+	<defaults>
+		<vars>
+			<!-- User variables, used only by defined steps -->
+			<var name="startYear">2015</var>
+			<var name="endYear">2050</var>
+			<var name="years" eval="1">{startYear}-{endYear}</var>
+			<var name="shockYear">2020</var>
+			<var name="queryPath" eval="1">{GCAM.QueryDir}:{GCAM.QueryDir}/Main_queries_Customized.xml</var>
+		</vars>
+		<steps>
+			<!--
+			The names defined in steps can be used on the command-line to limit operations to these steps
+			If runFor="baseline", the step is run only for baseline scenarios. If runFor="policy", the step
+			is run only for non-baseline scenarios.  If not set (or set to "all") the step is run for all
+			scenarios. Steps with same seq number can be run in any order. If forGroup="xxx" is set, the
+			step will be run only when group "xxx" is active.
+			 -->
+			<step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+			<step seq="2" name="gcam"  runFor="baseline">@gcam -l -S {projectXmlDir} -s {baseline} -w {scenarioWsDir} -P</step>
+			<step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+			<step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+			<step seq="5" name="gcam"  runFor="policy">@gcam -l -S {projectXmlDir} -s {scenario} -w {scenarioWsDir} -P</step>
+			<step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+			<step seq="7" name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+			<step seq="8" name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+			<step seq="9" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+			<step seq="10" name="plotCI" runFor="policy">@chart {plotCIArgs} -F {diffsDir}/fuelEJ.txt "Emissions-changes-{scenario}-{baseline}.csv"</step>
+			<step seq="11" name="plotCI" runFor="policy">@chart {plotCIArgs} --reference {baseline} --scenario {scenario} --fromFile {ciPlots}</step>
+			<step seq="12" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o diffs.xlsx {diffsDir}/*.csv</step>
+			<step seq="13" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+		</steps>
+		<vars>
+			<var name="plotCIArgs" eval="1">-D {diffsDir} --outputDir figures --years {years} --barWidth 0.25 --box --label --labelColor black --legendY='-0.2' --zeroLine --rotation 0 --sumYears --ylabel 'g CO$_2$e / MJ' --title 'Contributions to carbon intensity'</var>
+		</vars>
+		<tmpFile varName="queryFile" eval="0">
+			<!-- Providing an optional tag lets a project declare same with no text to deactivate -->
+			<text>Ag_N2O_and_CH4_emissions</text>
+			<text>Ag_Production_by_Crop_Type</text>
+			<text>Ag_non-burning_N2O_emissions</text>
+			<text>Ag_waste_burning_N2O_emissions</text>
+			<text>CO2_emissions_from_fertilizer_production</text>
+			<text>Climate_forcing</text>
+			<text>energy-consumption-by-sector-USA</text>
+			<text>GHG_emissions_by_aggregated_sector</text>
+			<text>GHG_emissions_by_region</text>
+			<text>Global_mean_temperature</text>
+			<text>Kyoto_gas_forcing</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg</text>
+			<text tag="msw">MSW_production</text>
+			<text>More_Aggregated_Land_Allocation</text>
+			<text>More_Aggregated_Land_Allocation_Wise_agg</text>
+			<text>Slightly_Less_Aggregated_Land_Allocation</text>
+			<text>Purpose-grown_biomass_production</text>
+			<text>Residue_biomass_production</text>
+			<text>Total_biomass_consumption</text>
+			<text tag="prices">prices-by-select-sectors-USA</text>
+			<text>refined-liquids-prod-by-tech-USA</text>
+			<text>refined-liquids-prod-by-tech</text>
+		</tmpFile>
+		<vars>
+			<var name="scenPlotArgs" eval="1">-D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
+		</vars>
+		<tmpFile varName="scenPlots">
+			<!-- Residue biomass production -->
+			<text>Residue_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -T "Residue biomass production, {years}" -S -c region -I sector</text>
+			<text>Residue_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -T 'Residue biomass production' -x by-year.png -I sector</text>
+			<text>Residue_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -T 'Residue biomass production' -x region-by-year.png -I region</text>
+
+			<!-- Biomass consumption by region -->
+			<text>Total_biomass_consumption-{scenario}.csv -Y EJ -i -n 4 -T 'Biomass consumption by region' -C 'input == "biomass"' -z -x by-region.png</text>
+
+			<!-- Refined liquids production, USA  -->
+			<text>refined-liquids-prod-by-tech-USA-{scenario}.csv -Y EJ -I technology -i -T 'Refined liquid fuels production in USA' -c region -n 4</text>
+
+			<!-- Purpose-grown biomass -->
+			<text>Purpose-grown_biomass_production-{scenario}.csv -Y "EJ" -i -n 4 -c output -I region -T 'Purpose-grown biomass production' -x by-region.png</text>
+		</tmpFile>
+		<vars>
+			<var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years} --label --enumerate --ygrid --zeroLine</var>
+		</vars>
+		<tmpFile varName="diffPlots">
+			<!-- Residue biomass production -->
+			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
+			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
+			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'MJ biomass / MJ biofuel' -n 4 -T '$\Delta$ Residue biomass production per unit fuel' -x sector-by-region-per-MJ.png -c sector -I region -F fuelEJ.txt</text>
+			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'MJ biomass / MJ biofuel' -n 4 -T '$\Delta$ Residue biomass production per unit fuel' -x region-by-sector-per-MJ.png -I sector -c region -F fuelEJ.txt</text>
+
+			<!-- Biomass consumption by region -->
+			<text>Total_biomass_consumption-{scenario}-{reference}.csv -Y 'EJ biomass' -n 3 -T '$\Delta$ Total biomass consumption by region' -z -x by-region.png</text>
+
+			<!-- Same plots, but as CO2 -->
+			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m 3.667 -I region -c "land-use-change-emission" -n 4 -T '$\Delta$ Land-use Change Emissions' -x by-region-CO2.png</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m 3.667 -c region -I "land-use-change-emission" -n 3 -T '$\Delta$ Land-use Change Emissions' -x by-LUT-CO2.png</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -I region -c "land-use-change-emission" -n 3 -T 'Contribution to Carbon Intensity' -x by-LUT-CO2-per-MJ.png -F fuelEJ.txt</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -c region -I "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x by-region-CO2-per-MJ.png -F fuelEJ.txt</text>
+
+			<!-- Unstacked as in Wise et al 2015 -->
+			<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -u "land-use-change-emission" -n 3 -T 'Contribution to Carbon Intensity' -x unstacked-CO2-per-MJ.png -F fuelEJ.txt --legendY=-0.5 -k</text>
+
+			<!-- Refined liquids production, USA -->
+			<text>refined-liquids-prod-by-tech-USA-{scenario}-{reference}.csv -I technology -T '$\Delta$ Refined liquid fuels production, USA' -c region -n 3</text>
+
+			<!-- Aggregated Land Allocation -->
+			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 3 -x by-region-per-EJ.png -c land-allocation -I region -F fuelEJ.txt --format=',' --transparent -T 'Area change per unit fuel'</text>
+			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 3 -T '$\Delta$ Land Allocation' -x by-land-allocation.png -I land-allocation</text>
+			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 4 -T '$\Delta$ Land Allocation' -x by-region.png -I region</text>
+			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'm$^2$ / MJ' -m 0.001 -n 4 -T 'Area change per unit fuel' -x by-land-alloc-per-MJ.png -I land-allocation -c region -F fuelEJ.txt</text>
+			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'm$^2$ / MJ' -m 0.001 -n 3 -T 'Area change per unit fuel' -x by-region-per-MJ.png     -c land-allocation -I region -F fuelEJ.txt</text>
+
+			<!-- Unstacked as in Wise et al 2015 -->
+			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv          -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png</text>
+			<text>More_Aggregated_Land_Allocation_Wise_agg-{scenario}-{reference}.csv -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png --legendY=-0.5</text>
+
+			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 4 -x by-region-per-EJ.png -c land-allocation -I region -F fuelEJ.txt --format=',' --transparent -T 'Area change per unit fuel'</text>
+			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 3 -T '$\Delta$ Land Allocation' -x by-land-allocation.png -I land-allocation</text>
+			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 4 -T '$\Delta$ Land Allocation' -x by-region.png -I region</text>
+
+			<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "EJ biomass" -n 4 -c output -I region -z -T '$\Delta$ Purpose-grown biomass production' -x by-region.png</text>
+			<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "MJ biomass / MJ biofuel" -c output -I region -z -T 'Purpose-grown biomass production per unit fuel' -x by-region-per-MJ.png  -F fuelEJ.txt</text>
+
+			<!-- Ag non-burning N2O -->
+			<text>Ag_non-burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -n 4 -T '$\Delta$ Global Ag N$_2$O Emissions ({scenario} - {reference})' -x by-sector.png -I subsector</text>
+			<text>Ag_non-burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -n 4 -T '$\Delta$ Global Ag N$_2$O Emissions ({scenario} - {reference})' -x by-region.png -I region</text>
+
+			<!-- Ag waste-burning N2O -->
+			<text>Ag_waste_burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -I region -n 4 -T '$\Delta$ Ag Waste Burning N$_2$O Emissions ({scenario} - {reference})' -x by-region.png</text>
+
+			<!-- Forcing -->
+			<!-- text>Kyoto_gas_forcing-{scenario}-{reference}.csv -Y 'W/m$^2$' - -timeseries -T '$\Delta$ Kyoto Gas Forcing'</text -->
+			<text>Climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
+			<text>Global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
+		</tmpFile>
+
+		<vars>
+			<var name="plotCIArgs" eval="1">-D {diffsDir} -n3 --outputDir figures --years {years} --barWidth 0.25 --box --label --legendY='-0.2' --zeroLine --rotation 0 --sumYears --ylabel 'g CO$_2$e / MJ' --title 'Contributions to carbon intensity'</var>
+		</vars>
+
+		<tmpFile varName="ciPlots">
+			<!-- (note split double hyphens to avoid syntax complaint)
+			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 4 -x by-region-per-EJ.png -c land-allocation -I region -F fuelEJ.txt - -format=',' - -transparent -T 'Area change per unit fuel'</text>
+			<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -u "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x unstacked-CO2-per-MJ.png -F fuelEJ.txt - -legendY=-0.5 -k</text>
+			<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "MJ biomass / MJ biofuel" -n 4 -c output -I region -z -T 'Purpose-grown biomass production per unit fuel' -x by-region-per-MJ.png  -F fuelEJ.txt</text>
+			-->
+			<!-- Generated by carbonIntensity.py -->
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>
+
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -I sector -c region -x by-region-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'g CO$_2$e / MJ' -c sector -I region -x by-sector-per-MJ.png -T 'Contribution to carbon intensity' -z -n3 -F fuelEJ.txt</text>
+		</tmpFile>
+	</defaults>
+
+	<project name="Paper1">
+		<scenarioGroup name="protect-0" default="1">
+			<scenario name="base-0" subdir="baseline" baseline="1"/>
+			<scenario name="corn-0" subdir="corn"/>
+			<scenario name="switchgrass-0" subdir="switchgrass"/>
+			<scenario name="biodiesel-0" subdir="biodiesel"/>
+			<scenario name="cellulose-0" subdir="cellulose"/>
+			<scenario name="stover-0" subdir="stover" active="0"/>
+		</scenarioGroup>
+
+		<scenarioGroup name="protect-0.1">
+			<scenario name="base-0.1" subdir="baseline" baseline="1"/>
+			<scenario name="corn-0.1" subdir="corn"/>
+			<scenario name="switchgrass-0.1" subdir="switchgrass"/>
+			<scenario name="biodiesel-0.1" subdir="biodiesel"/>
+			<scenario name="cellulose-0.1" subdir="cellulose"/>
+			<scenario name="stover-0.1" subdir="stover" active="0"/>
+		</scenarioGroup>
+
+		<scenarioGroup name="protect-0.3">
+			<scenario name="base-0.3" subdir="baseline" baseline="1"/>
+			<scenario name="corn-0.3" subdir="corn"/>
+			<scenario name="switchgrass-0.3" subdir="switchgrass"/>
+			<scenario name="biodiesel-0.3" subdir="biodiesel"/>
+			<scenario name="cellulose-0.3" subdir="cellulose"/>
+			<scenario name="stover-0.3" subdir="stover" active="0"/>
+		</scenarioGroup>
+
+		<scenarioGroup name="protect-0.5">
+			<scenario name="base-0.5" subdir="baseline" baseline="1"/>
+			<scenario name="corn-0.5" subdir="corn"/>
+			<scenario name="switchgrass-0.5" subdir="switchgrass"/>
+			<scenario name="biodiesel-0.5" subdir="biodiesel"/>
+			<scenario name="cellulose-0.5" subdir="cellulose"/>
+			<scenario name="stover-0.5" subdir="stover" active="0"/>
+		</scenarioGroup>
+
+		<scenarioGroup name="protect-0.7">
+			<scenario name="base-0.7" subdir="baseline" baseline="1"/>
+			<scenario name="corn-0.7" subdir="corn"/>
+			<scenario name="switchgrass-0.7" subdir="switchgrass"/>
+			<scenario name="biodiesel-0.7" subdir="biodiesel"/>
+			<scenario name="cellulose-0.7" subdir="cellulose"/>
+			<scenario name="stover-0.7" subdir="stover" active="0"/>
+		</scenarioGroup>
+
+		<scenarioGroup name="protect-0.9">
+			<scenario name="base-0.9" subdir="baseline" baseline="1"/>
+			<scenario name="corn-0.9" subdir="corn"/>
+			<scenario name="switchgrass-0.9" subdir="switchgrass"/>
+			<scenario name="biodiesel-0.9" subdir="biodiesel"/>
+			<scenario name="cellulose-0.9" subdir="cellulose"/>
+			<scenario name="stover-0.9" subdir="stover" active="0"/>
+		</scenarioGroup>
+
+		<vars>
+			<!-- common arguments to chartGCAM.py used for each line in the tmp file stored in variable 'scenPlots' -->
+			<var name="scenPlotArgs" eval="1">-D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
+			<!-- ditto for variable 'diffPlots' -->
+			<var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years} --label --enumerate --ygrid --zeroLine</var>
+		</vars>
+
+		<tmpFile varName="queryFile" replace="0">
+			<!-- These queries are not needed, so don't bother with these queries -->
+			<text tag="msw"/>
+			<text tag="prices"/>
+		</tmpFile>
+	</project>
+</projects>

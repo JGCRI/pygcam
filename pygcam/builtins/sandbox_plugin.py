@@ -7,26 +7,29 @@
 .. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-import os
-import shutil
-import subprocess
 
-from .config import getParam
-from .error import CommandlineError
-from .log import getLogger
-from .setup import createSandbox
-from .subcommand import SubcommandABC
+from ..log import getLogger
+from ..subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
 def driver(args, tool):
+    # lazy imports to avoid loading anything that's not used by gcamtool
+    import os
+    import shutil
+    import subprocess
+
+    from ..config import getParam
+    from ..error import CommandlineError
+    from ..setup import createSandbox
+
     project = args.configSection or getParam('GCAM.DefaultProject')
 
     if not project:
-        raise CommandlineError("ws: must specify project name or set config parameter GCAM.DefaultProject")
+        raise CommandlineError("sandbox: must specify project name or set config parameter GCAM.DefaultProject")
 
-    if not args.scenario or args.groupDir:
-        raise CommandlineError("ws: must specify scenario and/or group name")
+    if not (args.scenario or args.groupDir):
+        raise CommandlineError("sandbox: must specify scenario and/or group name")
 
     sandboxProjectDir = getParam('GCAM.SandboxProjectDir')
     sandbox = os.path.join(sandboxProjectDir, args.groupDir, args.scenario)
@@ -36,31 +39,39 @@ def driver(args, tool):
     if args.path:
         print(sandbox)
 
+    execute = not args.noExecute
+
     if args.recreate:
         args.delete = args.create = True
 
     if args.delete:
-        _logger.info('removing ' + sandbox)
+        _logger.info('Removing ' + sandbox)
         try:
-            if not args.noExecute:
+            if execute:
                 if os.path.islink(sandbox):
                     os.remove(sandbox)
                 else:
                     shutil.rmtree(sandbox)
+            else:
+                print("Would remove %s" % sandbox)
         except Exception as e:
             _logger.warn("Can't remove '%s': %s" % (sandbox, e))
 
     if args.create:
-        createSandbox(sandbox)
+        if execute:
+            _logger.info('Creating ' + sandbox)
+            createSandbox(sandbox)
+        else:
+            print("Would create %s" % sandbox)
 
     if args.run:
         cmdStr = 'cd ' + sandbox + '; ' + args.run
-        if args.noExecute:
-            print(cmdStr)
-        else:
+        if execute:
             _logger.info(cmdStr)
             os.chdir(sandbox)
             subprocess.call(args.run, shell=True)
+        else:
+            print("Would run: %s" % cmdStr)
 
 class SandboxCommand(SubcommandABC):
     __version__ = '0.2'

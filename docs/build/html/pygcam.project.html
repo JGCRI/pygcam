@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -232,6 +234,14 @@ the current (project, scenario) context</p>
 <dd><p>Validate a parsed project.xml file</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="pygcam.project.Queries">
+<em class="property">class </em><code class="descclassname">pygcam.project.</code><code class="descname">Queries</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.project.Queries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the <code class="docutils literal"><span class="pre">&lt;queries&gt;</span></code> element in the projects.xml file. We don&#8217;t process the
+&lt;queries&gt; element here; we just store it so we can write it to a temp file as needed.
+Actual reading/processing of contents is handled in queryFile.py.</p>
 </dd></dl>
 
 <dl class="class">

@@ -4,6 +4,7 @@ from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology
 
 _logger = getLogger(__name__)
 
+# TBD: move to constants.py?
 REFINING_SECTOR = 'refining'
 BIOMASS_LIQUIDS = 'biomass liquids'
 
@@ -16,6 +17,7 @@ TECH_BIODIESEL          = 'biodiesel'
 TECH_GTL                = 'gas to liquids'
 TECH_CTL                = 'coal to liquids'
 
+# TBD: Eliminate this class, moving functionality to xmlEditor
 class RefiningEditor(XMLEditor):
     """
     RefiningEditor add methods that deal with the refinery sector.
@@ -61,6 +63,7 @@ class BioenergyEditor(RefiningEditor):
         super(BioenergyEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
                                               workspaceDir, groupDir, subdir, parent=parent)
 
+        # TBD: unclear whether this is useful or general
         cornEthanolUsaFile = 'cornEthanolUSA.xml'
         self.cornEthanolUsaAbs = path.join(self.scenario_dir_abs, cornEthanolUsaFile)
         self.cornEthanolUsaRel = path.join(self.scenario_dir_rel, cornEthanolUsaFile)
@@ -128,6 +131,7 @@ class BioenergyEditor(RefiningEditor):
 
         self.updateScenarioComponent("residue_bio", resbioFileRel)
 
+    # TBD: make region an optional parameter; fix callers
     def setMswParameterUSA(self, parameter, value):
         resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
 
@@ -144,7 +148,7 @@ class BioenergyEditor(RefiningEditor):
 
         xmlEdit(resourcesFileAbs,
                 '-u', "//region[@name='%s']/renewresource[@name='biomass']/market" % region,
-                '-v', "USA")
+                '-v', region)   # TBD: changed from "USA"; test this
 
         self.updateScenarioComponent("resources", resourcesFileRel)
 
@@ -243,6 +247,8 @@ class BioenergyEditor(RefiningEditor):
 
     #
     # Various methods that operate on the USA specifically
+    #
+    # TBD: make region an optional parameter in these; fix callers
     #
     def adjustForestResidueSupplyUSA(self, loPrice, loFract, hiPrice, hiFract):
         '''

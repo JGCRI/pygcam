@@ -7,41 +7,31 @@
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-import os
 import argparse
+import os
+
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+
 import numpy as np
+import seaborn as sns
+import shlex
+
 from .error import CommandlineError
 from .log import getLogger
-from .subcommand import SubcommandABC
 from .query import dropExtraCols, readCsv
+from .utils import systemOpenFile
 
 _logger = getLogger(__name__)
 
-TIMESTEP = 5            # 5 year time-step
 __version__  = "0.3"
-
-# TBD: document this default
-DFLT_UNSTACKED_REGION = 'USA'
 
 #%matplotlib inline
 
-_importedMPL = False
-
-def _importMPL():
-    '''
-    Do this on the fly, on demand, to speed up startup whenever not using this module
-    '''
-    global _importedMPL
-
-    if not _importedMPL:
-        import matplotlib as mpl
-        mpl.use('Agg')                      # avoid creating a DISPLAY
-        _importedMPL = True
 
 def setupPalette(count, pal=None):
-    _importMPL()
-    import seaborn as sns
-
     # See http://xkcd.com/color/rgb/. These were chosen to be different "enough".
     colors = ['grass green', 'canary yellow', 'dirty pink', 'azure', 'tangerine', 'strawberry',
               'yellowish green', 'gold', 'sea blue', 'lavender', 'orange brown', 'turquoise',
@@ -51,59 +41,105 @@ def setupPalette(count, pal=None):
     palette = sns.color_palette(palette=pal, n_colors=count) if pal else sns.xkcd_palette(colors)
     sns.set_palette(palette, n_colors=count)
 
+
 # For publications, call setupPlot("paper", font_scale=1.5)
 def setupPlot(context="talk", style="white", font_scale=1.0):
-    _importMPL()
-    import seaborn as sns
     sns.set_context(context, font_scale=font_scale)
     sns.set_style(style)
+
+
+def _getFloatFromFile(filename):
+    value = None
+    if filename:
+        with open(filename) as f:
+            value = float(f.readline())
+
+    return value
+
+
+def _amendFilename(filename, suffix):
+    '''
+    Insert the given suffix into filename before the extension.
+    '''
+    base, ext = os.path.splitext(filename)
+    return base + '-' + suffix + ext
+
+
+def _finalizeFigure(fig, ax, outFile=None, yFormat=None, sideLabel=False,
+                    labelColor=None, transparent=False, openFile=False, closeFig=True):
+    if yFormat:
+        func = (lambda x, p: format(int(x), ',')) if yFormat == ',' else (lambda x, p: yFormat % x)
+        formatter = FuncFormatter(func)
+        ax.get_yaxis().set_major_formatter(formatter)
+
+    if sideLabel:
+        labelColor = labelColor or 'lightgrey'
+        # add the filename down the right side of the plot
+        fig.text(1, 0.5, sideLabel, color=labelColor, weight='ultralight', fontsize=7,
+                 va='center', ha='right', rotation=270)
+
+    if outFile:
+        fig.savefig(outFile, bbox_inches='tight', transparent=transparent)
+
+    if closeFig:
+        plt.close(fig)
+
+    if openFile:
+        systemOpenFile(outFile)
+
 
 def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='USA',
                                   otherRegion='Rest of world', box=False, title='', ncol=3,
                                   xlabel='', ylabel='', ygrid=False, yticks=False,
-                                  ymin=None, ymax=None, legendY=None, palette=None):
+                                  ymin=None, ymax=None, legendY=None, palette=None,
+                                  outFile=None, sideLabel=False, labelColor=None,
+                                  yFormat=None, transparent=False, openFile=False, closeFig=True):
     '''
     Plot unstacked bars showing the values for 'categoryCol', summed across years,
     for one region, for everything else, and the totals of the two.
     '''
-    _importMPL()
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    setupPlot()
 
     count = len(df[categoryCol].unique())     # categoryCol = 'land-allocation'
     setupPalette(count, pal=palette)
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
+    plotCol   = '_value_'
+    regionCol = '_region_'
+
     yearCols = filter(str.isdigit, df.columns)
     if valueCol:
-        df['total'] = df[valueCol]
+        # Copy value col so we can delete all yearCols
+        df[plotCol] = df[valueCol]
     else:
-        df['total'] = df[yearCols].sum(axis=1)
+        # Create and plot a new column with values summed across years
+        df[plotCol] = df[yearCols].sum(axis=1)
 
     df = df.drop(yearCols, axis=1)          # copy to not affect caller's df
 
-    # TBD: make this generic
-    USA = ['US', 'USA', 'United States']
-    reg = df.query('region in %s' % USA)
-    other = df.query('region not in %s' % USA)
+    regions = region.split(',')
+    reg   = df.query('region in %s' % regions)
+    other = df.query('region not in %s' % regions)
 
     grp = other.groupby(categoryCol)
     otherSums = grp.sum()
     otherSums.reset_index(inplace=True)
-    otherSums['region'] = otherRegion
+    otherSums[regionCol] = otherRegion
 
     grp = reg.groupby(categoryCol)
     regSum = grp.sum()
     regSum.reset_index(inplace=True)
-    regSum['region'] = region
+    regSum[regionCol] = region
 
+    # combine the data for selected region and Rest of World, and sum these
+    # to create a Total bar
     totals = regSum.set_index(categoryCol) + otherSums.set_index(categoryCol)
-    totals['region'] = 'Total'
+    totals[regionCol] = 'Total'
     totals.reset_index(inplace=True)
     world = regSum.append(otherSums).append(totals)
 
-    ax = sns.barplot(x="region", y="total", hue=categoryCol, data=world, ci=None)
+    ax = sns.barplot(x=regionCol, y=plotCol, hue=categoryCol, data=world, ci=None)
 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -129,24 +165,27 @@ def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='U
         ax.set_autoscale_on(False)
         ax.set_ylim(ymin, ymax)
 
+    _finalizeFigure(fig, ax, outFile=outFile, sideLabel=sideLabel, labelColor=labelColor,
+                    yFormat=yFormat, transparent=transparent, openFile=openFile, closeFig=closeFig)
+
     return (fig, ax)
 
 
-def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=False, rotation=90,
-                              zeroLine=False, title="", xlabel='', ylabel='', ncol=5, ygrid=False,
-                              yticks=False, ymin=None, ymax=None, barWidth=0.5, legendY=None, palette=None):
+def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=90,
+                          zeroLine=False, title="", xlabel='', ylabel='', ncol=5, ygrid=False,
+                          yticks=False, ymin=None, ymax=None, barWidth=0.5, legendY=None,
+                          palette=None, outFile=None, sideLabel=False, labelColor=None,
+                          yFormat=None, transparent=False, openFile=False, closeFig=True):
     '''
     Plot a stacked bar plot using data in df, given the index column, the
     column holding the values to pivot to columns, and the column holding
     the values. The argument 'ncol' specifies the number of columns with
     which to render the legend.
     '''
-    _importMPL()
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    setupPlot()
 
     # TBD: handle year values as columns to plot
-    df2 = df[[indexCol, columns, values]].pivot(index=indexCol, columns=columns, values=values)
+    df2 = df[[indexCol, columns, valuesCol]].pivot(index=indexCol, columns=columns, values=valuesCol)
 
     setupPalette(len(df2.columns), pal=palette)
 
@@ -160,9 +199,10 @@ def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=
         plt.tick_params(axis='y', direction='out', length=5, width=.75,
                         colors='k', left='on', right='off')
 
-    lines = ax.get_lines()
-    if lines:
-        lines[0].set_visible(False)    # get rid of ugly dashed line
+    # deprecated
+    # lines = ax.get_lines()
+    # if lines:
+    #     lines[0].set_visible(False)    # get rid of ugly dashed line
 
     if zeroLine:
         ax.axhline(0, color='k', linewidth=0.75, linestyle='-')
@@ -185,17 +225,18 @@ def plotStackedBarChartScalar(df, indexCol=None, columns=None, values=None, box=
         ax.set_autoscale_on(False)
         ax.set_ylim(ymin, ymax)
 
+    _finalizeFigure(fig, ax, outFile=outFile, sideLabel=sideLabel, labelColor=labelColor,
+                    yFormat=yFormat, transparent=transparent, openFile=openFile, closeFig=closeFig)
+
     return (fig, ax)
 
 
 def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=False,
                           zeroLine=False, title="", ygrid=False, yticks=False,
                           ymin=None, ymax=None, barWidth=0.5, legendY=None, yearStep=5,
-                          palette=None):
-    _importMPL()
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
+                          palette=None, outFile=None, sideLabel=False, labelColor=None,
+                          yFormat=None, transparent=False, openFile=False, closeFig=True):
+    setupPlot()
     df = dropExtraCols(df, inplace=False)
     grouped = df.groupby(index)
     df2 = grouped.aggregate(np.sum)
@@ -240,29 +281,18 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
     if title:
         ax.set_title(title, y=1.05)
 
+    _finalizeFigure(fig, ax, outFile=outFile, sideLabel=sideLabel, labelColor=labelColor,
+                    yFormat=yFormat, transparent=transparent, openFile=openFile, closeFig=closeFig)
+
     return (fig, ax)
 
 
-# TBD: eliminate this by adding extra lines to chartGCAM?
-def plotStackedSums(df, indexCol=None, columns=None, xlabel='', ylabel='', rotation=90,
-                    ncol=5, box=False, zeroLine=False, ygrid=False, yticks=False,
-                    ymin=None, ymax=None, barWidth=0.5, legendY=None, title="", palette=None):
-    df = df.copy()
-    yearCols = filter(str.isdigit, df.columns)
-    df['total'] = df[yearCols].sum(axis=1)
-
-    return plotStackedBarChartScalar(df, indexCol=indexCol, columns=columns, values='total',
-                                     box=box, zeroLine=zeroLine, title=title, xlabel=xlabel, ylabel=ylabel,
-                                     ygrid=ygrid, yticks=yticks, ymin=ymin, ymax=ymax, rotation=rotation,
-                                     ncol=ncol, barWidth=barWidth, legendY=legendY, palette=palette)
-
-
 def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title="", ygrid=False,
-                   yticks=False, ymin=None, ymax=None, legend=False, legendY=None, yearStep=5):
-    _importMPL()
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+                   yticks=False, ymin=None, ymax=None, legend=False, legendY=None, yearStep=5,
+                   outFile=None, sideLabel=False, labelColor=None, yFormat=None, transparent=False,
+                   openFile=False, closeFig=True):
 
+    setupPlot()
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
     yearCols = filter(str.isdigit, df.columns)
@@ -270,6 +300,7 @@ def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title=""
     y = list(df[yearCols].iloc[0])
     plt.plot(x, y)
 
+    # TBD: see if this is worth doing
     # space out year labels to every 5 years
     #locs, labels = plt.xticks()
     #plt.xticks(locs[::yearStep], yearCols[::yearStep])
@@ -280,10 +311,6 @@ def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title=""
     if yticks:
         plt.tick_params(axis='y', direction='out', length=5, width=.75,
                         colors='k', left='on', right='off')
-
-    #lines = ax.get_lines()
-    #if lines:
-    #    lines[0].set_visible(False)    # get rid of ugly dashed line
 
     if zeroLine:
         ax.axhline(0, color='k', linewidth=0.75, linestyle='-')
@@ -307,51 +334,61 @@ def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title=""
     if title:
         ax.set_title(title, y=1.05)
 
+    _finalizeFigure(fig, ax, outFile=outFile, sideLabel=sideLabel, labelColor=labelColor,
+                    yFormat=yFormat, transparent=transparent, openFile=openFile, closeFig=closeFig)
+
     return (fig, ax)
 
 
-def amendFilename(filename, suffix):
-    '''
-    Insert the given suffix into filename before the extension.
-    '''
-    base, ext = os.path.splitext(filename)
-    return base + '-' + suffix + ext
+def chartGCAM(args, num=None, negate=False):
+    """
+    Generate a chart from GCAM data. This function is called to process
+    the ``chart`` sub-command for a single scenario. See the command-line
+    arguments to the ``chart`` sub-command for details about `args`.
 
-
-def chartGCAM(args, num=None, negate=False, divisor=None):
-    _importMPL()
-    import matplotlib.pyplot as plt
-
+    :param args: (argparse Namespace) command-line arguments to `chart`
+        sub-command
+    :param num: (int or None) if not None, a number to prepend to the
+        filename to allow files to have numerical sequence.
+    :param negate: (bool) if True, all values in year columns are multiplied
+        by -1 before plotting.
+    :return: none
+    """
+    barWidth   = args.barWidth
+    box        = args.box
+    byRegion   = args.byRegion
+    columns    = args.columns
+    constraint = args.constraint
     csvFile    = args.csvFile
     indexCol   = args.indexCol or None
-    columns    = args.columns
-    sumYears   = args.sumYears
+    label      = args.label
+    labelColor = args.labelColor
+    legendY    = args.legendY
+    ncol       = args.ncol
+    openFile   = args.open
     outFile    = args.outFile
     outputDir  = args.outputDir
-    multiplier = args.multiplier
-    title      = args.title
-    yearStep   = args.yearStep
-    legendY    = args.legendY
-    ygrid      = args.ygrid
-    yticks     = args.yticks
-    ylabel     = args.ylabel
-    xlabel     = args.xlabel
-    rotation   = args.rotation
-    box        = args.box
-    zeroLine   = args.zeroLine
-    ncol       = args.ncol
-    barWidth   = args.barWidth
-    ymin       = args.ymin
-    ymax       = args.ymax
-    byRegion   = args.byRegion
-    constraint = args.constraint
-    timeseries = args.timeseries
     palette    = args.palette
-    yFormat    = args.format
-    valueCol   = args.valueCol
+    region     = args.region
+    rotation   = args.rotation
+    sumYears   = args.sumYears
+    timeseries = args.timeseries
+    title      = args.title
+    transparent= args.transparent
     unstacked  = args.unstacked
-    unStackedRegion = args.unstackedRegion
+    unStackReg = args.unstackedRegion
+    valueCol   = args.valueCol
+    xlabel     = args.xlabel
+    yFormat    = args.format
+    yearStep   = args.yearStep
+    ygrid      = args.ygrid
+    ylabel     = args.ylabel
+    ymax       = args.ymax
+    ymin       = args.ymin
+    yticks     = args.yticks
+    zeroLine   = args.zeroLine
 
+    # DOCUMENT
     # use outputDir if provided, else use parent dir of outFile
     outputDir = outputDir or os.path.dirname(outFile)
 
@@ -382,6 +419,12 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
     # e.g., "/Users/rjp/ws-ext/new-reference/batch-new-reference/LUC_Emission_by_Aggregated_LUT_EM-new-reference." % scenario
     df = readCsv(csvFile, skiprows=args.skiprows, years=yearStrs, interpolate=args.interpolate)
 
+    if region:
+        try:
+            df = df.query('region == "%s"' % region)
+        except Exception as e:
+            raise CommandlineError("Failed to slice by region %s\n  -- %s" % (region, e))
+
     if constraint:
         try:
             df = df.query(constraint)
@@ -390,104 +433,74 @@ def chartGCAM(args, num=None, negate=False, divisor=None):
 
     yearCols = filter(str.isdigit, df.columns)
 
+    multiplier = args.multiplier or _getFloatFromFile(args.multiplierFile)
     if multiplier:
-        _logger.debug("Multiplying all values by %.3f for %s", multiplier, os.path.basename(csvFile))
         df[yearCols] *= multiplier
 
+    divisor = args.divisor or _getFloatFromFile(args.divisorFile)
     if divisor:
-        df[yearCols] /= divisor # TBD: document or rethink the assumption below
-        sumYears = True         # dividing by total fuel makes sense only for totals
+        df[yearCols] /= divisor
 
     if negate:
-        outFile = amendFilename(outFile, 'negated')
-        imgFile = amendFilename(imgFile, 'negated')
+        outFile = _amendFilename(outFile, 'negated')
+        imgFile = _amendFilename(imgFile, 'negated')
         df[yearCols] *= -1
 
-    # allow loop to handle both byRegion and not
-    regions = df.region.unique() if byRegion else [None]
+    regions = df.region.unique() if byRegion else [None]    # allows loop to work when not byRegion
 
     outFileOrig = outFile
     imgFileOrig = imgFile
+    titleOrig   = title
+    dfOrig = df
 
-    # TBD: organize this better to remove redundancy and to allow all forms to be --byRegion
-    for region in regions:
+    for reg in regions:
+        if reg:
+            df = dfOrig.query('region == "%s"' % reg)
+            title = titleOrig + " (%s)" % reg
+            outFile = _amendFilename(outFileOrig, reg)
+            imgFile = _amendFilename(imgFileOrig, reg)
+            _logger.debug("Processing %s", reg)
 
-        setupPlot(context="talk", style="white")    # TBD: test whether this needs to be in loop
+        sideLabel = imgFile if label else ''
 
         if unstacked:
             otherRegion = 'Rest of world'
-            fig, ax = plotUnstackedRegionComparison(df, categoryCol=unstacked, valueCol=valueCol, region=unStackedRegion,
-                                                    otherRegion=otherRegion, box=box, title=title, ncol=ncol,
-                                                    xlabel=xlabel, ylabel=ylabel, ygrid=ygrid, yticks=yticks,
-                                                    ymin=ymin, ymax=ymax, legendY=legendY, palette=palette)
+            mainRegion  = reg or unStackReg
 
-        elif region:
-            # i.e., if "--byRegion" was specified and we're looping over all regions
-            slice = df.query('region == "%s"' % region)
-            sliceTitle = title + " (%s)" % region
-            outFile = amendFilename(outFileOrig, region)
-            imgFile = amendFilename(imgFileOrig, region)
+            plotUnstackedRegionComparison(df, categoryCol=unstacked, valueCol=valueCol, region=mainRegion,
+                                          otherRegion=otherRegion, box=box, title=title, ncol=ncol,
+                                          xlabel=xlabel, ylabel=ylabel, ygrid=ygrid, yticks=yticks,
+                                          ymin=ymin, ymax=ymax, legendY=legendY, palette=palette,
+                                          outFile=outFile, sideLabel=sideLabel, labelColor=labelColor,
+                                          yFormat=yFormat, transparent=transparent, openFile=openFile)
+        elif sumYears or valueCol:
+            if sumYears:
+                # create a new value column by summing year columns
+                valueCol = '_total_'
+                df[valueCol] = df[yearCols].sum(axis=1)
 
-            fig, ax = plotStackedTimeSeries(slice, index=indexCol, yearStep=yearStep, ygrid=ygrid, yticks=yticks,
-                                            ymin=ymin, ymax=ymax, zeroLine=zeroLine, title=sliceTitle, legendY=legendY,
-                                            box=box, xlabel=xlabel, ylabel=ylabel, ncol=ncol, barWidth=barWidth,
-                                            palette=palette)
-        elif sumYears:
-            fig, ax = plotStackedSums(df, indexCol=indexCol, columns=columns, ygrid=ygrid, yticks=yticks,
-                                      rotation=rotation, zeroLine=zeroLine, title=title, legendY=legendY,
-                                      box=box, xlabel=xlabel, ylabel=ylabel, ymin=ymin, ymax=ymax,
-                                      ncol=ncol, barWidth=barWidth, palette=palette)
+            plotStackedBarsScalar(df, indexCol, columns, valueCol, box=box, zeroLine=zeroLine,
+                                  title=title, xlabel=xlabel, ylabel=ylabel, ygrid=ygrid, yticks=yticks,
+                                  ymin=ymin, ymax=ymax, rotation=rotation, ncol=ncol, barWidth=barWidth,
+                                  legendY=legendY, palette=palette, outFile=outFile, sideLabel=sideLabel,
+                                  labelColor=labelColor, yFormat=yFormat, transparent=transparent,
+                                  openFile=openFile)
+
         elif timeseries:
-            # TBD: reasonable to plot this for a single region (i.e., should be usable byRegion)
-            fig, ax = plotTimeSeries(df, xlabel=xlabel, ylabel=ylabel, box=box, zeroLine=zeroLine, title=title, ygrid=ygrid,
-                                     yticks=yticks, ymin=ymin, ymax=ymax, legend=False, legendY=legendY, yearStep=yearStep)
+            plotTimeSeries(df, xlabel=xlabel, ylabel=ylabel, box=box, zeroLine=zeroLine, title=title, ygrid=ygrid,
+                           yticks=yticks, ymin=ymin, ymax=ymax, legend=False, legendY=legendY, yearStep=yearStep,
+                           outFile=outFile, sideLabel=sideLabel, labelColor=labelColor, yFormat=yFormat,
+                           transparent=transparent, openFile=openFile)
 
         else:
-            # Merge this with sumYears branch
-            fig, ax = plotStackedTimeSeries(df, index=indexCol, yearStep=yearStep, ygrid=ygrid, yticks=yticks,
-                                            ymin=ymin, ymax=ymax, zeroLine=zeroLine, title=title, legendY=legendY,
-                                            box=box, xlabel=xlabel, ylabel=ylabel, ncol=ncol, barWidth=barWidth,
-                                            palette=palette)
+            plotStackedTimeSeries(df, index=indexCol, yearStep=yearStep, ygrid=ygrid, yticks=yticks,
+                                  ymin=ymin, ymax=ymax, zeroLine=zeroLine, title=title, legendY=legendY,
+                                  box=box, xlabel=xlabel, ylabel=ylabel, ncol=ncol, barWidth=barWidth,
+                                  palette=palette, outFile=outFile, sideLabel=sideLabel, labelColor=labelColor,
+                                  yFormat=yFormat, transparent=transparent, openFile=openFile)
 
-        if yFormat:
-            from matplotlib.ticker import FuncFormatter
-
-            func = (lambda x, p: format(int(x), ',')) if yFormat == ',' else (lambda x, p: yFormat % x)
-            formatter = FuncFormatter(func)
-
-            ax.get_yaxis().set_major_formatter(formatter)
-
-        labelColor = args.labelColor or 'lightgrey'
-
-        # add the filename to the plot
-        if args.label or args.labelColor:
-            fig.text(1, 0.5, imgFile, color=labelColor, weight='ultralight', fontsize=7,
-                     va='center', ha='right', rotation=270)
-
-        if fig:
-            fig.savefig(outFile, bbox_inches='tight', transparent=args.transparent)
-
-        plt.close(fig)
-
-        if args.open:
-            from subprocess import call
-            import platform
-
-            if platform.system() == 'Windows':
-                call(['start', os.path.abspath(outFile)], shell=True)
-            else:
-                # "-g" => don't bring app to the foreground
-                call(['open', '-g', outFile], shell=False)
-
-def getDivisor(filename):
-    divisor = 0
-    if filename:
-        with open(filename) as f:
-            divisor = float(f.readline())
-
-    return divisor
-
-def main(mainArgs, tool, parser):
+def chartMain(mainArgs, tool, parser):
+    # DOCUMENT '*null*', if still useful
     if not mainArgs.fromFile and mainArgs.csvFile == '*null*':
         raise CommandlineError("Must specify a CSV file or use -f flag to read arguments from a file")
 
@@ -498,8 +511,6 @@ def main(mainArgs, tool, parser):
     del mainArgs.negate
 
     if mainArgs.fromFile:
-        import shlex
-
         del mainArgs.csvFile    # whatever is passed, e.g., "-", is ignored
 
         enumerate = mainArgs.enumerate
@@ -536,221 +547,12 @@ def main(mainArgs, tool, parser):
 
                 argsNS  = argparse.Namespace(**argDict)
                 allArgs = parser.parse_args(args=fileArgs, namespace=argsNS)
-                divisor = getDivisor(allArgs.divisorFile)
 
                 nextNum = num if enumerate else None
                 num += 1
 
-                chartGCAM(allArgs, num=nextNum, divisor=divisor)
-
-                if negate:
-                    # Do this in addition to standard figure, but don't *also*
-                    # negate since divisor may be + or -.
-                    chartGCAM(allArgs, num=nextNum, divisor=divisor, negate=True)
+                chartGCAM(allArgs, num=nextNum, negate=negate)
 
     else:
-        divisor = getDivisor(mainArgs.divisorFile)
-        chartGCAM(mainArgs, divisor=divisor)
+        chartGCAM(mainArgs, negate=negate)
 
-
-class ChartCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        kwargs = {'help' : '''Generate charts from CSV files generated by GCAM batch queries'''}
-
-        super(ChartCommand, self).__init__('chart', subparsers, kwargs)
-
-    def addArgs(self, parser):
-        parser.add_argument('csvFile', nargs='?',
-                            help='''The file containing the data to plot.''')
-
-        parser.add_argument('-b', '--box', action="store_true",
-                            help='''Draw a box around the plot. Default is no box.''')
-
-        parser.add_argument('-B', '--byRegion', action="store_true",
-                            help='''Generate one plot per region. Region names are read from the CSV file,
-                            so they reflect any regional aggregation produced by the query.''')
-
-        parser.add_argument('-c', '--columns', default="output",
-                            help='''Specify the column whose values identify the segments in the stacked
-                            bar chart. (These appear in the legend.)''')
-
-        parser.add_argument('-C', '--constraint',
-                            help='''Apply a constraint to limit the rows of data to plot. The constraint
-                            can be any constraint string that is valid for the DataFrame.query() method,
-                            e.g., -C 'input == "biomass"'
-                            ''')
-
-        parser.add_argument('-d', '--outputDir', default=".",
-                            help='''The directory into which to write image files. Default is "."''')
-
-        parser.add_argument('-D', '--workingDir', default='.',
-                            help='''The directory to change to before performing any operations''')
-
-        parser.add_argument('-e', '--enumerate', action="store_true",
-                            help='''Prefix image filenames with sequential number for easy reference.
-                            Used only with --fromFile''')
-
-        parser.add_argument('-f', '--fromFile',
-                            help='''A file from which to read argument strings, one per line.
-                            These are read as if chartGCAM.py were called on each line individually,
-                            but avoiding the ~2 sec startup time for the bigger python packages.''')
-
-        parser.add_argument('-F', '--divisorFile',
-                            help='''A file containing the number of EJ of fuel that constitute the shock
-                            the differences represent. If provided, the difference values are divided by
-                            the quantity given.''')
-
-        parser.add_argument('--format',
-                            help='''Specify a format for the Y-axis. Possible values are '.' for float,
-                            ',' for int with commas, or any format recognized by print, e.g., "%%.2f" to
-                            Y values as floats with 2 decimal places.''')
-
-        parser.add_argument('-g', '--ygrid', action="store_true",
-                            help="Show light grey horizontal lines at the major Y-axis ticks. Default is no grid.")
-
-        parser.add_argument('-i', '--interpolate', action="store_true",
-                            help="Interpolate (linearly) annual values between timesteps.")
-
-        parser.add_argument('-I', '--indexCol', default="region",
-                            help='''A column to use as the index column, or blank for None. Default is "region".''')
-
-        parser.add_argument('-k', '--yticks', action="store_true",
-                            help="Show tick marks on Y-axis. Default is no tick marks.")
-
-        parser.add_argument('-l', '--label', action="store_true",
-                            help="Add text along the right side of the figure showing the filename.")
-
-        parser.add_argument('-L', '--labelColor',
-                            help='''Color for the text label, which defaults to lightgrey. Some users may
-                            prefer "black", for example. (Implies -l)''')
-
-        parser.add_argument('-m', '--multiplier', type=float,
-                            help='''A value to multiply results by before generating the plot.
-                            This is useful for unit conversions, e.g., "-m 3.667" converts Tg C to Tg CO2.
-                            Be sure to set Y axis label.''')
-
-        parser.add_argument('-n', '--ncol', type=int, default=5,
-                            help='''The number of columns with which to display the legend. Default is 5.''')
-
-        parser.add_argument('-N', '--scenario', default="",
-                            help='''When using the '--fromFile' option, this argument is used to specify one
-                            or more scenario names (delimited by commas if more than one). These are substituted
-                            into each line read from the file as the value for "{scenario}" wherever it appears
-                            on each line read from the 'fromFile'.''')
-
-        parser.add_argument('--negate', action="store_true",
-                            help="""Multiply data by -1 before plotting, which can make interpretation
-                            of some figures more intuitive. The string "-negated" is added to the file
-                            label, displayed if the "-l" or "-L" flag is specified.""")
-
-        parser.add_argument('-o',  '--outFile', default="",
-                            help='''The name of the image file to create. Format is determined from
-                            filename extension. All common formats are allowed, e.g., png, pdf, tif,
-                            and gif. Try it; it probably works. Default is the name of the data file
-                            substituting ".png" for ".csv"''')
-
-        parser.add_argument('-O', '--open', action="store_true",
-                            help="Open the plot file after generating it.")
-
-        parser.add_argument('-p',  '--palette', # "hls",
-                            help='''The name of a color palette to use. Some good options include hls, husl, and Paired.
-                            See http://stanford.edu/~mwaskom/software/seaborn/tutorial/color_palettes.html''')
-
-        parser.add_argument('-r', '--rotation', type=int, default=90,
-                            help='''Set the rotation angle for X-axis labels. Defaults to 90 degrees (vertical).
-                            Use 0 for horizontal labels.''')
-
-        parser.add_argument('-R', '--reference', default="reference",
-                            help='''When using the '--fromFile' option, this argument is used to specify the
-                            name of the reference scenario. The "other" scenario is given using the "-N" option.
-                            These are substituted into each line read from the file as the value for "{scenario}"
-                            and "{reference}" (without the quotes) wherever they appear on each line read
-                            from the 'fromFile'. Defaults to "reference"''')
-
-        parser.add_argument('-s', '--skiprows', type=int, default=1,
-                            help='''The number of rows of the CSV file to skip before reading the data (starting
-                            with a header row with column names.) Default is 1, which works for GCAM batch
-                            query output.''')
-
-        parser.add_argument('-S', '--sumYears', action="store_true",
-                            help='''Sum across the time horizon, typically by region. This results
-                            in a stacked bar plot. When not summed over years (the default) a stacked area
-                            plot is generated showing values grouped and summed by indexCol (-I) and
-                            presented by year.''')
-
-        parser.add_argument('-t', '--yearStep', type=int, default=TIMESTEP,
-                            help='''The spacing of year labels on X-axis for time-series plots.
-                            Defaults to %d.''' % TIMESTEP)
-
-        parser.add_argument('-T', '--title', default="",
-                            help='''Adds a title to the plot. Default is no title. The string can have
-                            LaTeX math language in it, e.g., 'CO$_2$' causes the 2 to be subscripted, and
-                            'MJ$^{-1}$' results in "MJ" with a superscripted exponent of -1. The string
-                            '$\Delta$' results in a capital Greek delta. See LaTeX documentation for more
-                            options. Be sure to enclose the title in single quotes so the "$" is not
-                            (mis)interpreted by the shell.''')
-
-        parser.add_argument('--timeseries', action='store_true',
-                            help='''Plot the data as a time series.''')
-
-        parser.add_argument('--transparent', action='store_true',
-                            help='''Save the plot with a transparent background. (Default is white.)''')
-
-        parser.add_argument('-u', '--unstacked',
-                            help='''Draw an unstacked bar plot for the column given as an argument to this
-                            option, showing three groups of bars: the region, all other regions, and the total.''')
-
-        parser.add_argument('-U', '--unstackedRegion', default=DFLT_UNSTACKED_REGION,
-                            help='''The region to plot separately from Rest of World in an unstacked plot.
-                            Default is %s.''' % DFLT_UNSTACKED_REGION)
-
-        parser.add_argument('-v', '--valueCol',
-                            help='''Identify a column to plot for unstacked bar plots. If not specified,
-                            values are summed across years.''')
-
-        parser.add_argument('-x', '--suffix',
-                            help='''A suffix to append to the basename of the input csv file to create the
-                            name for the output file. For example, if processing my_data.csv, indicating
-                            -x '-by-region.pdf' results in an output file named my_data-by-region.pdf.''')
-
-        parser.add_argument('-X', '--xlabel', default="",
-                            help='''Defines a label for the X-axis; defaults to blank. LaTeX math language
-                            is supported. (See the -T flag for more info.)''')
-
-        parser.add_argument('-Y', '--ylabel', default="EJ",
-                            help='''Label for the Y-axis; defaults to "EJ". LaTeX math language
-                            is supported. (See the -T flag for more info.)''')
-
-        parser.add_argument('-y', '--years', default="",
-                            help='''Takes a parameter of the form XXXX-YYYY, indicating start and end
-                            years of interest. Data for all other years are dropped.''')
-
-        parser.add_argument('--ymax', type=float,
-                            help='''Set the scale of a figure by indicating the value to show as the
-                            maximum Y value. (By default, scale is set according to the data.)''')
-
-        parser.add_argument('--ymin', type=float,
-                            help='''Set the scale of a figure by indicating the value (given as abs(value),
-                            but used as -value) to show as the minimum Y value''')
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
-
-        parser.add_argument('-z', '--zeroLine', action="store_true",
-                                help='''Whether to show a line at Y=0''')
-        #
-        # For manually tweaking figure layout
-        #
-        parser.add_argument('--legendY', type=float,
-                            help='''The Y position of the legend. Useful for fixing poorly formatted figures.
-                            Note that to pass a negative value, use the syntax --legendY="-xxx.xxx", otherwise
-                            the hyphen is interpreted as indicating a command-line argument.''')
-
-        parser.add_argument('--barWidth', type=float, default=0.5,
-                            help='''The relative width of bars. Helpful when plotting only 1 or 2 bar, so they
-                            aren't obnoxiously wide. Default is 0.5''')
-
-        return parser
-
-
-    def run(self, args, tool):
-        main(args, tool, self.parser)

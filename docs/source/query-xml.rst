@@ -26,7 +26,29 @@ The elements that comprise the ``queries.xml`` file are described below.
 ^^^^^^^^^^
 
 The top-most element, ``<queries>``, encloses one or more ``<query>``
-elements The ``<query>`` element takes no attributes.
+elements. The ``<query>`` element takes the following attributes:
+
++-------------+------------+-----------+----------+
+| Attribute   | Required   | Default   | Values   |
++=============+============+===========+==========+
+| varName     | depends    | (none)    | text     |
++-------------+------------+-----------+----------+
+| defaultMap  | no         | (none)    | text     |
++-------------+------------+-----------+----------+
+| delete      | no         | "1"       | boolean  |
++-------------+------------+-----------+----------+
+
+The `varName` is required for ``<queries>`` defined in the project.xml file;
+it defines a variable name which is assigned the path of a temporary file
+into which the ``<queries>`` element and sub-elements are copied. If an
+external queries file is used, the varName is ignored.
+
+The ``defaultMap`` defines a default rewrite map to use with all queries,
+unless a query explicitly specifies ``useDefault="0"``.
+
+The ``delete`` attribute defines whether the temporary file generated from
+the ``<queries>`` element in the project.xml file should be deleted. This
+is primarily for debugging.
 
 <query>
 ^^^^^^^^^
@@ -34,7 +56,7 @@ elements The ``<query>`` element takes no attributes.
 The ``<query>`` element specifies a query to run. The required
 name attribute must match the name of a query found on the Query
 Path, which is specified as an argument to the function
-pygcam.runBatchQuery, on the command-line to the ``query``
+:py:func:`pygcam.query.runBatchQuery`, on the command-line to the ``query``
 sub-command, or by the value of the config variable ``GCAM.QueryPath``.
 
 The ``<query>`` element can contain zero or more ``<rewriter>``
@@ -45,6 +67,13 @@ elements.
 +=============+============+===========+==========+
 | name        | yes        | (none)    | text     |
 +-------------+------------+-----------+----------+
+| useDefault  | no         | "1"       | boolean  |
++-------------+------------+-----------+----------+
+
+The `useDefault` attribute provides a way to override any
+`defaultMap` specified in the surrounding ``<queries>`` element.
+Set ``useDefault="0"`` to prevent the default rewrite map from
+applying to this ``<query>``.
 
 <rewriter>
 ^^^^^^^^^^
@@ -90,8 +119,8 @@ This is an example of a query specification file.
 
         <query name="luc_emissions"/>
 
-        <query name="ag_production">
-            <rewriter name="eightRegions"/>
+        <query name="ag_production" useDefault="0">
+            <rewriter name="GTAP-BIO-ADV"/>
             <rewriter name="food" level="input"/>
         </query>
 
@@ -100,12 +129,15 @@ This is an example of a query specification file.
         <query name="Global_mean_temperature"/>
      </queries>
 
+---------
+
 .. _rewriteSets-label:
 
 rewriteSets.xml
 =================
 The ``rewriteSets.xml`` file defines named sets of rewrite statements that
-can be added to queries defined in ``queries.xml``, described above.
+can be added to queries defined in ``queries.xml``, described above, or in
+a ``<queries>`` element within a ``project.xml`` file.
 
 XML elements
 ------------

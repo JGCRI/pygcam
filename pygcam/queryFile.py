@@ -5,6 +5,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from .error import PygcamException
 from .utils import XMLFile, getBooleanXML, resourceStream
 
 #
@@ -54,3 +55,51 @@ class QueryFile(object):
         schemaStream = resourceStream('etc/queryFile-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream)
         return cls(xmlFile.tree.getroot())
+
+#
+# Classes to parse rewriteSets.xml (see pygcam/etc/rewriteSets-schema.xsd)
+#
+class Rewrite(object):
+    def __init__(self, node):
+        self.From = node.get('from')    # 'from' is a keyword...
+        self.to   = node.get('to')
+        self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
+
+    def __str__(self):
+        return "<Rewrite from='%s' to='%s' byAEZ='%s'>" % (self.From, self.to, self.byAEZ)
+
+
+class RewriteSet(object):
+    def __init__(self, node):
+        self.name  = node.get('name')
+        self.level = node.get('level')
+        self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
+        self.appendValues = getBooleanXML(node.get('append-values', '0'))
+        self.rewrites = map(Rewrite, node.findall('rewrite'))
+
+    def __str__(self):
+        return "<RewriteSet name='%s' level='%s' byAEZ='%s' append-values='%s'>" % \
+               (self.name, self.level, self.byAEZ, self.appendValues)
+
+class RewriteSetParser(object):
+    def __init__(self, node, filename):
+        rewriteSets = map(RewriteSet, node.findall('rewriteSet'))
+        self.rewriteSets = {obj.name : obj for obj in rewriteSets}
+        self.filename = filename # for error messages only
+
+    def getRewriteSet(self, name):
+        try:
+            return self.rewriteSets[name]
+        except KeyError:
+            raise PygcamException('RewriteSet "%s" not found in file "%s"' % (name, self.filename))
+
+    @classmethod
+    def parse(cls, filename):
+        """
+        Parse an XML file holding a list of query result rewrites.
+        :param filename: (str) the name of the XML file to read
+        :return: a list of RewriteSet instances
+        """
+        schemaStream = resourceStream('etc/rewriteSets-schema.xsd')
+        xmlFile = XMLFile(filename, schemaFile=schemaStream)
+        return cls(xmlFile.tree.getroot(), filename)

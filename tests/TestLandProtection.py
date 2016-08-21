@@ -1,7 +1,7 @@
 import unittest
 import os
 import subprocess
-from .context.landProtection import _makeLandClassXpath, _makeRegionXpath, protectLand
+from pygcam.landProtection import _makeLandClassXpath, _makeRegionXpath, protectLand
 
 class TestLandProtection(unittest.TestCase):
     def setUp(self):
@@ -11,6 +11,7 @@ class TestLandProtection(unittest.TestCase):
         '''
         Run diff on two files and test that there is no difference.
         '''
+        # print "diff %s %s" % (outfile, testfile)
         status = subprocess.call(['diff', outfile, testfile], shell=False)
         self.assertEqual(status, 0, 'Files %s and %s differ' % (outfile, testfile))
         if deleteOnSuccess:
@@ -28,9 +29,9 @@ class TestLandProtection(unittest.TestCase):
 
     def test_makeLandXpath(self):
         pairs = (('Shrubland',
-                  ".//UnmanagedLandLeaf[starts-with(@name, 'Shrubland')]"),
+                  './/UnmanagedLandLeaf[starts-with(@name, "Shrubland")]'),
                  (['Shrubland', 'UnmanagedForest'],
-                  ".//UnmanagedLandLeaf[starts-with(@name, 'Shrubland') or starts-with(@name, 'UnmanagedForest')]"))
+                  './/UnmanagedLandLeaf[starts-with(@name, "Shrubland") or starts-with(@name, "UnmanagedForest")]'))
 
         for value, expected in pairs:
             xpath = _makeLandClassXpath(value)
@@ -41,10 +42,12 @@ class TestLandProtection(unittest.TestCase):
         classes = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland']
         regions = ['Brazil', 'USA']
 
+        xmlDir = os.path.join('data', 'xml')
+
         for num in (2, 3):
-            infile   = os.path.join('xml', 'partial_land_input_%d.xml' % num)
-            outfile  = os.path.join('xml', 'changed_land_input_%d.xml' % num)
-            testfile = os.path.join('xml', 'expected_land_input_%d.xml' % num)
+            infile   = os.path.join(xmlDir, 'partial_land_input_%d.xml' % num)
+            outfile  = os.path.join(xmlDir, 'changed_land_input_%d.xml' % num)
+            testfile = os.path.join(xmlDir, 'expected_land_input_%d.xml' % num)
 
             protectLand(infile, outfile, protectedFraction, landClasses=classes, regions=regions)
             self.assertFilesEqual(outfile, testfile)

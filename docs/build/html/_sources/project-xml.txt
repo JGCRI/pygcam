@@ -191,16 +191,16 @@ For example, the block:
   .. code-block:: xml
 
      <steps>
-        <step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-		<step seq="2" name="gcam"  runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
-		<step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-		<step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-		<step seq="5" name="gcam"  runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
-		<step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-		<step seq="7" name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-		<step seq="7" name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-		<step seq="8" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-		<step seq="9" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+        <step name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+		<step name="gcam"  runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
+		<step name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+		<step name="gcam"  runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
+		<step name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+		<step name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+		<step name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+		<step name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
      </steps>
 
 defines a series of steps that calls setup scripts, runs GCAM, runs a
@@ -427,6 +427,17 @@ file, by specifying:
         <text tag="2"/>
     </tmpFile>
 
+<queries>
+^^^^^^^^^
+
+The project file supports the same `<queries>` elements and sub-elements
+that can appear in a separate :doc:`query XML file <query-xml>`, allowing
+queries to be consolidated within the project.xml file, or managed separately.
+
+The queries listed in the `<queries>` element are used both to execute batch
+XML queries against the GCAM database, and to drive the `diff` step in the
+standard project.xml, which calls the `diff` sub-command.
+
 
 Example project.xml file
 ------------------------
@@ -444,16 +455,16 @@ Example project.xml file
             <var name="queryPath" eval="1">{GCAM.QueryDir}:{GCAM.QueryDir}/Main_queries_customized.xml</var>
           </vars>
           <steps>
-            <step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-            <step seq="2" name="gcam" runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
-            <step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-            <step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-            <step seq="5" name="gcam" runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
-            <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-            <step seq="7" name="plot" runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-            <step seq="7" name="diff" runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-            <step seq="8" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-            <step seq="9" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+            <step name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+            <step name="gcam" runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
+            <step name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+            <step name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+            <step name="gcam" runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
+            <step name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+            <step name="plot" runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+            <step name="diff" runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+            <step name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+            <step name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
           </steps>
           <tmpFile varName="queryFile" eval="0">
             <text>Residue_biomass_production</text>

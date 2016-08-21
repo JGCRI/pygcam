@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -199,7 +201,7 @@ they can be referred to in land protection scenarios.</p>
 <p>For example, we can define
 a group called <code class="docutils literal"><span class="pre">Europe</span></code> consisting of all the GCAM European regions as follows:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;Europe&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;Europe&quot;</span><span class="nt">&gt;</span>
    <span class="nt">&lt;region&gt;</span>EU-12<span class="nt">&lt;/region&gt;</span>
    <span class="nt">&lt;region&gt;</span>EU-15<span class="nt">&lt;/region&gt;</span>
    <span class="nt">&lt;region&gt;</span>Europe_Eastern<span class="nt">&lt;/region&gt;</span>
@@ -211,7 +213,7 @@ a group called <code class="docutils literal"><span class="pre">Europe</span></c
 </div></blockquote>
 <p>We can also define other groups that refer to existing groups:</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;MyGroup&quot;</span><span class="nt">&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;group</span> <span class="na">name=</span><span class="s">&quot;MyGroup&quot;</span><span class="nt">&gt;</span>
    <span class="nt">&lt;region&gt;</span>Europe<span class="nt">&lt;/region&gt;</span>
    <span class="nt">&lt;region&gt;</span>USA<span class="nt">&lt;/region&gt;</span>
    <span class="nt">&lt;region&gt;</span>China<span class="nt">&lt;region&gt;</span>
@@ -315,7 +317,7 @@ to protect in the region named by the enclosing <code class="docutils literal"><
 <p>This file defines several groups of regions and uses these in a
 scenario named <code class="docutils literal"><span class="pre">scen1</span></code>. See the in-line comments for more details.</p>
 <blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;landProtection&gt;</span>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;landProtection&gt;</span>
    <span class="c">&lt;!--</span>
 <span class="c">   Define a set of groups that we will use in our protection</span>
 <span class="c">   scenario definitions.</span>

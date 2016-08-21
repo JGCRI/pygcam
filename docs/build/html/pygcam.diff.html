@@ -92,9 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
 </ul>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
@@ -157,7 +159,7 @@ from multiple CSV files.</p>
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.diff" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="pygcam.diff.computeDifference">
-<code class="descclassname">pygcam.diff.</code><code class="descname">computeDifference</code><span class="sig-paren">(</span><em>df1</em>, <em>df2</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.computeDifference" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.diff.</code><code class="descname">computeDifference</code><span class="sig-paren">(</span><em>df1</em>, <em>df2</em>, <em>resetIndex=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.diff.computeDifference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the difference between two DataFrames.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -166,6 +168,10 @@ from multiple CSV files.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>df1</strong> &#8211; a pandas DataFrame instance</li>
 <li><strong>obj2</strong> &#8211; a pandas DataFrame instance</li>
+<li><strong>resetIndex</strong> &#8211; (bool) if True (the default), the index in the DataFrame
+holding the computed difference is reset so that data in non-year columns
+appear in individual columns. Otherwise, the index in the returned
+DataFrame is based on all non-year columns.</li>
 </ul>
 </td>
 </tr>
@@ -196,6 +202,10 @@ compute differences.</li>
 <li><strong>skiprows</strong> &#8211; (int) should be 1 for GCAM files, to skip header info before column names</li>
 <li><strong>interpolate</strong> &#8211; (bool) if True, linearly interpolate annual values between timesteps
 in all data files and compute the differences for all resulting years.</li>
+<li><strong>years</strong> &#8211; (iterable of 2 values coercible to int) the range of years to include in
+results.</li>
+<li><strong>startYear</strong> &#8211; (int) the year at which to begin interpolation, if interpolate is True.
+Defaults to the first year in <cite>years</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -227,6 +237,10 @@ are written to an .XLSX file.</li>
 <li><strong>skiprows</strong> &#8211; (int) should be 1 for GCAM files, to skip header info before column names</li>
 <li><strong>interpolate</strong> &#8211; (bool) if True, linearly interpolate annual values between timesteps
 in all data files and compute the differences for all resulting years.</li>
+<li><strong>years</strong> &#8211; (iterable of 2 values coercible to int) the range of years to include in
+results.</li>
+<li><strong>startYear</strong> &#8211; (int) the year at which to begin interpolation, if interpolate is True.
+Defaults to the first year in <cite>years</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -257,6 +271,10 @@ compute differences.</li>
 <li><strong>skiprows</strong> &#8211; (int) should be 1 for GCAM files, to skip header info before column names</li>
 <li><strong>interpolate</strong> &#8211; (bool) if True, linearly interpolate annual values between timesteps
 in all data files and compute the differences for all resulting years.</li>
+<li><strong>years</strong> &#8211; (iterable of 2 values coercible to int) the range of years to include in
+results.</li>
+<li><strong>startYear</strong> &#8211; (int) the year at which to begin interpolation, if interpolate is True.
+Defaults to the first year in <cite>years</cite>.</li>
 </ul>
 </td>
 </tr>

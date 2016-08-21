@@ -15,10 +15,10 @@ from lxml import etree as ET
 
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean
+from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
-from .queryFile import QueryFile
-#from .setup import setupWorkspace
+from .queryFile import QueryFile, RewriteSetParser
 from .subcommand import SubcommandABC
 from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
                     saveToFile, XMLFile, getBooleanXML, resourceStream, getExeDir,
@@ -27,43 +27,6 @@ from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, 
 _logger = getLogger(__name__)
 
 __version__ = '0.2'
-
-NUM_AEZS = 18
-
-GCAM_32_REGIONS = [
-    'Africa_Eastern',
-    'Africa_Northern',
-    'Africa_Southern',
-    'Africa_Western',
-    'Argentina',
-    'Australia_NZ',
-    'Brazil',
-    'Canada',
-    'Central America and Caribbean',
-    'Central Asia',
-    'China',
-    'Colombia',
-    'EU-12',
-    'EU-15',
-    'Europe_Eastern',
-    'Europe_Non_EU',
-    'European Free Trade Association',
-    'India',
-    'Indonesia',
-    'Japan',
-    'Mexico',
-    'Middle East',
-    'Pakistan',
-    'Russia',
-    'South Africa',
-    'South America_Northern',
-    'South America_Southern',
-    'South Asia',
-    'South Korea',
-    'Southeast Asia',
-    'Taiwan',
-    'USA'
-]
 
 def limitYears(df, years):
     """
@@ -890,9 +853,12 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
     import pandas as pd
 
     csvFiles = map(ensureCSV, inFiles)
-    # TBD: catch exception on reading bad CSV file; save error and report at the end
-    dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate,
-                                         years=years, startYear=startYear), csvFiles)
+
+    try:
+        dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate,
+                                             years=years, startYear=startYear), csvFiles)
+    except Exception as e:
+        raise CommandlineError("readCsv failed: %s" % e)
 
     formatStr = getParam('GCAM.ExcelNumberFormat')
 
@@ -932,56 +898,9 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
             worksheet.write_string(0, 1, fname)
             worksheet.write_url(1, 0, "internal:index!A1", linkFmt, "Back to index")
 
-#
-# Classes to parse rewriteSets.xml (see pygcam/etc/rewriteSets-schema.xsd)
-#
-class Rewrite(object):
-    def __init__(self, node):
-        self.From = node.get('from')    # 'from' is a keyword...
-        self.to   = node.get('to')
-        self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
-
-    def __str__(self):
-        return "<Rewrite from='%s' to='%s' byAEZ='%s'>" % (self.From, self.to, self.byAEZ)
 
 
-class RewriteSet(object):
-    def __init__(self, node):
-        self.name  = node.get('name')
-        self.level = node.get('level')
-        self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
-        self.appendValues = getBooleanXML(node.get('append-values', '0'))
-        self.rewrites = map(Rewrite, node.findall('rewrite'))
-
-    def __str__(self):
-        return "<RewriteSet name='%s' level='%s' byAEZ='%s' append-values='%s'>" % \
-               (self.name, self.level, self.byAEZ, self.appendValues)
-
-class RewriteSetParser(object):
-    def __init__(self, node, filename):
-        rewriteSets = map(RewriteSet, node.findall('rewriteSet'))
-        self.rewriteSets = {obj.name : obj for obj in rewriteSets}
-        self.filename = filename # for error messages only
-
-    def getRewriteSet(self, name):
-        try:
-            return self.rewriteSets[name]
-        except KeyError:
-            raise PygcamException('RewriteSet "%s" not found in file "%s"' % (name, self.filename))
-
-    @classmethod
-    def parse(cls, filename):
-        """
-        Parse an XML file holding a list of query result rewrites.
-        :param filename: (str) the name of the XML file to read
-        :return: a list of RewriteSet instances
-        """
-        schemaStream = resourceStream('etc/rewriteSets-schema.xsd')
-        xmlFile = XMLFile(filename, schemaFile=schemaStream)
-        return cls(xmlFile.tree.getroot(), filename)
-
-
-def main(args):
+def queryMain(args):
     # """
     # Main driver for query sub-command
     #
@@ -990,13 +909,14 @@ def main(args):
     # """
     miLogFile   = getParam('GCAM.MI.LogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
-    sandbox     = args.workspace or getParam('GCAM.Sandbox')
+    groupDir    = args.groupDir
+    scenario    = args.scenario
+    sandbox     = args.workspace or os.path.join(getParam('GCAM.SandboxDir'), groupDir, scenario)
     xmldb       = args.xmldb     or os.path.join(sandbox, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     queryFile   = args.queryXmlFile
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
     regions     = args.regions.split(',') if args.regions else GCAM_32_REGIONS
-    scenario    = args.scenario
     queryNames  = args.queryName
     noDelete    = args.noDelete
     prequery    = args.prequery
@@ -1067,75 +987,3 @@ def main(args):
                              queryPath=queryPath, outputDir=outputDir, rewriteParser=rewriteParser,
                              miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                              noRun=args.noRun, noDelete=args.noDelete)
-
-
-class QueryCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        kwargs = {'fromfile_prefix_chars' : '@',      # use "@" before value to substitute contents of file as arguments
-                  'help' : '''Run one or more GCAM database queries by generating and running the
-                  named XML queries.'''}
-
-        super(QueryCommand, self).__init__('query', subparsers, kwargs)
-
-    def addArgs(self, parser):
-        parser.add_argument('queryName', nargs='*',
-                            help='''A file or files, each holding an XML query to run. (The ".xml" suffix will be added if needed.)
-                                    If an argument is preceded by the "@" sign, it is read and its contents substituted as the
-                                    values for this argument. That means you can store queries to run in a file (one per line) and
-                                    just reference the file by preceding the filename argument with "@".''')
-
-        parser.add_argument('-d', '--xmldb',
-                             help='''The XML database to query (default is value of GCAM.DbFile, in the GCAM.Workspace's
-                             "output" directory. Overrides the -w flag.''')
-
-        parser.add_argument('-D', '--noDelete', action="store_true",
-                            help='''Don't delete any temporary file created by extracting a query from a query file. Used
-                                    mainly for debugging.''')
-
-        parser.add_argument('-n', '--noRun', action="store_true",
-                            help="Show the command to be run, but don't run it")
-
-        parser.add_argument('-o', '--outputDir',
-                             help='Where to output the result (default taken from config parameter "GCAM.OutputDir")')
-
-        parser.add_argument('-p', '--prequery', action="store_true",
-                            help='''Generate the XMLDBDriver.properties file and associated batch file to be
-                                 run by GCAM when GCAM.BatchMultipleQueries or GCAM.InMemoryDatabase are True.''')
-
-        parser.add_argument('-q', '--queryXmlFile',
-                            help='''An XML file holding a list of queries to run, with optional mappings specified to
-                            rewrite output. This file has the same structure as the <queries> element in project.xml.''')
-
-        parser.add_argument('-Q', '--queryPath',
-                            help='''A semicolon-delimited list of directories or filenames to look in to find query files.
-                                    Defaults to value of config parameter GCAM.QueryPath''')
-
-        parser.add_argument('-r', '--regions',
-                            help='''A comma-separated list of regions on which to run queries found in query files structured
-                                    like Main_Queries.xml. If not specified, defaults to querying all 32 regions.''')
-
-        parser.add_argument('-R', '--regionMap',
-                            help='''A file containing tab-separated pairs of names, the first being a GCAM region
-                                    and the second being the name to map this region to. Lines starting with "#" are
-                                    treated as comments. Lines without a tab character are also ignored. This arg
-                                    overrides the value of config variable GCAM.RegionMapFile.''')
-
-        parser.add_argument('-s', '--scenario', default='Reference',
-                            help='''The scenario to run the query/queries for (default is "Reference")
-                                    Note that this must refers to a scenarios in the XML database.''')
-
-        parser.add_argument('-S', '--rewriteSetsFile',
-                            help='''An XML file defining query maps by name (default taken from
-                            config parameter "GCAM.RewriteSetsFile")''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-
-        parser.add_argument('-w', '--workspace', default='',
-                            help='''The workspace directory in which to find the XML database.
-                                    Defaults to value of config file parameter GCAM.Workspace.
-                                    Overridden by the -d flag.''')
-
-        return parser
-
-    def run(self, args, tool):
-        main(args)
