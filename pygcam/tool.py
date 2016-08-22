@@ -424,6 +424,7 @@ def checkWindowsSymlinks():
             _logger.info('No symlink permission; setting GCAM.CopyAllFiles = True')
             setParam('GCAM.CopyAllFiles', 'True')
 
+# deprecated
 def _setupLogging(argv):
     parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
     parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
@@ -446,8 +447,6 @@ def _main(argv=None):
     configureLogs()
     checkWindowsSymlinks()
 
-    _setupLogging(argv)     # so loading plugins recognize desired logLevel
-
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
 
@@ -465,6 +464,11 @@ def _main(argv=None):
     ns, otherArgs = parser.parse_known_args(args=argv)
 
     tool.setMcsMode(ns.mcs)
+
+    section = ns.configSection
+    if section:
+        setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
+        setSection(section)
 
     # Set specified config vars
     for arg in ns.configVars:
