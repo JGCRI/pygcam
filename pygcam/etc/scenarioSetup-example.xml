@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Possible syntax for defining simple setup "script" in XML.
 
@@ -14,7 +15,9 @@
   the innards, keeping the same API.
 -->
 
-<setup name="uniqueName">
+<setup name="uniqueName"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="scenarioSetup-schema.xsd">
     <vars>
         <!-- results in variables from the set {0.0, 0.2, 0.4, 0.6, 0.8, 1.0} -->
         <iterator name="fraction" type="float" min="0.0" max="1.0" incr="0.2"/>
@@ -27,41 +30,39 @@
     <scenarioGroup name="protect-{fraction}" useGroupDir="0" iterator="fraction">
 
         <scenario name="base-{fraction}-ssp-{sspnum}" baseline="1" iterator="sspnum">
-            <delete name="nonco2_pland"/>
+            <config action="delete" name="nonco2_pland"/>
 
             <!-- Rules for interpreting filenames
             - the variable {scenarioDir} is defined to be a relative link
               to the current scenario's subdir in local-xml.
-            -
             -->
-            <replace name="cement_2">{scenarioDir}/cement_incelas_ssp{sspnum}.xml'</replace>
-            <replace name="industry_2">{scenarioDir}/industry_incelas_ssp{sspnum}.xml'</replace>
-            <replace name="socioeconomics_2">{scenarioDir}/socioeconomics_ssp{sspnum}.xml'</replace>
+            <config action="replace" name="cement_2">{scenarioDir}/cement_incelas_ssp{sspnum}.xml'</config>
+            <config action="replace" name="industry_2">{scenarioDir}/industry_incelas_ssp{sspnum}.xml'</config>
+            <config action="replace" name="socioeconomics_2">{scenarioDir}/socioeconomics_ssp{sspnum}.xml'</config>
 
             <!-- Replace standard files with these modified versions -->
-            <replace name="energy_transformation" dir="scenario">{scenarioDir}/en_transformation_OTAQ.xml</replace>
-            <replace name="transportation">{scenarioDir}/transportation_UCD_OTAQ.xml</replace>
-
+            <config action="replace" name="energy_transformation" dir="scenario">{scenarioDir}/en_transformation_OTAQ.xml</config>
+            <config action="replace" name="transportation">{scenarioDir}/transportation_UCD_OTAQ.xml</config>
+            
             <!-- Options for <insert>:
                 <insert name="whatever">path</insert> => inserts at the end of the list of <File>s
                 <insert name="whatever" before="tag">path</insert> => insert before element with "tag"
                 <insert name="whatever" after="tag">path</insert>  => insert after element with "tag"
             -->
-            <insert name="refining_LDV">{scenarioDir}/refining_LDV_OTAQ.xml</insert>
+            <config action="insert" name="refining_LDV">{scenarioDir}/refining_LDV_OTAQ.xml</config>
 
             <!-- US sugar ethanol and palm biodiesel -->
-            <insert name="energy_USSugar">{scenarioDir}/USSugarEthanol.xml</insert>
-            <insert name="energy_USPalm">{scenarioDir}/USPalmBioDiesel.xml</insert>
+            <config action="insert" name="energy_USSugar">{scenarioDir}/USSugarEthanol.xml</config>
+            <config action="insert" name="energy_USPalm">{scenarioDir}/USPalmBioDiesel.xml</config>
 
             <!-- Don't ramp up biofuel shareweight in US. Tunes ref case to be close to AEO 2015 projection -->
-            <insert name="energy_transformationBFS1">Biofuelshareweights.xml</insert>
-
+            <config action="insert" name="energy_transformationBFS1">Biofuelshareweights.xml</config>
 
         </scenario>
 
         <!-- By default, active="1"; set it to "0" to deactivate -->
-        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum" active="1">
-            <insert name="whatever">{scenarioDir}/corn-specific-file.xml</insert>
+        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum" active="0">
+            <config action="insert" name="whatever">{scenarioDir}/corn-specific-file.xml</config>
 
             <!--
             Translate this into generateX(arg='foo', x=1, y=bar).
