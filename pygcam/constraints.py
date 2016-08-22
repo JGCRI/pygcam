@@ -121,6 +121,7 @@ cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
   <output-meta-data>
     <summary>
       Cellulosic ethanol constraints.
+      
       This is a generated constraint file. Edits will be overwritten!
     </summary>
   </output-meta-data>
@@ -145,6 +146,8 @@ cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 
 US_REGION_QUERY = 'region in ["USA", "United States"]'
 
+# TBD: make region an argument rather than assuming USA
+
 def genBioConstraints(**kwargs):
     import pandas as pd
 
@@ -162,19 +165,20 @@ def genBioConstraints(**kwargs):
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
     batchDir = getBatchDir(baseline, resultsDir)
-    totalBiomassFile   = os.path.join(batchDir, 'Total_biomass_consumption-%s.csv' % baseline)
-    refinedLiquidsFile = os.path.join(batchDir, 'refined-liquids-prod-by-tech-USA-%s.csv' % baseline)
-    purposeGrownFile   = os.path.join(batchDir, 'Purpose-grown_biomass_production-%s.csv' % baseline)
 
-    totalBiomassDF   = readCsv(totalBiomassFile)
-    refinedLiquidsDF = readCsv(refinedLiquidsFile)
+    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'Refined-liquids-production-by-technology')
+    totalBiomassDF   = readQueryResult(batchDir, baseline, 'Total_biomass_consumption')
+    purposeGrownDF   = readQueryResult(batchDir, baseline, 'Purpose-grown_biomass_production')
 
     yearCols = getYearCols(kwargs['years'])
 
-    totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
+    refinedLiquidsUSA = refinedLiquidsDF.query(US_REGION_QUERY)[yearCols]
+    totalBiomassUSA   = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
+    purposeGrownUSA   = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
+
     _logger.debug('totalBiomassUSA:\n', totalBiomassUSA)
 
-    cellulosicEtOH  = refinedLiquidsDF.query('technology == "cellulosic ethanol"')[yearCols]
+    cellulosicEtOH  = refinedLiquidsUSA.query('technology == "cellulosic ethanol"')[yearCols]
     if cellulosicEtOH.shape[0] == 0:
         cellulosicEtOH = 0
 
@@ -203,9 +207,6 @@ def genBioConstraints(**kwargs):
 
     # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
     # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
-    purposeGrownDF   = readCsv(purposeGrownFile)
-    purposeGrownUSA  = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
-
     if kwargs.get('switchgrass', False):
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
     else:
@@ -272,11 +273,15 @@ def genDeltaConstraints(**kwargs):
     purposeGrownPolicyType = kwargs.get('purposeGrownPolicyType', None)
 
     batchDir = getBatchDir(baseline, resultsDir)
-    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'refined-liquids-prod-by-tech-USA')
+    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'Refined-liquids-production-by-technology')
 
     yearCols = getYearCols(kwargs['years'])
+    #refinedLiquidsUSA = refinedLiquidsDF.query(US_REGION_QUERY)[yearCols]
 
-    fuelBaseline = refinedLiquidsDF.query('technology == "%s"' % fuelName)[yearCols]
+    combinedQuery = US_REGION_QUERY + ' and technology == "%s"' % fuelName
+
+    #fuelBaseline = refinedLiquidsUSA.query('technology == "%s"' % fuelName)[yearCols]
+    fuelBaseline = refinedLiquidsDF.query(combinedQuery)[yearCols]
     if fuelBaseline.shape[0] == 0:
         fuelBaseline = 0
 

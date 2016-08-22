@@ -19,10 +19,8 @@ from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
-from .subcommand import SubcommandABC
 from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
-                    saveToFile, XMLFile, getBooleanXML, resourceStream, getExeDir,
-                    writeXmldbDriverProperties)
+                    saveToFile, getExeDir, writeXmldbDriverProperties)
 
 _logger = getLogger(__name__)
 
@@ -144,7 +142,7 @@ def writeCsv(df, filename, header='', float_format="%.4f"):
         f.write("%s\n" % header)  # add a header line to match batch-query output format
         f.write(txt)
 
-def readQueryResult(batchDir, baseline, queryName, years=None, interpolate=False, startYear=0):
+def  readQueryResult(batchDir, baseline, queryName, years=None, interpolate=False, startYear=0):
     """
     Compose the name of the 'standard' result file, read it into a DataFrame and
     return the DataFrame. Data is read from the computed filename

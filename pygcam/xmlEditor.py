@@ -28,7 +28,6 @@ import subprocess
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
-from .landProtection import protectLand
 from .log import getLogger
 from .utils import coercible, mkdirs, unixPath
 
@@ -897,7 +896,8 @@ class XMLEditor(object):
         self.delScenarioComponent("protected_land_input_2")
         self.delScenarioComponent("protected_land_input_3")
 
-    def protectLand(self, fraction, landClasses=None, otherArable=False, regions=None):
+    def protectLand(self, fraction, landClasses=None, otherArable=False,
+                    regions=None, unprotectFirst=False):
         """
         Modify land_input files to protect a constant fraction of unmanaged
         land of the given classes, in the given regions.
@@ -911,6 +911,8 @@ class XMLEditor(object):
         :param regions: a string or a list of strings, or None. If None, all
                regions are modified.
         """
+        from .landProtection import protectLand
+
         _logger.info("Protecting %d%% of land globally", int(fraction * 100))
 
         # NB: this code depends on these being the tags assigned to the land files
@@ -921,7 +923,7 @@ class XMLEditor(object):
             landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
-                        otherArable=otherArable, regions=regions)
+                        otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
             self.updateScenarioComponent(landFile, landFileRel)
 
     # TBD: normalize so that all (year, value) args behave like the pairs, in all fns?

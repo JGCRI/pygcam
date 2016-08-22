@@ -326,7 +326,8 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
             multiplyValues(originalAreas, 1 - fraction)
             multiplyValues(protectedAreas, fraction)
 
-def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False, regions=None):
+def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
+                regions=None, unprotectFirst=False):
     """
     Create a copy of `infile` that protects a `fraction` of `landClasses` in `regions`.
 
@@ -344,7 +345,8 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False, 
     parser = ET.XMLParser(remove_blank_text=True)
     tree = ET.parse(infile, parser)
 
-    createProtected(tree, fraction, landClasses=landClasses, otherArable=otherArable, regions=regions)
+    createProtected(tree, fraction, landClasses=landClasses, otherArable=otherArable,
+                    regions=regions, unprotectFirst=unprotectFirst)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
 
