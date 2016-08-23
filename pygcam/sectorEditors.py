@@ -17,44 +17,7 @@ TECH_BIODIESEL          = 'biodiesel'
 TECH_GTL                = 'gas to liquids'
 TECH_CTL                = 'coal to liquids'
 
-# TBD: Eliminate this class, moving functionality to xmlEditor
-class RefiningEditor(XMLEditor):
-    """
-    RefiningEditor add methods that deal with the refinery sector.
-    """
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
-                 groupDir, subdir, parent=None):
-        super(RefiningEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
-                                             refWorkspace, groupDir, subdir, parent=parent)
-
-    # TBD: redefine this as follows, or just call setGlobalTechShutdownRate directly?
-    def _setRefinedFuelShutdownRate(self, fuel, year, rate):
-        self.setGlobalTechShutdownRate(self, REFINING_SECTOR, BIOMASS_LIQUIDS, fuel, year, rate)
-
-    # def setup(self, stopPeriod=None, dynamic=False, writeDebugFile=None,
-    #           writePrices=None, writeOutputCsv=None, writeXmlOutputFile=None):
-    #     super(RefiningEditor, self).setup(stopPeriod=stopPeriod, dynamic=dynamic,
-    #                                       writeDebugFile=writeDebugFile,
-    #                                       writePrices=writePrices,
-    #                                       writeOutputCsv=writeOutputCsv,
-    #                                       writeXmlOutputFile=writeXmlOutputFile)
-
-    def setRefinedFuelShutdownRate(self, fuel, year, rate):
-        _logger.info("Set %s shutdown rate to %s for %s in %s" % (fuel, rate, self.name, year))
-
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
-
-        prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
-                 (REFINING_SECTOR, BIOMASS_LIQUIDS, fuel)
-
-        xmlEdit(enTransFileAbs,
-                '-u', prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
-                '-v', rate)
-
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-
-class BioenergyEditor(RefiningEditor):
+class BioenergyEditor(XMLEditor):
     """
     BioenergyEditor adds knowledge of biomass and biofuels.
     """
@@ -131,11 +94,10 @@ class BioenergyEditor(RefiningEditor):
 
         self.updateScenarioComponent("residue_bio", resbioFileRel)
 
-    # TBD: make region an optional parameter; fix callers
-    def setMswParameterUSA(self, parameter, value):
+    def setMswParameter(self, region, parameter, value):
         resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
 
-        xpath = "//region[@name='USA']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/%s" % parameter
+        xpath = "//region[@name='%s']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/%s" % (region, parameter)
 
         xmlEdit(resourcesFileAbs, '-u', xpath, '-v', value)
 
@@ -148,7 +110,7 @@ class BioenergyEditor(RefiningEditor):
 
         xmlEdit(resourcesFileAbs,
                 '-u', "//region[@name='%s']/renewresource[@name='biomass']/market" % region,
-                '-v', region)   # TBD: changed from "USA"; test this
+                '-v', region)
 
         self.updateScenarioComponent("resources", resourcesFileRel)
 
@@ -194,7 +156,7 @@ class BioenergyEditor(RefiningEditor):
             xmlEdit(*args)
             self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    # TBD: generalize this
+    # deprecated?
     def setBiofuelBiomassCoefficients(self, fuelName, pairs):
         '''
         Set new coefficients for biomass conversion for the given fuel
@@ -208,25 +170,10 @@ class BioenergyEditor(RefiningEditor):
         :return:
             nothing
         '''
-        _logger.info("Set global biomass coefficients for %s: %s" % (fuelName, pairs))
+        self.setEnergyTechnologyCoefficients(self, BIOMASS_LIQUIDS, fuelName, 'regional biomass', pairs)
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
-
-        prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
-                 (BIOMASS_LIQUIDS, fuelName)
-        suffix = "minicam-energy-input[@name='regional biomass']/coefficient"
-
-        args = [enTransFileAbs]
-
-        for year, coef in pairs:
-            args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
-                     '-v', str(coef)]
-
-        xmlEdit(*args)
-
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-    def purposeGrownOffRegional(self, region):
+    # TBD: test
+    def purposeGrownOffInRegion(self, region):
         '''
         Turn off the "isNewTechnology" flag for all land-leaf nodes to turn off
         purpose-grown biomass. The line(s) we need to edit in land_input_3.xml is:

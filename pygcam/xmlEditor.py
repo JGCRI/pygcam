@@ -1099,6 +1099,41 @@ class XMLEditor(object):
 
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
+    # TBD: test
+    def setEnergyTechnologyCoefficients(self, subsector, technology, energyInput, pairs):
+        '''
+        Set the coefficients in the global technology database for the given energy input
+        of the given technology in the given subsector.
+
+        :param subsector: (str) the name of the subsector
+        :param technology: (str)
+            The name of the technology, e.g., 'cellulosic ethanol', 'FT biofuel', etc.
+        :param energyInput: (str) the name of the minicam-energy-input
+        :param pairs:
+            A sequence of tuples of the form (year, coefficient). For example, to set
+            the coefficients for cellulosic ethanol for years 2020 and 2025 to 1.234,
+            the pairs would be ((2020, 1.234), (2025, 1.234)).
+        :return:
+            nothing
+        '''
+        _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s" % \
+                     (energyInput, technology, subsector, pairs))
+
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
+
+        prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
+                 (subsector, technology)
+        suffix = "minicam-energy-input[@name='%s']/coefficient" % energyInput
+
+        args = [enTransFileAbs]
+
+        for year, coef in pairs:
+            args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
+                     '-v', str(coef)]
+
+        xmlEdit(*args)
+        self.updateScenarioComponent("energy_transformation", enTransFileRel)
+
     # TBD -- test this!
     def _addTimeStepYear(self, year, timestep=5):
 
