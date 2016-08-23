@@ -121,7 +121,7 @@ cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
   <output-meta-data>
     <summary>
       Cellulosic ethanol constraints.
-      
+
       This is a generated constraint file. Edits will be overwritten!
     </summary>
   </output-meta-data>
@@ -284,8 +284,10 @@ def genDeltaConstraints(**kwargs):
     fuelBaseline = refinedLiquidsDF.query(combinedQuery)[yearCols]
     if fuelBaseline.shape[0] == 0:
         fuelBaseline = 0
+    else:
+        _logger.debug('fuelBaseline:')
+        printSeries(fuelBaseline, fuelTag)
 
-    _logger.debug('fuelBaseline: %s\n', fuelBaseline)
     _logger.debug("Default fuel delta %.2f EJ", defaultDelta)
 
     deltas = pd.Series(data={year: defaultDelta for year in yearCols})
@@ -296,7 +298,7 @@ def genDeltaConstraints(**kwargs):
 
     # Calculate fuel target after applying deltas
     fuelTargets = fuelBaseline.iloc[0] + deltas
-    _logger.debug('fuelTargets:')
+    _logger.debug('fuelTargets:\n')
     printSeries(fuelTargets, fuelTag)
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>

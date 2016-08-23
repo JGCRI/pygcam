@@ -76,7 +76,7 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
 
             diff = computeDifference(refDF, otherDF)
 
-            csvText = diff.to_csv(None)
+            csvText = diff.to_csv(index=None)
             label = "[%s] minus [%s]" % (otherFile, referenceFile)
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
 
