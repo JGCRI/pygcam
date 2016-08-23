@@ -121,7 +121,7 @@ cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
   <output-meta-data>
     <summary>
       Cellulosic ethanol constraints.
-      
+
       This is a generated constraint file. Edits will be overwritten!
     </summary>
   </output-meta-data>
@@ -284,8 +284,9 @@ def genDeltaConstraints(**kwargs):
     fuelBaseline = refinedLiquidsDF.query(combinedQuery)[yearCols]
     if fuelBaseline.shape[0] == 0:
         fuelBaseline = 0
+    else:
+        printSeries(fuelBaseline, fuelTag, header='fuelBaseline:')
 
-    _logger.debug('fuelBaseline: %s\n', fuelBaseline)
     _logger.debug("Default fuel delta %.2f EJ", defaultDelta)
 
     deltas = pd.Series(data={year: defaultDelta for year in yearCols})
@@ -296,8 +297,7 @@ def genDeltaConstraints(**kwargs):
 
     # Calculate fuel target after applying deltas
     fuelTargets = fuelBaseline.iloc[0] + deltas
-    _logger.debug('fuelTargets:')
-    printSeries(fuelTargets, fuelTag)
+    printSeries(fuelTargets, fuelTag, header='fuelTargets:')
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>
     yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.iteritems()]
@@ -315,16 +315,13 @@ def genDeltaConstraints(**kwargs):
     if switchgrass:
         # Calculate additional biomass required to meet required delta
         deltaCellulose = deltas * coefficients[yearCols]
-
-        _logger.debug('\ndeltaCellulose:')
-        printSeries(deltaCellulose, 'cellulose')
+        printSeries(deltaCellulose, 'cellulose', header='deltaCellulose:')
 
         totalBiomassDF = readQueryResult(batchDir, baseline, 'Total_biomass_consumption')
         totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
 
         biomassConstraint = totalBiomassUSA.iloc[0] + deltaCellulose.iloc[0]
-        _logger.debug('biomassConstraint:')
-        printSeries(biomassConstraint, 'regional-biomass')
+        printSeries(biomassConstraint, 'regional-biomass', header='biomassConstraint:')
 
         # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
         # by the same amount as the total regional biomass, forcing the change to come from switchgrass.

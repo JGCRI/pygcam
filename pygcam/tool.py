@@ -309,6 +309,16 @@ class GcamTool(object):
             if args.batch:
                 args.batch = False
 
+            args.configSection = section = args.configSection or getParam('GCAM.DefaultProject')
+            if section:
+                 setSection(section)
+
+            logLevel = args.logLevel or getParam('GCAM.LogLevel')
+            if logLevel:
+                setLogLevel(logLevel)
+
+            configureLogs(force=True)
+            
         # Get the sub-command and run it with the given args
         obj = self.getPlugin(args.subcommand)
 
