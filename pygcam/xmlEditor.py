@@ -952,7 +952,12 @@ class XMLEditor(object):
             which the rest of the explanation above applies. The `price` can be
             anything coercible to float.
         """
-        _logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
+        from .utils import printSeries
+
+        msg = "Set non-energy-cost of %s for %s to:" % (technology, self.name)
+        printSeries(values, technology, header=msg, loglevel='INFO')
+
+        #_logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 

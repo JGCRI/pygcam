@@ -569,7 +569,7 @@ class XMLFile(object):
         return self.root
 
 
-def printSeries(series, label):
+def printSeries(series, label, header='', loglevel='DEBUG'):
     """
     Print a `series` of values, with a give `label`.
 
@@ -577,13 +577,21 @@ def printSeries(series, label):
     :param label: (str) a label to print for the data
     :return: none
     """
-    if getLogLevel() == 'DEBUG':
+    func = _logger.debug if loglevel == 'DEBUG' else \
+        (_logger.info if loglevel == 'INFO' else None)
+
+    if func:
         import pandas as pd
 
-        df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
+        if type(series) == pd.DataFrame:
+            df = series
+            df = df.T
+        else:
+            df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
+
         df.columns = [label]
         pd.set_option('precision', 5)
-        print(df.T)
+        func("%s\n%s", header, df.T)
 
 def getTempFile(suffix='', tmpDir=None, text=True, delete=True):
     """
