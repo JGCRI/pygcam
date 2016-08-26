@@ -8,26 +8,10 @@ Document
 
 - PPT slides for October
 
-- queryMapping
-  - default "level" set in query itself, can override in query list
-  - append-values="false" unless any of the queries sets it to "true"
-
 - Assumptions behind setup code
-
-- Update figure on config.rst page showing relationships among variables
-
-- QueryFile.xml and new delete=0 option
 
 Cleanup
 -------
-- Convert constraint.py to internal plugins, thus making it optional
-- Maybe convert other big modules to internal plugins, loaded on demand
-    - They're for use by biofuel studies only (maybe a sep plugin dir?)
-    - Perhaps split out generic function from domain-specific
-    - could add __init__.py to plugins, allowing plugins to import others
-- Review ToDos in XmlEditor: normalize to have all fns use the same style of
-  lists of tuples with years and values.
-- Update files: etc/*-example.xml
 - Post xsd files on bitbucket or github and reference them in the XML files
 
 - Consolidate generic code from sectorEditors and xmlEditor
