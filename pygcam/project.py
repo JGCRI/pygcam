@@ -3,8 +3,6 @@
 .. Support for running a sequence of operations for a GCAM project
    that is described in an XML file.
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """

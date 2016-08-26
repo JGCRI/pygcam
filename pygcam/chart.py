@@ -2,8 +2,6 @@
 .. Created on: 2/12/15
    Common functions and data
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''

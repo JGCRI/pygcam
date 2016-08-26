@@ -1,3 +1,7 @@
+'''
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+'''
 import os
 from .log import getLogger
 from .error import CommandlineError, FileFormatError

@@ -1,12 +1,9 @@
 '''
-.. gcamtool plugin for setting up / customizing GCAM project's XML files.
-
-.. codeauthor:: Rich Plevin <rich@plevin.com>
+.. Support for 'setup' sub-command, which sets up / customizes GCAM project's XML files.
 
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-
 import os
 import shutil
 

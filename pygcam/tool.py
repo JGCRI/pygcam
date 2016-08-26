@@ -3,8 +3,6 @@
 '''
 .. The "gt" (gcamtool) commandline program
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
@@ -318,7 +316,7 @@ class GcamTool(object):
                 setLogLevel(logLevel)
 
             configureLogs(force=True)
-            
+
         # Get the sub-command and run it with the given args
         obj = self.getPlugin(args.subcommand)
 

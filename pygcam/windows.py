@@ -1,5 +1,7 @@
 '''
-  .. Stuff specific to MS Windows
+.. Stuff specific to MS Windows
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
 import platform

@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 '''
-Created on 4/26/15
+.. Created on 4/26/15
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 
-@author: rjp
 '''
 import os
 

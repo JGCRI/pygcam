@@ -1,6 +1,4 @@
 '''
-.. codeauthor:: Richard Plevin
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
