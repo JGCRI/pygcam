@@ -1,79 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Possible syntax for defining simple setup "script" in XML.
+<!-- Example of XML setup "script"
 
-  Need a way to call out to a Python function, e.g., to generate
-  constraints. Maybe translate text into kwargs?
-
-  Maybe best approach is to compile this into a Python program that
-  accomplishes the same? If so, are we really avoiding having to know
-  python?
-
-  Or, have a generic version of scenarios.py that reads this file,
-  respects the various flags for directory locations, scenario names,
-  whether to generate or not. Start with a scenarios.py and replace
-  the innards, keeping the same API.
+     The iterators are used to expand the scenarioGroup and scenario
+     elements that reference them, and the top-level run method
+     executes the steps defined here for the given group and scenario.
 -->
 
-<setup name="uniqueName"
+<setup name="uniqueName" defaultGroup="protect-0.0"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="scenarioSetup-schema.xsd">
-    <vars>
-        <!-- results in variables from the set {0.0, 0.2, 0.4, 0.6, 0.8, 1.0} -->
-        <iterator name="fraction" type="float" min="0.0" max="1.0" incr="0.2"/>
 
-        <!-- incr="1" is default for int type -->
-        <iterator name="sspnum" type="int" min="1" max="5"/>
-    </vars>
+    <!-- Results in the set {'0.0', '0.2', '0.4', '0.6', '0.8', '1.0'} -->
+    <iterator name="fraction" type="float" min="0.0" max="1.0" step="0.2" format="%.1f"/>
 
-    <!-- This makes listing groups harder, but not impossible -->
+    <!-- step="1" is default for int type. Yields {'1', '2', '3', '4', '5'} -->
+    <iterator name="sspnum" type="int" min="1" max="5"/>
+
+    <iterator name="letter" type="list" values="a,b ,c "/>
+
     <scenarioGroup name="protect-{fraction}" useGroupDir="0" iterator="fraction">
 
         <scenario name="base-{fraction}-ssp-{sspnum}" baseline="1" iterator="sspnum">
-            <config action="delete" name="nonco2_pland"/>
+            <!--
+             <function> allows certain methods of the XMLEditor class to be called
+             by passing comma-separated arguments in the text, just as they would
+             be written inside the parentheses of a function call
+             -->
+            <function name="protectLand">{fraction}, otherArable=False, unprotectFirst=True</function>
+            <function name="setClimateOutputInterval">2</function>
 
-            <!-- Rules for interpreting filenames
-            - the variable {scenarioDir} is defined to be a relative link
-              to the current scenario's subdir in local-xml.
+            <!-- Delete scenario elements in the file by their "name" tag -->
+            <delete name="protected_land_input_2"/>
+            <delete name="protected_land_input_3"/>
+
+            <!--
+            The variable {scenarioDir} is defined dynamically to be a relative path (from
+            the "exe" directory, where GCAM is run) to the scenario's dir under local-xml.
             -->
-            <config action="replace" name="cement_2">{scenarioDir}/cement_incelas_ssp{sspnum}.xml'</config>
-            <config action="replace" name="industry_2">{scenarioDir}/industry_incelas_ssp{sspnum}.xml'</config>
-            <config action="replace" name="socioeconomics_2">{scenarioDir}/socioeconomics_ssp{sspnum}.xml'</config>
+            <replace name="cement_2">{scenarioDir}/cement_incelas_ssp{sspnum}.xml</replace>
+            <replace name="industry_2">{scenarioDir}/industry_incelas_ssp{sspnum}.xml</replace>
+            <replace name="socioeconomics_2">{scenarioDir}/socioeconomics_ssp{sspnum}.xml</replace>
 
-            <!-- Replace standard files with these modified versions -->
-            <config action="replace" name="energy_transformation" dir="scenario">{scenarioDir}/en_transformation_OTAQ.xml</config>
-            <config action="replace" name="transportation">{scenarioDir}/transportation_UCD_OTAQ.xml</config>
-            
-            <!-- Options for <insert>:
-                <insert name="whatever">path</insert> => inserts at the end of the list of <File>s
-                <insert name="whatever" before="tag">path</insert> => insert before element with "tag"
-                <insert name="whatever" after="tag">path</insert>  => insert after element with "tag"
-            -->
-            <config action="insert" name="refining_LDV">{scenarioDir}/refining_LDV_OTAQ.xml</config>
+            <!-- Replace standard file with modified version -->
+            <replace name="transportation">{scenarioDir}/transportation_custom.xml</replace>
 
-            <!-- US sugar ethanol and palm biodiesel -->
-            <config action="insert" name="energy_USSugar">{scenarioDir}/USSugarEthanol.xml</config>
-            <config action="insert" name="energy_USPalm">{scenarioDir}/USPalmBioDiesel.xml</config>
-
-            <!-- Don't ramp up biofuel shareweight in US. Tunes ref case to be close to AEO 2015 projection -->
-            <config action="insert" name="energy_transformationBFS1">Biofuelshareweights.xml</config>
-
+            <!-- add these new files at the end -->
+            <add name="energy_USSugar">{scenarioDir}/USSugarEthanol.xml</add>
+            <add name="energy_USPalm">{scenarioDir}/USPalmBioDiesel.xml</add>
         </scenario>
 
         <!-- By default, active="1"; set it to "0" to deactivate -->
         <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum" active="0">
-            <config action="insert" name="whatever">{scenarioDir}/corn-specific-file.xml</config>
-
-            <!--
-            Translate this into generateX(arg='foo', x=1, y=bar).
-            If a generator is defined, it must be run after baseline results are available.
-            -->
-            <generator name='pkg.module.generateX'>arg='foo' x=1 y=bar</generator>
+            <!-- <insert> adds an element after the element with the given name  -->
+            <insert name="whatever" after="cement_2">{scenarioDir}/corn-specific-file.xml</insert>
         </scenario>
 
-        <scenario name="sugarcane"/>
-        <scenario name="soy"/>
-
+        <scenario name="foo-{fraction}-{letter}" iterator="letter">
+            <insert name="something" after="cement_2">{scenarioDir}/foo-bar-baz.xml</insert>
+        </scenario>
     </scenarioGroup>
-
 </setup>

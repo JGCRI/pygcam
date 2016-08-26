@@ -2,8 +2,6 @@
 .. Created on: 2/12/15
    Common functions and data
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
@@ -543,10 +541,11 @@ class XMLFile(object):
       tree and stored internally
     :raises: FileFormatError
     """
-    def __init__(self, xmlFile, schemaFile=None, raiseError=True, rootClass=None):
+    def __init__(self, xmlFile, schemaFile=None, raiseError=True,
+                 rootClass=None, removeComments=False):
         from lxml import etree as ET
 
-        parser = ET.XMLParser(remove_blank_text=True)
+        parser = ET.XMLParser(remove_blank_text=True, remove_comments=removeComments)
         self.tree = ET.parse(xmlFile, parser)
 
         if not schemaFile:

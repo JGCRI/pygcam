@@ -19,8 +19,8 @@ class SetupCommand(SubcommandABC):
     def addArgs(self, parser):
         defaultYears = '2015-2100'
 
-        group1 = parser.add_mutually_exclusive_group()
-        group2 = parser.add_mutually_exclusive_group()
+        group1 = parser.add_mutually_exclusive_group()  # --dynamicOnly, --staticOnly
+        group2 = parser.add_mutually_exclusive_group()  # --modulePath, --moduleSpec, --setupXml
 
         parser.add_argument('-b', '--baseline',
                             help='''Identify the baseline the selected scenario is based on.
@@ -40,14 +40,15 @@ class SetupCommand(SubcommandABC):
         group1.add_argument('-G', '--staticOnly', action='store_true',
                             help='''Generate only static XML for local-xml: don't create dynamic XML.''')
 
-        # -m and -M are mutually exclusive
+        # mutually exclusive with --moduleSpec and --setupXml
         group2.add_argument('-m', '--modulePath',
                             help='''The path to a scenario definition module. See -M flag for more info.''')
 
+        # mutually exclusive with --modulePath and --setupXml
         group2.add_argument('-M', '--moduleSpec',
                             help='''The "dot spec" for the Python module holding the setup classes and
-                            a function called 'scenarioClass' or a dictionary called 'ClassMap' which map
-                            scenario names to classes. If the function 'scenarioClass' exists, it is
+                            a function called 'scenarioMapper' or a dictionary called 'ClassMap' which map
+                            scenario names to classes. If the function 'scenarioMapper' exists, it is
                             used. If not, the 'ClassMap' is used. Default is "{xmlsrc}/subdir/scenarios.py" (if
                             subdir is defined) or "{xmlsrc}/scenarios.py" (if subdir is undefined) under the
                             current ProjectRoot.''')
@@ -67,6 +68,11 @@ class SetupCommand(SubcommandABC):
 
         parser.add_argument('-S', '--subdir', default="",
                             help='A sub-directory to use instead of scenario name')
+
+        # mutually exclusive with --moduleSpec and --modulePath
+        group2.add_argument('--setupXml',
+                            help='''An XML scenario definition file. Overrides configuration variable
+                             GCAM.ScenarioSetupFile.''')
 
         parser.add_argument('-u', '--useGroupDir', action='store_true',
                             help='Use the group name as a subdir below xmlsrc, local-xml, and dyn-xml')
@@ -117,31 +123,38 @@ class SetupCommand(SubcommandABC):
 
         xmlSourceDir = args.xmlSourceDir or getParam('GCAM.XmlSrc')
 
+        setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
+
         # TBD: document this
-        try:
-            if args.moduleSpec:
-                module = import_module(args.moduleSpec, package=None)
-            else:
-                modulePath = args.modulePath or os.path.join(xmlSourceDir, groupName, 'scenarios.py')
-                module = loadModuleFromPath(modulePath)
+        if setupXml:
+            from pygcam.scenarioSetup import SimpleScenario
+            scenClass = SimpleScenario
+        else:
+            # If neither is defined, we assume a custom scenarios.py file is used
+            try:
+                if args.moduleSpec:
+                    module = import_module(args.moduleSpec, package=None)
+                else:
+                    modulePath = args.modulePath or os.path.join(xmlSourceDir, groupName, 'scenarios.py')
+                    module = loadModuleFromPath(modulePath)
 
-        except Exception as e:
-            moduleName = args.moduleSpec or modulePath
-            raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (moduleName, e))
+            except Exception as e:
+                moduleName = args.moduleSpec or modulePath
+                raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (moduleName, e))
 
-        try:
-            # First look for a function called scenarioMapper
-            scenarioMapper = getattr(module, 'scenarioMapper', None)
-            if scenarioMapper:
-                scenClass = scenarioMapper(scenario)
+            try:
+                # First look for a function called scenarioMapper
+                scenarioMapper = getattr(module, 'scenarioMapper', None)
+                if scenarioMapper:
+                    scenClass = scenarioMapper(scenario)
 
-            else:
-                # Look for 'ClassMap' in the specified module
-                classMap  = getattr(module, 'ClassMap')
-                scenClass = classMap[scenario]
+                else:
+                    # Look for 'ClassMap' in the specified module
+                    classMap  = getattr(module, 'ClassMap')
+                    scenClass = classMap[scenario]
 
-        except KeyError:
-            raise SetupException('Failed to map scenario "%s" to a class in %s' % (scenario, module.__file__))
+            except KeyError:
+                raise SetupException('Failed to map scenario "%s" to a class in %s' % (scenario, module.__file__))
 
         subdir = args.subdir or scenario
         refWorkspace  = args.refWorkspace or getParam('GCAM.RefWorkspace')

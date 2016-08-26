@@ -14,8 +14,6 @@
    to refer to the modified file. (This may be done multiple times, to
    no ill effect.)
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
@@ -29,7 +27,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
 from .log import getLogger
-from .utils import coercible, mkdirs, unixPath
+from .utils import coercible, mkdirs, unixPath, printSeries
 
 # Set to True to see all xmlstarlet commands
 Verbose = False
@@ -37,6 +35,18 @@ Verbose = False
 _logger = getLogger(__name__)
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
+
+# methods callable from <function name="x">args</function> in
+# XML scenario setup scripts.
+CallableMethods = {}
+
+# decorator it identify callable methods
+def callableMethod(func):
+    CallableMethods[func.__name__] = func
+    return func
+
+def getCallableMethod(name):
+    return CallableMethods.get(name)
 
 def makeDirPath(elements, require=False, create=False, mode=0o775):
     """
@@ -183,17 +193,18 @@ def expandYearRanges(seq):
     """
     Expand a sequence of (year, value) tuples, or a dict keyed by
     year, where the year argument may be a string containing identifying
-    range of values with an optional "step" value (default step is 5)
-    e.g., "2015-2030", which means (2015, 2020, 2025, 2030), or
-    "2015-2020:1", which means (2015, 2016, 2017, 2018, 2019, 2020).
-    When a range is given, the tuple is replaced with a sequence of
-    tuples naming each years explicitly.
+    range of values with an optional "step" value indicated after a ":".
+    The default step is 5 years. For example, "2015-2030" expands to
+    (2015, 2020, 2025, 2030), and "2015-2020:1" expands to
+    (2015, 2016, 2017, 2018, 2019, 2020). When a range is given, the
+    tuple is replaced with a sequence of tuples naming each year explicitly.
+    Typical usage is ``for year, price in expandYearRanges(values): ...``.
 
     :param seq_or_dict:
-        The sequence of tuples or dict of {year: value} elements
-        to expand.
+        The sequence of (year, value) tuples, or any object with an
+        iteritems() method that returns (year, value) pairs.
     :return:
-        The a list of tuples holding the expanded sequence.
+        A list of tuples with the expanded sequence.
     """
     result = []
     try:
@@ -227,7 +238,7 @@ class XMLEditor(object):
     '''
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
                  groupDir, subdir, parent=None):
-        self.name = name = scenario or baseline # if no scenario stated, assume it's the baseline
+        self.name = name = scenario or baseline # if no scenario stated, assume baseline
         self.baseline = baseline
         self.scenario = scenario
         self.xmlOutputRoot = xmlOutputRoot
@@ -290,7 +301,6 @@ class XMLEditor(object):
             to setup sub-command
         :return: none
         """
-        from .windows import removeSymlink
 
         _logger.info("Generating dyn-xml for scenario %s" % self.name)
 
@@ -347,7 +357,6 @@ class XMLEditor(object):
 
         parent = self.parent
         parentConfigPath = parent.cfgPath() if parent else getParam('GCAM.RefConfigFile')
-        #mkdirs(os.path.dirname(parentConfigPath))
 
         _logger.info("Copy %s\n      to %s" % (parentConfigPath, configPath))
         shutil.copy(parentConfigPath, configPath)
@@ -496,7 +505,7 @@ class XMLEditor(object):
         is checked, and if not present, and error is raised.
 
         :param relPath: (str) a relative pathname
-        :return" (str)
+        :return: (str) the pathname of the closest copy of the file
         '''
         tail = self._splitPath(relPath)
         if not tail:
@@ -516,7 +525,7 @@ class XMLEditor(object):
 
         :param pathname: (str) the pathname of an XML file
         :return: (str, str) a tuple of the relative and absolute path of the
-        local (i.e., within the current scenario) copy of the file.
+          local (i.e., within the current scenario) copy of the file.
         """
         tail = self._splitPath(pathname)
         if not tail:
@@ -536,7 +545,6 @@ class XMLEditor(object):
             copyIfMissing(absPath, localAbsPath, makedirs=True)
 
         return localRelPath, localAbsPath
-
 
     def updateConfigComponent(self, group, name, value=None, writeOutput=None, appendScenarioName=None):
         """
@@ -583,11 +591,13 @@ class XMLEditor(object):
 
         xmlEdit(*args)
 
+    @callableMethod
     def setClimateOutputInterval(self, years):
         """
-        Sets the climate output interval (the frequency at which climate-related
-        outputs are saved to the XML database) to the given number of years,
+        Sets the the frequency at which climate-related outputs are
+        saved to the XML database to the given number of years,
         e.g., ``<Value name="climateOutputInterval">1</Value>``.
+        **Callable from XML setup files.**
 
         :param years: (coercible to int) the number of years to set as the climate (GHG)
            output interval
@@ -664,7 +674,7 @@ class XMLEditor(object):
 
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
-    def delScenarioComponent(self, name):
+    def deleteScenarioComponent(self, name):
         """
         Delete a ``<ScenarioComponent>`` identified by the ``<Value>`` element name.
 
@@ -711,7 +721,7 @@ class XMLEditor(object):
 
         cfg = self.cfgPath()
 
-        basename = "%s-%s" % (target, policy)	# e.g., corn-etoh-subsidy
+        basename = "%s-%s" % (target, policy)	# e.g., biodiesel-subsidy
 
         policyTag     = target + "-policy"
         constraintTag = target + "-constraint"
@@ -729,15 +739,6 @@ class XMLEditor(object):
         addOrUpdate = self.updateScenarioComponent if xmlSel(cfg, *args) else self.addScenarioComponent
         addOrUpdate(policyTag, policyXML)
         addOrUpdate(constraintTag, constraintXML)
-
-        # if xmlSel(cfg, *args):
-        #     # found it; update the elements
-        #     self.updateScenarioComponent(policyTag, policyXML)
-        #     self.updateScenarioComponent(constraintTag, constraintXML)
-        # else:
-        #     # didn't find it; add the elements
-        #     self.addScenarioComponent(policyTag, policyXML)
-        #     self.addScenarioComponent(constraintTag, constraintXML)
 
     def delMarketConstraint(self, target, policy):
         """
@@ -762,17 +763,8 @@ class XMLEditor(object):
 
         if xmlSel(cfg, args):
             # found it; delete the elements
-            self.delScenarioComponent(policyTag)
-            self.delScenarioComponent(constraintTag)
-
-    # deprecated
-    # def setScenarioName(self):
-    #     """
-    #     Set the name of the scenario based on the value passed to __init__
-    #
-    #     :return: none
-    #     """
-    #     self.updateConfigComponent('Strings', 'scenarioName', self.name)
+            self.deleteScenarioComponent(policyTag)
+            self.deleteScenarioComponent(constraintTag)
 
     def setStopPeriod(self, yearOrPeriod):
         """
@@ -781,23 +773,24 @@ class XMLEditor(object):
         to the correct stop period for the configuration file.
 
         :param yearOrPeriod: (coercible to int) this argument is treated as a literal
-          stop period if the value is < 23. (N.B. 2015 = step 4, 2020 = step 5, and so
-          on.) If 2000 < `yearOrPeriod` <= 2100, it is treated as a year, and converted
-          to a stopPeriod. If the value is in neither range, a SetupException is raised.
+          stop period if the value is < 1000. (N.B. 2015 = step 4, 2020 = step 5, and so
+          on.) If yearOrPeriod >= 1000, it is treated as a year and converted
+          to a stopPeriod for use in the GCAM configuration file.
         :return: none
         :raises: SetupException
         """
         value = coercible(yearOrPeriod, int)
-        stopPeriod = value if 1< value < 23 else 1+ (value - 2000)/5
+        stopPeriod = value if 1 < value < 1000 else 1 + (value - 2000)/5
 
         self.updateConfigComponent('Ints', 'stop-period', stopPeriod)
 
+    @callableMethod
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
                                  funcName, applyTo='share-weight', stubTechnology=None):
         """
         Set the interpolation function for the share-weight of the `subsector`
         of `supplysector` to `funcName` between years `fromYear` to `toYear`
-        in `region`.
+        in `region`. **Callable from XML setup files.**
 
         :param region: the GCAM region to operate on
         :param supplysector: the name of a supply sector
@@ -891,16 +884,18 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("solver", solverFileRel)
 
-
+    @callableMethod
     def dropLandProtection(self):
-        self.delScenarioComponent("protected_land_input_2")
-        self.delScenarioComponent("protected_land_input_3")
+        self.deleteScenarioComponent("protected_land_input_2")
+        self.deleteScenarioComponent("protected_land_input_3")
 
+    @callableMethod
     def protectLand(self, fraction, landClasses=None, otherArable=False,
                     regions=None, unprotectFirst=False):
         """
         Modify land_input files to protect a constant fraction of unmanaged
         land of the given classes, in the given regions.
+        **Callable from XML setup files.**
 
         :param fraction: (float) the fraction of land in the given land classes
                to protect
@@ -926,20 +921,14 @@ class XMLEditor(object):
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
             self.updateScenarioComponent(landFile, landFileRel)
 
-    # TBD: normalize so that all (year, value) args behave like the pairs, in all fns?
-    # TBD: or handle both dict-like vs 'list of pairs' cases? If it has iteritems, then
-    # TBD: it's dict-like enough for our purposes. Else, it should be [(year, val), (year, val)]
-    #
-    # TBD: optional arg to indicate delta rather than absolute value. More useful but will
-    # TBD: require lxml rather than xmlstarlet. See code for land protection.
-    #
-    # TBD: have this and related functions handle both regional and GTDB cases?
     # TBD: test
+    @callableMethod
     def setGlobalTechNonEnergyCost(self, sector, subsector, technology, values):
         """
         Set the non-energy cost of for technology in the global-technology-database,
         given a list of values of (year, price). The price is applied to all years
         indicated by the range.
+        **Callable from XML setup files.**
 
         :param sector: (str) the name of a GCAM sector
         :param subsector: (str) the name of a GCAM subsector within `sector`
@@ -952,8 +941,6 @@ class XMLEditor(object):
             which the rest of the explanation above applies. The `price` can be
             anything coercible to float.
         """
-        from .utils import printSeries
-
         msg = "Set non-energy-cost of %s for %s to:" % (technology, self.name)
         printSeries(values, technology, header=msg, loglevel='INFO')
 
@@ -976,10 +963,12 @@ class XMLEditor(object):
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
     # TBD: Test
+    @callableMethod
     def setGlobalTechShutdownRate(self, sector, subsector, technology, values):
         """
         Create a modified version of en_transformation.xml with the given shutdown
         rates for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
 
         :param sector: (str) the name of a GCAM sector
         :param subsector: (str) the name of a GCAM subsector within `sector`
@@ -1013,6 +1002,7 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
+    @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
                                stubTechnology=None,
                                xmlBasename='en_transformation.xml',
@@ -1020,6 +1010,7 @@ class XMLEditor(object):
         """
         Create a modified version of en_transformation.xml with the given share-weights
         for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
 
         :param region: if not None, changes are made in a specific region, otherwise they're
             made in the global-technology-database.
@@ -1064,12 +1055,14 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
     # TBD: Test
+    @callableMethod
     def setGlobalTechShareWeight(self, sector, subsector, technology, values,
                                  xmlBasename='en_transformation.xml',
                                  configFileTag='energy_transformation'):
         """
         Create a modified version of en_transformation.xml with the given share-weights
         for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
 
         :param sector: (str) the name of a GCAM sector
         :param technology: (str) the name of a GCAM technology in `sector`
@@ -1105,26 +1098,30 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
     # TBD: test
-    def setEnergyTechnologyCoefficients(self, subsector, technology, energyInput, pairs):
+    @callableMethod
+    def setEnergyTechnologyCoefficients(self, subsector, technology, energyInput, values):
         '''
         Set the coefficients in the global technology database for the given energy input
         of the given technology in the given subsector.
+        **Callable from XML setup files.**
 
         :param subsector: (str) the name of the subsector
         :param technology: (str)
             The name of the technology, e.g., 'cellulosic ethanol', 'FT biofuel', etc.
         :param energyInput: (str) the name of the minicam-energy-input
-        :param pairs:
-            A sequence of tuples of the form (year, coefficient). For example, to set
+        :param values:
+            A sequence of tuples or object with ``iteritems`` method returning
+            (year, coefficient). For example, to set
             the coefficients for cellulosic ethanol for years 2020 and 2025 to 1.234,
             the pairs would be ((2020, 1.234), (2025, 1.234)).
         :return:
-            nothing
+            none
         '''
         _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s" % \
-                     (energyInput, technology, subsector, pairs))
+                     (energyInput, technology, subsector, values))
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
+        enTransFileRel, enTransFileAbs = \
+            self.getLocalCopy(os.path.join(self.energy_dir_rel, "en_transformation.xml"))
 
         prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
                  (subsector, technology)
@@ -1132,14 +1129,14 @@ class XMLEditor(object):
 
         args = [enTransFileAbs]
 
-        for year, coef in pairs:
+        for year, coef in expandYearRanges(values):
             args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
                      '-v', str(coef)]
 
         xmlEdit(*args)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    # TBD -- test this!
+    # TBD: test
     def _addTimeStepYear(self, year, timestep=5):
 
         _logger.info("Add timestep year %s" % year)

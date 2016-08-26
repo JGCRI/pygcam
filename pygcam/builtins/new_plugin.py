@@ -56,7 +56,7 @@ def driver(args, tool):
     copyResource('etc/scenarios-template.py', dst, overwrite=False)
 
     # Provide example XML files
-    xmlFilesToCopy = ['rewriteSets', 'project', 'protection', 'queries']
+    xmlFilesToCopy = ['rewriteSets', 'project', 'protection', 'queries', 'scenarioSetup']
     for name in xmlFilesToCopy:
         path = 'etc/%s-example.xml' % name       # e.g., pygcam/etc/project-example.xml
         _logger.debug('Creating %s/%s', projectDir, dst)
