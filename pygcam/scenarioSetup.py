@@ -77,12 +77,16 @@ class ScenarioSetup(object):
         '''
         finalGroups = []
 
+        def expand(group):
+            group.name = group.name.format(**templateDict)
+            group.setScenarios(self.expandScenarios(group.scenarios(), templateDict))
+            finalGroups.append(group)
+
         for templateGroup in templateGroups:
             iterName = templateGroup.iteratorName
 
             if not iterName:
-                templateGroup.setScenarios(self.expandScenarios(templateGroup.scenarios(), templateDict))
-                finalGroups.append(templateGroup)
+                expand(templateGroup)
                 continue
 
             node = templateGroup.node
@@ -91,22 +95,27 @@ class ScenarioSetup(object):
 
             for value in iterator:
                 templateDict[iterName] = strFormat % value    # convert to string
-                group = ScenarioGroup(node)
-                group.name = group.name.format(**templateDict)
-                group.setScenarios(self.expandScenarios(group.scenarios(), templateDict))
-                finalGroups.append(group)
+                expand(ScenarioGroup(node))
 
         return finalGroups
 
     def expandScenarios(self, templateScenarios, templateDict):
         finalScenarios = []
 
+        # Replace the text context in all action elements with expanded version
+        def expand(scenario):
+            scenario.name = scenario.name.format(**templateDict)
+            finalScenarios.append(scenario)
+
+            for action in scenario.actions:
+                content = action.content
+                action.content = content.format(**templateDict) if content else None
+
         for templateScenario in templateScenarios:
             iterName = templateScenario.iteratorName
 
             if not iterName:
-                templateScenario.name = templateScenario.name.format(**templateDict)
-                finalScenarios.append(templateScenario)
+                expand(templateScenario)
                 continue
 
             node = templateScenario.node
@@ -116,14 +125,7 @@ class ScenarioSetup(object):
             # TBD: do substitution even if no inner iterator
             for value in iterator:
                 templateDict[iterName] = strFormat % value    # convert to string
-                scenario = Scenario(node)
-                scenario.name = scenario.name.format(**templateDict)
-                finalScenarios.append(scenario)
-
-                # Replace the text context in all action elements with expanded version
-                for action in scenario.actions:
-                    content = action.content
-                    action.content = content.format(**templateDict) if content else None
+                expand(Scenario(node))
 
         return finalScenarios
 
