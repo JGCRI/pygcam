@@ -159,7 +159,6 @@ setup programs (or other programs) without having to execute the <a class="refer
 <p>See the documentation for <a class="reference internal" href="landProtection-xml.html"><em>landProtection.xml</em></a>, the input file used by this subcommand.</p>
 <div class="section" id="module-pygcam.landProtection">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.landProtection" title="Permalink to this headline">¶</a></h2>
-<p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
 <dl class="class">
 <dt id="pygcam.landProtection.LandProtection">
 <em class="property">class </em><code class="descclassname">pygcam.landProtection.</code><code class="descname">LandProtection</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.LandProtection" title="Permalink to this definition">¶</a></dt>
@@ -230,7 +229,7 @@ regions are modified.</li>
 
 <dl class="function">
 <dt id="pygcam.landProtection.protectLand">
-<code class="descclassname">pygcam.landProtection.</code><code class="descname">protectLand</code><span class="sig-paren">(</span><em>infile</em>, <em>outfile</em>, <em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.protectLand" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.landProtection.</code><code class="descname">protectLand</code><span class="sig-paren">(</span><em>infile</em>, <em>outfile</em>, <em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em>, <em>unprotectFirst=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.landProtection.protectLand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a copy of <cite>infile</cite> that protects a <cite>fraction</cite> of <cite>landClasses</cite> in <cite>regions</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

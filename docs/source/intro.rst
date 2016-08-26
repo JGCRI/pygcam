@@ -1,8 +1,6 @@
 Introduction
 ==============
 
-*This package is currently under development.*
-
 The ``pygcam`` package comprises a set of Python modules and a main driver script designed
 to facilitate a more efficient workflow using
 `Global Change Assessment Model <http://www.globalchange.umd.edu/models/gcam>`_ (GCAM).
@@ -172,8 +170,10 @@ are used together. In this approach, "scenario" refers to both the name
 assigned in a configuration.xml file and a corresponding directory holding
 customized XML files, and a configuration file called ``config.xml``.
 
-Managing multiple workspaces
-----------------------------
+.. _workspaces-label:
+
+GCAM Workspaces
+--------------------
 
 The tools are most convenient to use if you follow the file layout created by
 the "setup tools". It is not required to use these tools or this file structure,

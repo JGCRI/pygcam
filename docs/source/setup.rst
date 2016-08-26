@@ -1,20 +1,55 @@
 GCAM XML-Setup
 =======================
 
-This page provides an introduction to the XML-Setup system. The
-API is documented with the :doc:`pygcam.xmlEditor` module. See also the
-:ref:`setup <setup-label>` sub-command.
+The XML-Setup system provides tools for modifying the XML input files
+that control GCAM's behavior. The XML-Setup system operates on standard
+GCAM input XML files to create modified copies of designated files and
+to manage corresponding modifications to the main GCAM ``configuration.xml``
+file.
 
-The XML-Setup system provides a Python API to the XML input files
-that control much of GCAM's behavior.
-The XML-Setup system operates  on standard GCAM input XML files to
-create modified copies of designated files and to manage corresponding
-modifications to the main GCAM ``configuration.xml`` file.
-
-User-defined Python scripts and any hand-coded XML files
-constitute the "source code" used to generate XML data and
+User-defined Python or XML scripts and any hand-coded XML files
+constitute the "source code" used to generate the XML data and
 configuration files described by the scripts. The generated XML files
-are written to a ``local-xml`` folder identified by the user's script.
+are written to a directory called ``local-xml`` within the source
+:ref:`workspace <workspaces-label>`.
+
+    .. seealso::
+
+       The :doc:`scenarios-xml` page documents the XML file format. See
+       :doc:`pygcam.xmlEditor` for more information about the Python API.
+       Command-line usage is described on the :ref:`gt setup <setup-label>` page.
+
+Usage
+------
+
+The XML-Setup system offers two levels of access:
+you can either write a custom Python module based on the API provided
+by :doc:`pygcam.xmlEditor`, or you can use a higher-level (but more
+restrictive) XML format that may be adequate and more convenient
+for many projects.
+
+The :ref:`setup <setup-label>` sub-command provides options to allow you
+to specify either the Python or XML approach. Determination of the file
+to use follows this sequence:
+
+  #. If a Python module or an XML setup file is specified on the command-line,
+     the indicated file is used.
+  #. If neither command-line option is used, the value of configuration file
+     variable ``GCAM.ScenarioSetupFile`` is used (if set) as the path to an
+     XML file.
+  #. If the variable is not set, the ultimate default is to look for a file
+     called ``scenarios.py`` at the location computed by combining the value
+     of configuration variable ``GCAM.XmlSrc``, an optional group sub-directory,
+     and ``scenarios.py``. For example, if ``GCAM.XmlSrc`` is set to
+     ``/Users/xyz/project/xmlsrc``, and the group directory ``FuelShock``
+     is in use, the path to the Python module would be
+     ``/Users/xyz/project/xmlsrc/FuelShock/scenarios.py``.
+
+
+Python setup scripts
+------------------------
+
+
 
 The module includes the :doc:`pygcam.xmlEditor` class that provides core XML
 editing functionality and identifies scenarios relationships, i.e., that

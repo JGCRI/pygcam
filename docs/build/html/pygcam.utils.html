@@ -157,7 +157,6 @@
 other modules of the pygcam toolkit.</p>
 <div class="section" id="module-pygcam.utils">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.utils" title="Permalink to this headline">¶</a></h2>
-<p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
 <dl class="class">
 <dt id="pygcam.utils.TempFile">
 <em class="property">class </em><code class="descclassname">pygcam.utils.</code><code class="descname">TempFile</code><span class="sig-paren">(</span><em>path=None</em>, <em>suffix=''</em>, <em>tmpDir=None</em>, <em>delete=True</em>, <em>openFile=False</em>, <em>text=True</em>, <em>createDir=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.TempFile" title="Permalink to this definition">¶</a></dt>
@@ -210,7 +209,7 @@ not a known TempFile.</li>
 
 <dl class="class">
 <dt id="pygcam.utils.XMLFile">
-<em class="property">class </em><code class="descclassname">pygcam.utils.</code><code class="descname">XMLFile</code><span class="sig-paren">(</span><em>xmlFile</em>, <em>schemaFile=None</em>, <em>raiseError=True</em>, <em>rootClass=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.XMLFile" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">pygcam.utils.</code><code class="descname">XMLFile</code><span class="sig-paren">(</span><em>xmlFile</em>, <em>schemaFile=None</em>, <em>raiseError=True</em>, <em>rootClass=None</em>, <em>removeComments=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.XMLFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an XML file, which is parsed by lxml.etree and stored internally.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -347,6 +346,13 @@ This function is the inverse of <a class="reference internal" href="#pygcam.util
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pygcam.utils.digitColumns">
+<code class="descclassname">pygcam.utils.</code><code class="descname">digitColumns</code><span class="sig-paren">(</span><em>df</em>, <em>asInt=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.digitColumns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of columns with integer names (as strings, e.g., &#8220;2007&#8221;) in df.
+If asInt is True return as a list of integers, otherwise as strings.</p>
 </dd></dl>
 
 <dl class="function">
@@ -676,7 +682,7 @@ by two ints separated by a hyphen.</td>
 
 <dl class="function">
 <dt id="pygcam.utils.printSeries">
-<code class="descclassname">pygcam.utils.</code><code class="descname">printSeries</code><span class="sig-paren">(</span><em>series</em>, <em>label</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.printSeries" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pygcam.utils.</code><code class="descname">printSeries</code><span class="sig-paren">(</span><em>series</em>, <em>label</em>, <em>header=''</em>, <em>loglevel='DEBUG'</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.utils.printSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print a <cite>series</cite> of values, with a give <cite>label</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

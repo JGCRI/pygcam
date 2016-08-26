@@ -1,0 +1,750 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>scenarios.xml &mdash; pygcam 0.1a1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
+        <link rel="up" title="XML File Formats" href="xmlFiles.html"/>
+        <link rel="next" title="queries.xml" href="query-xml.html"/>
+        <link rel="prev" title="project.xml" href="project-xml.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pygcam
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcamtool.html">GCAM tool (<code class="docutils literal"><span class="pre">gt</span></code>)</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.chart.html"><code class="docutils literal"><span class="pre">pygcam.chart</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.config.html"><code class="docutils literal"><span class="pre">pygcam.config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.diff.html"><code class="docutils literal"><span class="pre">pygcam.diff</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.error.html"><code class="docutils literal"><span class="pre">pygcam.error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.gcam.html"><code class="docutils literal"><span class="pre">pygcam.gcam</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.landProtection.html"><code class="docutils literal"><span class="pre">pygcam.landProtection</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="xmlFiles.html">XML File Formats</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pygcam</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="xmlFiles.html">XML File Formats</a> &raquo;</li>
+      
+    <li>scenarios.xml</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/scenarios-xml.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scenarios-xml">
+<h1>scenarios.xml<a class="headerlink" href="#scenarios-xml" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal"><span class="pre">scenarios.xml</span></code> provides instructions for modifying a GCAM
+configuration XML file. The file, which is processed by the
+<a class="reference internal" href="gcamtool.html#setup-label"><em>setup</em></a> sub-command, cad define one or more
+groups of related scenarios, and provides an iteration feature
+that allows automated generation of a set of related scenarios.</p>
+<blockquote>
+<div><div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">The <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> page provides an overview of setup system. See
+<a class="reference internal" href="pygcam.xmlEditor.html"><em>pygcam.xmlEditor</em></a> for more information about the Python API.
+Command-line usage is described on the <a class="reference internal" href="gcamtool.html#setup-label"><em>gt setup</em></a> page.</p>
+</div>
+</div></blockquote>
+<p>The XML element of the <code class="docutils literal"><span class="pre">scenarios.xml</span></code> file are described below, followed by an
+example.</p>
+<div class="section" id="xml-elements">
+<h2>XML elements<a class="headerlink" href="#xml-elements" title="Permalink to this headline">¶</a></h2>
+<p>The elements that comprise the <code class="docutils literal"><span class="pre">scenarios.xml</span></code> file are described below.</p>
+<div class="section" id="setup">
+<h3>&lt;setup&gt;<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
+<p>The top-most element, <code class="docutils literal"><span class="pre">&lt;setup&gt;</span></code>, encloses one or more <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code>
+elements and zero or more <code class="docutils literal"><span class="pre">&lt;iterator&gt;</span></code> elements. The <code class="docutils literal"><span class="pre">&lt;setup&gt;</span></code> element takes
+the following attributes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>defaultGroup</td>
+<td>no</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal"><span class="pre">defaultGroup</span></code> attribute of <code class="docutils literal"><span class="pre">&lt;setup&gt;</span></code> identifies the default
+scenarioGroup to use when no group is explicitly identified in
+the <a class="reference internal" href="gcamtool.html#setup-label"><em>gt setup</em></a> command.</p>
+</div>
+<div class="section" id="scenariogroup">
+<h3>&lt;scenarioGroup&gt;<a class="headerlink" href="#scenariogroup" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code> element defines a set of related <code class="docutils literal"><span class="pre">&lt;scenario&gt;</span></code>
+elements, which generally includes one baseline scenario and one or more
+policy scenarios. The required <cite>name</cite> attribute must match the name of a
+scenario defined in the <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file.</p>
+<p>Path, which is specified as an argument to the function
+<a class="reference internal" href="pygcam.query.html#pygcam.query.runBatchQuery" title="pygcam.query.runBatchQuery"><code class="xref py py-func docutils literal"><span class="pre">pygcam.query.runBatchQuery()</span></code></a>, on the command-line to the <code class="docutils literal"><span class="pre">query</span></code>
+sub-command, or by the value of the config variable <code class="docutils literal"><span class="pre">GCAM.QueryPath</span></code>.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="24%" />
+<col width="22%" />
+<col width="20%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+<tr class="row-odd"><td>useGroupDir</td>
+<td>no</td>
+<td>&#8220;0&#8221;</td>
+<td>boolean</td>
+</tr>
+<tr class="row-even"><td>iterator</td>
+<td>no</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+<tr class="row-odd"><td>baselineSource</td>
+<td>no</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+<p>When a project contains multiple scenario groups, it can keep the groups
+separated by using the group dir in the path. The <cite>useGroupDir</cite> attribute
+indicates whether the name of the scenario group should be used when
+composing pathnames of the scenario group&#8217;s XML files.</p>
+<p>The <cite>iterator</cite> attribute identifies an iterator (defined withing
+the <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code> to use to generate a series of scenario
+groups and/or scenarios. (See the next section and the
+<a class="reference internal" href="#setup-example"><em>example</em></a> below.)</p>
+<p>The <cite>baselineSource</cite> attribute allows the baseline for one scenario
+group to be based on the baseline for another scenario group in the
+same setup file. The argument to the <cite>baselineSource</cite> attribute must
+be of the form &#8220;groupName/baselineName&#8221;. For example, if the baseline
+(named &#8216;base-1a&#8217;) for scenario group &#8220;Bar&#8221; is sourced from scenario
+group &#8220;Foo&#8221;, whose baseline is named &#8220;foobase&#8221;, you would use the
+following definition:</p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;scenarioGroup</span> <span class="na">name=</span><span class="s">&quot;Bar&quot;</span> <span class="na">useGroupDir=</span><span class="s">&quot;1&quot;</span> <span class="na">baselineSource=</span><span class="s">&quot;Foo/foobase&quot;</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;base-1a&quot;</span> <span class="na">baseline=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Note that this use pattern requires that you use group directory names
+for each scenario group in a project, which is a good organizing approach
+in any case.</p>
+<p>The configuration file generated for the source
+group&#8217;s baseline is copied as the starting point for the current
+group&#8217;s baseline configuration, rather than using the GCAM reference
+configuration file. This avoids duplication of sequences of actions
+that are shared among scenario groups.</p>
+</div>
+<div class="section" id="iterator">
+<h3>&lt;iterator&gt;<a class="headerlink" href="#iterator" title="Permalink to this headline">¶</a></h3>
+<p>This element identifies an iterator that can be used to automatically
+generate a set of <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code> and/or <code class="docutils literal"><span class="pre">&lt;scenario&gt;</span></code> elements
+whose names are a function of the iterator value.</p>
+<p>There are three types of iterators: integer, floating point, and a
+comma-delimited list of text values. In each case, the setup command
+iterators over the given (or implied) set of values and substitutes
+the value where the name of the iterator is specified within curly
+braces, e.g., <code class="docutils literal"><span class="pre">{myIterator}</span></code>.</p>
+<p>For example, to create 3 scenarios called <code class="docutils literal"><span class="pre">scen-1</span></code>, <code class="docutils literal"><span class="pre">scen-2</span></code>,
+and <code class="docutils literal"><span class="pre">scen-3</span></code>, you can define an integer iterator (here, named
+&#8220;ssp&#8221;) with a minimum value of 1, a maximum of 2 and a step of
+1 (the default):</p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;iterator</span> <span class="na">name=</span><span class="s">&quot;ssp&quot;</span> <span class="na">min=</span><span class="s">&quot;1&quot;</span> <span class="na">max=</span><span class="s">&quot;3&quot;</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>You would then define the scenario name as</p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;scen-{ssp}&quot;</span><span class="nt">&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>which would result in the desired scenarios. Of course, for these
+to be useful, they need to create different configuration files.
+This is accomplished by using iterator names in the names of the
+relevant XML files. For example, you might have a set of files that
+define alternatives that you number 1 through three. You would then
+select the correct one by using the line:</p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;replace</span> <span class="na">name=</span><span class="s">&quot;cement_2&quot;</span><span class="nt">&gt;</span>{scenarioDir}/cement_incelas_ssp{ssp}.xml<span class="nt">&lt;/replace&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Note that in addition to iterators defined in the scenario group, two variables
+are added automatically: <code class="docutils literal"><span class="pre">scenarioDir</span></code> and <code class="docutils literal"><span class="pre">baselineDir</span></code>, which refer to paths
+relative to the GCAM &#8220;exe&#8221; directory to the directories for the current scenario
+and, for non-baseline scenarios, for the baseline.</p>
+<p>The <code class="docutils literal"><span class="pre">&lt;iterator&gt;</span></code> element recognizes the following attributes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>yes</td>
+<td>(none)</td>
+<td>see below</td>
+</tr>
+<tr class="row-even"><td>min</td>
+<td>no</td>
+<td>(none)</td>
+<td>numeric</td>
+</tr>
+<tr class="row-odd"><td>max</td>
+<td>no</td>
+<td>(none)</td>
+<td>numeric</td>
+</tr>
+<tr class="row-even"><td>step</td>
+<td>no</td>
+<td>(none)</td>
+<td>numeric</td>
+</tr>
+<tr class="row-odd"><td>format</td>
+<td>no</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+<tr class="row-even"><td>values</td>
+<td>no</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+<p>The <cite>type</cite> must be one of {int, float, list}. For the numeric types,
+int and float, a <cite>min</cite> and a <cite>max</cite> must be specified. These are
+coerced (if necessary) to the indicated type. Step is optional; it
+defaults to 1. The values generated are inclusive of the min and max
+values.</p>
+<p>The <cite>format</cite> allows you to specify how to represent values when converted
+to a string, using the formatting convention common to many programming
+languages. This is most useful for &#8220;float&#8221; iterators, as it lets you specify
+the number of decimal places to include. For example, a format of <code class="docutils literal"><span class="pre">%.2f</span></code>
+indicates a floating point value with 2 digits to the right of the decimal point.
+The default float format is <code class="docutils literal"><span class="pre">%.1f</span></code>, allowing one digit after the decimal point.</p>
+<p>For example, to generate the set of values {0.00, 0.25, 0.50, 0.75, 1.00}, you could
+create either of the following iterators:</p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;iterator</span> <span class="na">name=</span><span class="s">&quot;fraction&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">min=</span><span class="s">&quot;0&quot;</span> <span class="na">max=</span><span class="s">&quot;1&quot;</span> <span class="na">step=</span><span class="s">&quot;0.25&quot;</span> <span class="na">format=</span><span class="s">&quot;%.2f&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>or</p>
+<blockquote>
+<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;iterator</span> <span class="na">name=</span><span class="s">&quot;fraction&quot;</span> <span class="na">type=</span><span class="s">&quot;list&quot;</span> <span class="na">values=</span><span class="s">&quot;0.00,0.25,0.50,0.75,1.00&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The two approaches produce identical results. Use whichever you find more convenient.
+The &#8220;list&#8221; case is more flexible in that the values need not all have the same format,
+while the &#8220;int&#8221; and &#8220;float&#8221; versions would be more convenient for a large number of
+scenarios.</p>
+</div>
+<div class="section" id="scenario">
+<h3>&lt;scenario&gt;<a class="headerlink" href="#scenario" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">&lt;scenario&gt;</span></code> element defines a single scenario. It contains a
+sequence of &#8220;actions&#8221; that manipulate the scenario&#8217;s configuration
+file and (optionally) modify and create local copies of GCAM
+reference files or files defined in the baseline scenario.</p>
+<p>The <code class="docutils literal"><span class="pre">&lt;scenario&gt;</span></code> element accepts the following attributes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+<tr class="row-odd"><td>baseline</td>
+<td>no</td>
+<td>&#8220;0&#8221;</td>
+<td>boolean</td>
+</tr>
+<tr class="row-even"><td>iterator</td>
+<td>no</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+<p>The <cite>baseline</cite> attribute is used to identify the baseline scenario. Only
+one scenario in a <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code> can be identified as the baseline.</p>
+<p>The value of the <cite>iterator</cite> attribute must be the name of an iterator
+defined in the current <code class="docutils literal"><span class="pre">&lt;scenarioGroup&gt;</span></code>. When an <cite>iterator</cite> is used,
+a single <code class="docutils literal"><span class="pre">&lt;scenario&gt;</span></code> generates a sequence of
+scenarios based on the values of the iterator, as described above.</p>
+</div>
+<div class="section" id="actions-add-insert-replace-delete-and-function">
+<h3>Actions: &lt;add&gt;, &lt;insert&gt;, &lt;replace&gt;, &lt;delete&gt;, and &lt;function&gt;<a class="headerlink" href="#actions-add-insert-replace-delete-and-function" title="Permalink to this headline">¶</a></h3>
+<p>There are four action elements that operate on the configuration file, and
+a fifth, <code class="docutils literal"><span class="pre">&lt;function&gt;</span></code>, which can call certain internal methods of the
+<a class="reference internal" href="pygcam.xmlEditor.html"><em>pygcam.xmlEditor</em></a> class that can modify the configuration and/or
+modify and create local copies of GCAM reference files or files defined
+in the baseline scenario. Examples of each are provided
+<a class="reference internal" href="#setup-example"><em>below</em></a>.</p>
+<p>To maintain the ability to edit files programmatically using the the setup
+system, the name assigned to any new component should be unique among the
+scenario components.</p>
+<div class="section" id="add">
+<h4>&lt;add&gt;<a class="headerlink" href="#add" title="Permalink to this headline">¶</a></h4>
+<p>Adds a new &#8220;scenario component&#8221; element to the configuration file,
+at the end of the list of components. The text content of the element
+should be the name of the new XML file to include.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="insert">
+<h4>&lt;insert&gt;<a class="headerlink" href="#insert" title="Permalink to this headline">¶</a></h4>
+<p>Adds a new scenario components after the component with the name
+specified by the <cite>after</cite> attribute. The text content of the element
+should be the name of the new XML file to include.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+<tr class="row-odd"><td>after</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="replace">
+<h4>&lt;replace&gt;<a class="headerlink" href="#replace" title="Permalink to this headline">¶</a></h4>
+<p>Replace the XML file in the scenario component with the given name
+with that given in the text content of the <code class="docutils literal"><span class="pre">&lt;replace&gt;</span></code> element.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="delete">
+<h4>&lt;delete&gt;<a class="headerlink" href="#delete" title="Permalink to this headline">¶</a></h4>
+<p>Delete the scenario component with the given name.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="function">
+<h4>&lt;function&gt;<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h4>
+<p>Call the internal function (i.e., &#8220;method&#8221;) of the
+<a class="reference internal" href="pygcam.xmlEditor.html"><em>pygcam.xmlEditor</em></a> class with the given name, passing
+to it the arguments provided in the text of the <code class="docutils literal"><span class="pre">&lt;function&gt;</span></code>
+element. The arguments should be a comma-delimited set of
+values that are valid Python constants. Note that some
+function calls use keyword arguments, which must be specified
+with the keyword. Note that function arguments can refer to
+iterator variables. (See example <a class="reference internal" href="#setup-example"><em>below</em></a>.)</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="26%" />
+<col width="24%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Attribute</th>
+<th class="head">Required</th>
+<th class="head">Default</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>(none)</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="example">
+<span id="setup-example"></span><h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>This is an example of a scenarios.xml file.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="c">&lt;!-- Example of XML setup &quot;script&quot;</span>
+
+<span class="c">     The iterators are used to expand the scenarioGroup and scenario</span>
+<span class="c">     elements that reference them, and the top-level run method</span>
+<span class="c">     executes the steps defined here for the given group and scenario.</span>
+<span class="c">--&gt;</span>
+
+<span class="nt">&lt;setup</span> <span class="na">name=</span><span class="s">&quot;uniqueName&quot;</span> <span class="na">defaultGroup=</span><span class="s">&quot;protect-0.0&quot;</span>
+       <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+       <span class="na">xsi:noNamespaceSchemaLocation=</span><span class="s">&quot;scenarioSetup-schema.xsd&quot;</span><span class="nt">&gt;</span>
+
+    <span class="c">&lt;!-- Results in the set {&#39;0.0&#39;, &#39;0.2&#39;, &#39;0.4&#39;, &#39;0.6&#39;, &#39;0.8&#39;, &#39;1.0&#39;} --&gt;</span>
+    <span class="nt">&lt;iterator</span> <span class="na">name=</span><span class="s">&quot;fraction&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="na">min=</span><span class="s">&quot;0.0&quot;</span> <span class="na">max=</span><span class="s">&quot;1.0&quot;</span> <span class="na">step=</span><span class="s">&quot;0.2&quot;</span> <span class="na">format=</span><span class="s">&quot;%.1f&quot;</span><span class="nt">/&gt;</span>
+
+    <span class="c">&lt;!-- step=&quot;1&quot; is default for int type. Yields {&#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;} --&gt;</span>
+    <span class="nt">&lt;iterator</span> <span class="na">name=</span><span class="s">&quot;sspnum&quot;</span> <span class="na">type=</span><span class="s">&quot;int&quot;</span> <span class="na">min=</span><span class="s">&quot;1&quot;</span> <span class="na">max=</span><span class="s">&quot;5&quot;</span><span class="nt">/&gt;</span>
+
+    <span class="nt">&lt;iterator</span> <span class="na">name=</span><span class="s">&quot;letter&quot;</span> <span class="na">type=</span><span class="s">&quot;list&quot;</span> <span class="na">values=</span><span class="s">&quot;a,b ,c &quot;</span><span class="nt">/&gt;</span>
+
+    <span class="nt">&lt;scenarioGroup</span> <span class="na">name=</span><span class="s">&quot;protect-{fraction}&quot;</span> <span class="na">useGroupDir=</span><span class="s">&quot;0&quot;</span> <span class="na">iterator=</span><span class="s">&quot;fraction&quot;</span><span class="nt">&gt;</span>
+
+        <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;base-{fraction}-ssp-{sspnum}&quot;</span> <span class="na">baseline=</span><span class="s">&quot;1&quot;</span> <span class="na">iterator=</span><span class="s">&quot;sspnum&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!--</span>
+<span class="c">             &lt;function&gt; allows certain methods of the XMLEditor class to be called</span>
+<span class="c">             by passing comma-separated arguments in the text, just as they would</span>
+<span class="c">             be written inside the parentheses of a function call</span>
+<span class="c">             --&gt;</span>
+            <span class="nt">&lt;function</span> <span class="na">name=</span><span class="s">&quot;protectLand&quot;</span><span class="nt">&gt;</span>{fraction}, otherArable=False, unprotectFirst=True<span class="nt">&lt;/function&gt;</span>
+            <span class="nt">&lt;function</span> <span class="na">name=</span><span class="s">&quot;setClimateOutputInterval&quot;</span><span class="nt">&gt;</span>2<span class="nt">&lt;/function&gt;</span>
+
+            <span class="c">&lt;!-- Delete scenario elements in the file by their &quot;name&quot; tag --&gt;</span>
+            <span class="nt">&lt;delete</span> <span class="na">name=</span><span class="s">&quot;protected_land_input_2&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;delete</span> <span class="na">name=</span><span class="s">&quot;protected_land_input_3&quot;</span><span class="nt">/&gt;</span>
+
+            <span class="c">&lt;!--</span>
+<span class="c">            The variable {scenarioDir} is defined dynamically to be a relative path (from</span>
+<span class="c">            the &quot;exe&quot; directory, where GCAM is run) to the scenario&#39;s dir under local-xml.</span>
+<span class="c">            --&gt;</span>
+            <span class="nt">&lt;replace</span> <span class="na">name=</span><span class="s">&quot;cement_2&quot;</span><span class="nt">&gt;</span>{scenarioDir}/cement_incelas_ssp{sspnum}.xml<span class="nt">&lt;/replace&gt;</span>
+            <span class="nt">&lt;replace</span> <span class="na">name=</span><span class="s">&quot;industry_2&quot;</span><span class="nt">&gt;</span>{scenarioDir}/industry_incelas_ssp{sspnum}.xml<span class="nt">&lt;/replace&gt;</span>
+            <span class="nt">&lt;replace</span> <span class="na">name=</span><span class="s">&quot;socioeconomics_2&quot;</span><span class="nt">&gt;</span>{scenarioDir}/socioeconomics_ssp{sspnum}.xml<span class="nt">&lt;/replace&gt;</span>
+
+            <span class="c">&lt;!-- Replace standard file with modified version --&gt;</span>
+            <span class="nt">&lt;replace</span> <span class="na">name=</span><span class="s">&quot;transportation&quot;</span><span class="nt">&gt;</span>{scenarioDir}/transportation_custom.xml<span class="nt">&lt;/replace&gt;</span>
+
+            <span class="c">&lt;!-- add these new files at the end --&gt;</span>
+            <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;energy_USSugar&quot;</span><span class="nt">&gt;</span>{scenarioDir}/USSugarEthanol.xml<span class="nt">&lt;/add&gt;</span>
+            <span class="nt">&lt;add</span> <span class="na">name=</span><span class="s">&quot;energy_USPalm&quot;</span><span class="nt">&gt;</span>{scenarioDir}/USPalmBioDiesel.xml<span class="nt">&lt;/add&gt;</span>
+        <span class="nt">&lt;/scenario&gt;</span>
+
+        <span class="c">&lt;!-- By default, active=&quot;1&quot;; set it to &quot;0&quot; to deactivate --&gt;</span>
+        <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;corn-{fraction}-ssp-{sspnum}&quot;</span> <span class="na">iterator=</span><span class="s">&quot;sspnum&quot;</span> <span class="na">active=</span><span class="s">&quot;0&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- &lt;insert&gt; adds an element after the element with the given name  --&gt;</span>
+            <span class="nt">&lt;insert</span> <span class="na">name=</span><span class="s">&quot;whatever&quot;</span> <span class="na">after=</span><span class="s">&quot;cement_2&quot;</span><span class="nt">&gt;</span>{scenarioDir}/corn-specific-file.xml<span class="nt">&lt;/insert&gt;</span>
+        <span class="nt">&lt;/scenario&gt;</span>
+
+        <span class="nt">&lt;scenario</span> <span class="na">name=</span><span class="s">&quot;foo-{fraction}-{letter}&quot;</span> <span class="na">iterator=</span><span class="s">&quot;letter&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;insert</span> <span class="na">name=</span><span class="s">&quot;something&quot;</span> <span class="na">after=</span><span class="s">&quot;cement_2&quot;</span><span class="nt">&gt;</span>{scenarioDir}/foo-bar-baz.xml<span class="nt">&lt;/insert&gt;</span>
+        <span class="nt">&lt;/scenario&gt;</span>
+    <span class="nt">&lt;/scenarioGroup&gt;</span>
+<span class="nt">&lt;/setup&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="query-xml.html" class="btn btn-neutral float-right" title="queries.xml" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="project-xml.html" class="btn btn-neutral" title="project.xml" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Plevin.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1a1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

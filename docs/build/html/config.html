@@ -480,6 +480,7 @@ everything below it in the figure.</p>
 <span class="c1"># setup source files</span>
 <span class="na">GCAM.XmlSrc</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/xmlsrc</span>
 
+<span class="c1"># Deprecated</span>
 <span class="c1"># The folders for setup-generated XML files.</span>
 <span class="na">GCAM.LocalXml</span>       <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/local-xml</span>
 <span class="na">GCAM.DynXml</span>         <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/dyn-xml</span>
@@ -505,6 +506,10 @@ everything below it in the figure.</p>
 
 <span class="c1"># Default location in which to look for scenario directories</span>
 <span class="na">GCAM.ScenariosDir</span> <span class="o">=</span>
+
+<span class="c1"># Set to an XML file containing &quot;simple&quot; (i.e., no code required)</span>
+<span class="c1"># scenario setup instructions.</span>
+<span class="na">GCAM.ScenarioSetupFile</span> <span class="o">=</span>
 
 <span class="c1"># The ModelInterface directory for the version to use.</span>
 <span class="na">GCAM.MI.Dir</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/ModelInterface</span>

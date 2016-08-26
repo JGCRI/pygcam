@@ -1269,11 +1269,11 @@ usage: gt query [-h] [-d XMLDB] [-D] [-g GROUPDIR] [-n] [-o OUTPUTDIR] [-p]
 files and construction of a corresponding configuration XML file.
 See <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> for a detailed description.</p>
 <pre class="literal-block">
-usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G]
-                [-m MODULEPATH | -M MODULESPEC] [-p period-or-year]
-                [-r REFWORKSPACE] [-R RESULTSDIR] [-s SCENARIO] [-S SUBDIR]
-                [-u] [-x XMLSOURCEDIR] [-X XMLOUTPUTROOT] [-w WORKSPACE]
-                [-y YEARS]
+usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G] [-m MODULEPATH]
+                [-M MODULESPEC] [-p period-or-year] [-r REFWORKSPACE]
+                [-R RESULTSDIR] [-s SCENARIO] [-S SUBDIR]
+                [--setupXml SETUPXML] [-u] [-x XMLSOURCEDIR]
+                [-X XMLOUTPUTROOT] [-w WORKSPACE] [-y YEARS]
 </pre>
 <dl class="last docutils">
 <dt>Options:</dt>
@@ -1308,8 +1308,8 @@ usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G]
 <kbd><span class="option">-M</span>, <span class="option">--moduleSpec</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>The &#8220;dot spec&#8221; for the Python module holding the setup classes and
-                            a function called &#8216;scenarioClass&#8217; or a dictionary called &#8216;ClassMap&#8217; which map
-                            scenario names to classes. If the function &#8216;scenarioClass&#8217; exists, it is
+                            a function called &#8216;scenarioMapper&#8217; or a dictionary called &#8216;ClassMap&#8217; which map
+                            scenario names to classes. If the function &#8216;scenarioMapper&#8217; exists, it is
                             used. If not, the &#8216;ClassMap&#8217; is used. Default is &#8220;{xmlsrc}/subdir/scenarios.py&#8221; (if
                             subdir is defined) or &#8220;{xmlsrc}/scenarios.py&#8221; (if subdir is undefined) under the
                             current ProjectRoot.</td></tr>
@@ -1331,6 +1331,10 @@ usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G]
 <tr><td class="option-group">
 <kbd><span class="option">-S=</span>, <span class="option">--subdir=</span></kbd></td>
 <td>A sub-directory to use instead of scenario name</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--setupXml</span></kbd></td>
+<td>An XML scenario definition file. Overrides configuration variable
+                             GCAM.ScenarioSetupFile.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-u=False</span>, <span class="option">--useGroupDir=False</span></kbd></td>
 </tr>

@@ -176,7 +176,6 @@ form for Windows, but must be compiled on Mac OS X.</p>
 </div>
 <div class="section" id="module-pygcam.xmlEditor">
 <span id="api"></span><h2>API<a class="headerlink" href="#module-pygcam.xmlEditor" title="Permalink to this headline">¶</a></h2>
-<p><em>Code author: Rich Plevin &lt;<a class="reference external" href="mailto:rich&#37;&#52;&#48;plevin&#46;com">rich<span>&#64;</span>plevin<span>&#46;</span>com</a>&gt;</em></p>
 <dl class="class">
 <dt id="pygcam.xmlEditor.XMLEditor">
 <em class="property">class </em><code class="descclassname">pygcam.xmlEditor.</code><code class="descname">XMLEditor</code><span class="sig-paren">(</span><em>baseline</em>, <em>scenario</em>, <em>xmlOutputRoot</em>, <em>xmlSourceDir</em>, <em>refWorkspace</em>, <em>groupDir</em>, <em>subdir</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor" title="Permalink to this definition">¶</a></dt>
@@ -267,8 +266,8 @@ are constructed as indicated in</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pygcam.xmlEditor.XMLEditor.delScenarioComponent">
-<code class="descname">delScenarioComponent</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.delScenarioComponent" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.xmlEditor.XMLEditor.deleteScenarioComponent">
+<code class="descname">deleteScenarioComponent</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.deleteScenarioComponent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete a <code class="docutils literal"><span class="pre">&lt;ScenarioComponent&gt;</span></code> identified by the <code class="docutils literal"><span class="pre">&lt;Value&gt;</span></code> element name.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -294,11 +293,11 @@ already there.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pathname</strong> &#8211; (str) the pathname of an XML file</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str, str) a tuple of the relative and absolute path of the</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str, str) a tuple of the relative and absolute path of the
+local (i.e., within the current scenario) copy of the file.</td>
 </tr>
 </tbody>
 </table>
-<p>local (i.e., within the current scenario) copy of the file.</p>
 </dd></dl>
 
 <dl class="method">
@@ -353,16 +352,18 @@ is checked, and if not present, and error is raised.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>relPath</strong> &#8211; (str) a relative pathname</td>
 </tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str) the pathname of the closest copy of the file</td>
+</tr>
 </tbody>
 </table>
-<p>:return&#8221; (str)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pygcam.xmlEditor.XMLEditor.protectLand">
-<code class="descname">protectLand</code><span class="sig-paren">(</span><em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.protectLand" title="Permalink to this definition">¶</a></dt>
+<code class="descname">protectLand</code><span class="sig-paren">(</span><em>fraction</em>, <em>landClasses=None</em>, <em>otherArable=False</em>, <em>regions=None</em>, <em>unprotectFirst=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.protectLand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Modify land_input files to protect a constant fraction of unmanaged
-land of the given classes, in the given regions.</p>
+land of the given classes, in the given regions.
+<strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -410,9 +411,10 @@ only to the (now unique) names.</p>
 <dl class="method">
 <dt id="pygcam.xmlEditor.XMLEditor.setClimateOutputInterval">
 <code class="descname">setClimateOutputInterval</code><span class="sig-paren">(</span><em>years</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setClimateOutputInterval" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the climate output interval (the frequency at which climate-related
-outputs are saved to the XML database) to the given number of years,
-e.g., <code class="docutils literal"><span class="pre">&lt;Value</span> <span class="pre">name=&quot;climateOutputInterval&quot;&gt;1&lt;/Value&gt;</span></code>.</p>
+<dd><p>Sets the the frequency at which climate-related outputs are
+saved to the XML database to the given number of years,
+e.g., <code class="docutils literal"><span class="pre">&lt;Value</span> <span class="pre">name=&quot;climateOutputInterval&quot;&gt;1&lt;/Value&gt;</span></code>.
+<strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -427,11 +429,41 @@ output interval</td>
 </dd></dl>
 
 <dl class="method">
+<dt id="pygcam.xmlEditor.XMLEditor.setEnergyTechnologyCoefficients">
+<code class="descname">setEnergyTechnologyCoefficients</code><span class="sig-paren">(</span><em>subsector</em>, <em>technology</em>, <em>energyInput</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setEnergyTechnologyCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the coefficients in the global technology database for the given energy input
+of the given technology in the given subsector.
+<strong>Callable from XML setup files.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>subsector</strong> &#8211; (str) the name of the subsector</li>
+<li><strong>technology</strong> &#8211; (str)
+The name of the technology, e.g., &#8216;cellulosic ethanol&#8217;, &#8216;FT biofuel&#8217;, etc.</li>
+<li><strong>energyInput</strong> &#8211; (str) the name of the minicam-energy-input</li>
+<li><strong>values</strong> &#8211; A sequence of tuples or object with <code class="docutils literal"><span class="pre">iteritems</span></code> method returning
+(year, coefficient). For example, to set
+the coefficients for cellulosic ethanol for years 2020 and 2025 to 1.234,
+the pairs would be ((2020, 1.234), (2025, 1.234)).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pygcam.xmlEditor.XMLEditor.setGlobalTechNonEnergyCost">
 <code class="descname">setGlobalTechNonEnergyCost</code><span class="sig-paren">(</span><em>sector</em>, <em>subsector</em>, <em>technology</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setGlobalTechNonEnergyCost" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the non-energy cost of for technology in the global-technology-database,
 given a list of values of (year, price). The price is applied to all years
-indicated by the range.</p>
+indicated by the range.
+<strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -458,7 +490,8 @@ anything coercible to float.</li>
 <dt id="pygcam.xmlEditor.XMLEditor.setGlobalTechShareWeight">
 <code class="descname">setGlobalTechShareWeight</code><span class="sig-paren">(</span><em>sector</em>, <em>subsector</em>, <em>technology</em>, <em>values</em>, <em>xmlBasename='en_transformation.xml'</em>, <em>configFileTag='energy_transformation'</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setGlobalTechShareWeight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a modified version of en_transformation.xml with the given share-weights
-for <cite>technology</cite> in <cite>sector</cite> based on the data in <cite>values</cite>.</p>
+for <cite>technology</cite> in <cite>sector</cite> based on the data in <cite>values</cite>.
+<strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -490,7 +523,8 @@ section of a config file. This must match <cite>xmlBasename</cite>.</li>
 <dt id="pygcam.xmlEditor.XMLEditor.setGlobalTechShutdownRate">
 <code class="descname">setGlobalTechShutdownRate</code><span class="sig-paren">(</span><em>sector</em>, <em>subsector</em>, <em>technology</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setGlobalTechShutdownRate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a modified version of en_transformation.xml with the given shutdown
-rates for <cite>technology</cite> in <cite>sector</cite> based on the data in <cite>values</cite>.</p>
+rates for <cite>technology</cite> in <cite>sector</cite> based on the data in <cite>values</cite>.
+<strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -524,7 +558,7 @@ section of a config file. This must match <cite>xmlBasename</cite>.</li>
 <code class="descname">setInterpolationFunction</code><span class="sig-paren">(</span><em>region</em>, <em>supplysector</em>, <em>subsector</em>, <em>fromYear</em>, <em>toYear</em>, <em>funcName</em>, <em>applyTo='share-weight'</em>, <em>stubTechnology=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setInterpolationFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the interpolation function for the share-weight of the <cite>subsector</cite>
 of <cite>supplysector</cite> to <cite>funcName</cite> between years <cite>fromYear</cite> to <cite>toYear</cite>
-in <cite>region</cite>.</p>
+in <cite>region</cite>. <strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -551,7 +585,8 @@ in <cite>region</cite>.</p>
 <dt id="pygcam.xmlEditor.XMLEditor.setRegionalShareWeights">
 <code class="descname">setRegionalShareWeights</code><span class="sig-paren">(</span><em>region</em>, <em>sector</em>, <em>subsector</em>, <em>values</em>, <em>stubTechnology=None</em>, <em>xmlBasename='en_transformation.xml'</em>, <em>configFileTag='energy_transformation'</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.XMLEditor.setRegionalShareWeights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a modified version of en_transformation.xml with the given share-weights
-for <cite>technology</cite> in <cite>sector</cite> based on the data in <cite>values</cite>.</p>
+for <cite>technology</cite> in <cite>sector</cite> based on the data in <cite>values</cite>.
+<strong>Callable from XML setup files.</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -592,9 +627,9 @@ to the correct stop period for the configuration file.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>yearOrPeriod</strong> &#8211; (coercible to int) this argument is treated as a literal
-stop period if the value is &lt; 23. (N.B. 2015 = step 4, 2020 = step 5, and so
-on.) If 2000 &lt; <cite>yearOrPeriod</cite> &lt;= 2100, it is treated as a year, and converted
-to a stopPeriod. If the value is in neither range, a SetupException is raised.</td>
+stop period if the value is &lt; 1000. (N.B. 2015 = step 4, 2020 = step 5, and so
+on.) If yearOrPeriod &gt;= 1000, it is treated as a year and converted
+to a stopPeriod for use in the GCAM configuration file.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">none</td>
 </tr>
@@ -767,19 +802,20 @@ should replace the existing value</li>
 <code class="descclassname">pygcam.xmlEditor.</code><code class="descname">expandYearRanges</code><span class="sig-paren">(</span><em>seq</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.xmlEditor.expandYearRanges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Expand a sequence of (year, value) tuples, or a dict keyed by
 year, where the year argument may be a string containing identifying
-range of values with an optional &#8220;step&#8221; value (default step is 5)
-e.g., &#8220;2015-2030&#8221;, which means (2015, 2020, 2025, 2030), or
-&#8220;2015-2020:1&#8221;, which means (2015, 2016, 2017, 2018, 2019, 2020).
-When a range is given, the tuple is replaced with a sequence of
-tuples naming each years explicitly.</p>
+range of values with an optional &#8220;step&#8221; value indicated after a &#8221;:&#8221;.
+The default step is 5 years. For example, &#8220;2015-2030&#8221; expands to
+(2015, 2020, 2025, 2030), and &#8220;2015-2020:1&#8221; expands to
+(2015, 2016, 2017, 2018, 2019, 2020). When a range is given, the
+tuple is replaced with a sequence of tuples naming each year explicitly.
+Typical usage is <code class="docutils literal"><span class="pre">for</span> <span class="pre">year,</span> <span class="pre">price</span> <span class="pre">in</span> <span class="pre">expandYearRanges(values):</span> <span class="pre">...</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seq_or_dict</strong> &#8211; The sequence of tuples or dict of {year: value} elements
-to expand.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seq_or_dict</strong> &#8211; The sequence of (year, value) tuples, or any object with an
+iteritems() method that returns (year, value) pairs.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The a list of tuples holding the expanded sequence.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples with the expanded sequence.</td>
 </tr>
 </tbody>
 </table>
@@ -955,8 +991,8 @@ so they can be manipulated in the US only.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pygcam.sectorEditors.BioenergyEditor.purposeGrownOffRegional">
-<code class="descname">purposeGrownOffRegional</code><span class="sig-paren">(</span><em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.sectorEditors.BioenergyEditor.purposeGrownOffRegional" title="Permalink to this definition">¶</a></dt>
+<dt id="pygcam.sectorEditors.BioenergyEditor.purposeGrownOffInRegion">
+<code class="descname">purposeGrownOffInRegion</code><span class="sig-paren">(</span><em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.sectorEditors.BioenergyEditor.purposeGrownOffInRegion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn off the &#8220;isNewTechnology&#8221; flag for all land-leaf nodes to turn off
 purpose-grown biomass. The line(s) we need to edit in land_input_3.xml is:
 &lt;isNewTechnology fillout=&#8221;1&#8221; year=&#8221;2020&#8221;&gt;1&lt;/isNewTechnology&gt;</p>
@@ -1008,12 +1044,6 @@ required per GJ of ethanol. Modified from superclass version to operate on
 biofuelTechUSA.xml.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="pygcam.sectorEditors.RefiningEditor">
-<em class="property">class </em><code class="descclassname">pygcam.sectorEditors.</code><code class="descname">RefiningEditor</code><span class="sig-paren">(</span><em>baseline</em>, <em>scenario</em>, <em>xmlOutputRoot</em>, <em>xmlSourceDir</em>, <em>refWorkspace</em>, <em>groupDir</em>, <em>subdir</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pygcam.sectorEditors.RefiningEditor" title="Permalink to this definition">¶</a></dt>
-<dd><p>RefiningEditor add methods that deal with the refinery sector.</p>
 </dd></dl>
 
 </div>
