@@ -21,9 +21,6 @@ Features
 - Provide a way to run a query with different rewrites to produce different
   csv files.
 
-- Be able to specify a simple project without writing custom python code.
-  - see more info below
-
 - Have "gt new" copy a file structure as coremcs does
   - Config var defaults to this structure
   - User can copy this template, modify it, point to it
