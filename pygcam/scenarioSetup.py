@@ -4,11 +4,10 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-import os
 import sys
 
 from .config import getParam
-from .error import SetupException
+from .error import PygcamException, SetupException
 from .log import getLogger
 from .utils import XMLFile, getBooleanXML, resourceStream
 from .xmlEditor import XMLEditor, getCallableMethod
@@ -30,15 +29,21 @@ def _classForNode(node):
 #
 class ScenarioSetup(object):
 
-    def __init__(self, node, templateDict):
+    def __init__(self, node):
         self.name = node.get('name', '')    # unused currently
         self.defaultGroup = node.get('defaultGroup')
 
+        # These serve as a no-op on the build-out pass. The directory vars are
+        # converted when the scenario is run and the directories are known.
+        self.templateDict = {'scenarioDir' : '{scenarioDir}',
+                             'baselineDir' : '{baselineDir}'}
+
         iterators = map(Iterator, node.findall('iterator'))
         self.iteratorDict = {obj.name : obj for obj in iterators}
+        self.iteratorValues = {}
 
         templateGroups = map(ScenarioGroup, node.findall('scenarioGroup'))
-        self.groups = self.expandGroups(templateGroups, templateDict)
+        self.groups = self.expandGroups(templateGroups)
 
         # Create a dict of expanded groups for lookup
         self.groupDict = {obj.name : obj for obj in self.groups}
@@ -52,7 +57,7 @@ class ScenarioSetup(object):
     documentCache = {}
 
     @classmethod
-    def parse(cls, filename, templateDict):
+    def parse(cls, filename):
         """
         Parse an XML file holding a list of query descriptions.
         :param filename: (str) the name of the XML file to read
@@ -64,22 +69,23 @@ class ScenarioSetup(object):
 
         schemaStream = resourceStream('etc/scenarioSetup-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream, removeComments=True)
-        obj = cls(xmlFile.tree.getroot(), templateDict)
+        obj = cls(xmlFile.tree.getroot())
 
         cls.documentCache[filename] = obj      # cache it
         return obj
 
-    def expandGroups(self, templateGroups, templateDict):
+    def expandGroups(self, templateGroups):
         '''
         Expand the `templateGroups`, which may contain names based
         on iterators, into final scenarioGroups without iterators.
         Recursively expands scenarios within groups.
         '''
         finalGroups = []
+        templateDict = self.templateDict
 
         def expand(group):
             group.name = group.name.format(**templateDict)
-            group.setScenarios(self.expandScenarios(group.scenarios(), templateDict))
+            group.setScenarios(self.expandScenarios(group.scenarios()))
             finalGroups.append(group)
 
         for templateGroup in templateGroups:
@@ -94,22 +100,28 @@ class ScenarioSetup(object):
             strFormat = iterator.format
 
             for value in iterator:
-                templateDict[iterName] = strFormat % value    # convert to string
+                try:
+                    name = strFormat % value # convert to string
+                except Exception:
+                    raise SetupException("Bad format string: '%s'" % strFormat)
+
+                templateDict[iterName] = name
                 expand(ScenarioGroup(node))
 
         return finalGroups
 
-    def expandScenarios(self, templateScenarios, templateDict):
+    def expandScenarios(self, templateScenarios):
         finalScenarios = []
+        templateDict = self.templateDict
 
         # Replace the text context in all action elements with expanded version
         def expand(scenario):
             scenario.name = scenario.name.format(**templateDict)
             finalScenarios.append(scenario)
-
+            # This converts only the iterators. The directories {scenarioDir}
+            # and {baselineDir} are converted when the scenario is run.
             for action in scenario.actions:
-                content = action.content
-                action.content = content.format(**templateDict) if content else None
+                action.content = action.formatContent(templateDict)
 
         for templateScenario in templateScenarios:
             iterName = templateScenario.iteratorName
@@ -122,14 +134,13 @@ class ScenarioSetup(object):
             iterator = self.getIterator(iterName)
             strFormat = iterator.format
 
-            # TBD: do substitution even if no inner iterator
             for value in iterator:
                 templateDict[iterName] = strFormat % value    # convert to string
                 expand(Scenario(node))
 
         return finalScenarios
 
-    def run(self, editor):
+    def run(self, editor, directoryDict):
         """
         Run the setup for the given XmlEditor subclass.
 
@@ -139,7 +150,7 @@ class ScenarioSetup(object):
         self.editor = editor
         group = self.groupDict[editor.groupDir or self.defaultGroup]
         scenario = group.getScenario(editor.scenario or editor.baseline)
-        scenario.run(editor)
+        scenario.run(editor, directoryDict)
 
 # Iterators for float and int that *included* the stop value.
 # That is, terminal condition is "<= stop", not "< stop" as
@@ -232,9 +243,10 @@ class Scenario(object):
     def __str__(self):
         return "<scenario name='%s'>" % self.name
 
-    def run(self, editor):
-        for obj in self.actions:
-            obj.run(editor)
+    def run(self, editor, directoryDict):
+        for action in self.actions:
+            action.formattedContent = action.formatContent(directoryDict)
+            action.run(editor)
 
 class ConfigAction(object):
     def __init__(self, node):
@@ -242,10 +254,14 @@ class ConfigAction(object):
         self.name = node.get('name')
         self.dir  = node.get('dir', '')     # TBD: currently unused
         self.content = node.text
+        self.formattedContent = None
 
     def __str__(self):
-        return "<%s name='%s' dir='%s'>%s</config>" % \
-               (self.tag, self.name, self.dir, self.content)
+        return "<%s name='%s'>%s</config>" % \
+               (self.tag, self.name, self.content)
+
+    def formatContent(self, directoryDict):
+        return self.content.format(**directoryDict) if self.content else None
 
 class Insert(ConfigAction):
     def __init__(self, node):
@@ -253,40 +269,28 @@ class Insert(ConfigAction):
         self.after = node.get('after')
 
     def run(self, editor):
-        editor.insertScenarioComponent(self.name, self.content, self.after)
+        editor.insertScenarioComponent(self.name, self.formattedContent, self.after)
 
 class Add(ConfigAction):
-    def __init__(self, node):
-        super(Add, self).__init__(node)
-
     def run(self, editor):
-        editor.addScenarioComponent(self.name, self.content)
+        editor.addScenarioComponent(self.name, self.formattedContent)
 
 class Replace(ConfigAction):
-    def __init__(self, node):
-        super(Replace, self).__init__(node)
-
     def run(self, editor):
-        editor.updateScenarioComponent(self.name, self.content)
+        editor.updateScenarioComponent(self.name, self.formattedContent)
 
 class Delete(ConfigAction):
-    def __init__(self, node):
-        super(Delete, self).__init__(node)
-
     def run(self, editor):
         editor.deleteScenarioComponent(self.name)
 
 class Function(ConfigAction):
-    def __init__(self, node):
-        super(Function, self).__init__(node)
-
     def run(self, editor):
         name = self.name
         method = getCallableMethod(name)
         if not method:
             raise SetupException('<function name="%s">: function name is unknown', name)
 
-        codeStr = "editor.%s(%s)" % (name, self.content)
+        codeStr = "editor.%s(%s)" % (name, self.formattedContent)
         try:
             result = eval(codeStr)
         except SyntaxError as e:
@@ -294,57 +298,82 @@ class Function(ConfigAction):
 
 
 class Generator(ConfigAction):
-    def __init__(self, node):
-        super(Generator, self).__init__(node)
-        self.content = node.text
-
-    def __str__(self):
-        return "<generator name='%s'>%s</generator>" % (self.name, self.content)
-
     # TBD
     def run(self, editor):
         #print("Run generator %s: %s" % (self.name, self.content))
         raise SetupException('Generator is not yet implemented')
 
-#
-# This observes the same protocol as custom XMLEditor subclasses
-#
-class SimpleScenario(XMLEditor):
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
-        self.parentConfigPath = None
 
-        # if not a baseline, create a baseline instance as our parent
-        if scenario:
-            parent = SimpleScenario(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
+def createXmlEditorSubclass(setupFile):
+    """
+    Generate a subclass of the given `superclass` that runs the
+    XML setup file given by variable GCAM.ScenarioSetupFile.
+    If defined, GCAM.ScenarioSetupClass must be of the form:
+    "/path/to/module/dir:module.ClassName]". If the variable
+    GCAM.ScenarioSetupClass is empty, the class XMLEditor is
+    subclassed directly.
 
-        super(SimpleScenario, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                             refWorkspace, groupName, subdir, parent=parent)
+    :param setupFile: (str) the pathname of an XML setup file
+    :return: (class) A subclass of the given `superclass`
+    """
+    setupClass = getParam('GCAM.ScenarioSetupClass')
+    if setupClass:
+        try:
+            modPath, dotSpec = setupClass.split(':', 1)
+        except Exception:
+            raise SetupException('GCAM.ScenarioSetupClass should be of the form "/path/to/moduleDirectory:module.ClassName", got "%s"' % setupClass)
 
-    def setupStatic(self, args):
-        setupFile = getParam('GCAM.ScenarioSetupFile')
-        templateDict = {'scenarioDir': self.scenario_dir_rel,
-                        'baselineDir': self.baseline_dir_rel}
-        scenarioSetup = ScenarioSetup.parse(setupFile, templateDict)
+        try:
+            from .utils import importFromDotSpec
+            sys.path.insert(0, modPath)
+            _module, superclass = importFromDotSpec(dotSpec)
 
-        if not self.parent:
-            # Before calling setupStatic, we set the parent if there is
-            # a declared baseline source. This assumes it is in this
-            # project, in a different group directory.
-            group = scenarioSetup.groupDict[self.groupDir or scenarioSetup.defaultGroup]
-            baselineSource = group.baselineSource
-            if baselineSource:
-                try:
-                    groupName, baselineName = baselineSource.split('/')
-                except ValueError:
-                    raise SetupException('baselineSource error: "%s"; should be of the form "groupDir/baselineDir"' % baselineSource)
+        except PygcamException as e:
+            raise SetupException("Can't load setup class '%s' from '%s': %s" % (dotSpec, modPath, e))
+    else:
+        superclass = XMLEditor
 
-                parentGroup = scenarioSetup.groupDict[groupName]
-                scenario = parentGroup.getScenario(baselineName)
-                if scenario.isBaseline:
-                    self.parent = SimpleScenario(baselineName, None, self.xmlOutputRoot, self.xmlSourceDir,
-                                                 self.refWorkspace, groupName, self.subdir)
+    class XmlEditorSubclass(superclass):
+        def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
+            self.parentConfigPath = None
 
-        super(SimpleScenario, self).setupStatic(args)
-        scenarioSetup.run(self)
+            # if not a baseline, create a baseline instance as our parent
+            if scenario:
+                parent = XmlEditorSubclass(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
 
+            super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
+                                                    refWorkspace, groupName, subdir, parent=parent)
 
+        def setupStatic(self, args):
+            directoryDict = {'scenarioDir': self.scenario_dir_rel,
+                             'baselineDir': self.baseline_dir_rel}
+            scenarioSetup = ScenarioSetup.parse(setupFile)
+
+            if not self.parent:
+                # Before calling setupStatic, we set the parent if there is
+                # a declared baseline source. This assumes it is in this
+                # project, in a different group directory.
+                group = scenarioSetup.groupDict[self.groupDir or scenarioSetup.defaultGroup]
+                baselineSource = group.baselineSource
+                if baselineSource:
+                    try:
+                        groupName, baselineName = baselineSource.split('/')
+                    except ValueError:
+                        raise SetupException(
+                            'baselineSource error: "%s"; should be of the form "groupDir/baselineDir"' % baselineSource)
+
+                    parentGroup = scenarioSetup.groupDict[groupName]
+                    scenario = parentGroup.getScenario(baselineName)
+                    if scenario.isBaseline:
+                        self.parent = XmlEditorSubclass(baselineName, None, self.xmlOutputRoot, self.xmlSourceDir,
+                                                        self.refWorkspace, groupName, self.subdir)
+
+            # not an "else" since parent may be set in "if" above
+            if self.parent:
+                # patch the template dictionary with the dynamically-determined baseline dir
+                directoryDict['baselineDir'] = self.baseline_dir_rel = self.parent.scenario_dir_rel
+
+            super(XmlEditorSubclass, self).setupStatic(args)
+            scenarioSetup.run(self, directoryDict)
+
+    return XmlEditorSubclass

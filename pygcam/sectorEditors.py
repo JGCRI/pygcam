@@ -4,7 +4,7 @@
 '''
 from os import path
 from .log import getLogger
-from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology
+from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology, callableMethod
 
 _logger = getLogger(__name__)
 
@@ -56,6 +56,7 @@ class BioenergyEditor(XMLEditor):
         self.biodieselUsaAbs2 = path.join(self.scenario_dir_abs, biodieselUsaFile2)
         self.biodieselUsaRel2 = path.join(self.scenario_dir_rel, biodieselUsaFile2)
 
+    @callableMethod
     def adjustResidueSupply(self, loTarget, loPrice, loFract, hiTarget, hiPrice, hiFract, target):
         """
         Change supply curves for residues, as per arguments. loTarget and hiTarget identify
@@ -98,6 +99,7 @@ class BioenergyEditor(XMLEditor):
 
         self.updateScenarioComponent("residue_bio", resbioFileRel)
 
+    @callableMethod
     def setMswParameter(self, region, parameter, value):
         resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
 
@@ -107,6 +109,7 @@ class BioenergyEditor(XMLEditor):
 
         self.updateScenarioComponent("resources", resourcesFileRel)
 
+    @callableMethod
     def regionalizeBiomassMarket(self, region):
         _logger.info("Regionalize %s biomass market for %s" % (region, self.name))
 
@@ -126,6 +129,7 @@ class BioenergyEditor(XMLEditor):
 
         self.updateScenarioComponent("ag_base", agForPastBioFileRel)
 
+    @callableMethod
     def setCornEthanolCoefficients(self, cornCoef, gasCoef=None, elecCoef=None):
         '''
         Set corn ethanol performance coefficients, i.e., the (regional) corn, gas, and
@@ -161,6 +165,7 @@ class BioenergyEditor(XMLEditor):
             self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
     # deprecated?
+    @callableMethod
     def setBiofuelBiomassCoefficients(self, fuelName, pairs):
         '''
         Set new coefficients for biomass conversion for the given fuel
@@ -177,6 +182,7 @@ class BioenergyEditor(XMLEditor):
         self.setEnergyTechnologyCoefficients(self, BIOMASS_LIQUIDS, fuelName, 'regional biomass', pairs)
 
     # TBD: test
+    @callableMethod
     def purposeGrownOffInRegion(self, region):
         '''
         Turn off the "isNewTechnology" flag for all land-leaf nodes to turn off
@@ -201,7 +207,8 @@ class BioenergyEditor(XMLEditor):
     #
     # TBD: make region an optional parameter in these; fix callers
     #
-    def adjustForestResidueSupplyUSA(self, loPrice, loFract, hiPrice, hiFract):
+    @callableMethod
+    def adjustForestResidueSupply(self, region, loPrice, loFract, hiPrice, hiFract):
         '''
         Change supply curves for forest residues in the USA only. loPrice and hiPrice
         are the new prices to set; loFract and hiFract are the new fractions to assign
@@ -213,7 +220,7 @@ class BioenergyEditor(XMLEditor):
         resbioFileRel, resbioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "resbio_input.xml"))
 
         # Forest residue appears in two places. First, operate on AgSupplySector "Forest"
-        xPrefix = "//region[@name='USA']/AgSupplySector[@name='Forest']/AgSupplySubsector"
+        xPrefix = "//region[@name='%s']/AgSupplySector[@name='Forest']/AgSupplySubsector" % region
         fractHarvested = xPrefix + "/AgProductionTechnology/period[@year>=2015]/residue-biomass-production/fract-harvested"
 
         xmlEdit(resbioFileAbs,
@@ -227,7 +234,7 @@ class BioenergyEditor(XMLEditor):
             '-v', hiFract)
 
         # Do the same for supplysector="NonFoodDemand_Forest"
-        xPrefix = "//region[@name='USA']/supplysector[@name='NonFoodDemand_Forest']/subsector[@name='Forest']/stub-technology[@name='Forest']"
+        xPrefix = "//region[@name='%s']/supplysector[@name='NonFoodDemand_Forest']/subsector[@name='Forest']/stub-technology[@name='Forest']" % region
         fractHarvested = xPrefix + "/period[@year>=2015]/residue-biomass-production/fract-harvested"
 
         xmlEdit(resbioFileAbs,
@@ -246,6 +253,7 @@ class BioenergyEditor(XMLEditor):
     # Methods to operate in USA only on technologies extracted from global-technology-database
     #
     # TBD: generalize this?
+    @callableMethod
     def setCellEthanolShareWeightUSA(self, year, shareweight):
         '''
         Create modified version of cellEthanolUSA.xml with the given share-weight
@@ -261,6 +269,7 @@ class BioenergyEditor(XMLEditor):
 
         self.updateScenarioComponent("cell-etoh-USA", self.cellEthanolUsaRel)
 
+    @callableMethod
     def localizeCornEthanolTechnologyUSA(self):
         '''
         Copy the stub-technology for corn ethanol to CornEthanolUSA.xml and CornEthanolUSA2.xml
@@ -277,6 +286,7 @@ class BioenergyEditor(XMLEditor):
         self.insertScenarioComponent('corn-etoh-USA2', self.cornEthanolUsaRel2, 'energy_transformation')
         self.insertScenarioComponent('corn-etoh-USA1', self.cornEthanolUsaRel,  'energy_transformation')
 
+    @callableMethod
     def localizeCellEthanolTechnologyUSA(self):
         '''
         Same as corn ethanol above, but for cellulosic ethanol
@@ -288,6 +298,7 @@ class BioenergyEditor(XMLEditor):
 
         self.insertScenarioComponent('cell-etoh-USA', self.cellEthanolUsaRel, 'energy_transformation')
 
+    @callableMethod
     def localizeFtBiofuelsTechnologyUSA(self):
         '''
         Same as cellulosic ethanol above
@@ -300,6 +311,7 @@ class BioenergyEditor(XMLEditor):
         self.insertScenarioComponent('FT-biofuels-USA', self.ftBiofuelsUsaRel, 'energy_transformation')
 
     # TBD: translate pairs to allow ranges to be specified
+    @callableMethod
     def setBiofuelRefiningNonEnergyCostUSA(self, fuel, pairs):
         if not pairs:
             return
@@ -325,6 +337,7 @@ class BioenergyEditor(XMLEditor):
                      '-v', price]
         xmlEdit(*args)
 
+    @callableMethod
     def setCornEthanolCoefficientsUSA(self, cornCoef, gasCoef=None, elecCoef=None):
         '''
         Set corn ethanol performance coefficients: (regional) corn, gas, and electricity
@@ -352,6 +365,7 @@ class BioenergyEditor(XMLEditor):
         xmlEdit(*args)
         # config update handled in localize...()
 
+    @callableMethod
     def setCellEthanolBiomassCoefficientsUSA(self, tuples):
 
         _logger.info("Set US cellulosic ethanol biomass coefficients for %s" % self.name)

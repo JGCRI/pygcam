@@ -6,7 +6,10 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from ..log import getLogger
 from ..subcommand import SubcommandABC
+
+_logger = getLogger(__name__)
 
 class SetupCommand(SubcommandABC):
     __version__ = '0.1'
@@ -123,12 +126,14 @@ class SetupCommand(SubcommandABC):
 
         xmlSourceDir = args.xmlSourceDir or getParam('GCAM.XmlSrc')
 
-        setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
 
-        # TBD: document this
+        # If a setup XML file is defined, use the defined (or default) XMLEditor subclass
+        setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
         if setupXml:
-            from pygcam.scenarioSetup import SimpleScenario
-            scenClass = SimpleScenario
+            from ..scenarioSetup import createXmlEditorSubclass
+            _logger.debug('Setup using %s', setupXml)
+            scenClass = createXmlEditorSubclass(setupXml)
+
         else:
             # If neither is defined, we assume a custom scenarios.py file is used
             try:
@@ -136,6 +141,7 @@ class SetupCommand(SubcommandABC):
                     module = import_module(args.moduleSpec, package=None)
                 else:
                     modulePath = args.modulePath or os.path.join(xmlSourceDir, groupName, 'scenarios.py')
+                    _logger.debug('Setup using %s', modulePath)
                     module = loadModuleFromPath(modulePath)
 
             except Exception as e:
