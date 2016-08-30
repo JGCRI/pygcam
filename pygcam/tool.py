@@ -38,8 +38,8 @@ PROGRAM = 'gt'
 __version__ = '0.1'
 
 BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      NewProjectCommand, ProjectCommand, ProtectLandCommand,
-                      QueryCommand, SetupCommand, SandboxCommand]
+                      NewProjectCommand, ProtectLandCommand, QueryCommand,
+                      ProjectCommand, SandboxCommand, SetupCommand]
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
