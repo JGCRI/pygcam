@@ -585,7 +585,7 @@ class Project(object):
             except PygcamException as e:
                 if quitProgram:
                     raise
-                _logger.error(e)
+                _logger.error("Error running step '%s': %s", step.name, e)
 
 
     def dump(self, steps, scenarios):

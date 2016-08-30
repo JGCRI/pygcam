@@ -19,7 +19,7 @@ pathjoin = os.path.join
 _logger = getLogger(__name__)
 
 # Deprecated?
-def jobTmpDir():
+def _jobTmpDir():
     '''
     Generate the name of a temporary directory based on the value of GCAM.TempDir
     and the job ID from the environment.
@@ -36,7 +36,7 @@ def _setupTempOutputDir(outputDir):
     removeFileOrTree(outputDir, raiseError=False)
 
     if getParamAsBoolean('GCAM.MCS.UseTempOutput'): # TBD: define this variable
-        dirPath = jobTmpDir()
+        dirPath = _jobTmpDir()
         shutil.rmtree(dirPath, ignore_errors=True)  # rm any files from prior run in this job
         mkdirs(dirPath)
         _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
@@ -109,7 +109,7 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
             os.symlink(srcPath, dstPath)
 
 
-def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=''):
+def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
     '''
     Set up a run-time sandbox in which to run GCAM. This involves copying
     from or linking to files and directories in `workspace`, which defaults
@@ -118,7 +118,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=''):
     :param sandbox: (str) the directory to create
     :param srcWorkspace: (str) the workspace to link to or copy from
     :param forceCreate: (bool) if True, delete and recreate the sandbox
-    :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
+    :param mcsMode: (bool) perform setup appropriate for gcammcs trials.
     :return: none
     '''
     srcWorkspace = srcWorkspace or getParam('GCAM.SandboxRefWorkspace')
@@ -176,7 +176,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=''):
     _remakeSymLink(localXmlDir, localXmlLink)
 
 
-def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcs=False):
+def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=False):
     '''
     Create a copy of a reference workspace by linking to or copying files from
     `refWorkspace`, which defaults to the value of config parameter
@@ -186,7 +186,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcs=False)
     :param newWorkspace: (str) the directory to create
     :param refWorkspace: (str) the workspace to link to or copy from
     :param forceCreate: (bool) if True, delete and recreate the sandbox
-    :param mcs: (bool) if True, perform setup appropriate for gcammcs trials.
+    :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
     :return: none
     '''
     _logger.info("Setting up GCAM workspace '%s'", newWorkspace)
@@ -196,7 +196,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcs=False)
     if os.path.lexists(newWorkspace) and os.path.samefile(newWorkspace, refWorkspace):
         raise SetupException("run workspace is the same as reference workspace; no setup performed")
 
-    if mcs and getParamAsBoolean('GCAM.CopyAllFiles'):
+    if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
         _logger.warn('GCAM.CopyAllFiles = True while running MCS')
 
     if forceCreate:
@@ -206,11 +206,11 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcs=False)
 
     # Spell out rather than computing parameter names to facilitate
     # searching source files for parameter uses.
-    toCopy = getParam('GCAM.MCS.WorkspaceFilesToCopy' if mcs else 'GCAM.WorkspaceFilesToCopy')
+    toCopy = getParam('GCAM.MCS.WorkspaceFilesToCopy' if mcsMode else 'GCAM.WorkspaceFilesToCopy')
     for filename in toCopy.split():
         _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=True)
 
-    toLink = getParam('GCAM.MCS.WorkspaceFilesToLink' if mcs else 'GCAM.WorkspaceFilesToLink')
+    toLink = getParam('GCAM.MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink')
     for filename in toLink.split():
         _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=False)
 
