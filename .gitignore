@@ -21,10 +21,7 @@
 /dist/
 
 # Output
-docs/build/.doctrees
-docs/build/doctrees
-docs/build/latex
-docs/build/.buildinfo
+docs/build
 build/lib
 build/scripts-2.7
 

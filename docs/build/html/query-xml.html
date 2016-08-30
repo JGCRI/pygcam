@@ -32,7 +32,7 @@
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
         <link rel="up" title="XML File Formats" href="xmlFiles.html"/>
-        <link rel="next" title="landProtection.xml" href="landProtection-xml.html"/>
+        <link rel="next" title="rewriteSets.xml" href="rewrites-xml.html"/>
         <link rel="prev" title="scenarios.xml" href="scenarios-xml.html"/> 
 
   
@@ -86,6 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">What is pygcam?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
@@ -102,6 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
@@ -209,12 +211,13 @@ elements. The <code class="docutils literal"><span class="pre">&lt;query&gt;</sp
 </tr>
 </tbody>
 </table>
-<p>The <cite>varName</cite> is required for <code class="docutils literal"><span class="pre">&lt;queries&gt;</span></code> defined in the project.xml file;
+<p>The <cite>varName</cite> is required for <code class="docutils literal"><span class="pre">&lt;queries&gt;</span></code> defined in the <code class="docutils literal"><span class="pre">project.xml</span></code> file;
 it defines a variable name which is assigned the path of a temporary file
 into which the <code class="docutils literal"><span class="pre">&lt;queries&gt;</span></code> element and sub-elements are copied. If an
 external queries file is used, the varName is ignored.</p>
-<p>The <code class="docutils literal"><span class="pre">defaultMap</span></code> defines a default rewrite map to use with all queries,
-unless a query explicitly specifies <code class="docutils literal"><span class="pre">useDefault=&quot;0&quot;</span></code>.</p>
+<p>The <code class="docutils literal"><span class="pre">defaultMap</span></code> defines a default <a class="reference internal" href="rewrites-xml.html"><em>rewrite set</em></a> to use
+with all queries, which can be overridden for any single query by explicitly
+specifying <code class="docutils literal"><span class="pre">useDefault=&quot;0&quot;</span></code>.</p>
 <p>The <code class="docutils literal"><span class="pre">delete</span></code> attribute defines whether the temporary file generated from
 the <code class="docutils literal"><span class="pre">&lt;queries&gt;</span></code> element in the project.xml file should be deleted. This
 is primarily for debugging.</p>
@@ -262,12 +265,11 @@ applying to this <code class="docutils literal"><span class="pre">&lt;query&gt;<
 </div>
 <div class="section" id="rewriter">
 <h3>&lt;rewriter&gt;<a class="headerlink" href="#rewriter" title="Permalink to this headline">¶</a></h3>
-<p>This element identifies a rewrite set by name. The rewrite
-set must be defined in a file identified as an argument
+<p>This element identifies a <a class="reference internal" href="rewrites-xml.html"><em>rewrite set</em></a> by name.
+The rewrite set must be defined in a file identified as an argument
 to the <a class="reference internal" href="pygcam.query.html#pygcam.query.runBatchQuery" title="pygcam.query.runBatchQuery"><code class="xref py py-func docutils literal"><span class="pre">pygcam.query.runBatchQuery()</span></code></a>, on the command-line to
-the <a class="reference internal" href="gcamtool.html#query-label"><em>query sub-command</em></a>, or by the value of
-the config variable <code class="docutils literal"><span class="pre">GCAM.RewriteSetsFile</span></code>, which defaults to
-<code class="docutils literal"><span class="pre">%(GCAM.ProjectRoot)/etc/rewriteSets.xml</span></code>.</p>
+the <a class="reference internal" href="gcamtool.html#query-label"><em>query sub-command</em></a>, or by setting a value for
+the config variable <code class="docutils literal"><span class="pre">GCAM.RewriteSetsFile</span></code>.</p>
 <p>The query named in the <code class="docutils literal"><span class="pre">&lt;query&gt;</span></code> node is extracted into a
 temporary file and the specified rewrites are inserted into the
 query. If a <code class="docutils literal"><span class="pre">level</span></code> is specified, it identifies the variable
@@ -331,226 +333,6 @@ the option is available to override the default.</p>
 </pre></div>
 </div>
 </div></blockquote>
-<hr class="docutils" />
-</div>
-</div>
-</div>
-<div class="section" id="rewritesets-xml">
-<span id="rewritesets-label"></span><h1>rewriteSets.xml<a class="headerlink" href="#rewritesets-xml" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal"><span class="pre">rewriteSets.xml</span></code> file defines named sets of rewrite statements that
-can be added to queries defined in <code class="docutils literal"><span class="pre">queries.xml</span></code>, described above, or in
-a <code class="docutils literal"><span class="pre">&lt;queries&gt;</span></code> element within a <code class="docutils literal"><span class="pre">project.xml</span></code> file.</p>
-<div class="section" id="id1">
-<h2>XML elements<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p>The elements that comprise the <code class="docutils literal"><span class="pre">rewriteSets.xml</span></code> file are described below.</p>
-<div class="section" id="rewritesets">
-<h3>&lt;rewriteSets&gt;<a class="headerlink" href="#rewritesets" title="Permalink to this headline">¶</a></h3>
-<p>This is the outermost element, which takes no attributes and contains one
-or more <code class="docutils literal"><span class="pre">&lt;rewriteSet&gt;</span></code> elements.</p>
-</div>
-<div class="section" id="rewriteset">
-<h3>&lt;rewriteSet&gt;<a class="headerlink" href="#rewriteset" title="Permalink to this headline">¶</a></h3>
-<p>This element defines a set of rewrites, assigns the set a unique name, and
-specifies the default &#8216;level&#8217; to use if not overridden in the <code class="docutils literal"><span class="pre">queries.xml</span></code>
-file when the rewrite set is referenced. If the <code class="docutils literal"><span class="pre">append-values</span></code> flag is
-&#8220;true&#8221;, rows are written out for all elements including those with zero results.
-When the rewrite sets are inserted into a query file, <code class="docutils literal"><span class="pre">level</span></code> is set to &#8220;true&#8221;
-if any of the rewrite sets specified <code class="docutils literal"><span class="pre">append-values=&quot;true&quot;</span></code>, otherwise the
-value is set to &#8220;false&#8221;.</p>
-<p>If <code class="docutils literal"><span class="pre">byAEZ=&quot;true&quot;</span></code>, each rewrite is expanded to 18 elements with the same
-&#8216;to&#8217; attribute, but with the &#8216;from&#8217; attributes formed by appending &#8216;AEZ&#8217;
-and zero-padded, 2-digit integers from 1 to 18. In the example below, the
-element</p>
-<blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;rewriteSet</span> <span class="na">name=</span><span class="s">&quot;landCover&quot;</span> <span class="na">level=</span><span class="s">&quot;LandLeaf&quot;</span> <span class="na">byAEZ=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomass&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-    ...
-<span class="nt">&lt;/rewriteSet&gt;</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>is expanded in the generated query file to:</p>
-<blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ01&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ02&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ03&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ04&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ05&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ06&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ07&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ08&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ09&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ10&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ11&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ12&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ13&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ14&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ15&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ16&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ17&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomassAEZ18&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-</pre></div>
-</div>
-</div></blockquote>
-</div>
-<div class="section" id="rewrite">
-<h3>&lt;rewrite&gt;<a class="headerlink" href="#rewrite" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">&lt;rewrite&gt;</span></code> element defines a label rewrite. If the element
-specifies <code class="docutils literal"><span class="pre">byAEZ=&quot;true&quot;</span></code>, the element is expanded as described
-above. If all elements in a rewriteSet are to be expanded by AEZ,
-it is more convenient to specify this once in the <code class="docutils literal"><span class="pre">&lt;rewriteSet&gt;</span></code>
-element.</p>
-<p>The resulting <code class="docutils literal"><span class="pre">&lt;rewrite&gt;</span></code> statements are inserted into the query
-file and processed as usual by the GCAM batch query processor:</p>
-<blockquote>
-<div><ul class="simple">
-<li>If the &#8220;to&#8221; value is empty, any row with a matching value is
-dropped from the result set.</li>
-<li>If the &#8220;to&#8221; value specified a new name, the label is rewritten
-using the new name and grouped with other values having that
-name. This is used to aggregate values, e.g., from 32 regions
-to a smaller number. In the example below, the <code class="docutils literal"><span class="pre">resultSet</span></code>
-named <code class="docutils literal"><span class="pre">eightRegions</span></code> maps the 32 standard GCAM regions into
-8 regions.</li>
-<li>If a value is not specified, or if the &#8220;from&#8221; and &#8220;to&#8221; values
-are the same, the row is processed normally.</li>
-</ul>
-</div></blockquote>
-<table border="1" class="docutils">
-<colgroup>
-<col width="28%" />
-<col width="26%" />
-<col width="24%" />
-<col width="22%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Attribute</th>
-<th class="head">Required</th>
-<th class="head">Default</th>
-<th class="head">Values</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>from</td>
-<td>yes</td>
-<td>(none)</td>
-<td>text</td>
-</tr>
-<tr class="row-odd"><td>to</td>
-<td>yes</td>
-<td>(none)</td>
-<td>text</td>
-</tr>
-<tr class="row-even"><td>byAEZ</td>
-<td>no</td>
-<td>(none)</td>
-<td>text</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="id2">
-<h3>Example<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
-<p>This is an example of a file defining rewrite sets.</p>
-<blockquote>
-<div><div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;rewriteSets&gt;</span>
-   <span class="nt">&lt;rewriteSet</span> <span class="na">name=</span><span class="s">&quot;eightRegions&quot;</span> <span class="na">level=</span><span class="s">&quot;region&quot;</span> <span class="na">append-values=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;USA&quot;</span> <span class="na">to=</span><span class="s">&quot;United States&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Brazil&quot;</span> <span class="na">to=</span><span class="s">&quot;Brazil&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Canada&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of World&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;China&quot;</span> <span class="na">to=</span><span class="s">&quot;China&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Africa_Eastern&quot;</span> <span class="na">to=</span><span class="s">&quot;Africa&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Africa_Northern&quot;</span> <span class="na">to=</span><span class="s">&quot;Africa&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Africa_Southern&quot;</span> <span class="na">to=</span><span class="s">&quot;Africa&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Africa_Western&quot;</span> <span class="na">to=</span><span class="s">&quot;Africa&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Japan&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;South Korea&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;India&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Central America and Caribbean&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of South America&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Central Asia&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;EU-12&quot;</span> <span class="na">to=</span><span class="s">&quot;Europe Union 27&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;EU-15&quot;</span> <span class="na">to=</span><span class="s">&quot;Europe Union 27&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Europe_Eastern&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of World&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Europe_Non_EU&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of World&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;European Free Trade Association&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of World&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Indonesia&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Mexico&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of South America&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Middle East&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of World&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Pakistan&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Russia&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of World&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;South Africa&quot;</span> <span class="na">to=</span><span class="s">&quot;Africa&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;South America_Northern&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of South America&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;South America_Southern&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of South America&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;South Asia&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Southeast Asia&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Taiwan&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Argentina&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of South America&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Colombia&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of South America&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Australia_NZ&quot;</span> <span class="na">to=</span><span class="s">&quot;Rest of Asia&quot;</span><span class="nt">/&gt;</span>
-   <span class="nt">&lt;/rewriteSet&gt;</span>
-
-   <span class="nt">&lt;rewriteSet</span> <span class="na">name=</span><span class="s">&quot;food&quot;</span> <span class="na">level=</span><span class="s">&quot;input&quot;</span><span class="nt">&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Corn&quot;</span> <span class="na">to=</span><span class="s">&quot;Grains&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;FiberCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Other&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;MiscCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Other&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;OilCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Other&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;OtherGrain&quot;</span> <span class="na">to=</span><span class="s">&quot;Grains&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;PalmFruit&quot;</span> <span class="na">to=</span><span class="s">&quot;Other&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Rice&quot;</span> <span class="na">to=</span><span class="s">&quot;Grains&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Root_Tuber&quot;</span> <span class="na">to=</span><span class="s">&quot;Other&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;SugarCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Other&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Wheat&quot;</span> <span class="na">to=</span><span class="s">&quot;Grains&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;regional beef&quot;</span> <span class="na">to=</span><span class="s">&quot;Meat&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Dairy&quot;</span> <span class="na">to=</span><span class="s">&quot;Meat&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;OtherMeat_Fish&quot;</span> <span class="na">to=</span><span class="s">&quot;Meat&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Pork&quot;</span> <span class="na">to=</span><span class="s">&quot;Meat&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Poultry&quot;</span> <span class="na">to=</span><span class="s">&quot;Meat&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;SheepGoat&quot;</span> <span class="na">to=</span><span class="s">&quot;Meat&quot;</span><span class="nt">/&gt;</span>
-   <span class="nt">&lt;/rewriteSet&gt;</span>
-
-   <span class="c">&lt;!--</span>
-<span class="c">   This rewriteSet specifies byAEZ=&quot;true&quot;, which causes each rewrite to be</span>
-<span class="c">   expanded to 18 elements with the same &#39;to&#39; attribute, but with the &#39;from&#39;</span>
-<span class="c">   attributes formed by appending &#39;AEZ&#39; and zero-padded, 2-digit integers</span>
-<span class="c">   from 1 to 18, i.e., biomassAEZ01, biomassAEZ02, ..., biomassAEZ18.</span>
-<span class="c">   --&gt;</span>
-   <span class="nt">&lt;rewriteSet</span> <span class="na">name=</span><span class="s">&quot;landCover&quot;</span> <span class="na">level=</span><span class="s">&quot;LandLeaf&quot;</span> <span class="na">byAEZ=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;biomass&quot;</span> <span class="na">to=</span><span class="s">&quot;Biomass&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Corn&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;eucalyptus&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;FiberCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;FodderGrass&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;FodderHerb&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Forest&quot;</span> <span class="na">to=</span><span class="s">&quot;Forest (managed)&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Grassland&quot;</span> <span class="na">to=</span><span class="s">&quot;Grass&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Jatropha&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;MiscCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;OilCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;OtherArableLand&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;OtherGrain&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;PalmFruit&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Pasture&quot;</span> <span class="na">to=</span><span class="s">&quot;Pasture (grazed)&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;ProtectedGrassland&quot;</span> <span class="na">to=</span><span class="s">&quot;Other arable land&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;ProtectedShrubland&quot;</span> <span class="na">to=</span><span class="s">&quot;Other arable land&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;ProtectedUnmanagedForest&quot;</span> <span class="na">to=</span><span class="s">&quot;Forest (unmanaged)&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;ProtectedUnmanagedPasture&quot;</span> <span class="na">to=</span><span class="s">&quot;Pasture (other)&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Rice&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;RockIceDesert&quot;</span> <span class="na">to=</span><span class="s">&quot;Other land&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Root_Tuber&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Shrubland&quot;</span> <span class="na">to=</span><span class="s">&quot;Other arable land&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;SugarCrop&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Tundra&quot;</span> <span class="na">to=</span><span class="s">&quot;Other land&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;UnmanagedForest&quot;</span> <span class="na">to=</span><span class="s">&quot;Forest (unmanaged)&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;UnmanagedPasture&quot;</span> <span class="na">to=</span><span class="s">&quot;Pasture (other)&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;UrbanLand&quot;</span> <span class="na">to=</span><span class="s">&quot;Other land&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;Wheat&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;willow&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-       <span class="nt">&lt;rewrite</span> <span class="na">from=</span><span class="s">&quot;SugarcaneEthanol&quot;</span> <span class="na">to=</span><span class="s">&quot;Cropland&quot;</span><span class="nt">/&gt;</span>
-   <span class="nt">&lt;/rewriteSet&gt;</span>
-<span class="nt">&lt;/rewriteSets&gt;</span>
-</pre></div>
-</div>
-</div></blockquote>
 </div>
 </div>
 </div>
@@ -562,7 +344,7 @@ are the same, the row is processed normally.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="landProtection-xml.html" class="btn btn-neutral float-right" title="landProtection.xml" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rewrites-xml.html" class="btn btn-neutral float-right" title="rewriteSets.xml" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="scenarios-xml.html" class="btn btn-neutral" title="scenarios.xml" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

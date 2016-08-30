@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="pygcam 0.1a1 documentation" href="index.html"/>
-        <link rel="next" title="pygcam.subcommand" href="pygcam.subcommand.html"/>
+        <link rel="next" title="pygcam.setup" href="pygcam.setup.html"/>
         <link rel="prev" title="pygcam.project" href="pygcam.project.html"/> 
 
   
@@ -85,6 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">What is pygcam?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
@@ -101,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
@@ -213,10 +215,8 @@ is the only way to get data out of the model.</p>
 in order, adding any designated label rewrites to the query.</p>
 <p>The <a class="reference internal" href="gcamtool.html#query-label"><em>query sub-command</em></a> runs the batch query in ModelInterfaces and saves
 the results in the designated .CSV file. The <a class="reference internal" href="gcamtool.html"><em>GCAM tool (gt)</em></a> page for command-line options.</p>
-<p>Label rewrites are currently defined in a separate XML file, for which the default path is
-given in pygcam&#8217;s system configuration file by the variable <code class="docutils literal"><span class="pre">GCAM.RewriteSetsFile</span></code>; it
-defaults to <code class="docutils literal"><span class="pre">%(ProjectRoot)s/queries/rewriteSets.xml</span></code>. The format of this XML file is
-described in <a class="reference internal" href="query-xml.html"><em>queries.xml</em></a>.</p>
+<p>Label rewrites are currently defined in a separate <a class="reference internal" href="rewrites-xml.html"><em>rewriteSets.xml</em></a>, which can be named
+in the pygcam configuration file by the variable <code class="docutils literal"><span class="pre">GCAM.RewriteSetsFile</span></code>.</p>
 <div class="section" id="module-pygcam.query">
 <span id="api"></span><h3>API<a class="headerlink" href="#module-pygcam.query" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -620,7 +620,7 @@ for example, 2 decimal places, use float_format=&#8221;%.2f&#8221;.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pygcam.subcommand.html" class="btn btn-neutral float-right" title="pygcam.subcommand" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pygcam.setup.html" class="btn btn-neutral float-right" title="pygcam.setup" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="pygcam.project.html" class="btn btn-neutral" title="pygcam.project" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

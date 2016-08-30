@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
@@ -158,17 +159,6 @@
 <p class="first admonition-title">Note</p>
 <p class="last"><em>This tutorial is currently under development.</em></p>
 </div>
-<p>Elements to understand:</p>
-<blockquote>
-<div><ul class="simple">
-<li>Configuration file</li>
-<li>gt command and sub-commands</li>
-<li>project.xml</li>
-<li>rewrite sets</li>
-<li>query specifications (two forms &#8211; move doc from pygcam.query to non-programmer page)</li>
-<li>setup &#8211; the most challenging bit still</li>
-</ul>
-</div></blockquote>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a brief introduction to the elements of this tutorial. The tutorial
@@ -208,12 +198,14 @@ between scenario results, plot figures of scenario results and differences from
 baselines.)</li>
 <li>data required by some of the steps</li>
 </ul>
-<p>See <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> for a detailed description of the file&#8217;s XML schema.</p>
+<p>See <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> for a detailed description of the file&#8217;s XML schema, and more
+information later in this document. See <a class="reference internal" href="setup.html"><em>GCAM XML-Setup</em></a> and <a class="reference internal" href="scenarios-xml.html"><em>scenarios.xml</em></a> for
+information regarding how to define scenarios in XML or in Python.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <a class="reference internal" href="gcamtool.html#new-label"><em>new</em></a> sub-command of the <a class="reference internal" href="gcamtool.html"><em>GCAM tool (gt)</em></a> script can be used to create the
-initial structure and files required for a new project, and optionally, insert
-a section for the new project in the <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> configuration file.</p>
+<p class="last">The <a class="reference internal" href="gcamtool.html#new-label"><em>new</em></a> sub-command of the <a class="reference internal" href="gcamtool.html"><em>GCAM tool (gt)</em></a> script can be used to
+create the initial structure and files required for a new project, and optionally,
+insert a section for the new project in the <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code> configuration file.</p>
 </div>
 </div>
 <div class="section" id="setup-the-project-files">
@@ -242,13 +234,14 @@ checks whether this file exists. If the file is not found, it is created with al
 available configuration parameters shown in comments (i.e., lines starting with &#8216;#&#8217;)
 explaining their purpose and showing their default values. To uncomment a line,
 simply remove the leading &#8216;#&#8217; character.</p>
-<p>Edit the configuration file with any editor capable of
-working with plain text&#8212;not a word-processor such as Word. You can use
-the command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to invoke a system-appropriate editor on the
-configuration file. See the <a class="reference internal" href="config.html"><em>Configuration System</em></a> page for details.</p>
+<p>Edit the configuration file with any editor capable of working with plain text.
+(Word-processors such as Word introduce formatting information into the file which
+renders it unusable by <code class="docutils literal"><span class="pre">pygcam</span></code>.) You can use the command <code class="docutils literal"><span class="pre">gt</span> <span class="pre">config</span> <span class="pre">-e</span></code> to
+invoke a system-appropriate editor on the configuration file. See the <a class="reference internal" href="config.html"><em>Configuration System</em></a>
+page for details.</p>
 <div class="section" id="configuration-file-sections">
 <h3>Configuration file sections<a class="headerlink" href="#configuration-file-sections" title="Permalink to this headline">¶</a></h3>
-<p>The configuration file is divided into sections indicated by a name in square brackets.
+<p>The configuration file is divided into sections indicated by a name within square brackets.
 All variable declarations following a section declaration, until the next section
 declaration (if any) appear in the declared section. You can declare a section multiple
 times to add new values to the section.
@@ -256,7 +249,7 @@ times to add new values to the section.
 <div class="section" id="project-sections">
 <h4>Project sections<a class="headerlink" href="#project-sections" title="Permalink to this headline">¶</a></h4>
 <p>Each project should have its own section. For example, to setup a project called, say,
-&#8220;Paper1&#8221;, I would create the section <code class="docutils literal"><span class="pre">[Paper1]</span></code>. Following this, I would define variables
+&#8220;paper1&#8221;, I would create the section <code class="docutils literal"><span class="pre">[paper1]</span></code>. Following this, I would define variables
 particular to this project, e.g., where the to find the files defining scenarios, queries,
 and so on.</p>
 </div>
@@ -272,33 +265,28 @@ allowing them to be overridden on a project-by-project basis.</p>
 </div>
 <div class="section" id="sample-configuration-file">
 <span id="sample-config-label"></span><h3>Sample configuration file<a class="headerlink" href="#sample-configuration-file" title="Permalink to this headline">¶</a></h3>
-<p>Below is a sample configuration file for a project called <code class="docutils literal"><span class="pre">Paper1</span></code>. The user has
-created some (non-pygcam) variables prefixed by <code class="docutils literal"><span class="pre">User.</span></code>. The prefixes are merely a
-convention to identify standard pygcam variables. For user-defined variables, use any
-prefix desired, or none at all.</p>
+<p>Below is a sample configuration file for a project called <code class="docutils literal"><span class="pre">Paper1</span></code>. By convention,
+variables are named with a prefix identifying where they are defined. All variables
+defined by <code class="docutils literal"><span class="pre">pygcam</span></code> begin with <code class="docutils literal"><span class="pre">GCAM.</span></code>, so if you create your own variables (e.g.,
+to define values used in defining other variables) you should avoid confusion by avoiding
+this prefix. You can use any prefix desired, or none at all.</p>
 <blockquote>
 <div><div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
-<span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">Paper1</span>
+<span class="na">GCAM.DefaultProject</span> <span class="o">=</span> <span class="s">paper1</span>
 
-<span class="na">User.RepoRoot</span>       <span class="o">=</span> <span class="s">%(Home)s/git-repo</span>
+<span class="na">GCAM.ProjectRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/gcamProjects</span>
 <span class="na">GCAM.SandboxRoot</span>    <span class="o">=</span> <span class="s">%(Home)s/ws</span>
 
 <span class="na">GCAM.LogLevel</span>       <span class="o">=</span> <span class="s">INFO</span>
-<span class="na">GCAM.ShowStackTrace</span> <span class="o">=</span> <span class="s">True</span>
-<span class="na">GCAM.ModelInterfaceLogFile</span> <span class="o">=</span> <span class="s">%(Home)s/tmp/mi.log</span>
-<span class="na">GCAM.UseVirtualBuffer</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">GCAM.MI.LogFile</span>     <span class="o">=</span> <span class="s">%(Home)s/tmp/mi.log</span>
+<span class="na">GCAM.MI.Dir</span>         <span class="o">=</span> <span class="s">/pic/projects/GCAM/ModelInterface</span>
 
-<span class="na">GCAM.Root</span>           <span class="o">=</span> <span class="s">%(Home)s/GCAM</span>
-<span class="na">GCAM.RefWorkspace</span>   <span class="o">=</span> <span class="s">%(GCAM.Current)s/Main_User_Workspace</span>
-<span class="na">GCAM.ModelInterface</span> <span class="o">=</span> <span class="s">/pic/projects/GCAM/ModelInterface</span>
-<span class="na">GCAM.JavaLibPath</span>    <span class="o">=</span> <span class="s">/pic/projects/GCAM/GCAM-libraries/lib/basex</span>
 <span class="na">GCAM.OtherBatchArgs</span> <span class="o">=</span> <span class="s">-A my_account</span>
 
 <span class="na">GCAM.QueryDir</span>  <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/queries</span>
 <span class="na">GCAM.QueryPath</span> <span class="o">=</span> <span class="s">%(GCAM.QueryDir)s</span>
 
-<span class="c1"># Default location for query results</span>
-<span class="na">GCAM.OutputDir</span> <span class="o">=</span> <span class="s">%(Home)s/ws/output</span>
+<span class="na">GCAM.TextEditor</span>     <span class="o">=</span> <span class="s">open -a emacs</span>
 
 <span class="c1"># Setup config files to not write extraneous files, so of which are very large</span>
 <span class="na">GCAM.WriteDebugFile</span>     <span class="o">=</span> <span class="s">False</span>
@@ -306,8 +294,10 @@ prefix desired, or none at all.</p>
 <span class="na">GCAM.WriteXmlOutputFile</span> <span class="o">=</span> <span class="s">False</span>
 <span class="na">GCAM.WriteOutputCsv</span>     <span class="o">=</span> <span class="s">False</span>
 
-<span class="k">[Paper1]</span>
-<span class="na">GCAM.RegionMapFile</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/etc/Regions.txt</span>
+<span class="k">[paper1]</span>
+<span class="na">GCAM.RewriteSetsFile</span>        <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/etc/rewriteSets.xml</span>
+<span class="na">GCAM.ScenarioSetupFile</span>      <span class="o">=</span> <span class="s">%(GCAM.ProjectDir)s/etc/scenarios.xml</span>
+<span class="na">GCAM.LogLevel</span>           <span class="o">=</span> <span class="s">DEBUG</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -320,9 +310,58 @@ prefix desired, or none at all.</p>
 scenarios that are compared to the baseline. In <code class="docutils literal"><span class="pre">pygcam</span></code>, the experiment is defined in
 a <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file, the location of which is specified by the config parameter
 <code class="docutils literal"><span class="pre">GCAM.ProjectXmlFile</span></code>, which defaults to <code class="docutils literal"><span class="pre">%(GCAM.ProjectDir)s/etc/project.xml</span></code>.</p>
+<p>The <a class="reference internal" href="scenarios-xml.html"><em>scenarios.xml</em></a> file describes all the workflow steps required to setup, run, and</p>
 <p>The <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file describes all the workflow steps required to setup, run, and
 analyze the scenarios. The entire workflow or select steps can be run using the gcamtool
-<cite>:ref: run &lt;run-label&gt;</cite> sub-command.</p>
+<a class="reference internal" href="gcamtool.html#run-label"><em>run</em></a> sub-command.</p>
+<p>After you have created a <code class="docutils literal"><span class="pre">project.xml</span></code> file describing the scenarios, workflow steps,
+and other parameters and data required by the workflow steps, and created a configuration
+file to set appropriate defaults, you can run the entire analysis with a single command:</p>
+<div class="highlight-sh"><div class="highlight"><pre><span></span>gt run
+</pre></div>
+</div>
+<p>With no other options specified (as above), the default scenario group (identified in
+the project.xml file) of the default project (defined in your configuration file) will
+be run, starting with the scenario identified as the baseline, followed by all other
+policy scenarios. All defined workflow steps will be executed in the order defined,
+for all scenarios.</p>
+<p>Of course, there are several options available to the <a class="reference internal" href="gcamtool.html"><em>GCAM tool (gt)</em></a> command, including
+the ability to set the desired level of diagnostic output (the &#8220;log level&#8221;), and
+to run the command on a compute node on a cluster computing system.</p>
+<p>The <a class="reference internal" href="gcamtool.html#run-label"><em>&#8220;run&#8221; sub-command</em></a> also provides many options, including the
+ability to select which scenario group to run and limit which scenarios and steps to
+run (or not run).</p>
+</div>
+<div class="section" id="customizing-project-steps">
+<h2>Customizing project steps<a class="headerlink" href="#customizing-project-steps" title="Permalink to this headline">¶</a></h2>
+<p>The generic workflow steps defined in the <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file may suffice for
+many projects. It is likely, however, that you will want to customize several other
+elements of the project file.</p>
+<div class="section" id="queries">
+<h3>Queries<a class="headerlink" href="#queries" title="Permalink to this headline">¶</a></h3>
+<p>The queries identified in the project file (or in an external file) determine which
+results are extracted from the GCAM database for each run of the model, and thus
+determine which subsequent steps (computing differences, creating charts) can be
+performed. To plot results, you must first extract them from the database using
+a query.</p>
+<p>Queries can be extracted on-the-fly from files used with ModelInterface by specifying
+the location of the XML file in the configuration variable <code class="docutils literal"><span class="pre">GCAM.QueryPath</span></code> and
+referencing the desired query by its defined &#8220;title&#8221;. (See the
+<a class="reference internal" href="gcamtool.html#query-label"><em>query sub-command</em></a> and the <a class="reference internal" href="pygcam.query.html"><em>pygcam.query</em></a> API documentation
+for more information.)</p>
+</div>
+<div class="section" id="rewrite-sets">
+<h3>Rewrite sets<a class="headerlink" href="#rewrite-sets" title="Permalink to this headline">¶</a></h3>
+<p>Standard GCAM XML queries can define &#8220;rewrites&#8221; which modify the values of chosen
+data elements to allow them to be aggregated. For example, you can aggregate all
+values of CornAEZ01, CornAEZ02, ..., CornAEZ18 to be returned simply as &#8220;Corn&#8221;.</p>
+<p>In <code class="docutils literal"><span class="pre">pygcam</span></code> this idea is taken a step further by allowing you to define reusable,
+named &#8220;rewrite sets&#8221; that can be applied on-the-fly to
+queries named in the project file. For example, if you are working with a particular
+regional aggregation, you can define this aggregation once in a <code class="docutils literal"><span class="pre">rewrites.xml</span></code> file
+and reference the name of the rewrite set when specifying queries in <a class="reference internal" href="project-xml.html"><em>project.xml</em></a>.
+See <a class="reference internal" href="rewrites-xml.html"><em>rewrite sets</em></a> for more information.</p>
+</div>
 </div>
 </div>
 

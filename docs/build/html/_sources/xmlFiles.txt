@@ -1,6 +1,20 @@
 XML File Formats
 ==================
 
+Quick links
+^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   project-xml
+   scenarios-xml
+   query-xml
+   rewrites-xml
+   landProtection-xml
+
+-------------------
+
 Various :doc:`gcamtool` sub-commands take input from XML files that are distinct
 from those read by the GCAM model itself. These include:
 
@@ -21,7 +35,7 @@ by GCAM, including aggregation "rewrites" that are added on-the-fly.
 
 rewriteSets.xml
 ^^^^^^^^^^^^^^^^^
-The :ref:`rewriteSets.xml <rewriteSets-label>` file describes named sets of "rewrite" statements that can be
+The :doc:`rewriteSets.xml <rewrites-xml>` file describes named sets of "rewrite" statements that can be
 referenced by queries in :doc:`query-xml`.
 
 landProtection.xml
@@ -29,11 +43,3 @@ landProtection.xml
 The :doc:`landProtection-xml` file describes which types of unmanaged land should "protected",
 (i.e., removed from economic consideration in the model), and at what percentages in each region.
 
-
-.. toctree::
-   :maxdepth: 1
-
-   project-xml
-   scenarios-xml
-   query-xml
-   landProtection-xml

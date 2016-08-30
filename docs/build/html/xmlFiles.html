@@ -85,6 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">What is pygcam?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
@@ -101,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pygcam.log.html"><code class="docutils literal"><span class="pre">pygcam.log</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.project.html"><code class="docutils literal"><span class="pre">pygcam.project</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.query.html"><code class="docutils literal"><span class="pre">pygcam.query</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pygcam.setup.html"><code class="docutils literal"><span class="pre">pygcam.setup</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.subcommand.html"><code class="docutils literal"><span class="pre">pygcam.subcommand</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.utils.html"><code class="docutils literal"><span class="pre">pygcam.utils</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pygcam.xmlEditor.html"><code class="docutils literal"><span class="pre">pygcam.xmlEditor</span></code></a></li>
@@ -153,8 +155,21 @@
             
   <div class="section" id="xml-file-formats">
 <h1>XML File Formats<a class="headerlink" href="#xml-file-formats" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quick-links">
+<h2>Quick links<a class="headerlink" href="#quick-links" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scenarios-xml.html">scenarios.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="query-xml.html">queries.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rewrites-xml.html">rewriteSets.xml</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
+</ul>
+</div>
+<hr class="docutils" />
 <p>Various <a class="reference internal" href="gcamtool.html"><em>GCAM tool (gt)</em></a> sub-commands take input from XML files that are distinct
 from those read by the GCAM model itself. These include:</p>
+</div>
 <div class="section" id="project-xml">
 <h2>project.xml<a class="headerlink" href="#project-xml" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="project-xml.html"><em>project.xml</em></a> file describes all the workflow steps required to run a <code class="docutils literal"><span class="pre">pygcam</span></code> project.</p>
@@ -172,22 +187,13 @@ by GCAM, including aggregation &#8220;rewrites&#8221; that are added on-the-fly.
 </div>
 <div class="section" id="rewritesets-xml">
 <h2>rewriteSets.xml<a class="headerlink" href="#rewritesets-xml" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="query-xml.html#rewritesets-label"><em>rewriteSets.xml</em></a> file describes named sets of &#8220;rewrite&#8221; statements that can be
+<p>The <a class="reference internal" href="rewrites-xml.html"><em>rewriteSets.xml</em></a> file describes named sets of &#8220;rewrite&#8221; statements that can be
 referenced by queries in <a class="reference internal" href="query-xml.html"><em>queries.xml</em></a>.</p>
 </div>
 <div class="section" id="landprotection-xml">
 <h2>landProtection.xml<a class="headerlink" href="#landprotection-xml" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="landProtection-xml.html"><em>landProtection.xml</em></a> file describes which types of unmanaged land should &#8220;protected&#8221;,
 (i.e., removed from economic consideration in the model), and at what percentages in each region.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="project-xml.html">project.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scenarios-xml.html">scenarios.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="query-xml.html">queries.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="query-xml.html#rewritesets-xml">rewriteSets.xml</a></li>
-<li class="toctree-l1"><a class="reference internal" href="landProtection-xml.html">landProtection.xml</a></li>
-</ul>
-</div>
 </div>
 </div>
 

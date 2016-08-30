@@ -68,12 +68,8 @@ in order, adding any designated label rewrites to the query.
 The :ref:`query sub-command <query-label>` runs the batch query in ModelInterfaces and saves
 the results in the designated .CSV file. The :doc:`gcamtool` page for command-line options.
 
-Label rewrites are currently defined in a separate XML file, for which the default path is
-given in pygcam's system configuration file by the variable ``GCAM.RewriteSetsFile``; it
-defaults to ``%(ProjectRoot)s/queries/rewriteSets.xml``. The format of this XML file is
-described in :doc:`query-xml`.
-
-
+Label rewrites are currently defined in a separate :doc:`rewrites-xml`, which can be named
+in the pygcam configuration file by the variable ``GCAM.RewriteSetsFile``.
 
 API
 ---

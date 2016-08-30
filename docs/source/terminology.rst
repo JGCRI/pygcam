@@ -72,7 +72,7 @@ Rewrite sets
   rewrite commands to be stored separately and assigned a name, allowing them
   to be referenced by :ref:`queries <query-def>` defined in the
   :ref:`project file <project-file-def>` or in a separate XML file.
-  See also: :ref:`rewriteSets-label`.
+  See also: :doc:`rewrites-xml`.
 
 .. _sandbox-def:
 
