@@ -10,6 +10,7 @@ Contents
    intro
    install
    tutorial
+   terminology
 
 The ``gt`` workflow management script
 --------------------------------------------------

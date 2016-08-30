@@ -82,7 +82,7 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is pygcam?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
@@ -157,6 +157,15 @@
 single script with sub-commands. Generic sub-commands are implemented directly
 by the pygcam library. Project-specific features can be added via
 <a class="reference internal" href="#plugins-label"><em>plugins</em></a>.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Quick links to sub-commands: <a class="reference internal" href="#chart-label"><em>chart</em></a>, <a class="reference internal" href="#config-label"><em>config</em></a>,
+<a class="reference internal" href="#diff-label"><em>diff</em></a>, <a class="reference internal" href="#gcam-label"><em>gcam</em></a>, <a class="reference internal" href="#new-label"><em>new</em></a>,
+<a class="reference internal" href="#protect-label"><em>protect</em></a>, <a class="reference internal" href="#query-label"><em>query</em></a>, <a class="reference internal" href="#run-label"><em>run</em></a>,
+<a class="reference internal" href="#setup-label"><em>setup</em></a>, <a class="reference internal" href="#sandbox-label"><em>sandbox</em></a></p>
+</div>
+</div></blockquote>
 <p>The sub-commands support all the major workflow setups, including</p>
 <blockquote>
 <div><ul class="simple">
@@ -176,7 +185,7 @@ linear annualization of values between time-steps, and
 title, axis labels, scale, and so on.
 (See the <a class="reference internal" href="#chart-label"><em>chart</em></a> sub-command.)</li>
 <li>Manage (create, delete, rename, run commands in) automatically-created
-workspaces. (See the <a class="reference internal" href="#ws-label"><em>ws</em></a> sub-command.)</li>
+workspaces. (See the <a class="reference internal" href="#sandbox-label"><em>sandbox</em></a> sub-command.)</li>
 </ul>
 </div></blockquote>
 <p>In addition, the <a class="reference internal" href="#run-label"><em>run</em></a> sub-command allows workflow steps to be
@@ -206,7 +215,7 @@ sub-command specific options must follow it.</p>
 usage: gt [-h] [-b] [-B] [-e ENVIROVARS] [-j JOBNAME] [-l level] [-L LOGFILE]
           [-m MINUTES] [--mcs {trial,gensim}] [-P name] [-q QUEUENAME]
           [-r RESOURCES] [--set name=value] [-v] [--version]
-          {chart,config,diff,gcam,new,run,protect,query,setup,sandbox} ...
+          {chart,config,diff,gcam,new,protect,query,run,sandbox,setup} ...
 </pre>
 <dl class="docutils">
 <dt>Options:</dt>
@@ -836,12 +845,26 @@ usage: gt gcam [-h] [-C CONFIGFILE] [-f] [-g GROUPDIR] [-n] [-r REFWORKSPACE]
 If a directory is specified with the <code class="docutils literal"><span class="pre">-r</span></code> flag, the project is created with the
 given name in that directory; otherwise the project is created in the directory
 identified by the config variable <code class="docutils literal"><span class="pre">GCAM.ProjectRoot</span></code>.</p>
-<p>This sub-command creates examples of <code class="docutils literal"><span class="pre">xmlsrc/scenarios.py</span></code>, <code class="docutils literal"><span class="pre">etc/queries.xml</span></code>,
-<code class="docutils literal"><span class="pre">etc/project.xml</span></code>, <code class="docutils literal"><span class="pre">etc/rewriteSets.xml</span></code>, and <code class="docutils literal"><span class="pre">etc/protection.xml</span></code> that can
-be edited to fit the needs of your project.</p>
+<p>This sub-command creates examples of <code class="docutils literal"><span class="pre">xmlsrc/scenarios.py</span></code>,
+<code class="docutils literal"><span class="pre">etc/protection.xml</span></code>, <code class="docutils literal"><span class="pre">etc/project.xml</span></code>, <code class="docutils literal"><span class="pre">etc/queries.xml</span></code>,
+<code class="docutils literal"><span class="pre">etc/rewriteSets.xml</span></code>, and <code class="docutils literal"><span class="pre">etc/scenarioSetup.xml</span></code> that can
+be edited to fit the needs of your project. See the file <code class="docutils literal"><span class="pre">Instructions.txt</span></code>
+that is created in the new &#8220;etc&#8221; directory.</p>
 <p>If the <code class="docutils literal"><span class="pre">-c</span></code> flag is given, a basic entry for the new project is added to the
-users configuration file, <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>. Before modifying this file, a
-backup is created in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg~</span></code>.</p>
+users configuration file, <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg</span></code>. Before modifying the config file,
+a backup is created in <code class="docutils literal"><span class="pre">$HOME/.pygcam.cfg~</span></code>. For example, the command</p>
+<div class="highlight-sh"><div class="highlight"><pre><span></span>gt new -c foo
+</pre></div>
+</div>
+<p>generates and entry like this:</p>
+<div class="highlight-cfg"><div class="highlight"><pre><span></span><span class="k">[foo]</span>
+<span class="c1"># Added by &quot;new&quot; sub-command Mon Aug 29 15:00:19 2016</span>
+<span class="na">GCAM.ProjectDir</span> <span class="o">=</span> <span class="s">%(GCAM.ProjectRoot)s/foo</span>
+<span class="c1">#GCAM.LandProtectionXmlFile = %(GCAM.ProjectDir)s/etc/protection.xml</span>
+<span class="c1">#GCAM.RewriteSetsFile       = %(GCAM.ProjectDir)s/etc/rewriteSets.xml</span>
+<span class="c1">#GCAM.ScenarioSetupFile     = %(GCAM.ProjectDir)s/etc/scenarios.xml</span>
+</pre></div>
+</div>
 <p><strong>Variables controlling linking vs copying</strong></p>
 <p>Several configuration variables control which files are copied versus linked (on systems
 on which the user has the ability to create symlinks; if not all files are copied):</p>
@@ -869,7 +892,7 @@ Its value is appended to both GCAM.WorkspaceFilesToLink and GCAM.SandboxFilesToL
 have permission to create symlinks, it sets the configuration variable <code class="docutils literal"><span class="pre">GCAM.CopyAllFiles</span></code>
 to <code class="docutils literal"><span class="pre">True</span></code>, resulting in copies of the reference files rather than symbolic links.</p>
 <pre class="literal-block">
-usage: gt new [-h] [-c] [-r PATH] [--version] name
+usage: gt new [-h] [-c] [--overwrite] [-r PATH] [--version] name
 </pre>
 <dl class="last docutils">
 <dt>Positional arguments:</dt>
@@ -895,6 +918,11 @@ usage: gt new [-h] [-c] [-r PATH] [--version] name
 <tr><td>&nbsp;</td><td>Add a section for the new project to $HOME/.pygcam.cfg after
                             making a backup of the file in $HOME/.pygcam.cfg~</td></tr>
 <tr><td class="option-group" colspan="2">
+<kbd><span class="option">--overwrite=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>If files that are to be copied to the project directory exist, overwrite them.
+                            By default, existing files are not overwritten.</td></tr>
+<tr><td class="option-group" colspan="2">
 <kbd><span class="option">-r</span>, <span class="option">--projectRoot</span></kbd></td>
 </tr>
 <tr><td>&nbsp;</td><td>The directory in which to create a subdirectory for the named
@@ -902,128 +930,6 @@ usage: gt new [-h] [-c] [-r PATH] [--version] name
 <tr><td class="option-group">
 <kbd><span class="option">--version</span></kbd></td>
 <td>show program&#8217;s version number and exit</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
-<dt><strong>run</strong></dt>
-<dd><p class="first" id="run-label">This sub-command reads instructions from the file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a>, the
-location of which is taken from the user&#8217;s <a class="reference internal" href="config.html#pygcam-cfg"><em>~/.pygcam.cfg</em></a> file.
-The workflow steps indicated in the XML file and command-line determine which
-commands to run.</p>
-<p>Examples:</p>
-<p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run
-</pre></div>
-</div>
-<p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
-scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -g test -S baseline,policy1
-</pre></div>
-</div>
-<p>or, equivalently:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run --group test --scenario baseline --step policy1
-</pre></div>
-</div>
-<p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
-default scenario group:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1
-</pre></div>
-</div>
-<p>Same as above, but queue a batch job to run these commands on the queue
-&#8216;short&#8217;:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
-</pre></div>
-</div>
-<p>Show the commands that would be executed for the above command, but
-don&#8217;t run them:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
-</pre></div>
-</div>
-<pre class="literal-block">
-usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
-              [-K SKIPSCENARIOS] [-l] [-L] [-n] [-p PROJECT] [-q] [-s STEPS]
-              [-S SCENARIOS] [--version] [--vars] [-x SANDBOXDIR]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-f</span>, <span class="option">--projectFile</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The XML file describing the project. If set, command-line
-                            argument takes precedence. Otherwise, value is taken from config file
-                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
-                            is &#8216;./project.xml&#8217;.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
-<td>The name of the scenario group to process. If not specified,
-                            the group with attribute default=&#8221;1&#8221; is processed.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-G=False</span>, <span class="option">--listGroups=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>List the scenario groups defined in the project file and exit.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-k</span>, <span class="option">--skipStep</span></kbd></td>
-<td>Steps to skip. These must be names of steps defined in the
-                            project.xml file. Multiple steps can be given in a single (comma-delimited)
-                            argument, or the -k flag can be repeated to indicate additional steps.
-                            By default, all steps are run.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-K</span>, <span class="option">--skipScenario</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Scenarios to skip. Multiple scenarios can be given in a single
-                            (comma-delimited) argument, or the -K flag can be repeated to indicate
-                            additional scenarios. By default, all scenarios are run.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-l=False</span>, <span class="option">--listSteps=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>List the steps defined for the given project and exit.
-                            Dynamic variables (created at run-time) are not displayed.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-L=False</span>, <span class="option">--listScenarios=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>List the scenarios defined for the given project and exit.
-                            Dynamic variables (created at run-time) are not displayed.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Display the commands that would be run, but don&#8217;t run them.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-p</span>, <span class="option">--project</span></kbd></td>
-<td>The name of the project to run.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-q=False</span>, <span class="option">--quit=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Quit if an error occurs when processing a scenario. By default, the
-                            next scenario (if any) is run when an error occurs in a scenario.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-s</span>, <span class="option">--step</span></kbd></td>
-<td>The steps to run. These must be names of steps defined in the
-                            project.xml file. Multiple steps can be given in a single (comma-delimited)
-                            argument, or the -s flag can be repeated to indicate additional steps.
-                            By default, all steps are run.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-S</span>, <span class="option">--scenario</span></kbd></td>
-<td>Which of the scenarios defined for the given project should
-                            be run. Multiple scenarios can be given in a single (comma-delimited)
-                            argument, or the -S flag can be repeated to indicate additional scenarios.
-                            By default, all active scenarios are run.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--vars=False</span></kbd></td>
-<td>List variables and their values</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-x</span>, <span class="option">--sandboxDir</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The directory in which to create the run-time sandbox workspace.
-                            Defaults to value of {GCAM.SandboxProjectDir}/{scenarioGroup}.</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1264,6 +1170,189 @@ usage: gt query [-h] [-d XMLDB] [-D] [-g GROUPDIR] [-n] [-o OUTPUTDIR] [-p]
 </dd>
 </dl>
 </dd>
+<dt><strong>run</strong></dt>
+<dd><p class="first" id="run-label">This sub-command reads instructions from the file <a class="reference internal" href="project-xml.html"><em>project.xml</em></a>, the
+location of which is taken from the user&#8217;s <a class="reference internal" href="config.html#pygcam-cfg"><em>~/.pygcam.cfg</em></a> file.
+The workflow steps indicated in the XML file and command-line determine which
+commands to run.</p>
+<p>Examples:</p>
+<p>Run all steps for the default scenario group for project &#8216;Foo&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run
+</pre></div>
+</div>
+<p>Run all steps for scenario group &#8216;test&#8217; for project &#8216;Foo&#8217;, but only for
+scenarios &#8216;baseline&#8217; and &#8216;policy-1&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -g test -S baseline,policy1
+</pre></div>
+</div>
+<p>or, equivalently:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run --group test --scenario baseline --step policy1
+</pre></div>
+</div>
+<p>Run only the &#8216;setup&#8217; and &#8216;gcam&#8217; steps for scenario &#8216;baseline&#8217; in the
+default scenario group:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1
+</pre></div>
+</div>
+<p>Same as above, but queue a batch job to run these commands on the queue
+&#8216;short&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+</pre></div>
+</div>
+<p>Show the commands that would be executed for the above command, but
+don&#8217;t run them:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
+</pre></div>
+</div>
+<pre class="literal-block">
+usage: gt run [-h] [-f PROJECTFILE] [-g GROUP] [-G] [-k SKIPSTEPS]
+              [-K SKIPSCENARIOS] [-l] [-L] [-n] [-p PROJECT] [-q] [-s STEPS]
+              [-S SCENARIOS] [--version] [--vars] [-x SANDBOXDIR]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-f</span>, <span class="option">--projectFile</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The XML file describing the project. If set, command-line
+                            argument takes precedence. Otherwise, value is taken from config file
+                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
+                            is &#8216;./project.xml&#8217;.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-g</span>, <span class="option">--group</span></kbd></td>
+<td>The name of the scenario group to process. If not specified,
+                            the group with attribute default=&#8221;1&#8221; is processed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-G=False</span>, <span class="option">--listGroups=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the scenario groups defined in the project file and exit.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-k</span>, <span class="option">--skipStep</span></kbd></td>
+<td>Steps to skip. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -k flag can be repeated to indicate additional steps.
+                            By default, all steps are run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-K</span>, <span class="option">--skipScenario</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Scenarios to skip. Multiple scenarios can be given in a single
+                            (comma-delimited) argument, or the -K flag can be repeated to indicate
+                            additional scenarios. By default, all scenarios are run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l=False</span>, <span class="option">--listSteps=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the steps defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L=False</span>, <span class="option">--listScenarios=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>List the scenarios defined for the given project and exit.
+                            Dynamic variables (created at run-time) are not displayed.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noRun=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Display the commands that would be run, but don&#8217;t run them.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-p</span>, <span class="option">--project</span></kbd></td>
+<td>The name of the project to run.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-q=False</span>, <span class="option">--quit=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Quit if an error occurs when processing a scenario. By default, the
+                            next scenario (if any) is run when an error occurs in a scenario.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--step</span></kbd></td>
+<td>The steps to run. These must be names of steps defined in the
+                            project.xml file. Multiple steps can be given in a single (comma-delimited)
+                            argument, or the -s flag can be repeated to indicate additional steps.
+                            By default, all steps are run.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-S</span>, <span class="option">--scenario</span></kbd></td>
+<td>Which of the scenarios defined for the given project should
+                            be run. Multiple scenarios can be given in a single (comma-delimited)
+                            argument, or the -S flag can be repeated to indicate additional scenarios.
+                            By default, all active scenarios are run.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--vars=False</span></kbd></td>
+<td>List variables and their values</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-x</span>, <span class="option">--sandboxDir</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The directory in which to create the run-time sandbox workspace.
+                            Defaults to value of {GCAM.SandboxProjectDir}/{scenarioGroup}.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
+<dt><strong>sandbox</strong></dt>
+<dd><p class="first" id="sandbox-label">The <code class="docutils literal"><span class="pre">sandbox</span></code> sub-command allows you to create, delete, show the path of, or run a shell
+command in a workspace. If the <code class="docutils literal"><span class="pre">--scenario</span></code> argument is given, the operation is
+performed on a scenario-specific workspace within a project directory. If <code class="docutils literal"><span class="pre">--scenario</span></code>
+is not specified, the operation is performed on the project directory that contains
+individual scenario workspaces. Note that the <a class="reference internal" href="#gcam-label"><em>gcam</em></a> sub-command
+automatically creates workspaces as needed.</p>
+<p>N.B. You can run <code class="docutils literal"><span class="pre">sandbox</span></code> with the <code class="docutils literal"><span class="pre">--path</span></code> option before performing any
+operations to be sure of the directory that will be operated on, or use the
+<code class="docutils literal"><span class="pre">--noExecute</span></code> option to show the command that would be executed by <code class="docutils literal"><span class="pre">--run</span></code>.</p>
+<pre class="literal-block">
+usage: gt sandbox [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n]
+                  [-p] [-r RUN] [-s SCENARIO] [--version]
+</pre>
+<dl class="last docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--create=False</span></kbd></td>
+<td>Create the identified sandbox. If used with &#8211;delete,
+                            the deletion occurs first.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--delete=False</span></kbd></td>
+<td>Delete the identified sandbox&#8217; If used with &#8211;create, the
+                            deletion occurs first.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--recreate=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Recreate the identified sandbox. Equivalent to using the
+                            &#8211;delete and &#8211;create options together.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-g=</span>, <span class="option">--groupDir=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The name of the scenario group subdir</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-n=False</span>, <span class="option">--noExecute=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Print the command that would be executed by &#8211;run, but
+                            don&#8217;t execute it.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p=False</span>, <span class="option">--path=False</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Print the absolute path to the identified sandbox.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span>, <span class="option">--run</span></kbd></td>
+<td>Run the given command in the identified sandbox.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>The scenario for the computed sandbox root.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--version</span></kbd></td>
+<td>show program&#8217;s version number and exit</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</dd>
 <dt><strong>setup</strong></dt>
 <dd><p class="first" id="setup-label">The <code class="docutils literal"><span class="pre">setup</span></code> sub-command automates modification to copies of GCAM&#8217;s input XML
 files and construction of a corresponding configuration XML file.
@@ -1356,59 +1445,6 @@ usage: gt setup [-h] [-b BASELINE] [-d] [-f] [-g GROUP] [-G] [-m MODULEPATH]
 </tr>
 <tr><td>&nbsp;</td><td>Years to generate constraints for. Must be of the form
                             XXXX-YYYY. Default is &#8220;2015-2100&#8221;</td></tr>
-</tbody>
-</table>
-</dd>
-</dl>
-</dd>
-<dt><strong>sandbox</strong></dt>
-<dd><p class="first">Perform operations on a sandbox.</p>
-<pre class="literal-block">
-usage: gt sandbox [-h] [--create] [--delete] [--recreate] [-g GROUPDIR] [-n]
-                  [-p] [-r RUN] [-s SCENARIO] [--version]
-</pre>
-<dl class="last docutils">
-<dt>Options:</dt>
-<dd><table class="first last docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group">
-<kbd><span class="option">--create=False</span></kbd></td>
-<td>Create the identified sandbox. If used with &#8211;delete,
-                            the deletion occurs first.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--delete=False</span></kbd></td>
-<td>Delete the identified sandbox&#8217; If used with &#8211;create, the
-                            deletion occurs first.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">--recreate=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Recreate the identified sandbox. Equivalent to using the
-                            &#8211;delete and &#8211;create options together.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-g=</span>, <span class="option">--groupDir=</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The name of the scenario group subdir</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-n=False</span>, <span class="option">--noExecute=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Print the command that would be executed by &#8211;run, but
-                            don&#8217;t execute it.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-p=False</span>, <span class="option">--path=False</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Print the absolute path to the identified sandbox.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-r</span>, <span class="option">--run</span></kbd></td>
-<td>Run the given command in the identified sandbox.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-s=</span>, <span class="option">--scenario=</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>The scenario for the computed sandbox root.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">--version</span></kbd></td>
-<td>show program&#8217;s version number and exit</td></tr>
 </tbody>
 </table>
 </dd>

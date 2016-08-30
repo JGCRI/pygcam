@@ -316,5 +316,5 @@ Example
 ^^^^^^^^
 This is an example of a scenarios.xml file.
 
-.. literalinclude:: ../../pygcam/etc/scenarioSetup-example.xml
+.. literalinclude:: ../../pygcam/etc/scenarios-example.xml
    :language: xml

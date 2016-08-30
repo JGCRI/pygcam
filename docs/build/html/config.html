@@ -82,9 +82,10 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is pygcam?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="setup.html">GCAM XML-Setup</a></li>
@@ -510,6 +511,16 @@ everything below it in the figure.</p>
 <span class="c1"># Set to an XML file containing &quot;simple&quot; (i.e., no code required)</span>
 <span class="c1"># scenario setup instructions.</span>
 <span class="na">GCAM.ScenarioSetupFile</span> <span class="o">=</span>
+
+<span class="c1"># Set this to identify the subclass of XMLEditor to use as a</span>
+<span class="c1"># superclass to generate a class to process your XML-based</span>
+<span class="c1"># scenario setup. Uses XMLEditor as a superclass by default.</span>
+<span class="c1"># The format of this option is:</span>
+<span class="c1">#   {path to module directory}:{module.dot.specification}, e.g.</span>
+<span class="c1">#</span>
+<span class="c1"># GCAM.ScenarioSetupClass = %(Home)s/somewhere/pygcam:pygcam.sectorEditors.BioenergyEditor</span>
+<span class="c1">#</span>
+<span class="na">GCAM.ScenarioSetupClass</span> <span class="o">=</span>
 
 <span class="c1"># The ModelInterface directory for the version to use.</span>
 <span class="na">GCAM.MI.Dir</span> <span class="o">=</span> <span class="s">%(GCAM.Current)s/ModelInterface</span>

@@ -6,6 +6,12 @@ single script with sub-commands. Generic sub-commands are implemented directly
 by the pygcam library. Project-specific features can be added via
 :ref:`plugins <plugins-label>`.
 
+  .. note::
+     Quick links to sub-commands: :ref:`chart <chart-label>`, :ref:`config <config-label>`,
+     :ref:`diff <diff-label>`, :ref:`gcam <gcam-label>`, :ref:`new <new-label>`,
+     :ref:`protect <protect-label>`, :ref:`query <query-label>`, :ref:`run <run-label>`,
+     :ref:`setup <setup-label>`, :ref:`sandbox <sandbox-label>`
+
 The sub-commands support all the major workflow setups, including
 
   * Modify XML files and configuration.xml to set up a modeling experiment
@@ -29,7 +35,7 @@ The sub-commands support all the major workflow setups, including
     (See the :ref:`chart <chart-label>` sub-command.)
 
   * Manage (create, delete, rename, run commands in) automatically-created
-    workspaces. (See the :ref:`ws <ws-label>` sub-command.)
+    workspaces. (See the :ref:`sandbox <sandbox-label>` sub-command.)
 
 In addition, the :ref:`run <run-label>` sub-command allows workflow steps to be
 defined in an XML file so that individual or groups of steps can be executed for one
@@ -115,40 +121,6 @@ Usage
       ::
 
           gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
-
-
-   protect : @replace
-      .. _protect-label:
-
-      Generate versions of GCAM's land_input XML files that protect a given fraction of
-      land of the given land types in the given regions by subtracting the required land
-      area from the "managed" land classes, thereby removing them from consideration in
-      land allocations.
-
-      Simple protection scenarios can be specified on the command-line. More complex
-      scenarios can be specified in an XML file, :ref:`landProtection.xml <protect-xml>`.
-
-      Examples:
-
-      .. code-block:: bash
-
-         # Create and modify copies of the reference land files, renaming them with
-         # "prot\_" prefix. Protect 80% of the "UnmanagedForest" and "UnmanagedPasture"
-         # land classes in the specified regions only.
-
-         CLASSES=UnmanagedForest,UnmanagedPasture
-         REGIONS='Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA'
-         OUTDIR="$HOME/tmp/xml"
-
-         gt protect -f 0.8 "$INFILES" -l "$CLASSES" -r "$REGIONS" -o "$OUTDIR" -t 'prot_{filename}'
-
-
-      .. code-block:: bash
-
-         # Run the land protection scenario "s1", described in the file ``$HOME/protect.xml``,
-         # placing the results in the directory ``$HOME/ws/workspace1``
-
-         gt protect -s s1 -S "$HOME/protect.xml" -w "$HOME/ws/workspace1"
 
 
    chart : @replace
@@ -263,13 +235,30 @@ Usage
       given name in that directory; otherwise the project is created in the directory
       identified by the config variable ``GCAM.ProjectRoot``.
 
-      This sub-command creates examples of ``xmlsrc/scenarios.py``, ``etc/queries.xml``,
-      ``etc/project.xml``, ``etc/rewriteSets.xml``, and ``etc/protection.xml`` that can
-      be edited to fit the needs of your project.
+      This sub-command creates examples of ``xmlsrc/scenarios.py``,
+      ``etc/protection.xml``, ``etc/project.xml``, ``etc/queries.xml``,
+      ``etc/rewriteSets.xml``, and ``etc/scenarioSetup.xml`` that can
+      be edited to fit the needs of your project. See the file ``Instructions.txt``
+      that is created in the new "etc" directory.
 
       If the ``-c`` flag is given, a basic entry for the new project is added to the
-      users configuration file, ``$HOME/.pygcam.cfg``. Before modifying this file, a
-      backup is created in ``$HOME/.pygcam.cfg~``.
+      users configuration file, ``$HOME/.pygcam.cfg``. Before modifying the config file,
+      a backup is created in ``$HOME/.pygcam.cfg~``. For example, the command
+
+      .. code-block:: sh
+
+         gt new -c foo
+
+      generates and entry like this:
+
+      .. code-block:: cfg
+
+         [foo]
+         # Added by "new" sub-command Mon Aug 29 15:00:19 2016
+         GCAM.ProjectDir = %(GCAM.ProjectRoot)s/foo
+         #GCAM.LandProtectionXmlFile = %(GCAM.ProjectDir)s/etc/protection.xml
+         #GCAM.RewriteSetsFile       = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
+         #GCAM.ScenarioSetupFile     = %(GCAM.ProjectDir)s/etc/scenarios.xml
 
       **Variables controlling linking vs copying**
 
@@ -304,6 +293,42 @@ Usage
       have permission to create symlinks, it sets the configuration variable ``GCAM.CopyAllFiles``
       to ``True``, resulting in copies of the reference files rather than symbolic links.
 
+
+
+   protect : @replace
+      .. _protect-label:
+
+      Generate versions of GCAM's land_input XML files that protect a given fraction of
+      land of the given land types in the given regions by subtracting the required land
+      area from the "managed" land classes, thereby removing them from consideration in
+      land allocations.
+
+      Simple protection scenarios can be specified on the command-line. More complex
+      scenarios can be specified in an XML file, :ref:`landProtection.xml <protect-xml>`.
+
+      Examples:
+
+      .. code-block:: bash
+
+         # Create and modify copies of the reference land files, renaming them with
+         # "prot\_" prefix. Protect 80% of the "UnmanagedForest" and "UnmanagedPasture"
+         # land classes in the specified regions only.
+
+         CLASSES=UnmanagedForest,UnmanagedPasture
+         REGIONS='Australia_NZ,Canada,EU-12,EU-15,Japan,Middle East,Taiwan,USA'
+         OUTDIR="$HOME/tmp/xml"
+
+         gt protect -f 0.8 "$INFILES" -l "$CLASSES" -r "$REGIONS" -o "$OUTDIR" -t 'prot_{filename}'
+
+
+      .. code-block:: bash
+
+         # Run the land protection scenario "s1", described in the file ``$HOME/protect.xml``,
+         # placing the results in the directory ``$HOME/ws/workspace1``
+
+         gt protect -s s1 -S "$HOME/protect.xml" -w "$HOME/ws/workspace1"
+
+
    query : @replace
       .. _query-label:
 
@@ -330,6 +355,22 @@ Usage
       replacing ``'_'`` and ``'-'`` characters with spaces) is sought. Note that query names are
       case-sensitive.
 
+
+   sandbox : @replace
+      .. _sandbox-label:
+
+      The ``sandbox`` sub-command allows you to create, delete, show the path of, or run a shell
+      command in a workspace. If the ``--scenario`` argument is given, the operation is
+      performed on a scenario-specific workspace within a project directory. If ``--scenario``
+      is not specified, the operation is performed on the project directory that contains
+      individual scenario workspaces. Note that the :ref:`gcam <gcam-label>` sub-command
+      automatically creates workspaces as needed.
+
+      N.B. You can run ``sandbox`` with the ``--path`` option before performing any
+      operations to be sure of the directory that will be operated on, or use the
+      ``--noExecute`` option to show the command that would be executed by ``--run``.
+
+
    setup : @replace
       .. _setup-label:
 
@@ -337,19 +378,6 @@ Usage
       files and construction of a corresponding configuration XML file.
       See :doc:`setup` for a detailed description.
 
-   ws : @replace
-      .. _ws-label:
-
-      The ``ws`` sub-command allows you to create, delete, show the path of, or run a shell
-      command in a workspace. If the ``--scenario`` argument is given, the operation is
-      performed on a scenario-specific workspace within a project directory. If ``--scenario``
-      is not specified, the operation is performed on the project directory that contains
-      individual scenario workspaces. Note that the :ref:`gcam <gcam-label>` sub-command
-      automatically creates workspaces as needed.
-
-      N.B. You can run ``ws`` with the the ``--path`` option before performing any
-      operations to be sure of the directory that will be operated on, or use the
-      ``--noExecute`` option to show the command that would be executed by ``--run``.
 
 Extending gt using plug-ins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

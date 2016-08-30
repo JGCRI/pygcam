@@ -1,11 +1,11 @@
 GCAM XML-Setup
 =======================
 
-The XML-Setup system provides tools for modifying the XML input files
-that control GCAM's behavior. The XML-Setup system operates on standard
-GCAM input XML files to create modified copies of designated files and
-to manage corresponding modifications to the main GCAM ``configuration.xml``
-file.
+The XML-Setup system provides tools for modifying standard and custom XML
+input files that control GCAM's behavior. The XML-Setup system copies the
+designated files to the scenario's run-time "sandbox" before modifying them
+and the GCAM configuration file, which instructs GCAM on which
+XML data files to load.
 
 User-defined Python or XML scripts and any hand-coded XML files
 constitute the "source code" used to generate the XML data and
@@ -48,8 +48,6 @@ to use follows this sequence:
 
 Python setup scripts
 ------------------------
-
-
 
 The module includes the :doc:`pygcam.xmlEditor` class that provides core XML
 editing functionality and identifies scenarios relationships, i.e., that

@@ -5,7 +5,6 @@ Tutorial
 
    *This tutorial is currently under development.*
 
-
 Elements to understand:
 
   * Configuration file
@@ -22,6 +21,7 @@ Here we provide a brief introduction to the elements of this tutorial. The tutor
 explains how to setup ``pygcam`` and manage the GCAM workflow. The steps involved
 in using ``pygcam`` are explained briefly here, and in more
 detail in the sections that follow.
+
 
 1. Install pygcam
 ^^^^^^^^^^^^^^^^^^^

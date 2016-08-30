@@ -82,7 +82,7 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is pygcam?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
@@ -153,11 +153,11 @@
             
   <div class="section" id="gcam-xml-setup">
 <h1>GCAM XML-Setup<a class="headerlink" href="#gcam-xml-setup" title="Permalink to this headline">¶</a></h1>
-<p>The XML-Setup system provides tools for modifying the XML input files
-that control GCAM&#8217;s behavior. The XML-Setup system operates on standard
-GCAM input XML files to create modified copies of designated files and
-to manage corresponding modifications to the main GCAM <code class="docutils literal"><span class="pre">configuration.xml</span></code>
-file.</p>
+<p>The XML-Setup system provides tools for modifying standard and custom XML
+input files that control GCAM&#8217;s behavior. The XML-Setup system copies the
+designated files to the scenario&#8217;s run-time &#8220;sandbox&#8221; before modifying them
+and the GCAM configuration file, which instructs GCAM on which
+XML data files to load.</p>
 <p>User-defined Python or XML scripts and any hand-coded XML files
 constitute the &#8220;source code&#8221; used to generate the XML data and
 configuration files described by the scripts. The generated XML files
