@@ -3,8 +3,7 @@ For code release
 
 Document
 --------
-- Documentation, including tutorial
-  - Release on ReadTheDocs.org
+- Release docs on ReadTheDocs.org
 
 - PPT slides for October
 
@@ -12,7 +11,7 @@ Document
 
 Cleanup
 -------
-- Post xsd files on bitbucket or github and reference them in the XML files
+- Post xsd files on bitbucket or github and reference them in the XML files?
 
 - Consolidate generic code from sectorEditors and xmlEditor
 
@@ -113,7 +112,6 @@ MCS-only
 Test
 ====
 - Finish implementing/testing the queryFile and rewriteSets features
-- setup.py installer: test with full install
 - write more unit tests
 - Test constraint cmds
 - Should constraint commands be converted back to plugins?
