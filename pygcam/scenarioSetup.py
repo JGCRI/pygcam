@@ -25,7 +25,7 @@ def _classForNode(node):
 
 #
 # Classes to parse and run "simple" scenario setup files.
-# (See pygcam/etc/scenarioSetup-schema.xsd).
+# (See pygcam/etc/scenarios-schema.xsd).
 #
 class ScenarioSetup(object):
 
@@ -67,7 +67,7 @@ class ScenarioSetup(object):
             _logger.debug('Found scenario file "%s" in cache', filename)
             return cls.documentCache[filename]
 
-        schemaStream = resourceStream('etc/scenarioSetup-schema.xsd')
+        schemaStream = resourceStream('etc/scenarios-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream, removeComments=True)
         obj = cls(xmlFile.tree.getroot())
 
