@@ -198,7 +198,7 @@ def copyFileOrTree(src, dst):
     :return: none
     """
     if os.path.islink(src):
-        src = os.readlink(src)      # TBD: test on Windows
+        src = os.readlink(src)
 
     if os.path.isdir(src):
         shutil.copytree(src, dst)
@@ -435,6 +435,7 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
     from imp import load_source, load_compiled  # lazy import to speed startup
 
     # Extract the module name from the module path
+    modulePath = unixPath(modulePath)
     base       = os.path.basename(modulePath)
     moduleName = base.split('.')[0]
 
@@ -689,7 +690,15 @@ class TempFile(object):
         :return: none
         :raises: PygcamException if the path is not related to a TempFile instance.
         """
+        from .windows import IsWindows
+
         path = self.path
+
+        try:
+            if self.fd is not None:
+                os.close(self.fd)
+        except Exception as e:
+            _logger.debug('Failed to close file descriptor for "%s": %s', path, e)
 
         try:
             del self.Instances[path]
@@ -701,10 +710,7 @@ class TempFile(object):
 
         if self.delete:
             try:
-                if os.path.isdir(path):
-                    shutil.rmtree(path)
-                else:
-                    os.unlink(path)
+                removeFileOrTree(path, raiseError=True)
             except Exception as e:
                 _logger.debug('Failed to delete "%s": %s', path, e)
 

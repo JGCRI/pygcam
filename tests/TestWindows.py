@@ -1,67 +1,33 @@
-import unittest
 import os
-from glob import glob
-import shutil
-import time
+import sys
+import unittest
 
-from pygcam.utils import TempFile, getTempFile
+from pygcam.windows import islinkWindows, readlinkWindows
 
-class TestTempFile(unittest.TestCase):
+def printLink(path):
+    islink = os.path.islink(os.path.normpath(path))
+    sys.stderr.write("%s islink: %s\n" % (path, islink))
+    if islink:
+        path = os.readlink(path)
+        sys.stderr.write("Link: %s" % path)
+        # printLink(path)
+
+class TestSymlinks(unittest.TestCase):
     def setUp(self):
-        self.tmpDir = '/tmp/test'
-        self.removeTmpDir()
+        pass
 
     def tearDown(self):
-        self.removeTmpDir()
+        pass
 
-    def removeTmpDir(self):
-        try:
-            shutil.rmtree(self.tmpDir)
-        except:
-            pass
+    def test_funcs(self):
+        self.assertEqual(os.path.islink, islinkWindows)
+        self.assertEqual(os.readlink, readlinkWindows)
 
-    def test_createTempFile(self):
-        file = getTempFile('.txt', tmpDir=self.tmpDir, delete=True)
+    def test_islink(self):
+        p1 = 'C:/Users/rjp/GCAM/current'
+        self.assertTrue(os.path.islink(p1), '%s should be seen as a link' % p1)
 
-        with open(file, 'w') as f:
-            f.write("Test string\n")
+        p2 = p1 + '/Main_User_Workspace'
 
-        assert os.path.isfile(file), "File was not created"
-        TempFile.remove(file)
-        assert not os.path.isfile(file), "File was not deleted"
+        self.assertFalse(os.path.islink(p2), '%s should not be seen as a link' % p2)
 
-    def test_deletion(self):
-        fileCount = 3
-        for i in range(fileCount):
-            TempFile(suffix='.xml', tmpDir=self.tmpDir, openFile=True)
-
-        files = glob(os.path.join(self.tmpDir, '*'))
-        self.assertEqual(len(files), fileCount)
-
-        # duration = 2
-        # print 'sleeping %.2f' % duration
-        # time.sleep(duration)
-
-        TempFile.deleteAll()
-
-        files = glob(os.path.join(self.tmpDir, '*'))
-        self.assertEqual(len(files), 0)
-
-    def test_noDeletion(self):
-        fileCount = 3
-        for i in range(fileCount):
-            obj = TempFile(suffix='.xml', tmpDir=self.tmpDir, openFile=True, delete=False)
-            os.close(obj.fd)
-
-        files = glob(os.path.join(self.tmpDir, '*'))
-        self.assertEqual(len(files), fileCount)
-
-        TempFile.deleteAll()
-
-        files = glob(os.path.join(self.tmpDir, '*'))
-        self.assertEqual(len(files), fileCount)
-        # print "tmpDir has files:", files
-
-
-if __name__ == "__main__":
-    unittest.main()

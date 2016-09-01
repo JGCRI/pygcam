@@ -2,6 +2,7 @@ import unittest
 import os
 import subprocess
 from pygcam.landProtection import _makeLandClassXpath, _makeRegionXpath, protectLand
+from pygcam.windows import IsWindows
 
 class TestLandProtection(unittest.TestCase):
     def setUp(self):
@@ -12,7 +13,8 @@ class TestLandProtection(unittest.TestCase):
         Run diff on two files and test that there is no difference.
         '''
         # print "diff %s %s" % (outfile, testfile)
-        status = subprocess.call(['diff', outfile, testfile], shell=False)
+        diffCmd = "c:\\cygwin64\\bin\\diff" if IsWindows else "diff"
+        status = subprocess.call([diffCmd, '-w', outfile, testfile], shell=False)  # -w => ignore whitespace
         self.assertEqual(status, 0, 'Files %s and %s differ' % (outfile, testfile))
         if deleteOnSuccess:
             os.unlink(outfile) # doesn't happen if assertion fails, so file can be examined
