@@ -294,39 +294,14 @@ if IsWindows:
     os.path.islink = islinkWindows
     os.path.samefile = samefileWindows
 
-def setJavaPath(exeDir):
-    '''
-    Update the PATH to be able to find the Java dlls.
-    Modeled on run-gcam.bat in the GCAM distribution.
-    '''
-    if not IsWindows:
-        return
-
-    javaHome = os.environ.get('JAVA_HOME', None)
-    # Attempt to use WriteLocalBaseXDB which will print the java.home property of the Java
-    # Runtime used to run it.  Note if the runtime is not 64-bit it will only print an error.
-    from subprocess import check_output
-
-    if not javaHome:
-        curdir = os.getcwd()
-        os.chdir(exeDir)
-        # For some reason, this doesn't work with a path to WriteLocalBaseXDB
-        # so we chdir to the directory and run java there.
-        output = check_output('java WriteLocalBaseXDB', shell=True)
-        javaHome = output and output.strip()
-        os.chdir(curdir)
-
-    if javaHome and os.path.isdir(javaHome):
-        path = os.environ['PATH']
-        # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
-        os.environ['PATH'] = path + ';' + javaHome + r'\bin;' + javaHome + r'\bin\server'
-        _logger.debug("Setting PATH to %s", os.environ['PATH'])
-
 def removeSymlink(path):
     """
     On Windows, symlinks to directories  must be removed with os.rmdir(),
     while symlinks to files must be removed with os.remove()
     """
+    if not os.path.lexists(path):
+        return
+
     if not os.path.islink(path):
         raise PygcamException("removeSymlink: path '%s' is not a symlink" % path)
 

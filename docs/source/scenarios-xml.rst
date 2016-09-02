@@ -295,8 +295,9 @@ Delete the scenario component with the given name.
 
 <function>
 ~~~~~~~~~~~~
-Call the internal function (i.e., "method") of the
-:doc:`pygcam.xmlEditor` class with the given name, passing
+Call the internal function (i.e., "method") of the class
+:doc:`pygcam.xmlEditor` (or, a subclass thereof) with the given
+name, passing
 to it the arguments provided in the text of the ``<function>``
 element. The arguments should be a comma-delimited set of
 values that are valid Python constants. Note that some
@@ -309,6 +310,26 @@ iterator variables. (See example :ref:`below <setup-example>`.)
 +=============+============+===========+==========+
 | name        | yes        | (none)    | text     |
 +-------------+------------+-----------+----------+
+
+**Subclassing XMLEditor to provide functions callable from XML**
+
+By default, the ``<function>`` element allows you to invoke
+functions defined in the :doc:`pygcam.xmlEditor` class. If set,
+the class identified by the configuration variable
+``GCAM.ScenarioSetupClass`` must indicate a subclass of ``XMLEditor``
+to use instead. The format of the value for this variable is:
+
+``/path/to/module/dir;module.SubclassName``
+
+That is, there are two parts separated by a semi-colon. The first
+part is a path to a directory holding a module in which the subclass
+is defined. The second part is a standard Python specification of
+one or more modules separated by periods, with the final element being
+the name of the subclass.
+
+Note: Only functions (class methods) defined with the
+``@callableMethod`` decorator are recognized as callable from XML.
+See ``pygcam.xmlEditor.py`` for examples.
 
 .. _setup-example:
 

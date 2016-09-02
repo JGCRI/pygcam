@@ -10,16 +10,60 @@ import subprocess
 import sys
 
 from .config import getParam, getParamAsBoolean
-from .error import ProgramExecutionError, GcamRuntimeError
+from .error import ProgramExecutionError, GcamRuntimeError, PygcamException
 from .log import getLogger
 from .setup import createSandbox
-from .utils import writeXmldbDriverProperties, getExeDir
-from .windows import setJavaPath, IsWindows
+from .utils import writeXmldbDriverProperties, getExeDir, unixPath
+from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
 PROGRAM = os.path.basename(__file__)
 __version__ = "0.2"
+
+def setJavaPath(exeDir):
+    '''
+    Update the PATH to be able to find the Java dlls.
+    Modeled on run-gcam.bat in the GCAM distribution.
+    '''
+    if not IsWindows:
+        return
+
+    javaHome = os.environ.get('JAVA_HOME', None)
+    # Attempt to use WriteLocalBaseXDB which will print the java.home property of the Java
+    # Runtime used to run it.  Note if the runtime is not 64-bit it will only print an error.
+    from subprocess import check_output
+
+    if not javaHome:
+        curdir = os.getcwd()
+        os.chdir(exeDir)
+        # For some reason, this doesn't work with a path to WriteLocalBaseXDB
+        # so we chdir to the directory and run java there.
+        output = check_output('java WriteLocalBaseXDB', shell=True)
+        os.chdir(curdir)
+
+        os.environ['JAVA_HOME'] = javaHome = output and output.strip()
+
+        if not javaHome:
+            raise PygcamException("JAVA_HOME not set and failed to read java home directory from WriteLocalBaseXDB")
+
+    if not os.path.isdir(javaHome):
+        raise PygcamException('Java home (%s) is not a directory' % javaHome)
+
+    # Update the PATH to be able to find the Java dlls
+    # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
+    javaBin = os.path.join(javaHome, 'bin')
+    javaBinServer = os.path.join(javaBin, 'server')
+    envPath = os.environ.get('PATH', '')
+    os.environ['PATH'] = path = envPath + ';' + javaBin + ';' + javaBinServer
+    _logger.debug('PATH=%s', path)
+
+    envClasspath = os.environ.get('CLASSPATH', '')
+    envClasspath = ".;" + envClasspath if envClasspath else "."
+
+    miClasspath = getParam('GCAM.MI.ClassPath')
+    os.environ['CLASSPATH'] = classpath = envClasspath + ';' + javaBinServer + ';' + miClasspath
+    _logger.debug('CLASSPATH=%s', classpath)
 
 def _gcamWrapper(args):
     try:

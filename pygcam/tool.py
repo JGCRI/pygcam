@@ -274,6 +274,7 @@ class GcamTool(object):
         # sub-command so we can load the module if necessary.
         parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
         parser.add_argument('-h', '--help', action='store_true')
+        parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
 
         ns, otherArgs = parser.parse_known_args(args=argv)
 
@@ -432,28 +433,23 @@ def checkWindowsSymlinks():
             _logger.info('No symlink permission; setting GCAM.CopyAllFiles = True')
             setParam('GCAM.CopyAllFiles', 'True')
 
-# deprecated
-def _setupLogging(argv):
+def _setDefaultProject(argv):
     parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
     parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
-    parser.add_argument('-l', '--logLevel')
 
-    ns, otherArgs = parser.parse_known_args(args=argv)
+    ns, _otherArgs = parser.parse_known_args(args=argv)
 
-    ns.configSection = section = ns.configSection or getParam('GCAM.DefaultProject')
+    section = ns.configSection
     if section:
+        setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
-
-    logLevel = ns.logLevel or getParam('GCAM.LogLevel')
-    if logLevel:
-        setLogLevel(logLevel)
-
-    configureLogs(force=True)
 
 def _main(argv=None):
     getConfig()
     configureLogs()
     checkWindowsSymlinks()
+
+    _setDefaultProject(argv)
 
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
@@ -473,10 +469,10 @@ def _main(argv=None):
 
     tool.setMcsMode(ns.mcs)
 
-    section = ns.configSection
-    if section:
-        setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
-        setSection(section)
+    # section = ns.configSection
+    # if section:
+    #     setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
+    #     setSection(section)
 
     # Set specified config vars
     for arg in ns.configVars:

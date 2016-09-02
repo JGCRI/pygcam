@@ -9,12 +9,66 @@ import shutil
 
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
-from .error import SetupException
+from .error import SetupException, ConfigFileError
 from .log import getLogger
 from .utils import copyFileOrTree, removeFileOrTree, mkdirs
-from .windows import removeSymlink
+from .windows import removeSymlink, IsWindows
 
 pathjoin = os.path.join
+
+# Files specific to different versions of GCAM
+_VersionSpecificFiles = {
+    '4.2' : ['exe/WriteLocalBaseXDb.class', 'libs/basex/BaseX.jar'],
+    '4.3' : ['exe/XMLDBDriver.jar'],
+}
+
+_FilesToCopy = None
+
+def _getVersionSpecificFiles(version):
+    global _FilesToCopy
+
+    if _FilesToCopy:
+        return _FilesToCopy
+
+    try:
+        versionFiles = _VersionSpecificFiles[version]
+    except KeyError:
+        raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.setup.py', version)
+
+    executable = 'exe/' + getParam('GCAM.Executable')
+    files = versionFiles + [executable, 'input', 'libs', 'exe/log_conf.xml']
+    if IsWindows:
+        files.append('exe/xerces-c_3_1.dll')
+
+    _logger.debug("Version-specific files for GCAM %s: %s", version, files)
+    _FilesToCopy = files
+    return files
+
+def _getFilesToCopyAndLink(linkParam):
+    version = getParam('GCAM.VersionNumber')
+    files = _getVersionSpecificFiles(version)
+
+    allFiles = set(files)
+
+    # Subtract from the set of all files the ones to link
+    toLink = getParam(linkParam)
+    filesToLink = toLink.split()
+    filesToLinkSet = set(filesToLink)
+
+    unknownFiles = filesToLinkSet - allFiles
+    if unknownFiles:
+        raise ConfigFileError('Unknown files specified in %s: %s' % (linkParam, unknownFiles))
+
+    # Copy everything that is not in the filesToLinkSet
+    filesToCopy = list(allFiles - filesToLinkSet)
+    return filesToCopy, filesToLink
+
+
+# unused...
+def unixjoin(*args):
+    path = os.path.join(*args)
+    path = path.replace('\\', '/')
+    return path
 
 _logger = getLogger(__name__)
 
@@ -134,7 +188,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
     _logger.info("Setting up sandbox '%s'", sandbox)
 
     if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
-        raise SetupException("run sandbox is the same as run workspace; no setup performed")
+        raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
 
     if forceCreate:
         shutil.rmtree(sandbox, ignore_errors=True)
@@ -143,12 +197,12 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
     logPath = pathjoin(sandbox, 'exe', 'logs')
     mkdirs(logPath)
 
-    toCopy = getParam('GCAM.SandboxFilesToCopy')
-    for filename in toCopy.split():
+    filesToCopy, filesToLink = _getFilesToCopyAndLink('GCAM.SandboxFilesToLink')
+
+    for filename in filesToCopy:
         _workspaceLinkOrCopy(filename, srcWorkspace, sandbox, copyFiles=True)
 
-    toLink = getParam('GCAM.SandboxFilesToLink')
-    for filename in toLink.split():
+    for filename in filesToLink:
         _workspaceLinkOrCopy(filename, srcWorkspace, sandbox, copyFiles=False)
 
     outputDir = pathjoin(sandbox, 'output')
@@ -189,7 +243,8 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
     :return: none
     '''
-    _logger.info("Setting up GCAM workspace '%s'", newWorkspace)
+    version = getParam('GCAM.VersionNumber')
+    _logger.info("Setting up GCAM workspace '%s' for GCAM %s", newWorkspace, version)
 
     refWorkspace = refWorkspace or getParam('GCAM.RefWorkspace')
 
@@ -204,14 +259,16 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
 
     mkdirs(newWorkspace)
 
-    # Spell out rather than computing parameter names to facilitate
-    # searching source files for parameter uses.
-    toCopy = getParam('GCAM.MCS.WorkspaceFilesToCopy' if mcsMode else 'GCAM.WorkspaceFilesToCopy')
-    for filename in toCopy.split():
+    # Spell out variable names rather than computing parameter names to
+    # facilitate searching source files for parameter uses.
+    paramName = 'GCAM.MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink'
+
+    filesToCopy, filesToLink = _getFilesToCopyAndLink(paramName)
+
+    for filename in filesToCopy:
         _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=True)
 
-    toLink = getParam('GCAM.MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink')
-    for filename in toLink.split():
+    for filename in filesToLink:
         _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=False)
 
     for filename in ['local-xml', 'dyn-xml']:

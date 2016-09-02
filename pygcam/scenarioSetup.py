@@ -309,7 +309,7 @@ def createXmlEditorSubclass(setupFile):
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
     If defined, GCAM.ScenarioSetupClass must be of the form:
-    "/path/to/module/dir:module.ClassName]". If the variable
+    "/path/to/module/dir;module.ClassName]". If the variable
     GCAM.ScenarioSetupClass is empty, the class XMLEditor is
     subclassed directly.
 
@@ -319,7 +319,7 @@ def createXmlEditorSubclass(setupFile):
     setupClass = getParam('GCAM.ScenarioSetupClass')
     if setupClass:
         try:
-            modPath, dotSpec = setupClass.split(':', 1)
+            modPath, dotSpec = setupClass.split(';', 1)
         except Exception:
             raise SetupException('GCAM.ScenarioSetupClass should be of the form "/path/to/moduleDirectory:module.ClassName", got "%s"' % setupClass)
 
