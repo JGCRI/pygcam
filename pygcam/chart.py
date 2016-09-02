@@ -180,6 +180,7 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
     the values. The argument 'ncol' specifies the number of columns with
     which to render the legend.
     '''
+    #_logger.debug('plotStackedBarsScalar %s', sideLabel)
     setupPlot()
 
     # TBD: handle year values as columns to plot
@@ -188,7 +189,7 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
     setupPalette(len(df2.columns), pal=palette)
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-    df2.plot(kind='bar', stacked=True, ax=ax, grid=False, width=barWidth)
+    df2.plot(kind='bar', stacked=True, ax=ax, grid=False, width=barWidth, rot=rotation)
 
     if box == False:
         sns.despine(left=True)
@@ -214,7 +215,7 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
     legendY = -0.6 if legendY is None else legendY
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
 
-    plt.xticks(rotation=rotation)
+    #plt.xticks(rotation=rotation)
 
     if title:
         ax.set_title(title, y=1.05)
@@ -234,6 +235,7 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
                           ymin=None, ymax=None, barWidth=0.5, legendY=None, yearStep=5,
                           palette=None, outFile=None, sideLabel=False, labelColor=None,
                           yFormat=None, transparent=False, openFile=False, closeFig=True):
+    #_logger.debug('plotStackedTimeSeries %s', sideLabel)
     setupPlot()
     df = dropExtraCols(df, inplace=False)
     grouped = df.groupby(index)
@@ -247,7 +249,9 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
     # space out year labels to every 5 years
     locs, labels = plt.xticks()
     yearCols = filter(str.isdigit, df.columns)
-    plt.xticks(locs[::yearStep], yearCols[::yearStep])
+
+    if int(yearCols[1]) - int(yearCols[0]) == 1 and yearStep > 1:
+        plt.xticks(locs[::yearStep], yearCols[::yearStep])
 
     if box == False:
         sns.despine(left=True)
