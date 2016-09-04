@@ -18,22 +18,10 @@ from tempfile import mkstemp, mkdtemp
 
 from .config import getParam
 from .error import PygcamException, FileFormatError
-from .log import getLogger, getLogLevel
+from .log import getLogger
 
 _logger = getLogger(__name__)
 
-# TBD: allow user to specify a module to load in addition
-# TBD: to unitConversion, to add their own converters
-def unitConverter(name):
-    """
-    Get the value of a variable defined in the unitConversion module.
-    Basically an "eval" operation.
-
-    :param name: (str) the name of a variable to look up.
-    :return: (float or None) the value of the named variable, or None if not found.
-    """
-    import unitConversion
-    return getattr(unitConversion, name)
 
 def digitColumns(df, asInt=False):
     '''

@@ -23,17 +23,13 @@ class ChartCommand(SubcommandABC):
         # argparse type checker/converter to handle symbolic unit conversions
         def floatOrConversion(string):
             import argparse
-            from ..utils import coercible, unitConverter
+            from ..units import getUnits
 
-            value = coercible(string, float, raiseError=False)
-            if value is not None:
-                return value
-
-            value = unitConverter(string)
-            if value is not None:
-                return value
-
-            raise argparse.ArgumentTypeError("%r is not a float or a known unit conversion" % string)
+            u = getUnits()
+            try:
+                return u.convert(string)
+            except:
+                raise argparse.ArgumentTypeError("%r is not a float or a known unit conversion" % string)
 
         # --byRegion and --region are mutually exclusive
         group1 = parser.add_mutually_exclusive_group()
