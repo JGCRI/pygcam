@@ -15,17 +15,12 @@ _logger = getLogger(__name__)
 def getUnits(other=None):
     """
     Returns a singleton instance of a private namespace-like class
-    that can set and get unit conversions. For example, after calling
+    that can set and get unit conversions.
 
-    u = getUnits()
-
-    You can access a conversion named, for example, 'MJ_to_EJ' as
-    ``u.MJ_to_EJ``, and set a new value for, say, 'foo' simply by
-    setting ``u.foo = value``.
-
-    :param other: (dict-like) an object with the iteritems() method
-        that with pairs of (name, value) that are added to the built-in
-        conversion table. These will overwrite prior entries of the same name.
+    :param other: (dict-like) an object supporting the items() method
+        that returns pairs of (name, value) that are added to the built-in
+        unit conversion look-up table. Note that elements in `other` will
+        overwrite existing entries of the same name.
     :return: (UnitNamespace) returns a singleton instance, i.e., subsequent
         calls will return the same object, though additional names can be
         passed on each call.
@@ -33,12 +28,26 @@ def getUnits(other=None):
     units = UnitNamespace.getUnits()
 
     if other:
-        for name, value in other.iteritems():
+        for name, value in other.items():
             units.set(name, value)
 
     return units
 
 class UnitNamespace(object):
+    """
+    UnitNamespace is a namespace-like class that stores the names of
+    unit conversions, allowing these names to be used in the GCAM tool
+    "chart" sub-command to specify values to multiply or divide by to
+    convert units for plotting. Names can be set and accessed using
+    '.' notation. That is, after calling ``u = getUnits()``, you
+    can access a conversion named, for example, 'MJ_to_EJ' as
+    ``u.MJ_to_EJ``, or set a new value for, say, 'foo' simply by
+    setting ``u.foo = value``.
+
+    Note that the getUnits() method should generally be used rather
+    than calling UnitNamespace() directly to ensure that the single
+    instance of the class is returned.
+    """
     instance = None
     conversions = {}        # not an ivar since we hijack __getattr__
 
@@ -76,6 +85,19 @@ class UnitNamespace(object):
         self.conversions[name] = value
 
     def convert(self, string, raiseError=True):
+        """
+        Convert the given `string` to its numerical value, either by
+        direct type conversion, or if this fails, by look-up as the
+        name of a defined unit conversion.
+
+        :param string: (str) a string representing a float or the
+            name of a defined unit conversion.
+        :param raiseError: (bool) if True, an error is raised if the
+            string is neither a number nor a defined unit conversion.
+        :return: (float or None) returns the converted value, or if raiseError
+            is False and the string is not a recognized unit conversion,
+            None is returned.
+        """
         value = coercible(string, float, raiseError=False)
         if value is not None:
             return value
@@ -87,6 +109,9 @@ class UnitNamespace(object):
         return None
 
     def __init__(self):
+        """
+        Initialize the unit conversion look-up table.
+        """
         s = self    # just to make the following more readable
 
         # basic SI units and relationships
