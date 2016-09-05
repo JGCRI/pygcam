@@ -130,7 +130,7 @@ class SetupCommand(SubcommandABC):
         # If a setup XML file is defined, use the defined (or default) XMLEditor subclass
         setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
         if setupXml:
-            from ..scenarioSetup import createXmlEditorSubclass
+            from ..xmlSetup import createXmlEditorSubclass
             _logger.debug('Setup using %s', setupXml)
             scenClass = createXmlEditorSubclass(setupXml)
 
