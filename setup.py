@@ -16,7 +16,7 @@ requirements = ['lxml',
 
 setup(
     name='pygcam',
-    version='0.1a1',
+    version='1.0a1',
     description='Python 2.7 library and scripts for interfacing with GCAM',
 
     packages=['pygcam'],
