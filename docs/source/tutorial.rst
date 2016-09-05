@@ -1,25 +1,25 @@
-Tutorial -- Using ``pygcam``
-=============================
+Tutorial
+=========
 
 .. note::
 
    *This tutorial is currently under development.*
 
+
 Overview
 ----------
 Here we provide a brief introduction to the elements of this tutorial. The tutorial
-explains how to setup ``pygcam`` and manage the GCAM workflow. A separate tutorial
-will (eventually) be developed to describe how to use ``pygcam`` programmatically.
-
-The steps involved in using ``pygcam`` are explained briefly here, and in more
+explains how to setup ``pygcam`` and manage the GCAM workflow. The steps involved
+in using ``pygcam`` are explained briefly here, and in more
 detail in the sections that follow.
+
 
 1. Install pygcam
 ^^^^^^^^^^^^^^^^^^^
 
 Before using ``pygcam``, you must install a Python 2.7 environment and then
 install the ``pygcam`` package. See the :doc:`install` page for details.
-Windows users should also refer to :doc:`windows`.
+Windows users should also see :ref:`windows-label`.
 
 2. Configure pygcam
 ^^^^^^^^^^^^^^^^^^^^
@@ -46,13 +46,15 @@ of ``pygcam`` require an XML-based project definition file that describes:
   baselines.)
 * data required by some of the steps
 
-See :doc:`project-xml` for a detailed description of the file's XML schema.
+See :doc:`project-xml` for a detailed description of the file's XML schema, and more
+information later in this document. See :doc:`setup` and :doc:`scenarios-xml` for
+information regarding how to define scenarios in XML or in Python.
 
 .. note::
 
-   The :ref:`new <new-label>` sub-command of the :doc:`gcamtool` script can be used to create the
-   initial structure and files required for a new project, and optionally, insert
-   a section for the new project in the ``$HOME/.pygcam.cfg`` configuration file.
+   The :ref:`new <new-label>` sub-command of the :doc:`gcamtool` script can be used to
+   create the initial structure and files required for a new project, and optionally,
+   insert a section for the new project in the ``$HOME/.pygcam.cfg`` configuration file.
 
 
 4. Setup the project files
@@ -73,7 +75,6 @@ understand the project setup, and offers numerous options allowing you
 to choose which project, scenario group, or scenarios to operate on and which
 steps to run.
 
-
 ------------------------------------------
 
 .. _initial-configuration-label:
@@ -88,14 +89,15 @@ available configuration parameters shown in comments (i.e., lines starting with 
 explaining their purpose and showing their default values. To uncomment a line,
 simply remove the leading '#' character.
 
-Edit the configuration file with any editor capable of
-working with plain text---not a word-processor such as Word. You can use
-the command ``gt config -e`` to invoke a system-appropriate editor on the
-configuration file. See :doc:`config` for details.
+Edit the configuration file with any editor capable of working with plain text.
+(Word-processors such as Word introduce formatting information into the file which
+renders it unusable by ``pygcam``.) You can use the command ``gt config -e`` to
+invoke a system-appropriate editor on the configuration file. See the :doc:`config`
+page for details.
 
 Configuration file sections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The configuration file is divided into sections indicated by a name in square brackets.
+The configuration file is divided into sections indicated by a name within square brackets.
 All variable declarations following a section declaration, until the next section
 declaration (if any) appear in the declared section. You can declare a section multiple
 times to add new values to the section.
@@ -104,9 +106,10 @@ times to add new values to the section.
 Project sections
 ~~~~~~~~~~~~~~~~~~
 Each project should have its own section. For example, to setup a project called, say,
-"Paper1", I would create the section ``[Paper1]``. Following this, I would define variables
+"paper1", I would create the section ``[paper1]``. Following this, I would define variables
 particular to this project, e.g., where the to find the files defining scenarios, queries,
 and so on.
+
 
 Default section
 ~~~~~~~~~~~~~~~~~
@@ -122,35 +125,30 @@ allowing them to be overridden on a project-by-project basis.
 
 Sample configuration file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Below is a sample configuration file for a project called ``Paper1``. The user has
-created some (non-pygcam) variables prefixed by ``User.``. The prefixes are merely a
-convention to identify standard pygcam variables. For user-defined variables, use any
-prefix desired, or none at all.
+Below is a sample configuration file for a project called ``Paper1``. By convention,
+variables are named with a prefix identifying where they are defined. All variables
+defined by ``pygcam`` begin with ``GCAM.``, so if you create your own variables (e.g.,
+to define values used in defining other variables) you should avoid confusion by avoiding
+this prefix. You can use any prefix desired, or none at all.
 
  .. code-block:: cfg
 
     [DEFAULT]
-    GCAM.DefaultProject = Paper1
+    GCAM.DefaultProject = paper1
 
-    User.RepoRoot       = %(Home)s/git-repo
+    GCAM.ProjectRoot    = %(Home)s/gcamProjects
     GCAM.SandboxRoot    = %(Home)s/ws
 
     GCAM.LogLevel       = INFO
-    GCAM.ShowStackTrace = True
-    GCAM.ModelInterfaceLogFile = %(Home)s/tmp/mi.log
-    GCAM.UseVirtualBuffer = True
+    GCAM.MI.LogFile     = %(Home)s/tmp/mi.log
+    GCAM.MI.Dir         = /pic/projects/GCAM/ModelInterface
 
-    GCAM.Root           = %(Home)s/GCAM
-    GCAM.RefWorkspace   = %(GCAM.Current)s/Main_User_Workspace
-    GCAM.ModelInterface = /pic/projects/GCAM/ModelInterface
-    GCAM.JavaLibPath    = /pic/projects/GCAM/GCAM-libraries/lib/basex
     GCAM.OtherBatchArgs = -A my_account
 
     GCAM.QueryDir  = %(GCAM.ProjectDir)s/queries
     GCAM.QueryPath = %(GCAM.QueryDir)s
 
-    # Default location for query results
-    GCAM.OutputDir = %(Home)s/ws/output
+    GCAM.TextEditor     = open -a emacs
 
     # Setup config files to not write extraneous files, so of which are very large
     GCAM.WriteDebugFile     = False
@@ -158,37 +156,10 @@ prefix desired, or none at all.
     GCAM.WriteXmlOutputFile = False
     GCAM.WriteOutputCsv     = False
 
-    [Paper1]
-    GCAM.RegionMapFile = %(GCAM.ProjectDir)s/etc/Regions.txt
-
-------------------------------------------------
-
-Project structure
-------------------
-
-The :doc:`setup` system provides programmatic methods (i.e., Python functions) that
-automatic common edits to GCAM XML input and configuration files. The output of the
-setup system is thus a set of modified XML input and configuration files. These files
-should not be edited manually as the changes will be overwritten the next time the
-setup system is run.
-
-The files defining a project are stored in the directory identified by the configuration
-parameter ``GCAM.XmlSrc``, which defaults to ``%(GCAM.ProjectDir)s/xmlsrc``, i.e., the
-directory ``xmlsrc`` within your project directory. Included under ``xmlsrc`` are
-
-  * Custom XML files
-  * A Python file that defines baseline and policy scenarios, and calls the setup
-    functions as needed to modify standard input files or included custom one.
-
-The gcamtool :ref:`setup <setup-label>` sub-command loads the Python file and calls the
-setup functions corresponding to the requires baseline and policy scenarios. This
-modifies reference XML files and copies custom XML files to a directory identified by the
-config parameter ``GCAM.LocalXml``, which default to ``%(GCAM.ProjectDir)s/local-xml``.
-Dynamically generated constraints (i.e., those that depend on the output of the baseline
-scenario) are written to the directory indicated by ``GCAM.DynXml``, which defaults to
-``%(GCAM.ProjectDir)s/dyn-xml``. See the :doc:`setup` page for further details.
-
-N.B. a system for defining projects without writing any Python code is currently in development.
+    [paper1]
+    GCAM.RewriteSetsFile	= %(GCAM.ProjectDir)s/etc/rewriteSets.xml
+    GCAM.ScenarioSetupFile	= %(GCAM.ProjectDir)s/etc/scenarios.xml
+    GCAM.LogLevel           = DEBUG
 
 ------------------------------------------------
 
@@ -199,40 +170,65 @@ scenarios that are compared to the baseline. In ``pygcam``, the experiment is de
 a :doc:`project-xml` file, the location of which is specified by the config parameter
 ``GCAM.ProjectXmlFile``, which defaults to ``%(GCAM.ProjectDir)s/etc/project.xml``.
 
+The :doc:`scenarios-xml` file describes all the workflow steps required to setup, run, and
+
+
 The :doc:`project-xml` file describes all the workflow steps required to setup, run, and
 analyze the scenarios. The entire workflow or select steps can be run using the gcamtool
-`:ref: run <run-label>` sub-command.
+:ref:`run <run-label>` sub-command.
 
-Run-time structure
-^^^^^^^^^^^^^^^^^^^^
-In ``pygcam``, each GCAM scenario is run in a separate copy of the standard GCAM
-workspace. On Unix-like systems (and on Windows if
-the user has adequate administrative privileges), the read-only files are symbolically
-linked to the scenario workspace, avoiding copying of many megabytes of data.
+After you have created a ``project.xml`` file describing the scenarios, workflow steps,
+and other parameters and data required by the workflow steps, and created a configuration
+file to set appropriate defaults, you can run the entire analysis with a single command:
 
-Windows users lacking permission to create symbolic links should can the following
-configuration parameter to cause copying rather than linking to occur:
+.. code-block:: sh
 
-.. code-block:: cfg
+   gt run
 
-   GCAM.CopyAllFiles = True
+With no other options specified (as above), the default scenario group (identified in
+the project.xml file) of the default project (defined in your configuration file) will
+be run, starting with the scenario identified as the baseline, followed by all other
+policy scenarios. All defined workflow steps will be executed in the order defined,
+for all scenarios.
 
-To avoid ambiguity between the reference GCAM workspace (i.e., ``Main_User_Workspace``)
-and the per-scenario, generated workspaces, we refer to the latter as `sandboxes`, which
-is a computing term that refers to isolation areas in which programs are run to avoid
-interactions with other programs.
+Of course, there are several options available to the :doc:`gcamtool` command, including
+the ability to set the desired level of diagnostic output (the "log level"), and
+to run the command on a compute node on a cluster computing system.
 
-The default ``pygcam`` structure assumes there is a directory under which you want all
-sandboxes to be created. This is defined by the config parameter ``GCAM.SandboxRoot``,
-which defaults to ``%(GCAM.Root)s/ws``. ``GCAM.Root`` in turn defaults to
-``%(Home)s/GCAM``, thus the default sandbox root is ``%(Home)s/GCAM/ws``. You can change
-``GCAM.Root`` or ``GCAM.SandboxRoot`` to any desired directory. The sandbox for an
-individual project is defined by ``GCAM.SandboxDir``, which defaults
-to ``%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s``.
+The :ref:`"run" sub-command <run-label>` also provides many options, including the
+ability to select which scenario group to run and limit which scenarios and steps to
+run (or not run).
 
-With the project's sandbox directory are the standard GCAM workspace folders, i.e.,
-``input``, ``libs``, ``exe`` (which are symbolic links when possible), and ``output``,
-which is always created locally in the sandbox to hold the GCAM output files.
 
-*Create a figure showing file structure*
+Customizing project steps
+---------------------------
+The generic workflow steps defined in the :doc:`project-xml` file may suffice for
+many projects. It is likely, however, that you will want to customize several other
+elements of the project file.
 
+Queries
+^^^^^^^
+The queries identified in the project file (or in an external file) determine which
+results are extracted from the GCAM database for each run of the model, and thus
+determine which subsequent steps (computing differences, creating charts) can be
+performed. To plot results, you must first extract them from the database using
+a query.
+
+Queries can be extracted on-the-fly from files used with ModelInterface by specifying
+the location of the XML file in the configuration variable ``GCAM.QueryPath`` and
+referencing the desired query by its defined "title". (See the
+:ref:`query sub-command <query-label>` and the :doc:`pygcam.query` API documentation
+for more information.)
+
+Rewrite sets
+^^^^^^^^^^^^^
+Standard GCAM XML queries can define "rewrites" which modify the values of chosen
+data elements to allow them to be aggregated. For example, you can aggregate all
+values of CornAEZ01, CornAEZ02, ..., CornAEZ18 to be returned simply as "Corn".
+
+In ``pygcam`` this idea is taken a step further by allowing you to define reusable,
+named "rewrite sets" that can be applied on-the-fly to
+queries named in the project file. For example, if you are working with a particular
+regional aggregation, you can define this aggregation once in a ``rewrites.xml`` file
+and reference the name of the rewrite set when specifying queries in :doc:`project-xml`.
+See :doc:`rewrite sets <rewrites-xml>` for more information.

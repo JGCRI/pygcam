@@ -1,17 +1,13 @@
 '''
-.. codeauthor:: Richard Plevin
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
 import io
 import platform
-import re
 from pkg_resources import resource_string
-from ConfigParser import SafeConfigParser
-from .error import ConfigFileError, PygcamException, CommandlineError
-from .subcommand import SubcommandABC
+from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError
+from .error import ConfigFileError, PygcamException
 
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
@@ -61,8 +57,8 @@ def _getCommentedDefaults(systemDefaults):
     # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
     result += "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
     result += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
-    result += "# Location of ModelInterface jar file\n# GCAM.JarFile = %s\n\n" % getParam('GCAM.JarFile', raw=True)
-    result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.UseVirtualBuffer = %s\n\n" % getParam('GCAM.UseVirtualBuffer', raw=True)
+    result += "# Location of ModelInterface jar file\n# GCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
+    result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
     result += "# Editor command to invoke by 'gt config -e'\n# GCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
 
     if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n'
@@ -94,17 +90,34 @@ def getConfig():
     """
     Return the configuration object. If one has been created already via
     `readConfigFiles`, it is returned; otherwise a new one is created
-    and the configuration files are read.
+    and the configuration files are read. Applications generally do not
+    need to use this object directly since the single instance is stored
+    internally and referenced by the other API functions.
 
     :return: a `SafeConfigParser` instance.
     """
     return _ConfigParser or readConfigFiles()
 
+
+def _readConfigResourceFile(filename, raiseError=True):
+    try:
+        data = resource_string('pygcam', filename)
+    except IOError:
+        if raiseError:
+            raise
+        else:
+            return None
+
+    _ConfigParser.readfp(io.BytesIO(data))
+    return data
+
 def readConfigFiles():
     """
-    Read the pygcam configuration file, ``~/.pygcam.cfg``. "Sensible" default values are
-    established first, which overwritten by values found in the user's configuration
-    file.
+    Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
+    followed by ``pygcam/etc/{platform}.cfg`` if present. If the environment variable
+    ``PYGCAM_SITE_CONFIG`` is defined, its value should be a config file, which is
+    read next. Finally, the user's config file, ``~/.pygcam.cfg``, is read. Each
+    successive file overrides values for any variable defined in an earlier file.
 
     :return: a populated SafeConfigParser instance
     """
@@ -117,45 +130,15 @@ def readConfigFiles():
     else:
         home = os.getenv('HOME')
 
-    if PlatformName == 'Darwin':
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.app/Contents/Resources/Java/ModelInterface.jar'
-        exeFile = 'Release/objects'
-        useXvfb = 'False'
-        editor  = 'open -e'
-    elif PlatformName == 'Linux':
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = './gcam.exe'
-        useXvfb = 'True'
-        editor  = os.getenv('EDITOR', 'vi')
-    elif PlatformName == 'Windows':
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = 'Objects-Main.exe'
-        useXvfb = 'False'
-        editor  = os.getenv('EDITOR', 'notepad.exe')
-    else:
-        # unknown what this might be, but just in case
-        jarFile = '%(GCAM.ModelInterface)s/ModelInterface.jar'
-        exeFile = 'gcam.exe'
-        useXvfb = 'False'
-        editor  = os.getenv('EDITOR', 'vi')
-
-    # Initialize config parser with default values
     _ConfigParser = SafeConfigParser()
-
     _ConfigParser.optionxform = str     # don't force all names to lower-case
 
-    def readConfigResourceFile(filename):
-        data = resource_string('pygcam', filename)
-        _ConfigParser.readfp(io.BytesIO(data))
-        return data
-
-    systemDefaults = readConfigResourceFile('etc/system.cfg')
-
+    # Initialize config parser with default values
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.Executable', exeFile)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.JarFile', jarFile)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.UseVirtualBuffer', useXvfb)
-    _ConfigParser.set(DEFAULT_SECTION, 'GCAM.TextEditor', editor)
+    systemDefaults = _readConfigResourceFile('etc/system.cfg')
+
+    # Read platform-specific defaults, if defined. No error if file is missing.
+    _readConfigResourceFile('etc/%s.cfg' % PlatformName, raiseError=False)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:
@@ -163,7 +146,7 @@ def readConfigFiles():
             with open(siteConfig) as fp:
                 _ConfigParser.readfp(fp)
         except Exception as e:
-            print "WARNING: Failed to read site config file: %s" % e
+            print("WARNING: Failed to read site config file: %s" % e)
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
@@ -207,20 +190,21 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
     d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
     return d
 
-def setParam(name, value, section=DEFAULT_SECTION):
+def setParam(name, value, section=None):
     """
-    Set a configuration parameter in memory. The new value is not
-    written to the config file.
+    Set a configuration parameter in memory.
 
     :param name: (str) parameter name
     :param value: (any, coerced to str) parameter value
     :param section: (str) if given, the name of the section in which to set the value.
-       If not given, the value is set in the DEFAULT section.
+       If not given, the value is set in the established project section, or DEFAULT
+       if no project section has been set.
     :return: none
     """
+    section = section or getSection()
     _ConfigParser.set(section, name, value)
 
-def getParam(name, section=None, raw=False):
+def getParam(name, section=None, raw=False, raiseError=True):
     """
     Get the value of the configuration parameter `name`. Calls
     :py:func:`getConfig` if needed.
@@ -230,7 +214,10 @@ def getParam(name, section=None, raw=False):
     :param section: (str) the name of the section to read from, which
       defaults to the value used in the first call to ``getConfig``,
       ``readConfigFiles``, or any of the ``getParam`` variants.
-    :return: (str) the value of the variable
+    :return: (str) the value of the variable, or None if the variable
+      doesn't exist and raiseError is False.
+    :raises NoOptionError: if the variable is not found in the given
+      section and raiseError is True
     """
     section = section or _ProjectSection
 
@@ -240,7 +227,20 @@ def getParam(name, section=None, raw=False):
     if not _ConfigParser:
         getConfig()
 
-    return _ConfigParser.get(section, name, raw=raw)
+    try:
+        return _ConfigParser.get(section, name, raw=raw)
+
+    except NoSectionError:
+        if raiseError:
+            raise PygcamException('getParam: unknown section "%s"' % section)
+        else:
+            return None
+
+    except NoOptionError:
+        if raiseError:
+            raise PygcamException('getParam: unknown variable "%s"' % name)
+        else:
+            return None
 
 def getParamAsBoolean(name, section=None):
     """
@@ -301,110 +301,3 @@ def getParamAsFloat(name, section=None):
     value = getParam(name, section=section)
     return float(value)
 
-
-class ConfigCommand(SubcommandABC):
-    VERSION = '0.2'
-
-    def __init__(self, subparsers):
-        kwargs = {'help' : '''List the values of configuration variables from
-                  ~/.pygcam.cfg configuration file.'''}
-
-        super(ConfigCommand, self).__init__('config', subparsers, kwargs)
-
-    def addArgs(self, parser):
-        parser.add_argument('-d', '--useDefault', action='store_true',
-                            help='''Indicates to operate on the DEFAULT
-                                    section rather than the project section.''')
-
-        parser.add_argument('-e', '--edit', action='store_true',
-                            help='''Edit the configuration file. The command given by the
-                            value of config variable GCAM.TextEditor is run with the
-                            .pygcam.cfg file as an argument.''')
-
-        parser.add_argument('name', nargs='?', default='',
-                            help='''Show the names and values of all parameters whose
-                            name contains the given value. The match is case-insensitive.
-                            If not specified, all variable values are shown.''')
-
-        parser.add_argument('-x', '--exact', action='store_true',
-                            help='''Treat the text not as a substring to match, but
-                            as the name of a specific variable. Match is case-sensitive.
-                            Prints only the value.''')
-
-        parser.add_argument('-t', '--test', action='store_true',
-                            help='''Test the settings in the configuration file to ensure
-                            that the basic setup is ok, i.e., required parameters have
-                            values that make sense. If specified, no variables are displayed.''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
-
-        return parser
-
-    def testConfig(self, section):
-        requiredDirs = ['SandboxRoot', 'SandboxDir', 'ProjectRoot', 'ProjectDir',
-                        'QueryDir', 'ModelInterface', 'RefWorkspace', 'TempDir']
-        requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'JarFile']
-        optionalDirs  = ['UserTempDir']
-        optionalFiles = ['RegionMapFile', 'RewriteSetsFile']
-
-        dirVars  = requiredDirs  + optionalDirs
-        fileVars = requiredFiles + optionalFiles
-
-        optionalVars = optionalDirs + optionalFiles
-
-        for item in dirVars + fileVars:
-            var = 'GCAM.' + item
-            value = getParam(var)
-
-            if not value:
-                if item in optionalVars:
-                    continue
-                print "Config variable %s is empty" % var
-
-            elif not os.path.lexists(value):
-                print "Config variable %s refers to missing file or directory '%s'" % (var, value)
-
-            elif not os.path.isfile(value) and item in fileVars:
-                print "Config variable %s does not refer to a file (%s)" % (var, value)
-
-            elif not os.path.isdir(value) and item in dirVars:
-                print "Config variable %s does not refer to a directory (%s)" % (var, value)
-
-            print 'OK:', var, '=', value
-
-    def run(self, args, tool):
-        if args.edit:
-            import subprocess
-
-            cmd = "%s %s/%s" % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
-            print cmd
-            exitStatus = subprocess.call(cmd, shell=True)
-            if exitStatus <> 0:
-                raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
-            return
-
-        section = 'DEFAULT' if args.useDefault else args.configSection
-
-        if section != 'DEFAULT' and not _ConfigParser.has_section(section):
-            raise CommandlineError("Unknown configuration file section '%s'" % section)
-
-        if args.test:
-            self.testConfig(section)
-            return
-
-        if args.name and args.exact:
-            value = getParam(args.name, section=section)
-            if value is not None:
-                print value
-            return
-
-        # if no name is given, the pattern matches all variables
-        pattern = re.compile('.*' + args.name + '.*', re.IGNORECASE)
-
-        print "[%s]" % section
-        for name, value in sorted(_ConfigParser.items(section)):
-            if pattern.match(name):
-                print "%22s = %s" % (name, value)
-
-
-PluginClass = ConfigCommand

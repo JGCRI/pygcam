@@ -21,10 +21,7 @@
 /dist/
 
 # Output
-docs/build/.doctrees
-docs/build/doctrees
-docs/build/latex
-docs/build/.buildinfo
+docs/build
 build/lib
 build/scripts-2.7
 
@@ -36,4 +33,3 @@ pygcam-saved-2.tgz
 setuptools-21.0.0-py2.7.egg
 setuptools-21.0.0.zip
 pygcam/jugdir
-docs/build/html

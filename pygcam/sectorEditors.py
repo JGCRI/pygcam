@@ -1,9 +1,14 @@
+'''
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+'''
 from os import path
 from .log import getLogger
-from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology
+from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology, callableMethod
 
 _logger = getLogger(__name__)
 
+# TBD: move to constants.py?
 REFINING_SECTOR = 'refining'
 BIOMASS_LIQUIDS = 'biomass liquids'
 
@@ -16,54 +21,16 @@ TECH_BIODIESEL          = 'biodiesel'
 TECH_GTL                = 'gas to liquids'
 TECH_CTL                = 'coal to liquids'
 
-class RefiningEditor(XMLEditor):
-    """
-    RefiningEditor add methods that deal with the refinery sector.
-    """
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
-                 subdir, parent=None):
-        super(RefiningEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
-                                             refWorkspace, subdir, parent=parent)
-
-    def setup(self, args):
-        super(RefiningEditor, self).setup(args)
-
-    # TBD: redefine this as follows, or just call setGlobalTechShutdownRate directly?
-    def _setRefinedFuelShutdownRate(self, fuel, year, rate):
-        self.setGlobalTechShutdownRate(self, REFINING_SECTOR, BIOMASS_LIQUIDS, fuel, year, rate)
-
-    # def setup(self, stopPeriod=None, dynamic=False, writeDebugFile=None,
-    #           writePrices=None, writeOutputCsv=None, writeXmlOutputFile=None):
-    #     super(RefiningEditor, self).setup(stopPeriod=stopPeriod, dynamic=dynamic,
-    #                                       writeDebugFile=writeDebugFile,
-    #                                       writePrices=writePrices,
-    #                                       writeOutputCsv=writeOutputCsv,
-    #                                       writeXmlOutputFile=writeXmlOutputFile)
-
-    def setRefinedFuelShutdownRate(self, fuel, year, rate):
-        _logger.info("Set %s shutdown rate to %s for %s in %s" % (fuel, rate, self.name, year))
-
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
-
-        prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
-                 (REFINING_SECTOR, BIOMASS_LIQUIDS, fuel)
-
-        xmlEdit(enTransFileAbs,
-                '-u', prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
-                '-v', rate)
-
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-
-class BioenergyEditor(RefiningEditor):
+class BioenergyEditor(XMLEditor):
     """
     BioenergyEditor adds knowledge of biomass and biofuels.
     """
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, workspaceDir,
-                 subdir, parent=None):
+                 groupDir, subdir, parent=None):
         super(BioenergyEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
-                                              workspaceDir, subdir, parent=parent)
+                                              workspaceDir, groupDir, subdir, parent=parent)
 
+        # TBD: unclear whether this is useful or general
         cornEthanolUsaFile = 'cornEthanolUSA.xml'
         self.cornEthanolUsaAbs = path.join(self.scenario_dir_abs, cornEthanolUsaFile)
         self.cornEthanolUsaRel = path.join(self.scenario_dir_rel, cornEthanolUsaFile)
@@ -89,9 +56,7 @@ class BioenergyEditor(RefiningEditor):
         self.biodieselUsaAbs2 = path.join(self.scenario_dir_abs, biodieselUsaFile2)
         self.biodieselUsaRel2 = path.join(self.scenario_dir_rel, biodieselUsaFile2)
 
-    def setup(self, args):
-        super(BioenergyEditor, self).setup(args)
-
+    @callableMethod
     def adjustResidueSupply(self, loTarget, loPrice, loFract, hiTarget, hiPrice, hiFract, target):
         """
         Change supply curves for residues, as per arguments. loTarget and hiTarget identify
@@ -134,15 +99,17 @@ class BioenergyEditor(RefiningEditor):
 
         self.updateScenarioComponent("residue_bio", resbioFileRel)
 
-    def setMswParameterUSA(self, parameter, value):
+    @callableMethod
+    def setMswParameter(self, region, parameter, value):
         resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
 
-        xpath = "//region[@name='USA']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/%s" % parameter
+        xpath = "//region[@name='%s']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/%s" % (region, parameter)
 
         xmlEdit(resourcesFileAbs, '-u', xpath, '-v', value)
 
         self.updateScenarioComponent("resources", resourcesFileRel)
 
+    @callableMethod
     def regionalizeBiomassMarket(self, region):
         _logger.info("Regionalize %s biomass market for %s" % (region, self.name))
 
@@ -150,7 +117,7 @@ class BioenergyEditor(RefiningEditor):
 
         xmlEdit(resourcesFileAbs,
                 '-u', "//region[@name='%s']/renewresource[@name='biomass']/market" % region,
-                '-v', "USA")
+                '-v', region)
 
         self.updateScenarioComponent("resources", resourcesFileRel)
 
@@ -162,6 +129,7 @@ class BioenergyEditor(RefiningEditor):
 
         self.updateScenarioComponent("ag_base", agForPastBioFileRel)
 
+    @callableMethod
     def setCornEthanolCoefficients(self, cornCoef, gasCoef=None, elecCoef=None):
         '''
         Set corn ethanol performance coefficients, i.e., the (regional) corn, gas, and
@@ -196,7 +164,8 @@ class BioenergyEditor(RefiningEditor):
             xmlEdit(*args)
             self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    # TBD: generalize this
+    # deprecated?
+    @callableMethod
     def setBiofuelBiomassCoefficients(self, fuelName, pairs):
         '''
         Set new coefficients for biomass conversion for the given fuel
@@ -210,25 +179,11 @@ class BioenergyEditor(RefiningEditor):
         :return:
             nothing
         '''
-        _logger.info("Set global biomass coefficients for %s: %s" % (fuelName, pairs))
+        self.setEnergyTechnologyCoefficients(self, BIOMASS_LIQUIDS, fuelName, 'regional biomass', pairs)
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
-
-        prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
-                 (BIOMASS_LIQUIDS, fuelName)
-        suffix = "minicam-energy-input[@name='regional biomass']/coefficient"
-
-        args = [enTransFileAbs]
-
-        for year, coef in pairs:
-            args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
-                     '-v', str(coef)]
-
-        xmlEdit(*args)
-
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-    def purposeGrownOffRegional(self, region):
+    # TBD: test
+    @callableMethod
+    def purposeGrownOffInRegion(self, region):
         '''
         Turn off the "isNewTechnology" flag for all land-leaf nodes to turn off
         purpose-grown biomass. The line(s) we need to edit in land_input_3.xml is:
@@ -250,7 +205,10 @@ class BioenergyEditor(RefiningEditor):
     #
     # Various methods that operate on the USA specifically
     #
-    def adjustForestResidueSupplyUSA(self, loPrice, loFract, hiPrice, hiFract):
+    # TBD: make region an optional parameter in these; fix callers
+    #
+    @callableMethod
+    def adjustForestResidueSupply(self, region, loPrice, loFract, hiPrice, hiFract):
         '''
         Change supply curves for forest residues in the USA only. loPrice and hiPrice
         are the new prices to set; loFract and hiFract are the new fractions to assign
@@ -262,7 +220,7 @@ class BioenergyEditor(RefiningEditor):
         resbioFileRel, resbioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "resbio_input.xml"))
 
         # Forest residue appears in two places. First, operate on AgSupplySector "Forest"
-        xPrefix = "//region[@name='USA']/AgSupplySector[@name='Forest']/AgSupplySubsector"
+        xPrefix = "//region[@name='%s']/AgSupplySector[@name='Forest']/AgSupplySubsector" % region
         fractHarvested = xPrefix + "/AgProductionTechnology/period[@year>=2015]/residue-biomass-production/fract-harvested"
 
         xmlEdit(resbioFileAbs,
@@ -276,7 +234,7 @@ class BioenergyEditor(RefiningEditor):
             '-v', hiFract)
 
         # Do the same for supplysector="NonFoodDemand_Forest"
-        xPrefix = "//region[@name='USA']/supplysector[@name='NonFoodDemand_Forest']/subsector[@name='Forest']/stub-technology[@name='Forest']"
+        xPrefix = "//region[@name='%s']/supplysector[@name='NonFoodDemand_Forest']/subsector[@name='Forest']/stub-technology[@name='Forest']" % region
         fractHarvested = xPrefix + "/period[@year>=2015]/residue-biomass-production/fract-harvested"
 
         xmlEdit(resbioFileAbs,
@@ -295,6 +253,7 @@ class BioenergyEditor(RefiningEditor):
     # Methods to operate in USA only on technologies extracted from global-technology-database
     #
     # TBD: generalize this?
+    @callableMethod
     def setCellEthanolShareWeightUSA(self, year, shareweight):
         '''
         Create modified version of cellEthanolUSA.xml with the given share-weight
@@ -310,6 +269,7 @@ class BioenergyEditor(RefiningEditor):
 
         self.updateScenarioComponent("cell-etoh-USA", self.cellEthanolUsaRel)
 
+    @callableMethod
     def localizeCornEthanolTechnologyUSA(self):
         '''
         Copy the stub-technology for corn ethanol to CornEthanolUSA.xml and CornEthanolUSA2.xml
@@ -326,6 +286,7 @@ class BioenergyEditor(RefiningEditor):
         self.insertScenarioComponent('corn-etoh-USA2', self.cornEthanolUsaRel2, 'energy_transformation')
         self.insertScenarioComponent('corn-etoh-USA1', self.cornEthanolUsaRel,  'energy_transformation')
 
+    @callableMethod
     def localizeCellEthanolTechnologyUSA(self):
         '''
         Same as corn ethanol above, but for cellulosic ethanol
@@ -337,6 +298,7 @@ class BioenergyEditor(RefiningEditor):
 
         self.insertScenarioComponent('cell-etoh-USA', self.cellEthanolUsaRel, 'energy_transformation')
 
+    @callableMethod
     def localizeFtBiofuelsTechnologyUSA(self):
         '''
         Same as cellulosic ethanol above
@@ -349,6 +311,7 @@ class BioenergyEditor(RefiningEditor):
         self.insertScenarioComponent('FT-biofuels-USA', self.ftBiofuelsUsaRel, 'energy_transformation')
 
     # TBD: translate pairs to allow ranges to be specified
+    @callableMethod
     def setBiofuelRefiningNonEnergyCostUSA(self, fuel, pairs):
         if not pairs:
             return
@@ -374,6 +337,7 @@ class BioenergyEditor(RefiningEditor):
                      '-v', price]
         xmlEdit(*args)
 
+    @callableMethod
     def setCornEthanolCoefficientsUSA(self, cornCoef, gasCoef=None, elecCoef=None):
         '''
         Set corn ethanol performance coefficients: (regional) corn, gas, and electricity
@@ -401,6 +365,7 @@ class BioenergyEditor(RefiningEditor):
         xmlEdit(*args)
         # config update handled in localize...()
 
+    @callableMethod
     def setCellEthanolBiomassCoefficientsUSA(self, tuples):
 
         _logger.info("Set US cellulosic ethanol biomass coefficients for %s" % self.name)

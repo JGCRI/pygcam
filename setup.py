@@ -11,6 +11,7 @@ requirements = ['lxml',
                 'numpy',
                 'pandas',
                 'seaborn',
+                'sphinx-argparse',
                 ]
 
 setup(

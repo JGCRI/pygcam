@@ -1,8 +1,11 @@
 '''
-  .. Stuff specific to MS Windows
+.. Stuff specific to MS Windows
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
 import platform
+from errno import EEXIST
 
 IsWindows = platform.system() == 'Windows'
 
@@ -11,21 +14,34 @@ if IsWindows:
 
     import ctypes
     import win32file
-    from .utils import mkdirs
-    from .error import PygcamException
-    from .log import getLogger
+    from pygcam.error import PygcamException
+    from pygcam.log import getLogger
 
     _logger = getLogger(__name__)
 
+    # From http://stackoverflow.com/questions/8231719/how-to-check-whether-a-file-is-open-and-the-open-status-in-python
+    _sopen = ctypes.cdll.msvcrt._sopen
+    _close = ctypes.cdll.msvcrt._close
+    _SH_DENYRW = 0x10
+
+    def is_open(filename):
+        if not os.access(filename, os.F_OK):
+            return False  # file doesn't exist
+        h = _sopen(filename, 0, _SH_DENYRW, 0)
+        if h == 3:
+            _close(h)
+            return False  # file is not opened by anyone else
+        return True  # file is already open
+
     # Adapted from http://stackoverflow.com/questions/1447575/symlinks-on-windows
     # Win32file is missing this attribute.
-    FILE_ATTRIBUTE_REPARSE_POINT = 0x0400
-
-    REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
-
-    def islinkWindows(path):
-        """ Windows islink implementation. """
-        return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
+    # FILE_ATTRIBUTE_REPARSE_POINT = 0x0400
+    #
+    # REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
+    #
+    # def islinkWindows(path):
+    #     """ Windows islink implementation. """
+    #     return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
 
     # From http://tomjbward.co.uk/detect-symlink-using-python-2-x-on-windows/
     # def islinkWindows2(path):
@@ -56,23 +72,31 @@ if IsWindows:
          index_hi, index_lo) = win32file.GetFileInformationByHandle(hFile)
         return volume, index_hi, index_lo
 
+    def makeParents(path):
+        path = os.path.abspath(path)
+        try:
+            os.makedirs(os.path.dirname(path), 0o770)
+        except OSError as e:
+            if e.errno != EEXIST:
+                raise
+
     def samefileWindows(filename1, filename2):
         # If either of the files does not exist, create it and close
         # it to use get_read_handle(), then remove the files we created.
         # Yes, there's a race condition here, and this has the side-effect
         # of possibly creating directories that aren't deleted, but
         # Windows is lame, so we do what we can.
+        f1 = f2 = None
+        hFile1 = hFile2 = None
         try:
-            f1 = f2 = None
-            hFile1 = hFile2 = None
 
             if not os.path.lexists(filename1):
-                mkdirs(os.path.dirname(os.path.abspath(filename1)))
+                makeParents(filename1)
                 f1 = open(filename1, 'w')
                 f1.close()
 
             if not os.path.lexists(filename2):
-                mkdirs(os.path.dirname(os.path.abspath(filename2)))
+                makeParents(filename2)
                 f2 = open(filename2, 'w')
                 f2.close()
 
@@ -123,46 +147,161 @@ if IsWindows:
   ''')
             raise PygcamException("Failed to create symlink '%s' to '%s': %s" % (dst, src, e))
 
+    # The following taken from
+    # http://stackoverflow.com/questions/27972776/having-trouble-implementing-a-readlink-function
+    #from ctypes import *
+    from ctypes.wintypes import DWORD, LPCWSTR, LPVOID, HANDLE, BOOL, USHORT, ULONG, WCHAR
+    kernel32 = ctypes.WinDLL('kernel32')
+    LPDWORD = ctypes.POINTER(DWORD)
+    UCHAR = ctypes.c_ubyte
+
+    GetFileAttributesW = kernel32.GetFileAttributesW
+    GetFileAttributesW.restype = DWORD
+    GetFileAttributesW.argtypes = (LPCWSTR,) #lpFileName In
+
+    INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
+    FILE_ATTRIBUTE_REPARSE_POINT = 0x00400
+
+    CreateFileW = kernel32.CreateFileW
+    CreateFileW.restype = HANDLE
+    CreateFileW.argtypes = (LPCWSTR, #lpFileName In
+                            DWORD,   #dwDesiredAccess In
+                            DWORD,   #dwShareMode In
+                            LPVOID,  #lpSecurityAttributes In_opt
+                            DWORD,   #dwCreationDisposition In
+                            DWORD,   #dwFlagsAndAttributes In
+                            HANDLE)  #hTemplateFile In_opt
+
+    CloseHandle = kernel32.CloseHandle
+    CloseHandle.restype = BOOL
+    CloseHandle.argtypes = (HANDLE,) #hObject In
+
+    INVALID_HANDLE_VALUE = HANDLE(-1).value
+    OPEN_EXISTING = 3
+    FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+    FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+
+    DeviceIoControl = kernel32.DeviceIoControl
+    DeviceIoControl.restype = BOOL
+    DeviceIoControl.argtypes = (HANDLE,  #hDevice In
+                                DWORD,   #dwIoControlCode In
+                                LPVOID,  #lpInBuffer In_opt
+                                DWORD,   #nInBufferSize In
+                                LPVOID,  #lpOutBuffer Out_opt
+                                DWORD,   #nOutBufferSize In
+                                LPDWORD, #lpBytesReturned Out_opt
+                                LPVOID)  #lpOverlapped Inout_opt
+
+    FSCTL_GET_REPARSE_POINT = 0x000900A8
+    IO_REPARSE_TAG_MOUNT_POINT = 0xA0000003
+    IO_REPARSE_TAG_SYMLINK = 0xA000000C
+    MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 0x4000
+
+    class GENERIC_REPARSE_BUFFER(ctypes.Structure):
+        _fields_ = (('DataBuffer', UCHAR * 1),)
+
+    class SYMBOLIC_LINK_REPARSE_BUFFER(ctypes.Structure):
+        _fields_ = (('SubstituteNameOffset', USHORT),
+                    ('SubstituteNameLength', USHORT),
+                    ('PrintNameOffset', USHORT),
+                    ('PrintNameLength', USHORT),
+                    ('Flags', ULONG),
+                    ('PathBuffer', WCHAR * 1))
+        @property
+        def PrintName(self):
+            arrayt = WCHAR * (self.PrintNameLength // 2)
+            offset = type(self).PathBuffer.offset + self.PrintNameOffset
+            return arrayt.from_address(ctypes.addressof(self) + offset).value
+
+
+    class MOUNT_POINT_REPARSE_BUFFER(ctypes.Structure):
+        _fields_ = (('SubstituteNameOffset', USHORT),
+                    ('SubstituteNameLength', USHORT),
+                    ('PrintNameOffset', USHORT),
+                    ('PrintNameLength', USHORT),
+                    ('PathBuffer', WCHAR * 1))
+        @property
+        def PrintName(self):
+            arrayt = WCHAR * (self.PrintNameLength // 2)
+            offset = type(self).PathBuffer.offset + self.PrintNameOffset
+            return arrayt.from_address(ctypes.addressof(self) + offset).value
+
+
+    class REPARSE_DATA_BUFFER(ctypes.Structure):
+        class REPARSE_BUFFER(ctypes.Union):
+            _fields_ = (('SymbolicLinkReparseBuffer',
+                            SYMBOLIC_LINK_REPARSE_BUFFER),
+                        ('MountPointReparseBuffer',
+                            MOUNT_POINT_REPARSE_BUFFER),
+                        ('GenericReparseBuffer',
+                            GENERIC_REPARSE_BUFFER))
+        _fields_ = (('ReparseTag', ULONG),
+                    ('ReparseDataLength', USHORT),
+                    ('Reserved', USHORT),
+                    ('ReparseBuffer', REPARSE_BUFFER))
+        _anonymous_ = ('ReparseBuffer',)
+
+    REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
+
+    def islinkWindows(path):
+        """ Windows islink implementation. """
+        return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
+
+    def islinkWindows2(path):
+        result = GetFileAttributesW(path)
+        if result == INVALID_FILE_ATTRIBUTES:
+            raise ctypes.WinError()
+
+        return bool(result & FILE_ATTRIBUTE_REPARSE_POINT)
+
+    def readlinkWindows(path):
+        reparse_point_handle = CreateFileW(path,
+                                           0,
+                                           0,
+                                           None,
+                                           OPEN_EXISTING,
+                                           FILE_FLAG_OPEN_REPARSE_POINT |
+                                           FILE_FLAG_BACKUP_SEMANTICS,
+                                           None)
+        if reparse_point_handle == INVALID_HANDLE_VALUE:
+            _logger.info("Can't readlink: %s", path)
+            raise ctypes.WinError()
+
+        target_buffer = ctypes.c_buffer(MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+        n_bytes_returned = DWORD()
+        io_result = DeviceIoControl(reparse_point_handle,
+                                    FSCTL_GET_REPARSE_POINT,
+                                    None, 0,
+                                    target_buffer, len(target_buffer),
+                                    ctypes.byref(n_bytes_returned),
+                                    None)
+        CloseHandle(reparse_point_handle)
+        if not io_result:
+            raise ctypes.WinError()
+
+        rdb = REPARSE_DATA_BUFFER.from_buffer(target_buffer)
+        if rdb.ReparseTag == IO_REPARSE_TAG_SYMLINK:
+            return rdb.SymbolicLinkReparseBuffer.PrintName
+        elif rdb.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT:
+            return rdb.MountPointReparseBuffer.PrintName
+
+        raise ValueError("not a link")
+
     # Replace broken functions with those defined above.
     # (In python 2.7.11 os.path.islink() indeed failed to detect link made with mklink)
     os.symlink = symlinkWindows
+    os.readlink = readlinkWindows
     os.path.islink = islinkWindows
     os.path.samefile = samefileWindows
-
-
-def setJavaPath(exeDir):
-    '''
-    Update the PATH to be able to find the Java dlls.
-    Modeled on run-gcam.bat in the GCAM distribution.
-    '''
-    if not IsWindows:
-        return
-
-    javaHome = os.environ.get('JAVA_HOME', None)
-    # Attempt to use WriteLocalBaseXDB which will print the java.home property of the Java
-    # Runtime used to run it.  Note if the runtime is not 64-bit it will only print an error.
-    from subprocess import check_output
-
-    if not javaHome:
-        curdir = os.getcwd()
-        os.chdir(exeDir)
-        # For some reason, this doesn't work with a path to WriteLocalBaseXDB
-        # so we chdir to the directory and run java there.
-        output = check_output('java WriteLocalBaseXDB', shell=True)
-        javaHome = output and output.strip()
-        os.chdir(curdir)
-
-    if javaHome and os.path.isdir(javaHome):
-        path = os.environ['PATH']
-        # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
-        os.environ['PATH'] = path + ';' + javaHome + r'\bin;' + javaHome + r'\bin\server'
-        _logger.debug("Setting PATH to %s", os.environ['PATH'])
 
 def removeSymlink(path):
     """
     On Windows, symlinks to directories  must be removed with os.rmdir(),
     while symlinks to files must be removed with os.remove()
     """
+    if not os.path.lexists(path):
+        return
+
     if not os.path.islink(path):
         raise PygcamException("removeSymlink: path '%s' is not a symlink" % path)
 
@@ -170,3 +309,4 @@ def removeSymlink(path):
         os.rmdir(path)
     else:
         os.remove(path)
+

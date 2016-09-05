@@ -134,7 +134,7 @@ takes no attributes. Multiple ``<steps>`` elements are allowed.
 +=============+============+===========+=================================+
 | name        | yes        | (none)    | text                            |
 +-------------+------------+-----------+---------------------------------+
-| seq         | yes        | (none)    | integer                         |
+| seq         | yes        |(see text) | integer                         |
 +-------------+------------+-----------+---------------------------------+
 | runFor      | no         | "all"     | {"baseline", "policy", "all"}   |
 +-------------+------------+-----------+---------------------------------+
@@ -142,10 +142,22 @@ takes no attributes. Multiple ``<steps>`` elements are allowed.
 +-------------+------------+-----------+---------------------------------+
 
 A ``<step>`` describes one step in the workflow. Each step has a name
-and an integer sequence number. Steps (from one or more ``<steps>``
-sections) are sorted by sequence number before execution. By definition,
-steps with the same sequence number are order independent; they can run
-in any order.
+and an integer sequence number. Sequence numbers can be specified using
+the ``seq`` attribute, otherwise the steps are numbered in the order they
+occur in the file, starting with 1. Each step is assigned 1 more than the
+maximum step number already used: this includes automatically generated
+sequence numbers and any that are specified explicitly.
+
+In general, using the generated sequence numbers will suffice. Assigning
+your own sequence numbers allows you to group or order commands in any manner
+while ensuring that the commands are executed in the correct order. The
+other reason to assign sequence numbers is to be able to define optional
+steps in a ``<defaults>`` section that can be overridden in a ``<project>``
+section, as described :ref:`below <sequence-override-label>`.
+
+Steps (from one or more ``<steps>`` sections) are sorted by sequence number
+before execution. By definition, steps with the same sequence number are
+order independent; they can run in any order.
 
 The text value of a step can be any command you want to run. Many of the
 common workflow steps are built into ``gt`` and these can be
@@ -179,16 +191,16 @@ For example, the block:
   .. code-block:: xml
 
      <steps>
-        <step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-		<step seq="2" name="gcam"  runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
-		<step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-		<step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-		<step seq="5" name="gcam"  runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
-		<step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-		<step seq="7" name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-		<step seq="7" name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-		<step seq="8" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-		<step seq="9" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+        <step name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+		<step name="gcam"  runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
+		<step name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+		<step name="gcam"  runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
+		<step name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+		<step name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+		<step name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+		<step name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+		<step name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
      </steps>
 
 defines a series of steps that calls setup scripts, runs GCAM, runs a
@@ -197,11 +209,14 @@ baseline scenarios, plots the individual scenarios and the differences,
 and generates .XLSX files with the differences--one with the values
 directly from GCAM, the other with annually-interpolated values.
 
+  .. _sequence-override-label:
+
 Steps can be defined in the ``<defaults>`` section, in which case they
 apply to all projects. Projects, however, can add, delete, or redefine
 steps. To redefine a step, the project defines a ``<step>`` with the
 same values for the attributes ``name``, ``seq``, and ``runFor``. A
-default step can be deleted by redefining it with no text value, e.g.,
+default step can be effectively deleted by redefining it with no text
+value, e.g.,
 
   .. code-block:: xml
 
@@ -412,6 +427,17 @@ file, by specifying:
         <text tag="2"/>
     </tmpFile>
 
+<queries>
+^^^^^^^^^
+
+The project file supports the same `<queries>` elements and sub-elements
+that can appear in a separate :doc:`query XML file <query-xml>`, allowing
+queries to be consolidated within the project.xml file, or managed separately.
+
+The queries listed in the `<queries>` element are used both to execute batch
+XML queries against the GCAM database, and to drive the `diff` step in the
+standard project.xml, which calls the `diff` sub-command.
+
 
 Example project.xml file
 ------------------------
@@ -429,16 +455,16 @@ Example project.xml file
             <var name="queryPath" eval="1">{GCAM.QueryDir}:{GCAM.QueryDir}/Main_queries_customized.xml</var>
           </vars>
           <steps>
-            <step seq="1" name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-            <step seq="2" name="gcam" runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
-            <step seq="3" name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-            <step seq="4" name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
-            <step seq="5" name="gcam" runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
-            <step seq="6" name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
-            <step seq="7" name="plot" runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
-            <step seq="7" name="diff" runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
-            <step seq="8" name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
-            <step seq="9" name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
+            <step name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+            <step name="gcam" runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
+            <step name="query" runFor="baseline">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+            <step name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
+            <step name="gcam" runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioWsDir}</step>
+            <step name="query" runFor="policy">@query -o {batchDir} -w {scenarioWsDir} -s {scenario} -Q "{queryPath}" "@{queryFile}"</step>
+            <step name="plot" runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+            <step name="diff" runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryFile} -i {baseline} {scenario}</step>
+            <step name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
+            <step name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
           </steps>
           <tmpFile varName="queryFile" eval="0">
             <text>Residue_biomass_production</text>

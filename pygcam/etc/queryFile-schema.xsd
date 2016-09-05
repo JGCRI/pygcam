@@ -8,6 +8,7 @@
             </xs:sequence>
             <xs:attribute name='defaultMap' type='xs:string'/>
             <xs:attribute name='varName' type='xs:string'/>
+            <xs:attribute name='delete' type='xs:boolean'/>
         </xs:complexType>
     </xs:element>
 

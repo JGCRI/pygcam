@@ -8,11 +8,8 @@
    initialized, and all subsequently registered loggers are initialized
    upon instantiation.
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-
 """
 import os
 import logging

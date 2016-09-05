@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+	
+	<xs:element name='scenario'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref='world'/>
+            </xs:sequence>
+        </xs:complexType>
+	</xs:element>
+	
+    <xs:element name='world'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref='region'/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+	
+	<xs:element name='region'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref='shocks'/>
+            </xs:sequence>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+	
+	<xs:element name='shocks'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='shock'/>
+            </xs:sequence>
+        </xs:complexType>
+	</xs:element>
+	
+    <xs:element name='shock'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base='xs:decimal'>
+                    <xs:attribute name='fuel' use='required'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

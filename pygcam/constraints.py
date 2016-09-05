@@ -1,15 +1,16 @@
 #! /usr/bin/env python
 '''
-Created on 4/26/15
+.. Created on 4/26/15
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 
-@author: rjp
 '''
 import os
-#import pandas as pd    # moved inside functions to speed startup
+
+from .constants import LOCAL_XML_NAME
 from .log import getLogger
-from .subcommand import SubcommandABC
-from .utils import mkdirs, getBatchDir, getYearCols, printSeries
 from .query import readQueryResult, readCsv
+from .utils import mkdirs, getBatchDir, getYearCols, printSeries
 
 _logger = getLogger(__name__)
 
@@ -70,12 +71,12 @@ def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=No
     return xml
 
 
-def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdir='', fromMCS=False):
+def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName=''): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
-    constraintFile = basename + '-constraint.xml'
+    constraintFile = basename + '-constraint.xml'       # TBD: document this naming convention
     policyFile     = basename + '.xml'
 
-    dirname = os.path.join(dirname, subdir, scenario)
+    dirname = os.path.join(dirname, scenario)
     mkdirs(dirname)
 
     pathname = os.path.join(dirname, constraintFile)
@@ -84,13 +85,18 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, subdi
         f.write(xml)
 
     # compute relative location of local-xml directory
-    levels = 2
-    levels += 2 if fromMCS else 0
-    levels += 1 if subdir else 0
+    # levels = 2
+    # levels += 2 if fromMCS else 0
+    # #levels += 1 if subdir else 0
+    # localxml = '../' * levels + LOCAL_XML_NAME
 
-    localxml = '../' * levels + 'local-xml'
+    # TBD: test this
+    prefix = '../../../' if groupName else '../../'
+    localxml = prefix + LOCAL_XML_NAME
 
-    source   = os.path.join(localxml, subdir, scenario, policyFile)
+    # ToDo: replace subdir with groupDir?
+    #source   = os.path.join(localxml, subdir, scenario, policyFile)
+    source   = os.path.join(localxml, scenario, policyFile)
     linkname = os.path.join(dirname, policyFile)
 
     _logger.debug("Linking to: %s", source)
@@ -113,74 +119,40 @@ def parseStringPairs(argString, datatype=float):
 
 cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-	<output-meta-data>
-		<summary>
-		  Cellulosic ethanol constraints.
-          This is a generated constraint file. Edits will be overwritten!
-		</summary>
-	</output-meta-data>
-	<world>
-		<region name="USA">
-			<policy-portfolio-standard name="cellulosic-etoh-{cellEtohPolicyType}">
-				<market>USA</market>
-				<policyType>{cellEtohPolicyType}</policyType>
-				<constraint year="2020">{level2020}</constraint>
-				<constraint year="2025">{level2025}</constraint>
-				<constraint year="2030">{level2030}</constraint>
-				<constraint year="2035">{level2035}</constraint>
-				<constraint year="2040">{level2040}</constraint>
-				<constraint year="2045">{level2045}</constraint>
-				<constraint year="2050">{level2050}</constraint>
-			</policy-portfolio-standard>
-		</region>
-	</world>
-</scenario>
-'''
+  <output-meta-data>
+    <summary>
+      Cellulosic ethanol constraints.
 
-cellEtohComboConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
-<scenario>
-	<output-meta-data>
-		<summary>
-		  Combined cellulosic ethanol.
-          This is a generated constraint file. Edits will be overwritten!
-		</summary>
-	</output-meta-data>
-	<world>
-		<region name="USA">
-			<policy-portfolio-standard name="cellulosic-etoh-tax">
-				<market>USA</market>
-				<policyType>tax</policyType>
-				<constraint year="2020">{level2020}</constraint>
-				<constraint year="2025">{level2025}</constraint>
-				<constraint year="2030">{level2030}</constraint>
-				<constraint year="2035">{level2035}</constraint>
-				<constraint year="2040">{level2040}</constraint>
-				<constraint year="2045">{level2045}</constraint>
-				<constraint year="2050">{level2050}</constraint>
-			</policy-portfolio-standard>
-
-			<policy-portfolio-standard name="cellulosic-etoh-subsidy">
-				<market>USA</market>
-				<policyType>subsidy</policyType>
-				<constraint year="2020">{level2020}</constraint>
-				<constraint year="2025">{level2025}</constraint>
-				<constraint year="2030">{level2030}</constraint>
-				<constraint year="2035">{level2035}</constraint>
-				<constraint year="2040">{level2040}</constraint>
-				<constraint year="2045">{level2045}</constraint>
-				<constraint year="2050">{level2050}</constraint>
-			</policy-portfolio-standard>
-		</region>
-	</world>
+      This is a generated constraint file. Edits will be overwritten!
+    </summary>
+  </output-meta-data>
+  <world>
+    <region name="USA">
+      <policy-portfolio-standard name="cellulosic-etoh-{cellEtohPolicyType}">
+        <policyType>{cellEtohPolicyType}</policyType>
+        <market>USA</market>
+        <min-price year="1975" fillout="1">-1e6</min-price>
+        <constraint year="2020">{level2020}</constraint>
+        <constraint year="2025">{level2025}</constraint>
+        <constraint year="2030">{level2030}</constraint>
+        <constraint year="2035">{level2035}</constraint>
+        <constraint year="2040">{level2040}</constraint>
+        <constraint year="2045">{level2045}</constraint>
+        <constraint year="2050">{level2050}</constraint>
+      </policy-portfolio-standard>
+    </region>
+  </world>
 </scenario>
 '''
 
 US_REGION_QUERY = 'region in ["USA", "United States"]'
 
+# TBD: make region an argument rather than assuming USA
+
 def genBioConstraints(**kwargs):
     import pandas as pd
 
-    fromMCS = kwargs.get('fromMCS', False)
+    #fromMCS = kwargs.get('fromMCS', False)
     resultsDir = kwargs['resultsDir']
     baseline = kwargs['baseline']
     policy = kwargs['policy']
@@ -193,22 +165,21 @@ def genBioConstraints(**kwargs):
     coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
-    leafDir = 'queryResults' if fromMCS else 'batch-{baseline}'.format(baseline=baseline)
-    batchDir = os.path.join(resultsDir, baseline, leafDir)
-    #'{resultsDir}/{baseline}/{leafDir}'.format(resultsDir=resultsDir, baseline=baseline, leafDir=leafDir)
-    totalBiomassFile   = os.path.join(batchDir, 'Total_biomass_consumption-%s.csv' % baseline)
-    refinedLiquidsFile = os.path.join(batchDir, 'refined-liquids-prod-by-tech-USA-%s.csv' % baseline)
-    purposeGrownFile   = os.path.join(batchDir, 'Purpose-grown_biomass_production-%s.csv' % baseline)
+    batchDir = getBatchDir(baseline, resultsDir)
 
-    totalBiomassDF   = readCsv(totalBiomassFile)
-    refinedLiquidsDF = readCsv(refinedLiquidsFile)
+    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'Refined-liquids-production-by-technology')
+    totalBiomassDF   = readQueryResult(batchDir, baseline, 'Total_biomass_consumption')
+    purposeGrownDF   = readQueryResult(batchDir, baseline, 'Purpose-grown_biomass_production')
 
     yearCols = getYearCols(kwargs['years'])
 
-    totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
+    refinedLiquidsUSA = refinedLiquidsDF.query(US_REGION_QUERY)[yearCols]
+    totalBiomassUSA   = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
+    purposeGrownUSA   = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
+
     _logger.debug('totalBiomassUSA:\n', totalBiomassUSA)
 
-    cellulosicEtOH  = refinedLiquidsDF.query('technology == "cellulosic ethanol"')[yearCols]
+    cellulosicEtOH  = refinedLiquidsUSA.query('technology == "cellulosic ethanol"')[yearCols]
     if cellulosicEtOH.shape[0] == 0:
         cellulosicEtOH = 0
 
@@ -233,13 +204,10 @@ def genBioConstraints(**kwargs):
     xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint,
                                 policyType=biomassPolicyType, summary='Regional biomass constraint.')
     saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=subdir)#, fromMCS=fromMCS)
 
     # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
     # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
-    purposeGrownDF   = readCsv(purposeGrownFile)
-    purposeGrownUSA  = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
-
     if kwargs.get('switchgrass', False):
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
     else:
@@ -248,54 +216,53 @@ def genBioConstraints(**kwargs):
     xml = generateConstraintXML('purpose-grown-constraint', constraint, policyType=purposeGrownPolicyType,
                                 summary='Purpose-grown biomass constraint.')
     saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=subdir)#, fromMCS=fromMCS)
 
     # Create dictionary to use for template processing
     xmlArgs = {"level" + year : value for year, value in desiredCellEtoh.iteritems()}
     xmlArgs['cellEtohPolicyType'] = 'subsidy' if cellEtohPolicyType == 'subs' else cellEtohPolicyType
 
-    template = cellEtohComboConstraintTemplate if cellEtohPolicyType == 'combo' else cellEtohConstraintTemplate
-    xml = template.format(**xmlArgs)
-
+    xml = cellEtohConstraintTemplate.format(**xmlArgs)
     saveConstraintFile(xml, xmlOutputDir, 'cell-etoh', cellEtohPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=subdir)#, fromMCS=fromMCS)
 
 
 def bioMain(args):
     genBioConstraints(**vars(args))
 
 
-yearConstraintTemplate = '''                <constraint year="{year}">{level}</constraint>'''
+yearConstraintTemplate = '''        <constraint year="{year}">{level}</constraint>'''
 
 fuelConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-	<output-meta-data>
-		<summary>
-		  Define fuel constraints.
-          This is a generated constraint file. Edits will be overwritten!
-		</summary>
-	</output-meta-data>
-	<world>
-		<region name="USA">
-			<policy-portfolio-standard name="{fuelTag}-{fuelPolicyType}">
-				<market>USA</market>
-				<policyType>{fuelPolicyType}</policyType>
+  <output-meta-data>
+    <summary>
+      Define fuel constraints.
+      This is a generated constraint file. Edits will be overwritten!
+    </summary>
+  </output-meta-data>
+  <world>
+    <region name="USA">
+      <policy-portfolio-standard name="{fuelTag}-{fuelPolicyType}">
+        <policyType>{fuelPolicyType}</policyType>
+        <market>USA</market>
+        <min-price year="1975" fillout="1">-1e6</min-price>
 {yearConstraints}
-			</policy-portfolio-standard>
-		</region>
-	</world>
+      </policy-portfolio-standard>
+    </region>
+  </world>
 </scenario>
 '''
 
 def genDeltaConstraints(**kwargs):
     import pandas as pd
 
-    fromMCS  = kwargs.get('fromMCS', False)
-    baseline = kwargs['baseline']
-    policy   = kwargs['policy']
-    subdir   = kwargs.get('subdir', '')
-    fuelTag  = kwargs.get('fuelTag')
-    fuelName = kwargs.get('fuelName')
+    #fromMCS  = kwargs.get('fromMCS', False)
+    baseline  = kwargs['baseline']
+    policy    = kwargs['policy']
+    groupName = kwargs.get('groupName', '')
+    fuelTag   = kwargs.get('fuelTag')
+    fuelName  = kwargs.get('fuelName')
     resultsDir  = kwargs['resultsDir']
     switchgrass = kwargs.get('switchgrass', False)
     defaultDelta = float(kwargs.get('defaultDelta', 0))
@@ -306,16 +273,21 @@ def genDeltaConstraints(**kwargs):
     biomassPolicyType = kwargs.get('biomassPolicyType', None)
     purposeGrownPolicyType = kwargs.get('purposeGrownPolicyType', None)
 
-    batchDir = getBatchDir(baseline, resultsDir, fromMCS=fromMCS)
-    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'refined-liquids-prod-by-tech-USA')
+    batchDir = getBatchDir(baseline, resultsDir)
+    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'Refined-liquids-production-by-technology')
 
     yearCols = getYearCols(kwargs['years'])
+    #refinedLiquidsUSA = refinedLiquidsDF.query(US_REGION_QUERY)[yearCols]
 
-    fuelBaseline = refinedLiquidsDF.query('technology == "%s"' % fuelName)[yearCols]
+    combinedQuery = US_REGION_QUERY + ' and technology == "%s"' % fuelName
+
+    #fuelBaseline = refinedLiquidsUSA.query('technology == "%s"' % fuelName)[yearCols]
+    fuelBaseline = refinedLiquidsDF.query(combinedQuery)[yearCols]
     if fuelBaseline.shape[0] == 0:
         fuelBaseline = 0
+    else:
+        printSeries(fuelBaseline, fuelTag, header='fuelBaseline:')
 
-    _logger.debug('fuelBaseline: %s\n', fuelBaseline)
     _logger.debug("Default fuel delta %.2f EJ", defaultDelta)
 
     deltas = pd.Series(data={year: defaultDelta for year in yearCols})
@@ -326,8 +298,7 @@ def genDeltaConstraints(**kwargs):
 
     # Calculate fuel target after applying deltas
     fuelTargets = fuelBaseline.iloc[0] + deltas
-    _logger.debug('fuelTargets:')
-    printSeries(fuelTargets, fuelTag)
+    printSeries(fuelTargets, fuelTag, header='fuelTargets:')
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>
     yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.iteritems()]
@@ -340,21 +311,18 @@ def genDeltaConstraints(**kwargs):
     xml = fuelConstraintTemplate.format(**xmlArgs)
 
     saveConstraintFile(xml, xmlOutputDir, fuelTag, fuelPolicyType, policy,
-                       subdir=subdir, fromMCS=fromMCS)
+                       groupName=groupName)#, fromMCS=fromMCS)
 
     if switchgrass:
         # Calculate additional biomass required to meet required delta
         deltaCellulose = deltas * coefficients[yearCols]
-
-        _logger.debug('\ndeltaCellulose:')
-        printSeries(deltaCellulose, 'cellulose')
+        printSeries(deltaCellulose, 'cellulose', header='deltaCellulose:')
 
         totalBiomassDF = readQueryResult(batchDir, baseline, 'Total_biomass_consumption')
         totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
 
         biomassConstraint = totalBiomassUSA.iloc[0] + deltaCellulose.iloc[0]
-        _logger.debug('biomassConstraint:')
-        printSeries(biomassConstraint, 'regional-biomass')
+        printSeries(biomassConstraint, 'regional-biomass', header='biomassConstraint:')
 
         # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
         # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
@@ -373,7 +341,7 @@ def genDeltaConstraints(**kwargs):
                                     summary='Regional biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                           subdir=subdir, fromMCS=fromMCS)
+                           groupName=groupName)#, fromMCS=fromMCS)
 
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
 
@@ -381,183 +349,4 @@ def genDeltaConstraints(**kwargs):
                                     summary='Purpose-grown biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                           subdir=subdir, fromMCS=fromMCS)
-
-
-# def deltaMain(program, version):
-#     args = parseDeltaArgs(program, version)
-#     genDeltaConstraints(**vars(args))
-
-
-class BioConstraintsCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        kwargs = {#'aliases' : ['bio'],
-                  'help' : '''Bioenergy constraint generator'''}
-
-        super(BioConstraintsCommand, self).__init__('bioConstraint', subparsers, kwargs)
-
-    def addArgs(self, parser):
-        parser.add_argument('-b', '--baseline', default=None,
-                            help='The baseline on which the policy scenario is based')
-
-        parser.add_argument('-B', '--biomassPolicyType', default='tax', choices=PolicyChoices,
-                             help='Regional biomass policy type')
-
-        parser.add_argument('-c', '--coefficients',
-                            help='''A comma-separated string of year:coefficient pairs. This
-                            sets the cellulosic ethanol conversion coefficients. Defaults to
-                            standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
-
-        parser.add_argument('-e', '--cellEtohPolicyType', default='tax', choices=PolicyChoices,
-                             help='Cellulosic ethanol policy type')
-
-        parser.add_argument('-l', '--defaultLevel', type=float, default=0.0,
-                            help='''Target cellulosic biofuel level (EJ). All or individual years
-                            values can be set (overriding -l flag values) using the -L flag.''')
-
-        parser.add_argument('-L', '--annualLevels', required=False,
-                            help='''Optional cellulosic biofuel production levels by year. Value
-                            must be a comma-delimited string of year:level pairs, where level is
-                            given in EJ. If -l is not used to set default for all years, you must
-                            specify values for all years using this option.''')
-
-        parser.add_argument('-m', '--fromMCS', action='store_true',
-                             help="Used when calling from gcammcs so correct pathnames are computed.")
-
-        parser.add_argument('-p', '--policy',
-                            help='The policy scenario name')
-
-        parser.add_argument('-P', '--purposeGrownPolicyType', default='subsidy', choices=PolicyChoices,
-                             help='Purpose-grown biomass policy type')
-
-        parser.add_argument('-R', '--resultsDir',
-                            help='The parent directory holding the GCAM output workspaces')
-
-        parser.add_argument('-s', '--switchgrass', action='store_true',
-                             help="Generate constraints for switchgrass")
-
-        parser.add_argument('-S', '--subdir', default='',
-                             help='Sub-directory for local-xml files, if any')
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
-
-        parser.add_argument('-x', '--xmlOutputDir',
-                             help='''The directory into which to generate XML files. Defaults to
-                             policy name in the current directory.''')
-
-        parser.add_argument('-y', '--years', default=DefaultYears,
-                            help='''Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is "%s"''' % DefaultYears)
-        return parser
-
-
-    def run(self, args, tool):
-        genBioConstraints(**vars(args))
-
-
-
-DefaultName  = 'cellulosic ethanol'
-DefaultTag   = 'cell-etoh'
-
-class DeltaConstraintsCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        kwargs = {#'aliases' : ['delta'],
-                  'help' : '''Specify incremental values to add to the production of a given fuel,
-                              by year, and generate the corresponding constraint file.'''}
-
-        super(DeltaConstraintsCommand, self).__init__('deltaConstraint', subparsers, kwargs)
-
-    def addArgs(self, parser):
-        parser.add_argument('-c', '--coefficients',
-                            help='''A comma-separated string of year:coefficient pairs. This
-                            sets the cellulosic ethanol conversion coefficients. Defaults to
-                            standard GCAM values: %s.''' % DefaultCellulosicCoefficients)
-
-        parser.add_argument('-b', '--baseline', required=True,
-                            help='The baseline on which the policy scenario is based')
-
-        parser.add_argument('-B', '--biomassPolicyType', choices=PolicyChoices, default='subsidy',
-                            help='Regional biomass policy type. Default is subsidy.')
-
-        parser.add_argument('-f', '--fuelName', default=DefaultName,
-                            help="The fuel to generate constraints for. Default is %s" % DefaultName)
-
-        parser.add_argument('-l', '--defaultDelta', type=float, default=0.0,
-                            help='''Default increment to add to each year (EJ). All or individual
-                            years values can be set (overriding -l flag values) using the -L flag.''')
-
-        parser.add_argument('-L', '--annualDeltas', default='',
-                            help='''Optional production increments by year. Value must be a
-                            comma-delimited string of year:level pairs, where level in is EJ.
-                            If -l is not used to set default for all years, you must specify
-                            values for all years using this option.''')
-
-        parser.add_argument('-m', '--fromMCS', action='store_true',
-                             help="Used when calling from gcammcs so correct pathnames are computed.")
-
-        parser.add_argument('-p', '--policy', required=True,
-                            help='The policy scenario name')
-
-        parser.add_argument('-P', '--purposeGrownPolicyType', choices=PolicyChoices, default='subsidy',
-                             help='Purpose-grown biomass policy type. Default is subsidy.')
-
-        parser.add_argument('-R', '--resultsDir', default='.',
-                            help='The parent directory holding the GCAM output workspaces')
-
-        parser.add_argument('-S', '--subdir', default='',
-                             help='Sub-directory for local-xml files, if any')
-
-        parser.add_argument('-t', '--fuelTag', default=DefaultTag,
-                             help="The fuel tag to generate constraints for. Default is %s" % DefaultTag)
-
-        parser.add_argument('-T', '--policyType', choices=PolicyChoices, default='tax',
-                             help='Type of policy to use for the fuel. Default is tax.')
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
-
-        parser.add_argument('-x', '--xmlOutputDir',
-                             help='''The directory into which to generate XML files.
-                             Defaults to policy name in the current directory.''')
-
-        parser.add_argument('-y', '--years', default=DefaultYears,
-                            help='''Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is "%s"''' % DefaultYears)
-        return parser
-
-
-    def run(self, args, tool):
-        genDeltaConstraints(**vars(args))
-
-
-if __name__ == '__main__':
-    # <?xml version="1.0" encoding="UTF-8"?>
-    # <scenario>
-    #     <world>
-    #         <region name="USA">
-    #             <ghgpolicy name="ElecCO2">
-    #                 <market>USA</market>
-    #                 <fixedTax year="2015">0</fixedTax>
-    #                 <constraint year="2020">583</constraint>
-    #                 <constraint year="2025">512</constraint>
-    #                 <constraint year="2030">442</constraint>
-    #                 <constraint year="2035">442</constraint>
-    #                 <constraint year="2040">442</constraint>
-    #                 <constraint year="2045">442</constraint>
-    #                 <constraint year="2050">442</constraint>
-    #             </ghgpolicy>
-    #         </region>
-    #     </world>
-    # </scenario>
-
-    import pandas as pd
-
-    # Generate the XML above
-    xml = generateConstraintXML('ElecCO2',
-                                pd.Series({'2020':583, '2025':512, '2030':442, '2035':442,
-                                           '2040':442, '2045':442, '2050':442,}),
-                                gcamPolicy='ghgpolicy',
-                                region='USA',
-                                market='USA',
-                                preConstraint='<fixedTax year="2015">0</fixedTax>')
-    print xml
-
+                           groupName=groupName)#, fromMCS=fromMCS)

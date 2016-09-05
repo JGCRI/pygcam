@@ -269,7 +269,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'pygcam', u'pygcam Documentation',
-   u'Richard Plevin', 'pygcam', 'One line description of project.',
+   u'Richard Plevin', 'pygcam', 'GCAM workflow management script and libraries',
    'Miscellaneous'),
 ]
 

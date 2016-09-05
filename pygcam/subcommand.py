@@ -1,3 +1,7 @@
+'''
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+'''
 from abc import ABCMeta, abstractmethod
 
 class SubcommandABC(object):
@@ -25,10 +29,6 @@ class SubcommandABC(object):
         self.name = name
         self.parser = parser = subparsers.add_parser(self.name, **kwargs)
         self.Parsers[self.name] = parser
-
-        # for alias in parser.aliases:        # so we can look up the plug by alias, too
-        #     self.Parsers[alias] = parser
-
         self.addArgs(parser)
 
     @abstractmethod

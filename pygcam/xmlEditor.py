@@ -14,28 +14,39 @@
    to refer to the modified file. (This may be done multiple times, to
    no ill effect.)
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import glob
 import os
+import re
 import shutil
 import subprocess
-import glob
-import re
+
+from .config import getParam, getParamAsBoolean
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
-from .landProtection import protectLand, UnmanagedLandClasses
-from .config import getConfig, getParam, getParamAsBoolean, setSection
-from .utils import coercible, mkdirs, unixPath
-from .log import getLogger, setLogLevel, configureLogs
+from .log import getLogger
+from .utils import coercible, mkdirs, unixPath, printSeries
+
+# Set to True to see all xmlstarlet commands
+Verbose = False
 
 _logger = getLogger(__name__)
 
 pathjoin = os.path.join     # "alias" this since it's used frequently
 
-LOCAL_XML_NAME = "local-xml"
-DYN_XML_NAME   = "dyn-xml"
+# methods callable from <function name="x">args</function> in
+# XML scenario setup scripts.
+CallableMethods = {}
+
+# decorator it identify callable methods
+def callableMethod(func):
+    CallableMethods[func.__name__] = func
+    return func
+
+def getCallableMethod(name):
+    return CallableMethods.get(name)
 
 def makeDirPath(elements, require=False, create=False, mode=0o775):
     """
@@ -94,7 +105,8 @@ def xmlStarlet(*args):
     args = map(str, args)
     args.insert(0, getParam('GCAM.XmlStarlet'))
 
-    _logger.debug(' '.join(args))
+    if Verbose:
+        _logger.debug(' '.join(args))
 
     return subprocess.call(args, shell=False) == 0
 
@@ -181,17 +193,18 @@ def expandYearRanges(seq):
     """
     Expand a sequence of (year, value) tuples, or a dict keyed by
     year, where the year argument may be a string containing identifying
-    range of values with an optional "step" value (default step is 5)
-    e.g., "2015-2030", which means (2015, 2020, 2025, 2030), or
-    "2015-2020:1", which means (2015, 2016, 2017, 2018, 2019, 2020).
-    When a range is given, the tuple is replaced with a sequence of
-    tuples naming each years explicitly.
+    range of values with an optional "step" value indicated after a ":".
+    The default step is 5 years. For example, "2015-2030" expands to
+    (2015, 2020, 2025, 2030), and "2015-2020:1" expands to
+    (2015, 2016, 2017, 2018, 2019, 2020). When a range is given, the
+    tuple is replaced with a sequence of tuples naming each year explicitly.
+    Typical usage is ``for year, price in expandYearRanges(values): ...``.
 
     :param seq_or_dict:
-        The sequence of tuples or dict of {year: value} elements
-        to expand.
+        The sequence of (year, value) tuples, or any object with an
+        iteritems() method that returns (year, value) pairs.
     :return:
-        The a list of tuples holding the expanded sequence.
+        A list of tuples with the expanded sequence.
     """
     result = []
     try:
@@ -209,7 +222,7 @@ def expandYearRanges(seq):
             endYear   = int(m.group(2))
             stepStr = m.group(4)
             step = int(stepStr) if stepStr else 5
-            expanded = map(lambda y: [y, value], xrange(startYear, endYear+step, step))
+            expanded = map(lambda y: [y, value], range(startYear, endYear+step, step))
             result.extend(expanded)
         else:
             result.append((year, value))
@@ -223,11 +236,21 @@ class XMLEditor(object):
     Represents the information required to setup a scenario, i.e., to
     generate and/or copy the required XML files into the XML output dir.
     '''
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace, subdir, parent=None):
-        self.name = name = scenario or baseline # if no scenario stated, assume it's the baseline
-        self.parent = parent
+    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
+                 groupDir, subdir, parent=None):
+        self.name = name = scenario or baseline # if no scenario stated, assume baseline
+        self.baseline = baseline
+        self.scenario = scenario
+        self.xmlOutputRoot = xmlOutputRoot
         self.refWorkspace = refWorkspace
         self.xmlSourceDir = xmlSourceDir
+        self.parent = parent
+
+        # Allow scenario name to have arbitrary subdirs between "../local-xml" and
+        # the scenario name, e.g., "../local-xml/client/scenario"
+        self.subdir = subdir or ''
+        self.groupDir = groupDir
+
         self.configPath = None
 
         self.local_xml_abs = makeDirPath((xmlOutputRoot, LOCAL_XML_NAME), create=True)
@@ -236,17 +259,13 @@ class XMLEditor(object):
         self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
         self.dyn_xml_rel   = pathjoin("..", DYN_XML_NAME)
 
-        # Allow scenario name to have arbitrary subdirs between "../local-xml" and
-        # the scenario name, e.g., "../local-xml/client/scenario"
-        self.subdir = subdir or ''
-
         # N.B. join helpfully drops out "" components
-        self.scenario_dir_abs = makeDirPath((self.local_xml_abs, subdir, name), create=True)
-        self.scenario_dir_rel = pathjoin(self.local_xml_rel, subdir, name)
-        self.baseline_dir_rel = pathjoin(self.local_xml_rel, subdir, self.parent.name) if self.parent else None
+        self.scenario_dir_abs = makeDirPath((self.local_xml_abs, groupDir, name), create=True)
+        self.scenario_dir_rel = pathjoin(self.local_xml_rel, groupDir, name)
+        self.baseline_dir_rel = pathjoin(self.local_xml_rel, groupDir, self.parent.name) if self.parent else None
 
-        self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, subdir, name), create=True)
-        self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, subdir, name)
+        self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, groupDir, name), create=True)
+        self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, groupDir, name)
 
         # Store commonly-used paths
         gcam_xml = "input/gcam-data-system/xml"
@@ -268,48 +287,71 @@ class XMLEditor(object):
         self.solution_prefix_abs = pathjoin(refWorkspace, "input", "solution")
         self.solution_prefix_rel = pathjoin("..", "input", "solution")
 
-        # do this last so mixins can access the instance variables set above
-        super(XMLEditor, self).__init__()
+    @staticmethod
+    def recreateDir(path):
+        shutil.rmtree(path)
+        mkdirs(path)
 
-    def setup(self, args):
+    def setupDynamic(self, args):
         """
-        Set-up a scenario based on a "parent" scenario. If dynamic is True (or True-like),
-        symlinks are created in the dyn-xml directory to all the XML files in the local-xml
-        directory for this scenario so that files generated into the dyn-xml directory can
-        refer to them.
+        Create dynamic XML files in dyn-xml. These files are generated for policy
+        scenarios when XML file contents must be computed from baseline results.
 
-        :param stopPeriod: (coercible to int) a period number or a year at which to stop
-           running GCAM
-        :param args: (argparse.Namespace) arguments passed from the top-level call to setup
+        :param args: (argparse.Namespace) arguments passed from the top-level call
+            to setup sub-command
         :return: none
         """
-        _logger.info("Generating scenario %s" % self.name)
+
+        _logger.info("Generating dyn-xml for scenario %s" % self.name)
+
+        # Delete old generated scenario files
+        dynDir = self.scenario_dyn_dir_abs
+        self.recreateDir(dynDir)
+
+        scenDir = self.scenario_dir_abs
+        xmlFiles = glob.glob("%s/*.xml" % scenDir)
+
+        if xmlFiles:
+            _logger.info("Link static XML files in %s to %s", scenDir, dynDir)
+            for xml in xmlFiles:
+                base = os.path.basename(xml)
+                dst = os.path.join(dynDir, base)
+                src = os.path.join(scenDir, base)
+                # if os.path.islink(dst):           # recreateDir wipes it all out...
+                #     removeSymlink(dst)
+                os.symlink(src, dst)
+        else:
+            _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
+
+    def setupStatic(self, args):
+        """
+        Create static XML files in local-xml. By "static", we mean files whose contents are
+        independent of baseline results. In comparison, policy scenarios may generate dynamic
+        XML files whose contents are computed from baseline results.
+
+        :param args: (argparse.Namespace) arguments passed from the top-level call to setup
+            sub-command.
+        :return: none
+        """
+        _logger.info("Generating local-xml for scenario %s" % self.name)
 
         # Delete old generated scenario files
         scenDir = self.scenario_dir_abs
-        dynDir  = self.scenario_dyn_dir_abs
-        shutil.rmtree(scenDir)
-        shutil.rmtree(dynDir)
-        mkdirs(scenDir)
-        mkdirs(dynDir)
+        # dynDir = self.scenario_dyn_dir_abs
 
-        xmlSubdir = pathjoin(self.xmlSourceDir, self.subdir, self.name, 'xml')
-        xmlFiles  = glob.glob("%s/*.xml" % xmlSubdir)
+        #self.recreateDir(scenDir)  # this trashed symlinks to Workspace/local-xml
+        mkdirs(scenDir)
+
+        xmlSubdir = pathjoin(self.xmlSourceDir, self.groupDir, self.subdir or self.name, 'xml')
+        xmlFiles = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
-            _logger.info("Copy %d static XML files to %s" % (len(xmlFiles), scenDir))
+            _logger.info("Copy %d static XML files to %s", len(xmlFiles), scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
-
-            dynamic = 'dynamic' in args and args.dynamic
-
-            if dynamic:
-                for xml in xmlFiles:
-                    base = os.path.basename(xml)
-                    dst = os.path.join(dynDir, base)
-                    src = os.path.join(scenDir, base)
-                    os.symlink(src, dst)
+        else:
+            _logger.info("No XML files to copy in %s", os.path.abspath(xmlSubdir))
 
         configPath = self.cfgPath()
 
@@ -349,10 +391,26 @@ class XMLEditor(object):
             self.updateConfigComponent('Files', 'outFileName', value=None,
                                        writeOutput=getParamAsBoolean('GCAM.WriteOutputCsv'))
 
+    def setup(self, args):
+        """
+        Calls setupStatic and/or setupDynamic, depending on flags set in args.
+
+        :param args: (argparse.Namespace) arguments passed from the top-level call
+            to setup
+        :return: none
+        """
+        if not args.dynamicOnly:
+            self.setupStatic(args)
+
+        if not args.staticOnly:
+            self.setupDynamic(args)
 
     def makeScenarioComponentsUnique(self):
         """
-        Give all reference scenario components a unique "name" tag to facilitate manipulation via xmlstarlet.
+        Give all reference ScenarioComponents a unique "name" tag to facilitate
+        manipulation via xmlstarlet.
+
+        :return: none
         """
         self.renameScenarioComponent("socioeconomics_1", pathjoin(self.socioeconomics_dir_rel, "interest_rate.xml"))
         self.renameScenarioComponent("socioeconomics_2", pathjoin(self.socioeconomics_dir_rel, "socioeconomics_GCAM3.xml"))
@@ -380,10 +438,13 @@ class XMLEditor(object):
         return self.configPath
 
     def _splitPath(self, path):
-        '''
+        """
         See if the path refers to a file in our scenario space, and if so,
         return the tail, i.e., the scenario-relative path.
-        '''
+
+        :param path: (str) a pathname
+        :return: (str or None) the scenario-relative version of `path`
+        """
         def _split(path, prefix):
             '''
             Split off the tail of path relative to prefix, and return the tail
@@ -410,10 +471,14 @@ class XMLEditor(object):
         return result
 
     def _closestCopy(self, tail):
-        '''
-        See if the path refers to a file in our scenario space, and if so,
-        return the tail, i.e., the scenario-relative path.
-        '''
+        """
+        Find the "closest" copy of the given relative path, `tail`,
+        by looking in the current scenario directory and checking
+        recursively through parent scenarios.
+
+        :param tail: (str) a relative pathname of an XML file
+        :return: (str) absolute path of the closest version of the file
+        """
         def _check(absDir):
             absPath = pathjoin(absDir, tail)
             return absPath if os.path.lexists(absPath) else None
@@ -430,6 +495,7 @@ class XMLEditor(object):
 
         return absPath
 
+    # deprecated?
     def parseRelPath(self, relPath):
         '''
         Parse a relative pathname and return a tuple with the scenario prefix, the
@@ -439,6 +505,7 @@ class XMLEditor(object):
         is checked, and if not present, and error is raised.
 
         :param relPath: (str) a relative pathname
+        :return: (str) the pathname of the closest copy of the file
         '''
         tail = self._splitPath(relPath)
         if not tail:
@@ -448,13 +515,18 @@ class XMLEditor(object):
         if not result:
             raise SetupException('File "%s" was not found in any scenario directory' % relPath)
 
-        return result   # returns (relDir, absDir)
+        return result
 
     def getLocalCopy(self, pathname):
-        '''
+        """
         Get the filename for the most local version (in terms of scenario hierarchy)
-        of an XML file, and copy the file to our scenario dir if not already there.
-        '''
+        of the XML file `pathname`, and copy the file to our scenario dir if not
+        already there.
+
+        :param pathname: (str) the pathname of an XML file
+        :return: (str, str) a tuple of the relative and absolute path of the
+          local (i.e., within the current scenario) copy of the file.
+        """
         tail = self._splitPath(pathname)
         if not tail:
             raise SetupException('File "%s" was not recognized by any scenario' % pathname)
@@ -474,7 +546,6 @@ class XMLEditor(object):
 
         return localRelPath, localAbsPath
 
-
     def updateConfigComponent(self, group, name, value=None, writeOutput=None, appendScenarioName=None):
         """
         Update the value of an arbitrary element in GCAM's configuration.xml file, i.e.,
@@ -484,12 +555,13 @@ class XMLEditor(object):
         ``<Value write-output="1" append-scenario-name="0" name="outFileName">outFile.csv</Value>``
         Values for the optional args can be passed as any of ``[0, 1, "0", "1", True, False]``.
 
-        :param group: the name of a group of config elements in GCAM's configuration.xml
-        :param name: the name of the element to be updated
-        :param value: the value to set between the ``<Value></Value>`` elements
-        :param writeOutput: for ``<Files>`` group, this sets the optional ``write-output`` attribute
-        :param appendScenarioName: for ``<Files>`` group, this sets the optional ``append-scenario-name``
-          attribute.
+        :param group: (str) the name of a group of config elements in GCAM's configuration.xml
+        :param name: (str) the name of the element to be updated
+        :param value: (str) the value to set between the ``<Value></Value>`` elements
+        :param writeOutput: (coercible to int) for ``<Files>`` group, this sets the optional ``write-output``
+           attribute
+        :param appendScenarioName: (coercible to int) for ``<Files>`` group, this sets the optional
+          ``append-scenario-name`` attribute.
         :return: none
         """
         textArgs = "name='%s'" % name
@@ -519,13 +591,16 @@ class XMLEditor(object):
 
         xmlEdit(*args)
 
+    @callableMethod
     def setClimateOutputInterval(self, years):
         """
-        Sets the climate output interval (the frequency at which climate-related
-        outputs are saved to the XML database) to the given number of years,
+        Sets the the frequency at which climate-related outputs are
+        saved to the XML database to the given number of years,
         e.g., ``<Value name="climateOutputInterval">1</Value>``.
+        **Callable from XML setup files.**
 
-        :param years: (coercable to int) the number of years
+        :param years: (coercible to int) the number of years to set as the climate (GHG)
+           output interval
         :return: none
         """
         self.updateConfigComponent('Ints', 'climateOutputInterval', coercible(years, int))
@@ -535,8 +610,8 @@ class XMLEditor(object):
         Add a new ``<ScenarioComponent>`` to the configuration file, at the end of the list
         of components.
 
-        :param name: the name to assign to the new scenario component
-        :param xmlfile: the location of the XML file, relative to the `exe` directory
+        :param name: (str) the name to assign to the new scenario component
+        :param xmlfile: (str) the location of the XML file, relative to the `exe` directory
         :return: none
         """
         xmlfile = unixPath(xmlfile)
@@ -562,9 +637,9 @@ class XMLEditor(object):
         Insert a ``<ScenarioComponent>`` to the configuration file, following the
         entry named by ``after``.
 
-        :param name: the name to assign to the new scenario component
-        :param xmlfile: the location of the XML file, relative to the `exe` directory
-        :param after: the name of the element after which to insert the new component
+        :param name: (str) the name to assign to the new scenario component
+        :param xmlfile: (str) the location of the XML file, relative to the `exe` directory
+        :param after: (str) the name of the element after which to insert the new component
         :return: none
         """
         xmlfile = unixPath(xmlfile)
@@ -589,8 +664,8 @@ class XMLEditor(object):
         """
         Set a new filename for a ScenarioComponent identified by the ``<Value>`` element name.
 
-        :param name: the name of the scenario component to update
-        :param xmlfile: the location of the XML file, relative to the `exe` directory, that
+        :param name: (str) the name of the scenario component to update
+        :param xmlfile: (str) the location of the XML file, relative to the `exe` directory, that
            should replace the existing value
         :return: none
         """
@@ -599,11 +674,11 @@ class XMLEditor(object):
 
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
-    def delScenarioComponent(self, name):
+    def deleteScenarioComponent(self, name):
         """
         Delete a ``<ScenarioComponent>`` identified by the ``<Value>`` element name.
 
-        :param name: the name of the component to delete
+        :param name: (str) the name of the ScenarioComponent to delete
         :return: none
         """
         _logger.info("Delete ScenarioComponent name='%s' for scenario" % name)
@@ -618,8 +693,8 @@ class XMLEditor(object):
         for all scenario components, which allows all further modifications to refer
         only to the (now unique) names.
 
-        :param name: the new name for the scenario component
-        :param xmlfile: the XML file path used to locate the scenario component
+        :param name: (str) the new name for the scenario component
+        :param xmlfile: (str) the XML file path used to locate the scenario component
         :return: none
         """
         xmlfile = unixPath(xmlfile)
@@ -636,9 +711,9 @@ class XMLEditor(object):
         file and a constraint file. References to the two files--assumed to be named ``XXX-{subsidy,tax}.xml``
         and ``XXX-{subsidy,tax}-constraint.xml`` for policy `target` ``XXX``--are added to the configuration file.
 
-        :param target: the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
-        :param policy: one of ``subsidy`` or ``tax``
-        :param dynamic: True if the XML file was dynamically generated, and thus found in ``dyn-xml``
+        :param target: (str) the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
+        :param policy: (str) one of ``subsidy`` or ``tax``
+        :param dynamic: (str) True if the XML file was dynamically generated, and thus found in ``dyn-xml``
            rather than ``local-xml``
         :return: none
         """
@@ -646,10 +721,7 @@ class XMLEditor(object):
 
         cfg = self.cfgPath()
 
-        # if policy == "subsidy":
-        #     policy="subs"	# use shorthand in filename
-
-        basename = "%s-%s" % (target, policy)	# e.g., corn-etoh-subsidy
+        basename = "%s-%s" % (target, policy)	# e.g., biodiesel-subsidy
 
         policyTag     = target + "-policy"
         constraintTag = target + "-constraint"
@@ -664,22 +736,17 @@ class XMLEditor(object):
 
         # If we've already added files for policy/constraint on this target,
         # we replace the old values with new ones. Otherwise, we add them.
-        if xmlSel(cfg, *args):
-            # found it; update the elements
-            self.updateScenarioComponent(policyTag, policyXML)
-            self.updateScenarioComponent(constraintTag, constraintXML)
-        else:
-            # didn't find it; add the elements
-            self.addScenarioComponent(policyTag, policyXML)
-            self.addScenarioComponent(constraintTag, constraintXML)
+        addOrUpdate = self.updateScenarioComponent if xmlSel(cfg, *args) else self.addScenarioComponent
+        addOrUpdate(policyTag, policyXML)
+        addOrUpdate(constraintTag, constraintXML)
 
     def delMarketConstraint(self, target, policy):
         """
         Delete the two elements defining a market constraint from the configuration file. The filenames
         are constructed as indicated in
 
-        :param target: the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
-        :param policy: one of ``subsidy`` or ``tax``
+        :param target: (str) the subject of the policy, e.g., corn-etoh, cell-etoh, ft-biofuel, biodiesel
+        :param policy: (str) one of ``subsidy`` or ``tax``
         :return: none
         """
         _logger.info("Delete market constraint: %s %s for %s" % (target, policy, self.name))
@@ -696,17 +763,8 @@ class XMLEditor(object):
 
         if xmlSel(cfg, args):
             # found it; delete the elements
-            self.delScenarioComponent(policyTag)
-            self.delScenarioComponent(constraintTag)
-
-    # deprecated
-    # def setScenarioName(self):
-    #     """
-    #     Set the name of the scenario based on the value passed to __init__
-    #
-    #     :return: none
-    #     """
-    #     self.updateConfigComponent('Strings', 'scenarioName', self.name)
+            self.deleteScenarioComponent(policyTag)
+            self.deleteScenarioComponent(constraintTag)
 
     def setStopPeriod(self, yearOrPeriod):
         """
@@ -715,23 +773,24 @@ class XMLEditor(object):
         to the correct stop period for the configuration file.
 
         :param yearOrPeriod: (coercible to int) this argument is treated as a literal
-          stop period if the value is < 23. (N.B. 2015 = step 4, 2020 = step 5, and so
-          on.) If 2000 < `yearOrPeriod` <= 2100, it is treated as a year, and converted
-          to a stopPeriod. If the value is in neither range, a SetupException is raised.
+          stop period if the value is < 1000. (N.B. 2015 = step 4, 2020 = step 5, and so
+          on.) If yearOrPeriod >= 1000, it is treated as a year and converted
+          to a stopPeriod for use in the GCAM configuration file.
         :return: none
         :raises: SetupException
         """
         value = coercible(yearOrPeriod, int)
-        stopPeriod = value if 1< value < 23 else 1+ (value - 2000)/5
+        stopPeriod = value if 1 < value < 1000 else 1 + (value - 2000)/5
 
         self.updateConfigComponent('Ints', 'stop-period', stopPeriod)
 
+    @callableMethod
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
                                  funcName, applyTo='share-weight', stubTechnology=None):
         """
         Set the interpolation function for the share-weight of the `subsector`
         of `supplysector` to `funcName` between years `fromYear` to `toYear`
-        in `region`.
+        in `region`. **Callable from XML setup files.**
 
         :param region: the GCAM region to operate on
         :param supplysector: the name of a supply sector
@@ -825,15 +884,18 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("solver", solverFileRel)
 
-
+    @callableMethod
     def dropLandProtection(self):
-        self.delScenarioComponent("protected_land_input_2")
-        self.delScenarioComponent("protected_land_input_3")
+        self.deleteScenarioComponent("protected_land_input_2")
+        self.deleteScenarioComponent("protected_land_input_3")
 
-    def protectLand(self, fraction, landClasses=None, otherArable=False, regions=None):
+    @callableMethod
+    def protectLand(self, fraction, landClasses=None, otherArable=False,
+                    regions=None, unprotectFirst=False):
         """
         Modify land_input files to protect a constant fraction of unmanaged
         land of the given classes, in the given regions.
+        **Callable from XML setup files.**
 
         :param fraction: (float) the fraction of land in the given land classes
                to protect
@@ -844,6 +906,8 @@ class XMLEditor(object):
         :param regions: a string or a list of strings, or None. If None, all
                regions are modified.
         """
+        from .landProtection import protectLand
+
         _logger.info("Protecting %d%% of land globally", int(fraction * 100))
 
         # NB: this code depends on these being the tags assigned to the land files
@@ -854,23 +918,17 @@ class XMLEditor(object):
             landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
-                        otherArable=otherArable, regions=regions)
+                        otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
             self.updateScenarioComponent(landFile, landFileRel)
 
-    # TBD: normalize so that all (year, value) args behave like the pairs, in all fns?
-    # TBD: or handle both dict-like vs 'list of pairs' cases? If it has iteritems, then
-    # TBD: it's dict-like enough for our purposes. Else, it should be [(year, val), (year, val)]
-    #
-    # TBD: optional arg to indicate delta rather than absolute value. More useful but will
-    # TBD: require lxml rather than xmlstarlet. See code for land protection.
-    #
-    # TBD: have this and related functions handle both regional and GTDB cases?
     # TBD: test
+    @callableMethod
     def setGlobalTechNonEnergyCost(self, sector, subsector, technology, values):
         """
         Set the non-energy cost of for technology in the global-technology-database,
         given a list of values of (year, price). The price is applied to all years
         indicated by the range.
+        **Callable from XML setup files.**
 
         :param sector: (str) the name of a GCAM sector
         :param subsector: (str) the name of a GCAM subsector within `sector`
@@ -883,7 +941,10 @@ class XMLEditor(object):
             which the rest of the explanation above applies. The `price` can be
             anything coercible to float.
         """
-        _logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
+        msg = "Set non-energy-cost of %s for %s to:" % (technology, self.name)
+        printSeries(values, technology, header=msg, loglevel='INFO')
+
+        #_logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
@@ -902,10 +963,12 @@ class XMLEditor(object):
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
     # TBD: Test
+    @callableMethod
     def setGlobalTechShutdownRate(self, sector, subsector, technology, values):
         """
         Create a modified version of en_transformation.xml with the given shutdown
         rates for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
 
         :param sector: (str) the name of a GCAM sector
         :param subsector: (str) the name of a GCAM subsector within `sector`
@@ -939,6 +1002,7 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
+    @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
                                stubTechnology=None,
                                xmlBasename='en_transformation.xml',
@@ -946,6 +1010,7 @@ class XMLEditor(object):
         """
         Create a modified version of en_transformation.xml with the given share-weights
         for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
 
         :param region: if not None, changes are made in a specific region, otherwise they're
             made in the global-technology-database.
@@ -990,12 +1055,14 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
     # TBD: Test
+    @callableMethod
     def setGlobalTechShareWeight(self, sector, subsector, technology, values,
                                  xmlBasename='en_transformation.xml',
                                  configFileTag='energy_transformation'):
         """
         Create a modified version of en_transformation.xml with the given share-weights
         for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
 
         :param sector: (str) the name of a GCAM sector
         :param technology: (str) the name of a GCAM technology in `sector`
@@ -1030,7 +1097,46 @@ class XMLEditor(object):
 
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
-    # TBD -- test this!
+    # TBD: test
+    @callableMethod
+    def setEnergyTechnologyCoefficients(self, subsector, technology, energyInput, values):
+        '''
+        Set the coefficients in the global technology database for the given energy input
+        of the given technology in the given subsector.
+        **Callable from XML setup files.**
+
+        :param subsector: (str) the name of the subsector
+        :param technology: (str)
+            The name of the technology, e.g., 'cellulosic ethanol', 'FT biofuel', etc.
+        :param energyInput: (str) the name of the minicam-energy-input
+        :param values:
+            A sequence of tuples or object with ``iteritems`` method returning
+            (year, coefficient). For example, to set
+            the coefficients for cellulosic ethanol for years 2020 and 2025 to 1.234,
+            the pairs would be ((2020, 1.234), (2025, 1.234)).
+        :return:
+            none
+        '''
+        _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s" % \
+                     (energyInput, technology, subsector, values))
+
+        enTransFileRel, enTransFileAbs = \
+            self.getLocalCopy(os.path.join(self.energy_dir_rel, "en_transformation.xml"))
+
+        prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
+                 (subsector, technology)
+        suffix = "minicam-energy-input[@name='%s']/coefficient" % energyInput
+
+        args = [enTransFileAbs]
+
+        for year, coef in expandYearRanges(values):
+            args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
+                     '-v', str(coef)]
+
+        xmlEdit(*args)
+        self.updateScenarioComponent("energy_transformation", enTransFileRel)
+
+    # TBD: test
     def _addTimeStepYear(self, year, timestep=5):
 
         _logger.info("Add timestep year %s" % year)

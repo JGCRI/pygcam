@@ -1,0 +1,303 @@
+For code release
+================
+
+Document
+--------
+- Release docs on ReadTheDocs.org
+
+- PPT slides for October
+
+- Assumptions behind setup code
+
+Cleanup
+-------
+- Post xsd files on bitbucket or github and reference them in the XML files?
+
+- Consolidate generic code from sectorEditors and xmlEditor
+
+Features
+--------
+- Provide a way to run a query with different rewrites to produce different
+  csv files.
+
+- Have "gt new" copy a file structure as coremcs does
+  - Config var defaults to this structure
+  - User can copy this template, modify it, point to it
+  - Admin can set up custom structure for a project team and use that instead
+
+Testing
+-------
+- test all subcommands
+  - config (ok)
+  - diff
+  - gcam
+    Modes to test
+    - run using ref workspace, from anywhere (ok)
+    - standard project.xml mode (ok)
+    - standalone, but with new sandbox (ok)
+    - MCS mode
+  - new (ok)
+  - run (retest batch command and args)
+  - protect
+  - query
+  - setup
+  - sandbox (mostly ok, but setup.createSandbox might be broken for groupDir case)
+
+- Finish implementing/testing the queryFile and rewriteSets features
+  - Looks good, but need to test interaction with old form
+- setup.py installer: test with full install
+- On Windows: test that CopyAllFiles is set to True automatically if linking fails.
+- Host the xsd files on github or bb so they can be referenced in XML
+  files, allowing smart editing.
+- Test / update "new project" command
+- Test bioconstraint command -- maybe move out?
+
+Config changes
+===============
+- Renamed:
+  GCAM.ModelInterface => GCAM.MI.Dir
+  GCAM.JavaArgs       => GCAM.MI.JavaArgs
+  GCAM.JavaLibPath    => GCAM.MI.ClassPath
+  GCAM.ModelInterfaceLogFile => GCAM.MI.LogFile
+  GCAM.UseVirtualBuffer => GCAM.MI.UseVirtualBuffer
+
+- New:
+  GCAM.MI.JarFile      = %(GCAM.MI.Dir)s/ModelInterface.jar
+  GCAM.MI.BatchCommand = java %(GCAM.JavaArgs)s -cp %(GCAM.ClassPath)s ModelInterface/InterfaceMain -b {batchFile}
+
+  GCAM.MI.ClassPath
+
+  GCAM.SandboxProjectDir
+  GCAM.SandboxRefWorkspace
+  GCAM.SandboxDir is now populated using GCAM.ScenarioGroup, which may be empty
+
+On PIC: Add XMLDBDriver.jar to .../libs/jars. No sense treating this differently.
+
+- Eliminate generators from scenarios.py and use project.xml @setup instead.
+- In generators, expect baseline to be in ../../{baseline}, relative to "exe".
+
+Bugs
+====
+- Need fix on Windows for calling "java WriteLocalBaseXDB" to get jre path
+  using the new XMLDBDriver.jar, since Write... no longer has a main.
+  - Fixed, but not clear if Pralit is accepting the changes
+
+- There's a subtle problem with repeated use of GcamTool as top-level call.
+  First symptom is query list is repeated. Seems to be stale state from
+  prior invocation, suggesting a need to re-initialize (class vars?) when
+  called from top-level.
+  - in any case, all the start-up stuff is rerun needlessly, currently
+
+
+
+Cleanup
+=======
+- the term "batch" is confusing since used for SLURM batch and XML query batch
+
+- Rationalize batchQuery.log and GCAM.MI.LogFile in query.py
+
+- Handling of subdir and groupDir is confusing and needs to be rationalized
+  - constraint generation
+  - queries
+  - setup
+
+- Modify log_conf.xml in main wkspc to not create 100MB log data per run
+  - tried setting calibration and solver entries to 1 rather than 0 in trial 0, base-0
+
+MCS-only
+--------
+- @setup should call the prequery when GCAM.BatchMultipleQueries
+  so this is done just once for all trials
+
+Test
+====
+- Finish implementing/testing the queryFile and rewriteSets features
+- write more unit tests
+- Test constraint cmds
+- Should constraint commands be converted back to plugins?
+    - They're for use by biofuel studies only (maybe a sep plugin dir?)
+    - Perhaps split out generic function from domain-specific
+
+Features
+========
+
+Near-term
+---------
+- ?
+
+Medium-term
+-----------
+- For all top-level command-line funcs, create a dict of default
+  values that is used in parseArgs but also passed as a set of
+  defaults for the top-level func so caller doesn't have to supply
+  all the args. Might be able to extract this from parseArgs parser.
+  - Probably not worth the effort.
+
+- Be able to specify a simple project without writing custom python code.
+    - Create xmlsrc
+    - Use built-in scenarios.py that just needs scenario names,
+      called from runProj
+    - <scenario> has a <files> section similar to configuration.xml
+    - support a delete="true" attribute
+    - Use stopYear to limit run
+
+    - A "simple" project either:
+        - Has manually created sandboxes
+        - Has generated sandboxes, but the project only adds to and
+          removes from configuration.xml with references to local files.
+        - Code doesn't use XmlEditor
+            - Already supported using scenarios.py
+
+- Have a flag for batch mode that runs the baseline, then batches
+  the policy scenarios with '-d singleton' to cause them to wait
+  for the baseline to complete.
+  - Maybe --split => split the scenario to run in own batch jobs
+    rather than running them all in one big job. If the scenarios
+    include baseline and at least one policy scenario, add args
+    "-d afterok:<jobid>" to existing value of GCAM.OtherBatchArgs,
+    where <jobid> is the id of the baseline job.
+  - use subprocess.check_output() and look for "Submitted batch job (\d+)"
+
+- If scenario has unique name among groups, run it even if group isn't specified?
+    - Will require restructuring since it's assumed there's one group name
+
+Long-term
+---------
+- In chart subcommand, allow args to -m (multiplier) to take symbolic
+  values like EJ_to_Quad, where these are driven by a builtin table
+  with common ones, augmented if needed by a user file, e.g.,
+
+    GCAM.UnitMultipliers = %(ProjectRoot)/etc/multipliers.py
+
+    EJ_per_km2_to_Quad_per_Mha = whatever
+
+    Do this as a python file, e.g., unitConversion.py has values
+    gleaned from PNNL files. To see if a value is defined, do:
+        import pygcam.unitConversion as units
+        getattr(units, 't_Mt', None)    # returns None if not defined
+
+    Rewrite unitConversion.py to have more uniform/predictable naming scheme.
+
+- Allow plotting a marker at the total for a bar
+
+- Allow overlay of, say, line chart using right Y axis on barchart
+  using left Y axis, as in "US Land Cover and LUC Emissions"
+
+- Modify handling of named batchfile so it is copied to the tmp file and the
+  rest proceeds as with query definition files.
+
+- Generalize as many of the Bioenergy and Refining methods as possible
+    - Goal should be to not need any sector-based methods
+
+- Integrate gcam-driver code / ideas
+    - Consider re-implementing using jug
+
+- Host the xsd files somewhere so they can be referenced in XML
+  files, allowing smart editing.
+
+===========
+=== MCS ===
+===========
+- To try:
+  - Move run dir back to /pic/scratch/plev920
+
+MCS Integration
+---------------
+- Test pyfunc capability and use it to generate protected areas based on distro.
+- Failure to run diffs is being reported by Runner.py as success
+
+
+MCS Cleanup
+-----------
+- Eliminate scenarios.xml file; this information can be found in project.xml
+- Test "constant" distro
+- Test (or deprecate) FileChooser
+- Test xml db exists before running queries and raise a more targeted error
+- If stacked jobs are not yet running, but aborted, set status in db accordingly
+  - not needed in using master/worker architecture
+  - might also be possible to use sqlite in this approach; only master writes
+
+- When creating the run workspace, make all regular files read-only:
+
+    find . -type f -print0 | xargs -0 chmod -w
+
+- Optionally Use delta method from SALib instead of the CB method.
+- Incorporate SALib sampling as alternative. (Or just use external input files)
+
+MCS docs
+--------
+- New <Parameter active="0"> attribute
+
+- changes to XML format and validation
+    - pygcam and also gcammcs (results, parameters, scenarios)
+
+MCS Notes
+---------
+- Needs wrapper (runner.py) or jug-type master-slave approach
+    - master-slave avoids stacking jobs in advance
+    - jug handles tracking incomplete jobs
+
+- Using jug
+    - Slave asks for next task
+        - identified by path to .json file, which has all needed args
+    - Does stuff that runner.py does now
+        - signal handling
+        - sets per-task alarm
+        - database updates (unless jug results mgmt obviates this)
+        - returns status or tuple/dict with more info?
+
+Useful command:
+
+    gcammcs iterate -s1 -e corn -t0,7-11 -c 'gt mcs -S corn -s CI --sandbox {trialDir} --localXml {expDir}/local-xml'
+
+
+GUI implementation
+==================
+- Focus on "project"
+- Create an edit project.xml
+- Run a project
+    - select groups, scenarios, and steps to run (checkboxes)
+    - select direct or batch mode
+        - if direct, show output in window
+    - have a 'kill' command for local or batch (sdel?)
+- View & update config file
+
+
+GCAM enhancements to simplify scripting
+=======================================
+1. Report more meaningful exit statuses
+
+ModelInterface fails but exits with 0 status. GCAM seems to consistently exit with status 1 when it fails.
+
+Ideally, there would be a small number of status codes so a script can do the right thing. Currently I
+have to parse error output, which is a nuisance and not robust in the long run.
+
+Useful GCAM exit codes
+  0 = success
+  1 = failed to read a config file or xml file referenced therein
+  2 = failed to solve markets in some period (alternatively, the status could be the failed timestep)
+
+I’m not sure if there are other failure modes.
+
+Useful MI exit codes
+  0 = success
+  1 = failed to read a batch file or a query file
+  2 = query failed (syntax error in XPath, presumably)
+  3 = query returned no data (may not always be an error)
+
+2. Quit upon on failure to solve.
+
+When GCAM fails to converge, the task often eats up the entire time allocation spinning uselessly.
+If there are reasons that this is sometimes useful, then a cmd-line flag that indicates to quit on
+market failure would be helpful. (Or make this the default and have a flag to not quit.)
+
+As it is I’ll probably write code to parse model output to detect this. But it’s generally a waste
+of time.
+
+Look for "^ERROR:Currently Unsolved Markets:"
+
+After failing to solve in one or more periods, the climate model is still called, the database is
+written, and the model reports:
+
+    Model run completed.
+    Model exiting successfully.

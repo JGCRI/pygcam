@@ -1,21 +1,28 @@
+'''
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+'''
 import os
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs
-from .subcommand import SubcommandABC
-from .query import readCsv, ensureCSV, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup
+from .utils import mkdirs, ensureCSV, QueryResultsDir
+from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
 
 __version__ = "0.2"
 
 
-def computeDifference(df1, df2):
+def computeDifference(df1, df2, resetIndex=True):
     """
     Compute the difference between two DataFrames.
 
     :param df1: a pandas DataFrame instance
     :param obj2: a pandas DataFrame instance
+    :param resetIndex: (bool) if True (the default), the index in the DataFrame
+      holding the computed difference is reset so that data in non-year columns
+      appear in individual columns. Otherwise, the index in the returned
+      DataFrame is based on all non-year columns.
     :return: a pandas DataFrame with the difference in all the year columns, computed
       as (df2 - df1).
     """
@@ -34,6 +41,10 @@ def computeDifference(df1, df2):
 
     # Compute difference for timeseries values
     diff = df2 - df1
+
+    if resetIndex:
+        diff.reset_index(inplace=True)      # convert multi-index back to regular column values
+
     return diff
 
 
@@ -52,6 +63,10 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
     :param skiprows: (int) should be 1 for GCAM files, to skip header info before column names
     :param interpolate: (bool) if True, linearly interpolate annual values between timesteps
        in all data files and compute the differences for all resulting years.
+    :param years: (iterable of 2 values coercible to int) the range of years to include in
+       results.
+    :param startYear: (int) the year at which to begin interpolation, if interpolate is True.
+       Defaults to the first year in `years`.
     :return: none
     """
     refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate,
@@ -65,7 +80,7 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
 
             diff = computeDifference(refDF, otherDF)
 
-            csvText = diff.to_csv(None)
+            csvText = diff.to_csv(index=None)
             label = "[%s] minus [%s]" % (otherFile, referenceFile)
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
 
@@ -86,6 +101,10 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
     :param skiprows: (int) should be 1 for GCAM files, to skip header info before column names
     :param interpolate: (bool) if True, linearly interpolate annual values between timesteps
        in all data files and compute the differences for all resulting years.
+    :param years: (iterable of 2 values coercible to int) the range of years to include in
+       results.
+    :param startYear: (int) the year at which to begin interpolation, if interpolate is True.
+       Defaults to the first year in `years`.
     :return: none
     """
     import pandas as pd
@@ -106,8 +125,6 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
             sheetNum += 1
 
             diff = computeDifference(refDF, otherDF)
-
-            diff.reset_index(inplace=True)      # convert multi-index into regular column values
             diff.to_excel(writer, index=None, sheet_name=sheetName, startrow=2, startcol=0)
 
             worksheet = writer.sheets[sheetName]
@@ -142,13 +159,17 @@ def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, 
     :param skiprows: (int) should be 1 for GCAM files, to skip header info before column names
     :param interpolate: (bool) if True, linearly interpolate annual values between timesteps
        in all data files and compute the differences for all resulting years.
+    :param years: (iterable of 2 values coercible to int) the range of years to include in
+       results.
+    :param startYear: (int) the year at which to begin interpolation, if interpolate is True.
+       Defaults to the first year in `years`.
     :return: none
     """
     writer = writeDiffsToCSV if ext == '.csv' else writeDiffsToXLSX
     writer(outFile, referenceFile, otherFiles, skiprows=skiprows, interpolate=interpolate,
            years=years, startYear=startYear)
 
-def main(args):
+def diffMain(args):
     mkdirs(args.workingDir)
     os.chdir(args.workingDir)
 
@@ -159,25 +180,32 @@ def main(args):
     interpolate = args.interpolate
     groupSum    = args.groupSum
     sum         = args.sum
+    queryFile   = args.queryFile
+    yearStrs    = args.years.split('-')
 
-    yearStrs = args.years.split('-')
     if len(yearStrs) == 2:
         years = yearStrs
         startYear = args.startYear
 
-    # If a queryFile is given, we loop over the query names, computing required arguments to performDiff().
-    if args.queryFile:
+    # If a query file is given, we loop over the query names, computing required arguments to performDiff().
+    if queryFile:
         if len(args.csvFiles) != 2:
-            raise Exception, "When --queryFile is specified, 2 positional arguments--the baseline and policy names--are required."
+            raise CommandlineError("When --queryFile is specified, 2 positional arguments--the baseline and policy names--are required.")
 
         baseline, policy = args.csvFiles
 
         def makePath(query, scenario):
-            return os.path.join(scenario, "batch-" + scenario, '%s-%s.csv' % (query, scenario))
+            return os.path.join(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
 
-        with open(args.queryFile, 'rU') as f:    # 'U' converts line separators to '\n' on Windows
-            lines = f.read()
-            queries = filter(None, lines.split('\n'))   # eliminates blank lines
+        mainPart, extension = os.path.splitext(queryFile)
+
+        if extension.lower() == '.xml':
+            queryFileObj = QueryFile.parse(queryFile)
+            queries = queryFileObj.queryNames()
+        else:
+            with open(queryFile, 'rU') as f:    # 'U' converts line separators to '\n' on Windows
+                lines = f.read()
+                queries = filter(None, lines.split('\n'))   # eliminates blank lines
 
         for query in queries:
             baselineFile = makePath(query, baseline)
@@ -218,64 +246,3 @@ def main(args):
         writeDiffsToFile(outFile, referenceFile, otherFiles, ext=ext, skiprows=skiprows,
                          interpolate=interpolate, years=years, startYear=startYear)
 
-
-class DiffCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        helptext = 'Compute differences between CSV files generated by GCAM batch queries.'
-        desc = '''
-
-            '''
-        kwargs = {'help' : helptext,
-                  'description' : desc}
-        super(DiffCommand, self).__init__('diff', subparsers, kwargs)
-
-    def addArgs(self, parser):
-        parser.add_argument('csvFiles', nargs='+',
-                    help='''The files to process. For difference operations, the first file is treated
-                    as the reference file whose time-series data is subtracted from that of each other
-                    file. If missing, ".csv" suffixes are added to all arguments (the ".csv" is optional).''')
-
-        parser.add_argument('-D', '--workingDir', default='.',
-                            help='''The directory to change to before performing any operations''')
-
-        parser.add_argument('-g', '--groupSum', default="",
-                            help='''Group data for each timestep (or interpolated annual values) by the
-                            given column, and sum all members of each group to produce a timeseries for
-                            each group. Takes precedence over the simpler "-S" ("--sum") option.''')
-
-        parser.add_argument('-i', '--interpolate', action="store_true",
-                            help="Interpolate (linearly) annual values between timesteps.")
-
-        parser.add_argument('-o', '--outFile', default='differences.csv',
-                            help='''The name of the ".csv" or ".xlsx" file containing the differences
-                            between each scenario and the reference. Default is "differences.csv".''')
-
-        parser.add_argument('-c', '--convertOnly', default=False, action="store_true",
-                            help='''Convert the given CSV files into an Excel workbook, one sheet per CSV file.''')
-
-        parser.add_argument('-q', '--queryFile', default='',
-                            help='''A file from which to take the names of queries to process. When --queryFile
-                            is specified, the two positional arguments are the names of the baseline and policy
-                            scenarios, in that order.''')
-
-        parser.add_argument('-S', '--sum', default=False, action="store_true",
-                            help='''Sum all timestep (or interpolated annual values) to produce a single time-series.''')
-
-        parser.add_argument('-s', '--skiprows', type=int, default=1,
-                            help='''The number of rows to skip. Default is 1, which works for GCAM batch query output.
-                            Use -s0 for outFile.csv''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-
-        parser.add_argument('-y', '--years', default="",
-                            help='''Takes a parameter of the form XXXX-YYYY, indicating start and end years of interest.
-                            Other years are dropped (except for annual outputs.)''')
-
-        parser.add_argument('-Y', '--startYear', type=int, default=0,
-                            help='''The year at which to begin interpolation''')
-
-        return parser   # for auto-doc generation
-
-
-    def run(self, args, tool):
-        main(args)

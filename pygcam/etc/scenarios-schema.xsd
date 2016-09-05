@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+
+	<xs:simpleType name="numberType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="float"/>
+			<xs:enumeration value="int"/>
+            <xs:enumeration value="list"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+	<xs:simpleType name="action">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="insert"/>
+			<xs:enumeration value="replace"/>
+			<xs:enumeration value="delete"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name='setup'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element minOccurs="0" ref='iterator'/>
+                <xs:element ref='scenarioGroup'/>
+            </xs:choice>
+            <xs:attribute name='name' type='xs:string'/>            <!-- unused currently -->
+            <xs:attribute name='defaultGroup' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='iterator'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='type' use='required' type='numberType'/>
+                    <xs:attribute name='min' type='xs:decimal'/>
+                    <xs:attribute name='max' type='xs:decimal'/>
+                    <xs:attribute name='step' type='xs:decimal'/>
+                    <xs:attribute name='format' type='xs:string'/>
+                    <xs:attribute name='values' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='scenarioGroup'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='scenario'/>
+            </xs:sequence>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='useGroupDir' type='xs:boolean'/>
+            <xs:attribute name='iterator' type='xs:string'/>
+            <xs:attribute name='baselineSource' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='scenario'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element minOccurs="0" ref='insert'/>
+                <xs:element minOccurs="0" ref='add'/>
+                <xs:element minOccurs="0" ref='replace'/>
+                <xs:element minOccurs="0" ref='delete'/>
+                <xs:element minOccurs="0" ref='generator'/>
+                <xs:element minOccurs="0" ref='function'/>
+            </xs:choice>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='baseline' type='xs:boolean'/>
+            <xs:attribute name='iterator' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- <function name="protectLand">{fraction}, unprotectFirst=True, otherArable=False</function> -->
+    <xs:element name='function'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='insert'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='dir' type='xs:string'/>
+                    <xs:attribute name='after' use='required' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='add'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='dir' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='replace'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='dir' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='delete'>
+        <xs:complexType>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='dir' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='generator'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

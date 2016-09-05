@@ -1,126 +1,276 @@
 '''
-.. gcamtool plugin for setting up / customizing GCAM project's XML files.
-
-.. codeauthor:: Rich Plevin <rich@plevin.com>
+.. Support for 'setup' sub-command, which sets up / customizes GCAM project's XML files.
 
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-
-import sys
 import os
-from importlib import import_module
-from .error import SetupException
-from .config import getParam
+import shutil
+
+from .config import getParam, getParamAsBoolean
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME
+from .error import SetupException, ConfigFileError
 from .log import getLogger
-from .subcommand import SubcommandABC
-from .utils import loadModuleFromPath
+from .utils import copyFileOrTree, removeFileOrTree, mkdirs
+from .windows import removeSymlink, IsWindows
+
+pathjoin = os.path.join
+
+# Files specific to different versions of GCAM
+_VersionSpecificFiles = {
+    '4.2' : ['exe/WriteLocalBaseXDb.class', 'libs/basex/BaseX.jar'],
+    '4.3' : ['exe/XMLDBDriver.jar'],
+}
+
+_FilesToCopy = None
+
+def _getVersionSpecificFiles(version):
+    global _FilesToCopy
+
+    if _FilesToCopy:
+        return _FilesToCopy
+
+    try:
+        versionFiles = _VersionSpecificFiles[version]
+    except KeyError:
+        raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.setup.py', version)
+
+    executable = 'exe/' + getParam('GCAM.Executable')
+    files = versionFiles + [executable, 'input', 'libs', 'exe/log_conf.xml']
+    if IsWindows:
+        files.append('exe/xerces-c_3_1.dll')
+
+    _logger.debug("Version-specific files for GCAM %s: %s", version, files)
+    _FilesToCopy = files
+    return files
+
+def _getFilesToCopyAndLink(linkParam):
+    version = getParam('GCAM.VersionNumber')
+    files = _getVersionSpecificFiles(version)
+
+    allFiles = set(files)
+
+    # Subtract from the set of all files the ones to link
+    toLink = getParam(linkParam)
+    filesToLink = toLink.split()
+    filesToLinkSet = set(filesToLink)
+
+    unknownFiles = filesToLinkSet - allFiles
+    if unknownFiles:
+        raise ConfigFileError('Unknown files specified in %s: %s' % (linkParam, unknownFiles))
+
+    # Copy everything that is not in the filesToLinkSet
+    filesToCopy = list(allFiles - filesToLinkSet)
+    return filesToCopy, filesToLink
+
+
+# unused...
+def unixjoin(*args):
+    path = os.path.join(*args)
+    path = path.replace('\\', '/')
+    return path
 
 _logger = getLogger(__name__)
 
-class SetupCommand(SubcommandABC):
-    __version__ = '0.1'
+# Deprecated?
+def _jobTmpDir():
+    '''
+    Generate the name of a temporary directory based on the value of GCAM.TempDir
+    and the job ID from the environment.
+    '''
+    tmpDir = getParam('GCAM.TempDir')
+    dirName = "mcs.%s.tmp" % 999999 # TBD: getJobNum()
+    dirPath = pathjoin(tmpDir, dirName)
+    return dirPath
 
-    def __init__(self, subparsers):
-        kwargs = {'help': '''Setup a scenario by creating modified XML input files.'''}
+#
+# TBD: fix this and call it from setupWorkspace if mcs == True
+#
+def _setupTempOutputDir(outputDir):
+    removeFileOrTree(outputDir, raiseError=False)
 
-        super(SetupCommand, self).__init__('setup', subparsers, kwargs)
+    if getParamAsBoolean('GCAM.MCS.UseTempOutput'): # TBD: define this variable
+        dirPath = _jobTmpDir()
+        shutil.rmtree(dirPath, ignore_errors=True)  # rm any files from prior run in this job
+        mkdirs(dirPath)
+        _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
 
-    def addArgs(self, parser):
-        defaultYears = '2015-2100'
+        #TBD: workspaceSymlink(dirPath, output, relative=False)
 
-        parser.add_argument('-b', '--baseline',
-                            help='''Identify the baseline the selected scenario is based on.
-                                 Note: at least one of --baseline (-b) / --scenario (-s) must be used.''')
+        # Create a link that the epilogue.py script can find.
+        if getParam('Core.Epilogue'):
+            pass # TBD: createEpilogueLink(dirPath)
+    else:
+        mkdirs(outputDir)
 
-        parser.add_argument('-g', '--group',
-                            help='The scenario group to process. Defaults to the group labeled default="1".')
-
-        parser.add_argument('-G', '--noGenerate', action='store_true',
-                            help='Do not generate constraints (useful before copying files for Monte Carlo simulation).')
-
-        parser.add_argument('-m', '--module',
-                            help='''The "dot spec" for the Python module holding the setup classes and
-                            a function called 'scenarioClass' or a dictionary called 'ClassMap' which map
-                            scenario names to classes. If the function 'scenarioClass' exists, it is
-                            used. If not, the 'ClassMap' is used. Default is "{xmlsrc}/subdir/scenarios.py" (if
-                            subdir is defined) or "{xmlsrc}/scenarios.py" (if subdir is undefined) under the
-                            current ProjectRoot.''')
-
-        parser.add_argument('-p', '--stop', type=int, metavar='period-or-year', dest='stopPeriod',
-                            help='The number of the GCAM period or the year to stop after')
-
-        parser.add_argument('-R', '--resultsDir',
-                            help='The parent directory holding the GCAM output workspaces')
-
-        parser.add_argument('-s', '--scenario',
-                            help='''Identify the scenario to run.
-                            Note: at least one of --baseline (-b) / --scenario (-s) must be used.''')
-
-        parser.add_argument('-S', '--subdir', default="",
-                            help='A sub-directory to use instead of scenario name')
-
-        parser.add_argument('-u', '--useGroupDir', action='store_true',
-                            help='Use the group name as a subdir below xmlsrc, local-xml, and dyn-xml')
-
-        parser.add_argument('-x', '--xmlSourceDir',
-                            help='''The location of the xmlsrc directory.''')
-
-        parser.add_argument('-X', '--xmlOutputRoot',
-                            help='''The root directory into which to generate XML files.''')
-
-        parser.add_argument('-w', '--workspace',
-                            help='''The pathname of the workspace to operate on.''')
-
-        parser.add_argument('-y', '--years', default=defaultYears,
-                            help='''Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is "%s"''' % defaultYears)
-
-        return parser   # for auto-doc generation
+def _remakeSymLink(source, linkname):
+    if os.path.islink(linkname):
+        removeSymlink(linkname)
+    os.symlink(source, linkname)
 
 
-    def run(self, args, tool):
-        scenario = args.scenario or args.baseline
+# Deprecated?
+# Add symlinks to (or copy) dirs holding files generated by "setup" scripts
+def _linkOrCopyXmlDir(src, runWorkspace):
+    leafName = os.path.basename(os.path.normpath(src))     # normpath loses any trailing slash
+    dst = os.path.abspath(pathjoin(runWorkspace, leafName))
 
-        if not scenario:
-            raise SetupException('At least one of --baseline (-b) / --scenario (-s) must be used.')
+    if os.path.islink(dst):
+        removeSymlink(dst)
 
-        # TBD: remove ability to override on cmdline if not useful
-        args.workspace     = args.workspace     or getParam('GCAM.RefWorkspace')
-        args.xmlOutputRoot = args.xmlOutputRoot or getParam('GCAM.ProjectDir')
-        groupDir = args.group if args.useGroupDir else ''
-        subdir = args.subdir or scenario
-        args.xmlSourceDir  = args.xmlSourceDir or getParam('GCAM.XmlSrc')
+    if getParamAsBoolean('GCAM.CopyAllFiles'):
+        # for Windows users without symlink permission
+        _logger.info('Copying %s to %s' % (src, dst))
+        shutil.copytree(src, dst)
+    else:
+        _remakeSymLink(src, dst)
 
-        # TBD: document this
-        try:
-            if args.module:
-                module = import_module(args.module, package=None)
-            else:
-                modulePath = os.path.join(args.xmlSourceDir, groupDir, 'scenarios.py')
-                module = loadModuleFromPath(modulePath)
 
-        except Exception as e:
-            raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (args.module, e))
+def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
+    '''
+    Create a link (or copy) in the new workspace to the
+    equivalent file in the given source workspace.
+    '''
+    # Set automatically on Windows for users without symlink permission
+    copyFiles = copyFiles or getParamAsBoolean('GCAM.CopyAllFiles')
+    linkFiles = not copyFiles
 
-        _logger.debug('Loaded module %s', module)
+    if os.path.isabs(src):
+        # if absolute path, append only the basename to the runWorkspace
+        srcPath = src
+        dstPath = pathjoin(dstWorkspace, os.path.basename(os.path.normpath(src)))
+    else:
+        # if relative path, append the whole thing to both workspaces
+        srcPath = pathjoin(srcWorkspace, src)
+        dstPath = pathjoin(dstWorkspace, src)
 
-        try:
-            # First look for a function called scenarioMapper
-            scenarioMapper = getattr(module, 'scenarioMapper', None)
-            if scenarioMapper:
-                scenClass = scenarioMapper(scenario)
+    # Ensure that parent directory exists
+    parent = os.path.dirname(dstPath)
+    mkdirs(parent)
 
-            else:
-                # Look for 'ClassMap' in the specified module
-                classMap  = getattr(module, 'ClassMap')
-                scenClass = classMap[scenario]
+    # If dstPath is a link, we always remove it and either recreate
+    # the link or copy the files as required. If dstPath isn't a
+    # link, we remove it only if we are replacing it with a link.
+    if os.path.lexists(dstPath) and (linkFiles or os.path.islink(dstPath)):
+        removeFileOrTree(dstPath)
 
-        except KeyError:
-            raise SetupException('Failed to map scenario "%s" to a class in %s' % (scenario, module.__file__))
+    # We've removed dstPath unless we're avoiding re-copying srcPath
+    if not os.path.lexists(dstPath):
+        if copyFiles:
+            _logger.info('Copying %s to %s' % (srcPath, dstPath))
+            copyFileOrTree(srcPath, dstPath)
+        else:
+            os.symlink(srcPath, dstPath)
 
-        # TBD: Ensure that all setup classes conform to this protocol
-        obj = scenClass(args.baseline, args.scenario, args.xmlOutputRoot,
-                        args.xmlSourceDir, args.workspace, groupDir)
 
-        obj.setup(args)
+def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
+    '''
+    Set up a run-time sandbox in which to run GCAM. This involves copying
+    from or linking to files and directories in `workspace`, which defaults
+    to the value of config parameter GCAM.SandboxRefWorkspace.
+
+    :param sandbox: (str) the directory to create
+    :param srcWorkspace: (str) the workspace to link to or copy from
+    :param forceCreate: (bool) if True, delete and recreate the sandbox
+    :param mcsMode: (bool) perform setup appropriate for gcammcs trials.
+    :return: none
+    '''
+    srcWorkspace = srcWorkspace or getParam('GCAM.SandboxRefWorkspace')
+
+    # MCS "new" sub-command creates its ref workspace; for non-MCS
+    # we do it on demand, i.e., if it doesn't exist already.
+    if not (mcsMode or os.path.lexists(srcWorkspace)):
+        copyWorkspace(srcWorkspace)
+
+    if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
+        _logger.warn('GCAM.CopyAllFiles = True while running MCS')
+
+    _logger.info("Setting up sandbox '%s'", sandbox)
+
+    if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
+        raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
+
+    if forceCreate:
+        shutil.rmtree(sandbox, ignore_errors=True)
+
+    # also makes sandbox and sandbox/exe
+    logPath = pathjoin(sandbox, 'exe', 'logs')
+    mkdirs(logPath)
+
+    filesToCopy, filesToLink = _getFilesToCopyAndLink('GCAM.SandboxFilesToLink')
+
+    for filename in filesToCopy:
+        _workspaceLinkOrCopy(filename, srcWorkspace, sandbox, copyFiles=True)
+
+    for filename in filesToLink:
+        _workspaceLinkOrCopy(filename, srcWorkspace, sandbox, copyFiles=False)
+
+    outputDir = pathjoin(sandbox, 'output')
+
+    if mcsMode:
+        # link {sandbox}/dyn-xml to ../dyn-xml
+        dynXmlDir = pathjoin('..', DYN_XML_NAME)
+        mkdirs(dynXmlDir)
+
+        # deal with link and tmp dir...
+        _setupTempOutputDir(outputDir)
+    else:
+        # link {sandbox}/dyn-xml to {refWorkspace}/dyn-xml
+        dynXmlDir = pathjoin(srcWorkspace, DYN_XML_NAME)
+
+        # Create a local output dir
+        mkdirs(outputDir)
+
+    dynXmlLink = pathjoin(sandbox, DYN_XML_NAME)
+    _remakeSymLink(dynXmlDir, dynXmlLink)
+
+    # static xml files are always linked to reference workspace
+    localXmlDir  = pathjoin(srcWorkspace, LOCAL_XML_NAME)
+    localXmlLink = pathjoin(sandbox, LOCAL_XML_NAME)
+    _remakeSymLink(localXmlDir, localXmlLink)
+
+
+def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=False):
+    '''
+    Create a copy of a reference workspace by linking to or copying files from
+    `refWorkspace`, which defaults to the value of config parameter
+    GCAM.RunWorkspace. The copied workspace is the basis for creating sandboxes
+    for a Monte Carlo simulation or a non-MCS project.
+
+    :param newWorkspace: (str) the directory to create
+    :param refWorkspace: (str) the workspace to link to or copy from
+    :param forceCreate: (bool) if True, delete and recreate the sandbox
+    :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
+    :return: none
+    '''
+    version = getParam('GCAM.VersionNumber')
+    _logger.info("Setting up GCAM workspace '%s' for GCAM %s", newWorkspace, version)
+
+    refWorkspace = refWorkspace or getParam('GCAM.RefWorkspace')
+
+    if os.path.lexists(newWorkspace) and os.path.samefile(newWorkspace, refWorkspace):
+        raise SetupException("run workspace is the same as reference workspace; no setup performed")
+
+    if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
+        _logger.warn('GCAM.CopyAllFiles = True while running MCS')
+
+    if forceCreate:
+        shutil.rmtree(newWorkspace, ignore_errors=True)
+
+    mkdirs(newWorkspace)
+
+    # Spell out variable names rather than computing parameter names to
+    # facilitate searching source files for parameter uses.
+    paramName = 'GCAM.MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink'
+
+    filesToCopy, filesToLink = _getFilesToCopyAndLink(paramName)
+
+    for filename in filesToCopy:
+        _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=True)
+
+    for filename in filesToLink:
+        _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=False)
+
+    for filename in ['local-xml', 'dyn-xml']:
+        dirname = pathjoin(newWorkspace, filename)
+        mkdirs(dirname)

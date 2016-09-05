@@ -1,11 +1,7 @@
 '''
-Created on 1/19/15
-
-@author : Richard Plevin
-
-Copyright (c) 2015 Richard Plevin. See COPYRIGHT.txt for details.
+.. Copyright (c) 2016 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
 '''
-
 import os
 import subprocess as subp
 import time

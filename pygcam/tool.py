@@ -3,32 +3,33 @@
 '''
 .. The "gt" (gcamtool) commandline program
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-import os
-import signal
 import argparse
+import os
 import pipes
+import signal
 import subprocess
 from glob import glob
-from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
+
+from .builtins.chart_plugin import ChartCommand
+from .builtins.config_plugin import ConfigCommand
+from .builtins.diff_plugin import DiffCommand
+from .builtins.gcam_plugin import GcamCommand
+from .builtins.new_plugin import NewProjectCommand
+from .builtins.protect_plugin import ProtectLandCommand
+from .builtins.query_plugin import QueryCommand
+from .builtins.run_plugin import ProjectCommand
+from .builtins.sandbox_plugin import SandboxCommand
+from .builtins.setup_plugin import SetupCommand
+
+from .config import (getParam, getConfig, getParamAsBoolean, setParam,
+                     getSection, setSection, DEFAULT_SECTION)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
-from .chart import ChartCommand
-from .config import ConfigCommand, getParam, getConfig, getParamAsBoolean, setParam, getSection, setSection
-from .constraints import BioConstraintsCommand, DeltaConstraintsCommand
-from .diff import DiffCommand
-from .project import ProjectCommand, _TmpFile, SimpleVariable
-from .landProtection import ProtectLandCommand
-from .query import QueryCommand
-from .runGCAM import GcamCommand
-from .workspace import WorkspaceCommand
-from .newProject import NewProjectCommand
-from .setup import SetupCommand
-from .jugCmd import JugCommand
 from .log import getLogger, setLogLevel, configureLogs
+from .project import decacheVariables
+from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -36,10 +37,12 @@ _logger = getLogger(__name__)
 PROGRAM = 'gt'
 __version__ = '0.1'
 
-BuiltinSubcommands = [BioConstraintsCommand, DeltaConstraintsCommand,
-                      ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      JugCommand, NewProjectCommand, ProjectCommand, ProtectLandCommand,
-                      QueryCommand, SetupCommand, WorkspaceCommand]
+BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
+                      NewProjectCommand, ProtectLandCommand, QueryCommand,
+                      ProjectCommand, SandboxCommand, SetupCommand]
+
+# For now, these are not offered as command-line options. Needs more testing.
+# BioConstraintsCommand, DeltaConstraintsCommand,
 
 def _writeBatchScript(args, delete=False):
     """
@@ -66,7 +69,7 @@ def _writeBatchScript(args, delete=False):
         shellArgs = map(pipes.quote, args)
         f.write("gt %s\n" % ' '.join(shellArgs))
 
-    os.chmod(scriptFile, 0755)
+    os.chmod(scriptFile, 0o755)
     return scriptFile
 
 def _randomSleep(minSleep, maxSleep):
@@ -80,44 +83,85 @@ def _randomSleep(minSleep, maxSleep):
     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
     time.sleep(delay)
 
-def _waitForScript(scriptFile):
-    """
-    It can take a few moments for the script to be visible on a compute node.
-    """
-    maxTries = 4
-    minSleep = 1
-    maxSleep = 4
-
-    exists = False
-    for i in range(maxTries):
-        if os.path.exists(scriptFile):
-            print "%s exists!" % scriptFile
-            exists = True
-            break
-
-        _randomSleep(minSleep, maxSleep)    # TBD: check if this is still necessary
-
-    if not exists:
-        raise PygcamException("Failed to read args file after %d tries" % maxTries)
+# Deprecated
+# def _waitForScript(scriptFile):
+#     """
+#     It can take a few moments for the script to be visible on a compute node.
+#     """
+#     maxTries = 4
+#     minSleep = 1
+#     maxSleep = 4
+#
+#     exists = False
+#     for i in range(maxTries):
+#         if os.path.exists(scriptFile):
+#             print("%s exists!" % scriptFile)
+#             exists = True
+#             break
+#
+#         _randomSleep(minSleep, maxSleep)    # TBD: check if this is still necessary
+#
+#     if not exists:
+#         raise PygcamException("Failed to read args file after %d tries" % maxTries)
 
 
 class GcamTool(object):
 
+    # plugin instances by command name
     _plugins = {}
+
+    # cached plugin paths by command name
+    _pluginPaths = {}
 
     @classmethod
     def getPlugin(cls, name):
+        if name not in cls._plugins:
+            cls._loadCachedPlugin(name)
+
         return cls._plugins.get(name, None)
 
     @classmethod
-    def addPlugin(cls, plugin):
-        cls._plugins[plugin.name] = plugin
+    def _loadCachedPlugin(cls, name):
+        # see if it's already loaded
+        path = cls._pluginPaths[name]
+        tool = cls.getInstance()
+        tool.loadPlugin(path)
+
+    @classmethod
+    def _cachePlugins(cls):
+        '''
+        Find all plugins via GCAM.PluginPath and create a dict
+        of plugin pathnames keyed by command name so the plugin
+        can be loaded on-demand.
+        :return: none
+        '''
+        pluginDirs = cls._getPluginDirs()
+
+        suffix = '_plugin.py'
+        suffixLen = len(suffix)
+
+        for d in pluginDirs:
+            pattern = os.path.join(d, '*' + suffix)
+            for path in glob(pattern):
+                basename = os.path.basename(path)
+                command = basename[:-suffixLen]
+                cls._pluginPaths[command] = path
+
+    _instance = None
+
+    @classmethod
+    def getInstance(cls, loadPlugins=True):
+        if not cls._instance:
+            cls._instance = cls(loadPlugins=loadPlugins)
+
+        return cls._instance
 
     def __init__(self, loadPlugins=True):
 
         # TODO: This is a patch to so address re-entry issue, prior to proper integration
-        _TmpFile.decache()
-        SimpleVariable.decache()
+        decacheVariables()
+
+        self.mcsMode = ''
 
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
 
@@ -150,6 +194,9 @@ class GcamTool(object):
                             help='''Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)''')
 
+        parser.add_argument('--mcs', choices=['trial','gensim'],
+                            help='''Used only when running gcamtool from gcammcs.''')
+
         parser.add_argument('-P', '--projectName', dest='configSection', metavar='name',
                             help='''The project name (the config file section to read from),
                             which defaults to the value of config variable GCAM.DefaultProject''')
@@ -177,25 +224,38 @@ class GcamTool(object):
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
 
+        # load all built-in sub-commands
         map(self.instantiatePlugin, BuiltinSubcommands)
 
         if loadPlugins:
-            pluginPath = getParam('GCAM.PluginPath')
-            if pluginPath:
-                sep = os.path.pathsep           # ';' on Windows, ':' on Unix
-                items = pluginPath.split(sep)
-                self.loadPlugins(items)
+            self._cachePlugins()
+            # self.loadPlugins()
+
+    def setMcsMode(self, mode):
+        self.mcsMode = mode
+
+    def getMcsMode(self):
+        return self.mcsMode
 
     def instantiatePlugin(self, pluginClass):
         plugin = pluginClass(self.subparsers)
-        self.addPlugin(plugin)
+        self._plugins[plugin.name] = plugin
+
+    @staticmethod
+    def _getPluginDirs():
+        pluginPath = getParam('GCAM.PluginPath')
+        if not pluginPath:
+            return []
+
+        sep = os.path.pathsep           # ';' on Windows, ':' on Unix
+        items = pluginPath.split(sep)
+        return items
 
     def loadPlugin(self, path):
         """
         Load the plugin at `path`.
 
         :param path: (str) the pathname of a plugin file.
-        :param subparsers: instance of argparse.parser.add_subparsers
         :return: an instance of the ``SubcommandABC`` subclass defined in `path`
         """
         def getModObj(mod, name):
@@ -209,24 +269,24 @@ class GcamTool(object):
 
         self.instantiatePlugin(pluginClass)
 
-    def loadPlugins(self, pluginDirs):
-        """
-        Load plugins from the list of directories calculated in
-        ``SubcommandABC.__init__()`` and instantiate them.
+    def _loadRequiredPlugins(self, argv):
+        # Create a dummy subparser to allow us to identify the requested
+        # sub-command so we can load the module if necessary.
+        parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+        parser.add_argument('-h', '--help', action='store_true')
+        parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
 
-        :return: None
-        """
-        for d in pluginDirs:
-            pattern = os.path.join(d, '*_plugin.py')
-            for path in glob(pattern):
-                self.loadPlugin(path)
+        ns, otherArgs = parser.parse_known_args(args=argv)
 
-    def help(self):
-        """
-        Load config and plugins, then print help and exit.
-        """
-        self.parser.print_help()
-        self.parser.exit()
+        # For top-level help, or if no args, load all plugins
+        # so the generated help messages includes all subcommands
+        if ns.help or not otherArgs:
+            map(self._loadCachedPlugin, self._pluginPaths.keys())
+        else:
+            # Otherwise, load any referenced sub-command
+            for command in self._pluginPaths.keys():
+                if command in otherArgs:
+                    self.getPlugin(command)
 
     def run(self, args=None, argList=None):
         """
@@ -241,6 +301,7 @@ class GcamTool(object):
 
         if argList is not None:         # might be called with empty list of subcmd args
             # called recursively
+            self._loadRequiredPlugins(argList)
             args = self.parser.parse_args(args=argList)
 
         else:  # top-level call
@@ -304,10 +365,10 @@ class GcamTool(object):
             raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 
         if not run:
-            print command
-            print "Script file '%s':" % scriptFile
+            print(command)
+            print("Script file '%s':" % scriptFile)
             with open(scriptFile) as f:
-                print f.read()
+                print(f.read())
             return
 
         _logger.info('Running: %s', command)
@@ -326,7 +387,7 @@ def _getMainParser():
     we don't generate documentation for project-specific plugins.
     '''
     getConfig()
-    tool = GcamTool(loadPlugins=False)
+    tool = GcamTool.getInstance(loadPlugins=False)
     return tool.parser
 
 # We catch only these 3 signals. Can extend this if needed.
@@ -346,7 +407,7 @@ class SignalException(Exception):
     pass
 
 def _sigHandler(signum, _frame):
-    msg = "gt process received " + signame(signum)
+    # msg = "gt process received " + signame(signum)
     raise SignalException(signum)
 
 def catchSignals():
@@ -356,9 +417,42 @@ def catchSignals():
     for sig in signals:
         signal.signal(sig, _sigHandler)
 
+# TBD: test on Windows
+def checkWindowsSymlinks():
+    '''
+    If running on Windows and GCAM.CopyAllFiles is not set, and
+    we fail to create a test symlink, set GCAM.CopyAllFiles to True.
+    '''
+    if IsWindows and not getParamAsBoolean('GCAM.CopyAllFiles'):
+        src = getTempFile()
+        dst = getTempFile()
+
+        try:
+            os.symlink(src, dst)
+        except:
+            _logger.info('No symlink permission; setting GCAM.CopyAllFiles = True')
+            setParam('GCAM.CopyAllFiles', 'True')
+
+def _setDefaultProject(argv):
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+    parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+
+    ns, _otherArgs = parser.parse_known_args(args=argv)
+
+    section = ns.configSection
+    if section:
+        setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
+        setSection(section)
+
 def _main(argv=None):
     getConfig()
     configureLogs()
+    checkWindowsSymlinks()
+
+    _setDefaultProject(argv)
+
+    tool = GcamTool.getInstance()
+    tool._loadRequiredPlugins(argv)
 
     # This parser handles only --batch, --showBatch, and --projectName args.
     # If --batch is given, we need to create a script and call the GCAM.BatchCommand
@@ -368,13 +462,17 @@ def _main(argv=None):
     parser.add_argument('-b', '--batch', action='store_true')
     parser.add_argument('-B', '--showBatch', action="store_true")
     parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
-    parser.add_argument('--set', dest='configVars', metavar='name=value', action='append', default=[])
+    parser.add_argument('--set', dest='configVars', action='append', default=[])
+    parser.add_argument('--mcs', choices=['trial','gensim'])
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 
-    if ns.configSection:
-        setParam('GCAM.DefaultProject', ns.configSection)
-        setSection(ns.configSection)
+    tool.setMcsMode(ns.mcs)
+
+    # section = ns.configSection
+    # if section:
+    #     setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
+    #     setSection(section)
 
     # Set specified config vars
     for arg in ns.configVars:
@@ -390,21 +488,15 @@ def _main(argv=None):
     # Catch signals to allow cleanup of TempFile instances, e.g., on ^C
     catchSignals()
 
-    tool = GcamTool()
+    if ns.batch:
+        run = not ns.showBatch
+        if ns.configSection:        # add these back in for the batch script
+            otherArgs = ['-P', ns.configSection] + otherArgs
 
-    try:
-        if ns.batch:
-            run = not ns.showBatch
-            if ns.configSection:        # add these back in for the batch script
-                otherArgs = ['-P', ns.configSection] + otherArgs
-
-            tool.runBatch(otherArgs, run=run)
-        else:
-            args = tool.parser.parse_args(args=otherArgs)
-            tool.run(args=args)
-    finally:
-        # Delete any temporary files that were created
-        TempFile.deleteAll()
+        tool.runBatch(otherArgs, run=run)
+    else:
+        args = tool.parser.parse_args(args=otherArgs)
+        tool.run(args=args)
 
 
 def main(argv=None, raiseError=False):
@@ -413,16 +505,20 @@ def main(argv=None, raiseError=False):
         return 0
 
     except CommandlineError as e:
-        print e
+        print(e)
 
     except Exception as e:
         if raiseError:
             raise
 
-        print "%s failed: %s" % (PROGRAM, e)
+        print("%s failed: %s" % (PROGRAM, e))
 
         if not getSection() or getParamAsBoolean('GCAM.ShowStackTrace'):
             import traceback
             traceback.print_exc()
+
+    finally:
+        # Delete any temporary files that were created
+        TempFile.deleteAll()
 
     return 1

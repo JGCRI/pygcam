@@ -1,0 +1,37 @@
+These XML files are provided as examples which you can modify as
+required for your project.
+
+The recommended approach is to copy the desired example file to
+a new file without "-example" in the name, and to then edit the
+copy, ensuring that you maintain the example for reference.
+
+Once you modify the file for your project, you will need to either
+reference the file using via command-line arguments in the project
+"steps" you define, or by setting values in the configuration file,
+${HOME}/.pygcam.cfg.
+
+Here are some example settings to refer to files in this ("etc")
+directory within your project directory:
+
+GCAM.LandProtectionXmlFile = %(GCAM.ProjectDir)s/etc/protection.xml
+GCAM.RewriteSetsFile	   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
+GCAM.ScenarioSetupFile	   = %(GCAM.ProjectDir)s/etc/scenarios.xml
+
+If you used the "-c" option to the "new" sub-command, the above
+settings are added to the new section created in the .pygcam.cfg
+file, as comments. To enable these settings, simply edit the file
+to remove the leading "#" character.
+
+By default, the "run" sub-command looks for project.xml in the
+"etc" directory. The default setting is this:
+
+GCAM.ProjectXmlFile = %(GCAM.ProjectDir)s/etc/project.xml
+
+The file queries.xml is not needed in most cases as the <queries>
+element can be defined directly in the project.xml file, and if
+defined in the <defaults> section, this can be shared across projects
+defined in that file. If you do choose to use a separate queries.xml
+file (e.g., to share queries among projects *not* defined in the
+same project.xml file), you will need to reference this file from
+the query sub-command, as there is not system-defined configuration
+variable used for this.

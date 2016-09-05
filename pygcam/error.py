@@ -1,8 +1,6 @@
 '''
 .. pygcam's Exception classes
 
-.. codeauthor:: Rich Plevin <rich@plevin.com>
-
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
@@ -53,6 +51,9 @@ class CommandlineError(Exception):
     pass
 
 class ProgramExecutionError(PygcamException):
+    """
+    Raised when attempt to execute a program (e.g., the GCAM model or ModelInterface) fails.
+    """
     def __init__(self, command, exitCode):
         self.command = command
         self.exitCode = exitCode

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="shocks-schema.xsd">
+	<world>
+		<region name="USA">
+			<shocks>
+				<shock fuel="corn ethanol">0.5</shock>
+				<shock fuel="cellulose ethanol">0.25</shock>
+				<shock fuel="biodiesel">0.25</shock>
+			</shocks>
+		</region>
+	</world>
+</scenario>
