@@ -175,17 +175,21 @@
         </protectedRegion>
     </scenario>
 
-    <scenario name="protect-0.7">
-        <protectedRegion name="Global">
-            <protection>
-                <fraction>0.7</fraction>
-                <landClass>UnmanagedForest</landClass>
-                <landClass>UnmanagedPasture</landClass>
-                <landClass>Shrubland</landClass>
-                <landClass>Grassland</landClass>
-            </protection>
-        </protectedRegion>
-    </scenario>
+    <comment>
+        This has been commented out as an example.
+
+        <scenario name="protect-0.7">
+            <protectedRegion name="Global">
+                <protection>
+                    <fraction>0.7</fraction>
+                    <landClass>UnmanagedForest</landClass>
+                    <landClass>UnmanagedPasture</landClass>
+                    <landClass>Shrubland</landClass>
+                    <landClass>Grassland</landClass>
+                </protection>
+            </protectedRegion>
+        </scenario>
+    </comment>
 
     <scenario name="protect-0.9">
         <protectedRegion name="Global">

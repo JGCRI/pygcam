@@ -17,11 +17,20 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:element name='comment'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
     <xs:element name='setup'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
                 <xs:element minOccurs="0" ref='iterator'/>
                 <xs:element ref='scenarioGroup'/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' type='xs:string'/>            <!-- unused currently -->
             <xs:attribute name='defaultGroup' type='xs:string'/>
@@ -46,9 +55,10 @@
 
     <xs:element name='scenarioGroup'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='scenario'/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref='scenario'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='useGroupDir' type='xs:boolean'/>
             <xs:attribute name='iterator' type='xs:string'/>
@@ -65,6 +75,7 @@
                 <xs:element minOccurs="0" ref='delete'/>
                 <xs:element minOccurs="0" ref='generator'/>
                 <xs:element minOccurs="0" ref='function'/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='baseline' type='xs:boolean'/>

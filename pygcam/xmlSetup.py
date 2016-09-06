@@ -68,7 +68,7 @@ class ScenarioSetup(object):
             return cls.documentCache[filename]
 
         schemaStream = resourceStream('etc/scenarios-schema.xsd')
-        xmlFile = XMLFile(filename, schemaFile=schemaStream, removeComments=True)
+        xmlFile = XMLFile(filename, schemaFile=schemaStream)
         obj = cls(xmlFile.tree.getroot())
 
         cls.documentCache[filename] = obj      # cache it

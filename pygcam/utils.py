@@ -531,11 +531,19 @@ class XMLFile(object):
     :raises: FileFormatError
     """
     def __init__(self, xmlFile, schemaFile=None, raiseError=True,
-                 rootClass=None, removeComments=False):
+                 rootClass=None, removeComments=True):
         from lxml import etree as ET
 
         parser = ET.XMLParser(remove_blank_text=True, remove_comments=removeComments)
         self.tree = ET.parse(xmlFile, parser)
+
+        # Also remove <comment>...</comment> elements
+        if removeComments:
+            root = self.tree.getroot()
+            for elt in self.tree.iterfind('//comment'):
+                parent = elt.getparent()
+                if parent is not None:
+                    parent.remove(elt)
 
         if not schemaFile:
             return

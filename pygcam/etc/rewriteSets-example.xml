@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<rewriteSets>
+<rewriteSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			 xsi:noNamespaceSchemaLocation="rewriteSets-schema.xsd">
+
 	<rewriteSet name="biofuels" level="technology" append-values="true">
 		<rewrite from="cellulosic ethanol" to="Cellulosic ethanol"/>
 		<rewrite from="corn ethanol" to="Corn ethanol"/>

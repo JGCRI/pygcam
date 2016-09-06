@@ -49,8 +49,7 @@
             <add name="energy_USPalm">{scenarioDir}/USPalmBioDiesel.xml</add>
         </scenario>
 
-        <!-- By default, active="1"; set it to "0" to deactivate -->
-        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum" active="0">
+        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum">
             <!-- <insert> adds an element after the element with the given name  -->
             <insert name="whatever" after="cement_2">{scenarioDir}/corn-specific-file.xml</insert>
         </scenario>
