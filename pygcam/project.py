@@ -547,7 +547,7 @@ class Project(XMLFile):
         self.validateProjectArgs(scenarios, knownScenarios, 'scenarios')
         self.validateProjectArgs(steps,     knownSteps,     'steps')
 
-        quitProgram = args.quit
+        quitProgram = not args.noQuit
 
         scenarios = self.sortScenarios(scenarios)
 

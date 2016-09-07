@@ -61,9 +61,9 @@ class ProjectCommand(SubcommandABC):
         parser.add_argument('-p', '--project',
                             help='''The name of the project to run.''')
 
-        parser.add_argument('-q', '--quit', action='store_true',
-                            help='''Quit if an error occurs when processing a scenario. By default, the
-                            next scenario (if any) is run when an error occurs in a scenario.''')
+        parser.add_argument('-q', '--noQuit', action='store_true',
+                            help='''Don't quit if an error occurs when processing a scenario, just
+                            move on to processing the next scenario, if any.''')
 
         parser.add_argument('-s', '--step', dest='steps', action='append',
                             help='''The steps to run. These must be names of steps defined in the
