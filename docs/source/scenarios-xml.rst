@@ -328,10 +328,19 @@ function calls use keyword arguments, which must be specified
 with the keyword. Note that function arguments can refer to
 iterator variables. (See example :ref:`below <setup-example>`.)
 
+Any functions that generate dynamic content (e.g., computing
+constraints as a function of baseline results) should declare
+``dynamic="true"`` so they are run in the proper sequence. If
+these are not indicated as dynamic, any files written to the
+dyn-xml directory will be deleted when the setupDynamic()
+method of XmlEditor is run.
+
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
 +=============+============+===========+==========+
 | name        | yes        | (none)    | text     |
++-------------+------------+-----------+----------+
+| dynamic     | no         | "false"   | boolean  |
 +-------------+------------+-----------+----------+
 
 **Subclassing XMLEditor to provide functions callable from XML**

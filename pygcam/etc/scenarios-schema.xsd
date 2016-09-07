@@ -89,6 +89,7 @@
             <xs:simpleContent>
                 <xs:extension base="xs:string">
                     <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='dynamic' type='xs:boolean'/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>

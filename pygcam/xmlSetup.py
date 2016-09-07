@@ -133,17 +133,21 @@ class ScenarioSetup(object):
             iterators = map(str.strip, iterName.split(','))
             iterateList(self, ScenarioGroup, templateGroup.node, expand, iterators)
 
-    def run(self, editor, directoryDict):
+    def run(self, editor, directoryDict, dynamic=False):
         """
         Run the setup for the given XmlEditor subclass.
 
         :param editor: (XmlEditor) an instance of a subclass of XmlEditor
+        :param directoryDict: (dict) directory with values for {scenarioDir}
+            {baselineDir}
+        :param dynamic: (bool) if True, run only "dynamic" actions; else
+           run only static (non-dynamic) actions.
         :return: none
         """
         self.editor = editor
         group = self.groupDict[editor.groupName or self.defaultGroup]
         scenario = group.getFinalScenario(editor.scenario or editor.baseline)
-        scenario.run(editor, directoryDict)
+        scenario.run(editor, directoryDict, dynamic=dynamic)
 
 # Iterators for float and int that *included* the stop value.
 # That is, terminal condition is "<= stop", not "< stop" as
@@ -158,7 +162,6 @@ def irange(start, stop, step=1):
         yield start
         start += step
 
-# TBD: simplify int and float variants to pre-generate self.values list
 class Iterator(object):
     def __init__(self, node):
         self.name = node.get('name')
@@ -259,15 +262,14 @@ class Scenario(object):
         self.isBaseline = getBooleanXML(node.get('baseline', 0))
         self.iteratorName = node.get('iterator')
         self.actions = map(_classForNode, node)
-        _logger.debug('Create action list for %s', self)
-        # self.formattedActions = None
+        #_logger.debug('Create action list for %s', self)
 
     def __str__(self):
         return "<scenario name='%s'>" % self.name
 
-    def run(self, editor, directoryDict):
+    def run(self, editor, directoryDict, dynamic=False):
         for action in self.actions:
-            action.run(editor, directoryDict)
+            action.run(editor, directoryDict, dynamic=dynamic)
 
     def formatContent(self, templateDict):
         # This converts only the iterators. The directories {scenarioDir}
@@ -289,6 +291,7 @@ class ConfigActionBase(object):
         self.tag  = node.tag
         self.content = node.text
         self.formattedContent = None
+        self.dynamic = False
 
     def formatContent(self, formatDict):
         content = self.formattedContent or self.content
@@ -301,12 +304,18 @@ class ConfigAction(ConfigActionBase):
     def __init__(self, node):
         super(ConfigAction, self).__init__(node)
         self.name = node.get('name')
+        self.dynamic = getBooleanXML(node.get('dynamic', '0'))
         self.dir  = node.get('dir', '')     # TBD: currently unused
 
     def __str__(self):
         tag = self.tag
         content = self.formattedContent or self.content
         return "<%s name='%s'>%s</%s>" % (tag, self.name, content, tag)
+
+    def run(self, editor, directoryDict, dynamic=False):
+        if self.dynamic == dynamic:
+            self.formatContent(directoryDict)
+            self._run(editor)
 
 class Insert(ConfigAction):
     def __init__(self, node):
@@ -319,32 +328,26 @@ class Insert(ConfigAction):
         after = " after='%s'" % self.after if self.after else ''
         return "<%s name='%s'%s>%s</%s>" % (tag, self.name, after, content, tag)
 
-    def run(self, editor, directoryDict):
-        self.formatContent(directoryDict)
+    def _run(self, editor):
         editor.insertScenarioComponent(self.name, self.formattedContent, self.after)
 
 class Add(ConfigAction):
-    def run(self, editor, directoryDict):
-        self.formatContent(directoryDict)
+    def _run(self, editor):
         editor.addScenarioComponent(self.name, self.formattedContent)
 
 class Replace(ConfigAction):
-    def run(self, editor, directoryDict):
-        self.formatContent(directoryDict)
+    def _run(self, editor):
         editor.updateScenarioComponent(self.name, self.formattedContent)
 
 class Delete(ConfigAction):
-    def run(self, editor, directoryDict):
-        self.formatContent(directoryDict)
+    def _run(self, editor):
         editor.deleteScenarioComponent(self.name)
 
     def __str__(self):
         return "<%s name='%s'/>" % (self.tag, self.name)
 
 class Function(ConfigAction):
-    def run(self, editor, directoryDict):
-        self.formatContent(directoryDict)
-
+    def _run(self, editor):
         name = self.name
         method = getCallableMethod(name)
         if not method:
@@ -355,6 +358,11 @@ class Function(ConfigAction):
             eval(codeStr)
         except SyntaxError as e:
             raise SetupException("Failed to evaluate expression %s: %s" % (codeStr, e))
+
+    def __str__(self):
+        tag = self.tag
+        content = self.formattedContent or self.content
+        return "<%s name='%s' dynamic='%s'>%s</%s>" % (tag, self.name, self.dynamic, content, tag)
 
 class If(ConfigActionBase):
     def __init__(self, node):
@@ -379,11 +387,11 @@ class If(ConfigActionBase):
             for obj in self.actions:
                 obj.writeXML(stream, indent)
 
-    def run(self, editor, directoryDict):
-        # self.formatContent(templateDict)    # N.B. uses templateDict rather than directoryDict
+    # N.B. Override superclass method since this runs regardless of dynamic flag
+    def run(self, editor, directoryDict, dynamic=False):
         if (self.formattedValue1 == self.formattedValue2) == self.matches:
             for action in self.actions:
-                action.run(editor, directoryDict)
+                action.run(editor, directoryDict, dynamic=dynamic)
 
     def formatContent(self, formatDict):
         value1 = self.formattedValue1 or self.value1
@@ -435,12 +443,19 @@ def createXmlEditorSubclass(setupFile):
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
                                                     refWorkspace, groupName, subdir, parent=parent)
 
-        def setupStatic(self, args):
-            directoryDict = {'scenarioDir': self.scenario_dir_rel,
-                             'baselineDir': self.baseline_dir_rel}
-            scenarioSetup = ScenarioSetup.parse(setupFile)
+            self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
+                                  'baselineDir': self.baseline_dir_rel}
 
+            self.scenarioSetup = ScenarioSetup.parse(setupFile)
+
+
+        def setupDynamic(self, args):
+            super(XmlEditorSubclass, self).setupDynamic(args)
+            self.scenarioSetup.run(self, self.directoryDict, dynamic=True)
+
+        def setupStatic(self, args):
             self.groupName = args.group
+            scenarioSetup = self.scenarioSetup
 
             if not self.parent:
                 # Before calling setupStatic, we set the parent if there is
@@ -460,6 +475,7 @@ def createXmlEditorSubclass(setupFile):
                     if scenario.isBaseline:
                         self.parent = XmlEditorSubclass(baselineName, None, self.xmlOutputRoot, self.xmlSourceDir,
                                                         self.refWorkspace, groupName, self.subdir)
+            directoryDict = self.directoryDict
 
             # not an "else" since parent may be set in "if" above
             if self.parent:
@@ -467,7 +483,7 @@ def createXmlEditorSubclass(setupFile):
                 directoryDict['baselineDir'] = self.baseline_dir_rel = self.parent.scenario_dir_rel
 
             super(XmlEditorSubclass, self).setupStatic(args)
-            scenarioSetup.run(self, directoryDict)
+            scenarioSetup.run(self, directoryDict, dynamic=False)
 
             filename = getParam('GCAM.ScenarioSetupOutputFile')
             if filename:
