@@ -13,6 +13,12 @@ that allows automated generation of a set of related scenarios.
        :doc:`pygcam.xmlEditor` for more information about the Python API.
        Command-line usage is described on the :ref:`gt setup <setup-label>` page.
 
+    .. note::
+
+       When developing scenario definitions using iterators, it can be helpful
+       to see the generated XML. You can set the configuration variable
+       ``GCAM.ScenarioSetupOutputFile`` to a pathname to which the expanded
+       XML should be written after the ``setup`` sub-command has been run.
 
 The XML element of the ``scenarios.xml`` file are described below, followed by an
 example.
@@ -22,12 +28,18 @@ XML elements
 
 The elements that comprise the ``scenarios.xml`` file are described below.
 
+    .. note::
+
+       All elements can be wrapped in a ``<comment> ... </comment>`` element
+       to effectively remove them from the input stream. This is provided to
+       allow commenting sections that themselves contain comments.
+
 <setup>
 ^^^^^^^^^^
 
 The top-most element, ``<setup>``, encloses one or more ``<scenarioGroup>``
-elements and zero or more ``<iterator>`` elements. The ``<setup>`` element takes
-the following attributes:
+elements, zero or more ``<iterator>`` elements, and zero or more ``<comment>``
+elements. The ``<setup>`` element takes the following attributes:
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -43,15 +55,9 @@ the :ref:`gt setup <setup-label>` command.
 <scenarioGroup>
 ^^^^^^^^^^^^^^^^
 
-The ``<scenarioGroup>`` element defines a set of related ``<scenario>``
-elements, which generally includes one baseline scenario and one or more
-policy scenarios. The required `name` attribute must match the name of a
-scenario defined in the :doc:`project-xml` file.
-
-Path, which is specified as an argument to the function
-:py:func:`pygcam.query.runBatchQuery`, on the command-line to the ``query``
-sub-command, or by the value of the config variable ``GCAM.QueryPath``.
-
+The ``<scenarioGroup>`` element defines a set of two or moreo related
+``<scenario>`` elements, including one baseline scenario and one or more
+policy scenarios. It may also include zero or more ``<comment>`` elements.
 
 +----------------+------------+-----------+----------+
 | Attribute      | Required   | Default   | Values   |
@@ -64,6 +70,9 @@ sub-command, or by the value of the config variable ``GCAM.QueryPath``.
 +----------------+------------+-----------+----------+
 | baselineSource | no         | (none)    | text     |
 +----------------+------------+-----------+----------+
+
+The required `name` attribute must match the name of a
+scenario defined in the :doc:`project-xml` file.
 
 When a project contains multiple scenario groups, it can keep the groups
 separated by using the group dir in the path. The `useGroupDir` attribute
@@ -163,9 +172,12 @@ The ``<iterator>`` element recognizes the following attributes:
 
 The `type` must be one of {int, float, list}. For the numeric types,
 int and float, a `min` and a `max` must be specified. These are
-coerced (if necessary) to the indicated type. Step is optional; it
+coerced (if necessary) to the indicated type. Step is optional and
 defaults to 1. The values generated are inclusive of the min and max
-values.
+values. The `values` attribute is used only with ``type="list"``; its
+value should be a comma-delimited series of text or numeric values. A
+comma before or after no other content (or blank) results in a value
+of the empty string, which can be useful in some cases.
 
 The `format` allows you to specify how to represent values when converted
 to a string, using the formatting convention common to many programming
@@ -190,15 +202,23 @@ or
 The two approaches produce identical results. Use whichever you find more convenient.
 The "list" case is more flexible in that the values need not all have the same format,
 while the "int" and "float" versions would be more convenient for a large number of
-scenarios.
+scenarios. The list form allows iteration over distinctly formatted values, e.g.,
+
+  .. code-block:: xml
+
+     <iterator name="fraction" type="list" values="0,0.25,0.5,0.75,1"/>
+
+In this case, '0.00' and '1.00' are shortened to '0' and '1', respectively.
+
 
 <scenario>
 ^^^^^^^^^^^^^^^^
 
 The ``<scenario>`` element defines a single scenario. It contains a
-sequence of "actions" that manipulate the scenario's configuration
-file and (optionally) modify and create local copies of GCAM
-reference files or files defined in the baseline scenario.
+sequence of one or more "actions" that manipulate the scenario's
+configuration file and (optionally) modify and create local copies
+of GCAM reference files or files defined in the baseline scenario.
+It may also contain zero or more ``<comment>`` elements.
 
 The ``<scenario>`` element accepts the following attributes:
 
@@ -220,14 +240,17 @@ defined in the current ``<scenarioGroup>``. When an `iterator` is used,
 a single ``<scenario>`` generates a sequence of
 scenarios based on the values of the iterator, as described above.
 
-Actions: <add>, <insert>, <replace>, <delete>, and <function>
+Actions: <add>, <insert>, <replace>, <delete>, <function>, and <if>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are four action elements that operate on the configuration file, and
-a fifth, ``<function>``, which can call certain internal methods of the
-:doc:`pygcam.xmlEditor` class that can modify the configuration and/or
+There are five action elements that operate on the configuration file. The
+elements ``<add>``, ``<insert>``, ``<replace>``, and ``<delete>`` operate
+directly on XML configuration elements. The ``<function>`` element call
+certain internal methods of the :doc:`pygcam.xmlEditor` class (and its
+designated subclasses) that can modify the configuration and/or
 modify and create local copies of GCAM reference files or files defined
-in the baseline scenario. Examples of each are provided
+in the baseline scenario. Finally, the ``<if>`` element allows some content
+to be included conditionally. Examples of each are provided
 :ref:`below <setup-example>`.
 
 To maintain the ability to edit files programmatically using the the setup
@@ -330,6 +353,29 @@ the name of the subclass.
 Note: Only functions (class methods) defined with the
 ``@callableMethod`` decorator are recognized as callable from XML.
 See ``pygcam.xmlEditor.py`` for examples.
+
+<if>
+~~~~~~
+The ``<if>`` node allows one or more of the five action elements
+to be included if the two values provided match (are the same;
+the default) or do not match, indicated by specifying ``matches="0"``
+or ``matches="false"``. This element may contain zero or more
+``<comment>`` elements.
+
++-------------+------------+-----------+----------+
+| Attribute   | Required   | Default   | Values   |
++=============+============+===========+==========+
+| value1      | yes        | (none)    | text     |
++-------------+------------+-----------+----------+
+| value2      | yes        | (none)    | text     |
++-------------+------------+-----------+----------+
+| matches     | no         | "true"    | boolean  |
++-------------+------------+-----------+----------+
+
+When `matches` is "1" or "true" (the default) the enclosed actions
+are taken if and only if the values of attributes `value1` and
+`value2` are the same. When `matches` is "0" or "false", the actions
+are taken if and only if the two values differ.
 
 .. _setup-example:
 

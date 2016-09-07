@@ -10,6 +10,7 @@ __version__ = "0.1"
 
 DefaultName  = 'cellulosic ethanol'
 DefaultTag   = 'cell-etoh'
+DefaultType  = 'subsidy'
 
 class DeltaConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -30,8 +31,8 @@ class DeltaConstraintsCommand(SubcommandABC):
         parser.add_argument('-b', '--baseline', required=True,
                             help='The baseline on which the policy scenario is based')
 
-        parser.add_argument('-B', '--biomassPolicyType', choices=PolicyChoices, default='subsidy',
-                            help='Regional biomass policy type. Default is subsidy.')
+        parser.add_argument('-B', '--biomassPolicyType', choices=PolicyChoices, default=None,
+                            help='Regional biomass policy type. Default is None.')
 
         parser.add_argument('-f', '--fuelName', default=DefaultName,
                             help="The fuel to generate constraints for. Default is %s" % DefaultName)
@@ -52,8 +53,8 @@ class DeltaConstraintsCommand(SubcommandABC):
         parser.add_argument('-p', '--policy', required=True,
                             help='The policy scenario name')
 
-        parser.add_argument('-P', '--purposeGrownPolicyType', choices=PolicyChoices, default='subsidy',
-                             help='Purpose-grown biomass policy type. Default is subsidy.')
+        parser.add_argument('-P', '--purposeGrownPolicyType', choices=PolicyChoices, default=None,
+                             help='Purpose-grown biomass policy type. Default is None.')
 
         parser.add_argument('-R', '--resultsDir', default='.',
                             help='The parent directory holding the GCAM output workspaces')
@@ -64,8 +65,8 @@ class DeltaConstraintsCommand(SubcommandABC):
         parser.add_argument('-t', '--fuelTag', default=DefaultTag,
                              help="The fuel tag to generate constraints for. Default is %s" % DefaultTag)
 
-        parser.add_argument('-T', '--policyType', choices=PolicyChoices, default='tax',
-                             help='Type of policy to use for the fuel. Default is tax.')
+        parser.add_argument('-T', '--policyType', choices=PolicyChoices, default=DefaultType,
+                             help='Type of policy to use for the fuel. Default is %s.' % DefaultType)
 
         parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 

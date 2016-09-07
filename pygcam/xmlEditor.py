@@ -705,6 +705,7 @@ class XMLEditor(object):
                 '-u', "//ScenarioComponents/Value[text()='%s']/@name" % xmlfile,
                 '-v', name)
 
+    @callableMethod
     def addMarketConstraint(self, target, policy, dynamic=False):
         """
         Adds references to a pair of files comprising a policy, i.e., a policy definition

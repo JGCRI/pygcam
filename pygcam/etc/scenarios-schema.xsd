@@ -9,13 +9,13 @@
         </xs:restriction>
     </xs:simpleType>
 
-	<xs:simpleType name="action">
+	<xs:simpleType name="comparison">
 		<xs:restriction base="xs:string">
-			<xs:enumeration value="insert"/>
-			<xs:enumeration value="replace"/>
-			<xs:enumeration value="delete"/>
+			<xs:enumeration value="is"/>
+			<xs:enumeration value="isNot"/>
         </xs:restriction>
     </xs:simpleType>
+
 
     <xs:element name='comment'>
         <xs:complexType>
@@ -73,8 +73,8 @@
                 <xs:element minOccurs="0" ref='add'/>
                 <xs:element minOccurs="0" ref='replace'/>
                 <xs:element minOccurs="0" ref='delete'/>
-                <xs:element minOccurs="0" ref='generator'/>
                 <xs:element minOccurs="0" ref='function'/>
+                <xs:element minOccurs="0" ref='if'/>
                 <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
@@ -135,6 +135,23 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="if">
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element minOccurs="0" ref='insert'/>
+                <xs:element minOccurs="0" ref='add'/>
+                <xs:element minOccurs="0" ref='replace'/>
+                <xs:element minOccurs="0" ref='delete'/>
+                <xs:element minOccurs="0" ref='function'/>
+                <xs:element minOccurs="0" ref='comment'/>
+            </xs:choice>
+            <xs:attribute name='value1'  type='xs:string' use='required' />
+            <xs:attribute name='value2'  type='xs:string' use='required' />
+            <xs:attribute name='matches' type='xs:boolean' default="1"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!--
     <xs:element name='generator'>
         <xs:complexType>
             <xs:simpleContent>
@@ -144,4 +161,5 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    -->
 </xs:schema>
