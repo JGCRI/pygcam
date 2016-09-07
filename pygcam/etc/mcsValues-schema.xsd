@@ -21,7 +21,7 @@
     <xs:element name='world'>
         <xs:complexType>
             <xs:choice>
-                <xs:element ref='region' maxOccurs="1"/>
+                <xs:element ref='region' maxOccurs="unbounded"/>
                 <xs:element ref='comment' minOccurs="0" maxOccurs="unbounded"/>
             </xs:choice>
         </xs:complexType>
