@@ -5,6 +5,8 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from collections import OrderedDict
+import glob
+import os
 import sys
 
 from .config import getParam
@@ -452,6 +454,20 @@ def createXmlEditorSubclass(setupFile):
         def setupDynamic(self, args):
             super(XmlEditorSubclass, self).setupDynamic(args)
             self.scenarioSetup.run(self, self.directoryDict, dynamic=True)
+
+            # Add symlinks to any files that were added in the dynamic setup
+            dynDir  = self.scenario_dyn_dir_abs
+            scenDir = self.scenario_dir_abs
+            xmlFiles = glob.glob("%s/*.xml" % scenDir)
+
+            if xmlFiles:
+                _logger.info("Link additional static XML files in %s to %s", scenDir, dynDir)
+                for xml in xmlFiles:
+                    base = os.path.basename(xml)
+                    dst = os.path.join(dynDir, base)
+                    src = os.path.join(scenDir, base)
+                    if not os.path.lexists(dst):
+                        os.symlink(src, dst)
 
         def setupStatic(self, args):
             self.groupName = args.group
