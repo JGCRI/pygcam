@@ -36,7 +36,7 @@ def _getVersionSpecificFiles(version):
         raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.setup.py', version)
 
     executable = 'exe/' + getParam('GCAM.Executable')
-    files = versionFiles + [executable, 'input', 'libs', 'exe/log_conf.xml']
+    files = versionFiles + [executable, 'input', 'exe/log_conf.xml']
     if IsWindows:
         files.append('exe/xerces-c_3_1.dll')
 
@@ -57,7 +57,7 @@ def _getFilesToCopyAndLink(linkParam):
 
     unknownFiles = filesToLinkSet - allFiles
     if unknownFiles:
-        raise ConfigFileError('Unknown files specified in %s: %s' % (linkParam, unknownFiles))
+        raise ConfigFileError('Unknown files specified in %s: %s' % (linkParam, list(unknownFiles)))
 
     # Copy everything that is not in the filesToLinkSet
     filesToCopy = list(allFiles - filesToLinkSet)
