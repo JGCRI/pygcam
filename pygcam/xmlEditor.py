@@ -822,6 +822,7 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
+    @callableMethod
     def setupSolver(self, solutionTolerance=None, broydenTolerance=None,
                     maxModelCalcs=None, maxIterations=None):
         """

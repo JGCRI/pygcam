@@ -377,21 +377,24 @@ class If(ConfigActionBase):
         self.formattedValue2 = ''
 
     def __str__(self):
-        return "<%s value1='%s' value2='%s' matches='%s'/>" % \
-               (self.tag, self.value1, self.value2, self.matches)
+        value1 = self.formattedValue1 or self.value1
+        value2 = self.formattedValue2 or self.value2
+        return "<%s value1='%s' value2='%s' matches='%s'/>" % (self.tag, value1, value2, self.matches)
 
     def writeXML(self, stream, indent=0):
         value1 = self.formattedValue1 or self.value1
         value2 = self.formattedValue2 or self.value2
 
         # output active actions, without the "<if>"
-        if (self.formattedValue1 == self.formattedValue2) == self.matches:
+        values = self.formattedValue2.split(',')
+        if (self.formattedValue1 in values) == self.matches:
             for obj in self.actions:
                 obj.writeXML(stream, indent)
 
     # N.B. Override superclass method since this runs regardless of dynamic flag
     def run(self, editor, directoryDict, dynamic=False):
-        if (self.formattedValue1 == self.formattedValue2) == self.matches:
+        values = map(str.strip, self.formattedValue2.split(','))
+        if (self.formattedValue1 in values) == self.matches:
             for action in self.actions:
                 action.run(editor, directoryDict, dynamic=dynamic)
 

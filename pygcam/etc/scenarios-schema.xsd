@@ -144,6 +144,7 @@
                 <xs:element minOccurs="0" ref='replace'/>
                 <xs:element minOccurs="0" ref='delete'/>
                 <xs:element minOccurs="0" ref='function'/>
+                <xs:element minOccurs="0" ref='if'/>        <!-- nested <if> blocks are allowed -->
                 <xs:element minOccurs="0" ref='comment'/>
             </xs:choice>
             <xs:attribute name='value1'  type='xs:string' use='required' />

@@ -249,9 +249,9 @@ directly on XML configuration elements. The ``<function>`` element call
 certain internal methods of the :doc:`pygcam.xmlEditor` class (and its
 designated subclasses) that can modify the configuration and/or
 modify and create local copies of GCAM reference files or files defined
-in the baseline scenario. Finally, the ``<if>`` element allows some content
-to be included conditionally. Examples of each are provided
-:ref:`below <setup-example>`.
+in the baseline scenario. The sixth action element, ``<if>``, allows content
+to be included conditionally. Note that ``<if>`` elements can be nested.
+Examples of each are provided :ref:`below <setup-example>`.
 
 To maintain the ability to edit files programmatically using the the setup
 system, the name assigned to any new component should be unique among the
@@ -365,7 +365,7 @@ See ``pygcam.xmlEditor.py`` for examples.
 
 <if>
 ~~~~~~
-The ``<if>`` node allows one or more of the five action elements
+The ``<if>`` node allows one or more action elements
 to be included if the two values provided match (are the same;
 the default) or do not match, indicated by specifying ``matches="0"``
 or ``matches="false"``. This element may contain zero or more
@@ -376,7 +376,7 @@ or ``matches="false"``. This element may contain zero or more
 +=============+============+===========+==========+
 | value1      | yes        | (none)    | text     |
 +-------------+------------+-----------+----------+
-| value2      | yes        | (none)    | text     |
+| value2      | yes        | (none)    | text*    |
 +-------------+------------+-----------+----------+
 | matches     | no         | "true"    | boolean  |
 +-------------+------------+-----------+----------+
@@ -385,6 +385,30 @@ When `matches` is "1" or "true" (the default) the enclosed actions
 are taken if and only if the values of attributes `value1` and
 `value2` are the same. When `matches` is "0" or "false", the actions
 are taken if and only if the two values differ.
+
+Note that `value2` (but not `value1`) can be a comma-delimited
+string to identify multiple values. In this case, the test is
+whether `value1` is in the list of values created by splitting
+the string on the commmas and stripping blanks at the start and
+end of the resulting values. Thus, the following two
+blocks are functionally equivalent:
+
+.. code-block:: xml
+
+   <!-- first version matches one name at a time -->
+   <if value1="{name}" value2="John">
+     <!-- some actions -->
+   </if>
+   <if value1="{name}" value2="Jane">
+     <!-- the same actions as above -->
+   </if>
+
+.. code-block:: xml
+
+   <!-- second version matches any name in a list -->
+   <if value1="{name}" value2="John, Jane">
+     <!-- the same actions as above -->
+   </if>
 
 .. _setup-example:
 
