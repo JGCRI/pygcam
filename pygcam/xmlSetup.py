@@ -461,7 +461,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
                                   'baselineDir': self.baseline_dir_rel}
-            self.scenarioSetup = ScenarioSetup.parse(setupFile) if parent else None
+            self.scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
 
 
         def setupDynamic(self, args):
