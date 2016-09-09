@@ -324,7 +324,9 @@ class Project(XMLFile):
     """
     Represents the ``<project>`` element in the projects.xml file.
     """
-    def __init__(self, xmlFile, schemaStream, projectName, groupName):
+    def __init__(self, xmlFile, projectName, groupName):
+
+        schemaStream = resourceStream('etc/project-schema.xsd')
 
         super(Project, self).__init__(xmlFile, schemaFile=schemaStream)
 
@@ -621,7 +623,6 @@ def projectMain(args, tool):
     skipScens = listify(args.skipScenarios)
 
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
-    schemaStream = resourceStream('etc/project-schema.xsd')
 
-    project = Project(projectFile, schemaStream, args.project, args.group)
+    project = Project(projectFile, args.project, args.group)
     project.run(scenarios, skipScens, steps, skipSteps, args, tool)

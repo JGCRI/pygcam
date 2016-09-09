@@ -246,6 +246,8 @@ class XMLEditor(object):
         self.xmlSourceDir = xmlSourceDir
         self.parent = parent
 
+        self.setupArgs = None
+
         # Allow scenario name to have arbitrary subdirs between "../local-xml" and
         # the scenario name, e.g., "../local-xml/client/scenario"
         self.subdir = subdir or ''
@@ -399,6 +401,9 @@ class XMLEditor(object):
             to setup
         :return: none
         """
+        _logger.debug('Called XMLEditor.setup(%s)', args)
+        self.setupArgs = args   # some subclasses/functions might want access to these
+
         if not args.dynamicOnly:
             self.setupStatic(args)
 

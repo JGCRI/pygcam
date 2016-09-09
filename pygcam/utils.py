@@ -574,6 +574,7 @@ class McsValues(XMLFile):
         """
         from collections import defaultdict
 
+        _logger.debug('Reading MCS values from %s', xmlFile)
         schemaStream = resourceStream('etc/mcsValues-schema.xsd')
         super(McsValues, self).__init__(xmlFile, schemaFile=schemaStream)
 
@@ -602,6 +603,11 @@ class McsValues(XMLFile):
            Returns None if the region is not found
         """
         return self.regionMap.get(region, None)
+
+    # TBD: add optional error trapping
+    def valueForRegion(self, paramName, region):
+        regionMap = self.values(region)
+        return regionMap[paramName]
 
 
 def printSeries(series, label, header='', loglevel='DEBUG'):

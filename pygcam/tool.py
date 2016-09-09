@@ -194,7 +194,7 @@ class GcamTool(object):
                             help='''Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)''')
 
-        parser.add_argument('--mcs', choices=['trial','gensim'],
+        parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'],
                             help='''Used only when running gcamtool from gcammcs.''')
 
         parser.add_argument('-P', '--projectName', dest='configSection', metavar='name',
@@ -463,11 +463,11 @@ def _main(argv=None):
     parser.add_argument('-B', '--showBatch', action="store_true")
     parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
     parser.add_argument('--set', dest='configVars', action='append', default=[])
-    parser.add_argument('--mcs', choices=['trial','gensim'])
+    parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'])
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 
-    tool.setMcsMode(ns.mcs)
+    tool.setMcsMode(ns.mcsMode)
 
     # section = ns.configSection
     # if section:

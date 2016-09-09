@@ -264,7 +264,6 @@ class Scenario(object):
         self.isBaseline = getBooleanXML(node.get('baseline', 0))
         self.iteratorName = node.get('iterator')
         self.actions = map(_classForNode, node)
-        #_logger.debug('Create action list for %s', self)
 
     def __str__(self):
         return "<scenario name='%s'>" % self.name
@@ -408,7 +407,7 @@ class If(ConfigActionBase):
         for obj in self.actions:
             obj.formatContent(formatDict)
 
-def createXmlEditorSubclass(setupFile):
+def createXmlEditorSubclass(setupFile, mcsMode=None):
     """
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
@@ -440,22 +439,27 @@ def createXmlEditorSubclass(setupFile):
     class XmlEditorSubclass(superclass):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
             self.parentConfigPath = None
+            self.mcsMode = mcsMode          # save this from command-line for use in subclasses
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
-                parent = XmlEditorSubclass(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
+                # TBD: see if we ever need anything but base XMLEditor for parent baselines...
+                parent = XMLEditor(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
                                                     refWorkspace, groupName, subdir, parent=parent)
 
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
                                   'baselineDir': self.baseline_dir_rel}
-
-            self.scenarioSetup = ScenarioSetup.parse(setupFile)
+            self.scenarioSetup = ScenarioSetup.parse(setupFile) if parent else None
 
 
         def setupDynamic(self, args):
+            self.groupName = args.group
+
             super(XmlEditorSubclass, self).setupDynamic(args)
+
+            assert self.scenarioSetup, "XmlEditorSubclass.setupDynamic() was called without having read an XML scenario file"
             self.scenarioSetup.run(self, self.directoryDict, dynamic=True)
 
             # Add symlinks to any files that were added in the dynamic setup
@@ -476,6 +480,7 @@ def createXmlEditorSubclass(setupFile):
             self.groupName = args.group
             scenarioSetup = self.scenarioSetup
 
+            # TBD: This is convoluted, but may be needed for cases like FCIP, if based on FuelShock
             if not self.parent:
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this

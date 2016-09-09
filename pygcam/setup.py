@@ -191,7 +191,11 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
         raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
 
     if forceCreate:
-        shutil.rmtree(sandbox, ignore_errors=True)
+        # avoid deleting the current directory
+        from .utils import pushd
+        with pushd('..'):
+            shutil.rmtree(sandbox, ignore_errors=True)
+            os.mkdir(sandbox)
 
     # also makes sandbox and sandbox/exe
     logPath = pathjoin(sandbox, 'exe', 'logs')
