@@ -605,9 +605,9 @@ class McsValues(XMLFile):
         return self.regionMap.get(region, None)
 
     # TBD: add optional error trapping
-    def valueForRegion(self, paramName, region):
+    def valueForRegion(self, paramName, region, default=None):
         regionMap = self.values(region)
-        return regionMap[paramName]
+        return regionMap.get(paramName, default)
 
 
 def printSeries(series, label, header='', loglevel='DEBUG'):

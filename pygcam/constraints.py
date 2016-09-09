@@ -301,7 +301,7 @@ def genDeltaConstraints(**kwargs):
     printSeries(fuelTargets, fuelTag, header='fuelTargets:')
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>
-    yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.items()]
+    yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.iteritems()]
 
     xmlArgs = {}
     xmlArgs['fuelPolicyType'] = fuelPolicyType

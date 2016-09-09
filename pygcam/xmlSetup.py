@@ -407,6 +407,8 @@ class If(ConfigActionBase):
         for obj in self.actions:
             obj.formatContent(formatDict)
 
+MCSVALUES_FILE = 'mcsValues.xml'
+
 def createXmlEditorSubclass(setupFile, mcsMode=None):
     """
     Generate a subclass of the given `superclass` that runs the
@@ -449,6 +451,14 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
                                                     refWorkspace, groupName, subdir, parent=parent)
 
+            self.paramFile = None
+
+            # Read shocks from mcsValues.xml if present
+            if self.parent and self.mcsMode:
+                # ../../trial-xml/local-xml/base-0/mcsValues.xml
+                self.paramFile = os.path.normpath(os.path.join(self.xmlOutputRoot, '../trial-xml/local-xml',
+                                                               self.groupDir, self.parent.name, MCSVALUES_FILE))
+
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
                                   'baselineDir': self.baseline_dir_rel}
             self.scenarioSetup = ScenarioSetup.parse(setupFile) if parent else None
@@ -458,6 +468,12 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             self.groupName = args.group
 
             super(XmlEditorSubclass, self).setupDynamic(args)
+
+            if self.mcsMode:
+                from pygcam.utils import McsValues
+                paramFile = self.paramFile
+                if paramFile and os.path.lexists(paramFile):
+                    self.mcsValues = McsValues(paramFile)
 
             assert self.scenarioSetup, "XmlEditorSubclass.setupDynamic() was called without having read an XML scenario file"
             self.scenarioSetup.run(self, self.directoryDict, dynamic=True)
@@ -507,6 +523,13 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
                 directoryDict['baselineDir'] = self.baseline_dir_rel = self.parent.scenario_dir_rel
 
             super(XmlEditorSubclass, self).setupStatic(args)
+
+            # TBD: could be moved to XmlEditorSubclass since depends on mcsMode
+            # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
+            # to be found in the config file to be able to apply distributions to the values.
+            if self.mcsMode and not self.parent:
+                self.addScenarioComponent('mcsValues', os.path.join(self.scenario_dir_rel, MCSVALUES_FILE))
+
             scenarioSetup.run(self, directoryDict, dynamic=False)
 
             filename = getParam('GCAM.ScenarioSetupOutputFile')
