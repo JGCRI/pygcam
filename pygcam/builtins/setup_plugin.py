@@ -103,7 +103,7 @@ class SetupCommand(SubcommandABC):
 
         from ..config import getParam
         from ..error import SetupException
-        from ..setup import createSandbox
+        from ..scenarioSetup import createSandbox
         from ..utils import loadModuleFromPath
 
         scenario = args.scenario or args.baseline

@@ -33,7 +33,7 @@ def _getVersionSpecificFiles(version):
     try:
         versionFiles = _VersionSpecificFiles[version]
     except KeyError:
-        raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.setup.py', version)
+        raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.scenarioSetup.py', version)
 
     executable = 'exe/' + getParam('GCAM.Executable')
     files = versionFiles + [executable, 'input', 'exe/log_conf.xml']

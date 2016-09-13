@@ -21,7 +21,7 @@ def driver(args, tool):
 
     from ..config import getParam
     from ..error import CommandlineError
-    from ..setup import createSandbox
+    from ..scenarioSetup import createSandbox
 
     project = args.configSection or getParam('GCAM.DefaultProject')
 
