@@ -16,7 +16,7 @@ requirements = ['lxml',
 
 setup(
     name='pygcam',
-    version='1.0a2',
+    version='1.0a3',
     description='Python 2.7 library and scripts for interfacing with GCAM',
 
     packages=['pygcam'],
@@ -25,13 +25,14 @@ setup(
     include_package_data = True,
 
     url='https://bitbucket.org/plevin/pygcam',
-    download_url='ssh://git@bitbucket.org/plevin/pygcam.git',
+    # download_url='ssh://git@bitbucket.org/plevin/pygcam.git',
+    download_url='https://plevin@bitbucket.org/plevin/pygcam.git',
     license='MIT License',
     author='Richard Plevin',
     author_email='rich@plevin.com',
 
     classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'License :: OSI Approved :: MIT License',
           'Intended Audience :: Science/Research',
           ],
