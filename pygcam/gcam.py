@@ -9,11 +9,11 @@ import re
 import subprocess
 import sys
 
-from .config import getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean, getParamAsFloat
 from .error import ProgramExecutionError, GcamRuntimeError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
-from .utils import writeXmldbDriverProperties, getExeDir, unixPath
+from .utils import writeXmldbDriverProperties, getExeDir
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -130,9 +130,11 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
 
     exeDir = getExeDir(workspace, chdir=True)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
+    version = getParamAsFloat('GCAM.VersionNumber')
 
-    if not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
-            getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
+    # These features didn't exist in version 4.2
+    if version > 4.2 and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or \
+                              getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
@@ -164,42 +166,3 @@ def gcamMain(args):
     runGCAM(args.scenario, workspace=args.workspace, refWorkspace=args.refWorkspace,
             scenariosDir=args.scenariosDir, groupDir=args.groupDir, configFile=args.configFile,
             forceCreate=args.forceCreate, noRun=args.noRun, noWrapper=args.noWrapper)
-
-    # deprecated
-    # scenario  = args.scenario
-    # workspace = args.workspace or (os.path.join(getParam('GCAM.SandboxDir'), scenario) \
-    #                                    if scenario else getParam('GCAM.RefWorkspace'))
-    #
-    # if not os.path.lexists(workspace):
-    #     createSandbox(workspace, srcWorkspace=args.refWorkspace, forceCreate=args.forceCreate)
-    #
-    # exeDir = getExeDir(workspace, chdir=True)
-    # setJavaPath(exeDir)     # required for Windows; a no-op otherwise
-    #
-    # if not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
-    #         getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
-    #     # Write a "no-op" XMLDBDriver.properties file
-    #     writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
-    #
-    # if scenario:
-    #     # Translate scenario name into config file path, assuming that for scenario
-    #     # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
-    #     scenariosDir = os.path.abspath(args.scenariosDir or getParam('GCAM.ScenariosDir') or '.')
-    #     configFile   = os.path.join(scenariosDir, args.groupDir, scenario, "config.xml")
-    # else:
-    #     configFile = os.path.abspath(args.configFile or os.path.join(exeDir, 'configuration.xml'))
-    #
-    # gcamPath = os.path.abspath(getParam('GCAM.Executable'))
-    # gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
-    #
-    # command = ' '.join(gcamArgs)
-    # if args.noRun:
-    #     print(command)
-    # else:
-    #     _logger.info('Running: %s', command)
-    #
-    #     noWrapper = IsWindows or args.noWrapper     # never use the wrapper on Windows
-    #     exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else _gcamWrapper(gcamArgs)
-    #
-    #     if exitCode != 0:
-    #         raise ProgramExecutionError(command, exitCode)
