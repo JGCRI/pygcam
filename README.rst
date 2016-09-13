@@ -50,4 +50,4 @@ Contribution guidelines
 Who do I talk to?
 ------------------
 
-* Rich Plevin (rich@plevin.com)
+* Richard Plevin (rich@plevin.com)

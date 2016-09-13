@@ -51,14 +51,18 @@ folder up one level. Delete the empty outer folder ('x', or whatever you called 
 
 Install ``pygcam``
 -------------------
-There is a Python installer module called ``setup.py`` in the top level of the
-``pygcam`` repository. You can running this script with various options to install,
-or uninstall ``pygcam``.
+You can install ``pygcam`` directly from PyPi using the command:
 
-  - If you are working with ``pygcam`` from a cloned git repository, you should
-    install ``pygcam`` in 'develop' mode, which will create references to the source
-    code and therefore will be updated whenever you update the repository. To do this,
-    run the command:
+       ``pip install pygcam``
+
+If you are interested in working with the source code (e.g., writing plugins or
+adding functionality), you might prefer to clone the code repository and use the
+``setup.py`` script directly. (The ``setup.py`` script is found in the top-level
+``pygcam`` directory.)
+
+For added convenience when working with the code, install ``pygcam`` in "develop" mode,
+which will create references to the source code and therefore will be updated whenever
+you update the repository. To do this, run the command:
 
     ``python setup.py develop``
 
