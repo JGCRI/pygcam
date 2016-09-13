@@ -6,7 +6,7 @@ from os.path import dirname, realpath
 XmlSourceDir = dirname(realpath(sys.argv[0]))
 sys.path.insert(0, dirname(dirname(dirname(XmlSourceDir))))
 
-from pygcam.setup import ConfigEditor
+from pygcam.scenarioSetup import ConfigEditor
 from pygcam.sectorEditors import RefiningEditor, BioenergyEditor
 
 # Paper1.scenarios import (BiofuelShock, ResultsDir, XmlOutputRoot,
@@ -17,7 +17,7 @@ from pygcam.sectorEditors import RefiningEditor, BioenergyEditor
 # from xmlsrc.common.genDeltaConstraints import genDeltaConstraints
 
 # This sets default baseline and scenario, both of which can be
-# overridden on the command-line to setup.py
+# overridden on the command-line to scenarioSetup.py
 args = ConfigEditor.parseArgs(baseline='base-1', scenario='corn-1')
 
 BaselineName  = args.baseline

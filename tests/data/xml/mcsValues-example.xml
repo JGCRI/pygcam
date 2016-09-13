@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../pygcam/etc/mcsValues-schema.xsd">
+	<world>
+		<region name="USA">
+			<values>
+				<value name="corn ethanol">0.5</value>
+				<value name="cellulose ethanol">0.25</value>
+				<value name="biodiesel">0.25</value>
+			</values>
+		</region>
+		<region name="China">
+			<values>
+				<value name="corn ethanol">1.5</value>
+				<value name="cellulosic ethanol">1.25</value>
+				<value name="biodiesel">0.25</value>
+			</values>
+		</region>
+	</world>
+</scenario>

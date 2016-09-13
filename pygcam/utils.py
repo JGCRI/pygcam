@@ -531,11 +531,18 @@ class XMLFile(object):
     :raises: FileFormatError
     """
     def __init__(self, xmlFile, schemaFile=None, raiseError=True,
-                 rootClass=None, removeComments=False):
+                 rootClass=None, removeComments=True):
         from lxml import etree as ET
 
         parser = ET.XMLParser(remove_blank_text=True, remove_comments=removeComments)
         self.tree = ET.parse(xmlFile, parser)
+
+        # Also remove <comment>...</comment> elements
+        if removeComments:
+            for elt in self.tree.iterfind('//comment'):
+                parent = elt.getparent()
+                if parent is not None:
+                    parent.remove(elt)
 
         if not schemaFile:
             return
@@ -555,6 +562,52 @@ class XMLFile(object):
 
     def getRoot(self):
         return self.root
+
+class McsValues(XMLFile):
+    def __init__(self, xmlFile):
+        """
+        Reads an XML file of numeric values for named parameters by region.
+        This allows the Monte Carlo simulation machinery to modify these
+        values. Note that the file's contents are ignored if read by GCAM.
+
+        :param xmlFile: (str) the name of an XML file adhering to mcsValues-schema.xsd.
+        """
+        from collections import defaultdict
+
+        _logger.debug('Reading MCS values from %s', xmlFile)
+        schemaStream = resourceStream('etc/mcsValues-schema.xsd')
+        super(McsValues, self).__init__(xmlFile, schemaFile=schemaStream)
+
+        self.regionMap = defaultdict(dict)
+        for regNode in self.tree.iterfind('//region'):
+            region = regNode.get('name')
+            valueMap = self.regionMap[region]
+            for valNode in regNode.iterfind('.//value'):
+                name = valNode.get('name')
+                valueMap[name] = float(valNode.text)    # xml schema requires numeric value here
+
+    def regions(self):
+        """
+        Get the regions used in this file.
+
+        :return: (list of str) region names
+        """
+        return self.regionMap.keys()
+
+    def values(self, region):
+        """
+        Get the values associated with the `region`.
+
+        :param region: (str) the name of a GCAM region
+        :return: (dict) keys are names of value elements and values are floats.
+           Returns None if the region is not found
+        """
+        return self.regionMap.get(region, None)
+
+    # TBD: add optional error trapping
+    def valueForRegion(self, paramName, region, default=None):
+        regionMap = self.values(region)
+        return regionMap.get(paramName, default)
 
 
 def printSeries(series, label, header='', loglevel='DEBUG'):

@@ -37,9 +37,11 @@ This file defines one or more "projects" that are run using the runProjects.py s
 			<step name="prequery" runFor="policy">@query -p -o {batchDir} -w {scenarioDir} -s {scenario} -Q "{queryPath}" -q "{queryXmlFile}"</step>
 			<step name="gcam"  runFor="policy">@gcam -S {projectXmlDir} -s {scenario} -w {scenarioDir}</step>
 			<step name="query" runFor="policy">@query -o {batchDir} -w {scenarioDir} -s {scenario} -Q "{queryPath}" -q "{queryXmlFile}"</step>
-			<!--
-			<step name="plot"  runFor="all">@chart {scenPlotArgs} - -scenario {scenario} - -fromFile {scenPlots}</step>
-			-->
+
+			<comment>
+				<step name="plot"  runFor="all">@chart {scenPlotArgs} --scenario {scenario} --fromFile {scenPlots}</step>
+			</comment>
+
 			<!-- <step name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryNameFile} -i {baseline} {scenario}</step> -->
 			<step name="diff"  runFor="policy">@diff -D {sandboxDir} -y {years} -Y {shockYear} -q {queryXmlFile} {baseline} {scenario}</step>
 
@@ -133,39 +135,33 @@ This file defines one or more "projects" that are run using the runProjects.py s
 		<tmpFile varName="diffPlots">
 			<text>Refined-liquids-production-by-technology-{scenario}-{reference}.csv --region=China -C "technology=='Oil refining'" -c region -I technology -T '$\Delta$ Refined liquid fuels production' -n 3 --timeseries --ymax=0.05 --ymin=-0.05 </text>
 
-			<!-- combined biomass sources -->
-			<!--
-			<text>Biomass-combined-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue, MSW, and purpose-grown biomass production' -x sector-by-year.png -I sector</text>
-			-->
+			<comment>
+				<!-- combined biomass sources -->
+				<text>Biomass-combined-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue, MSW, and purpose-grown biomass production' -x sector-by-year.png -I sector</text>
 
-			<!-- Residue biomass production -->
-			<!--
-			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
-			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
-			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'MJ biomass / MJ biofuel' -n 4 -T '$\Delta$ Residue biomass production per unit fuel' -x sector-by-region-per-MJ.png -c sector -I region -S -F fuelEJ.txt</text>
-			<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'MJ biomass / MJ biofuel' -n 4 -T '$\Delta$ Residue biomass production per unit fuel' -x region-by-sector-per-MJ.png -I sector -c region -S -F fuelEJ.txt</text>
-			-->
+				<!-- Residue biomass production -->
+				<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
+				<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
+				<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'MJ biomass / MJ biofuel' -n 4 -T '$\Delta$ Residue biomass production per unit fuel' -x sector-by-region-per-MJ.png -c sector -I region -S -F fuelEJ.txt</text>
+				<text>Residue_biomass_production-{scenario}-{reference}.csv -Y 'MJ biomass / MJ biofuel' -n 4 -T '$\Delta$ Residue biomass production per unit fuel' -x region-by-sector-per-MJ.png -I sector -c region -S -F fuelEJ.txt</text>
 
-			<!-- Biomass consumption by region -->
-			<!--
-			<text>Total_biomass_consumption-{scenario}-{reference}.csv -Y 'EJ biomass' -n 3 -T '$\Delta$ Total biomass consumption by region' -z -x by-region.png</text>
-			-->
+				<!-- Biomass consumption by region -->
+				<text>Total_biomass_consumption-{scenario}-{reference}.csv -Y 'EJ biomass' -n 3 -T '$\Delta$ Total biomass consumption by region' -z -x by-region.png</text>
 
-			<!-- Same plots, but as CO2 -->
-			<!--
-			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m 3.667 -I region -c "land-use-change-emission" -n 4 -T '$\Delta$ Land-use Change Emissions' -x by-region-CO2.png</text>
-			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m 3.667 -c region -I "land-use-change-emission" -n 3 -T '$\Delta$ Land-use Change Emissions' -x by-LUT-CO2.png</text>
-			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -I region -c "land-use-change-emission" -n 3 -T 'Contribution to Carbon Intensity' -x by-LUT-CO2-per-MJ.png -S -F fuelEJ.txt</text>
+				<!-- Same plots, but as CO2 -->
+				<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m 3.667 -I region -c "land-use-change-emission" -n 4 -T '$\Delta$ Land-use Change Emissions' -x by-region-CO2.png</text>
+				<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m 3.667 -c region -I "land-use-change-emission" -n 3 -T '$\Delta$ Land-use Change Emissions' -x by-LUT-CO2.png</text>
+				<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -I region -c "land-use-change-emission" -n 3 -T 'Contribution to Carbon Intensity' -x by-LUT-CO2-per-MJ.png -S -F fuelEJ.txt</text>
 			<text>LUC_Emission_by_More_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -c region -I "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x by-region-CO2-per-MJ.png -S -F fuelEJ.txt</text>
-			-->
+			</comment>
+
 			<text>LUC_Emission_by_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -c region -I "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x by-region-CO2-per-MJ.png -S -F fuelEJ.txt</text>
 			<text>LUC_Emission_by_Aggregated_LUT-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -I region -c "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x by-region-CO2-per-MJ.png -S -F fuelEJ.txt</text>
 
-			<!-- Unstacked as in Wise et al 2015 -->
-			<!--
-			<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -U "United States" -u "land-use-change-emission" -n 3 -T 'Contribution to Carbon Intensity' -x unstacked-CO2-per-MJ.png -S -F fuelEJ.txt - -legendY=-0.5 -k</text>
-			-->
-
+			<comment>
+				<!-- Unstacked as in Wise et al 2015 -->
+				<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -U "United States" -u "land-use-change-emission" -n 3 -T 'Contribution to Carbon Intensity' -x unstacked-CO2-per-MJ.png -S -F fuelEJ.txt --legendY=-0.5 -k</text>
+			</comment>
 			<!-- Refined liquids production, USA alone, and global -->
 			<text>Refined-liquids-production-by-technology-{scenario}-{reference}.csv -c region -I technology -T '$\Delta$ Refined liquid fuels production (global)' -n 3</text>
 			<text>Refined-liquids-production-by-technology-{scenario}-{reference}.csv -x USA.png --region "USA" -c region -I technology -T '$\Delta$ Refined liquid fuels production (USA)' -n 3</text>
@@ -178,51 +174,48 @@ This file defines one or more "projects" that are run using the runProjects.py s
 			<text>Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -v 2050 -F fuelEJ.txt -n 3 -x by-region-per-EJ-2050.png -c land-allocation -I region --format=',' -T 'Area change per EJ (2050)'</text>
 
 			<!-- Aggregated Land Allocation -->
-			<!--
-			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 3 -x by-region-per-EJ.png -c land-allocation -I region -S -F fuelEJ.txt - -format=',' -T 'Area change per unit fuel'</text>
-			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 3 -T '$\Delta$ Land Allocation' -x by-land-allocation.png -I land-allocation</text>
-			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 4 -T '$\Delta$ Land Allocation' -x by-region.png -I region</text>
-			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'm$^2$ / MJ' -m 0.001 -n 4 -T 'Area change per unit fuel' -x by-land-alloc-per-MJ.png -I land-allocation -c region -S -F fuelEJ.txt</text>
-			-->
+			<comment>
+				<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 3 -x by-region-per-EJ.png -c land-allocation -I region -S -F fuelEJ.txt --format=',' -T 'Area change per unit fuel'</text>
+				<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 3 -T '$\Delta$ Land Allocation' -x by-land-allocation.png -I land-allocation</text>
+				<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 4 -T '$\Delta$ Land Allocation' -x by-region.png -I region</text>
+				<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'm$^2$ / MJ' -m 0.001 -n 4 -T 'Area change per unit fuel' -x by-land-alloc-per-MJ.png -I land-allocation -c region -S -F fuelEJ.txt</text>
+			</comment>
 			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'm$^2$ / MJ' -m 0.001 -n 3 -T 'Area change per unit fuel (2050)' -x by-region-per-MJ-2050.png -c land-allocation -I region -v 2050 -F fuelEJ.txt</text>
 			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv -U "United States" -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png</text>
 
 			<!-- Unstacked as in Wise et al 2015 -->
-			<!--
-			<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv          -U "United States" -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png</text>
-			<text>More_Aggregated_Land_Allocation_Wise_agg-{scenario}-{reference}.csv -U "United States" -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png - -legendY=-0.5</text>
+			<comment>
+				<text>More_Aggregated_Land_Allocation-{scenario}-{reference}.csv          -U "United States" -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png</text>
+				<text>More_Aggregated_Land_Allocation_Wise_agg-{scenario}-{reference}.csv -U "United States" -u "land-allocation" -v 2020 -n 3 -Y "Thousand km$^2$" -T '$\Delta$ Land Allocation (2020)' -x unstacked-land-alloc.png --legendY=-0.5</text>
 
-			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 4 -x by-region-per-EJ.png -c land-allocation -I region -S -F fuelEJ.txt - -format=',' -T 'Area change per unit fuel'</text>
-			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 3 -T '$\Delta$ Land Allocation' -x by-land-allocation.png -I land-allocation</text>
-			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 4 -T '$\Delta$ Land Allocation' -x by-region.png -I region</text>
+				<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 4 -x by-region-per-EJ.png -c land-allocation -I region -S -F fuelEJ.txt --format=',' -T 'Area change per unit fuel'</text>
+				<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 3 -T '$\Delta$ Land Allocation' -x by-land-allocation.png -I land-allocation</text>
+				<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y '10$^3$ km$^2$' -n 4 -T '$\Delta$ Land Allocation' -x by-region.png -I region</text>
 
-			<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "EJ biomass" -n 4 -c output -I region -z -T '$\Delta$ Purpose-grown biomass production' -x by-region.png</text>
-			<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "MJ biomass / MJ biofuel" -c output -I region -z -T 'Purpose-grown biomass production per unit fuel' -x by-region-per-MJ.png -S -F fuelEJ.txt</text>
-			-->
+				<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "EJ biomass" -n 4 -c output -I region -z -T '$\Delta$ Purpose-grown biomass production' -x by-region.png</text>
+				<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "MJ biomass / MJ biofuel" -c output -I region -z -T 'Purpose-grown biomass production per unit fuel' -x by-region-per-MJ.png -S -F fuelEJ.txt</text>
 
-			<!-- Ag non-burning N2O -->
-			<!--
-			<text>Ag_non-burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -n 4 -T '$\Delta$ Global Ag N$_2$O Emissions ({scenario} - {reference})' -x by-sector.png -I subsector</text>
-			<text>Ag_non-burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -n 4 -T '$\Delta$ Global Ag N$_2$O Emissions ({scenario} - {reference})' -x by-region.png -I region</text>
-			-->
+				<!-- Ag non-burning N2O -->
+				<text>Ag_non-burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -n 4 -T '$\Delta$ Global Ag N$_2$O Emissions ({scenario} - {reference})' -x by-sector.png -I subsector</text>
+				<text>Ag_non-burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -n 4 -T '$\Delta$ Global Ag N$_2$O Emissions ({scenario} - {reference})' -x by-region.png -I region</text>
 
-			<!-- Ag waste-burning N2O -->
-			<!--
-			    <text>Ag_waste_burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -I region -n 4 -T '$\Delta$ Ag Waste Burning N$_2$O Emissions ({scenario} - {reference})' -x by-region.png</text>
-			-->
+				<!-- Ag waste-burning N2O -->
+				<text>Ag_waste_burning_N2O_emissions-{scenario}-{reference}.csv -Y 'Tg N$_2$O' -I region -n 4 -T '$\Delta$ Ag Waste Burning N$_2$O Emissions ({scenario} - {reference})' -x by-region.png</text>
+			</comment>
 
 			<!-- Forcing -->
-			<!-- text>Kyoto_gas_forcing-{scenario}-{reference}.csv -Y 'W/m$^2$' - -timeseries -T '$\Delta$ Kyoto Gas Forcing'</text -->
+			<comment><text>Kyoto_gas_forcing-{scenario}-{reference}.csv -Y 'W/m$^2$' --timeseries -T '$\Delta$ Kyoto Gas Forcing'</text></comment>
 			<text>Climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
 			<text>Global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
 		</tmpFile>
 
 		<tmpFile varName="ciPlots">
-			<!-- (note split double hyphens inside comment to avoid syntax complaint)
-			<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 4 -x by-region-per-EJ.png -c land-allocation -I region -S -F fuelEJ.txt - -format=',' -T 'Area change per unit fuel'</text>
-			<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -U "United States" -u "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x unstacked-CO2-per-MJ.png -S -F fuelEJ.txt - -legendY=-0.5 -k</text>
-			<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "MJ biomass / MJ biofuel" -n 4 -c output -I region -z -T 'Purpose-grown biomass production per unit fuel' -x by-region-per-MJ.png -S -F fuelEJ.txt</text>
-			-->
+			<comment>
+				<text>Slightly_Less_Aggregated_Land_Allocation-{scenario}-{reference}.csv -Y 'hectares / EJ' -m 100 -n 4 -x by-region-per-EJ.png -c land-allocation -I region -S -F fuelEJ.txt --format=',' -T 'Area change per unit fuel'</text>
+				<text>LUC_Emission_by_More_Aggregated_LUT_Wise_agg-{scenario}-{reference}.csv -Y 'g CO$_2$ / MJ' -m 3.667 -U "United States" -u "land-use-change-emission" -n 4 -T 'Contribution to Carbon Intensity' -x unstacked-CO2-per-MJ.png -S -F fuelEJ.txt --legendY=-0.5 -k</text>
+				<text>Purpose-grown_biomass_production-{scenario}-{reference}.csv -Y "MJ biomass / MJ biofuel" -n 4 -c output -I region -z -T 'Purpose-grown biomass production per unit fuel' -x by-region-per-MJ.png -S -F fuelEJ.txt</text>
+			</comment>
+
 			<!-- Generated by carbonIntensity.py -->
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I sector -c region -x by-sector.png -T '$\Delta$ GHG emissions by sector' -z -n3</text>
 			<text>GHG_emissions_by_aggregated_sector-{scenario}-{reference}-as-CO2e.csv -Y 'Tg CO$_2$e' -I region -c sector -x by-region.png -T '$\Delta$ GHG emissions by region' -z -n3</text>

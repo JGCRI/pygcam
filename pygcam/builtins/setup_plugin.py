@@ -103,7 +103,7 @@ class SetupCommand(SubcommandABC):
 
         from ..config import getParam
         from ..error import SetupException
-        from ..setup import createSandbox
+        from ..scenarioSetup import createSandbox
         from ..utils import loadModuleFromPath
 
         scenario = args.scenario or args.baseline
@@ -126,13 +126,12 @@ class SetupCommand(SubcommandABC):
 
         xmlSourceDir = args.xmlSourceDir or getParam('GCAM.XmlSrc')
 
-
         # If a setup XML file is defined, use the defined (or default) XMLEditor subclass
         setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
         if setupXml:
             from ..xmlSetup import createXmlEditorSubclass
-            _logger.debug('Setup using %s', setupXml)
-            scenClass = createXmlEditorSubclass(setupXml)
+            _logger.debug('Setup using %s, mcsMode=%s', setupXml, mcsMode)
+            scenClass = createXmlEditorSubclass(setupXml, mcsMode=mcsMode)
 
         else:
             # If neither is defined, we assume a custom scenarios.py file is used

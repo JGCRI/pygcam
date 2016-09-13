@@ -246,6 +246,8 @@ class XMLEditor(object):
         self.xmlSourceDir = xmlSourceDir
         self.parent = parent
 
+        self.setupArgs = None
+
         # Allow scenario name to have arbitrary subdirs between "../local-xml" and
         # the scenario name, e.g., "../local-xml/client/scenario"
         self.subdir = subdir or ''
@@ -399,6 +401,9 @@ class XMLEditor(object):
             to setup
         :return: none
         """
+        _logger.debug('Called XMLEditor.setup(%s)', args)
+        self.setupArgs = args   # some subclasses/functions might want access to these
+
         if not args.dynamicOnly:
             self.setupStatic(args)
 
@@ -705,6 +710,7 @@ class XMLEditor(object):
                 '-u', "//ScenarioComponents/Value[text()='%s']/@name" % xmlfile,
                 '-v', name)
 
+    @callableMethod
     def addMarketConstraint(self, target, policy, dynamic=False):
         """
         Adds references to a pair of files comprising a policy, i.e., a policy definition
@@ -821,6 +827,7 @@ class XMLEditor(object):
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
+    @callableMethod
     def setupSolver(self, solutionTolerance=None, broydenTolerance=None,
                     maxModelCalcs=None, maxIterations=None):
         """
