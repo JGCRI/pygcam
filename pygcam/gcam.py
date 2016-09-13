@@ -12,7 +12,7 @@ import sys
 from .config import getParam, getParamAsBoolean
 from .error import ProgramExecutionError, GcamRuntimeError, PygcamException
 from .log import getLogger
-from .setup import createSandbox
+from .scenarioSetup import createSandbox
 from .utils import writeXmldbDriverProperties, getExeDir, unixPath
 from .windows import IsWindows
 
