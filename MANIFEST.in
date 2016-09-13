@@ -4,15 +4,14 @@ include setup.py
 
 # Source code
 include pygcam/*.py
-include pygcam/builtins/*.py
+graft pygcam/builtins
 
 # Documentation source as well as generated html
 graft docs/source
-graft docs/build/html
 include docs/[mM]ake*
 
 # Test code
-graft pygcam/testd
+graft pygcam/tests
 
 # Assorted data files
 graft pygcam/etc
