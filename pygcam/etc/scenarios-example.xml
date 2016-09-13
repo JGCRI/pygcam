@@ -26,12 +26,16 @@
              by passing comma-separated arguments in the text, just as they would
              be written inside the parentheses of a function call
              -->
-            <function name="protectLand">{fraction}, otherArable=False, unprotectFirst=True</function>
             <function name="setClimateOutputInterval">2</function>
 
             <!-- Delete scenario elements in the file by their "name" tag -->
             <delete name="protected_land_input_2"/>
             <delete name="protected_land_input_3"/>
+
+            <if value1="{fraction}" value2="0.0" matches="false">
+                # do this only for non-zero fractions
+                <function name="protectLand">{fraction}, otherArable=False, unprotectFirst=True</function>
+            </if>
 
             <!--
             The variable {scenarioDir} is defined dynamically to be a relative path (from
@@ -45,12 +49,11 @@
             <replace name="transportation">{scenarioDir}/transportation_custom.xml</replace>
 
             <!-- add these new files at the end -->
-            <add name="energy_USSugar">{scenarioDir}/USSugarEthanol.xml</add>
-            <add name="energy_USPalm">{scenarioDir}/USPalmBioDiesel.xml</add>
+            <add name="custom1">{scenarioDir}/someCustomFile.xml</add>
+            <add name="custom2">{scenarioDir}/otherCustomFIle.xml</add>
         </scenario>
 
-        <!-- By default, active="1"; set it to "0" to deactivate -->
-        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum" active="0">
+        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum">
             <!-- <insert> adds an element after the element with the given name  -->
             <insert name="whatever" after="cement_2">{scenarioDir}/corn-specific-file.xml</insert>
         </scenario>

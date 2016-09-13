@@ -9,11 +9,20 @@
         </xs:restriction>
 	</xs:simpleType>
 
+    <xs:element name='comment'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
     <xs:element name='projects'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
                 <xs:element ref='defaults'/>
                 <xs:element ref='project'/>
+                <xs:element ref='comment'/>
             </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -25,6 +34,7 @@
                 <xs:element ref='tmpFile'/>
                 <xs:element ref='vars'/>
                 <xs:element ref='queries'/>
+                <xs:element ref='comment'/>
             </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -37,6 +47,7 @@
                 <xs:element ref='vars'/>
                 <xs:element ref='scenarioGroup'/>
                 <xs:element ref='queries'/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='subdir' type='xs:string'/>
@@ -45,9 +56,10 @@
 
     <xs:element name='scenarioGroup'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='scenario'/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref='scenario'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='default' type='xs:boolean' default='false'/>
             <xs:attribute name="useGroupDir" type='xs:boolean' default='false'/>
@@ -65,9 +77,10 @@
 
     <xs:element name='steps'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='step'/>
-            </xs:sequence>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='step'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
 
@@ -86,9 +99,10 @@
 
     <xs:element name='vars'>
         <xs:complexType>
-            <xs:sequence>
+            <xs:choice maxOccurs="unbounded">
                 <xs:element maxOccurs='unbounded' ref='var'/>
-            </xs:sequence>
+                <xs:element maxOccurs='unbounded' ref='comment'/>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
 
@@ -106,9 +120,10 @@
 
     <xs:element name='tmpFile'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='text'/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref='text'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='delete' type='xs:boolean' default="true"/>
             <xs:attribute name='eval' type='xs:boolean' default="true"/>
             <xs:attribute name='replace' type='xs:boolean' default="false"/>
@@ -130,9 +145,10 @@
 
     <xs:element name='queries'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='query'/>
-            </xs:sequence>
+            <xs:choice maxOccurs='unbounded' >
+                <xs:element ref='query'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='varName' use='required' type='xs:string'/>
             <xs:attribute name='defaultMap' type='xs:string'/>
             <xs:attribute name='delete' type='xs:boolean'/>
@@ -143,6 +159,7 @@
         <xs:complexType>
             <xs:choice minOccurs="0" maxOccurs='unbounded'>
                 <xs:element ref='rewriter'/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='useDefault' type='xs:boolean'/>

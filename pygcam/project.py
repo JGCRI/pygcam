@@ -19,8 +19,8 @@ from .config import getParam, getConfigDict, setParam
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
-from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath, simpleFormat,
-                    resourceStream, QueryResultsDir)
+from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
+                    simpleFormat, resourceStream, QueryResultsDir, XMLFile)
 
 __version__ = '0.2'
 
@@ -320,14 +320,18 @@ class Variable(SimpleVariable):
         return self.evaluate(argDict, value=result) if re.search('\{[^\}]+\}', result) else result
 
 
-class Project(object):
+class Project(XMLFile):
     """
     Represents the ``<project>`` element in the projects.xml file.
     """
-    def __init__(self, tree, projectName, groupName):
-        self.validateXML(tree)
-        self.projectName = projectName
+    def __init__(self, xmlFile, projectName, groupName):
 
+        schemaStream = resourceStream('etc/project-schema.xsd')
+
+        super(Project, self).__init__(xmlFile, schemaFile=schemaStream)
+
+        self.projectName = projectName
+        tree = self.tree
         projectNodes = tree.findall('project[@name="%s"]' % projectName)
 
         if len(projectNodes) == 0:
@@ -545,7 +549,7 @@ class Project(object):
         self.validateProjectArgs(scenarios, knownScenarios, 'scenarios')
         self.validateProjectArgs(steps,     knownSteps,     'steps')
 
-        quitProgram = args.quit
+        quitProgram = not args.noQuit
 
         scenarios = self.sortScenarios(scenarios)
 
@@ -602,7 +606,7 @@ class Project(object):
             print("  " + t.varName)
 
 
-def projectMain(args, tool, cmdClass=Project):
+def projectMain(args, tool):
     if not args.project:
         args.project = args.configSection or getParam('GCAM.DefaultProject')
 
@@ -620,8 +624,5 @@ def projectMain(args, tool, cmdClass=Project):
 
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
-    parser  = ET.XMLParser(remove_blank_text=True)
-    tree    = ET.parse(projectFile, parser)
-    project = cmdClass(tree, args.project, args.group)
-
+    project = Project(projectFile, args.project, args.group)
     project.run(scenarios, skipScens, steps, skipSteps, args, tool)

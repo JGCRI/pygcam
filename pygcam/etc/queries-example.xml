@@ -1,11 +1,21 @@
-<queries varName="queryXmlFile" defaultMap="eightRegions">
+<?xml version="1.0" encoding="UTF-8"?>
+
+<queries varName="queryXmlFile" defaultMap="eightRegions"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="queries-schema.xsd">
     <query name="land_cover">
-        <rewriter name="eightRegions"/>
+        <comment>
+            landCover is applied in addition to the default "eightRegions"
+        </comment>
         <rewriter name="landCover"/>
     </query>
 
-    <query name="Ag Production by Crop Type">
-        <rewriter name="eightRegions"/>
+    <query name="Ag Production by Crop Type" useDefault="0">
+        <!--
+            In this case, the default, "eightRegions" is not applied because
+            the "useDefault" attribute is set to "0" ("false" also works).
+        -->
+        <rewriter name="specialRegionMap"/>
         <rewriter name="biofuels" level="output"/>
     </query>
 

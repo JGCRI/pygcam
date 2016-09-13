@@ -9,19 +9,28 @@
         </xs:restriction>
     </xs:simpleType>
 
-	<xs:simpleType name="action">
+	<xs:simpleType name="comparison">
 		<xs:restriction base="xs:string">
-			<xs:enumeration value="insert"/>
-			<xs:enumeration value="replace"/>
-			<xs:enumeration value="delete"/>
+			<xs:enumeration value="is"/>
+			<xs:enumeration value="isNot"/>
         </xs:restriction>
     </xs:simpleType>
+
+
+    <xs:element name='comment'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
 
     <xs:element name='setup'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
                 <xs:element minOccurs="0" ref='iterator'/>
                 <xs:element ref='scenarioGroup'/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' type='xs:string'/>            <!-- unused currently -->
             <xs:attribute name='defaultGroup' type='xs:string'/>
@@ -46,9 +55,10 @@
 
     <xs:element name='scenarioGroup'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='scenario'/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref='scenario'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='useGroupDir' type='xs:boolean'/>
             <xs:attribute name='iterator' type='xs:string'/>
@@ -63,8 +73,9 @@
                 <xs:element minOccurs="0" ref='add'/>
                 <xs:element minOccurs="0" ref='replace'/>
                 <xs:element minOccurs="0" ref='delete'/>
-                <xs:element minOccurs="0" ref='generator'/>
                 <xs:element minOccurs="0" ref='function'/>
+                <xs:element minOccurs="0" ref='if'/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='baseline' type='xs:boolean'/>
@@ -78,6 +89,7 @@
             <xs:simpleContent>
                 <xs:extension base="xs:string">
                     <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='dynamic' type='xs:boolean'/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>
@@ -124,6 +136,24 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="if">
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element minOccurs="0" ref='insert'/>
+                <xs:element minOccurs="0" ref='add'/>
+                <xs:element minOccurs="0" ref='replace'/>
+                <xs:element minOccurs="0" ref='delete'/>
+                <xs:element minOccurs="0" ref='function'/>
+                <xs:element minOccurs="0" ref='if'/>        <!-- nested <if> blocks are allowed -->
+                <xs:element minOccurs="0" ref='comment'/>
+            </xs:choice>
+            <xs:attribute name='value1'  type='xs:string' use='required' />
+            <xs:attribute name='value2'  type='xs:string' use='required' />
+            <xs:attribute name='matches' type='xs:boolean' default="1"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!--
     <xs:element name='generator'>
         <xs:complexType>
             <xs:simpleContent>
@@ -133,4 +163,5 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    -->
 </xs:schema>

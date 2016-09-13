@@ -8,7 +8,7 @@ from .utils import XMLFile, getBooleanXML, resourceStream
 
 #
 # Classes to parse queryFiles and the <queries> element of project.xml
-# (see pygcam/etc/queryFile-schema.xsd). These are in a separate file
+# (see pygcam/etc/queries-schema.xsd). These are in a separate file
 # for sharing between query.py and project.py
 #
 class Query(object):
@@ -50,7 +50,7 @@ class QueryFile(object):
         :param filename: (str) the name of the XML file to read
         :return: a QueryFile instance.
         """
-        schemaStream = resourceStream('etc/queryFile-schema.xsd')
+        schemaStream = resourceStream('etc/queries-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream)
         return cls(xmlFile.tree.getroot())
 
