@@ -3,17 +3,15 @@ include LICENSE.txt
 include setup.py
 
 # Source code
-include bin/gcamtool.py
-include bin/gt.cmd
 include pygcam/*.py
+graft pygcam/builtins
 
 # Documentation source as well as generated html
 graft docs/source
-graft docs/build/html
 include docs/[mM]ake*
 
 # Test code
-graft pygcam/test
+graft pygcam/tests
 
 # Assorted data files
 graft pygcam/etc

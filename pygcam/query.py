@@ -11,7 +11,7 @@ import subprocess
 from lxml import etree as ET
 
 from .Xvfb import Xvfb
-from .config import getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean, getParamAsFloat
 from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
@@ -926,8 +926,9 @@ def queryMain(args):
     queryNames  = args.queryName
     noDelete    = args.noDelete
     prequery    = args.prequery
-    inMemory    = getParamAsBoolean('GCAM.InMemoryDatabase')
-    internalQueries = inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM')
+    version     = getParamAsFloat('GCAM.VersionNumber')
+    inMemory    = version > 4.2 and getParamAsBoolean('GCAM.InMemoryDatabase')
+    internalQueries = version > 4.2 and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
     batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
 
