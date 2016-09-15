@@ -522,6 +522,8 @@ class XMLEditor(object):
 
         return result
 
+    # TBD: should this operate instead on component name rather than path?
+    # TBD: advantage is not having to know where original file lives.
     def getLocalCopy(self, pathname):
         """
         Get the filename for the most local version (in terms of scenario hierarchy)

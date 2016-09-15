@@ -3,16 +3,11 @@ For code release
 
 Document
 --------
-- Release docs on ReadTheDocs.org
-
 - PPT slides for October
-
 - Assumptions behind setup code
 
 Cleanup
 -------
-- Post xsd files on bitbucket or github and reference them in the XML files?
-
 - Consolidate generic code from sectorEditors and xmlEditor
 
 Features
@@ -87,7 +82,6 @@ Bugs
   prior invocation, suggesting a need to re-initialize (class vars?) when
   called from top-level.
   - in any case, all the start-up stuff is rerun needlessly, currently
-
 
 
 Cleanup
