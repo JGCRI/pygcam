@@ -1,66 +1,39 @@
-from pygcam.config import getParam
+import os
+import pandas as pd
 from pygcam.log import getLogger
-from pygcam.xmlEditor import XMLEditor
+from pygcam.xmlEditor import XMLEditor, callableMethod
 
 _logger = getLogger(__name__)
 
-class Baseline(XMLEditor):
+class MyCustomClass(XMLEditor):
     '''
-    XML editing class for a baseline scenario
+    XML editing subclass to extend XML setup functionality
     '''
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, workspace, subdir):
-        scenario = None
-        super(Baseline, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                       workspace, subdir, parent=None)
+    @callableMethod
+    def updateEnergyCosts(self, startYear, endYear, techs=None):
+        """
+        Use updated non-energy-costs provided by Matteo.
+        """
+        techs = techs or ('oil refining', 'coal to liquids', 'gas to liquids',
+                          'corn ethanol', 'biodiesel', 'sugar cane ethanol',
+                          'cellulosic ethanol', 'FT biofuels')
 
-    def setup(self, args):
-        super(Baseline, self).setup(args)
+        _logger.debug('Updating energy costs for %s, %s-%s', techs, startYear, endYear)
 
-        # Call methods of XMLEditor to setup the baseline scenario
-        # Examples:
+        def getCost(df, tech):
+            query = 'technology=="%s" and year >= %d and year <= %d' % (tech, startYear, endYear)
+            df = df.query(query)
+            df.set_index('year', inplace=True)
+            costs = df['input.cost']
+            return costs
 
-        # Output GHG emissions annually rather than per time-step
-        # self.setClimateOutputInterval(1)
+        filename = os.path.join(self.xmlSourceDir, 'baseline', 'L222.GlobalTechCost_en-Modified.csv')
+        df = pd.read_csv(filename, skiprows=4)
 
-        # Drop default 90% land protection
-        # self.dropLandProtection()
-
-        # Adjust solver tolerance to reduce stringency
-        # self.setupSolver(solutionTolerance=0.01, broydenTolerance=0.001)
-
-
-class Policy(XMLEditor):
-    '''
-    XML editing class for policies that refer to the Baseline defined above.
-    '''
-    def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, subdir):
-        parent = Baseline(baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, subdir)
-        super(Policy, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                           refWorkspace, subdir, parent=parent)
-
-    def setup(self, args):
-        super(Policy, self).setup(args)
-
-        baseline = args.baseline
-        scenario = args.scenario
-        years = args.years
-        generate = not args.noGenerate
-        resultsDir = args.resultsDir or getParam('GCAM.SandboxDir')
-        dynamic = args.dynamic
-
-        # do stuff ...
-
-# Define ClassMap if the mapping from scenario name to
-# XML editing class is straightforward.
-ClassMap = {
-    'base'  : Baseline,
-    'scen1' : Policy,
-    'scen2' : Policy,
-}
-
-# Alternatively define a scenarioMapper function to compute
-# class names based on scenario names.
-#
-# def scenarioMapper(scenario):
-#     return ClassMap[scenario]
+        for tech in techs:
+            # The three fossil technologies are in their own subsectors of the
+            # same name. The rest are biomass liquids.
+            subSector = tech if tech in ['oil refining', 'coal to liquids', 'gas to liquids'] else 'biomass liquids'
+            costs = getCost(df, tech)
+            self.setGlobalTechNonEnergyCost('refining', subSector, tech, costs)
 
