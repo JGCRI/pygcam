@@ -55,9 +55,11 @@ def driver(args, tool):
         open(name, 'a').close() # append just in case it exists already
 
     # Copy scenarios.py template to serve as a starting point
-    dst = 'xmlsrc/scenarios.py'
+    name = 'scenarios-example.py'
+    src = os.path.join('etc', name)
+    dst = os.path.join('xmlsrc', name)
     _logger.debug('Creating %s/%s', projectDir, dst)
-    copyResource('etc/scenarios-template.py', dst, overwrite=overwrite)
+    copyResource(src, dst, overwrite=overwrite)
 
     # Provide example XML files. Can't use glob module since these might be installed in a tar file (egg)
     xmlFilesToCopy = ['project', 'protection', 'queries', 'rewriteSets', 'scenarios']
