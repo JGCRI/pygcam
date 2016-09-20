@@ -1,65 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Example of XML setup "script"
 
-     The iterators are used to expand the scenarioGroup and scenario
-     elements that reference them, and the top-level run method
-     executes the steps defined here for the given group and scenario.
--->
-
+<!-- Example of XML setup for "simple" tutorial project -->
 <setup name="uniqueName" defaultGroup="protect-0.0"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
 
-    <!-- Results in the set {'0.0', '0.2', '0.4', '0.6', '0.8', '1.0'} -->
-    <iterator name="fraction" type="float" min="0.0" max="1.0" step="0.2" format="%.1f"/>
-
-    <!-- step="1" is default for int type. Yields {'1', '2', '3', '4', '5'} -->
-    <iterator name="sspnum" type="int" min="1" max="5"/>
-
-    <iterator name="letter" type="list" values="a,b ,c "/>
+    <iterator name="fraction" type="list" values="0, 0.90"/>
+    <iterator name="policy"   type="list" values="corn,switchgrass,biodiesel"/>
 
     <scenarioGroup name="protect-{fraction}" useGroupDir="0" iterator="fraction">
 
-        <scenario name="base-{fraction}-ssp-{sspnum}" baseline="1" iterator="sspnum">
+        <scenario name="base-{fraction}" baseline="1">
+            <!-- N.B. configuration_ref.xml protects 90% of unmanaged land -->
+            <if value1="{fraction}" value2="0" matches="true">
+                <!-- Delete scenario elements in the file by their "name" tag -->
+                <delete name="protected_land_input_2"/>
+                <delete name="protected_land_input_3"/>
+            </if>
+
+            <!--
+            Set baseline fuel quantities
+
+            "addMarketConstraint" adds references to a pair of files comprising a policy,
+            i.e., a policy definition file and a constraint file. References to two files
+            are added to the configuration file: the files are assumed  to be named, e.g.,
+            "corn-etoh-subsidy.xml" and "corn-etoh-subsidy-constraint.xml" for a "subsidy"
+            policy named "corn-etoh"
+            -->
+            <function name="addMarketConstraint">'base-corn',         'subsidy'</function>
+            <function name="addMarketConstraint">'base-switchgrass',  'subsidy'</function>
+            <function name="addMarketConstraint">'base-biodiesel',    'subsidy'</function>
+        </scenario>
+
+        <scenario name="{policy}-{fraction}" iterator="policy">
             <!--
              <function> allows certain methods of the XMLEditor class to be called
              by passing comma-separated arguments in the text, just as they would
              be written inside the parentheses of a function call
              -->
-            <function name="setClimateOutputInterval">2</function>
-
-            <!-- Delete scenario elements in the file by their "name" tag -->
-            <delete name="protected_land_input_2"/>
-            <delete name="protected_land_input_3"/>
-
-            <if value1="{fraction}" value2="0.0" matches="false">
-                # do this only for non-zero fractions
-                <function name="protectLand">{fraction}, otherArable=False, unprotectFirst=True</function>
-            </if>
-
-            <!--
-            The variable {scenarioDir} is defined dynamically to be a relative path (from
-            the "exe" directory, where GCAM is run) to the scenario's dir under local-xml.
-            -->
-            <replace name="cement_2">{scenarioDir}/cement_incelas_ssp{sspnum}.xml</replace>
-            <replace name="industry_2">{scenarioDir}/industry_incelas_ssp{sspnum}.xml</replace>
-            <replace name="socioeconomics_2">{scenarioDir}/socioeconomics_ssp{sspnum}.xml</replace>
-
-            <!-- Replace standard file with modified version -->
-            <replace name="transportation">{scenarioDir}/transportation_custom.xml</replace>
-
-            <!-- add these new files at the end -->
-            <add name="custom1">{scenarioDir}/someCustomFile.xml</add>
-            <add name="custom2">{scenarioDir}/otherCustomFIle.xml</add>
+            <function name="delMarketConstraint">'base-{policy}', 'subsidy'</function>
+            <function name="addMarketConstraint">'shock-{policy}', 'subsidy'</function>
         </scenario>
 
-        <scenario name="corn-{fraction}-ssp-{sspnum}" iterator="sspnum">
-            <!-- <insert> adds an element after the element with the given name  -->
-            <insert name="whatever" after="cement_2">{scenarioDir}/corn-specific-file.xml</insert>
-        </scenario>
-
-        <scenario name="foo-{fraction}-{letter}" iterator="letter">
-            <insert name="something" after="cement_2">{scenarioDir}/foo-bar-baz.xml</insert>
-        </scenario>
     </scenarioGroup>
 </setup>

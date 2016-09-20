@@ -55,11 +55,14 @@ def _getCommentedDefaults(systemDefaults):
     result += p.sub(comment, systemDefaults)
 
     # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
-    result += "\n# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
+    result += "\n# For up-to-date documentation of configuration variables, see the\n"
+    result += "# listing at the end of https://pygcam.readthedocs.io/en/latest/config.html\n\n"
+    result += "# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
     result += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
     result += "# Location of ModelInterface jar file\n# GCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
     result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
     result += "# Editor command to invoke by 'gt config -e'\n# GCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
+
 
     if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n'
         result = result.replace(r'\n', '\r\n')

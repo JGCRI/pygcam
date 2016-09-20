@@ -169,7 +169,7 @@ class Iterator(object):
         self.name = node.get('name')
         self.min  = self.max = self.step = self.values = self.format = None
 
-        typeName  = node.get('type')
+        typeName  = node.get('type', 'list')
         isNumeric = typeName in ('int', 'float')
         self.type = iterType = eval(typeName)   # N.B. schema ensures numeric values
 
@@ -442,6 +442,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
             self.parentConfigPath = None
             self.mcsMode = mcsMode          # save this from command-line for use in subclasses
+            self.mcsValues = None
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
@@ -534,6 +535,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             filename = getParam('GCAM.ScenarioSetupOutputFile')
             if filename:
+                _logger.debug('Writing "%s"', filename)
                 with open(filename, 'w') as stream:
                     scenarioSetup.writeXML(stream)
 

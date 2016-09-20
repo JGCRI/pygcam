@@ -567,7 +567,7 @@ class Project(XMLFile):
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
             argDict['sandboxDir']     = sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
             # was: unixPath(join(sandboxRoot, projectName, groupDir), rmFinalSlash=True), but now set in config
-            argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, scenarioName))
+            argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, groupDir, scenarioName))
             argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
             argDict['batchDir']       = unixPath(join(scenarioDir, QueryResultsDir))     # used to be batch-{scenario}
 

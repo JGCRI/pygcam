@@ -748,6 +748,7 @@ class XMLEditor(object):
         addOrUpdate(policyTag, policyXML)
         addOrUpdate(constraintTag, constraintXML)
 
+    @callableMethod
     def delMarketConstraint(self, target, policy):
         """
         Delete the two elements defining a market constraint from the configuration file. The filenames
@@ -774,6 +775,7 @@ class XMLEditor(object):
             self.deleteScenarioComponent(policyTag)
             self.deleteScenarioComponent(constraintTag)
 
+    @callableMethod
     def setStopPeriod(self, yearOrPeriod):
         """
         Sets the model stop period. If `stopPeriod` is <= 22, the stop period is set to
