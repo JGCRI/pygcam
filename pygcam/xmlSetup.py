@@ -497,7 +497,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             self.groupName = args.group
             scenarioSetup = self.scenarioSetup
 
-            # TBD: This is convoluted, but may be needed for cases like FCIP, if based on FuelShock
+            # TBD: This is convoluted, but may be needed for cases like FCIP, whose baseline builds on FuelShock
             if not self.parent:
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this
@@ -525,7 +525,6 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             super(XmlEditorSubclass, self).setupStatic(args)
 
-            # TBD: could be moved to XmlEditorSubclass since depends on mcsMode
             # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
             # to be found in the config file to be able to apply distributions to the values.
             if self.mcsMode and not self.parent:

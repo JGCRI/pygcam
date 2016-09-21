@@ -520,15 +520,11 @@ class Project(XMLFile):
 
         self.argDict = argDict = Variable.getDict()
 
-        # Add standard variables from project XML file itself
+        # Add standard variables for use in step command substitutions
         argDict['project']       = projectName
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = scenarioGroupName
-
-        # argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
-        # argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
-
         argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   groupDir, subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir, subdir), rmFinalSlash=True)
 
@@ -560,17 +556,15 @@ class Project(XMLFile):
                 _logger.debug("Skipping inactive scenario: %s", scenarioName)
                 continue
 
-            sandboxRoot = argDict['GCAM.SandboxRoot']
-
             # These get reset as each scenario is processed
             argDict['scenario']       = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
             argDict['sandboxDir']     = sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
-            # was: unixPath(join(sandboxRoot, projectName, groupDir), rmFinalSlash=True), but now set in config
-            argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, groupDir, scenarioName))
+            argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, scenarioName))
             argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
             argDict['batchDir']       = unixPath(join(scenarioDir, QueryResultsDir))     # used to be batch-{scenario}
 
+            # set in case it wasn't already
             setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
