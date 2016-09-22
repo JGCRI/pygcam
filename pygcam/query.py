@@ -510,6 +510,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         csvFile = csvFile.replace(' ', '_')             # eliminate spaces for convenience
 
     outputDir = outputDir or getParam('GCAM.OutputDir')
+    mkdirs(outputDir)
     csvPath = os.path.abspath(os.path.join(outputDir, csvFile))
 
     batchCommand = BatchCommandElement.format(scenario=scenario, queryFile=queryFile,
