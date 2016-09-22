@@ -245,6 +245,7 @@ class XMLEditor(object):
         self.refWorkspace = refWorkspace
         self.xmlSourceDir = xmlSourceDir
         self.parent = parent
+        self.mcsMode = None
 
         self.setupArgs = None
 

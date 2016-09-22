@@ -9,13 +9,14 @@ Document
 Cleanup
 -------
 - Consolidate generic code from sectorEditors and xmlEditor
+- Consolidate mcs/scenarios.xml, etc/scenarios.xml and scenarios in project.xml
 
 Features
 --------
 - Provide a way to run a query with different rewrites to produce different
   csv files.
 
-- Have "gt new" copy a file structure as coremcs does
+- Have "gt new" copy a file structure as coremcs does?
   - Config var defaults to this structure
   - User can copy this template, modify it, point to it
   - Admin can set up custom structure for a project team and use that instead
@@ -217,6 +218,43 @@ MCS Cleanup
 
 - Optionally Use delta method from SALib instead of the CB method.
 - Incorporate SALib sampling as alternative. (Or just use external input files)
+
+Migration to worker model
+-------------------------
+- Can be even simpler than jug given that we have a database available
+- Bust out gensim loop innards to run this in separate worker processes
+    - Have gensim just write a csv file with trial data
+        - each worker reads their own row and generates XML as needed
+    - need to normalize column-names somehow
+        - if independent vars, colname[index] ?
+- Each worker finds next available run, runs it, repeats until no more
+- Batch a script like the following, where the # workers depends on config var:
+    for i in {1..$x}
+    do
+        runWorker &
+    done
+    wait    # waits for all children to complete
+
+- Easier than python method below
+
+    procs = []
+
+    # check for exited children on signal
+    def reap():
+        for proc in procs:
+            if proc.poll():
+               procs.remove(proc)
+               del proc # to avoid zombies
+
+    signal(signal.SIGCHLD, reap)
+
+    for i in range(count):
+        proc = Popen('runworker')
+        procs.append(proc)
+
+    while procs:
+        sleep(60)
+
 
 MCS docs
 --------

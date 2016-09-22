@@ -224,7 +224,7 @@ class ScenarioGroup(object):
         try:
             return self.finalDict[name]
         except KeyError:
-            raise PygcamException('Scenario "%s" was not found in group "%s"' % (self.name, name))
+            raise PygcamException('Scenario "%s" was not found in group "%s"' % (name, self.name))
 
     def expandScenarios(self, scenarioSetup, templateDict):
         # Replace the text context in all action elements with expanded version
@@ -409,7 +409,7 @@ class If(ConfigActionBase):
 
 MCSVALUES_FILE = 'mcsValues.xml'
 
-def createXmlEditorSubclass(setupFile, mcsMode=None):
+def createXmlEditorSubclass(setupFile):
     """
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
@@ -441,7 +441,6 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
     class XmlEditorSubclass(superclass):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
             self.parentConfigPath = None
-            self.mcsMode = mcsMode          # save this from command-line for use in subclasses
             self.mcsValues = None
 
             # if not a baseline, create a baseline instance as our parent
@@ -470,7 +469,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             super(XmlEditorSubclass, self).setupDynamic(args)
 
-            if self.mcsMode:
+            if self.mcsMode == 'trial':             # TBD: was just "if self.mcsMode" -- test this
                 from pygcam.utils import McsValues
                 paramFile = self.paramFile
                 if paramFile and os.path.lexists(paramFile):
@@ -527,7 +526,9 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
             # to be found in the config file to be able to apply distributions to the values.
-            if self.mcsMode and not self.parent:
+            # TBD: was if self.mcsMode and not self.parent:
+            mcsValuesPath = os.path.join(self.scenario_dir_abs, MCSVALUES_FILE)
+            if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
                 self.addScenarioComponent('mcsValues', os.path.join(self.scenario_dir_rel, MCSVALUES_FILE))
 
             scenarioSetup.run(self, directoryDict, dynamic=False)

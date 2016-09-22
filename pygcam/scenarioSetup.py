@@ -175,7 +175,8 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
     :param mcsMode: (bool) perform setup appropriate for gcammcs trials.
     :return: none
     '''
-    srcWorkspace = srcWorkspace or getParam('GCAM.SandboxRefWorkspace')
+    if not srcWorkspace:
+        srcWorkspace = getParam('GCAM.RefWorkspace') if mcsMode == 'gensim' else getParam('GCAM.SandboxRefWorkspace')
 
     # MCS "new" sub-command creates its ref workspace; for non-MCS
     # we do it on demand, i.e., if it doesn't exist already.

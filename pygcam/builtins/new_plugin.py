@@ -8,6 +8,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from datetime import datetime
+import re
 
 from ..subcommand import SubcommandABC
 from ..log import getLogger
@@ -19,13 +20,14 @@ def driver(args, tool):
     import os
     import shutil
     from ..config import getParam, USR_CONFIG_FILE
-    from ..utils import mkdirs, copyResource
+    from ..utils import mkdirs, copyResource, getResource, removeFileOrTree
     from ..error import CommandlineError
+
+    pathjoin = os.path.join
 
     projectName = args.name
     projectRoot = args.root or getParam('GCAM.ProjectRoot')
-    projectDir  = os.path.join(projectRoot, projectName)
-
+    projectDir  = pathjoin(projectRoot, projectName)
     overwrite   = args.overwrite
 
     try:
@@ -35,6 +37,9 @@ def driver(args, tool):
 
     try:
         os.mkdir(projectDir)
+    except OSError as e:
+        if e.errno == 17:   # already exists; ignore
+            pass
     except Exception as e:
         raise CommandlineError("Can't create to '%s': %s" % (projectDir, e))
 
@@ -54,27 +59,43 @@ def driver(args, tool):
         _logger.debug('Creating %s/%s', projectDir, name)
         open(name, 'a').close() # append just in case it exists already
 
-    # Copy scenarios.py template to serve as a starting point
-    name = 'scenarios-example.py'
-    src = os.path.join('etc', name)
-    dst = os.path.join('xmlsrc', name)
-    _logger.debug('Creating %s/%s', projectDir, dst)
-    copyResource(src, dst, overwrite=overwrite)
+    exampleDir = pathjoin('etc', 'examples')
+    projectEtc = pathjoin(projectDir, 'etc')
 
-    # Provide example XML files. Can't use glob module since these might be installed in a tar file (egg)
-    xmlFilesToCopy = ['project', 'protection', 'queries', 'rewriteSets', 'scenarios']
-    for name in xmlFilesToCopy:
-        path = 'etc/%s-example.xml' % name       # e.g., pygcam/etc/project-example.xml
-        _logger.debug('Creating %s/%s', projectDir, dst)
-        copyResource(path, path, overwrite=overwrite)
+    # # Copy scenarios.py template to serve as a starting point
+    # name = 'scenarios.py'
+    # src = pathjoin(exampleDir, name)
+    # dst = pathjoin('xmlsrc', name)
+    # _logger.debug('Creating %s/%s', projectDir, dst)
+    # copyResource(src, dst, overwrite=overwrite)
 
-    instructions = 'etc/Instructions.txt'
-    copyResource(instructions, instructions, overwrite=overwrite)
+    # Provide example XML files and instructions. We can't use the glob
+    # module since these might need to be extracted from a tar/egg file.
+    filesToCopy = ['project.xml', 'protection.xml', 'queries.xml',
+                   'rewriteSets.xml', 'scenarios.xml',
+                   'Instructions.txt']
+
+    for filename in filesToCopy:
+        src = pathjoin(exampleDir, filename)
+        dst = pathjoin(projectEtc, filename)
+        _logger.debug('Creating %s', dst)
+
+        if filename == 'project.xml':
+            # For project.xml, we change the project name to the name given by user
+            if not overwrite and os.path.lexists(dst):
+                raise CommandlineError("Refusing to overwrite '%s'" % os.path.abspath(dst))
+
+            oldText = getResource(src)
+            newText = re.sub('<project name="(\w*)">', '<project name="%s">' % projectName, oldText)
+            with open(dst, 'w') as fp:
+                fp.write(newText)
+        else:
+            copyResource(src, dst, overwrite=overwrite)
 
     if args.addToConfig:
         _logger.debug('Adding [%s] to %s', projectName, USR_CONFIG_FILE)
 
-        cfgFile = os.path.join(getParam('Home'), USR_CONFIG_FILE)
+        cfgFile = pathjoin(getParam('Home'), USR_CONFIG_FILE)
 
         # Create backup copy of config file
         shutil.copyfile(cfgFile, cfgFile + '~')
@@ -88,9 +109,8 @@ def driver(args, tool):
             f.write('\n[%s]\n' % projectName)
             f.write('# Added by "new" sub-command %s\n' % datetime.now().ctime())
             f.write('GCAM.ProjectDir = %s\n' % dirName)
-            f.write('#GCAM.LandProtectionXmlFile = %(GCAM.ProjectDir)s/etc/protection.xml\n')
-            f.write('#GCAM.RewriteSetsFile       = %(GCAM.ProjectDir)s/etc/rewriteSets.xml\n')
-            f.write('#GCAM.ScenarioSetupFile     = %(GCAM.ProjectDir)s/etc/scenarios.xml\n')
+            f.write('GCAM.ScenarioSetupFile = %(GCAM.ProjectDir)s/etc/scenarios.xml\n')
+            f.write('GCAM.RewriteSetsFile   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml\n')
 
 
 class NewProjectCommand(SubcommandABC):

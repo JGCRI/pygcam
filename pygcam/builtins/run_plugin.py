@@ -23,6 +23,9 @@ class ProjectCommand(SubcommandABC):
 
     def addArgs(self, parser):
 
+        parser.add_argument('-a', '--allGroups', action='store_true',
+                            help='''Run all scenarios for all defined groups.''')
+
         parser.add_argument('-f', '--projectFile',
                             help='''The XML file describing the project. If set, command-line
                             argument takes precedence. Otherwise, value is taken from config file

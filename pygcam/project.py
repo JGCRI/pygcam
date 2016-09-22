@@ -324,7 +324,7 @@ class Project(XMLFile):
     """
     Represents the ``<project>`` element in the projects.xml file.
     """
-    def __init__(self, xmlFile, projectName, groupName):
+    def __init__(self, xmlFile, projectName, groupName=None):
 
         schemaStream = resourceStream('etc/project-schema.xsd')
 
@@ -347,19 +347,10 @@ class Project(XMLFile):
         defaultsNode = tree.find('defaults')   # returns 1st match
         hasDefaults = defaultsNode is not None
 
-        scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
+        self.scenarioGroups = scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
         self.scenarioGroupDict = groupDict = {group.name : group for group in scenarioGroups}
-        if not groupName:
-            defaultGroup = getDefaultGroup(scenarioGroups)
-            groupName = defaultGroup.name
 
-        if groupName not in groupDict:
-            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, projectName))
-
-        self.scenarioGroupName = groupName
-        self.scenarioGroup = scenarioGroup = groupDict[groupName]
-        self.baselineName  = scenarioGroup.baseline
-        self.scenarioDict  = scenarioGroup.scenarioDict
+        self.setGroup(groupName)    # if None, default group is set
 
         dfltSteps = map(Step, defaultsNode.findall('./steps/step')) if hasDefaults else []
         projSteps = map(Step, projectNode.findall('./steps/step'))
@@ -400,6 +391,23 @@ class Project(XMLFile):
             schema.assertValid(doc)
         else:
             return schema.validate(doc)
+
+    def setGroup(self, groupName=None):
+        if not groupName:
+            defaultGroup = getDefaultGroup(self.scenarioGroups)
+            groupName = defaultGroup.name
+
+        groupDict = self.scenarioGroupDict
+
+        if groupName not in groupDict:
+            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, self.projectName))
+
+        self.scenarioGroupName = groupName
+        self.scenarioGroup = scenarioGroup = groupDict[groupName]
+        self.baselineName  = scenarioGroup.baseline
+        self.scenarioDict  = scenarioGroup.scenarioDict
+
+        return self.scenarioGroup
 
     def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
         '''
@@ -619,4 +627,9 @@ def projectMain(args, tool):
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
     project = Project(projectFile, args.project, args.group)
-    project.run(scenarios, skipScens, steps, skipSteps, args, tool)
+
+    groups = project.getKnownGroups() if args.allGroups else [args.group]
+
+    for group in groups:
+        project.setGroup(group)
+        project.run(scenarios, skipScens, steps, skipSteps, args, tool)

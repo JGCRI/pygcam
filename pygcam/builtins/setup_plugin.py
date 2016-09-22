@@ -86,7 +86,7 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-X', '--xmlOutputRoot',
                             help='''The root directory into which to generate XML files.''')
 
-        parser.add_argument('-w', '--workspace',
+        parser.add_argument('-w', '--workspace', # i.e., sandbox
                             help='''The pathname of the workspace to operate on.''')
 
         # Deprecated or pass to scenario?
@@ -121,6 +121,7 @@ class SetupCommand(SubcommandABC):
 
         mcsMode = tool.getMcsMode()
         forceCreate = args.forceCreate or bool(mcsMode)
+
         if not mcsMode or mcsMode == 'trial':
             createSandbox(workspace, srcWorkspace=args.refWorkspace, forceCreate=forceCreate, mcsMode=mcsMode)
 
@@ -131,7 +132,7 @@ class SetupCommand(SubcommandABC):
         if setupXml:
             from ..xmlSetup import createXmlEditorSubclass
             _logger.debug('Setup using %s, mcsMode=%s', setupXml, mcsMode)
-            scenClass = createXmlEditorSubclass(setupXml, mcsMode=mcsMode)
+            scenClass = createXmlEditorSubclass(setupXml)
 
         else:
             # If neither is defined, we assume a custom scenarios.py file is used
@@ -177,4 +178,5 @@ class SetupCommand(SubcommandABC):
         obj = scenClass(args.baseline, args.scenario, xmlOutputRoot,
                         xmlSourceDir, refWorkspace, groupName, subdir)
 
+        obj.mcsMode = mcsMode
         obj.setup(args)

@@ -551,6 +551,9 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         if isinstance(obj, Query):      # handle Query instances and simple query name strings
             queryName = obj.name
             rewriters = obj.rewriters
+
+            if not rewriteParser:
+                raise PygcamException("No rewriteParser defined. Pass filename as argument to query sub-command or define GCAM.RewriteSetsFile")
         else:
             queryName = obj
             rewriters = None
