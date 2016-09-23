@@ -56,7 +56,7 @@ def _writeBatchScript(args, delete=False):
     tmpDir = getParam('GCAM.UserTempDir')
     mkdirs(tmpDir)
 
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=False)
+    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
     _logger.info("Creating batch script '%s'", scriptFile)
 
     with open(scriptFile, 'w') as f:
