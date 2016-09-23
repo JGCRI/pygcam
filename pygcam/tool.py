@@ -331,7 +331,8 @@ class GcamTool(object):
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
-        scriptFile = _writeBatchScript(shellArgs, delete=not run)    # delete it if just showing cmd
+        #scriptFile = _writeBatchScript(shellArgs, delete=not run)    # delete it if just showing cmd
+        scriptFile = _writeBatchScript(shellArgs, delete=True)
 
         args = self.parser.parse_args(args=shellArgs)
         jobName   = args.jobName

@@ -503,7 +503,8 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
                                        outputDir=outputDir, tmpFiles=tmpFiles, delete=delete)
 
     if not queryFile:
-        raise PygcamException("_createBatchCommand: file for query '%s' was not found." % basename)
+        raise PygcamException("_createBatchCommand: file for query '%s' was not found in '%s'." % \
+                              (basename, queryPath))
 
     if not csvFile:
         csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
