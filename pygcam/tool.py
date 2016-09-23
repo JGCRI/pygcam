@@ -35,7 +35,7 @@ from .windows import IsWindows
 _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
-__version__ = '0.1'
+__version__ = '1a4'
 
 BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
                       NewProjectCommand, ProtectLandCommand, QueryCommand,
