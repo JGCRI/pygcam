@@ -71,9 +71,8 @@ def driver(args, tool):
 
     # Provide example XML files and instructions. We can't use the glob
     # module since these might need to be extracted from a tar/egg file.
-    filesToCopy = ['project.xml', 'protection.xml', 'queries.xml',
-                   'rewriteSets.xml', 'scenarios.xml',
-                   'Instructions.txt']
+    filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml',
+                   'scenarios.xml', 'Instructions.txt']
 
     for filename in filesToCopy:
         src = pathjoin(exampleDir, filename)

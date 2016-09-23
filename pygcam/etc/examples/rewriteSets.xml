@@ -2,19 +2,19 @@
 <rewriteSets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			 xsi:noNamespaceSchemaLocation="rewriteSets-schema.xsd">
 
-	<rewriteSet name="liquidFuels" level="technology" append-values="true">
+	<rewriteSet name="liquidFuels" level="technology" append-values="false">
 		<rewrite from="cellulosic ethanol" to="Cellulosic ethanol"/>
 		<rewrite from="corn ethanol" to="Corn ethanol"/>
 		<rewrite from="sugar cane ethanol" to="Sugar cane ethanol"/>
-		<rewrite from="cellulosic ethanol CCS Level 1" to="Cellulosic ethanol"/>
-		<rewrite from="cellulosic ethanol CCS Level 2" to="Cellulosic ethanol"/>
+		<rewrite from="cellulosic ethanol CCS level 1" to="Cellulosic ethanol"/>
+		<rewrite from="cellulosic ethanol CCS level 2" to="Cellulosic ethanol"/>
 		<rewrite from="FT biofuels" to="FT biofuels"/>
 		<rewrite from="biodiesel" to="Oilcrop biodiesel"/>
-		<rewrite from="FT biofuels CCS Level 1" to="FT biofuels"/>
-		<rewrite from="FT biofuels CCS Level 2" to="FT biofuels"/>
+		<rewrite from="FT biofuels CCS level 1" to="FT biofuels"/>
+		<rewrite from="FT biofuels CCS level 2" to="FT biofuels"/>
 		<rewrite from="coal to liquids" to=""/>
-		<rewrite from="coal to liquids CCS Level 1" to=""/>
-		<rewrite from="coal to liquids CCS Level 2" to=""/>
+		<rewrite from="coal to liquids CCS level 1" to=""/>
+		<rewrite from="coal to liquids CCS level 2" to=""/>
 		<rewrite from="crude oil refining" to=""/>
 		<rewrite from="oil refining" to=""/>
 		<rewrite from="gas to liquids" to=""/>
@@ -85,6 +85,7 @@
 		<rewrite from="Forest" to="Forest (managed)"/>
 		<rewrite from="Grassland" to="Grass"/>
 		<rewrite from="Jatropha" to="Cropland"/>
+		<rewrite from="miscanthus" to="Biomass"/>
 		<rewrite from="MiscCrop" to="Cropland"/>
 		<rewrite from="OilCrop" to="Cropland"/>
 		<rewrite from="OtherArableLand" to="Cropland"/>

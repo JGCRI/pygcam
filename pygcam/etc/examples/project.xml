@@ -40,15 +40,16 @@ This file defines one or more "projects" that are run using the runProjects.py s
 		</steps>
 
 		<!-- Queries to run, including rewrites to perform on results -->
-		<queries varName="queryXmlFile" defaultMap="eightRegions">
+		<queries varName="queryXmlFile">
 			<query name="Land_Allocation">
 				<rewriter name="landCover"/>
+				<rewriter name="eightRegions"/>
 			</query>
-			<query name="Refined-liquids-production-by-technology" useDefault="0">
+			<query name="Refined-liquids-production-by-technology">
 				<rewriter name="liquidFuels"/>
 			</query>
 			<query name="Climate_forcing"/>
-			<query name="Global_mean_temperature" useDefault="0"/>
+			<query name="Global_mean_temperature"/>
 		</queries>
 
 		<vars>
@@ -71,26 +72,12 @@ This file defines one or more "projects" that are run using the runProjects.py s
 			<text>Refined-liquids-production-by-technology-{scenario}-{reference}.csv -x USA.png --region "USA" -c region -I technology -T '$\Delta$ Refined liquid fuels production (USA)' -n 3</text>
 
 			<!-- Land allocation -->
-			<text>Land_Allocation-{scenario}-{reference}.csv -Y 'hectares' -m kkm2_to_ha -n 3 -x by-region-2020.png -c land-allocation -I region -v 2020 --format=',' -T 'Area change (2020)'</text>
-			<text>Land_Allocation-{scenario}-{reference}.csv -Y 'hectares' -m kkm2_to_ha -n 3 -x by-region-2030.png -c land-allocation -I region -v 2030 --format=',' -T 'Area change (2030)'</text>
-			<text>Land_Allocation-{scenario}-{reference}.csv -Y 'hectares' -m kkm2_to_ha -n 3 -x by-region-2040.png -c land-allocation -I region -v 2040 --format=',' -T 'Area change (2040)'</text>
 			<text>Land_Allocation-{scenario}-{reference}.csv -Y 'hectares' -m kkm2_to_ha -n 3 -x by-region-2050.png -c land-allocation -I region -v 2050 --format=',' -T 'Area change (2050)'</text>
 
 			<!-- Forcing and temperature change -->
 			<text>Climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
 			<text>Global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
 		</tmpFile>
-
-		<comment>
-			<!-- Eliminate redundancy by allowing this -->
-			<scenarioSetupFile>xxxxx.xml</scenarioSetupFile>
-			of
-			<scenarioSetup>
-				<scenarioGroup name="foo">
-					<!-- etc -->
-				</scenarioGroup>
-			</scenarioSetup>
-		</comment>
 
 		<scenarioGroup name="protect-0" default="1">
 			<scenario name="base-0" baseline="1"/>
