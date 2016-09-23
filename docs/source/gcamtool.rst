@@ -134,6 +134,12 @@ Usage
       indicated by using the '-S' ('--sumYears') option. Numerous options allow the appearance to
       be customized.
 
+      You can perform on-the-fly unit conversions using the ``-m`` / ``--multiplier`` or
+      ``-V`` / ``--divisor`` arguments, which cause all values in "year columns" to be
+      multiplied or divided, respectively, by the values provided. Values can be specified
+      as numeric constants or using symbolic constants defined in the :doc:`pygcam.units`
+      module.
+
 
    config : @replace
       .. _config-label:
@@ -236,10 +242,9 @@ Usage
       identified by the config variable ``GCAM.ProjectRoot``.
 
       This sub-command creates examples of ``xmlsrc/scenarios.py``,
-      ``etc/protection.xml``, ``etc/project.xml``, ``etc/queries.xml``,
-      ``etc/rewriteSets.xml``, and ``etc/scenarioSetup.xml`` that can
-      be edited to fit the needs of your project. See the file ``Instructions.txt``
-      that is created in the new "etc" directory.
+      ``etc/protection.xml``, ``etc/project.xml``, ``etc/rewriteSets.xml``, and
+      ``etc/scenarios.xml`` that can be edited to fit the needs of your project.
+      The file ``etc/Instructions.txt`` is also created to provide further information.
 
       If the ``-c`` flag is given, a basic entry for the new project is added to the
       users configuration file, ``$HOME/.pygcam.cfg``. Before modifying the config file,
@@ -254,45 +259,16 @@ Usage
       .. code-block:: cfg
 
          [foo]
-         # Added by "new" sub-command Mon Aug 29 15:00:19 2016
-         GCAM.ProjectDir = %(GCAM.ProjectRoot)s/foo
-         #GCAM.LandProtectionXmlFile = %(GCAM.ProjectDir)s/etc/protection.xml
-         #GCAM.RewriteSetsFile       = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
-         #GCAM.ScenarioSetupFile     = %(GCAM.ProjectDir)s/etc/scenarios.xml
+         # Added by "new" sub-command Thu Sep 22 14:30:29 2016
+         GCAM.ProjectDir        = %(GCAM.ProjectRoot)s/foo
+         GCAM.ScenarioSetupFile = %(GCAM.ProjectDir)s/etc/scenarios.xml
+         GCAM.RewriteSetsFile   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
 
-      **Variables controlling linking vs copying**
-
-      Several configuration variables control which files are copied versus linked (on systems
-      on which the user has the ability to create symlinks; if not all files are copied):
-
-      ``GCAM.WorkspaceFilesToCopy``
-         A list of paths relative to GCAM.RefWorkspace that should be copied to the same
-         relative location under {GCAM.SandboxDir}/Workspace.
-
-      ``GCAM.WorkspaceFilesToLink``
-         A list of paths relative to GCAM.RefWorkspace that should be symlinked to same
-         relative location under {GCAM.SandboxDir}/Workspace.
-
-      ``GCAM.SandboxFilesToCopy``
-         A list of paths relative to {GCAM.SandboxDir}/Workspace that should be copied
-         to the same relative location in the current scenario directory.
-
-      ``GCAM.SandboxFilesToLink``
-         A list of paths relative to {GCAM.SandboxDir}/Workspace that should be symlinked
-         to the same relative location in the current scenario directory.
-
-      ``GCAM.OtherFilesToCopy``
-         This variable is provided to allow the user to specify additional files to copy.
-         Its value is appended to both GCAM.WorkspaceFilesToCopy and GCAM.SandboxFilesToCopy.
-
-      ``GCAM.OtherFilesToLink``
-         This variable is provided to allow the user to specify additional files to symlink.
-         Its value is appended to both GCAM.WorkspaceFilesToLink and GCAM.SandboxFilesToLink.
-
-      Note that when running on Windows, if pygcam detects that the user does not
-      have permission to create symlinks, it sets the configuration variable ``GCAM.CopyAllFiles``
-      to ``True``, resulting in copies of the reference files rather than symbolic links.
-
+      The example project defines two scenario groups, consisting of a baseline
+      and 4 carbon tax scenarios. In one group, 90% of unmanaged land is protected
+      (i.e., removed from consideration), as in the reference GCAM scenario. In the
+      other scenario group, this protection is not performed, so all land is
+      considered available for use.
 
 
    protect : @replace

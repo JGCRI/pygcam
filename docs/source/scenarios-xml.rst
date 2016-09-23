@@ -414,7 +414,9 @@ blocks are functionally equivalent:
 
 Example
 ^^^^^^^^
-This is an example of a scenarios.xml file.
+The following is the scenarios.xml file that is copied into new projects
+by the :ref:`new <new-label>` sub-command. It serves as a starting point
+and for testing that the overall pygcam environment is configured properly.
 
-.. literalinclude:: ../../pygcam/etc/scenarios-example.xml
+.. literalinclude:: ../../pygcam/etc/examples/scenarios.xml
    :language: xml

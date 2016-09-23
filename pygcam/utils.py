@@ -62,6 +62,7 @@ def pushd(directory):
     """
     Context manager that changes to the given directory and then
     returns to the original directory. Usage is ``with pushd('/foo/bar'): ...``
+    
     :param directory: (str) a directory to chdir to temporarily
     :return: none
     """

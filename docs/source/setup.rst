@@ -105,6 +105,49 @@ The setup module provides functions that automate the manipulation of XML files,
       non-energy-cost, shutdown rate for specified technologies, residue supply curves,
       and more.
 
+Workspaces and Sandboxes
+-------------------------
+Pygcam creates two levels of GCAM workspaces. To distinguish them, the directory in
+which GCAM is run is referred to as a `sandbox`. The directory whose contents are
+copied and/or symlinked to create the sandbox is referred to as a `workspace`.
+
+To ensure that sets of related runs use the same reference workspace, the
+:ref:`setup <setup-label>` sub-command copies and/or symlinks files from the reference
+workspace (identified by config variable ``GCAM.RefWorkspace``) to a directory
+called ``Workspace`` in the sandbox directory. This directory is created only when
+it doesn't exist already, however you can force the directory to be recreated either
+by deleting it manually or via the :ref:`sandbox <sandbox-label>` sub-command.
+
+Depending on your project workflow (and on Windows, level of administrative privileges)
+you can choose to copy or symlink files and directories back to their source. This applies
+to both the run-time workspace created from the reference Workspace, and the sandboxes
+created from the run-time workspace.
+
+By default, the run-time workspace is created with a symlink to the reference workspace's
+``input`` directory, but the ``exe`` directory is copied.
+
+By default, sandboxes are created with symlinks to the run-time workspace's ``input``
+directory and the GCAM executable in the ``exe`` directory. The ``output`` directory
+and directories used by ``pygcam`` are created as needed.
+
+The following twoo variables control which files to symlink or copy. All required files and
+directories not named in these variables are copied. Note that if the config variable
+``GCAM.CopyAllFiles`` is set to ``True``, or on Windows, if the user does not have
+permission to create symlinks, all files are copied regardless of the settings of these
+variables.
+
+      ``GCAM.WorkspaceFilesToLink``
+         A list of paths relative to ``GCAM.RefWorkspace`` that should be symlinked to same
+         relative location under ``{GCAM.SandboxDir}/Workspace``.
+
+      ``GCAM.SandboxFilesToLink``
+         A list of paths relative to ``{GCAM.SandboxDir}/Workspace`` that should be symlinked
+         to the same relative location in the current sandbox directory.
+
+
+Design notes
+-------------
+
 Benefits
 ^^^^^^^^^
   * Automates and simplifies modification of XML files, which is less

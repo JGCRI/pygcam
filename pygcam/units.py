@@ -4,7 +4,22 @@
 # Pythonized from gcam-data-system/_common/assumptions/unit_conversions.R
 #
 
-# TBD: allow user to specify a module to add conversions
+'''
+This module includes a large number of pre-defined symbolic constants to
+support unit conversion. Values can be accessed, and additional values added,
+programmatically via this API.
+
+Use ``getUnits()`` to get the singleton instance of the ``UnitNamespace``
+class, and set values prior to use in, say, the API to the :doc:`pygcam.chart`
+module. For example,
+
+  .. code-block:: python
+
+     from pygcam.units import getUnits
+
+     u = getUnits()
+     u.NewConstant = 123.456
+'''
 
 from .error import PygcamException
 from .log import getLogger

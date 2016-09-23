@@ -194,7 +194,7 @@ class ChartCommand(SubcommandABC):
         group3.add_argument('-v', '--valueCol',
                             help='''Identify a single column (e.g., a year) to plot for bar plots.''')
 
-        group2.add_argument('-V', '--divisor', type=floatOrConversion, default=0.0,
+        group2.add_argument('-V', '--divisor', type=floatOrConversion,
                             help='''A value to divide year column values by before plotting. The argument can
                             be a floating point number or the name of any variable in pygcam.unitConversion.py.
                             See also -F.''')
