@@ -18,8 +18,8 @@ pathjoin = os.path.join
 
 # Files specific to different versions of GCAM
 _VersionSpecificFiles = {
-    '4.2' : ['exe/WriteLocalBaseXDb.class', 'libs/basex/BaseX.jar'],
-    '4.3' : ['exe/XMLDBDriver.jar'],
+    '4.2' : ['exe/WriteLocalBaseXDb.class', 'libs'],
+    '4.3' : ['exe/XMLDBDriver.jar', 'libs'],
 }
 
 _FilesToCopy = None
