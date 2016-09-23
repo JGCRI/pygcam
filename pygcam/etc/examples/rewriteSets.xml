@@ -12,13 +12,13 @@
 		<rewrite from="biodiesel" to="Oilcrop biodiesel"/>
 		<rewrite from="FT biofuels CCS level 1" to="FT biofuels"/>
 		<rewrite from="FT biofuels CCS level 2" to="FT biofuels"/>
-		<rewrite from="coal to liquids" to=""/>
-		<rewrite from="coal to liquids CCS level 1" to=""/>
-		<rewrite from="coal to liquids CCS level 2" to=""/>
-		<rewrite from="crude oil refining" to=""/>
-		<rewrite from="oil refining" to=""/>
-		<rewrite from="gas to liquids" to=""/>
-		<rewrite from="unconventional oil refining" to=""/>
+		<rewrite from="coal to liquids" to="CTL"/>
+		<rewrite from="coal to liquids CCS level 1" to="CTL"/>
+		<rewrite from="coal to liquids CCS level 2" to="CTL"/>
+		<rewrite from="crude oil refining" to="Oil refining"/>
+		<rewrite from="oil refining" to="Oil refining"/>
+		<rewrite from="gas to liquids" to="GTL"/>
+		<rewrite from="unconventional oil refining" to="Oil refining"/>
 	</rewriteSet>
 
 	<rewriteSet name="eightRegions" level="region" append-values="true">
