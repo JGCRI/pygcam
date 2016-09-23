@@ -19,13 +19,13 @@ This file defines one or more "projects" that are run using the runProjects.py s
 			for all scenarios.
 			 -->
 			<step name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -w {scenarioDir} -p {endYear} -y {years}</step>
-			<step name="prequery" runFor="baseline">@query -p -o {batchDir} -w {scenarioDir} -s {scenario} -Q "{queryPath}" -q "{queryXmlFile}"</step>
+			<step name="prequery" runFor="baseline">@query -p -o {batchDir} -w {scenarioDir} -s {scenario} -q "{queryXmlFile}"</step>
 			<step name="gcam"  runFor="baseline">@gcam -s {baseline} -S {projectXmlDir} </step>
 			<step name="query" runFor="baseline">@query -o {batchDir} -w {scenarioDir} -s {scenario} -q "{queryXmlFile}"</step>
 
 			<!-- Explicitly require policy setup, gcam, and query steps to run after baseline in case we use baseline results in constraints -->
 			<step name="setup" runFor="policy">@setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -w {scenarioDir} -p {endYear} -y {years}</step>
-			<step name="prequery" runFor="policy">@query -p -o {batchDir} -w {scenarioDir} -s {scenario} -Q "{queryPath}" -q "{queryXmlFile}"</step>
+			<step name="prequery" runFor="policy">@query -p -o {batchDir} -w {scenarioDir} -s {scenario} -q "{queryXmlFile}"</step>
 			<step name="gcam"  runFor="policy">@gcam -s {scenario} -S {projectXmlDir}</step>
 			<step name="query" runFor="policy">@query -o {batchDir} -w {scenarioDir} -s {scenario} -q "{queryXmlFile}"</step>
 
