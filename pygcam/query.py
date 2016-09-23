@@ -940,7 +940,7 @@ def queryMain(args):
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
     # by GCAM to query the in-memory database before exiting.
-    if version <= 4.2:
+    if prequery and version <= 4.2:
         _logger.info('Skipping pre-query step for GCAM %s', version)
         return
 
