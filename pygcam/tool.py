@@ -30,12 +30,12 @@ from .error import PygcamException, ProgramExecutionError, ConfigFileError, Comm
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
 from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
+from .version import VERSION
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
-__version__ = '1a4'
 
 BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
                       NewProjectCommand, ProtectLandCommand, QueryCommand,
@@ -82,27 +82,6 @@ def _randomSleep(minSleep, maxSleep):
     delay = minSleep + random.random() * (maxSleep - minSleep)
     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
     time.sleep(delay)
-
-# Deprecated
-# def _waitForScript(scriptFile):
-#     """
-#     It can take a few moments for the script to be visible on a compute node.
-#     """
-#     maxTries = 4
-#     minSleep = 1
-#     maxSleep = 4
-#
-#     exists = False
-#     for i in range(maxTries):
-#         if os.path.exists(scriptFile):
-#             print("%s exists!" % scriptFile)
-#             exists = True
-#             break
-#
-#         _randomSleep(minSleep, maxSleep)    # TBD: check if this is still necessary
-#
-#     if not exists:
-#         raise PygcamException("Failed to read args file after %d tries" % maxTries)
 
 
 class GcamTool(object):
@@ -219,7 +198,7 @@ class GcamTool(object):
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
+        parser.add_argument('--version', action='version', version='%(prog)s-' + VERSION)
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
