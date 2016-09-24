@@ -12,6 +12,7 @@ requirements = ['lxml',
                 'pandas',
                 'seaborn',
                 'sphinx-argparse',
+                'filelock',
                 ]
 
 long_description = '''

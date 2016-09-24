@@ -20,7 +20,7 @@ def driver(args, tool):
     import os
     import shutil
     from ..config import getParam, USR_CONFIG_FILE
-    from ..utils import mkdirs, copyResource, getResource, removeFileOrTree
+    from ..utils import mkdirs, copyResource, getResource
     from ..error import CommandlineError
 
     pathjoin = os.path.join

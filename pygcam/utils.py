@@ -842,4 +842,3 @@ def chunkify(lst, chunks):
             chunkSize -= 1
         yield lst[i:i + chunkSize]
         i += chunkSize
-
