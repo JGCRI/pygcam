@@ -73,7 +73,7 @@ def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=No
 
 def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName=''): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
-    constraintFile = basename + '-constraint.xml'       # TBD: document this naming convention
+    constraintFile = basename + '-constraint.xml'
     policyFile     = basename + '.xml'
 
     dirname = os.path.join(dirname, scenario)
@@ -83,12 +83,6 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, group
     _logger.debug("Generating constraint file: %s", pathname)
     with open(pathname, 'w') as f:
         f.write(xml)
-
-    # compute relative location of local-xml directory
-    # levels = 2
-    # levels += 2 if fromMCS else 0
-    # #levels += 1 if subdir else 0
-    # localxml = '../' * levels + LOCAL_XML_NAME
 
     # TBD: test this
     prefix = '../../../' if groupName else '../../'

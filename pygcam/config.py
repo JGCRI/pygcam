@@ -2,6 +2,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from __future__ import print_function
 import os
 import io
 import platform

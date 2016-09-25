@@ -6,6 +6,7 @@
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
+from __future__ import print_function
 import glob
 import os
 import re
@@ -595,7 +596,7 @@ class Project(XMLFile):
 
 
     def dump(self, steps, scenarios):
-        print("Scenario group: %s" % self.scenarioGroupName)
+        print("Scenario group:", self.scenarioGroupName)
         print("Requested steps:", steps)
         print("Requested scenarios:", scenarios)
         print("Defined steps:", self.getKnownSteps())

@@ -3,6 +3,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from __future__ import print_function
 import os
 import platform
 from errno import EEXIST
@@ -10,7 +11,7 @@ from errno import EEXIST
 IsWindows = platform.system() == 'Windows'
 
 if IsWindows:
-    # print "Loading Windows support functions..."
+    # print("Loading Windows support functions...")
 
     import ctypes
     import win32file

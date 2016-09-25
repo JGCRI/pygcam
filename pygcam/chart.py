@@ -198,11 +198,6 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
         plt.tick_params(axis='y', direction='out', length=5, width=.75,
                         colors='k', left='on', right='off')
 
-    # deprecated
-    # lines = ax.get_lines()
-    # if lines:
-    #     lines[0].set_visible(False)    # get rid of ugly dashed line
-
     if zeroLine:
         ax.axhline(0, color='k', linewidth=0.75, linestyle='-')
 
@@ -214,8 +209,6 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
 
     legendY = -0.6 if legendY is None else legendY
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
-
-    #plt.xticks(rotation=rotation)
 
     if title:
         ax.set_title(title, y=1.05)

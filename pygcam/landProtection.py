@@ -4,6 +4,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
+from __future__ import print_function
 import copy
 import os
 import sys
@@ -121,7 +122,7 @@ class Group(object):
             reg = ET.SubElement(group, 'region')
             reg.text = name
 
-        # print ET.tostring(group, pretty_print=True)
+        # print(ET.tostring(group, pretty_print=True))
         return cls(group)
 
     @classmethod
@@ -179,7 +180,7 @@ class Scenario(object):
             _logger.debug("Processing protectedRegion '%s'", protReg.name)
             regions = protReg.expandNames()
 
-            # print protReg.name, ' => ', regions
+            # print(protReg.name, ' => ', regions)
             for region in regions:
                 regCopy = copy.copy(protReg)
                 regCopy.name = region

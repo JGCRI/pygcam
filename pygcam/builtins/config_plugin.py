@@ -4,6 +4,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from __future__ import print_function
 from ..error import PygcamException, CommandlineError
 from ..subcommand import SubcommandABC
 
@@ -69,7 +70,7 @@ class ConfigCommand(SubcommandABC):
             if not value:
                 if item in optionalVars:
                     continue
-                print("Config variable %s is empty" % var)
+                print("Config variable", var, "is empty")
 
             elif not os.path.lexists(value) and item not in optionalVars:
                 errors.append("%s = '%s' : non-existent path" % (var, value))
@@ -84,7 +85,7 @@ class ConfigCommand(SubcommandABC):
         if errors:
             print('')
             for error in errors:
-                print('Error: %s' % error)
+                print('Error:', error)
 
     def run(self, args, tool):
         import re
