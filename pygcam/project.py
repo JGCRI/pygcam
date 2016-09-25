@@ -348,7 +348,7 @@ class Project(XMLFile):
         hasDefaults = defaultsNode is not None
 
         self.scenarioGroups = scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
-        self.scenarioGroupDict = groupDict = {group.name : group for group in scenarioGroups}
+        self.scenarioGroupDict = {group.name : group for group in scenarioGroups}
 
         self.setGroup(groupName)    # if None, default group is set
 

@@ -427,7 +427,6 @@ def _setDefaultProject(argv):
 def _main(argv=None):
     getConfig()
     configureLogs()
-    checkWindowsSymlinks()
 
     _setDefaultProject(argv)
 
@@ -467,6 +466,8 @@ def _main(argv=None):
 
     # Catch signals to allow cleanup of TempFile instances, e.g., on ^C
     catchSignals()
+
+    checkWindowsSymlinks()  # creates TempFiles to test
 
     if ns.batch:
         run = not ns.showBatch
