@@ -16,37 +16,45 @@ from .windows import removeSymlink, IsWindows
 
 pathjoin = os.path.join
 
-# Files specific to different versions of GCAM
-_VersionSpecificFiles = {
-    '4.2' : ['exe/WriteLocalBaseXDb.class', 'libs'],
-    '4.3' : ['exe/XMLDBDriver.jar', 'libs'],
+# Files specific to different versions of GCAM. This is explicit rather
+# than computed so we can easily detect an unknown version number, and
+# so that searches for config parameter names find these occurrences.
+_VersionSpecificParameterName = {
+    '4.2' : 'GCAM.RequiredFiles.4.2',
+    '4.3' : 'GCAM.RequiredFiles.4.3',
 }
 
 _FilesToCopy = None
 
-def _getVersionSpecificFiles(version):
+def _getVersionSpecificFiles():
+    '''
+    Compute the list of version-specific files (including universal files)
+    that need to be copied or linked into sandboxes, and cache this since
+    it doesn't change in a single run.
+    '''
     global _FilesToCopy
 
     if _FilesToCopy:
         return _FilesToCopy
 
+    version = getParam('GCAM.VersionNumber')
     try:
-        versionFiles = _VersionSpecificFiles[version]
+        paramName = _VersionSpecificParameterName[version]
     except KeyError:
         raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.scenarioSetup.py', version)
 
-    executable = 'exe/' + getParam('GCAM.Executable')
-    files = versionFiles + [executable, 'input', 'exe/log_conf.xml']
-    if IsWindows:
-        files.append('exe/xerces-c_3_1.dll')
+    versionFiles = getParam(paramName)
+    universalFiles = getParam('GCAM.RequiredFiles.All')
+    allFiles = universalFiles + ' ' + versionFiles
 
-    _logger.debug("Version-specific files for GCAM %s: %s", version, files)
-    _FilesToCopy = files
-    return files
+    fileList = allFiles.split()
+
+    _logger.debug("Version-specific files for GCAM %s: %s", version, fileList)
+    _FilesToCopy = fileList
+    return fileList
 
 def _getFilesToCopyAndLink(linkParam):
-    version = getParam('GCAM.VersionNumber')
-    files = _getVersionSpecificFiles(version)
+    files = _getVersionSpecificFiles()
 
     allFiles = set(files)
 
@@ -57,7 +65,8 @@ def _getFilesToCopyAndLink(linkParam):
 
     unknownFiles = filesToLinkSet - allFiles
     if unknownFiles:
-        raise ConfigFileError('Unknown files specified in %s: %s' % (linkParam, list(unknownFiles)))
+        _logger.warn('Ignoring unknown files specified in %s: %s' % (linkParam, list(unknownFiles)))
+        filesToLinkSet -= unknownFiles
 
     # Copy everything that is not in the filesToLinkSet
     filesToCopy = list(allFiles - filesToLinkSet)
