@@ -278,6 +278,8 @@ class GcamTool(object):
         """
         assert args or argList, "GcamTool.run requires either args or argList"
 
+        checkWindowsSymlinks()
+
         if argList is not None:         # might be called with empty list of subcmd args
             # called recursively
             self._loadRequiredPlugins(argList)
@@ -306,7 +308,8 @@ class GcamTool(object):
         import platform
 
         system = platform.system()
-        if False and system in ['Windows', 'Darwin']:
+        # TBD: Might install SLURM on an OS X server...
+        if system in ['Windows']: # , 'Darwin']:
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
@@ -466,8 +469,6 @@ def _main(argv=None):
 
     # Catch signals to allow cleanup of TempFile instances, e.g., on ^C
     catchSignals()
-
-    checkWindowsSymlinks()  # creates TempFiles to test
 
     if ns.batch:
         run = not ns.showBatch
