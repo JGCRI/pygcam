@@ -11,6 +11,7 @@ Cleanup
 - Consolidate generic code from sectorEditors and xmlEditor
 - Consolidate mcs/scenarios.xml, etc/scenarios.xml and scenarios in project.xml
 
+
 Features
 --------
 - Provide a way to run a query with different rewrites to produce different

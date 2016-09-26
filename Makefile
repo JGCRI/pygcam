@@ -15,6 +15,8 @@ pypitest-upload:
 pypi-upload:
 	python setup.py sdist upload -r pypi
 
+clean-html:
+	make -C docs clean
 
 html:
 	make -C docs html
@@ -22,15 +24,16 @@ html:
 pdf:
 	make -C docs latexpdf
 
+clean-setup:
+	python setup.py clean
+
 sdist:
 	python setup.py sdist
 
 wheel: 
 	python setup.py bdist_wheel
 
-clean:
-	python setup.py clean
-	make -C docs clean
+clean: clean-html clean-setup
 
 dev:
 	pip install -e 
