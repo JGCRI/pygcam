@@ -59,7 +59,8 @@ def driver(args, tool):
         _logger.debug('Creating %s/%s', projectDir, name)
         open(name, 'a').close() # append just in case it exists already
 
-    exampleDir = pathjoin('etc', 'examples')
+    etcDir = 'etc'
+    exampleDir = pathjoin(etcDir, 'examples')
     projectEtc = pathjoin(projectDir, 'etc')
 
     # # Copy scenarios.py template to serve as a starting point
@@ -72,10 +73,13 @@ def driver(args, tool):
     # Provide example XML files and instructions. We can't use the glob
     # module since these might need to be extracted from a tar/egg file.
     filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml',
-                   'scenarios.xml', 'Instructions.txt']
+                   'scenarios.xml', 'Instructions.txt', 'project-schema.xsd',
+                   'protection-schema.xsd', 'queries-schema.xsd',
+                   'rewriteSets-schema.xsd', 'scenarios-schema.xsd']
 
     for filename in filesToCopy:
-        src = pathjoin(exampleDir, filename)
+        srcDir = etcDir if filename.endswith('.xsd') else exampleDir
+        src = pathjoin(srcDir, filename)
         dst = pathjoin(projectEtc, filename)
         _logger.debug('Creating %s', dst)
 
