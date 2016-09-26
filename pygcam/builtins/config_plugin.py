@@ -50,7 +50,7 @@ class ConfigCommand(SubcommandABC):
         import os
         from ..config import getParam
 
-        requiredDirs = ['SandboxRoot', 'SandboxDir', 'ProjectRoot', 'ProjectDir',
+        requiredDirs = ['SandboxRoot', 'ProjectRoot', 'ProjectDir',
                         'QueryDir', 'MI.Dir', 'RefWorkspace', 'TempDir']
         requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'MI.JarFile']
         optionalDirs  = ['UserTempDir']
@@ -124,7 +124,7 @@ class ConfigCommand(SubcommandABC):
         print("[%s]" % section)
         for name, value in sorted(_ConfigParser.items(section)):
             if pattern.match(name):
-                print("%22s = %s" % (name, value))
+                print("%25s = %s" % (name, value))
 
 
 PluginClass = ConfigCommand

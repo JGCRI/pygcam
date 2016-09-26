@@ -306,7 +306,7 @@ class ConfigAction(ConfigActionBase):
         super(ConfigAction, self).__init__(node)
         self.name = node.get('name')
         self.dynamic = getBooleanXML(node.get('dynamic', '0'))
-        self.dir  = node.get('dir', '')     # TBD: currently unused
+        # self.dir  = node.get('dir', '')     # deprecated
 
     def __str__(self):
         tag = self.tag
@@ -445,7 +445,7 @@ def createXmlEditorSubclass(setupFile):
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
-                # TBD: see if we ever need anything but base XMLEditor for parent baselines...
+                # TBD: test this in FCIP case where baseline builds on FuelShock
                 parent = XMLEditor(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
@@ -496,7 +496,7 @@ def createXmlEditorSubclass(setupFile):
             self.groupName = args.group
             scenarioSetup = self.scenarioSetup
 
-            # TBD: This is convoluted, but may be needed for cases like FCIP, whose baseline builds on FuelShock
+            # TBD: test this in FCIP case where baseline builds on FuelShock
             if not self.parent:
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this
@@ -526,7 +526,7 @@ def createXmlEditorSubclass(setupFile):
 
             # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
             # to be found in the config file to be able to apply distributions to the values.
-            # TBD: was if self.mcsMode and not self.parent:
+            # TBD: Note that this was "if self.mcsMode and not self.parent:"
             mcsValuesPath = os.path.join(self.scenario_dir_abs, MCSVALUES_FILE)
             if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
                 self.addScenarioComponent('mcsValues', os.path.join(self.scenario_dir_rel, MCSVALUES_FILE))

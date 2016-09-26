@@ -401,7 +401,6 @@ def catchSignals():
     for sig in signals:
         signal.signal(sig, _sigHandler)
 
-# TBD: test on Windows
 def checkWindowsSymlinks():
     '''
     If running on Windows and GCAM.CopyAllFiles is not set, and

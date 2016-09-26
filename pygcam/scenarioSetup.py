@@ -98,17 +98,15 @@ def _jobTmpDir():
 def _setupTempOutputDir(outputDir):
     removeFileOrTree(outputDir, raiseError=False)
 
-    if getParamAsBoolean('GCAM.MCS.UseTempOutput'): # TBD: define this variable
+    if getParamAsBoolean('GCAM.MCS.UseTempOutput'): # TBD: define in system.cfg after merging MCS
         dirPath = _jobTmpDir()
         shutil.rmtree(dirPath, ignore_errors=True)  # rm any files from prior run in this job
         mkdirs(dirPath)
         _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
 
-        #TBD: workspaceSymlink(dirPath, output, relative=False)
-
         # Create a link that the epilogue.py script can find.
-        if getParam('Core.Epilogue'):
-            pass # TBD: createEpilogueLink(dirPath)
+        # if getParam('Core.Epilogue'):
+        #     createEpilogueLink(dirPath)
     else:
         mkdirs(outputDir)
 
@@ -257,7 +255,6 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     semaphoreFile = os.path.join(newWorkspace, '.creation_semaphore')
     lockfile = semaphoreFile + '.lock'
 
-    # TBD: test on Windows
     with filelock.FileLock(lockfile):
         if os.path.lexists(semaphoreFile):
             os.remove(semaphoreFile)
@@ -270,7 +267,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
             shutil.rmtree(newWorkspace, ignore_errors=True)
 
         mkdirs(newWorkspace)
-        open(semaphoreFile, 'w').close()    # create empty file
+        open(semaphoreFile, 'w').close()    # create empty semaphore file
 
         # Spell out variable names rather than computing parameter names to
         # facilitate searching source files for parameter uses.

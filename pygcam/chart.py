@@ -86,7 +86,7 @@ def _finalizeFigure(fig, ax, outFile=None, yFormat=None, sideLabel=False,
         systemOpenFile(outFile)
 
 
-def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='USA',
+def plotUnstackedRegionComparison(df, categoryCol, valueCol=None, region=None,
                                   otherRegion='Rest of world', box=False, title='', ncol=3,
                                   xlabel='', ylabel='', ygrid=False, yticks=False,
                                   ymin=None, ymax=None, legendY=None, palette=None,
@@ -370,8 +370,8 @@ def chartGCAM(args, num=None, negate=False):
     timeseries = args.timeseries
     title      = args.title
     transparent= args.transparent
-    unstacked  = args.unstacked
-    unStackReg = args.unstackedRegion
+    unstackCol  = args.unstackedCol
+    unstackReg = args.unstackedRegion
     valueCol   = args.valueCol
     xlabel     = args.xlabel
     yFormat    = args.format
@@ -458,11 +458,11 @@ def chartGCAM(args, num=None, negate=False):
 
         sideLabel = imgFile if label else ''
 
-        if unstacked:
+        if unstackCol:
             otherRegion = 'Rest of world'
-            mainRegion  = reg or unStackReg
+            mainRegion  = reg or unstackReg
 
-            plotUnstackedRegionComparison(df, categoryCol=unstacked, valueCol=valueCol, region=mainRegion,
+            plotUnstackedRegionComparison(df, unstackCol, valueCol=valueCol, region=mainRegion,
                                           otherRegion=otherRegion, box=box, title=title, ncol=ncol,
                                           xlabel=xlabel, ylabel=ylabel, ygrid=ygrid, yticks=yticks,
                                           ymin=ymin, ymax=ymax, legendY=legendY, palette=palette,
