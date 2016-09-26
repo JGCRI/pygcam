@@ -23,13 +23,16 @@ The ``pygcam`` package provides a workflow management framework for GCAM
 consisting of scripts and a Python API for customizing the framework by
 writing plug-ins, or by writing new applications.
 
+Full documentation and a tutorial are available at
+https://pygcam.readthedocs.io.
+
 Core functionality
 ------------------
 
 * Project workflow management framework that lets you define steps to run and
   run them all or run steps selectively.
 
-* The main ``gt`` (think "gcamtool") script, which provides numerous
+* The main ``gt`` ("GCAM tool") script, which provides numerous
   sub-commands, and can be extended by writing plug-ins.
 
 * The ``gt`` sub-commands facilitate key steps in working with GCAM, including:
@@ -59,6 +62,14 @@ How do I get set up?
 
     ``python setup.py install``
 
+  Or, if you clone the repository, you might want to install in "develop"
+  mode, which creates links back to the repository so you don't have to
+  reinstall every time there is a change. To install in develop mode use
+  this command:
+
+    ``python setup.py develop``
+
+
 Contribution guidelines
 ------------------------
 
@@ -72,7 +83,7 @@ Who do I talk to?
 
 setup(
     name='pygcam',
-    version='1.0a3',
+    version='1.0a4',
     description='Python 2.7 library and scripts for interfacing with GCAM',
     platforms=['Windows', 'Mac OS X', 'Linux'],
 

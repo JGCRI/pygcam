@@ -1,16 +1,22 @@
 Contents
 =========
 
-*This package is currently under development.*
-
-
 .. toctree::
    :maxdepth: 1
 
    intro
    install
-   tutorial
    terminology
+
+Tutorial
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial1
+   tutorial2
+   tutorial3
 
 The ``gt`` workflow management script
 --------------------------------------------------
@@ -39,3 +45,11 @@ XML File Formats
    :maxdepth: 2
 
    xmlFiles
+
+For PIC Users
+-------------
+
+  .. toctree::
+   :maxdepth: 1
+
+   pic
