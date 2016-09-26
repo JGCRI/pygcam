@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-This file defines one or more "projects" that are run using the runProjects.py script.
+This file defines one or more "projects" that are run using the "gt run" subcommand.
 -->
 <projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:noNamespaceSchemaLocation="project-schema.xsd">
@@ -10,7 +10,6 @@ This file defines one or more "projects" that are run using the runProjects.py s
 			<var name="endYear">2050</var>  <!-- stops at 2050 so tutorial runs faster -->
 			<var name="years" eval="1">{startYear}-{endYear}</var>
 		</vars>
-
 		<steps>
 			<!--
 			The names defined in steps can be used on the command-line to limit operations to these steps.
