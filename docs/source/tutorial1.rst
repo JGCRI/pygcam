@@ -1,8 +1,8 @@
 Tutorial, Part 1
 =================
 
-Introduction
--------------
+1.0 Introduction
+-----------------
 The command-line interface to ``pygcam`` uses the :doc:`gcamtool` script,
 which is installed when you install ``pygcam``. In this tutorial, we focus on the
 :ref:`run <run-label>`
@@ -49,7 +49,7 @@ We begin Part 1 of the tutorial by creating a project called ``ctax`` using the
 templates files provided by ``pygcam``.
 
 1.1 Create the project structure and initial configuration file
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------------------------------
 The first step in creating a new product is to run gcamtool
 :ref:`new <new-label>` sub-command. To create the project ``ctax``
 with the project directory ``/Users/rjp/projects/ctax``, I would
@@ -87,7 +87,7 @@ removed):
 The next step is to customize this to our environment.
 
 1.2 Customize .pygcam.cfg
-^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 Our first task will be to set ``GCAM.DefaultProject`` so we don't have to keep typing
 ``gt -P ctax``. We add this setting the ``[DEFAULT]`` section
 
@@ -102,7 +102,7 @@ invoke a system-appropriate editor on the configuration file. See the :doc:`conf
 page for details.
 
 1.3 Check configuration
-^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 We can check that key file and directory pathnames required by ``pycgam`` exist
 by running this command:
 
@@ -126,7 +126,7 @@ by running this command:
 
 
 1.4 Examine default project files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 The :ref:`run <run-label>` sub-command offers several options that list
 project elements and display commands that would be run.
 
@@ -181,7 +181,7 @@ List all project steps for the default scenario group of the default project:
       xlsx
 
 1.5 Run "setup" on a single baseline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------
 
 Now we will run just the ``setup`` step the baseline scenario.
 
@@ -220,7 +220,7 @@ on a slower disk.
 
 
 1.6 Run a single baseline
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 Now we'll run all remaining steps for the baseline scenario.
 We already ran the ``setup`` step, so we use the ``-k`` flag to
 skip it.

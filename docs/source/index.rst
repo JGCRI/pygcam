@@ -1,22 +1,15 @@
 Contents
 =========
 
+Introduction
+---------------
 .. toctree::
    :maxdepth: 1
 
    intro
    install
-   terminology
-
-Tutorial
------------
-
-.. toctree::
-   :maxdepth: 1
-
-   tutorial1
-   tutorial2
-   tutorial3
+   config
+   tutorial
 
 The ``gt`` workflow management script
 --------------------------------------------------
@@ -24,27 +17,24 @@ The ``gt`` workflow management script
   .. toctree::
    :maxdepth: 1
 
-   setup
-   config
    gcamtool
+   setup
 
+XML File Formats
+------------------
+
+  .. toctree::
+   :maxdepth: 1
+
+   xmlFiles
 
 Application Programming Interface (API)
 ----------------------------------------
 
   .. toctree::
    :maxdepth: 1
-   :glob:
 
-   pygcam.*
-
-XML File Formats
-------------------
-
-  .. toctree::
-   :maxdepth: 2
-
-   xmlFiles
+   api
 
 For PIC Users
 -------------

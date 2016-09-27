@@ -1,7 +1,7 @@
 Tutorial, Part 3
 ==================
 
-*This section is under development.*
+ .. note:: This section is under development.
 
 In this part of the tutorial, we will modify the queries that are defined
 in ``project.xml`` and change the "rewrites" to aggregate the

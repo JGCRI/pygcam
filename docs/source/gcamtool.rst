@@ -356,7 +356,7 @@ Usage
 
 
 Extending gt using plug-ins
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
   .. _plugins-label:
 
 The gt script will load any python files whose name ends in
