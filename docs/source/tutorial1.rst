@@ -127,6 +127,12 @@ by running this command:
 
 1.4 Examine default project files
 -----------------------------------
+The default ``scenarios.xml`` file defines two scenario groups, each with a
+baseline and 4 policy scenarios with different levels of C tax. The default
+scenario does not exclude unmanaged land from consideration, while the second
+scenario excludes 90% of unmanaged land, which is the default in the GCAM
+reference scenario.
+
 The :ref:`run <run-label>` sub-command offers several options that list
 project elements and display commands that would be run.
 

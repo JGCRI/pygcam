@@ -16,8 +16,22 @@ There is a shared installation of the Anaconda2 Python package in
 any other Python installations. (This is done for you in the
 ``pygcam.sh`` script described below.)
 
-You might want to drop the python2 module as well to avoid
-confusion.
+Module conflicts
+^^^^^^^^^^^^^^^^
+To avoid confusion, it would be best to unload any other Python or Anaconda modules
+you may have loaded:
+
+ .. code-block:: sh
+
+    module unload python/2.7.3
+    module unload python/2.7.8
+    module unload python/3.4.2
+    module unload python/anaconda2
+    module unload python/anaconda3
+
+It may be possible, at times, to run ``pygcam`` with the standard anaconda2
+module, but ``pygcam`` is under active development, and the version installed in
+``/pic/projects/GCAM`` will be kept current with respect to python module requirements.
 
 
 XML Starlet
