@@ -76,7 +76,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, group
     constraintFile = basename + '-constraint.xml'
     policyFile     = basename + '.xml'
 
-    dirname = os.path.join(dirname, scenario)
+    dirname = os.path.join(dirname, groupName, scenario)
     mkdirs(dirname)
 
     pathname = os.path.join(dirname, constraintFile)
@@ -251,7 +251,6 @@ fuelConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 def genDeltaConstraints(**kwargs):
     import pandas as pd
 
-    #fromMCS  = kwargs.get('fromMCS', False)
     baseline  = kwargs['baseline']
     policy    = kwargs['policy']
     groupName = kwargs.get('groupName', '')
@@ -267,8 +266,12 @@ def genDeltaConstraints(**kwargs):
     biomassPolicyType = kwargs.get('biomassPolicyType', None)
     purposeGrownPolicyType = kwargs.get('purposeGrownPolicyType', None)
 
+    refinedLiquidsQuery = kwargs.get('refinedLiquidsQuery', 'Refined-liquids-production-by-technology')
+    totalBiomassQuery   = kwargs.get('totalBiomassQuery',   'Total_biomass_consumption')
+    purposeGrownQuery   = kwargs.get('purposeGrownQuery',   'Purpose-grown_biomass_production')
+
     batchDir = getBatchDir(baseline, resultsDir)
-    refinedLiquidsDF = readQueryResult(batchDir, baseline, 'Refined-liquids-production-by-technology', cache=True)
+    refinedLiquidsDF = readQueryResult(batchDir, baseline, refinedLiquidsQuery, cache=True)
 
     yearCols = getYearCols(kwargs['years'])
     #refinedLiquidsUSA = refinedLiquidsDF.query(US_REGION_QUERY)[yearCols]
@@ -288,7 +291,8 @@ def genDeltaConstraints(**kwargs):
     if annualDeltas:
         annuals = parseStringPairs(annualDeltas)
         deltas.loc[annuals.index] = annuals    # override any default for the given years
-        _logger.debug("Annual deltas: %s", deltas)
+        printSeries(deltas, fuelTag, header='annual deltas:')
+        #_logger.debug("Annual deltas: %s", deltas)
 
     # Calculate fuel target after applying deltas
     fuelTargets = fuelBaseline.iloc[0] + deltas
@@ -312,7 +316,7 @@ def genDeltaConstraints(**kwargs):
         deltaCellulose = deltas * coefficients[yearCols]
         printSeries(deltaCellulose, 'cellulose', header='deltaCellulose:')
 
-        totalBiomassDF = readQueryResult(batchDir, baseline, 'Total_biomass_consumption', cache=True)
+        totalBiomassDF = readQueryResult(batchDir, baseline, totalBiomassQuery, cache=True)
         totalBiomassUSA = totalBiomassDF.query(US_REGION_QUERY)[yearCols]
 
         biomassConstraint = totalBiomassUSA.iloc[0] + deltaCellulose.iloc[0]
@@ -320,7 +324,7 @@ def genDeltaConstraints(**kwargs):
 
         # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
         # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
-        purposeGrownDF = readQueryResult(batchDir, baseline, 'Purpose-grown_biomass_production', cache=True)
+        purposeGrownDF = readQueryResult(batchDir, baseline, purposeGrownQuery, cache=True)
 
         # For some reason, purpose grown results are returned for 1990, 2005, then
         # 2020, 2025, but not 2010 or 2015. So we add any missing columns here.
