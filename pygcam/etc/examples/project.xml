@@ -80,20 +80,7 @@ This file defines one or more "projects" that are run using the "gt run" subcomm
 			<text>Global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
 		</tmpFile>
 
-		<scenarioGroup name="protect-0" default="1">
-			<scenario name="base-0" baseline="1"/>
-			<scenario name="tax-10-0"/>
-			<scenario name="tax-15-0"/>
-			<scenario name="tax-20-0"/>
-			<scenario name="tax-25-0"/>
-		</scenarioGroup>
+		<scenariosFile name="scenarios.xml"/>
 
-		<scenarioGroup name="protect-90">
-			<scenario name="base-90" baseline="1"/>
-			<scenario name="tax-10-90"/>
-			<scenario name="tax-15-90"/>
-			<scenario name="tax-20-90"/>
-			<scenario name="tax-25-90"/>
-		</scenarioGroup>
 	</project>
 </projects>

@@ -25,7 +25,7 @@
         </xs:complexType>
     </xs:element>
 
-    <xs:element name='setup'>
+    <xs:element name='scenarios'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
                 <xs:element minOccurs="0" ref='iterator'/>
@@ -60,7 +60,8 @@
                 <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
-            <xs:attribute name='useGroupDir' type='xs:boolean'/>
+            <!-- <xs:attribute name='default' type='xs:boolean' default='false'/> -->
+            <xs:attribute name='useGroupDir' type='xs:boolean' default='false'/>
             <xs:attribute name='iterator' type='xs:string'/>
             <xs:attribute name='baselineSource' type='xs:string'/>
         </xs:complexType>
@@ -78,8 +79,11 @@
                 <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='active' type='xs:boolean' default='true'/>      <!-- TBD: drop this? -->
             <xs:attribute name='baseline' type='xs:boolean'/>
             <xs:attribute name='iterator' type='xs:string'/>
+            <xs:attribute name='subdir' type='xs:string'/>                      <!-- TBD-->
+
         </xs:complexType>
     </xs:element>
 

@@ -90,7 +90,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, group
 
     # ToDo: replace subdir with groupDir?
     #source   = os.path.join(localxml, subdir, scenario, policyFile)
-    source   = os.path.join(localxml, scenario, policyFile)
+    source   = os.path.join(localxml, groupName, scenario, policyFile)
     linkname = os.path.join(dirname, policyFile)
 
     _logger.debug("Linking to: %s", source)
@@ -274,11 +274,9 @@ def genDeltaConstraints(**kwargs):
     refinedLiquidsDF = readQueryResult(batchDir, baseline, refinedLiquidsQuery, cache=True)
 
     yearCols = getYearCols(kwargs['years'])
-    #refinedLiquidsUSA = refinedLiquidsDF.query(US_REGION_QUERY)[yearCols]
 
     combinedQuery = US_REGION_QUERY + ' and technology == "%s"' % fuelName
 
-    #fuelBaseline = refinedLiquidsUSA.query('technology == "%s"' % fuelName)[yearCols]
     fuelBaseline = refinedLiquidsDF.query(combinedQuery)[yearCols]
     if fuelBaseline.shape[0] == 0:
         fuelBaseline = 0

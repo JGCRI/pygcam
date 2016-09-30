@@ -714,7 +714,7 @@ class XMLEditor(object):
                 '-v', name)
 
     @callableMethod
-    def addMarketConstraint(self, target, policy, dynamic=False):
+    def addMarketConstraint(self, target, policy, dynamic=False, baselinePolicy=False):
         """
         Adds references to a pair of files comprising a policy, i.e., a policy definition
         file and a constraint file. References to the two files--assumed to be named ``XXX-{subsidy,tax}.xml``
@@ -724,6 +724,8 @@ class XMLEditor(object):
         :param policy: (str) one of ``subsidy`` or ``tax``
         :param dynamic: (str) True if the XML file was dynamically generated, and thus found in ``dyn-xml``
            rather than ``local-xml``
+        :param baselinePolicy: (bool) if True, the policy file is linked to the baseline directory
+           rather than this scenario's own directory.
         :return: none
         """
         _logger.info("Add market constraint: %s %s for %s" % (target, policy, self.name))
@@ -737,7 +739,9 @@ class XMLEditor(object):
 
         reldir = self.scenario_dyn_dir_rel if dynamic else self.scenario_dir_rel
 
-        policyXML     = pathjoin(reldir, basename + ".xml")
+        policyReldir = self.baseline_dir_rel if baselinePolicy else reldir
+
+        policyXML     = pathjoin(policyReldir, basename + ".xml")
         constraintXML = pathjoin(reldir, basename + "-constraint.xml")
 
         # See if element exists in config file (-Q => quiet; just report exit status)

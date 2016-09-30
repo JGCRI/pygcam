@@ -212,13 +212,14 @@ class ScenarioGroup(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.useGroupDir = getBooleanXML(node.get('useGroupDir', 0))
-        self.isDefault = getBooleanXML(node.get('default', 0))
+        self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
+        self.isDefault = getBooleanXML(node.get('default', default='0'))
         self.iteratorName = node.get('iterator')
         self.baselineSource = node.get('baselineSource')
         self.templateScenarios = scenarios = map(Scenario, node.findall('scenario'))
         self.templateDict = {obj.name: obj for obj in scenarios}
         self.finalDict = OrderedDict()
+        self.baseline = None
 
     def getFinalScenario(self, name):
         try:
@@ -233,8 +234,13 @@ class ScenarioGroup(object):
         # and {baselineDir} are converted when the scenario is run.
         def expand(scenario):
             scenario.name = name = scenario.name.format(**templateDict)
+            scenario.subdir = scenario.node.get('subdir', default=scenario.name)
             self.finalDict[name] = scenario
             scenario.formatContent(templateDict)
+            if scenario.isBaseline:
+                if self.baseline:
+                    raise SetupException('Group %s declares multiple baselines' % self.name)
+                self.baseline = name
 
         for templateScenario in self.templateScenarios:
             iterName = templateScenario.iteratorName
@@ -261,9 +267,11 @@ class Scenario(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.isBaseline = getBooleanXML(node.get('baseline', 0))
+        self.isBaseline = getBooleanXML(node.get('baseline', default=0))
+        self.isActive   = getBooleanXML(node.get('active',   default='1'))
         self.iteratorName = node.get('iterator')
         self.actions = map(_classForNode, node)
+        self.subdir = node.get('subdir', default=self.name)
 
     def __str__(self):
         return "<scenario name='%s'>" % self.name
