@@ -234,7 +234,9 @@ class ScenarioGroup(object):
         # and {baselineDir} are converted when the scenario is run.
         def expand(scenario):
             scenario.name = name = scenario.name.format(**templateDict)
-            scenario.subdir = scenario.node.get('subdir', default=scenario.name)
+            subdir = scenario.node.get('subdir', default=scenario.name)
+            scenario.subdir = subdir.format(**templateDict)
+
             self.finalDict[name] = scenario
             scenario.formatContent(templateDict)
             if scenario.isBaseline:
