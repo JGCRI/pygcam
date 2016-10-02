@@ -2,7 +2,7 @@
 
 <!-- Example of XML setup for "simple" tutorial project -->
 
-<scenarios name="uniqueName" defaultGroup="protect-0.0"
+<scenarios name="uniqueName" defaultGroup="protect-0"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
 
