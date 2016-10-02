@@ -27,8 +27,8 @@ _MetaTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
     <output-meta-data>
         <summary>
-            This is a generated constraint file. Edits will be overwritten!
-            {summary}
+        This is a generated constraint file. Edits will be overwritten!
+        {summary}
         </summary>
     </output-meta-data>
     <world>

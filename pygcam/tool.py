@@ -24,6 +24,7 @@ from .builtins.query_plugin import QueryCommand
 from .builtins.run_plugin import ProjectCommand
 from .builtins.sandbox_plugin import SandboxCommand
 from .builtins.setup_plugin import SetupCommand
+from .builtins.compare_plugin import CompareCommand
 
 from .config import (getParam, getConfig, getParamAsBoolean, setParam,
                      getSection, setSection, DEFAULT_SECTION)
@@ -38,7 +39,7 @@ _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
 
-BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
+BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand, GcamCommand,
                       NewProjectCommand, ProtectLandCommand, QueryCommand,
                       ProjectCommand, SandboxCommand, SetupCommand]
 

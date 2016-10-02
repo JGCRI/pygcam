@@ -427,6 +427,9 @@ class XMLEditor(object):
         self.renameScenarioComponent("cement_1", pathjoin(self.energy_dir_rel, "cement.xml"))
         self.renameScenarioComponent("cement_2", pathjoin(self.energy_dir_rel, "cement_incelas_gcam3.xml"))
 
+        self.renameScenarioComponent("en_fertilizer", pathjoin(self.energy_dir_rel, "en_Fert.xml"))
+        self.renameScenarioComponent("ag_fertilizer", pathjoin(self.aglu_dir_rel,   "ag_Fert.xml"))
+
         landFiles = ('land_input_1', 'land_input_2', 'land_input_3', 'protected_land_input_2', 'protected_land_input_3')
         for landFile in landFiles:
             self.renameScenarioComponent(landFile, pathjoin(self.aglu_dir_rel, landFile + '.xml'))
