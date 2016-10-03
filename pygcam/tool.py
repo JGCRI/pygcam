@@ -39,9 +39,9 @@ _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
 
-BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      NewProjectCommand, ProtectLandCommand, QueryCommand,
-                      ProjectCommand, SandboxCommand, SetupCommand]
+BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
+                      GcamCommand, NewProjectCommand, ProtectLandCommand,
+                      QueryCommand, ProjectCommand, SandboxCommand, SetupCommand]
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
