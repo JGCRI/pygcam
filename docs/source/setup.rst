@@ -21,7 +21,7 @@ configuration files described by the scripts. The generated XML files
 are written to a directory called ``local-xml`` in the run-time
 :ref:`workspace <workspaces-label>`.
 
-  .. seealso::
+.. seealso::
 
      Command-line usage is described on the :ref:`gt setup <setup-label>` page.
 

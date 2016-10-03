@@ -56,69 +56,24 @@ reducing redundancy. Individual projects can override and/or declare new
 variables steps as needed. The ``<defaults>`` element takes no
 attributes.
 
-<scenarioGroup>
-^^^^^^^^^^^^^^^
+.. note::
+  The use of ``<scenarioGroup>`` in the ``project.xml`` is deprecated. The
+  scenarios must now be defined in a separate ``scenarios.xml`` file, and
+  referenced in the ``project.xml`` file using the ``<scenariosFile>`` element.
 
-+-------------+------------+-----------+--------------+
-| Attribute   | Required   | Default   | Values       |
-+=============+============+===========+==============+
-| name        | yes        | (none)    | text         |
-+-------------+------------+-----------+--------------+
-| useGroupDir | no         | "0"       | {"0", "1"}   |
-+-------------+------------+-----------+--------------+
-| default     | no         | "0"       | {"0", "1"}   |
-+-------------+------------+-----------+--------------+
+<scenariosFile>
+^^^^^^^^^^^^^^^^^
+The element ``<scenariosFile>`` identifies the file containing scenario
+descriptions. See :doc:`scenarios-xml` for a description of that file.
 
-The ``<scenarioGroup>`` element names and defines a list of scenarios.
-This allows several distinct baselines and related policies to be
-defined within a project.
++-------------+------------+-----------+---------------------------------+
+| Attribute   | Required   | Default   | Values                          |
++=============+============+===========+=================================+
+| name        | yes        | (none)    | the path to the scenarios.xml   |
++-------------+------------+-----------+---------------------------------+
 
-One ``<scenarioGroup>`` can have the attribute ``default="1"`` to
-identify it as the default attribute, i.e., the one selected if no group
-is named on the command line. If there is only one ``<scenarioGroup>``
-defined for a project, it is treated as the default; in this case
-setting ``default="1"`` is redundant.
-
-If ``useGroupDir`` is set to "1", the name of the scenario group
-is inserted into the pathnames for the xmlsrc, sandbox,
-local-xml and dyn-xml folders, between the "root" of each of those
-folders and the scenario name as the final directory level.
-
-<scenario>
-^^^^^^^^^^
-
-+-------------+------------+-----------+--------------+
-| Attribute   | Required   | Default   | Values       |
-+=============+============+===========+==============+
-| name        | yes        | (none)    | text         |
-+-------------+------------+-----------+--------------+
-| baseline    | no         | "0"       | {"0", "1"}   |
-+-------------+------------+-----------+--------------+
-| subdir      | no         | (none)    | text         |
-+-------------+------------+-----------+--------------+
-
-The ``<scenario>`` element describes a single GCAM scenario, which is
-either a baseline scenario or a policy scenario. Each scenario must have
-a unique name within the project. Scenarios are "active" by default, but
-can be deactivated by specifying the attribute ``active="0"``.
-
-Each project must define exactly one active baseline scenario, defined
-by specifying the attribute ``baseline="1"``.
-
-The setup tools expect each scenario to be defined in a sub-directory
-below the project directory. By default the sub-directory is named the
-same as the scenario, but this can be defined separately using the
-``subdir="otherName"`` attribute.
-
-For example,
-
-  .. code-block:: xml
-
-    <scenario name="biodiesel-1" subdir="biodiesel" active="0"/>
-
-defines a scenario named ``biodiesel-1`` that is found in the
-sub-directory ``biodiesel``, but the scenario is not currently active,
-so it is ignored when the project is run.
+If the pathname given by the `name` attribute is not an absolute path,
+it is interpreted relative to the directory holding the ``project.xml``.
 
 <steps>
 ^^^^^^^
