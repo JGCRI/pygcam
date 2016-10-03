@@ -213,6 +213,7 @@ def expandYearRanges(seq):
         pass
 
     for year, value in seq:
+        value = float(value)
         if isinstance(year, basestring) and '-' in year:
             m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
             if not m:
@@ -225,7 +226,7 @@ def expandYearRanges(seq):
             expanded = map(lambda y: [y, value], range(startYear, endYear+step, step))
             result.extend(expanded)
         else:
-            result.append((year, value))
+            result.append((int(year), value))
 
     return result
 
