@@ -266,6 +266,8 @@ def genDeltaConstraints(**kwargs):
     biomassPolicyType = kwargs.get('biomassPolicyType', None)
     purposeGrownPolicyType = kwargs.get('purposeGrownPolicyType', None)
 
+    pd.set_option('display.width', None)    # discover width from terminal
+
     refinedLiquidsQuery = kwargs.get('refinedLiquidsQuery', 'Refined-liquids-production-by-technology')
     totalBiomassQuery   = kwargs.get('totalBiomassQuery',   'Total_biomass_consumption')
     purposeGrownQuery   = kwargs.get('purposeGrownQuery',   'Purpose-grown_biomass_production')
