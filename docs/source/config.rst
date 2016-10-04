@@ -15,6 +15,33 @@ configuration file and the API to access it are described below.
    :ref:`gt config <config-label>` page. See :doc:`pygcam.config`
    for documentation of the API to the configuration system.
 
+Configuration file sections
+----------------------------
+The configuration file is divided into sections indicated by a name within square brackets.
+All variable declarations following a section declaration, until the next section
+declaration (if any) appear in the declared section.
+
+Default section
+^^^^^^^^^^^^^^^^^^^^^^
+Default values are defined in the ``[DEFAULT]`` section. When ``pygcam`` requests the value
+of a variable from a project section (see below), the default value is returned if the
+variable is not defined in the project section. Variables whose values apply to multiple
+projects can be defined conveniently in the ``[DEFAULT]`` section.
+
+All pre-defined ``pygcam`` variables are defined in the ``[DEFAULT]`` section,
+allowing them to be overridden on a project-by-project basis.
+
+Project sections
+^^^^^^^^^^^^^^^^^^^^^^
+Each project must have its own section. For example, to setup a project called,
+say, "paper1", I would create the section ``[paper1]``. Following this, I would define
+variables particular to this project, e.g., where the to find the files defining scenarios,
+queries, and so on.
+
+Note that the :ref:`new <new-label>` sub-command will set up the structure for a new
+project and (optionally) add a section to the user's config file for the named project.
+
+
 .. _pygcam-cfg:
 
 The configuration files
@@ -146,27 +173,37 @@ and whether their value must be a file or directory.
 +----------------------+----------+-----------+
 
 The ``config`` sub-command provides a limited amount of validation by checking
-that all required and optional variables are set to reasonable values. To check
-the config file, run the command ``gt config -t``. You can specify a project to
-check that project's variables. For example, I can test the values set for project
-``Paper1`` with the following command, shown with command output:
+that all required and optional variables are set to reasonable values. You can
+do a basic (not foolproof) check that the required files and directories exist
+using the command:
+
+  .. code-block:: bash
+
+     gt config -t
+
+which will print out a listing of files and their status.
+
+You can also specify a project to check that project's variables. For example,
+I can test the values set for project ``Paper1`` with the following command,
+shown with command output:
 
   .. code-block:: bash
 
      $ gt -P paper1 config -t
-     OK: GCAM.SandboxRoot = /Users/rjp/ws
-     OK: GCAM.SandboxDir = /Users/rjp/ws/paper1
-     OK: GCAM.ProjectRoot = /Users/rjp/bitbucket
-     OK: GCAM.ProjectDir = /Users/rjp/bitbucket/paper1
-     OK: GCAM.QueryDir = /Users/rjp/bitbucket/paper1/queries
-     OK: GCAM.MI.Dir = /Users/rjp/GCAM/current/ModelInterface
-     OK: GCAM.RefWorkspace = /Users/rjp/GCAM/current/Main_User_Workspace
-     OK: GCAM.TempDir = /tmp
-     OK: GCAM.UserTempDir = /Users/rjp/tmp
-     OK: GCAM.ProjectXmlFile = /Users/rjp/bitbucket/paper1/etc/project.xml
-     OK: GCAM.RefConfigFile = /Users/rjp/GCAM/current/Main_User_Workspace/exe/configuration_ref.xml
-     OK: GCAM.MI.JarFile = /Users/rjp/bitbucket/gcam-proj/ModelInterface/ModelInterface.jar
-     OK: GCAM.RegionMapFile = /Users/rjp/bitbucket/paper1/etc/Regions.txt
+
+    OK: GCAM.SandboxRoot = /people/plev920/ws
+    OK: GCAM.SandboxDir = /people/plev920/ws/paper1/
+    OK: GCAM.ProjectRoot = /people/plev920/bitbucket
+    OK: GCAM.ProjectDir = /people/plev920/bitbucket/paper1
+    OK: GCAM.QueryDir = /people/plev920/bitbucket/paper1/queries
+    OK: GCAM.MI.Dir = /people/plev920/GCAM/current/input/gcam-data-system/_common/ModelInterface/src
+    OK: GCAM.RefWorkspace = /people/plev920/GCAM/current
+    OK: GCAM.TempDir = /pic/scratch/plev920/tmp
+    OK: GCAM.UserTempDir = /people/plev920/tmp
+    OK: GCAM.ProjectXmlFile = /people/plev920/bitbucket/paper1/etc/project.xml
+    OK: GCAM.RefConfigFile = /people/plev920/GCAM/current/exe/configuration_ref.xml
+    OK: GCAM.MI.JarFile = /people/plev920/GCAM/current/input/gcam-data-system/_common/ModelInterface/src/ModelInterface.jar
+    OK: GCAM.RewriteSetsFile = /people/plev920/bitbucket/paper1/etc/rewriteSets.xml
 
 
 Location of GCAM program and data files
@@ -186,8 +223,8 @@ The variable ``GCAM.MI.Dir`` should point to a directory holding the ModelInterf
 program. This is used to execute batch queries to extract results from GCAM.
 
 
-Default values
-^^^^^^^^^^^^^^^
+Default configuration variable dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The system default values are provided in the ``pygcam`` package in the file
 ``pygcam/etc/system.cfg``, which is listed below. In addition to these values,
 several values are read from platform-specific files, as noted above. These

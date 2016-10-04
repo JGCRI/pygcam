@@ -7,7 +7,7 @@
 .. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-
+from __future__ import print_function
 from ..log import getLogger
 from ..subcommand import SubcommandABC
 
@@ -53,7 +53,7 @@ def driver(args, tool):
                 else:
                     shutil.rmtree(sandbox)
             else:
-                print("Would remove %s" % sandbox)
+                print("Would remove", sandbox)
         except Exception as e:
             _logger.warn("Can't remove '%s': %s" % (sandbox, e))
 
@@ -62,7 +62,7 @@ def driver(args, tool):
             _logger.info('Creating ' + sandbox)
             createSandbox(sandbox)
         else:
-            print("Would create %s" % sandbox)
+            print("Would create", sandbox)
 
     if args.run:
         cmdStr = 'cd ' + sandbox + '; ' + args.run
@@ -71,7 +71,7 @@ def driver(args, tool):
             os.chdir(sandbox)
             subprocess.call(args.run, shell=True)
         else:
-            print("Would run: %s" % cmdStr)
+            print("Would run:", cmdStr)
 
 class SandboxCommand(SubcommandABC):
     __version__ = '0.2'

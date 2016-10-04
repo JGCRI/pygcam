@@ -213,6 +213,7 @@ def expandYearRanges(seq):
         pass
 
     for year, value in seq:
+        value = float(value)
         if isinstance(year, basestring) and '-' in year:
             m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
             if not m:
@@ -225,7 +226,7 @@ def expandYearRanges(seq):
             expanded = map(lambda y: [y, value], range(startYear, endYear+step, step))
             result.extend(expanded)
         else:
-            result.append((year, value))
+            result.append((int(year), value))
 
     return result
 
@@ -245,6 +246,7 @@ class XMLEditor(object):
         self.refWorkspace = refWorkspace
         self.xmlSourceDir = xmlSourceDir
         self.parent = parent
+        self.mcsMode = None
 
         self.setupArgs = None
 
@@ -426,6 +428,9 @@ class XMLEditor(object):
         self.renameScenarioComponent("cement_1", pathjoin(self.energy_dir_rel, "cement.xml"))
         self.renameScenarioComponent("cement_2", pathjoin(self.energy_dir_rel, "cement_incelas_gcam3.xml"))
 
+        self.renameScenarioComponent("en_fertilizer", pathjoin(self.energy_dir_rel, "en_Fert.xml"))
+        self.renameScenarioComponent("ag_fertilizer", pathjoin(self.aglu_dir_rel,   "ag_Fert.xml"))
+
         landFiles = ('land_input_1', 'land_input_2', 'land_input_3', 'protected_land_input_2', 'protected_land_input_3')
         for landFile in landFiles:
             self.renameScenarioComponent(landFile, pathjoin(self.aglu_dir_rel, landFile + '.xml'))
@@ -522,6 +527,8 @@ class XMLEditor(object):
 
         return result
 
+    # TBD: should this operate instead on component name rather than path?
+    # TBD: advantage is not having to know where original file lives.
     def getLocalCopy(self, pathname):
         """
         Get the filename for the most local version (in terms of scenario hierarchy)
@@ -711,7 +718,7 @@ class XMLEditor(object):
                 '-v', name)
 
     @callableMethod
-    def addMarketConstraint(self, target, policy, dynamic=False):
+    def addMarketConstraint(self, target, policy, dynamic=False, baselinePolicy=False):
         """
         Adds references to a pair of files comprising a policy, i.e., a policy definition
         file and a constraint file. References to the two files--assumed to be named ``XXX-{subsidy,tax}.xml``
@@ -721,6 +728,8 @@ class XMLEditor(object):
         :param policy: (str) one of ``subsidy`` or ``tax``
         :param dynamic: (str) True if the XML file was dynamically generated, and thus found in ``dyn-xml``
            rather than ``local-xml``
+        :param baselinePolicy: (bool) if True, the policy file is linked to the baseline directory
+           rather than this scenario's own directory.
         :return: none
         """
         _logger.info("Add market constraint: %s %s for %s" % (target, policy, self.name))
@@ -734,7 +743,9 @@ class XMLEditor(object):
 
         reldir = self.scenario_dyn_dir_rel if dynamic else self.scenario_dir_rel
 
-        policyXML     = pathjoin(reldir, basename + ".xml")
+        policyReldir = self.baseline_dir_rel if baselinePolicy else reldir
+
+        policyXML     = pathjoin(policyReldir, basename + ".xml")
         constraintXML = pathjoin(reldir, basename + "-constraint.xml")
 
         # See if element exists in config file (-Q => quiet; just report exit status)
@@ -746,6 +757,7 @@ class XMLEditor(object):
         addOrUpdate(policyTag, policyXML)
         addOrUpdate(constraintTag, constraintXML)
 
+    @callableMethod
     def delMarketConstraint(self, target, policy):
         """
         Delete the two elements defining a market constraint from the configuration file. The filenames
@@ -772,6 +784,7 @@ class XMLEditor(object):
             self.deleteScenarioComponent(policyTag)
             self.deleteScenarioComponent(constraintTag)
 
+    @callableMethod
     def setStopPeriod(self, yearOrPeriod):
         """
         Sets the model stop period. If `stopPeriod` is <= 22, the stop period is set to

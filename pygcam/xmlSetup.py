@@ -169,7 +169,7 @@ class Iterator(object):
         self.name = node.get('name')
         self.min  = self.max = self.step = self.values = self.format = None
 
-        typeName  = node.get('type')
+        typeName  = node.get('type', 'list')
         isNumeric = typeName in ('int', 'float')
         self.type = iterType = eval(typeName)   # N.B. schema ensures numeric values
 
@@ -212,19 +212,20 @@ class ScenarioGroup(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.useGroupDir = getBooleanXML(node.get('useGroupDir', 0))
-        self.isDefault = getBooleanXML(node.get('default', 0))
+        self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
+        self.isDefault = getBooleanXML(node.get('default', default='0'))
         self.iteratorName = node.get('iterator')
         self.baselineSource = node.get('baselineSource')
         self.templateScenarios = scenarios = map(Scenario, node.findall('scenario'))
         self.templateDict = {obj.name: obj for obj in scenarios}
         self.finalDict = OrderedDict()
+        self.baseline = None
 
     def getFinalScenario(self, name):
         try:
             return self.finalDict[name]
         except KeyError:
-            raise PygcamException('Scenario "%s" was not found in group "%s"' % (self.name, name))
+            raise PygcamException('Scenario "%s" was not found in group "%s"' % (name, self.name))
 
     def expandScenarios(self, scenarioSetup, templateDict):
         # Replace the text context in all action elements with expanded version
@@ -233,8 +234,15 @@ class ScenarioGroup(object):
         # and {baselineDir} are converted when the scenario is run.
         def expand(scenario):
             scenario.name = name = scenario.name.format(**templateDict)
+            subdir = scenario.node.get('subdir', default=scenario.name)
+            scenario.subdir = subdir.format(**templateDict)
+
             self.finalDict[name] = scenario
             scenario.formatContent(templateDict)
+            if scenario.isBaseline:
+                if self.baseline:
+                    raise SetupException('Group %s declares multiple baselines' % self.name)
+                self.baseline = name
 
         for templateScenario in self.templateScenarios:
             iterName = templateScenario.iteratorName
@@ -261,9 +269,11 @@ class Scenario(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.isBaseline = getBooleanXML(node.get('baseline', 0))
+        self.isBaseline = getBooleanXML(node.get('baseline', default=0))
+        self.isActive   = getBooleanXML(node.get('active',   default='1'))
         self.iteratorName = node.get('iterator')
         self.actions = map(_classForNode, node)
+        self.subdir = node.get('subdir', default=self.name)
 
     def __str__(self):
         return "<scenario name='%s'>" % self.name
@@ -306,7 +316,7 @@ class ConfigAction(ConfigActionBase):
         super(ConfigAction, self).__init__(node)
         self.name = node.get('name')
         self.dynamic = getBooleanXML(node.get('dynamic', '0'))
-        self.dir  = node.get('dir', '')     # TBD: currently unused
+        # self.dir  = node.get('dir', '')     # deprecated
 
     def __str__(self):
         tag = self.tag
@@ -409,7 +419,7 @@ class If(ConfigActionBase):
 
 MCSVALUES_FILE = 'mcsValues.xml'
 
-def createXmlEditorSubclass(setupFile, mcsMode=None):
+def createXmlEditorSubclass(setupFile):
     """
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
@@ -441,11 +451,11 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
     class XmlEditorSubclass(superclass):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
             self.parentConfigPath = None
-            self.mcsMode = mcsMode          # save this from command-line for use in subclasses
+            self.mcsValues = None
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
-                # TBD: see if we ever need anything but base XMLEditor for parent baselines...
+                # TBD: test this in FCIP case where baseline builds on FuelShock
                 parent = XMLEditor(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
@@ -469,7 +479,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             super(XmlEditorSubclass, self).setupDynamic(args)
 
-            if self.mcsMode:
+            if self.mcsMode == 'trial':             # TBD: was just "if self.mcsMode" -- test this
                 from pygcam.utils import McsValues
                 paramFile = self.paramFile
                 if paramFile and os.path.lexists(paramFile):
@@ -496,7 +506,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             self.groupName = args.group
             scenarioSetup = self.scenarioSetup
 
-            # TBD: This is convoluted, but may be needed for cases like FCIP, if based on FuelShock
+            # TBD: test this in FCIP case where baseline builds on FuelShock
             if not self.parent:
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this
@@ -524,17 +534,13 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             super(XmlEditorSubclass, self).setupStatic(args)
 
-            # TBD: could be moved to XmlEditorSubclass since depends on mcsMode
             # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
             # to be found in the config file to be able to apply distributions to the values.
-            if self.mcsMode and not self.parent:
+            # TBD: Note that this was "if self.mcsMode and not self.parent:"
+            mcsValuesPath = os.path.join(self.scenario_dir_abs, MCSVALUES_FILE)
+            if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
                 self.addScenarioComponent('mcsValues', os.path.join(self.scenario_dir_rel, MCSVALUES_FILE))
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
-
-            filename = getParam('GCAM.ScenarioSetupOutputFile')
-            if filename:
-                with open(filename, 'w') as stream:
-                    scenarioSetup.writeXML(stream)
 
     return XmlEditorSubclass

@@ -6,6 +6,7 @@
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
+from __future__ import print_function
 import glob
 import os
 import re
@@ -21,6 +22,7 @@ from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
                     simpleFormat, resourceStream, QueryResultsDir, XMLFile)
+from .xmlSetup import ScenarioSetup
 
 __version__ = '0.2'
 
@@ -28,28 +30,32 @@ _logger = getLogger(__name__)
 
 DefaultProjectFile = './project.xml'
 
-def getBaseline(scenarios):
-    '''Check that exactly one active baseline is defined, and if so, return it'''
+# deprecated
+# def getBaseline(scenarios):
+#     '''Check that exactly one active baseline is defined, and if so, return it'''
+#
+#     baselines = [s for s in scenarios if s.isBaseline and s.isActive]
+#     if len(baselines) == 1:
+#         return baselines[0]
+#
+#     raise FileFormatError('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
 
-    baselines = [s for s in scenarios if s.isBaseline and s.isActive]
-    if len(baselines) == 1:
-        return baselines[0]
-
-    raise FileFormatError('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
-
-def getDefaultGroup(groups):
-    '''
-    Check that exactly one default scenarioGroup is defined, unless there is only one group,
-    in which case it is obviously the default.
-    '''
-    if len(groups) == 1:
-        return groups[0]
-
-    defaults = [group for group in groups if group.isDefault]
-    if len(defaults) == 1:
-        return defaults[0]
-
-    raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
+# Deprecated
+# def getDefaultGroup(groupDict):
+#     '''
+#     Check that exactly one default scenarioGroup is defined, unless there is
+#     only one group, in which case it is obviously the default.
+#     '''
+#     groups = groupDict.values()
+#
+#     if len(groups) == 1:
+#         return groups[0]
+#
+#     defaults = [group for group in groups if group.isDefault]
+#     if len(defaults) == 1:
+#         return defaults[0]
+#
+#     raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
 
 def decacheVariables():
     SimpleVariable.decache()
@@ -163,32 +169,33 @@ class Queries(_TmpFileBase):
         self.tree.write(path, xml_declaration=True, pretty_print=True)
         return path
 
-class ScenarioGroup(object):
-    """
-    Represents the ``<scenarioGroup>`` element in the projects.xml file.
-    """
-    def __init__(self, node):
-        self.name = node.get('name')
-        self.isDefault   = getBooleanXML(node.get('default', default='0'))
-        self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
-
-        scenarioNodes = node.findall('scenario')
-        scenarios = map(Scenario, scenarioNodes)
-
-        self.scenarioDict = {scen.name : scen for scen in scenarios}
-
-        baselineNode = getBaseline(scenarios)
-        self.baseline = baselineNode.name
-
-class Scenario(object):
-    """
-    Represents the ``<scenario>`` element in the projects.xml file.
-    """
-    def __init__(self, node):
-        self.name = node.get('name')
-        self.isActive   = getBooleanXML(node.get('active',   default='1'))
-        self.isBaseline = getBooleanXML(node.get('baseline', default='0'))
-        self.subdir = node.get('subdir', default=self.name)
+# deprecated
+# class ScenarioGroup(object):
+#     """
+#     Represents the ``<scenarioGroup>`` element in the projects.xml file.
+#     """
+#     def __init__(self, node):
+#         self.name = node.get('name')
+#         self.isDefault   = getBooleanXML(node.get('default', default='0'))
+#         self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
+#
+#         scenarioNodes = node.findall('scenario')
+#         scenarios = map(Scenario, scenarioNodes)
+#
+#         self.scenarioDict = {scen.name : scen for scen in scenarios}
+#
+#         baselineNode = getBaseline(scenarios)
+#         self.baseline = baselineNode.name
+#
+# class Scenario(object):
+#     """
+#     Represents the ``<scenario>`` element in the projects.xml file.
+#     """
+#     def __init__(self, node):
+#         self.name = node.get('name')
+#         self.isActive   = getBooleanXML(node.get('active',   default='1'))
+#         self.isBaseline = getBooleanXML(node.get('baseline', default='0'))
+#         self.subdir = node.get('subdir', default=self.name)
 
 
 class Step(object):
@@ -244,7 +251,6 @@ class Step(object):
                 tool.run(argList=argList)
             else:
                 shellCommand(command, shell=True)   # shell=True to expand shell wildcards and so on
-
 
 class SimpleVariable(object):
     """
@@ -319,12 +325,11 @@ class Variable(SimpleVariable):
         # recurse in case there are vars whose values are variable references
         return self.evaluate(argDict, value=result) if re.search('\{[^\}]+\}', result) else result
 
-
 class Project(XMLFile):
     """
     Represents the ``<project>`` element in the projects.xml file.
     """
-    def __init__(self, xmlFile, projectName, groupName):
+    def __init__(self, xmlFile, projectName, groupName=None):
 
         schemaStream = resourceStream('etc/project-schema.xsd')
 
@@ -347,19 +352,27 @@ class Project(XMLFile):
         defaultsNode = tree.find('defaults')   # returns 1st match
         hasDefaults = defaultsNode is not None
 
-        scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarioGroup'))
-        self.scenarioGroupDict = groupDict = {group.name : group for group in scenarioGroups}
-        if not groupName:
-            defaultGroup = getDefaultGroup(scenarioGroups)
-            groupName = defaultGroup.name
+        # Read referenced scenarios.xml file and add it as a child of projectNode
+        nodes = projectNode.findall('scenariosFile')
+        if len(nodes) != 1:
+            raise FileFormatError("%s: <project> must define exactly one <scenariosFile> element" % xmlFile)
+        filename = nodes[0].get('name')
+        setupFile = os.path.join(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
+        self.scenarioSetup = ScenarioSetup.parse(setupFile)
 
-        if groupName not in groupDict:
-            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, projectName))
+        filename = getParam('GCAM.ScenarioSetupOutputFile')
+        if filename:
+            _logger.debug('Writing "%s"', filename)
+            with open(filename, 'w') as stream:
+                self.scenarioSetup.writeXML(stream)
 
-        self.scenarioGroupName = groupName
-        self.scenarioGroup = scenarioGroup = groupDict[groupName]
-        self.baselineName  = scenarioGroup.baseline
-        self.scenarioDict  = scenarioGroup.scenarioDict
+        # deprecated (old approach)
+        # self.scenarioGroups = scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarios/scenarioGroup'))
+        # self.scenarioGroupDict = {group.name : group for group in scenarioGroups}
+        # TBD: new approach
+        self.scenarioGroupDict = self.scenarioSetup.groupDict
+
+        self.setGroup(groupName)    # if None, default group is set
 
         dfltSteps = map(Step, defaultsNode.findall('./steps/step')) if hasDefaults else []
         projSteps = map(Step, projectNode.findall('./steps/step'))
@@ -400,6 +413,21 @@ class Project(XMLFile):
             schema.assertValid(doc)
         else:
             return schema.validate(doc)
+
+    def setGroup(self, groupName=None):
+        groupDict = self.scenarioGroupDict
+
+        groupName = groupName or self.scenarioSetup.defaultGroup
+
+        if groupName not in groupDict:
+            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, self.projectName))
+
+        self.scenarioGroupName = groupName
+        self.scenarioGroup = scenarioGroup = groupDict[groupName]
+        self.baselineName  = scenarioGroup.baseline
+        self.scenarioDict  = scenarioGroup.finalDict
+
+        return self.scenarioGroup
 
     def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
         '''
@@ -520,15 +548,11 @@ class Project(XMLFile):
 
         self.argDict = argDict = Variable.getDict()
 
-        # Add standard variables from project XML file itself
+        # Add standard variables for use in step command substitutions
         argDict['project']       = projectName
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = scenarioGroupName
-
-        # argDict['projectSrcDir'] = unixPath(join(argDict['GCAM.XmlSrc'], groupDir, subdir), rmFinalSlash=True)
-        # argDict['projectXmlDir'] = unixPath(join(argDict['GCAM.LocalXml'], groupDir, subdir), rmFinalSlash=True)
-
         argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   groupDir, subdir), rmFinalSlash=True)
         argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir, subdir), rmFinalSlash=True)
 
@@ -560,17 +584,15 @@ class Project(XMLFile):
                 _logger.debug("Skipping inactive scenario: %s", scenarioName)
                 continue
 
-            sandboxRoot = argDict['GCAM.SandboxRoot']
-
             # These get reset as each scenario is processed
             argDict['scenario']       = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
             argDict['sandboxDir']     = sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
-            # was: unixPath(join(sandboxRoot, projectName, groupDir), rmFinalSlash=True), but now set in config
             argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, scenarioName))
             argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
             argDict['batchDir']       = unixPath(join(scenarioDir, QueryResultsDir))     # used to be batch-{scenario}
 
+            # set in case it wasn't already
             setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
@@ -593,7 +615,7 @@ class Project(XMLFile):
 
 
     def dump(self, steps, scenarios):
-        print("Scenario group: %s" % self.scenarioGroupName)
+        print("Scenario group:", self.scenarioGroupName)
         print("Requested steps:", steps)
         print("Requested scenarios:", scenarios)
         print("Defined steps:", self.getKnownSteps())
@@ -625,4 +647,9 @@ def projectMain(args, tool):
     projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
 
     project = Project(projectFile, args.project, args.group)
-    project.run(scenarios, skipScens, steps, skipSteps, args, tool)
+
+    groups = project.getKnownGroups() if args.allGroups else [args.group]
+
+    for group in groups:
+        project.setGroup(group)
+        project.run(scenarios, skipScens, steps, skipSteps, args, tool)

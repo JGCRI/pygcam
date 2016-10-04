@@ -6,6 +6,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from __future__ import print_function
 import argparse
 import os
 import pipes
@@ -23,6 +24,7 @@ from .builtins.query_plugin import QueryCommand
 from .builtins.run_plugin import ProjectCommand
 from .builtins.sandbox_plugin import SandboxCommand
 from .builtins.setup_plugin import SetupCommand
+from .builtins.compare_plugin import CompareCommand
 
 from .config import (getParam, getConfig, getParamAsBoolean, setParam,
                      getSection, setSection, DEFAULT_SECTION)
@@ -30,16 +32,16 @@ from .error import PygcamException, ProgramExecutionError, ConfigFileError, Comm
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
 from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
+from .version import VERSION
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
-__version__ = '0.1'
 
-BuiltinSubcommands = [ChartCommand, ConfigCommand, DiffCommand, GcamCommand,
-                      NewProjectCommand, ProtectLandCommand, QueryCommand,
-                      ProjectCommand, SandboxCommand, SetupCommand]
+BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
+                      GcamCommand, NewProjectCommand, ProtectLandCommand,
+                      QueryCommand, ProjectCommand, SandboxCommand, SetupCommand]
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
@@ -56,7 +58,7 @@ def _writeBatchScript(args, delete=False):
     tmpDir = getParam('GCAM.UserTempDir')
     mkdirs(tmpDir)
 
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=False)
+    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
     _logger.info("Creating batch script '%s'", scriptFile)
 
     with open(scriptFile, 'w') as f:
@@ -82,27 +84,6 @@ def _randomSleep(minSleep, maxSleep):
     delay = minSleep + random.random() * (maxSleep - minSleep)
     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
     time.sleep(delay)
-
-# Deprecated
-# def _waitForScript(scriptFile):
-#     """
-#     It can take a few moments for the script to be visible on a compute node.
-#     """
-#     maxTries = 4
-#     minSleep = 1
-#     maxSleep = 4
-#
-#     exists = False
-#     for i in range(maxTries):
-#         if os.path.exists(scriptFile):
-#             print("%s exists!" % scriptFile)
-#             exists = True
-#             break
-#
-#         _randomSleep(minSleep, maxSleep)    # TBD: check if this is still necessary
-#
-#     if not exists:
-#         raise PygcamException("Failed to read args file after %d tries" % maxTries)
 
 
 class GcamTool(object):
@@ -219,7 +200,7 @@ class GcamTool(object):
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
+        parser.add_argument('--version', action='version', version='%(prog)s-' + VERSION)
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
@@ -299,6 +280,8 @@ class GcamTool(object):
         """
         assert args or argList, "GcamTool.run requires either args or argList"
 
+        checkWindowsSymlinks()
+
         if argList is not None:         # might be called with empty list of subcmd args
             # called recursively
             self._loadRequiredPlugins(argList)
@@ -327,11 +310,13 @@ class GcamTool(object):
         import platform
 
         system = platform.system()
-        if False and system in ['Windows', 'Darwin']:
+        # TBD: Might install SLURM on an OS X server...
+        if system in ['Windows']: # , 'Darwin']:
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
-        scriptFile = _writeBatchScript(shellArgs, delete=not run)    # delete it if just showing cmd
+        #scriptFile = _writeBatchScript(shellArgs, delete=not run)    # delete it if just showing cmd
+        scriptFile = _writeBatchScript(shellArgs, delete=True)
 
         args = self.parser.parse_args(args=shellArgs)
         jobName   = args.jobName
@@ -417,7 +402,6 @@ def catchSignals():
     for sig in signals:
         signal.signal(sig, _sigHandler)
 
-# TBD: test on Windows
 def checkWindowsSymlinks():
     '''
     If running on Windows and GCAM.CopyAllFiles is not set, and
@@ -447,7 +431,6 @@ def _setDefaultProject(argv):
 def _main(argv=None):
     getConfig()
     configureLogs()
-    checkWindowsSymlinks()
 
     _setDefaultProject(argv)
 

@@ -45,12 +45,55 @@
                 <xs:element ref='steps'/>
                 <xs:element ref='tmpFile'/>
                 <xs:element ref='vars'/>
-                <xs:element ref='scenarioGroup'/>
+                <!-- <xs:element ref='scenarios'/> -->
+                <xs:element ref='scenariosFile'/>
                 <xs:element ref='queries'/>
                 <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='subdir' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- basically an "include" statement -->
+    <xs:element name='scenariosFile'>
+        <xs:complexType>
+            <xs:attribute name='name' use='required' type='xs:string'/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Use only external scenarios file -->
+    <!--
+    <xs:element name='scenarios'>
+        <xs:complexType>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='scenarioGroup'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+	<xs:simpleType name="iteratorType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="float"/>
+			<xs:enumeration value="int"/>
+            <xs:enumeration value="list"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name='iterator'>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name='name' use='required' type='xs:string'/>
+                    <xs:attribute name='type' type='iteratorType' default="list"/>
+                    <xs:attribute name='min' type='xs:decimal'/>
+                    <xs:attribute name='max' type='xs:decimal'/>
+                    <xs:attribute name='step' type='xs:decimal'/>
+                    <xs:attribute name='format' type='xs:string'/>
+                    <xs:attribute name='values' type='xs:string'/>
+                </xs:extension>
+            </xs:simpleContent>
         </xs:complexType>
     </xs:element>
 
@@ -63,17 +106,20 @@
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='default' type='xs:boolean' default='false'/>
             <xs:attribute name="useGroupDir" type='xs:boolean' default='false'/>
+            <xs:attribute name='iterator' type='xs:string'/>
+            <xs:attribute name='baselineSource' type='xs:string'/>
         </xs:complexType>
     </xs:element>
 
     <xs:element name='scenario'>
         <xs:complexType>
+            <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='active' type='xs:boolean' default='true'/>
             <xs:attribute name='baseline' type='xs:boolean' default='false'/>
-            <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='subdir' type='xs:string'/>
         </xs:complexType>
     </xs:element>
+    -->
 
     <xs:element name='steps'>
         <xs:complexType>

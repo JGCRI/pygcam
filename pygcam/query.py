@@ -503,13 +503,15 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
                                        outputDir=outputDir, tmpFiles=tmpFiles, delete=delete)
 
     if not queryFile:
-        raise PygcamException("_createBatchCommand: file for query '%s' was not found." % basename)
+        raise PygcamException("_createBatchCommand: file for query '%s' was not found in '%s'." % \
+                              (basename, queryPath))
 
     if not csvFile:
         csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
         csvFile = csvFile.replace(' ', '_')             # eliminate spaces for convenience
 
     outputDir = outputDir or getParam('GCAM.OutputDir')
+    mkdirs(outputDir)
     csvPath = os.path.abspath(os.path.join(outputDir, csvFile))
 
     batchCommand = BatchCommandElement.format(scenario=scenario, queryFile=queryFile,
@@ -551,6 +553,9 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         if isinstance(obj, Query):      # handle Query instances and simple query name strings
             queryName = obj.name
             rewriters = obj.rewriters
+
+            if not rewriteParser:
+                raise PygcamException("No rewriteParser defined. Pass filename as argument to query sub-command or define GCAM.RewriteSetsFile")
         else:
             queryName = obj
             rewriters = None
@@ -935,12 +940,16 @@ def queryMain(args):
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
     # by GCAM to query the in-memory database before exiting.
-    if inMemory and not prequery:
-        _logger.info('Skipping post-GCAM query step: using in-memory database')
+    if prequery and version <= 4.2:
+        _logger.info('Skipping pre-query step for GCAM %s', version)
         return
 
     if internalQueries and not prequery:
         _logger.info('Skipping post-GCAM query step: GCAM runs queries internally')
+        return
+
+    if inMemory and not prequery:
+        _logger.info('Skipping post-GCAM query step: using in-memory database')
         return
 
     if not (xmldb or inMemory):

@@ -62,6 +62,7 @@ def pushd(directory):
     """
     Context manager that changes to the given directory and then
     returns to the original directory. Usage is ``with pushd('/foo/bar'): ...``
+
     :param directory: (str) a directory to chdir to temporarily
     :return: none
     """
@@ -432,18 +433,10 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
     # Load the compiled code if it's a '.pyc', otherwise load the source code
     module = None
     try:
-        # TBD: this test isn't necessary since load_source loads a .pyc instead if found
-        if base.endswith('.py'):
-            module = load_source(moduleName, modulePath)
-        elif base.endswith('.pyc'):
-            module = load_compiled(moduleName, modulePath)
-        else:
-            raise Exception('Unknown module type (%s): file must must be .py or .pyc' % modulePath)
-
+        module = load_source(moduleName, modulePath)
     except Exception as e:
         errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
         if raiseOnError:
-            #logger.error(errorString)
             raise PygcamException(errorString)
 
         _logger.error(errorString)
@@ -573,6 +566,7 @@ class McsValues(XMLFile):
         :param xmlFile: (str) the name of an XML file adhering to mcsValues-schema.xsd.
         """
         from collections import defaultdict
+        self.xmlFile = xmlFile
 
         _logger.debug('Reading MCS values from %s', xmlFile)
         schemaStream = resourceStream('etc/mcsValues-schema.xsd')
@@ -604,9 +598,13 @@ class McsValues(XMLFile):
         """
         return self.regionMap.get(region, None)
 
-    # TBD: add optional error trapping
-    def valueForRegion(self, paramName, region, default=None):
+    def valueForRegion(self, paramName, region, default=None, raiseError=True):
         regionMap = self.values(region)
+        if regionMap is None:
+            if raiseError:
+                raise PygcamException('Region "%s" is not defined in %s' % (region, self.xmlFile))
+            return None
+
         return regionMap.get(paramName, default)
 
 
@@ -708,7 +706,7 @@ class TempFile(object):
             mkdirs(tmpDir)
 
             if createDir:
-                self.path = mkdtemp(suffix=suffix, dir=tmpDir)      # TODO: test this
+                self.path = mkdtemp(suffix=suffix, dir=tmpDir)
             else:
                 fd, tmpFile = mkstemp(suffix=suffix, dir=tmpDir, text=text)
 
@@ -841,4 +839,3 @@ def chunkify(lst, chunks):
             chunkSize -= 1
         yield lst[i:i + chunkSize]
         i += chunkSize
-

@@ -86,7 +86,7 @@ def _finalizeFigure(fig, ax, outFile=None, yFormat=None, sideLabel=False,
         systemOpenFile(outFile)
 
 
-def plotUnstackedRegionComparison(df, categoryCol=None, valueCol=None, region='USA',
+def plotUnstackedRegionComparison(df, categoryCol, valueCol=None, region=None,
                                   otherRegion='Rest of world', box=False, title='', ncol=3,
                                   xlabel='', ylabel='', ygrid=False, yticks=False,
                                   ymin=None, ymax=None, legendY=None, palette=None,
@@ -198,11 +198,6 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
         plt.tick_params(axis='y', direction='out', length=5, width=.75,
                         colors='k', left='on', right='off')
 
-    # deprecated
-    # lines = ax.get_lines()
-    # if lines:
-    #     lines[0].set_visible(False)    # get rid of ugly dashed line
-
     if zeroLine:
         ax.axhline(0, color='k', linewidth=0.75, linestyle='-')
 
@@ -214,8 +209,6 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
 
     legendY = -0.6 if legendY is None else legendY
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, legendY), ncol=ncol)
-
-    #plt.xticks(rotation=rotation)
 
     if title:
         ax.set_title(title, y=1.05)
@@ -377,8 +370,8 @@ def chartGCAM(args, num=None, negate=False):
     timeseries = args.timeseries
     title      = args.title
     transparent= args.transparent
-    unstacked  = args.unstacked
-    unStackReg = args.unstackedRegion
+    unstackCol  = args.unstackedCol
+    unstackReg = args.unstackedRegion
     valueCol   = args.valueCol
     xlabel     = args.xlabel
     yFormat    = args.format
@@ -427,6 +420,9 @@ def chartGCAM(args, num=None, negate=False):
         except Exception as e:
             raise CommandlineError("Failed to slice by region %s\n  -- %s" % (region, e))
 
+        if df.shape[0] == 0:
+            raise CommandlineError('Region "%s" was not found in %s' % (region, csvFile))
+
     if constraint:
         try:
             df = df.query(constraint)
@@ -465,11 +461,11 @@ def chartGCAM(args, num=None, negate=False):
 
         sideLabel = imgFile if label else ''
 
-        if unstacked:
+        if unstackCol:
             otherRegion = 'Rest of world'
-            mainRegion  = reg or unStackReg
+            mainRegion  = reg or unstackReg
 
-            plotUnstackedRegionComparison(df, categoryCol=unstacked, valueCol=valueCol, region=mainRegion,
+            plotUnstackedRegionComparison(df, unstackCol, valueCol=valueCol, region=mainRegion,
                                           otherRegion=otherRegion, box=box, title=title, ncol=ncol,
                                           xlabel=xlabel, ylabel=ylabel, ygrid=ygrid, yticks=yticks,
                                           ymin=ymin, ymax=ymax, legendY=legendY, palette=palette,

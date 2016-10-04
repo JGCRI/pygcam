@@ -129,6 +129,7 @@ class BioenergyEditor(XMLEditor):
 
         self.updateScenarioComponent("ag_base", agForPastBioFileRel)
 
+    # TBD: generalize this as setInputCoefficients(self, (('wholesale gas', x), ('elect_td_ind', y)))
     @callableMethod
     def setCornEthanolCoefficients(self, cornCoef, gasCoef=None, elecCoef=None):
         '''
@@ -181,7 +182,7 @@ class BioenergyEditor(XMLEditor):
         '''
         self.setEnergyTechnologyCoefficients(self, BIOMASS_LIQUIDS, fuelName, 'regional biomass', pairs)
 
-    # TBD: test
+    # TBD: generalize as setIsNewTechnology() ?
     @callableMethod
     def purposeGrownOffInRegion(self, region):
         '''

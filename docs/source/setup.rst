@@ -4,29 +4,40 @@ GCAM XML-Setup
 The XML-Setup system provides tools for modifying standard and custom XML
 input files that control GCAM's behavior. The XML-Setup system copies the
 designated files to the scenario's run-time "sandbox" before modifying them
-and the GCAM configuration file, which instructs GCAM on which
+and updating the GCAM configuration file that tells GCAM which
 XML data files to load.
 
-User-defined Python or XML scripts and any hand-coded XML files
+.. note:: The :doc:`pygcam.xmlEditor` module relies on the *XML Starlet* program, a
+   command-line tool that can search and edit XML files (among other tricks.) It is
+   available for all three GCAM platforms.
+   `Download XML Starlet <http://xmlstar.sourceforge.net/download.php>`_.
+   It should be included on all modern Linux systems. It is available in binary
+   (executable) form for Windows, but must be compiled on Mac OS X. Contact the
+   author if you need a copy for the Mac.
+
+User-defined Python scripts and XML files
 constitute the "source code" used to generate the XML data and
 configuration files described by the scripts. The generated XML files
-are written to a directory called ``local-xml`` within the source
+are written to a directory called ``local-xml`` in the run-time
 :ref:`workspace <workspaces-label>`.
 
-    .. seealso::
+.. seealso::
 
-       The :doc:`scenarios-xml` page documents the XML file format. See
-       :doc:`pygcam.xmlEditor` for more information about the Python API.
-       Command-line usage is described on the :ref:`gt setup <setup-label>` page.
+     Command-line usage is described on the :ref:`gt setup <setup-label>` page.
 
 Usage
 ------
 
-The XML-Setup system offers two levels of access:
-you can either write a custom Python module based on the API provided
-by :doc:`pygcam.xmlEditor`, or you can use a higher-level (but more
-restrictive) XML format that may be adequate and more convenient
-for many projects.
+The XML-Setup system allows scenarios to be defined in XML or in Python.
+In addition, functions can be added in Python that are accessible via
+XML.
+
+The higher-level XML method should be adequate and more convenient for
+many projects. The :doc:`scenarios-xml` page documents the XML file format
+and provides a complete example.
+
+Pythonistas should review the API provided by :doc:`pygcam.xmlEditor` and
+the many XML-accessible functions available therein.
 
 The :ref:`setup <setup-label>` sub-command provides options to allow you
 to specify either the Python or XML approach. Determination of the file
@@ -55,13 +66,6 @@ a given policy scenario is based on a particular baseline scenario. The
 structure can have an arbitrary number of layers. For example, a
 "bioenergy baseline" scenario may be shared across several analyses, each
 of which refines the shared scenario to create a baseline specific to the analysis.
-
-.. note:: The :doc:`pygcam.xmlEditor` module relies on the *XML Starlet* program, a
-   command-line tool that can search and edit XML files (among other tricks.) It is available
-   for all three GCAM platforms. `Download XML Starlet <http://xmlstar.sourceforge.net/download.php>`_.
-   It should be included on all modern Linux systems. It is available in binary (executable)
-   form for Windows, but must be compiled on Mac OS X.
-
 
 Core features
 --------------
@@ -104,6 +108,49 @@ The setup module provides functions that automate the manipulation of XML files,
     * Currently defined functions can modify performance coefficients,
       non-energy-cost, shutdown rate for specified technologies, residue supply curves,
       and more.
+
+Workspaces and Sandboxes
+-------------------------
+Pygcam creates two levels of GCAM workspaces. To distinguish them, the directory in
+which GCAM is run is referred to as a `sandbox`. The directory whose contents are
+copied and/or symlinked to create the sandbox is referred to as a `workspace`.
+
+To ensure that sets of related runs use the same reference workspace, the
+:ref:`setup <setup-label>` sub-command copies and/or symlinks files from the reference
+workspace (identified by config variable ``GCAM.RefWorkspace``) to a directory
+called ``Workspace`` in the sandbox directory. This directory is created only when
+it doesn't exist already, however you can force the directory to be recreated either
+by deleting it manually or via the :ref:`sandbox <sandbox-label>` sub-command.
+
+Depending on your project workflow (and on Windows, level of administrative privileges)
+you can choose to copy or symlink files and directories back to their source. This applies
+to both the run-time workspace created from the reference Workspace, and the sandboxes
+created from the run-time workspace.
+
+By default, the run-time workspace is created with a symlink to the reference workspace's
+``input`` directory, but the ``exe`` directory is copied.
+
+By default, sandboxes are created with symlinks to the run-time workspace's ``input``
+directory and the GCAM executable in the ``exe`` directory. The ``output`` directory
+and directories used by ``pygcam`` are created as needed.
+
+The following twoo variables control which files to symlink or copy. All required files and
+directories not named in these variables are copied. Note that if the config variable
+``GCAM.CopyAllFiles`` is set to ``True``, or on Windows, if the user does not have
+permission to create symlinks, all files are copied regardless of the settings of these
+variables.
+
+      ``GCAM.WorkspaceFilesToLink``
+         A list of paths relative to ``GCAM.RefWorkspace`` that should be symlinked to same
+         relative location under ``{GCAM.SandboxDir}/Workspace``.
+
+      ``GCAM.SandboxFilesToLink``
+         A list of paths relative to ``{GCAM.SandboxDir}/Workspace`` that should be symlinked
+         to the same relative location in the current sandbox directory.
+
+
+Design notes
+-------------
 
 Benefits
 ^^^^^^^^^

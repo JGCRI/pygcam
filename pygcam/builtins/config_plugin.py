@@ -4,6 +4,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from __future__ import print_function
 from ..error import PygcamException, CommandlineError
 from ..subcommand import SubcommandABC
 
@@ -49,7 +50,7 @@ class ConfigCommand(SubcommandABC):
         import os
         from ..config import getParam
 
-        requiredDirs = ['SandboxRoot', 'SandboxDir', 'ProjectRoot', 'ProjectDir',
+        requiredDirs = ['SandboxRoot', 'ProjectRoot', 'ProjectDir',
                         'QueryDir', 'MI.Dir', 'RefWorkspace', 'TempDir']
         requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'MI.JarFile']
         optionalDirs  = ['UserTempDir']
@@ -60,6 +61,8 @@ class ConfigCommand(SubcommandABC):
 
         optionalVars = optionalDirs + optionalFiles
 
+        errors = []
+
         for item in dirVars + fileVars:
             var = 'GCAM.' + item
             value = getParam(var)
@@ -67,18 +70,22 @@ class ConfigCommand(SubcommandABC):
             if not value:
                 if item in optionalVars:
                     continue
-                print("Config variable %s is empty" % var)
+                print("Config variable", var, "is empty")
 
-            elif not os.path.lexists(value):
-                print("Config variable %s refers to missing file or directory '%s'" % (var, value))
+            elif not os.path.lexists(value) and item not in optionalVars:
+                errors.append("%s = '%s' : non-existent path" % (var, value))
 
             elif not os.path.isfile(value) and item in fileVars:
-                print("Config variable %s does not refer to a file (%s)" % (var, value))
+                errors.append("%s = '%s' : does not refer to a file" % (var, value))
 
             elif not os.path.isdir(value) and item in dirVars:
-                print("Config variable %s does not refer to a directory (%s)" % (var, value))
+                errors.append("%s = '%s' : does not refer to a directory" % (var, value))
 
-            print 'OK:', var, '=', value
+            print('OK: %s = %s' %(var, value))
+        if errors:
+            print('')
+            for error in errors:
+                print('Error:', error)
 
     def run(self, args, tool):
         import re
@@ -94,6 +101,9 @@ class ConfigCommand(SubcommandABC):
             return
 
         section = 'DEFAULT' if args.useDefault else args.configSection
+
+        if not section:
+            raise CommandlineError("Project was not specifed and GCAM.DefaultProject is not set")
 
         if section != 'DEFAULT' and not _ConfigParser.has_section(section):
             raise CommandlineError("Unknown configuration file section '%s'" % section)
@@ -114,7 +124,7 @@ class ConfigCommand(SubcommandABC):
         print("[%s]" % section)
         for name, value in sorted(_ConfigParser.items(section)):
             if pattern.match(name):
-                print("%22s = %s" % (name, value))
+                print("%25s = %s" % (name, value))
 
 
 PluginClass = ConfigCommand

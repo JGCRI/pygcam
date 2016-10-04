@@ -3,27 +3,17 @@ For code release
 
 Document
 --------
-- Release docs on ReadTheDocs.org
-
 - PPT slides for October
-
 - Assumptions behind setup code
 
 Cleanup
 -------
-- Post xsd files on bitbucket or github and reference them in the XML files?
-
 - Consolidate generic code from sectorEditors and xmlEditor
 
 Features
 --------
 - Provide a way to run a query with different rewrites to produce different
   csv files.
-
-- Have "gt new" copy a file structure as coremcs does
-  - Config var defaults to this structure
-  - User can copy this template, modify it, point to it
-  - Admin can set up custom structure for a project team and use that instead
 
 Testing
 -------
@@ -47,34 +37,14 @@ Testing
   - Looks good, but need to test interaction with old form
 - setup.py installer: test with full install
 - On Windows: test that CopyAllFiles is set to True automatically if linking fails.
-- Host the xsd files on github or bb so they can be referenced in XML
-  files, allowing smart editing.
-- Test / update "new project" command
 - Test bioconstraint command -- maybe move out?
 
-Config changes
-===============
-- Renamed:
-  GCAM.ModelInterface => GCAM.MI.Dir
-  GCAM.JavaArgs       => GCAM.MI.JavaArgs
-  GCAM.JavaLibPath    => GCAM.MI.ClassPath
-  GCAM.ModelInterfaceLogFile => GCAM.MI.LogFile
-  GCAM.UseVirtualBuffer => GCAM.MI.UseVirtualBuffer
-
-- New:
-  GCAM.MI.JarFile      = %(GCAM.MI.Dir)s/ModelInterface.jar
-  GCAM.MI.BatchCommand = java %(GCAM.JavaArgs)s -cp %(GCAM.ClassPath)s ModelInterface/InterfaceMain -b {batchFile}
-
-  GCAM.MI.ClassPath
-
-  GCAM.SandboxProjectDir
-  GCAM.SandboxRefWorkspace
-  GCAM.SandboxDir is now populated using GCAM.ScenarioGroup, which may be empty
+- Generalize the idea of reading baseline result and setting constraints to that
+  level or some delta from that level.
 
 On PIC: Add XMLDBDriver.jar to .../libs/jars. No sense treating this differently.
 
 - Eliminate generators from scenarios.py and use project.xml @setup instead.
-- In generators, expect baseline to be in ../../{baseline}, relative to "exe".
 
 Bugs
 ====
@@ -87,7 +57,6 @@ Bugs
   prior invocation, suggesting a need to re-initialize (class vars?) when
   called from top-level.
   - in any case, all the start-up stuff is rerun needlessly, currently
-
 
 
 Cleanup
@@ -163,21 +132,6 @@ Medium-term
 
 Long-term
 ---------
-- In chart subcommand, allow args to -m (multiplier) to take symbolic
-  values like EJ_to_Quad, where these are driven by a builtin table
-  with common ones, augmented if needed by a user file, e.g.,
-
-    GCAM.UnitMultipliers = %(ProjectRoot)/etc/multipliers.py
-
-    EJ_per_km2_to_Quad_per_Mha = whatever
-
-    Do this as a python file, e.g., unitConversion.py has values
-    gleaned from PNNL files. To see if a value is defined, do:
-        import pygcam.unitConversion as units
-        getattr(units, 't_Mt', None)    # returns None if not defined
-
-    Rewrite unitConversion.py to have more uniform/predictable naming scheme.
-
 - Allow plotting a marker at the total for a bar
 
 - Allow overlay of, say, line chart using right Y axis on barchart
@@ -195,6 +149,8 @@ Long-term
 - Host the xsd files somewhere so they can be referenced in XML
   files, allowing smart editing.
 
+- Generate multi-plot figures, or at least generate data in a useful format.
+
 ===========
 === MCS ===
 ===========
@@ -205,7 +161,13 @@ MCS Integration
 ---------------
 - Test pyfunc capability and use it to generate protected areas based on distro.
 - Failure to run diffs is being reported by Runner.py as success
+- Consolidate mcs/scenarios.xml with etc/scenarios.xml
 
+MCS Bugs
+---------
+- Creating the new database on PIC doesn't properly drop old tables first.
+- This means changes to GCAM.Years aren't handled correctly.
+  - Perhaps just have cols for all years from 2005-2100?
 
 MCS Cleanup
 -----------
@@ -223,6 +185,43 @@ MCS Cleanup
 
 - Optionally Use delta method from SALib instead of the CB method.
 - Incorporate SALib sampling as alternative. (Or just use external input files)
+
+Migration to worker model
+-------------------------
+- Can be even simpler than jug given that we have a database available
+- Bust out gensim loop innards to run this in separate worker processes
+    - Have gensim just write a csv file with trial data
+        - each worker reads their own row and generates XML as needed
+    - need to normalize column-names somehow
+        - if independent vars, colname[index] ?
+- Each worker finds next available run, runs it, repeats until no more
+- Batch a script like the following, where the # workers depends on config var:
+    for i in {1..$x}
+    do
+        runWorker &
+    done
+    wait    # waits for all children to complete
+
+- Easier than python method below
+
+    procs = []
+
+    # check for exited children on signal
+    def reap():
+        for proc in procs:
+            if proc.poll():
+               procs.remove(proc)
+               del proc # to avoid zombies
+
+    signal(signal.SIGCHLD, reap)
+
+    for i in range(count):
+        proc = Popen('runworker')
+        procs.append(proc)
+
+    while procs:
+        sleep(60)
+
 
 MCS docs
 --------

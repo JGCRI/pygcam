@@ -1,16 +1,15 @@
 Contents
 =========
 
-*This package is currently under development.*
-
-
+Introduction
+---------------
 .. toctree::
    :maxdepth: 1
 
    intro
    install
+   config
    tutorial
-   terminology
 
 The ``gt`` workflow management script
 --------------------------------------------------
@@ -18,24 +17,29 @@ The ``gt`` workflow management script
   .. toctree::
    :maxdepth: 1
 
-   setup
-   config
    gcamtool
+   setup
 
+XML File Formats
+------------------
+
+  .. toctree::
+   :maxdepth: 1
+
+   xmlFiles
 
 Application Programming Interface (API)
 ----------------------------------------
 
   .. toctree::
    :maxdepth: 1
-   :glob:
 
-   pygcam.*
+   api
 
-XML File Formats
-------------------
+For PIC Users
+-------------
 
   .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   xmlFiles
+   pic

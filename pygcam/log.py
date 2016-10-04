@@ -26,7 +26,7 @@ _verbose  = False
 
 def _debug(msg):
     if _verbose:
-        print msg
+        print(msg)
 
 #
 # Copied here from utils.py to avoid an "import loop"
@@ -42,7 +42,7 @@ def _mkdirs(newdir, mode=0o770):
 
     try:
         os.makedirs(newdir, mode)
-    except OSError, e:
+    except OSError as e:
         if e.errno != EEXIST:
             raise
 

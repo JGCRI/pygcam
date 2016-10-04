@@ -91,7 +91,8 @@ class ChartCommand(SubcommandABC):
                             help="Interpolate (linearly) annual values between timesteps.")
 
         parser.add_argument('-I', '--indexCol', default="region",
-                            help='''A column to use as the index column, or blank for None. Default is "region".''')
+                            help='''A column to use as the index column, or blank for None. This column
+                            is displayed on the X-axis of stacked barcharts. Default value is "region".''')
 
         parser.add_argument('-k', '--yticks', action="store_true",
                             help="Show tick marks on Y-axis. Default is no tick marks.")
@@ -183,7 +184,7 @@ class ChartCommand(SubcommandABC):
         parser.add_argument('--transparent', action='store_true',
                             help='''Save the plot with a transparent background. (Default is white.)''')
 
-        parser.add_argument('-u', '--unstacked',
+        parser.add_argument('-u', '--unstackedCol',
                             help='''Draw an unstacked bar plot for the column given as an argument to this
                             option, showing three groups of bars: the region, all other regions, and the total.''')
 
@@ -194,7 +195,7 @@ class ChartCommand(SubcommandABC):
         group3.add_argument('-v', '--valueCol',
                             help='''Identify a single column (e.g., a year) to plot for bar plots.''')
 
-        group2.add_argument('-V', '--divisor', type=floatOrConversion, default=0.0,
+        group2.add_argument('-V', '--divisor', type=floatOrConversion,
                             help='''A value to divide year column values by before plotting. The argument can
                             be a floating point number or the name of any variable in pygcam.unitConversion.py.
                             See also -F.''')

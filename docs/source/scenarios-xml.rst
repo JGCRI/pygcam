@@ -7,18 +7,18 @@ configuration XML file. The file, which is processed by the
 groups of related scenarios, and provides an iteration feature
 that allows automated generation of a set of related scenarios.
 
-    .. seealso::
+.. seealso::
 
-       The :doc:`setup` page provides an overview of setup system. See
-       :doc:`pygcam.xmlEditor` for more information about the Python API.
-       Command-line usage is described on the :ref:`gt setup <setup-label>` page.
+   The :doc:`setup` page provides an overview of setup system. See
+   :doc:`pygcam.xmlEditor` for more information about the Python API.
+   Command-line usage is described on the :ref:`gt setup <setup-label>` page.
 
-    .. note::
+.. note::
 
-       When developing scenario definitions using iterators, it can be helpful
-       to see the generated XML. You can set the configuration variable
-       ``GCAM.ScenarioSetupOutputFile`` to a pathname to which the expanded
-       XML should be written after the ``setup`` sub-command has been run.
+   When developing scenario definitions using iterators, it can be helpful
+   to see the generated XML. You can set the configuration variable
+   ``GCAM.ScenarioSetupOutputFile`` to a pathname to which the expanded
+   XML should be written after the ``setup`` sub-command has been run.
 
 The XML element of the ``scenarios.xml`` file are described below, followed by an
 example.
@@ -28,18 +28,18 @@ XML elements
 
 The elements that comprise the ``scenarios.xml`` file are described below.
 
-    .. note::
+.. note::
 
-       All elements can be wrapped in a ``<comment> ... </comment>`` element
-       to effectively remove them from the input stream. This is provided to
-       allow commenting sections that themselves contain comments.
+   All elements can be wrapped in a ``<comment> ... </comment>`` element
+   to effectively remove them from the input stream. This is provided to
+   allow commenting sections that themselves contain comments.
 
-<setup>
-^^^^^^^^^^
+<scenarios>
+^^^^^^^^^^^
 
-The top-most element, ``<setup>``, encloses one or more ``<scenarioGroup>``
+The top-most element, ``<scenarios>``, encloses one or more ``<scenarioGroup>``
 elements, zero or more ``<iterator>`` elements, and zero or more ``<comment>``
-elements. The ``<setup>`` element takes the following attributes:
+elements. The ``<scenarios>`` element takes the following attributes:
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -47,7 +47,7 @@ elements. The ``<setup>`` element takes the following attributes:
 | defaultGroup| no         | (none)    | text     |
 +-------------+------------+-----------+----------+
 
-The ``defaultGroup`` attribute of ``<setup>`` identifies the default
+The ``defaultGroup`` attribute of ``<scenarios>`` identifies the default
 scenarioGroup to use when no group is explicitly identified in
 the :ref:`gt setup <setup-label>` command.
 
@@ -92,10 +92,10 @@ be of the form "groupName/baselineName". For example, if the baseline
 group "Foo", whose baseline is named "foobase", you would use the
 following definition:
 
-  .. code-block:: xml
+.. code-block:: xml
 
-     <scenarioGroup name="Bar" useGroupDir="1" baselineSource="Foo/foobase">
-        <scenario name="base-1a" baseline="1">
+   <scenarioGroup name="Bar" useGroupDir="1" baselineSource="Foo/foobase">
+      <scenario name="base-1a" baseline="1">
 
 Note that this use pattern requires that you use group directory names
 for each scenario group in a project, which is a good organizing approach
@@ -124,15 +124,19 @@ and ``scen-3``, you can define an integer iterator (here, named
 "ssp") with a minimum value of 1, a maximum of 2 and a step of
 1 (the default):
 
-  .. code-block:: xml
+.. code-block:: xml
 
-     <iterator name="ssp" min="1" max="3">
+   <iterator name="ssp" type="int" min="1" max="3">
+
+or, equivalently,
+
+    <iterator name="ssp" values="1,2,3">
 
 You would then define the scenario name as
 
-  .. code-block:: xml
+.. code-block:: xml
 
-     <scenario name="scen-{ssp}">
+   <scenario name="scen-{ssp}">
 
 which would result in the desired scenarios. Of course, for these
 to be useful, they need to create different configuration files.
@@ -141,9 +145,9 @@ relevant XML files. For example, you might have a set of files that
 define alternatives that you number 1 through three. You would then
 select the correct one by using the line:
 
-  .. code-block:: xml
+.. code-block:: xml
 
-     <replace name="cement_2">{scenarioDir}/cement_incelas_ssp{ssp}.xml</replace>
+   <replace name="cement_2">{scenarioDir}/cement_incelas_ssp{ssp}.xml</replace>
 
 Note that in addition to iterators defined in the scenario group, two variables
 are added automatically: ``scenarioDir`` and ``baselineDir``, which refer to paths
@@ -157,7 +161,7 @@ The ``<iterator>`` element recognizes the following attributes:
 +=============+============+===========+==========+
 | name        | yes        | (none)    | text     |
 +-------------+------------+-----------+----------+
-| type        | yes        | (none)    | see below|
+| type        | yes        | list      | see below|
 +-------------+------------+-----------+----------+
 | min         | no         | (none)    | numeric  |
 +-------------+------------+-----------+----------+
@@ -189,13 +193,13 @@ The default float format is ``%.1f``, allowing one digit after the decimal point
 For example, to generate the set of values {0.00, 0.25, 0.50, 0.75, 1.00}, you could
 create either of the following iterators:
 
-  .. code-block:: xml
+.. code-block:: xml
 
      <iterator name="fraction" type="float" min="0" max="1" step="0.25" format="%.2f"/>
 
 or
 
-  .. code-block:: xml
+.. code-block:: xml
 
      <iterator name="fraction" type="list" values="0.00,0.25,0.50,0.75,1.00"/>
 
@@ -204,7 +208,7 @@ The "list" case is more flexible in that the values need not all have the same f
 while the "int" and "float" versions would be more convenient for a large number of
 scenarios. The list form allows iteration over distinctly formatted values, e.g.,
 
-  .. code-block:: xml
+.. code-block:: xml
 
      <iterator name="fraction" type="list" values="0,0.25,0.5,0.75,1"/>
 
@@ -414,7 +418,9 @@ blocks are functionally equivalent:
 
 Example
 ^^^^^^^^
-This is an example of a scenarios.xml file.
+The following is the scenarios.xml file that is copied into new projects
+by the :ref:`new <new-label>` sub-command. It serves as a starting point
+and for testing that the overall pygcam environment is configured properly.
 
-.. literalinclude:: ../../pygcam/etc/scenarios-example.xml
+.. literalinclude:: ../../pygcam/etc/examples/scenarios.xml
    :language: xml
