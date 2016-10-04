@@ -360,6 +360,12 @@ class Project(XMLFile):
         setupFile = os.path.join(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
         self.scenarioSetup = ScenarioSetup.parse(setupFile)
 
+        filename = getParam('GCAM.ScenarioSetupOutputFile')
+        if filename:
+            _logger.debug('Writing "%s"', filename)
+            with open(filename, 'w') as stream:
+                self.scenarioSetup.writeXML(stream)
+
         # deprecated (old approach)
         # self.scenarioGroups = scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarios/scenarioGroup'))
         # self.scenarioGroupDict = {group.name : group for group in scenarioGroups}

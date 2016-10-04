@@ -543,10 +543,4 @@ def createXmlEditorSubclass(setupFile):
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
 
-            filename = getParam('GCAM.ScenarioSetupOutputFile')
-            if filename:
-                _logger.debug('Writing "%s"', filename)
-                with open(filename, 'w') as stream:
-                    scenarioSetup.writeXML(stream)
-
     return XmlEditorSubclass
