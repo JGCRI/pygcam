@@ -58,197 +58,342 @@ The options to each sub-command can be found by using ``-h`` after the sub-comma
 
 ----------------
 
-We begin Part 1 of the tutorial by creating a project called ``ctax`` using the
-templates files provided by ``pygcam``.
+We begin Part 1 of the tutorial by examining a minimal project called ``tutorial``.
 
-1.1 Create the project structure and initial configuration file
-----------------------------------------------------------------------
-The first step in creating a new product is to run gcamtool
-:ref:`new <new-label>` sub-command. To create the project ``ctax``
-with the project directory ``/Users/rjp/projects/ctax``, I would
-run the following command:
+1.1 Minimal example project
+-----------------------------
+The following is an example ``project.xml`` file that doesn't do anything other than
+allow us to explore some of the features of the ref:`"run" sub-command <run-label>`
 
-.. code-block:: bash
+.. code-block:: xml
+   :linenos:
 
-   gt new -c -r /Users/rjp/projects ctax
+    <?xml version="1.0" encoding="UTF-8"?>
+    <projects>
+        <project name="tutorial">
+            <steps>
+                <step name="step1" runFor="baseline">echo "step 1(baseline)"</step>
+                <step name="step2" runFor="baseline">echo "step 2 (baseline)"</step>
+                <step name="step3" runFor="policy">echo "step 3 (policy)"</step>
+                <step name="step4" runFor="policy">echo "step 4 (policy)"</step>
+                <step name="step5" runFor="all">echo "step 5 (all)"</step>
+                <step name="step6" runFor="all">echo "step 6 (all)"</step>
+            </steps>
+            <scenariosFile name="scenarios.xml"/>
+        </project>
+    </projects>
 
-This both creates the initial file structure in ``/Users/rjp/projects/ctax``,
-and (because I specified the ``-c`` flag) adds a section for ``ctax`` to my
-configuration file, which is found in my home directory. In my case, it is
-in ``/Users/rjp/projects/.pygcam.cfg``.
+The file above defines steps for a projected name "tutorial" (see line 3). Each ``<step>``
+is given a name which can be specified on the command-line as a step to run or to skip.
+All non-skipped steps are run in the order indicated, for all relevant scenarios.
 
-When ``gt`` runs, it checks whether this file exists. If the file is not found,
-it is created with all available configuration parameters shown in comments (i.e.,
-lines starting with '#') explaining their purpose and showing their default values.
-To uncomment a line, simply remove the leading '#' character.
+Note lines 5 and 6 indicate ``runFor="baseline"``. As this suggests, these steps are run
+only for baseline scenarios. (Baseline scenarios are indicated as such in the ``scenarios.xml``
+file, which we will turn to shortly.)
 
-Here is the ``.pygcam.cfg`` file (with the long listing of default settings
-removed):
+Similarly, lines 7 and 8 are run only for "policy" (i.e., non-baseline) scenarios. Finally, lines
+9 and 10 are run for all scenarios, baseline and non-baseline.
 
-.. code-block:: cfg
+1.2 Minimal scenarios file
+---------------------------
+The standard GCAM distribution includes files that define various
+levels of carbon taxes:
 
-    [DEFAULT]
+.. code-block:: sh
 
-    # default config settings are listed here in comments...
+    rjp@bebop:~/GCAM/current/input/policy $ ls -l carbon*
+    -rw-rw-r--  1 rjp  staff  5462 Jul 28 07:10 carbon_tax_10_5.xml
+    -rw-rw-r--  1 rjp  staff  5463 Jul 28 07:10 carbon_tax_15_5.xml
+    -rw-rw-r--  1 rjp  staff  5463 Jul 28 07:10 carbon_tax_20_5.xml
+    -rw-rw-r--  1 rjp  staff  4123 Jul 28 07:10 carbon_tax_25_5.xml
 
-    [ctax]
-    # Added by "new" sub-command Sun Sep 25 13:47:49 2016
-    GCAM.ProjectDir        = %(GCAM.ProjectRoot)s/ctax
-    GCAM.ScenarioSetupFile = %(GCAM.ProjectDir)s/etc/scenarios.xml
-    GCAM.RewriteSetsFile   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
+We will use these files in our example.
 
-The next step is to customize this to our environment.
+The following ``scenarios.xml`` file defines a baseline that does nothing (i.e., it
+replicates the GCAM reference scenario) and a single scenario implementing a $25 per
+tonne carbon tax.
 
-.. note:: See :doc:`config` for a detail description of the configuration system.
+.. code-block:: xml
 
-1.2 Customize .pygcam.cfg
-----------------------------
-Our first task will be to set ``GCAM.DefaultProject`` so we don't have to keep typing
-``gt -P ctax``. We add this setting the ``[DEFAULT]`` section
+    <?xml version="1.0" encoding="UTF-8"?>
+    <scenarios name="tutorial" defaultGroup="tax">
+       <scenarioGroup name="tax">
+          <scenario name="base" baseline="1"/>
+          <scenario name="tax-25">
+             <add name='carbon_tax'>../input/policy/carbon_tax_25_5.xml</add>
+          </scenario>
+       </scenarioGroup>
+    </scenarios>
 
-.. code-block:: cfg
+The file defines a single "scenario group" named "tax", containing two scenarios,
+one called "base", which is the baseline, and another called "tax-25", which is a
+policy scenario.
 
-   GCAM.DefaultProject = ctax
+We can see all steps from ``project.xml`` that would be run using the command:
 
-You can edit the configuration file with any editor capable of working with plain text.
-(Word-processors such as Word introduce formatting information into the file which
-renders it unusable by ``pygcam``.) You can use the command ``gt config -e`` to
-invoke a system-appropriate editor on the configuration file. See the :doc:`config`
-page for details.
+.. code-block:: sh
 
-1.3 Check configuration
-----------------------------
-We can check that key file and directory pathnames required by ``pycgam`` exist
-by running this command:
+    $ gt -P tutorial run -n
+    2016-10-04 11:32:14,197 INFO [base, 1, step1] echo "step 1 (baseline)"
+    2016-10-04 11:32:14,198 INFO [base, 2, step2] echo "step 2 (baseline)"
+    2016-10-04 11:32:14,198 INFO [base, 5, step5] echo "step 5 (all)"
+    2016-10-04 11:32:14,198 INFO [base, 6, step6] echo "step 6 (all)"
+    2016-10-04 11:32:14,199 INFO [tax-25, 3, step3] echo "step 3 (policy)"
+    2016-10-04 11:32:14,199 INFO [tax-25, 4, step4] echo "step 4 (policy)"
+    2016-10-04 11:32:14,199 INFO [tax-25, 5, step5] echo "step 5 (all)"
+    2016-10-04 11:32:14,199 INFO [tax-25, 6, step6] echo "step 6 (all)"
 
-.. code-block:: bash
+The ``-n`` argument to the ``run`` sub-command says "show me the commands, but
+don't run them."
 
-    $ gt config -t
-    OK: GCAM.SandboxRoot = /Users/rjp/ws
-    OK: GCAM.SandboxDir = /Users/rjp/ws/ctax/
-    OK: GCAM.ProjectRoot = /Users/rjp/bitbucket
-    OK: GCAM.ProjectDir = /tmp/ctax
-    OK: GCAM.QueryDir = /tmp/ctax/queries
-    OK: GCAM.MI.Dir = /Users/rjp/GCAM/current/input/gcam-data-system/_common/ModelInterface/src
-    OK: GCAM.RefWorkspace = /Users/rjp/GCAM/current
-    OK: GCAM.TempDir = /tmp
-    OK: GCAM.UserTempDir = /Users/rjp/tmp
-    OK: GCAM.ProjectXmlFile = /tmp/ctax/etc/project.xml
-    OK: GCAM.RefConfigFile = /Users/rjp/GCAM/current/exe/configuration_ref.xml
-    OK: GCAM.MI.JarFile = /Users/rjp/GCAM/current/input/gcam-data-system/_common/ModelInterface/src/ModelInterface.jar
-    OK: GCAM.RewriteSetsFile = /tmp/ctax/etc/rewriteSets.xml
+To run them, we use the same command without the ``-n``:
 
+.. code-block:: sh
 
-1.4 Examine default project files
+    $ gt -P tutorial run
+    2016-10-04 11:27:08,649 INFO [base, 1, step1] echo "step 1 (baseline)"
+    step 1(baseline)
+    2016-10-04 11:27:08,653 INFO [base, 2, step2] echo "step 2 (baseline)"
+    step 2 (baseline)
+    2016-10-04 11:27:08,658 INFO [base, 5, step5] echo "step 5 (all)"
+    step 5 (all)
+    2016-10-04 11:27:08,662 INFO [base, 6, step6] echo "step 6 (all)"
+    step 6 (all)
+    2016-10-04 11:27:08,667 INFO [tax-25, 3, step3] echo "step 3 (policy)"
+    step 3 (policy)
+    2016-10-04 11:27:08,671 INFO [tax-25, 4, step4] echo "step 4 (policy)"
+    step 4 (policy)
+    2016-10-04 11:27:08,675 INFO [tax-25, 5, step5] echo "step 5 (all)"
+    step 5 (all)
+    2016-10-04 11:27:08,680 INFO [tax-25, 6, step6] echo "step 6 (all)"
+    step 6 (all)
+
+1.3 Introspection commands
 -----------------------------------
-The default ``scenarios.xml`` file defines two scenario groups, each with a
-baseline and 4 policy scenarios with different levels of C tax. The default
-scenario does not exclude unmanaged land from consideration, while the second
-scenario excludes 90% of unmanaged land, which is the default in the GCAM
-reference scenario.
+You can use ``-G``, ``-L`` and ``-l`` arguments to the "run" subcommand to list
+defined scenario groups, scenarios, and steps, respectively. These can be specified
+together or separately:
 
-The :ref:`run <run-label>` sub-command offers several options that list
-project elements and display commands that would be run.
+.. code-block:: sh
 
-To list the scenario groups in the default project:
-
-.. code-block:: bash
-
-    $ gt run -G
+    $ gt -P tutorial run -G
     Scenario groups:
-      protect-0
-      protect-90
-
-List all the scenarios in the default scenario group:
-
-.. code-block:: bash
-
-    $ gt run -L
+      tax
+    $ gt -P tutorial run -L
     Scenarios:
-      base-0
-      tax-25-0
-      tax-10-0
-      tax-15-0
-      tax-20-0
-
-
-List all the scenarios in group ``protect-90``:
-
-.. code-block:: bash
-
-    $ gt run -L -g protect-90
-    Scenarios:
-      base-90
-      tax-25-90
-      tax-15-90
-      tax-10-90
-      tax-20-90
-
-List all project steps for the default scenario group of the default project:
-
-.. code-block:: bash
-
-    $ gt run -l
+      base
+      tax-25
+    $ gt -P tutorial run -l
     Steps:
-      setup
-      prequery
-      gcam
-      query
-      plot
-      diff
-      plotDiff
-      xlsx
+      step1
+      step2
+      step3
+      step4
+      step5
+      step6
+    $ gt -P tutorial run -l -L -G
+    $ gt -P tutorial run -G
+    Scenario groups:
+      tax
+    Scenarios:
+      base
+      tax-25
+    Steps:
+      step1
+      step2
+      step3
+      step4
+      step5
+      step6
 
-1.5 Run "setup" on a single baseline
-------------------------------------------
+Note that if we had multiple scenario groups defined, we could specify one
+using the ``-g`` flag, in which case the scenarios listed by ``-L`` would be
+those for the designated group.
 
-Now we will run just the ``setup`` step the baseline scenario.
 
-The first time we run
-setup, it will create a local copy (using symbolic links in some cases, when possible)
-of the reference GCAM workspace that is used to create run-time sandbox directories.
-This can be useful in a high-performance computing environment if you will be running
-numerous scenarios on compute nodes that have access to fast temporary storage, since
-each scenario will copy from that location rather than the reference GCAM which may be
-on a slower disk.
+1.5 Selecting and skipping scenarios and steps
+-------------------------------------------------
+
+You can select which scenarios and steps to run using the ``-S``
+and ``-s`` flags, respective. For example, to run "step1" and "step2"
+for the baseline scenario "base", we would use this command:
 
 .. code-block:: bash
 
-    $ gt run -S base-0 -s setup
-
+    $ gt run -S base -s step1,step2
     rjp@bebop:~ $ gt -P ctax run -s setup -S base-0
-    2016-09-25 15:33:03,705 INFO [base-0, 1, setup] @setup -b base-0 -g protect-0 -S base-0 -w /Users/rjp/ws/ctax/base-0 -p 2050 -y 2015-2050
-    2016-09-25 15:33:03,713 INFO Setting up GCAM workspace '/Users/rjp/ws/ctax/Workspace' for GCAM 4.3
-    2016-09-25 15:33:03,714 WARNING Ignoring unknown files specified in GCAM.WorkspaceFilesToLink: ['libs']
-    2016-09-25 15:33:03,714 INFO Copying /Users/rjp/GCAM/current/exe/XMLDBDriver.jar to /Users/rjp/ws/ctax/Workspace/exe/XMLDBDriver.jar
-    2016-09-25 15:33:03,716 INFO Copying /Users/rjp/GCAM/current/exe/gcam.exe to /Users/rjp/ws/ctax/Workspace/exe/gcam.exe
-    2016-09-25 15:33:03,745 INFO Copying /Users/rjp/GCAM/current/exe/log_conf.xml to /Users/rjp/ws/ctax/Workspace/exe/log_conf.xml
-    2016-09-25 15:33:03,746 INFO Setting up sandbox '/Users/rjp/ws/ctax/base-0'
-    2016-09-25 15:33:03,747 WARNING Ignoring unknown files specified in GCAM.SandboxFilesToLink: ['libs']
-    2016-09-25 15:33:03,747 INFO Copying /Users/rjp/ws/ctax/Workspace/exe/XMLDBDriver.jar to /Users/rjp/ws/ctax/base-0/exe/XMLDBDriver.jar
-    2016-09-25 15:33:03,747 INFO Copying /Users/rjp/ws/ctax/Workspace/exe/log_conf.xml to /Users/rjp/ws/ctax/base-0/exe/log_conf.xml
-    2016-09-25 15:33:03,765 INFO Generating local-xml for scenario base-0
-    2016-09-25 15:33:03,765 INFO No XML files to copy in /tmp/ctax/xmlsrc/base-0/xml
-    2016-09-25 15:33:03,766 INFO Copy /Users/rjp/GCAM/current/exe/configuration_ref.xml
-          to /Volumes/PlevinSSD/rjp/ws/ctax/Workspace/local-xml/base-0/config.xml
-    2016-09-25 15:33:03,861 INFO Delete ScenarioComponent name='protected_land_input_2' for scenario
-    2016-09-25 15:33:03,866 INFO Delete ScenarioComponent name='protected_land_input_3' for scenario
-    2016-09-25 15:33:03,872 INFO Generating dyn-xml for scenario base-0
-    2016-09-25 15:33:03,873 INFO Link static XML files in /Users/rjp/ws/ctax/base-0/local-xml/base-0 to /Users/rjp/ws/ctax/base-0/dyn-xml/base-0
-    2016-09-25 15:33:03,873 INFO Link additional static XML files in /Users/rjp/ws/ctax/base-0/local-xml/base-0 to /Users/rjp/ws/ctax/base-0/dyn-xml/base-0
+    2016-10-04 12:03:13,746 INFO [base, 1, step1] echo "step 1 (baseline)"
+    step 1 (baseline)
+    2016-10-04 12:03:13,750 INFO [base, 2, step2] echo "step 2 (baseline)"
+    step 2 (baseline)
 
+Note that when listing multiple steps or scenarios, you must separate
+their names with a "," and you must not include spaces.
 
-1.6 Run a single baseline
------------------------------------
-Now we'll run all remaining steps for the baseline scenario.
-We already ran the ``setup`` step, so we use the ``-k`` flag to
-skip it.
+Sometimes we want to run most of the steps except for a few. Use the
+``-K`` and ``-k`` flags to indicate which scenarios or steps, respectively,
+to skip. All other defined scenarios and steps will be run.
+
+This command runs all scenarios other than "base":
 
 .. code-block:: bash
 
-    $ gt run -k setup -S base-0
+    $ gt -P tutorial run -K base
+    2016-10-04 12:06:08,430 INFO [tax-25, 3, step3] echo "step 3 (policy)"
+    step 3 (policy)
+    2016-10-04 12:06:08,434 INFO [tax-25, 4, step4] echo "step 4 (policy)"
+    step 4 (policy)
+    2016-10-04 12:06:08,438 INFO [tax-25, 5, step5] echo "step 5 (all)"
+    step 5 (all)
+    2016-10-04 12:06:08,442 INFO [tax-25, 6, step6] echo "step 6 (all)"
+    step 6 (all)
 
-This runs gcam, runs the defined queries to create CSV files, and generates
-a plot.
+This command runs all scenarios other than "base", and all steps other than
+steps 3 and 5:
 
-*In* :doc:`tutorial2`, *we examine and customize plots generated by the project.*
+.. code-block:: bash
+
+    $ gt -P tutorial run -K base -k step3,step5
+    2016-10-04 12:06:44,010 INFO [tax-25, 4, step4] echo "step 4 (policy)"
+    step 4 (policy)
+    2016-10-04 12:06:44,014 INFO [tax-25, 6, step6] echo "step 6 (all)"
+    step 6 (all)
+
+1.4 Creating additional scenarios
+-----------------------------------
+We can add more tax scenarios to our file by copying and pasting the
+existing one, and changing a few instances of "25" to other values,
+producing the following:
+
+.. code-block:: xml
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <scenarios name="tutorial" defaultGroup="tax">
+
+        <scenarioGroup name="tax">
+            <scenario name="base" baseline="1"/>
+
+            <scenario name="tax-10">
+                <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+            </scenario>
+
+            <scenario name="tax-15">
+                <add name="carbon_tax">../input/policy/carbon_tax_15_5.xml</add>
+            </scenario>
+
+            <scenario name="tax-20">
+                <add name="carbon_tax">../input/policy/carbon_tax_20_5.xml</add>
+            </scenario>
+
+            <scenario name="tax-25">
+                <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
+            </scenario>
+        </scenarioGroup>
+    </scenarios>
+
+We can see the additional scenarios using the ``-L`` flag, and see what would be
+run using the ``-n`` flag:
+
+.. code-block:: sh
+
+    $ gt -P tutorial run -L
+    Scenarios:
+      base
+      tax-10
+      tax-15
+      tax-20
+      tax-25
+    rjp@bebop:~/GCAM/current/input/policy $ gt -P tutorial run -n
+    2016-10-04 12:11:22,926 INFO [base, 1, step1] echo "step 1 (baseline)"
+    2016-10-04 12:11:22,927 INFO [base, 2, step2] echo "step 2 (baseline)"
+    2016-10-04 12:11:22,927 INFO [base, 5, step5] echo "step 5 (all)"
+    2016-10-04 12:11:22,927 INFO [base, 6, step6] echo "step 6 (all)"
+    2016-10-04 12:11:22,927 INFO [tax-15, 3, step3] echo "step 3 (policy)"
+    2016-10-04 12:11:22,927 INFO [tax-15, 4, step4] echo "step 4 (policy)"
+    2016-10-04 12:11:22,928 INFO [tax-15, 5, step5] echo "step 5 (all)"
+    2016-10-04 12:11:22,928 INFO [tax-15, 6, step6] echo "step 6 (all)"
+    2016-10-04 12:11:22,928 INFO [tax-20, 3, step3] echo "step 3 (policy)"
+    2016-10-04 12:11:22,928 INFO [tax-20, 4, step4] echo "step 4 (policy)"
+    2016-10-04 12:11:22,928 INFO [tax-20, 5, step5] echo "step 5 (all)"
+    2016-10-04 12:11:22,929 INFO [tax-20, 6, step6] echo "step 6 (all)"
+    2016-10-04 12:11:22,929 INFO [tax-10, 3, step3] echo "step 3 (policy)"
+    2016-10-04 12:11:22,929 INFO [tax-10, 4, step4] echo "step 4 (policy)"
+    2016-10-04 12:11:22,929 INFO [tax-10, 5, step5] echo "step 5 (all)"
+    2016-10-04 12:11:22,929 INFO [tax-10, 6, step6] echo "step 6 (all)"
+    2016-10-04 12:11:22,930 INFO [tax-25, 3, step3] echo "step 3 (policy)"
+    2016-10-04 12:11:22,930 INFO [tax-25, 4, step4] echo "step 4 (policy)"
+    2016-10-04 12:11:22,930 INFO [tax-25, 5, step5] echo "step 5 (all)"
+    2016-10-04 12:11:22,930 INFO [tax-25, 6, step6] echo "step 6 (all)"
+
+1.5 Using iterators
+---------------------
+Copying and pasting isn't a bad approach with our simple scenarios, which merely
+add one file each to the reference scenario. If our scenarios were much more
+involved, copying and pasting would become troublesome, particularly if we needed
+to make changes that affected all the scenarios.
+
+You can instead define similar scenarios using "iterators", which define a set of
+values to iterate over, with a new scenario (or scenario group) defined for each
+value of the iterator.
+
+The following is equivalent to our "cut & paste" example above:
+
+.. code-block:: xml
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <scenarios name="tutorial" defaultGroup="tax">
+
+        <!-- Our policy scenarios will use these levels of carbon taxes -->
+        <iterator name="tax" values="10,15,20,25"/>
+
+        <scenarioGroup name="tax">
+            <scenario name="base" baseline="1"/>
+
+            <!-- e.g., tax-10 for $10/tonne tax -->
+            <scenario name="tax-{tax}" iterator="tax">
+                <!-- C tax filenames differ only in the amount of tax -->
+                <add name="carbon_tax">../input/policy/carbon_tax_{tax}_5.xml</add>
+            </scenario>
+        </scenarioGroup>
+    </scenarios>
+
+The example above defines an iterator named "tax", with values 10, 15, 20, and 25.
+The scenario group includes the same baseline as before, but now there's only one
+``<scenario>`` definition for the four policy cases. The term "{tax}" is replaced
+by each value of the iterator in turn, defining a new scenario, and the file that
+is included by the ``<add>`` element likewise uses the iterator value.
+
+If you set the configuration file variable ``GCAM.ScenarioSetupOutputFile`` to
+the pathname of a file, the ``run`` sub-command will write the "expanded" scenario
+definitions to this file each time it runs. For example:
+
+.. code-block:: cfg
+
+    GCAM.ScenarioSetupOutputFile = %(Home)s/scenariosExpanded.xml
+
+Results in the following:
+
+.. code-block:: sh
+
+    $ cat ~/scenariosExpanded.xml
+    <setup>
+
+       <scenarioGroup name="tax" useGroupDir="0">
+          <scenario name="base" baseline="1">
+          </scenario>
+          <scenario name="tax-10" baseline="0">
+             <add name='carbon_tax'>../input/policy/carbon_tax_10_5.xml</add>
+          </scenario>
+          <scenario name="tax-15" baseline="0">
+             <add name='carbon_tax'>../input/policy/carbon_tax_15_5.xml</add>
+          </scenario>
+          <scenario name="tax-20" baseline="0">
+             <add name='carbon_tax'>../input/policy/carbon_tax_20_5.xml</add>
+          </scenario>
+          <scenario name="tax-25" baseline="0">
+             <add name='carbon_tax'>../input/policy/carbon_tax_25_5.xml</add>
+          </scenario>
+       </scenarioGroup>
+    </setup>
+
+*In* :doc:`tutorial2`, *we begin to work with a "real" project definition.*
