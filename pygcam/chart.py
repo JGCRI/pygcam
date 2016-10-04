@@ -420,6 +420,9 @@ def chartGCAM(args, num=None, negate=False):
         except Exception as e:
             raise CommandlineError("Failed to slice by region %s\n  -- %s" % (region, e))
 
+        if df.shape[0] == 0:
+            raise CommandlineError('Region "%s" was not found in %s' % (region, csvFile))
+
     if constraint:
         try:
             df = df.query(constraint)
