@@ -3,7 +3,6 @@ For code release
 
 Document
 --------
-- PPT slides for October
 - Assumptions behind setup code
 
 Cleanup
