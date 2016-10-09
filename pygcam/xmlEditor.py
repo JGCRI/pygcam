@@ -24,7 +24,7 @@ import shutil
 import subprocess
 
 from .config import getParam, getParamAsBoolean
-from .constants import LOCAL_XML_NAME, DYN_XML_NAME
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException
 from .log import getLogger
 from .utils import coercible, mkdirs, unixPath, printSeries
@@ -940,6 +940,35 @@ class XMLEditor(object):
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
             self.updateScenarioComponent(landFile, landFileRel)
+
+    @callableMethod
+    def taxCarbon(self, value, years=range(2020, 2110, 10),
+                  rate=0.05, regions=GCAM_32_REGIONS, market='global'):
+        '''
+        Generate an XML file defining a global carbon tax starting
+        at `value` and increasing by `rate` annually. Generate values
+        for the give `years`. The first year in `years` is assumed to be
+        the year at which the tax starts at `value`. The generated file
+        is named 'carbon-tax-{market}.xml' and is added to the configuration.
+
+        :param value: (float) the initial value of the tax ($/tonne)
+        :param years: (list(int)) years to set carbon taxes. Default is 2020-2100
+           at 10 year time-steps.
+        :param rate: (float) annual rate of increase. Default is 0.05.
+        :param regions: (list(str)) the regions for which to create a C tax market.
+             Default is all 32 GCAM regions.
+        :param market: (str) the name of the market to create. Default is 'global'.
+        :return: none
+        '''
+        from .carbonTax import genCarbonTaxFile
+
+        tag = 'carbon-tax-' + market
+        filename = tag + '.xml'
+        fileRel = pathjoin(self.dyn_xml_rel, filename)
+        fileAbs = pathjoin(self.dyn_xml_abs, filename)
+
+        genCarbonTaxFile(fileAbs, value, years, rate, regions=regions, market=market)
+        self.addScenarioComponent(tag, fileRel)
 
     # TBD: test
     @callableMethod
