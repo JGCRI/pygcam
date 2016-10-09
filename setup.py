@@ -83,7 +83,7 @@ Who do I talk to?
 
 setup(
     name='pygcam',
-    version='1.0a4',
+    version='1.0b1',
     description='Python 2.7 library and scripts for interfacing with GCAM',
     platforms=['Windows', 'Mac OS X', 'Linux'],
 
