@@ -12,23 +12,24 @@ Quick Links:
 Follow the steps below to install these. Additional information is available
 below :ref:`for Windows users <windows-label>`.
 
-  .. note::
-
-     ``pygcam`` requires a Python 2.7 environment. A Python 3 version will
-     be availabe at some point, but isn't presently.
-
 
 Support software
 --------------------------
 
 Anaconda
 ^^^^^^^^^^^^^^^^^
+
+  .. note::
+
+     Be sure to install Anaconda for **Python 2.7!** It does not yet run in Python 3.
+
 The most convenient way to install and manage a scientific Python environment
 is to use the free `Anaconda <https://www.continuum.io/downloads>`_ distribution.
 Anaconda includes most of the scientific and statistical modules used by ``pygcam``.
 You can, however, use any installation of Python **2.7** if you prefer. Without
 Anaconda you may have to install more packages. Note that all development and
-testing of pygcam uses Anaconda.
+testing of pygcam uses Anaconda. Follow the installation instructions for you
+platform.
 
   - `Download Anaconda <https://www.continuum.io/downloads>`_
 
@@ -60,8 +61,17 @@ The default setting is:
 
      GCAM.XmlStarlet = xml
 
+  - `Download XML Starlet from the original sourceforge site <http://xmlstar.sourceforge.net/download.php>`_.
 
-  - `Download XML Starlet <http://xmlstar.sourceforge.net/download.php>`_.
+Note that the official site provides a binary version only for Windows. For Mac users,
+a `homebrew recipe <http://macappstore.org/xmlstarlet/>`_ is available to build it on
+your machine if you have homebrew and developer tools (Xcode) installed.
+
+  - `Download binaries of XML Starlet from the pygcam site <https://bitbucket.org/plevin/pygcam/downloads>`_.
+
+Unfortunately, given the vagaries of dynamic libraries, I cannot guarantee that these
+binaries will work on your machine. I provide them in the hope that they will help someone!
+A future version of pygcam may eliminate this dependency.
 
 GCAM and pygcam
 ------------------------
@@ -70,13 +80,13 @@ GCAM
 ^^^^^^^^^^^^^^^^^
 You probably already have GCAM or you wouldn't be reading this. But for completeness:
 
-  - `Download GCAM <http://www.globalchange.umd.edu/models/gcam/download>`_
+  - `Download GCAM <https://github.com/JGCRI/gcam-core/releases>`_
 
 Create a file structure for GCAM and pygcam
 """""""""""""""""""""""""""""""""""""""""""""""
 A convenient way to manage GCAM is to create a folder called GCAM in your home
-directory (or anywhere you prefer). Copy the latest GCAM distribution (zip file)
-into this directory, and unzip the file.
+directory (or anywhere you prefer). Copy the latest GCAM distribution into this
+directory, and unpack the files. (Follow the instructions at the link above.)
 
 Within this folder you might create a symbolic link called ``current`` which
 points to the current version of GCAM. This allows you to switch versions simply
@@ -84,14 +94,7 @@ by changing the symbolic link. All ``pygcam`` configuration and project informat
 will remain valid unless the internal file structure of the GCAM distribution
 changes, which may require an update to ``pygcam``.
 
-Note that on Windows, the file explorer unhelpfully creates two folders with the
-same name. That is, if you unzip ``GCAM_4.2_r6539_User_Package_Windows.zip``, you
-end up with a folder named ``GCAM_4.2_r6539_User_Package_Windows``, and within it,
-another folder named ``GCAM_4.2_r6539_User_Package_Windows``. In the file explorer,
-change the name of the outer folder to something else ('x' will do), and move the inner
-folder up one level. Delete the empty outer folder ('x', or whatever you called it.)
-
-Note also that ``pygcam`` sets the following default values for the following
+Note that ``pygcam`` sets the following default values for the following
 configuration variables; these may need to be updated for your installation.
 
     .. code-block:: cfg
@@ -99,7 +102,7 @@ configuration variables; these may need to be updated for your installation.
        GCAM.Root         = %(Home)s/GCAM
        GCAM.SandboxRoot  = %(GCAM.Root)s/ws
        GCAM.Current      = %(GCAM.Root)s/current
-       GCAM.RefWorkspace = %(GCAM.Current)s/Main_User_Workspace
+       GCAM.RefWorkspace = %(GCAM.Current)s
 
   .. _pygcam_install_label:
 
