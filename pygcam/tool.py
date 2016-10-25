@@ -296,7 +296,7 @@ class GcamTool(object):
             logFile = os.path.normpath(os.path.join(logDir, logFile))
             mkdirs(os.path.dirname(logFile))
 
-        otherArgs = "-d afterok:" + dependsOn if dependsOn else ''
+        otherArgs = "-d afterok:%s" % dependsOn if dependsOn else ''
 
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
