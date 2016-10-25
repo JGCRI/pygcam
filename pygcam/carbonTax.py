@@ -12,8 +12,7 @@ regionTemplate = '''        <region name="{region}">
             </ghgpolicy>
         </region>'''
 
-ctaxTemplate = '''
-<?xml version="1.0" encoding="UTF-8"?>
+ctaxTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
 <scenario name="ctax">
     <world>
         <region name="{region}">
