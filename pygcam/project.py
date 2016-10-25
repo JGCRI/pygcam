@@ -592,8 +592,7 @@ class Project(XMLFile):
             # setting the -S flag for one scenario at a time.
             if args.distribute:
                 newArgs = shellArgs + ['-S', scenarioName]
-
-                jobId = tool.runBatch2(newArgs, jobName=args.jobName, queueName=args.queueName,
+                jobId = tool.runBatch2(newArgs, jobName=scenarioName, queueName=args.queueName,
                                        logFile=args.logFile, minutes=args.minutes,
                                        dependsOn=baselineJobId)
                 if scenario.isBaseline:
