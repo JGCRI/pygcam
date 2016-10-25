@@ -942,14 +942,14 @@ class XMLEditor(object):
 
         # NB: this code depends on these being the tags assigned to the land files
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
-        landFiles = ['land2', 'land3']
-        for landFile in landFiles:
-            filename = landFile + '.xml'
+        for num in [2, 3]:
+            filename = 'land_input_%d.xml' % num
+            fileTag  = 'land%d' % num
             landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
-            self.updateScenarioComponent(landFile, landFileRel)
+            self.updateScenarioComponent(fileTag, landFileRel)
 
     @callableMethod
     def taxCarbon(self, value, years=range(2020, 2110, 10),
