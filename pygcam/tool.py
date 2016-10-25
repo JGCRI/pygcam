@@ -314,7 +314,7 @@ class GcamTool(object):
 
         try:
             command = batchCmd.format(**batchArgs)
-            # deal with problem "%" chars used by SLURM variables
+            # deal with problem "%" chars used by SLURM variables (config gets confused by '%')
             if getParam('GCAM.BatchLogFileDollarToPercent'):
                 command = command.replace('$', '%')
         except KeyError as e:
@@ -346,13 +346,6 @@ class GcamTool(object):
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
         shellArgs = map(pipes.quote, shellArgs)
-
-        # scriptFile = self.writeBatchScript(shellArgs, delete=True)
-        # if not run:
-        #     print("Script file '%s':" % scriptFile)
-        #     with open(scriptFile) as f:
-        #         print(f.read())
-
         args = self.parser.parse_args(args=shellArgs)
 
         return self.runBatch2(shellArgs, jobName=args.jobName, queueName=args.queueName,
