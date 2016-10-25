@@ -10,6 +10,7 @@ from __future__ import print_function
 import argparse
 import os
 import pipes
+import re
 import signal
 import subprocess
 from glob import glob
@@ -26,8 +27,8 @@ from .builtins.sandbox_plugin import SandboxCommand
 from .builtins.setup_plugin import SetupCommand
 from .builtins.compare_plugin import CompareCommand
 
-from .config import (getParam, getConfig, getParamAsBoolean, setParam,
-                     getSection, setSection, DEFAULT_SECTION)
+from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
+                     setParam, getSection, setSection, DEFAULT_SECTION)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
@@ -45,34 +46,6 @@ BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
-
-def _writeBatchScript(args, delete=False):
-    """
-    Create a shell script in a temporary file which calls gt with the
-    given `args`.
-    :param args: (list of str) arguments to "gt" to write into a
-        script to be executed as a batch job
-    :param delete: (bool) if True, mark the tmp file for deletion.
-    :return: (str) the pathname of the script
-    """
-    tmpDir = getParam('GCAM.UserTempDir')
-    mkdirs(tmpDir)
-
-    scriptFile  = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
-    _logger.info("Creating batch script '%s'", scriptFile)
-
-    with open(scriptFile, 'w') as f:
-        f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
-        if delete:
-            f.write("rm -f %s\n" % pipes.quote(scriptFile)) # file removes itself once running
-        else:
-            _logger.info('Batch script file will not be deleted.')
-
-        shellArgs = map(pipes.quote, args)
-        f.write("gt %s\n" % ' '.join(shellArgs))
-
-    os.chmod(scriptFile, 0o755)
-    return scriptFile
 
 def _randomSleep(minSleep, maxSleep):
     '''
@@ -143,6 +116,7 @@ class GcamTool(object):
         decacheVariables()
 
         self.mcsMode = ''
+        self.shellArgs = None
 
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
 
@@ -306,23 +280,15 @@ class GcamTool(object):
 
         obj.run(args, self)
 
-    def runBatch(self, shellArgs, run=True):
-        import platform
+    # Extracted from runBatch() to be callable from the run sub-command
+    # to distribute scenario runs.
+    @staticmethod
+    def runBatch2(scriptFile, jobName='gt', queueName=None, logFile=None, minutes=None,
+                  dependsOn=None, run=True):
 
-        system = platform.system()
-        # TBD: Might install SLURM on an OS X server...
-        if system in ['Windows']: # , 'Darwin']:
-            system = 'Mac OS X' if system == 'Darwin' else system
-            raise CommandlineError('Batch commands are not supported on %s' % system)
-
-        #scriptFile = _writeBatchScript(shellArgs, delete=not run)    # delete it if just showing cmd
-        scriptFile = _writeBatchScript(shellArgs, delete=True)
-
-        args = self.parser.parse_args(args=shellArgs)
-        jobName   = args.jobName
-        queueName = args.queueName or getParam('GCAM.DefaultQueue')
-        logFile   = args.logFile or getParam('GCAM.BatchLogFile', raw=False)
-        minutes   = args.minutes or float(getParam('GCAM.Minutes'))
+        queueName = queueName or getParam('GCAM.DefaultQueue')
+        logFile   = logFile   or getParam('GCAM.BatchLogFile', raw=False)
+        minutes   = minutes   or getParamAsFloat('GCAM.Minutes')
         walltime  = "%02d:%02d:00" % (minutes / 60, minutes % 60)
 
         if logFile:
@@ -330,9 +296,12 @@ class GcamTool(object):
             logFile = os.path.normpath(os.path.join(logDir, logFile))
             mkdirs(os.path.dirname(logFile))
 
+        otherArgs = "-d afterok:" + dependsOn if dependsOn else ''
+
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
         batchArgs = {'scriptFile': scriptFile,
+                     'otherArgs' : otherArgs,
                      'logFile'   : logFile,
                      'minutes'   : minutes,
                      'walltime'  : walltime,
@@ -351,20 +320,68 @@ class GcamTool(object):
 
         if not run:
             print(command)
-            print("Script file '%s':" % scriptFile)
-            with open(scriptFile) as f:
-                print(f.read())
             return
 
         _logger.info('Running: %s', command)
         try:
-            exitCode = subprocess.call(command, shell=True)
-            if exitCode != 0:
-                raise ProgramExecutionError(command, exitCode)
+            jobStr = subprocess.check_output(command, shell=True)
+            result = re.search('\d+', jobStr)
+            jobId = int(result.group(0)) if result else -1
+            return jobId
+
+        except subprocess.CalledProcessError as e:
+            raise ProgramExecutionError(command, e.returncode)
 
         except Exception as e:
             raise PygcamException("Error running command '%s': %s" % (command, e))
 
+    def runBatch(self, shellArgs, run=True):
+        import platform
+
+        system = platform.system()
+        if system in ['Windows']: # , 'Darwin']:
+            system = 'Mac OS X' if system == 'Darwin' else system
+            raise CommandlineError('Batch commands are not supported on %s' % system)
+
+        scriptFile = self.writeBatchScript(shellArgs, delete=True)
+        if not run:
+            print("Script file '%s':" % scriptFile)
+            with open(scriptFile) as f:
+                print(f.read())
+
+        args = self.parser.parse_args(args=shellArgs)
+
+        return self.runBatch2(scriptFile, jobName=args.jobName, queueName=args.queueName,
+                              logFile=args.logFile, minutes=args.minutes, run=run)
+
+    @staticmethod
+    def writeBatchScript(args, delete=False):
+        """
+        Create a shell script in a temporary file which calls gt with the
+        given `args`.
+        :param args: (list of str) arguments to "gt" to write into a
+            script to be executed as a batch job
+        :param delete: (bool) if True, mark the tmp file for deletion.
+        :return: (str) the pathname of the script
+        """
+        tmpDir = getParam('GCAM.UserTempDir')
+        mkdirs(tmpDir)
+
+        scriptFile = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
+        _logger.info("Creating batch script '%s'", scriptFile)
+
+        with open(scriptFile, 'w') as f:
+            f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
+            if delete:
+                f.write("rm -f %s\n" % pipes.quote(scriptFile)) # file removes itself once running
+            else:
+                _logger.info('Batch script file will not be deleted.')
+
+            shellArgs = map(pipes.quote, args)
+            f.write("gt %s\n" % ' '.join(shellArgs))
+
+        os.chmod(scriptFile, 0o755)
+        return scriptFile
 
 def _getMainParser():
     '''
@@ -452,11 +469,6 @@ def _main(argv=None):
 
     tool.setMcsMode(ns.mcsMode)
 
-    # section = ns.configSection
-    # if section:
-    #     setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
-    #     setSection(section)
-
     # Set specified config vars
     for arg in ns.configVars:
         if not '=' in arg:
@@ -465,7 +477,8 @@ def _main(argv=None):
         name, value = arg.split('=')
         setParam(name, value)
 
-    if ns.showBatch:          # don't run batch command; --showBatch implies --batch
+    # showBatch => don't run batch command, but implies --batch
+    if ns.showBatch:
         ns.batch = True
 
     # Catch signals to allow cleanup of TempFile instances, e.g., on ^C
@@ -478,6 +491,7 @@ def _main(argv=None):
 
         tool.runBatch(otherArgs, run=run)
     else:
+        tool.shellArgs = otherArgs  # save for project run method to use in "distribute" mode
         args = tool.parser.parse_args(args=otherArgs)
         tool.run(args=args)
 
