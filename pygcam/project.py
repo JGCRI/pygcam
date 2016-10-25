@@ -579,6 +579,8 @@ class Project(XMLFile):
         shellArgs = dropArgs(tool.shellArgs, '-S', '--scenario')
         shellArgs = dropArgs(shellArgs, '-D', '--distribute', takesArgs=False)
 
+        baselineJobId = None
+
         for scenarioName in scenarios:
             scenario = self.scenarioDict[scenarioName]
 
@@ -589,15 +591,14 @@ class Project(XMLFile):
             # Construct gt command that does this scenario's steps
             # setting the -S flag for one scenario at a time.
             if args.distribute:
-                scenarioArg = ['-S', scenarioName]
-                scriptFile = tool.writeBatchScript(shellArgs + scenarioArg, delete=True)
+                newArgs = shellArgs + ['-S', scenarioName]
 
+                jobId = tool.runBatch2(newArgs, jobName=args.jobName, queueName=args.queueName,
+                                       logFile=args.logFile, minutes=args.minutes,
+                                       dependsOn=baselineJobId)
                 if scenario.isBaseline:
-                    jobId = tool.runBatch2(scriptFile, jobName=args.jobName, queueName=args.queueName,
-                                           logFile=args.logFile, minutes=args.minutes)
-                else:
-                    tool.runBatch2(scriptFile, jobName=args.jobName, queueName=args.queueName,
-                                   logFile=args.logFile, minutes=args.minutes, dependsOn=jobId)
+                    baselineJobId = jobId
+
                 continue
 
             # These get reset as each scenario is processed

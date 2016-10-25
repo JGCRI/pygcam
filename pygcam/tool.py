@@ -283,7 +283,7 @@ class GcamTool(object):
     # Extracted from runBatch() to be callable from the run sub-command
     # to distribute scenario runs.
     @staticmethod
-    def runBatch2(scriptFile, jobName='gt', queueName=None, logFile=None, minutes=None,
+    def runBatch2(shellArgs, jobName='gt', queueName=None, logFile=None, minutes=None,
                   dependsOn=None, run=True):
 
         queueName = queueName or getParam('GCAM.DefaultQueue')
@@ -298,9 +298,11 @@ class GcamTool(object):
 
         otherArgs = "-d afterok:%s" % dependsOn if dependsOn else ''
 
+        scriptCommand = "gt " + ' '.join(shellArgs)
+
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
-        batchArgs = {'scriptFile': scriptFile,
+        batchArgs = {'scriptFile': scriptCommand,
                      'otherArgs' : otherArgs,
                      'logFile'   : logFile,
                      'minutes'   : minutes,
@@ -343,45 +345,48 @@ class GcamTool(object):
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
-        scriptFile = self.writeBatchScript(shellArgs, delete=True)
-        if not run:
-            print("Script file '%s':" % scriptFile)
-            with open(scriptFile) as f:
-                print(f.read())
+        shellArgs = map(pipes.quote, shellArgs)
+
+        # scriptFile = self.writeBatchScript(shellArgs, delete=True)
+        # if not run:
+        #     print("Script file '%s':" % scriptFile)
+        #     with open(scriptFile) as f:
+        #         print(f.read())
 
         args = self.parser.parse_args(args=shellArgs)
 
-        return self.runBatch2(scriptFile, jobName=args.jobName, queueName=args.queueName,
+        return self.runBatch2(shellArgs, jobName=args.jobName, queueName=args.queueName,
                               logFile=args.logFile, minutes=args.minutes, run=run)
 
-    @staticmethod
-    def writeBatchScript(args, delete=False):
-        """
-        Create a shell script in a temporary file which calls gt with the
-        given `args`.
-        :param args: (list of str) arguments to "gt" to write into a
-            script to be executed as a batch job
-        :param delete: (bool) if True, mark the tmp file for deletion.
-        :return: (str) the pathname of the script
-        """
-        tmpDir = getParam('GCAM.UserTempDir')
-        mkdirs(tmpDir)
-
-        scriptFile = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
-        _logger.info("Creating batch script '%s'", scriptFile)
-
-        with open(scriptFile, 'w') as f:
-            f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
-            if delete:
-                f.write("rm -f %s\n" % pipes.quote(scriptFile)) # file removes itself once running
-            else:
-                _logger.info('Batch script file will not be deleted.')
-
-            shellArgs = map(pipes.quote, args)
-            f.write("gt %s\n" % ' '.join(shellArgs))
-
-        os.chmod(scriptFile, 0o755)
-        return scriptFile
+    # deprecated
+    # @staticmethod
+    # def writeBatchScript(args, delete=False):
+    #     """
+    #     Create a shell script in a temporary file which calls gt with the
+    #     given `args`.
+    #     :param args: (list of str) arguments to "gt" to write into a
+    #         script to be executed as a batch job
+    #     :param delete: (bool) if True, mark the tmp file for deletion.
+    #     :return: (str) the pathname of the script
+    #     """
+    #     tmpDir = getParam('GCAM.UserTempDir')
+    #     mkdirs(tmpDir)
+    #
+    #     scriptFile = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
+    #     _logger.info("Creating batch script '%s'", scriptFile)
+    #
+    #     with open(scriptFile, 'w') as f:
+    #         f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
+    #         if delete:
+    #             f.write("rm -f %s\n" % pipes.quote(scriptFile)) # file removes itself once running
+    #         else:
+    #             _logger.info('Batch script file will not be deleted.')
+    #
+    #         shellArgs = map(pipes.quote, args)
+    #         f.write("gt %s\n" % ' '.join(shellArgs))
+    #
+    #     os.chmod(scriptFile, 0o755)
+    #     return scriptFile
 
 def _getMainParser():
     '''
