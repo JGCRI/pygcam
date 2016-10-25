@@ -952,7 +952,7 @@ class XMLEditor(object):
             self.updateScenarioComponent(fileTag, landFileRel)
 
     @callableMethod
-    def taxCarbon(self, value, years=range(2020, 2110, 10),
+    def taxCarbon(self, value, startYear=2020, endYear=2100, timestep=5,
                   rate=0.05, regions=GCAM_32_REGIONS, market='global'):
         '''
         Generate an XML file defining a global carbon tax starting
@@ -974,10 +974,11 @@ class XMLEditor(object):
 
         tag = 'carbon-tax-' + market
         filename = tag + '.xml'
-        fileRel = pathjoin(self.dyn_xml_rel, filename)
-        fileAbs = pathjoin(self.dyn_xml_abs, filename)
+        fileRel = pathjoin(self.scenario_dir_rel, filename)
+        fileAbs = pathjoin(self.scenario_dir_abs, filename)
 
-        genCarbonTaxFile(fileAbs, value, years, rate, regions=regions, market=market)
+        genCarbonTaxFile(fileAbs, value, startYear=startYear, endYear=endYear,
+                         timestep=timestep, rate=rate, regions=regions, market=market)
         self.addScenarioComponent(tag, fileRel)
 
     # TBD: test

@@ -47,10 +47,6 @@ On PIC: Add XMLDBDriver.jar to .../libs/jars. No sense treating this differently
 
 Bugs
 ====
-- Need fix on Windows for calling "java WriteLocalBaseXDB" to get jre path
-  using the new XMLDBDriver.jar, since Write... no longer has a main.
-  - Fixed, but not clear if Pralit is accepting the changes
-
 - There's a subtle problem with repeated use of GcamTool as top-level call.
   First symptom is query list is repeated. Seems to be stale state from
   prior invocation, suggesting a need to re-initialize (class vars?) when
@@ -100,31 +96,6 @@ Medium-term
   defaults for the top-level func so caller doesn't have to supply
   all the args. Might be able to extract this from parseArgs parser.
   - Probably not worth the effort.
-
-- Be able to specify a simple project without writing custom python code.
-    - Create xmlsrc
-    - Use built-in scenarios.py that just needs scenario names,
-      called from runProj
-    - <scenario> has a <files> section similar to configuration.xml
-    - support a delete="true" attribute
-    - Use stopYear to limit run
-
-    - A "simple" project either:
-        - Has manually created sandboxes
-        - Has generated sandboxes, but the project only adds to and
-          removes from configuration.xml with references to local files.
-        - Code doesn't use XmlEditor
-            - Already supported using scenarios.py
-
-- Have a flag for batch mode that runs the baseline, then batches
-  the policy scenarios with '-d singleton' to cause them to wait
-  for the baseline to complete.
-  - Maybe --split => split the scenario to run in own batch jobs
-    rather than running them all in one big job. If the scenarios
-    include baseline and at least one policy scenario, add args
-    "-d afterok:<jobid>" to existing value of GCAM.OtherBatchArgs,
-    where <jobid> is the id of the baseline job.
-  - use subprocess.check_output() and look for "Submitted batch job (\d+)"
 
 - If scenario has unique name among groups, run it even if group isn't specified?
     - Will require restructuring since it's assumed there's one group name
