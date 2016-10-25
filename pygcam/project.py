@@ -568,10 +568,9 @@ class Project(XMLFile):
         self.validateProjectArgs(steps,     knownSteps,     'steps')
 
         quitProgram = not args.noQuit
+        run = not args.noRun
 
         scenarios = self.sortScenarios(scenarios)
-        jobId = None
-
         sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
 
         # Delete all variants of scenario specification from shellArgs
@@ -591,10 +590,10 @@ class Project(XMLFile):
             # Construct gt command that does this scenario's steps
             # setting the -S flag for one scenario at a time.
             if args.distribute:
-                newArgs = shellArgs + ['-S', scenarioName]
+                newArgs = ['-P', projectName] + shellArgs + ['-S', scenarioName]
                 jobId = tool.runBatch2(newArgs, jobName=scenarioName, queueName=args.queueName,
                                        logFile=args.logFile, minutes=args.minutes,
-                                       dependsOn=baselineJobId)
+                                       dependsOn=baselineJobId, run=run)
                 if scenario.isBaseline:
                     baselineJobId = jobId
 
