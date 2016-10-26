@@ -122,7 +122,7 @@ Usage
 
       ::
 
-         gt -q short -O Foo run -D setup,gcam -S baseline,policy-1
+         gt -q short -P Foo run -D -S baseline,policy-1
 
       The "distribute" option knows that various project steps for non-baseline
       scenarios may  depend on baseline scenarios, so the baseline is always run first,
