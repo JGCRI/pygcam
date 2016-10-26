@@ -7,6 +7,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from __future__ import print_function
+from copy import copy
 import glob
 import os
 import re
@@ -16,10 +17,10 @@ from os.path import join
 
 from lxml import etree as ET
 
-from .config import getParam, getConfigDict, setParam
+from .config import getParam, setParam, getConfigDict
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
-from .log import getLogger
+from .log import getLogger, getLogLevel
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
                     simpleFormat, resourceStream, QueryResultsDir, XMLFile)
 from .xmlSetup import ScenarioSetup
@@ -30,32 +31,25 @@ _logger = getLogger(__name__)
 
 DefaultProjectFile = './project.xml'
 
-# deprecated
-# def getBaseline(scenarios):
-#     '''Check that exactly one active baseline is defined, and if so, return it'''
-#
-#     baselines = [s for s in scenarios if s.isBaseline and s.isActive]
-#     if len(baselines) == 1:
-#         return baselines[0]
-#
-#     raise FileFormatError('Exactly one active baseline scenario must be defined; found %d' % len(baselines))
+def dropArgs(args, shortArg, longArg, takesArgs=True):
+    args = copy(args)
 
-# Deprecated
-# def getDefaultGroup(groupDict):
-#     '''
-#     Check that exactly one default scenarioGroup is defined, unless there is
-#     only one group, in which case it is obviously the default.
-#     '''
-#     groups = groupDict.values()
-#
-#     if len(groups) == 1:
-#         return groups[0]
-#
-#     defaults = [group for group in groups if group.isDefault]
-#     if len(defaults) == 1:
-#         return defaults[0]
-#
-#     raise FileFormatError('Exactly one active default scenario group must be defined; found %d' % len(defaults))
+    # Delete separated versions, e.g., "-s foo" and "--scenario foo"
+    for arg in [shortArg, longArg]:
+        while arg in args:
+            argIndex = args.index(arg)
+            if takesArgs:
+                del args[argIndex + 1]
+            del args[argIndex]
+
+    if takesArgs:
+        # Delete contiguous versions, e.g., "-sfoo" and "--scenario=foo"
+        matches = filter(lambda s: s.startswith(shortArg) or s.startswith(longArg + '='), args)
+        for arg in matches:
+            while arg in args:   # in case an arg is repeated...
+                args.remove(arg)
+
+    return args
 
 def decacheVariables():
     SimpleVariable.decache()
@@ -574,8 +568,17 @@ class Project(XMLFile):
         self.validateProjectArgs(steps,     knownSteps,     'steps')
 
         quitProgram = not args.noQuit
+        run = not args.noRun
 
         scenarios = self.sortScenarios(scenarios)
+        sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
+
+        # Delete all variants of scenario specification from shellArgs
+        # so we can queue these one at a time.
+        shellArgs = dropArgs(tool.shellArgs, '-S', '--scenario')
+        shellArgs = dropArgs(shellArgs, '-D', '--distribute', takesArgs=False)
+
+        baselineJobId = None
 
         for scenarioName in scenarios:
             scenario = self.scenarioDict[scenarioName]
@@ -584,10 +587,22 @@ class Project(XMLFile):
                 _logger.debug("Skipping inactive scenario: %s", scenarioName)
                 continue
 
+            # Construct gt command that does this scenario's steps
+            # setting the -S flag for one scenario at a time.
+            if args.distribute:
+                newArgs = ['-P', projectName] + shellArgs + ['-S', scenarioName]
+                jobId = tool.runBatch2(newArgs, jobName=scenarioName, queueName=args.queueName,
+                                       logFile=args.logFile, minutes=args.minutes,
+                                       dependsOn=baselineJobId, run=run)
+                if scenario.isBaseline:
+                    baselineJobId = jobId
+
+                continue
+
             # These get reset as each scenario is processed
             argDict['scenario']       = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
-            argDict['sandboxDir']     = sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
+            argDict['sandboxDir']     = sandboxDir
             argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, scenarioName))
             argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
             argDict['batchDir']       = unixPath(join(scenarioDir, QueryResultsDir))     # used to be batch-{scenario}

@@ -365,7 +365,7 @@ def protectLandMain(args):
     if not workspace:
         raise CommandlineError('Workspace must be identified in command-line or config variable GCAM.RefWorkspace')
 
-    landXmlFiles = ['land_input_2.xml', 'land_input_3.xml']
+    landXmlFiles = ['land2.xml', 'land3.xml']
     xmlDir = os.path.join(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
     inFiles = map(lambda filename: os.path.join(xmlDir, filename), landXmlFiles)
 

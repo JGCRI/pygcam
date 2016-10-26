@@ -201,7 +201,7 @@ class BioenergyEditor(XMLEditor):
                 '-u', "//region[@name='%s']//isNewTechnology[@year='2020']" % region,
                 '-v', "0")
 
-        self.updateScenarioComponent("land_input_3", landInput3Rel)
+        self.updateScenarioComponent("land3", landInput3Rel)
 
     #
     # Various methods that operate on the USA specifically

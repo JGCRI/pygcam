@@ -26,6 +26,11 @@ class ProjectCommand(SubcommandABC):
         parser.add_argument('-a', '--allGroups', action='store_true',
                             help='''Run all scenarios for all defined groups.''')
 
+        parser.add_argument('-D', '--distribute', action="store_true",
+                            help='''Run the given scenarios by queueing them independently. If one of
+                            the scenarios is a baseline, it is queued first and the remaining scenarios
+                            are queued as dependent on the completion of the baseline job.''')
+
         parser.add_argument('-f', '--projectFile',
                             help='''The XML file describing the project. If set, command-line
                             argument takes precedence. Otherwise, value is taken from config file
