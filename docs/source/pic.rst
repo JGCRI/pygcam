@@ -123,3 +123,15 @@ with a dependency on successful completion of the baseline scenario job.
 If scenarios are explicitly named, only those scenarios are run, as usual.
 If none of the named scenarios is a baseline, the jobs are all queued
 immediately.
+
+You can run all scenarios in all scenario groups using this same mechanism
+by specifying the ``-a`` or ``--allGroups`` flag:
+
+    ::
+
+       gt -P Foo run -D -a
+
+This command is equivalent to iterates over all groups and running ``gt run -D``
+on each group. All the baselines will start immediately, and all the policy
+scenarios will be queued with a dependency on successful completion of the
+corresponding baseline.

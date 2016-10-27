@@ -163,35 +163,6 @@ class Queries(_TmpFileBase):
         self.tree.write(path, xml_declaration=True, pretty_print=True)
         return path
 
-# deprecated
-# class ScenarioGroup(object):
-#     """
-#     Represents the ``<scenarioGroup>`` element in the projects.xml file.
-#     """
-#     def __init__(self, node):
-#         self.name = node.get('name')
-#         self.isDefault   = getBooleanXML(node.get('default', default='0'))
-#         self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
-#
-#         scenarioNodes = node.findall('scenario')
-#         scenarios = map(Scenario, scenarioNodes)
-#
-#         self.scenarioDict = {scen.name : scen for scen in scenarios}
-#
-#         baselineNode = getBaseline(scenarios)
-#         self.baseline = baselineNode.name
-#
-# class Scenario(object):
-#     """
-#     Represents the ``<scenario>`` element in the projects.xml file.
-#     """
-#     def __init__(self, node):
-#         self.name = node.get('name')
-#         self.isActive   = getBooleanXML(node.get('active',   default='1'))
-#         self.isBaseline = getBooleanXML(node.get('baseline', default='0'))
-#         self.subdir = node.get('subdir', default=self.name)
-
-
 class Step(object):
     maxStep = 0        # for auto-numbering steps lacking a sequence number
 
@@ -621,7 +592,10 @@ class Project(XMLFile):
             try:
                 # Loop over all steps and run those that user has requested
                 for step in self.sortedSteps:
-                    if step.name in steps and (not step.group or step.group == scenarioGroupName):
+                    group = step.group
+                    if step.name in steps and (not group or                            # no group specified
+                                               group == scenarioGroupName or           # exact match
+                                               re.match(group, scenarioGroupName)):    # pattern match
                         argDict['step'] = step.name
                         step.run(self, baseline, scenario, argDict, tool, noRun=args.noRun)
             except PygcamException as e:
