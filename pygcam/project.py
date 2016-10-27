@@ -577,6 +577,7 @@ class Project(XMLFile):
         # so we can queue these one at a time.
         shellArgs = dropArgs(tool.shellArgs, '-S', '--scenario')
         shellArgs = dropArgs(shellArgs, '-D', '--distribute', takesArgs=False)
+        shellArgs = dropArgs(shellArgs, '-a', '--allGroups', takesArgs=False)
 
         baselineJobId = None
 
@@ -590,7 +591,7 @@ class Project(XMLFile):
             # Construct gt command that does this scenario's steps
             # setting the -S flag for one scenario at a time.
             if args.distribute:
-                newArgs = ['-P', projectName] + shellArgs + ['-S', scenarioName]
+                newArgs = ['-P', projectName] + shellArgs + ['-S', scenarioName] + ['-g', scenarioGroupName]
                 jobId = tool.runBatch2(newArgs, jobName=scenarioName, queueName=args.queueName,
                                        logFile=args.logFile, minutes=args.minutes,
                                        dependsOn=baselineJobId, run=run)
