@@ -2,6 +2,18 @@
 # Build a stand-alone version of pygcam's "gt" (GCAM tool)
 #
 
+NAME = $(shell uname -s)
+
+# Change "Darwin" to "Mac"
+ifeq ($(NAME),Darwin)
+  NAME=mac
+else ifeq ($(NAME),Linux)
+  NAME=linux		# not currently used
+else
+  NAME=win
+endif
+
+
 # NOTE: A suggested solution is to eliminate mkl:
 # conda install nomkl numpy scipy scikit-learn numexpr
 # conda remove mkl mkl-service
@@ -20,11 +32,11 @@ all: one_dir tarball
 one_dir:
 	$(PYINSTALLER) --onedir --distpath=dist
 
-zipmac:
-	cd dist && gzip -r -c -9 gt-mac > ../gt-mac.zip
-
-zipwin:
-	cd dist && gzip -r -c -9 gt-win > ../gt-win.zip
+zip: zips
+	cd dist && gzip -r -c -9 gt-$(NAME) > ../zips/gt-$(NAME).zip
 
 clean:
-	rm -rf build one_dir one_file gt-*.zip
+	rm -rf build one_dir one_file zips
+
+zips:
+	-mkdir zips

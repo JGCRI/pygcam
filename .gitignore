@@ -36,3 +36,4 @@ pygcam/jugdir
 test.py
 pyinst/build
 pyinst/dist
+pyinst/zips
