@@ -39,7 +39,7 @@ def setJavaPath(exeDir):
         with pushd(exeDir):
             if getParamAsFloat('GCAM.VersionNumber') > 4.2:
                 classpath = getParam('GCAM.MI.ClassPath')
-                command = 'java -cp %s XMLDBDriver --print-java-path' % classpath
+                command = "java -cp '%s' XMLDBDriver --print-java-home" % classpath
             else:
                 command = 'java WriteLocalBaseXDB'
 
