@@ -46,8 +46,7 @@ def setJavaPath(exeDir):
             try:
                 output = subprocess.check_output(str(command), shell=True)
             except Exception as e:
-                raise PygcamException("Failed to get java home: %s" % e)
-
+                raise PygcamException("Cannot get java home dir: %s" % e)
 
         os.environ['JAVA_HOME'] = javaHome = output and output.strip()
 
