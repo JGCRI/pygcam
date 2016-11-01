@@ -6,8 +6,7 @@ from __future__ import print_function
 import os
 import platform
 from pkg_resources import resource_string
-#from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError
-from configparser import ConfigParser, NoOptionError, NoSectionError
+from backports import configparser
 from .error import ConfigFileError, PygcamException
 
 DEFAULT_SECTION = 'DEFAULT'
@@ -136,8 +135,8 @@ def readConfigFiles():
         home = os.getenv('HOME')
 
     # Strict mode prevents duplicate sections, which we do not restrict
-    _ConfigParser = ConfigParser(comment_prefixes=('#'), strict=False,
-                                 empty_lines_in_values=False)
+    _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'), strict=False,
+                                              empty_lines_in_values=False)
 
     # don't force keys to lower-case
     _ConfigParser.optionxform = lambda option: option
@@ -237,13 +236,13 @@ def getParam(name, section=None, raw=False, raiseError=True):
     try:
         return _ConfigParser.get(section, name, raw=raw)
 
-    except NoSectionError:
+    except configparser.NoSectionError:
         if raiseError:
             raise PygcamException('getParam: unknown section "%s"' % section)
         else:
             return None
 
-    except NoOptionError:
+    except configparser.NoOptionError:
         if raiseError:
             raise PygcamException('getParam: unknown variable "%s"' % name)
         else:
