@@ -7,7 +7,8 @@ if platform.system() != 'Windows':
 
 from setuptools import setup
 
-requirements = ['lxml',
+requirements = ['configparser',     # backport of python 3.5 version
+                'lxml',
                 'numpy',
                 'pandas',
                 'seaborn',
