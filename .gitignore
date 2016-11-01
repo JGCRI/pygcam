@@ -34,3 +34,5 @@ setuptools-*.egg
 setuptools-*.zip
 pygcam/jugdir
 test.py
+pyinst/build
+pyinst/dist
