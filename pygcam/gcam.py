@@ -39,12 +39,12 @@ def setJavaPath(exeDir):
         with pushd(exeDir):
             if getParamAsFloat('GCAM.VersionNumber') > 4.2:
                 classpath = getParam('GCAM.MI.ClassPath')
-                command = "java -cp '%s' XMLDBDriver --print-java-home" % classpath
+                command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
             else:
                 command = 'java WriteLocalBaseXDB'
 
             try:
-                output = subprocess.check_output(command, shell=True)
+                output = subprocess.check_output(str(command), shell=True)
             except Exception as e:
                 raise PygcamException("Failed to get java home: %s" % e)
 
