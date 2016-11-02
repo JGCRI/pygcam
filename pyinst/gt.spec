@@ -17,15 +17,16 @@ excludes = ['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'PyQt5', 'gt
 
 hiddenimports = ['pygcam.builtins.*', 'pygcam.sectorEditors', 'pygcam.carbonTax', 'pygcam.constraints']
 
+from pygcam.version import VERSION
 import platform
 
 if platform.system() == 'Windows':
 
     hiddenimports += ['wincom32']
-    name = 'gt-win'
+    name = 'gt-' + VERSION + '-win'
 
 else:
-    name = 'gt-mac'
+    name = 'gt-' + VERSION + '-mac'
 
     excludes += ['win32con', 'win32com.shell', 'win32com.client', 'win32com.client.gencache',
                 'win32clipboard', 'win32evtlog', 'win32evtlogutil', 'win32file', 'win32api', 
