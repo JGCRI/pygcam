@@ -1,7 +1,45 @@
 Installation
 ==================
 
-Quick Links:
+Option 1: Download the all-in-one zip file
+-------------------------------------------
+Starting with ``pygcam`` version 1.0b2, Mac and Windows users have the option of
+downloading a zip file with an all-in-one directory created by
+`pyinstaller <https://pythonhosted.org/PyInstaller>`_ that provides a
+stand-alone version of ``pygcam`` and all supporting files. To use this:
+
+  - Download the latest version of the gt zip file from the
+    `pygcam downloads <https://bitbucket.org/plevin/pygcam/downloads>`_ page. At
+    the time of this writing, the current versions are:
+
+    - Mac: `gt-1.0b2-mac.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b1-mac.zip>`_
+    - Windows: `gt-1.0b2-win.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b1-win.zip>`_
+
+  - Unzip the downloaded zip file anywhere on your system.
+  - Set the PATH environment variable to top-level folder created from the zip file.
+
+For help setting the PATH variable, Windows users can read
+`this page <http://www.computerhope.com/issues/ch000549.htm>`_, and Macintosh
+users can read
+`this one <https://developer.apple.com/library/content/documentation/OpenSource/Conceptual/ShellScripting/shell_scripts/shell_scripts.html>`_.
+
+This is the simplest approach to gaining access to the :ref:`gcamtool` command.
+However, it does not install the ``pygcam`` package in a manner that can be used
+in your own Python programming efforts: see Option 2, below, for more information.
+
+Note that under Option 1, you still need to install java, XML Starlet, and GCAM, as
+described below.
+
+Option 2: Install python and the pygcam package
+------------------------------------------------
+
+If you intend to use ``pygcam`` as a library for Python programming, or if you
+intend to modify or debug (thanks!) the code, you must install a Python environment
+and then install ``pygcam`` as a standard python package.
+
+
+Quick Links
+------------
 
   - `Download Anaconda <https://www.continuum.io/downloads>`_
   - `Download Java <http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html>`_
@@ -21,7 +59,7 @@ Anaconda
 
   .. note::
 
-     Be sure to install Anaconda for **Python 2.7!** It does not yet run in Python 3.
+     Be sure to install Anaconda for **Python 2.7!** Pygcam does not yet run in Python 3.
 
 The most convenient way to install and manage a scientific Python environment
 is to use the free `Anaconda <https://www.continuum.io/downloads>`_ distribution.
@@ -32,6 +70,11 @@ testing of pygcam uses Anaconda. Follow the installation instructions for you
 platform.
 
   - `Download Anaconda <https://www.continuum.io/downloads>`_
+
+If you mistakenly install Python 3, you might want to delete it (unless you plan to
+use it for other purposes) to avoid confusion. Creating a Python 2.7 virtual environment
+requires more work than simply downloading the correct Python 2 version of Anaconda.
+
 
 Java
 ^^^^^^^^^^^^^^^^
@@ -49,8 +92,10 @@ on the `XML Starlet <http://xmlstar.sourceforge.net/download.php>`_ program, a
 command-line tool that can search and edit XML files, among other tricks.
 It is available for all three GCAM platforms, and should already
 be included on all modern Linux systems. It is available from the download page in
-binary (executable) form for Windows, but must be compiled on Mac OS X. Contact the
-author if you need a copy for the Mac.
+binary (executable) form for Windows, but must be compiled on Mac OS X. Binary versions
+are available on https://bitbucket.org/plevin/pygcam/downloads, but owing to differences
+in library versions and locations, these are not guaranteed to work on you system. (A
+better solution is in the works...)
 
 Once installed, be sure the ``xml`` (starlet) program is available on your ``PATH``
 or set the ``GCAM.XmlStarlet`` config variable to the program, either in your own
