@@ -13,7 +13,7 @@ else
   NAME=win
 endif
 
-VERSION  := $(shell ./gt.py --version 2>&1)
+VERSION  := $(shell python gt.py --version 2>&1)
 FULLNAME := $(VERSION)-$(NAME)
 
 # NOTE: A suggested solution is to eliminate mkl:
