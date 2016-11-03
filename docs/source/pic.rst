@@ -101,3 +101,37 @@ settings.
     # for the GCAM.BatchCommand.
     GCAM.LocalCommand = srun -A GCAM -p short,slurm --time={walltime} --pty -N 1 -u
 
+
+Running scenario groups
+------------------------
+
+The most convenient way to run a scenario group on PIC (or any cluster)
+is to use the ``-D`` or ``--distribute`` option to the run sub-commmand. For
+example, to run the default scenario group for project "Foo", you can run:
+
+      ::
+
+         gt -P Foo run -D
+
+This will queue the baseline scenario and then queue the policy scenarios
+with a dependency on successful completion of the baseline scenario job.
+
+      ::
+
+         gt -P Foo run -D -S baseline,policy-1
+
+If scenarios are explicitly named, only those scenarios are run, as usual.
+If none of the named scenarios is a baseline, the jobs are all queued
+immediately.
+
+You can run all scenarios in all scenario groups using this same mechanism
+by specifying the ``-a`` or ``--allGroups`` flag:
+
+    ::
+
+       gt -P Foo run -D -a
+
+This command is equivalent to iterates over all groups and running ``gt run -D``
+on each group. All the baselines will start immediately, and all the policy
+scenarios will be queued with a dependency on successful completion of the
+corresponding baseline.

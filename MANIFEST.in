@@ -1,6 +1,7 @@
 include README.md
 include LICENSE.txt
 include setup.py
+include ez_setup.py
 
 # Source code
 include pygcam/*.py

@@ -115,8 +115,23 @@ Usage
 
           gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
 
-      Show the commands that would be executed for the above command, but
-      don't run them:
+
+      Note that the command above will run the two scenarios ('baseline' and
+      'policy-1') in a single batch job. To run scenarios in separate batch
+      jobs, use the ``-D`` or ``--distribute`` option to the run sub-commmand:
+
+      ::
+
+         gt -q short -P Foo run -D -S baseline,policy-1
+
+      The "distribute" option knows that various project steps for non-baseline
+      scenarios may  depend on baseline scenarios, so the baseline is always run first,
+      with the non-baseline scenarios queued as dependent on the successful completion
+      of the baseline. If no scenarios are explicitly named, all scenarios in the group
+      are run, as usual.
+
+      The ``-n`` flag displays the commands that would be executed for a command, but
+      doesn't run them:
 
       ::
 

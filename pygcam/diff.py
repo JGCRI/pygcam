@@ -33,6 +33,15 @@ def computeDifference(df1, df2, resetIndex=True):
         raise FileFormatError("Can't compute difference because result sets have different columns. df1:%s, df2:%s" \
                               % (df1.columns, df2.columns))
 
+    # Handle corner case in which query results for non-existent data have zero in Units column
+    if 'Units' in df1.columns:
+        units = list(df1.Units.unique())
+        if len(units) == 2 and '0.0' in units:
+            units.remove('0.0')
+            realUnits = units[0]
+            df1.Units = realUnits
+            df2.Units = realUnits
+
     yearCols = filter(str.isdigit, df1.columns)
     nonYearCols = list(set(df1.columns) - set(yearCols))
 

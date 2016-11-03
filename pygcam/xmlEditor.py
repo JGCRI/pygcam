@@ -24,7 +24,7 @@ import shutil
 import subprocess
 
 from .config import getParam, getParamAsBoolean
-from .constants import LOCAL_XML_NAME, DYN_XML_NAME
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException
 from .log import getLogger
 from .utils import coercible, mkdirs, unixPath, printSeries
@@ -415,25 +415,35 @@ class XMLEditor(object):
     def makeScenarioComponentsUnique(self):
         """
         Give all reference ScenarioComponents a unique "name" tag to facilitate
-        manipulation via xmlstarlet.
+        manipulation via xmlstarlet. This is a no-op in GCAM v4.3.
 
         :return: none
         """
-        self.renameScenarioComponent("socioeconomics_1", pathjoin(self.socioeconomics_dir_rel, "interest_rate.xml"))
-        self.renameScenarioComponent("socioeconomics_2", pathjoin(self.socioeconomics_dir_rel, "socioeconomics_GCAM3.xml"))
+        version = getParam('GCAM.VersionNumber')
 
-        self.renameScenarioComponent("industry_1", pathjoin(self.energy_dir_rel, "industry.xml"))
-        self.renameScenarioComponent("industry_2", pathjoin(self.energy_dir_rel, "industry_incelas_gcam3.xml"))
+        # no longer necessary in 4.3. For 4.2, we reset names to those used in 4.3
+        if version == '4.2':
+            self.renameScenarioComponent("interest_rate", pathjoin(self.socioeconomics_dir_rel, "interest_rate.xml"))
+            self.renameScenarioComponent("socioeconomics", pathjoin(self.socioeconomics_dir_rel, "socioeconomics_GCAM3.xml"))
 
-        self.renameScenarioComponent("cement_1", pathjoin(self.energy_dir_rel, "cement.xml"))
-        self.renameScenarioComponent("cement_2", pathjoin(self.energy_dir_rel, "cement_incelas_gcam3.xml"))
+            self.renameScenarioComponent("industry", pathjoin(self.energy_dir_rel, "industry.xml"))
+            self.renameScenarioComponent("industry_income_elas", pathjoin(self.energy_dir_rel, "industry_incelas_gcam3.xml"))
 
-        self.renameScenarioComponent("en_fertilizer", pathjoin(self.energy_dir_rel, "en_Fert.xml"))
-        self.renameScenarioComponent("ag_fertilizer", pathjoin(self.aglu_dir_rel,   "ag_Fert.xml"))
+            self.renameScenarioComponent("cement", pathjoin(self.energy_dir_rel, "cement.xml"))
+            self.renameScenarioComponent("cement_income_elas", pathjoin(self.energy_dir_rel, "cement_incelas_gcam3.xml"))
 
-        landFiles = ('land_input_1', 'land_input_2', 'land_input_3', 'protected_land_input_2', 'protected_land_input_3')
-        for landFile in landFiles:
-            self.renameScenarioComponent(landFile, pathjoin(self.aglu_dir_rel, landFile + '.xml'))
+            self.renameScenarioComponent("fertilizer_energy", pathjoin(self.energy_dir_rel, "en_Fert.xml"))
+            self.renameScenarioComponent("fertilizer_agriculture", pathjoin(self.aglu_dir_rel, "ag_Fert.xml"))
+
+            for i in (1,2,3):
+                tag = 'land%d' % i
+                filename = 'land_input_%d.xml' % i
+                self.renameScenarioComponent(tag, pathjoin(self.aglu_dir_rel, filename))
+
+                if i > 1:
+                    tag = 'protected_' + tag
+                    filename = 'protected_' + filename
+                    self.renameScenarioComponent(tag, pathjoin(self.aglu_dir_rel, filename))
 
     def cfgPath(self):
         """
@@ -906,8 +916,8 @@ class XMLEditor(object):
 
     @callableMethod
     def dropLandProtection(self):
-        self.deleteScenarioComponent("protected_land_input_2")
-        self.deleteScenarioComponent("protected_land_input_3")
+        self.deleteScenarioComponent("protected_land2")
+        self.deleteScenarioComponent("protected_land3")
 
     @callableMethod
     def protectLand(self, fraction, landClasses=None, otherArable=False,
@@ -932,14 +942,44 @@ class XMLEditor(object):
 
         # NB: this code depends on these being the tags assigned to the land files
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
-        landFiles = ['land_input_2', 'land_input_3']
-        for landFile in landFiles:
-            filename = landFile + '.xml'
+        for num in [2, 3]:
+            filename = 'land_input_%d.xml' % num
+            fileTag  = 'land%d' % num
             landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
-            self.updateScenarioComponent(landFile, landFileRel)
+            self.updateScenarioComponent(fileTag, landFileRel)
+
+    @callableMethod
+    def taxCarbon(self, value, startYear=2020, endYear=2100, timestep=5,
+                  rate=0.05, regions=GCAM_32_REGIONS, market='global'):
+        '''
+        Generate an XML file defining a global carbon tax starting
+        at `value` and increasing by `rate` annually. Generate values
+        for the give `years`. The first year in `years` is assumed to be
+        the year at which the tax starts at `value`. The generated file
+        is named 'carbon-tax-{market}.xml' and is added to the configuration.
+
+        :param value: (float) the initial value of the tax ($/tonne)
+        :param years: (list(int)) years to set carbon taxes. Default is 2020-2100
+           at 10 year time-steps.
+        :param rate: (float) annual rate of increase. Default is 0.05.
+        :param regions: (list(str)) the regions for which to create a C tax market.
+             Default is all 32 GCAM regions.
+        :param market: (str) the name of the market to create. Default is 'global'.
+        :return: none
+        '''
+        from .carbonTax import genCarbonTaxFile
+
+        tag = 'carbon-tax-' + market
+        filename = tag + '.xml'
+        fileRel = pathjoin(self.scenario_dir_rel, filename)
+        fileAbs = pathjoin(self.scenario_dir_abs, filename)
+
+        genCarbonTaxFile(fileAbs, value, startYear=startYear, endYear=endYear,
+                         timestep=timestep, rate=rate, regions=regions, market=market)
+        self.addScenarioComponent(tag, fileRel)
 
     # TBD: test
     @callableMethod

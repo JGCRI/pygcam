@@ -4,10 +4,9 @@
 '''
 from __future__ import print_function
 import os
-import io
 import platform
 from pkg_resources import resource_string
-from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError
+from backports import configparser
 from .error import ConfigFileError, PygcamException
 
 DEFAULT_SECTION = 'DEFAULT'
@@ -98,7 +97,7 @@ def getConfig():
     need to use this object directly since the single instance is stored
     internally and referenced by the other API functions.
 
-    :return: a `SafeConfigParser` instance.
+    :return: a `ConfigParser` instance.
     """
     return _ConfigParser or readConfigFiles()
 
@@ -112,7 +111,8 @@ def _readConfigResourceFile(filename, raiseError=True):
         else:
             return None
 
-    _ConfigParser.readfp(io.BytesIO(data))
+    data = unicode(data)
+    _ConfigParser.read_string(data, source=filename)
     return data
 
 def readConfigFiles():
@@ -123,7 +123,7 @@ def readConfigFiles():
     read next. Finally, the user's config file, ``~/.pygcam.cfg``, is read. Each
     successive file overrides values for any variable defined in an earlier file.
 
-    :return: a populated SafeConfigParser instance
+    :return: a populated ConfigParser instance
     """
     global _ConfigParser
 
@@ -134,8 +134,12 @@ def readConfigFiles():
     else:
         home = os.getenv('HOME')
 
-    _ConfigParser = SafeConfigParser()
-    _ConfigParser.optionxform = str     # don't force all names to lower-case
+    # Strict mode prevents duplicate sections, which we do not restrict
+    _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'), strict=False,
+                                              empty_lines_in_values=False)
+
+    # don't force keys to lower-case
+    _ConfigParser.optionxform = lambda option: option
 
     # Initialize config parser with default values
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
@@ -147,8 +151,7 @@ def readConfigFiles():
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:
         try:
-            with open(siteConfig) as fp:
-                _ConfigParser.readfp(fp)
+           _ConfigParser.read_file(open(siteConfig))
         except Exception as e:
             print("WARNING: Failed to read site config file: %s" % e)
 
@@ -157,8 +160,7 @@ def readConfigFiles():
 
     # os.path.exists doesn't always work on Windows, so just try opening it.
     try:
-        with open(usrConfigPath) as fp:
-           _ConfigParser.readfp(fp)
+       _ConfigParser.read_file(open(usrConfigPath))
 
     except IOError as e:
         # create a file with the system defaults if no file exists
@@ -234,13 +236,13 @@ def getParam(name, section=None, raw=False, raiseError=True):
     try:
         return _ConfigParser.get(section, name, raw=raw)
 
-    except NoSectionError:
+    except configparser.NoSectionError:
         if raiseError:
             raise PygcamException('getParam: unknown section "%s"' % section)
         else:
             return None
 
-    except NoOptionError:
+    except configparser.NoOptionError:
         if raiseError:
             raise PygcamException('getParam: unknown variable "%s"' % name)
         else:

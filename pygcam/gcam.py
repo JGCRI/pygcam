@@ -14,7 +14,7 @@ from .config import getParam, getParamAsBoolean, getParamAsFloat
 from .error import ProgramExecutionError, GcamRuntimeError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
-from .utils import writeXmldbDriverProperties, getExeDir
+from .utils import writeXmldbDriverProperties, getExeDir, pushd
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -31,17 +31,22 @@ def setJavaPath(exeDir):
         return
 
     javaHome = os.environ.get('JAVA_HOME', None)
-    # Attempt to use WriteLocalBaseXDB which will print the java.home property of the Java
-    # Runtime used to run it.  Note if the runtime is not 64-bit it will only print an error.
-    from subprocess import check_output
 
     if not javaHome:
-        curdir = os.getcwd()
-        os.chdir(exeDir)
-        # For some reason, this doesn't work with a path to WriteLocalBaseXDB
-        # so we chdir to the directory and run java there.
-        output = check_output('java WriteLocalBaseXDB', shell=True)
-        os.chdir(curdir)
+        # Use WriteLocalBaseXDB (v4.2) or XMLDBDriver (v4.3) to print the java.home property
+        # of the Java Runtime used to run it. Note if the runtime is not 64-bit it will only
+        # print an error.
+        with pushd(exeDir):
+            if getParamAsFloat('GCAM.VersionNumber') > 4.2:
+                classpath = getParam('GCAM.MI.ClassPath')
+                command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
+            else:
+                command = 'java WriteLocalBaseXDB'
+
+            try:
+                output = subprocess.check_output(str(command), shell=True)
+            except Exception as e:
+                raise PygcamException("Cannot get java home dir: %s" % e)
 
         os.environ['JAVA_HOME'] = javaHome = output and output.strip()
 

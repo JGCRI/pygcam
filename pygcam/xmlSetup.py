@@ -364,7 +364,8 @@ class Function(ConfigAction):
         if not method:
             raise SetupException("<function name='%s'>: function doesn't exist or is not callable from XML" % name)
 
-        codeStr = "editor.%s(%s)" % (name, self.formattedContent)
+        args = "(%s)" % self.formattedContent if self.formattedContent else "()"
+        codeStr = "editor.%s%s" % (name, args)
         try:
             eval(codeStr)
         except SyntaxError as e:
