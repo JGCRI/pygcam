@@ -12,6 +12,8 @@ all: clean html sdist wheel
 pypitest-upload:
 	python setup.py sdist upload -r pypitest
 
+upload: pypi-upload
+
 pypi-upload:
 	python setup.py sdist upload -r pypi
 
