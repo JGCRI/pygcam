@@ -21,12 +21,11 @@ import glob
 import os
 import re
 import shutil
-import subprocess
 from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
-from .error import SetupException
+from .error import SetupException, PygcamException
 from .log import getLogger
 from .utils import coercible, mkdirs, unixPath, printSeries
 
@@ -198,7 +197,6 @@ def xmlEdit(filename, pairs, useCache=True):
 
     return updated
 
-# TBD: revive this using lxml rather than xmlstarlet
 def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technology,
                           sectorElement='supplysector', fromRegion=False):
     """
@@ -222,9 +220,6 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     """
     _logger.info("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
 
-    def _attr(element, value): # Simple helper function
-        return '-i "//%s" -t attr -n name -v "%s" ' % (element, value)
-
     if fromRegion:
         xpath = "//region[@name='%s']/%s[@name='%s']/subsector[@name='%s']/stub-technology[@name='%s']" % \
                 (region, sectorElement, sector, subsector, technology)
@@ -232,27 +227,37 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
         xpath = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                 (sector, subsector, technology)
 
-    exe = getParam('GCAM.XmlStarlet')
+    # Read the srcFile to extract the required elements
+    parser = ET.XMLParser(remove_blank_text=True)
+    tree = ET.parse(srcFile, parser)
+
+    # Rename technology => stub-technology (for global-tech-db case)
+    elts = tree.xpath(xpath)
+    if len(elts) != 1:
+        raise PygcamException('Xpath "%s" failed' % xpath)
+
+    technologyElt = elts[0]
+    technologyElt.tag = 'stub-technology'       # no-op if fromRegion == True
 
     # Surround the extracted XML with the necessary hierarchy
-    cmd1 = '''%s sel -t -e scenario -e world -e region -e %s -e subsector -c "%s" "%s"''' % \
-           (exe, sectorElement, xpath, srcFile)
-
-    # Insert attribute names to the new hierarchy and rename technology => stub-technology (for global-tech-db case)
-    cmd2 = exe + " ed " + _attr("region", region) + _attr(sectorElement, sector) + _attr("subsector", subsector) + \
-           '''-r "//technology[@name='%s']" -v stub-technology ''' % technology
+    scenarioElt  = ET.Element('scenario')
+    worldElt     = ET.SubElement(scenarioElt, 'world')
+    regionElt    = ET.SubElement(worldElt, 'region', attrib={'name' : region})
+    sectorElt    = ET.SubElement(regionElt, sectorElement, attrib={'name' : sector})
+    subsectorElt = ET.SubElement(sectorElt, 'subsector', attrib={'name' : subsector})
+    subsectorElt.append(technologyElt)
 
     # Workaround for parsing error: explicitly name shutdown deciders
-    for name in ['phased-shutdown-decider', 'profit-shutdown-decider']:
-        cmd2 += ' -d "//%s"' % name  # just delete the redundant definitions...
-        #cmd2 += ' -i "//{decider}" -t attr -n name -v "{decider}"'.format(decider=name)
+    elts = scenarioElt.xpath("//phased-shutdown-decider|profit-shutdown-decider")
+    for elt in elts:
+        parent = elt.getparent()
+        parent.remove(elt)
 
-    # Redirect output to the destination file
-    cmd = "%s | %s > %s" % (cmd1, cmd2, dstFile)
-    _logger.debug(cmd)
-    status = subprocess.call(cmd, shell=True)
-    return status == 0
+    _logger.info("Writing '%s'", dstFile)
+    newTree = ET.ElementTree(scenarioElt)
+    newTree.write(dstFile, xml_declaration=True, pretty_print=True)
 
+    return True
 
 def expandYearRanges(seq):
     """
