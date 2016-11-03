@@ -87,16 +87,12 @@ class BioenergyEditor(XMLEditor):
 
         fractHarvested = xPrefix + "/AgProductionTechnology/period[@year>2010]/residue-biomass-production/fract-harvested"
 
-        xmlEdit(resbioFileAbs,
-            '-u', fractHarvested + "[@price='%s']" % loTarget,
-            '-v', loFract,
-            '-u', fractHarvested + "[@price='%s']" % hiTarget,
-            '-v', hiFract,
-            '-u', fractHarvested + "[@price='%s']/@price" % loTarget,
-            '-v', loPrice,
-            '-u', fractHarvested + "[@price='%s']/@price" % hiTarget,
-            '-v', hiPrice)
+        pairs = [(fractHarvested + "[@price='%s']" % loTarget, loFract),
+                 (fractHarvested + "[@price='%s']" % hiTarget, hiFract),
+                 (fractHarvested + "[@price='%s']/@price" % loTarget, loPrice),
+                 (fractHarvested + "[@price='%s']/@price" % hiTarget, hiPrice)]
 
+        xmlEdit(resbioFileAbs, pairs)
         self.updateScenarioComponent("residue_bio", resbioFileRel)
 
     @callableMethod
@@ -105,7 +101,7 @@ class BioenergyEditor(XMLEditor):
 
         xpath = "//region[@name='%s']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/%s" % (region, parameter)
 
-        xmlEdit(resourcesFileAbs, '-u', xpath, '-v', value)
+        xmlEdit(resourcesFileAbs, [(xpath, value)])
 
         self.updateScenarioComponent("resources", resourcesFileRel)
 
@@ -115,18 +111,12 @@ class BioenergyEditor(XMLEditor):
 
         resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
 
-        xmlEdit(resourcesFileAbs,
-                '-u', "//region[@name='%s']/renewresource[@name='biomass']/market" % region,
-                '-v', region)
-
+        xmlEdit(resourcesFileAbs, [("//region[@name='%s']/renewresource[@name='biomass']/market" % region, region)])
         self.updateScenarioComponent("resources", resourcesFileRel)
 
         agForPastBioFileRel, agForPastBioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "ag_For_Past_bio_base.xml"))
 
-        xmlEdit(agForPastBioFileAbs,
-                '-u', "//region[@name='%s']/AgSupplySector[@name='biomass']/market" % region,
-                '-v', region)
-
+        xmlEdit(agForPastBioFileAbs, [("//region[@name='%s']/AgSupplySector[@name='biomass']/market" % region, region)])
         self.updateScenarioComponent("ag_base", agForPastBioFileRel)
 
     # TBD: generalize this as setInputCoefficients(self, (('wholesale gas', x), ('elect_td_ind', y)))
@@ -145,24 +135,24 @@ class BioenergyEditor(XMLEditor):
 
         enSupplyFileRel, enSupplyFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_supply.xml"))
 
-        xmlEdit(enSupplyFileAbs, '-u', cornCoefXpath, '-v', cornCoef)
+        xmlEdit(enSupplyFileAbs, [(cornCoefXpath, cornCoef)])
 
         self.updateScenarioComponent("energy_supply", enSupplyFileRel)
 
         if gasCoef or elecCoef:
             enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
-            args = [enTransFileAbs]
+            pairs = []
             xpath = '//technology[@name="corn ethanol"]/period[@year>=2015]/minicam-energy-input[@name="%s"]/coefficient'
 
             if gasCoef:
                 gasCoefXpath  = xpath % 'wholesale gas'
-                args.extend(['-u', gasCoefXpath,  '-v', gasCoef])
+                pairs.append((gasCoefXpath, gasCoef))
 
             if elecCoef:
                 elecCoefXpath = xpath % 'elect_td_ind'
-                args.extend(['-u', elecCoefXpath,  '-v', elecCoef])
+                pairs.append((elecCoefXpath, elecCoef))
 
-            xmlEdit(*args)
+            xmlEdit(enTransFileAbs, pairs)
             self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
     # deprecated?
@@ -197,10 +187,7 @@ class BioenergyEditor(XMLEditor):
         if region == 'global':
              region='*'
 
-        xmlEdit(landInput3Abs,
-                '-u', "//region[@name='%s']//isNewTechnology[@year='2020']" % region,
-                '-v', "0")
-
+        xmlEdit(landInput3Abs, [("//region[@name='%s']//isNewTechnology[@year='2020']" % region, 0)])
         self.updateScenarioComponent("land3", landInput3Rel)
 
     #
@@ -224,29 +211,21 @@ class BioenergyEditor(XMLEditor):
         xPrefix = "//region[@name='%s']/AgSupplySector[@name='Forest']/AgSupplySubsector" % region
         fractHarvested = xPrefix + "/AgProductionTechnology/period[@year>=2015]/residue-biomass-production/fract-harvested"
 
-        xmlEdit(resbioFileAbs,
-            '-u', fractHarvested + "[@price='1.2']/@price",
-            '-v', loPrice,
-            '-u', fractHarvested + "[@price='1.5']/@price",
-            '-v', hiPrice,
-            '-u', fractHarvested + "[@price='1.2']",
-            '-v', loFract,
-            '-u', fractHarvested + "[@price='1.5']",
-            '-v', hiFract)
+        pairs = [(fractHarvested + "[@price='1.2']/@price", loPrice),
+                 (fractHarvested + "[@price='1.5']/@price", hiPrice),
+                 (fractHarvested + "[@price='1.2']", loFract),
+                 (fractHarvested + "[@price='1.5']", hiFract)]
+        xmlEdit(resbioFileAbs, pairs)
 
         # Do the same for supplysector="NonFoodDemand_Forest"
         xPrefix = "//region[@name='%s']/supplysector[@name='NonFoodDemand_Forest']/subsector[@name='Forest']/stub-technology[@name='Forest']" % region
         fractHarvested = xPrefix + "/period[@year>=2015]/residue-biomass-production/fract-harvested"
 
-        xmlEdit(resbioFileAbs,
-            '-u', "%s[@price='1.2']/@price" % fractHarvested,
-                '-v', loPrice,
-            '-u', "%s[@price='1.5']/@price" % fractHarvested,
-                '-v', hiPrice,
-            '-u', "%s[@price='1.2']" % fractHarvested,
-                '-v', loFract,
-            '-u', "%s[@price='1.5']" % fractHarvested,
-                '-v', hiFract)
+        pairs = [("%s[@price='1.2']/@price" % fractHarvested, loPrice),
+                 ("%s[@price='1.5']/@price" % fractHarvested, hiPrice),
+                 ("%s[@price='1.2']" % fractHarvested, loFract),
+                 ("%s[@price='1.5']" % fractHarvested, hiFract)]
+        xmlEdit(resbioFileAbs, pairs)
 
         self.updateScenarioComponent("residue_bio", resbioFileRel)
 
@@ -265,8 +244,8 @@ class BioenergyEditor(XMLEditor):
         yearConstraint = ">= 2015" if year == 'all' else ("=" + year)
 
         xmlEdit(self.cellEthanolUsaAbs,
-                '-u', "//stub-technology[@name='cellulosic ethanol']/period[@year%s]/share-weight" % yearConstraint,
-                '-v', shareweight)
+                [("//stub-technology[@name='cellulosic ethanol']/period[@year%s]/share-weight" % yearConstraint,
+                  shareweight)])
 
         self.updateScenarioComponent("cell-etoh-USA", self.cellEthanolUsaRel)
 
@@ -330,13 +309,12 @@ class BioenergyEditor(XMLEditor):
         prefix = "//stub-technology[@name='%s']" % fuel
         suffix = "/minicam-non-energy-input[@name='non-energy']/input-cost"
 
-        abspath = pathMap[fuel]
-        args = [abspath]
+        pairs = []
         for year, price in pairs:
-           args += ['-u',
-                     prefix + ("/period[@year='%s']" % year) + suffix,
-                     '-v', price]
-        xmlEdit(*args)
+           pairs.append((prefix + ("/period[@year='%s']" % year) + suffix, price))
+
+        abspath = pathMap[fuel]
+        xmlEdit(abspath, pairs)
 
     @callableMethod
     def setCornEthanolCoefficientsUSA(self, cornCoef, gasCoef=None, elecCoef=None):
@@ -351,19 +329,18 @@ class BioenergyEditor(XMLEditor):
         # Corn input is in elements extracted from global-technology-database in energy-xml/en_supply.xml
         cornCoefXpath = '//stub-technology[@name="regional corn for ethanol"]/period[@year>=2015]/minicam-energy-input[@name="Corn"]/coefficient'
 
-        args = [self.cornEthanolUsaAbs, '-u', cornCoefXpath, '-v', cornCoef]
+        pairs = [(cornCoefXpath, cornCoef)]
 
         xpath = '//stub-technology[@name="corn ethanol"]/period[@year>=2015]/minicam-energy-input[@name="%s"]/coefficient'
-
         if gasCoef:
             gasCoefXpath  = xpath % 'wholesale gas'
-            args.extend(['-u', gasCoefXpath,  '-v', gasCoef])
+            pairs.append((gasCoefXpath,  gasCoef))
 
         if elecCoef:
             elecCoefXpath = xpath % 'elect_td_ind'
-            args.extend(['-u', elecCoefXpath,  '-v', elecCoef])
+            pairs.append((elecCoefXpath,  elecCoef))
 
-        xmlEdit(*args)
+        xmlEdit(self.cornEthanolUsaAbs, pairs)
         # config update handled in localize...()
 
     @callableMethod
@@ -374,11 +351,9 @@ class BioenergyEditor(XMLEditor):
         prefix = "//stub-technology[@name='cellulosic ethanol']"
         suffix = "minicam-energy-input[@name='regional biomass']/coefficient"
 
-        args = [self.cellEthanolUsaAbs]
-
+        pairs = []
         for year, coef in tuples:
-            args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
-                     '-v', str(coef)]
+            pairs.append(("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef))
 
-        xmlEdit(*args)
+        xmlEdit(self.cellEthanolUsaAbs, pairs)
         # config update handled in localize...()
