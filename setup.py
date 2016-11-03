@@ -1,4 +1,5 @@
 import platform
+from pygcam.version import VERSION
 
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
@@ -84,7 +85,7 @@ Who do I talk to?
 
 setup(
     name='pygcam',
-    version='1.0b1',
+    version=VERSION,
     description='Python 2.7 library and scripts for interfacing with GCAM',
     platforms=['Windows', 'Mac OS X', 'Linux'],
 
