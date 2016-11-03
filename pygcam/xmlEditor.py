@@ -21,15 +21,15 @@ import glob
 import os
 import re
 import shutil
-import subprocess
+from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
-from .error import SetupException
+from .error import SetupException, PygcamException
 from .log import getLogger
 from .utils import coercible, mkdirs, unixPath, printSeries
 
-# Set to True to see all xmlstarlet commands
+# Deprecated: Set to True to see all xmlstarlet commands
 Verbose = False
 
 _logger = getLogger(__name__)
@@ -93,46 +93,109 @@ def copyIfMissing(src, dst, makedirs=False):
         shutil.copy(src, dst)
         os.chmod(dst, 0o644)
 
-def xmlStarlet(*args):
+class CachedFile(object):
+    parser = ET.XMLParser(remove_blank_text=True)
+
+    # Store parsed XML trees here and use with xmlSel/xmlEdit if useCache is True
+    cache = {}
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.edited = False
+
+        _logger.debug("Reading '%s'", filename)
+        self.tree = ET.parse(filename, self.parser)
+        self.cache[filename] = self
+
+    @classmethod
+    def getFile(cls, filename):
+        if filename in cls.cache:
+            #_logger.debug("Found '%s' in cache", filename)
+            item = cls.cache[filename]
+        else:
+            item = CachedFile(filename)
+
+        return item
+
+    def setEdited(self):
+        self.edited = True
+
+    def write(self):
+        _logger.info("Writing '%s'", self.filename)
+        self.tree.write(self.filename, xml_declaration=True, pretty_print=True)
+        self.edited = False
+
+    def decache(self):
+        if self.edited:
+            self.write()
+
+    @classmethod
+    def decacheAll(cls):
+        for item in cls.cache.values():
+            item.decache()
+
+
+def xmlSel(filename, xpath, useCache=True):
     """
-    Run the XML Starlet executable in a subprocess, passing the given `args`
-    and return True if success, else False.
-
-    :param args: (iterable) these values are passed as arguments to xmlstarlet.
-        See xmlstarlet documentation for details.
-    :return: True if exit status was 0, else False
-    """
-    args = map(str, args)
-    args.insert(0, getParam('GCAM.XmlStarlet'))
-
-    if Verbose:
-        _logger.debug(' '.join(args))
-
-    return subprocess.call(args, shell=False) == 0
-
-def xmlEdit(filename, *rest):
-    """
-    Edit the XML file `filename` in place, using the xmlstarlet arguments passed in `rest`.
-
-    :param filename: the file to edit
-    :param rest: (iterable) values to pass as arguments to xmlstarlet
-    :return: True on success, else False
-    """
-    args = ['ed', '--inplace'] + list(rest) + [filename]
-    return xmlStarlet(*args)
-
-def xmlSel(filename, *rest):
-    """
-    Return True if the XML component identified by the xmlstarlet arguments
-    in `rest` exists in `filename`. Useful for deciding whether to edit or
+    Return True if the XML component identified by the xpath argument
+    exists in `filename`. Useful for deciding whether to edit or
     insert an XML element.
 
     :param filename: (str) the file to edit
-    :param rest: (iterable) values to pass as arguments to xmlstarlet
-    :return:
+    :param xpath: (str) the xml element(s) to search for
+    :param useCache: (bool) if True, the etree is sought first in the XmlCache.
+    :return: (bool) True if found, False otherwise.
     """
-    args = ['sel'] + list(rest) + [filename]
-    return xmlStarlet(*args)
+    item = CachedFile.getFile(filename)
+
+    result = item.tree.xpath(xpath)
+    return bool(result)
+
+AttributePattern = re.compile('(.*)/@([-\w]*)$')
+
+def xmlEdit(filename, pairs, useCache=True):
+    """
+    Edit the XML file `filename` in place, applying the values to the given xpaths
+    in the list of pairs.
+
+    :param filename: the file to edit in-place.
+    :param pairs: (iterable of (xpath, value) pairs) In each pair, the xpath selects
+      elements or attributes to update with the given values.
+    :param useCache: (bool) if True, the etree is sought first in the XmlCache. This
+      avoids repeated parsing, but the file is always written if updated by this function.
+    :return: True on success, else False
+    """
+    item = CachedFile.getFile(filename)
+    tree = item.tree
+
+    updated = False
+
+    # if at least one xpath is found, update and write file
+    for xpath, value in pairs:
+        attr = None
+        value = str(value)
+
+        # If it's an attribute update, extract the attribute
+        # and use the rest of the xpath to select the elements.
+        match = re.match(AttributePattern, xpath)
+        if match:
+            attr = match.group(2)
+            xpath = match.group(1)
+
+        elts = tree.xpath(xpath)
+        if len(elts):
+            updated = True
+            if attr:                # conditional outside loop since there may be many elements
+                for elt in elts:
+                    elt.set(attr, value)
+            else:
+                for elt in elts:
+                    elt.text = value
+
+    if updated:
+        item.setEdited()
+
+    return updated
 
 def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technology,
                           sectorElement='supplysector', fromRegion=False):
@@ -157,9 +220,6 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     """
     _logger.info("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
 
-    def _attr(element, value): # Simple helper function
-        return '-i "//%s" -t attr -n name -v "%s" ' % (element, value)
-
     if fromRegion:
         xpath = "//region[@name='%s']/%s[@name='%s']/subsector[@name='%s']/stub-technology[@name='%s']" % \
                 (region, sectorElement, sector, subsector, technology)
@@ -167,27 +227,37 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
         xpath = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                 (sector, subsector, technology)
 
-    exe = getParam('GCAM.XmlStarlet')
+    # Read the srcFile to extract the required elements
+    parser = ET.XMLParser(remove_blank_text=True)
+    tree = ET.parse(srcFile, parser)
+
+    # Rename technology => stub-technology (for global-tech-db case)
+    elts = tree.xpath(xpath)
+    if len(elts) != 1:
+        raise PygcamException('Xpath "%s" failed' % xpath)
+
+    technologyElt = elts[0]
+    technologyElt.tag = 'stub-technology'       # no-op if fromRegion == True
 
     # Surround the extracted XML with the necessary hierarchy
-    cmd1 = '''%s sel -t -e scenario -e world -e region -e %s -e subsector -c "%s" "%s"''' % \
-           (exe, sectorElement, xpath, srcFile)
-
-    # Insert attribute names to the new hierarchy and rename technology => stub-technology (for global-tech-db case)
-    cmd2 = exe + " ed " + _attr("region", region) + _attr(sectorElement, sector) + _attr("subsector", subsector) + \
-           '''-r "//technology[@name='%s']" -v stub-technology ''' % technology
+    scenarioElt  = ET.Element('scenario')
+    worldElt     = ET.SubElement(scenarioElt, 'world')
+    regionElt    = ET.SubElement(worldElt, 'region', attrib={'name' : region})
+    sectorElt    = ET.SubElement(regionElt, sectorElement, attrib={'name' : sector})
+    subsectorElt = ET.SubElement(sectorElt, 'subsector', attrib={'name' : subsector})
+    subsectorElt.append(technologyElt)
 
     # Workaround for parsing error: explicitly name shutdown deciders
-    for name in ['phased-shutdown-decider', 'profit-shutdown-decider']:
-        cmd2 += ' -d "//%s"' % name  # just delete the redundant definitions...
-        #cmd2 += ' -i "//{decider}" -t attr -n name -v "{decider}"'.format(decider=name)
+    elts = scenarioElt.xpath("//phased-shutdown-decider|profit-shutdown-decider")
+    for elt in elts:
+        parent = elt.getparent()
+        parent.remove(elt)
 
-    # Redirect output to the destination file
-    cmd = "%s | %s > %s" % (cmd1, cmd2, dstFile)
-    _logger.debug(cmd)
-    status = subprocess.call(cmd, shell=True)
-    return status == 0
+    _logger.info("Writing '%s'", dstFile)
+    newTree = ET.ElementTree(scenarioElt)
+    newTree.write(dstFile, xml_declaration=True, pretty_print=True)
 
+    return True
 
 def expandYearRanges(seq):
     """
@@ -327,6 +397,8 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
 
+        CachedFile.decacheAll()
+
     def setupStatic(self, args):
         """
         Create static XML files in local-xml. By "static", we mean files whose contents are
@@ -395,6 +467,9 @@ class XMLEditor(object):
             self.updateConfigComponent('Files', 'outFileName', value=None,
                                        writeOutput=getParamAsBoolean('GCAM.WriteOutputCsv'))
 
+        CachedFile.decacheAll()
+
+
     def setup(self, args):
         """
         Calls setupStatic and/or setupDynamic, depending on flags set in args.
@@ -411,6 +486,9 @@ class XMLEditor(object):
 
         if not args.staticOnly:
             self.setupDynamic(args)
+
+        CachedFile.decacheAll()
+
 
     def makeScenarioComponentsUnique(self):
         """
@@ -597,21 +675,18 @@ class XMLEditor(object):
         cfg = self.cfgPath()
 
         prefix = "//%s/Value[@name='%s']" % (group, name)
-        args = [cfg]
+        pairs = []
 
         if value is not None:
-            args += ['-u', prefix,
-                     '-v', str(value)]
+            pairs.append((prefix, value))
 
         if writeOutput is not None:
-            args += ['-u', prefix + "/@write-output",
-                     '-v', str(int(writeOutput))]
+            pairs.append((prefix + "/@write-output", int(writeOutput)))
 
         if appendScenarioName is not None:
-            args += ['-u', prefix + "/@append-scenario-name",
-                     '-v', str(int(appendScenarioName))]
+            pairs.append((prefix + "/@append-scenario-name", int(appendScenarioName)))
 
-        xmlEdit(*args)
+        xmlEdit(cfg, pairs)
 
     @callableMethod
     def setClimateOutputInterval(self, years):
@@ -638,21 +713,15 @@ class XMLEditor(object):
         """
         xmlfile = unixPath(xmlfile)
         _logger.info("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
-        cfg = self.cfgPath()
 
-        xmlEdit(cfg,
-                '-s', '//ScenarioComponents',
-                '-t', 'elem',
-                '-n', 'TMP',
-                '-v', '',
-                '-i', '//ScenarioComponents/TMP',
-                '-t', 'attr',
-                '-name', 'name',
-                '-v', name,
-                '-u', '//ScenarioComponents/TMP',
-                '-v', xmlfile,
-                '-r', '//ScenarioComponents/TMP',
-                '-v', 'Value')
+        cfg = self.cfgPath()
+        item = CachedFile.getFile(cfg)
+        item.setEdited()
+
+        elt = item.tree.find('//ScenarioComponents')
+        node = ET.SubElement(elt, 'Value')
+        node.set('name', name)
+        node.text = xmlfile
 
     def insertScenarioComponent(self, name, xmlfile, after):
         """
@@ -666,21 +735,19 @@ class XMLEditor(object):
         """
         xmlfile = unixPath(xmlfile)
         _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
-        cfg = self.cfgPath()
 
-        xmlEdit(cfg,
-                '-a', '//ScenarioComponents/Value[@name="%s"]' % after,
-                '-t', 'elem',
-                '-n', 'TMP',
-                '-v', '',
-                '-i', '//ScenarioComponents/TMP',
-                '-t', 'attr',
-                '-name', 'name',
-                '-v', name,
-                '-u', '//ScenarioComponents/TMP',
-                '-v', xmlfile,
-                '-r', '//ScenarioComponents/TMP',
-                '-v', 'Value')
+        cfg = self.cfgPath()
+        item = CachedFile.getFile(cfg)
+        item.setEdited()
+
+        elt = item.tree.find('//ScenarioComponents')
+        afterNode = elt.find('Value[@name="%s"]' % after)
+        index = elt.index(afterNode)
+
+        node = ET.Element('Value')
+        node.set('name', name)
+        node.text = xmlfile
+        elt.insert(index, node)
 
     def updateScenarioComponent(self, name, xmlfile):
         """
@@ -696,7 +763,7 @@ class XMLEditor(object):
 
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
-    def deleteScenarioComponent(self, name):
+    def deleteScenarioComponent(self, name, useCache=True):
         """
         Delete a ``<ScenarioComponent>`` identified by the ``<Value>`` element name.
 
@@ -705,8 +772,13 @@ class XMLEditor(object):
         """
         _logger.info("Delete ScenarioComponent name='%s' for scenario" % name)
         cfg = self.cfgPath()
+        item = CachedFile.getFile(cfg)
 
-        xmlEdit(cfg, '-d', "//ScenarioComponents/Value[@name='%s']" % name)
+        elt = item.tree.find("//ScenarioComponents")
+        valueNode = elt.find("Value[@name='%s']" % name)
+        if valueNode is not None:
+            elt.remove(valueNode)
+            item.setEdited()
 
     def renameScenarioComponent(self, name, xmlfile):
         """
@@ -723,9 +795,7 @@ class XMLEditor(object):
         _logger.debug("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 
-        xmlEdit(cfg,
-                '-u', "//ScenarioComponents/Value[text()='%s']/@name" % xmlfile,
-                '-v', name)
+        xmlEdit(cfg, ("//ScenarioComponents/Value[text()='%s']/@name" % xmlfile, name))
 
     @callableMethod
     def addMarketConstraint(self, target, policy, dynamic=False, baselinePolicy=False):
@@ -759,11 +829,11 @@ class XMLEditor(object):
         constraintXML = pathjoin(reldir, basename + "-constraint.xml")
 
         # See if element exists in config file (-Q => quiet; just report exit status)
-        args = ['-Q', '-t', '-v', '//ScenarioComponents/Value[@name="%s"]' % policyTag]
+        xpath = '//ScenarioComponents/Value[@name="%s"]' % policyTag
 
         # If we've already added files for policy/constraint on this target,
         # we replace the old values with new ones. Otherwise, we add them.
-        addOrUpdate = self.updateScenarioComponent if xmlSel(cfg, *args) else self.addScenarioComponent
+        addOrUpdate = self.updateScenarioComponent if xmlSel(cfg, xpath) else self.addScenarioComponent
         addOrUpdate(policyTag, policyXML)
         addOrUpdate(constraintTag, constraintXML)
 
@@ -787,9 +857,9 @@ class XMLEditor(object):
         constraintTag = target + "-constraint"
 
         # See if element exists in config file (-Q => quiet; just report exit status)
-        args = ['-Q', '-t', '-v', '//ScenarioComponents/Value[@name="%s"]' % policyTag]
+        xpath = '//ScenarioComponents/Value[@name="%s"]' % policyTag
 
-        if xmlSel(cfg, args):
+        if xmlSel(cfg, xpath):
             # found it; delete the elements
             self.deleteScenarioComponent(policyTag)
             self.deleteScenarioComponent(constraintTag)
@@ -841,12 +911,9 @@ class XMLEditor(object):
                   applyTo)
 
         xmlEdit(enTransFileAbs,
-                '-u', prefix + '/@from-year',
-                '-v', fromYear,
-                '-u', prefix + '/@to-year',
-                '-v', toYear,
-                '-u', prefix + '/interpolation-function/@name',
-                '-v', funcName)
+                (prefix + '/@from-year', fromYear),
+                (prefix + '/@to-year', toYear),
+                (prefix + '/interpolation-function/@name', funcName))
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
@@ -892,25 +959,21 @@ class XMLEditor(object):
         solverFileRel, solverFileAbs = self.getLocalCopy(pathjoin(self.solution_prefix_rel, solverFile))
 
         prefix = "//scenario/user-configurable-solver[@year>=2010]/"
-        args = [solverFileAbs]
+        pairs = []
 
         if solutionTolerance:
-            args += ['-u', prefix + 'solution-tolerance',
-                     '-v', str(solutionTolerance)]
+            pairs.append((prefix + 'solution-tolerance', solutionTolerance))
 
         if broydenTolerance:
-            args += ['-u', prefix + 'broyden-solver-component/ftol',
-                     '-v', str(broydenTolerance)]
+            pairs.append((prefix + 'broyden-solver-component/ftol', broydenTolerance))
 
         if maxModelCalcs:
-            args += ['-u', prefix + 'max-model-calcs',
-                     '-v', str(maxModelCalcs)]
+            pairs.append(prefix + 'max-model-calcs', maxModelCalcs)
 
         if maxIterations:
-            args += ['-u', prefix + 'broyden-solver-component/max-iterations',
-                     '-v', str(maxIterations)]
+            pairs.append(prefix + 'broyden-solver-component/max-iterations', maxIterations)
 
-        xmlEdit(*args)
+        xmlEdit(solverFileAbs, pairs)
 
         self.updateScenarioComponent("solver", solverFileRel)
 
@@ -1012,13 +1075,11 @@ class XMLEditor(object):
                  (sector, subsector, technology)
         suffix = '/minicam-non-energy-input[@name="non-energy"]/input-cost'
 
-        args = [enTransFileAbs]
+        pairs = []
         for year, price in expandYearRanges(values):
-            args += ['-u',
-                     prefix + ('/period[@year="%s"]' % year) + suffix,
-                     '-v', str(price)]
+            pairs.append(prefix + ('/period[@year="%s"]' % year) + suffix, price)
 
-        xmlEdit(*args)
+        xmlEdit(enTransFileAbs, pairs)
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
@@ -1052,14 +1113,13 @@ class XMLEditor(object):
         prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
 
-        args = [enTransFileAbs]
+        pairs = []
 
         for year, value in expandYearRanges(values):
-            args += ['-u', prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
-                     '-v', coercible(value, float)]
+            pairs.append(prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
+                         coercible(value, float))
 
-        xmlEdit(*args)
-
+        xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
     @callableMethod
@@ -1105,13 +1165,12 @@ class XMLEditor(object):
         shareWeight = '/stub-technology[@name="{technology}"]/period[@year="{year}"]/share-weight' \
                       if stubTechnology else '/share-weight[@year="{year}"]'
 
-        args = [enTransFileAbs]
+        pairs = []
         for year, value in expandYearRanges(values):
-            args += ['-u', prefix + shareWeight.format(technology=stubTechnology, year=year),
-                     '-v', coercible(value, float)]
+            pairs.append(prefix + shareWeight.format(technology=stubTechnology, year=year),
+                         coercible(value, float))
 
-        xmlEdit(*args)
-
+        xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
     # TBD: Test
@@ -1148,13 +1207,12 @@ class XMLEditor(object):
         prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
 
-        args = [enTransFileAbs]
+        pairs = []
         for year, value in expandYearRanges(values):
-            args += ['-u', prefix + "/period[@year=%s]/share-weight" % year,
-                     '-v', coercible(value, float)]
+            pairs.append(prefix + "/period[@year=%s]/share-weight" % year,
+                         coercible(value, float))
 
-        xmlEdit(*args)
-
+        xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
 
     # TBD: test
@@ -1187,63 +1245,61 @@ class XMLEditor(object):
                  (subsector, technology)
         suffix = "minicam-energy-input[@name='%s']/coefficient" % energyInput
 
-        args = [enTransFileAbs]
-
+        pairs = []
         for year, coef in expandYearRanges(values):
-            args += ['-u', "%s/period[@year='%s']/%s" % (prefix, year, suffix),
-                     '-v', str(coef)]
+            pairs.append("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef)
 
-        xmlEdit(*args)
+        xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
-    # TBD: test
-    def _addTimeStepYear(self, year, timestep=5):
-
-        _logger.info("Add timestep year %s" % year)
-
-        year = int(year)
-        modeltimeFileRel, modeltimeFileAbs = self.getLocalCopy(pathjoin(self.modeltime_dir_rel, "modeltime.xml"))
-
-        xmlEdit(modeltimeFileAbs,
-                '-i', '//modeltime/inter-year[1]',
-                '-t', 'elem',
-                '-n', 'TMP',
-                '-v', str(year),
-                '-i', '//TMP',
-                '-t', 'attr',
-                '-n', 'time-step',
-                '-v', str(timestep  - year % timestep),
-                '-r', '//TMP',
-                '-v', 'inter-year',
-                '-i', '//modeltime/inter-year[1]',
-                '-t', 'elem',
-                '-n', 'TMP',
-                '-v', str(year - year % timestep),
-                '-i', '//TMP',
-                '-t', 'attr',
-                '-n', 'time-step',
-                '-v', str(year % timestep),
-                '-r', '//TMP',
-                '-v', 'inter-year')
-
-        nextStep = year + timestep - year % timestep
-        args = ['-Q', '-t', '-v', '//model-time/inter-year[text()="%d"]' % nextStep]
-        if not xmlSel(modeltimeFileAbs, *args):
-            xmlEdit(modeltimeFileAbs,
-                    '-i', '//modeltime/inter-year[1]',
-                    '-t', 'elem',
-                    '-n', 'TMP',
-                    '-v', str(nextStep),
-                    '-i', '//TMP',
-                    '-t', 'attr',
-                    '-n', 'time-step',
-                    '-v', str(timestep),
-                    '-r', '//TMP',
-                    '-v', 'inter-year')
-
-        cfg = self.cfgPath()
-        xmlEdit(cfg,
-                '-u', "//Files/Value[@name='xmlInputFileName']",
-                '-v', modeltimeFileRel)
+    # deprecated
+    # def _addTimeStepYear(self, year, timestep=5):
+    #
+    #     _logger.info("Add timestep year %s" % year)
+    #
+    #     year = int(year)
+    #     modeltimeFileRel, modeltimeFileAbs = self.getLocalCopy(pathjoin(self.modeltime_dir_rel, "modeltime.xml"))
+    #
+    #     xmlEdit(modeltimeFileAbs,
+    #             '-i', '//modeltime/inter-year[1]',
+    #             '-t', 'elem',
+    #             '-n', 'TMP',
+    #             '-v', str(year),
+    #             '-i', '//TMP',
+    #             '-t', 'attr',
+    #             '-n', 'time-step',
+    #             '-v', str(timestep  - year % timestep),
+    #             '-r', '//TMP',
+    #             '-v', 'inter-year',
+    #             '-i', '//modeltime/inter-year[1]',
+    #             '-t', 'elem',
+    #             '-n', 'TMP',
+    #             '-v', str(year - year % timestep),
+    #             '-i', '//TMP',
+    #             '-t', 'attr',
+    #             '-n', 'time-step',
+    #             '-v', str(year % timestep),
+    #             '-r', '//TMP',
+    #             '-v', 'inter-year')
+    #
+    #     nextStep = year + timestep - year % timestep
+    #     args = ['-Q', '-t', '-v', '//model-time/inter-year[text()="%d"]' % nextStep]
+    #     if not xmlSel(modeltimeFileAbs, *args):
+    #         xmlEdit(modeltimeFileAbs,
+    #                 '-i', '//modeltime/inter-year[1]',
+    #                 '-t', 'elem',
+    #                 '-n', 'TMP',
+    #                 '-v', str(nextStep),
+    #                 '-i', '//TMP',
+    #                 '-t', 'attr',
+    #                 '-n', 'time-step',
+    #                 '-v', str(timestep),
+    #                 '-r', '//TMP',
+    #                 '-v', 'inter-year')
+    #
+    #     cfg = self.cfgPath()
+    #     xmlEdit(cfg,
+    #             '-u', "//Files/Value[@name='xmlInputFileName']",
+    #             '-v', modeltimeFileRel)
 
     parser = None

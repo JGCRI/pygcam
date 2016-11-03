@@ -31,7 +31,7 @@ one_dir:
 	$(PYINSTALLER) --onedir --distpath=dist
 
 zip:
-	cd dist && gzip -r -c -9 $(FULLNAME) > $(FULLNAME).zip
+	cd dist && zip -q -r $(FULLNAME).zip $(FULLNAME)
 
 all: default zip
 

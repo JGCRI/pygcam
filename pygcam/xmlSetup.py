@@ -13,7 +13,7 @@ from .config import getParam
 from .error import PygcamException, SetupException
 from .log import getLogger
 from .utils import XMLFile, getBooleanXML, resourceStream
-from .xmlEditor import XMLEditor, getCallableMethod
+from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 
 _logger = getLogger(__name__)
 
@@ -503,6 +503,9 @@ def createXmlEditorSubclass(setupFile):
                     if not os.path.lexists(dst):
                         os.symlink(src, dst)
 
+            CachedFile.decacheAll()
+
+
         def setupStatic(self, args):
             self.groupName = args.group
             scenarioSetup = self.scenarioSetup
@@ -543,5 +546,6 @@ def createXmlEditorSubclass(setupFile):
                 self.addScenarioComponent('mcsValues', os.path.join(self.scenario_dir_rel, MCSVALUES_FILE))
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
+            CachedFile.decacheAll()
 
     return XmlEditorSubclass
