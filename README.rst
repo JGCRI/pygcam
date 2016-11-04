@@ -89,12 +89,12 @@ Version 1.0b2
   match is not found. So if you have, say, groups FuelShock-0.9 and FuelShock-1.0, you can declare a 
   step like the following that applies to both groups:
 
-	<step name="plotCI" runFor="policy" group="FuelShock"> ... some command ... </step>
+	``<step name="plotCI" runFor="policy" group="FuelShock"> ... some command ... </step>``
 
 * Updated carbon tax generator. This can be called from a scenarios.xml file as follows (default 
   values are shown):
 
-	<function name="taxCarbon">initialValue, startYear=2020, endYear=2100, timestep=5, rate=0.05, regions=GCAM_32_REGIONS, market='global'</function>
+	``<function name="taxCarbon">initialValue, startYear=2020, endYear=2100, timestep=5, rate=0.05, regions=GCAM_32_REGIONS, market='global'</function>``
 
   * The regions argument must be a list of regions in Python syntax, e.g., ["USA"] or ["USA", "EU27"]. 
   * It creates the carbon tax policy in a file called carbon-tax-{market-name}.xml, which is added
