@@ -94,7 +94,7 @@ Version 1.0b2
 * Updated carbon tax generator. This can be called from a scenarios.xml file as follows (default 
   values are shown):
 
-  <function name="taxCarbon">initialValue, startYear=2020, endYear=2100, timestep=5, rate=0.05, regions=GCAM_32_REGIONS, market='global'</function>
+	<function name="taxCarbon">initialValue, startYear=2020, endYear=2100, timestep=5, rate=0.05, regions=GCAM_32_REGIONS, market='global'</function>
 
   * The regions argument must be a list of regions in Python syntax, e.g., ["USA"] or ["USA", "EU27"]. 
   * It creates the carbon tax policy in a file called carbon-tax-{market-name}.xml, which is added
