@@ -41,8 +41,6 @@ Testing
 - Generalize the idea of reading baseline result and setting constraints to that
   level or some delta from that level.
 
-On PIC: Add XMLDBDriver.jar to .../libs/jars. No sense treating this differently.
-
 - Eliminate generators from scenarios.py and use project.xml @setup instead.
 
 Bugs
@@ -65,8 +63,6 @@ Cleanup
   - queries
   - setup
 
-- Modify log_conf.xml in main wkspc to not create 100MB log data per run
-  - tried setting calibration and solver entries to 1 rather than 0 in trial 0, base-0
 
 MCS-only
 --------
@@ -91,12 +87,6 @@ Near-term
 
 Medium-term
 -----------
-- For all top-level command-line funcs, create a dict of default
-  values that is used in parseArgs but also passed as a set of
-  defaults for the top-level func so caller doesn't have to supply
-  all the args. Might be able to extract this from parseArgs parser.
-  - Probably not worth the effort.
-
 - If scenario has unique name among groups, run it even if group isn't specified?
     - Will require restructuring since it's assumed there's one group name
 
@@ -223,7 +213,7 @@ Useful command:
 GUI implementation
 ==================
 - Focus on "project"
-- Create an edit project.xml
+- Create and edit project.xml
 - Run a project
     - select groups, scenarios, and steps to run (checkboxes)
     - select direct or batch mode
