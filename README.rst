@@ -33,7 +33,7 @@ Core functionality
 How do I get set up?
 ----------------------
 
-* See http://pygcam.readthedocs.io/installation.html
+* See http://pygcam.readthedocs.io/en/latest/install.html
 
 Who do I talk to?
 ------------------
