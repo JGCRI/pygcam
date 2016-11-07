@@ -10,7 +10,7 @@ Core functionality
 * Project workflow management framework that lets you define steps to run and
   run them all or run steps selectively.
 
-* The main ``gt`` (think "gcamtool") script, which provides numerous
+* The main ``gt`` (GCAM tool) script, which provides numerous
   sub-commands, and can be extended by writing plug-ins.
 
 * The ``gt`` sub-commands facilitate key steps in working with GCAM, including:
@@ -20,15 +20,6 @@ Core functionality
   * Querying the GCAM database to extract results to CSV files
   * Interpolating between time-steps and computing differences between baseline and policy cases
   * Plotting results
-
-* The scripts are based on the pygcam API, which is fully documented on readthedocs.org.
-  Use the scripts or API to develop your own custom applications or plug-ins for use with
-  gt.
-
-* Scripts that provide flexible command-line interfaces to the functionality provided by
-  the library.
-
-* Customization through an extensive configuration system
 
 How do I get set up?
 ----------------------
