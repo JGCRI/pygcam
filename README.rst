@@ -33,6 +33,24 @@ Who do I talk to?
 
 Release Notes
 ==============
+Version 1.0b3
+--------------
+* Fixed several problems with Windows version:
+
+  * Whereas on Linux and OS X, the user's home
+    directory is unambiguous, Windows has both ``HOMESHARE`` and ``HOMEPATH``, at least one
+    of which should be non-empty, but neither is guaranteed correct. Thus for Windows, the
+    user can define ``PYGCAM_HOME`` to be the folder in which to create the ``.pygcam.cfg`
+    file. Pygcam looks for the first directory found searching in the order ``PYGCAM_HOME``,
+    ``HOMESHARE``, and finally ``HOMEPATH``.
+
+  * Pygcam was attempting to symlink some files and failing if the Windows user didn't have
+    symlink permission. This has been corrected to copy in all cases if symlinks fail.
+
+  * When copying is required, pygcam was copying more than was required from the reference
+    workspace. (With v4.3, the "input" folder holds much more than just XML files...) The
+    copying is now limited to folders containing XML files. (But it's still best if you can
+    arrange to have permission to create symbolic links, since that avoids all the copying.)
 
 Version 1.0b2
 --------------
