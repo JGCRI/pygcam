@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from itertools import chain
 from tempfile import mkstemp, mkdtemp
 
-from .config import getParam
+from .config import getParam, getParamAsBoolean
 from .error import PygcamException, FileFormatError
 from .log import getLogger
 
@@ -185,7 +185,7 @@ def symlinkOrCopyFile(src, dst):
     :param dst: (dst) filename of copy
     :return: none
     """
-    if getParam('GCAM.CopyAllFiles'):
+    if getParamAsBoolean('GCAM.CopyAllFiles'):
         shutil.copy2(src, dst)
     else:
         os.symlink(src, dst)
