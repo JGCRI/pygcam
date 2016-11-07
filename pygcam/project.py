@@ -90,7 +90,7 @@ class _TmpFileBase(object):
 
     def write(self, argDict):
         # subclass responsibility
-        pass
+        raise PygcamException("Called abstract _TmpFileBase.write() method")
 
 class _TmpFile(_TmpFileBase):
     """
