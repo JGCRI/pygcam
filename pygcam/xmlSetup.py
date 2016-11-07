@@ -9,10 +9,10 @@ import glob
 import os
 import sys
 
-from .config import getParam
+from .config import getParam, getParamAsBoolean
 from .error import PygcamException, SetupException
 from .log import getLogger
-from .utils import XMLFile, getBooleanXML, resourceStream
+from .utils import XMLFile, getBooleanXML, resourceStream, symlinkOrCopyFile
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 
 _logger = getLogger(__name__)
@@ -495,13 +495,14 @@ def createXmlEditorSubclass(setupFile):
             xmlFiles = glob.glob("%s/*.xml" % scenDir)
 
             if xmlFiles:
-                _logger.info("Link additional static XML files in %s to %s", scenDir, dynDir)
+                mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+                _logger.info("%s additional static XML files in %s to %s", mode, scenDir, dynDir)
                 for xml in xmlFiles:
                     base = os.path.basename(xml)
                     dst = os.path.join(dynDir, base)
                     src = os.path.join(scenDir, base)
                     if not os.path.lexists(dst):
-                        os.symlink(src, dst)
+                        symlinkOrCopyFile(src, dst)
 
             CachedFile.decacheAll()
 

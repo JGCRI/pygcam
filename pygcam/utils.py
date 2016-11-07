@@ -177,6 +177,19 @@ def deleteFile(filename):
     except:
         pass    # ignore errors, like "rm -f"
 
+def symlinkOrCopyFile(src, dst):
+    """
+    Symlink a file unless GCAM.CopyAllFiles is True, in which case, copy the file.
+
+    :param src: (str) filename of original file
+    :param dst: (dst) filename of copy
+    :return: none
+    """
+    if getParam('GCAM.CopyAllFiles'):
+        shutil.copy2(src, dst)
+    else:
+        os.symlink(src, dst)
+
 def copyFileOrTree(src, dst):
     """
     Copy src to dst, where the two can both be files or directories.

@@ -27,7 +27,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
-from .utils import coercible, mkdirs, unixPath, printSeries
+from .utils import coercible, mkdirs, unixPath, printSeries, symlinkOrCopyFile
 
 # Deprecated: Set to True to see all xmlstarlet commands
 Verbose = False
@@ -386,14 +386,13 @@ class XMLEditor(object):
         xmlFiles = glob.glob("%s/*.xml" % scenDir)
 
         if xmlFiles:
-            _logger.info("Link static XML files in %s to %s", scenDir, dynDir)
             for xml in xmlFiles:
                 base = os.path.basename(xml)
                 dst = os.path.join(dynDir, base)
                 src = os.path.join(scenDir, base)
-                # if os.path.islink(dst):           # recreateDir wipes it all out...
-                #     removeSymlink(dst)
-                os.symlink(src, dst)
+                mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+                _logger.info("%s static XML files in %s to %s", mode, scenDir, dynDir)
+                symlinkOrCopyFile(src, dst)
         else:
             _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
 
