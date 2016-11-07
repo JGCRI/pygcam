@@ -127,10 +127,14 @@ def readConfigFiles():
     """
     global _ConfigParser
 
-    # HOME exists on all Unix-like systems; for Windows it's HOMEPATH
     if PlatformName == 'Windows':
-        home = os.path.realpath(os.getenv('HOMEPATH'))  # adds home drive
-        home = home.replace('\\', '/')                  # avoids '\' quoting issues
+        # HOME exists on all Unix-like systems; for Windows it's HOMEPATH or HOMESHARE.
+        # If set, we use PYGCAM_HOME to identify the folder with the config file;
+        # otherwise, we use HOMESHARE if set, or HOMEPATH, in that order.
+        env = os.environ
+        homedir = env.get('PYGCAM_HOME') or env.get('HOMESHARE') or env.get('HOMEPATH')
+        home = os.path.realpath(homedir)          # adds home drive
+        home = home.replace('\\', '/')            # avoids '\' quoting issues
     else:
         home = os.getenv('HOME')
 

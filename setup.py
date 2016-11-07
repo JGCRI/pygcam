@@ -55,22 +55,24 @@ Core functionality
 How do I get set up?
 ----------------------
 
-* The easiest way to to install directly from PyPi:
+* Users on OS X and Windows platforms can download a zip file with an all-in-one
+  directory that has everything you need to run the "gt" (gcamtool) command.
+
+* Linux users and anyone wishing to use ``pygcam`` for Python development should
+  install it as a normal Python package. The easiest way to to install directly from
+  PyPi:
 
     ``pip install pygcam``
 
-* Alternatively, clone the repository or download the tarball and run this command
+  Alternatively, clone the repository or download the tarball and run this command
   on the included setup.py file:
 
     ``python setup.py install``
 
-  Or, if you clone the repository, you might want to install in "develop"
-  mode, which creates links back to the repository so you don't have to
-  reinstall every time there is a change. To install in develop mode use
-  this command:
+  or, if you want to edit the code or stay abreast of code changes, you might install
+  it in "developer" mode:
 
     ``python setup.py develop``
-
 
 Contribution guidelines
 ------------------------

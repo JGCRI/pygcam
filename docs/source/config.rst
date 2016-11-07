@@ -15,6 +15,7 @@ configuration file and the API to access it are described below.
    :ref:`gt config <config-label>` page. See :doc:`pygcam.config`
    for documentation of the API to the configuration system.
 
+
 Configuration file sections
 ----------------------------
 The configuration file is divided into sections indicated by a name within square brackets.
@@ -63,10 +64,21 @@ There are up to 4 configuration files read, two of which are user-modifiable:
      optional; it allows an administrator to consolidate site-specific values to
      simplify configuration for users.
 
-  #. Finally, the user's own ``$HOME/.pygcam.cfg`` is read if it exists; otherwise the
+  #. Finally, the user's configuration file is read if it exists; otherwise the
      file is created with the initial contents being a commented-out version of
      ``pygcam/etc/system.cfg``. This provides a handy reference to the available parameters
      and their default values.
+
+     * On Linux and OS X, the user's configuration file is found in ``$HOME/.pygcam.cfg``
+
+     * On Windows, the file ``.pygcam.cfg`` will be stored in the directory identified
+       by the first of the following environment variables defined to have a non-empty
+       value: ``PYGCAM_HOME``, ``HOMESHARE``, and ``HOMEPATH``. The
+       first variable, ``PYGCAM_HOME`` is known only to pygcam, while at least one of
+       the other two should be set by Windows.
+
+     * In all cases, the directory in which the configuration file is located is
+       assigned to the pygcam configuration variable ``Home``.
 
 The values in each successive configuration file override default values for
 variables of the same name that are set in files read earlier. Values can also be set in
@@ -111,13 +123,21 @@ this line to ``~/.pygcam.cfg``:
 
      GCAM.TextEditor = emacs
 
-Then, invoking the command:
+If the editor command is not found on your execution ``PATH``, you can specify the
+full pathname, e.g.,
+
+  .. code-block:: cfg
+
+     GCAM.TextEditor = C:/Program Files/Notepad++/notepad++.exe
+
+Invoking the command:
 
   .. code-block:: bash
 
      gt config -e
 
-will cause the command ``emacs $HOME/.pygcam.cfg`` to be run.
+will cause the editor to be invoked on your configuration file.
+
 
 Referencing configuration variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

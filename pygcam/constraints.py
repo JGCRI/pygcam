@@ -7,10 +7,11 @@
 '''
 import os
 
+from .config import getParamAsBoolean
 from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
-from .utils import mkdirs, getBatchDir, getYearCols, printSeries
+from .utils import mkdirs, getBatchDir, getYearCols, printSeries, symlinkOrCopyFile
 
 _logger = getLogger(__name__)
 
@@ -93,10 +94,11 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, group
     source   = os.path.join(localxml, groupName, scenario, policyFile)
     linkname = os.path.join(dirname, policyFile)
 
-    _logger.debug("Linking to: %s", source)
+    mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+    _logger.debug("%sking to: %s", mode, source)
     if os.path.lexists(linkname):
         os.remove(linkname)
-    os.symlink(source, linkname)
+    symlinkOrCopyFile(source, linkname)
 
 def parseStringPairs(argString, datatype=float):
     """

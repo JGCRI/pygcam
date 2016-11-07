@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from itertools import chain
 from tempfile import mkstemp, mkdtemp
 
-from .config import getParam
+from .config import getParam, getParamAsBoolean
 from .error import PygcamException, FileFormatError
 from .log import getLogger
 
@@ -176,6 +176,19 @@ def deleteFile(filename):
         os.remove(filename)
     except:
         pass    # ignore errors, like "rm -f"
+
+def symlinkOrCopyFile(src, dst):
+    """
+    Symlink a file unless GCAM.CopyAllFiles is True, in which case, copy the file.
+
+    :param src: (str) filename of original file
+    :param dst: (dst) filename of copy
+    :return: none
+    """
+    if getParamAsBoolean('GCAM.CopyAllFiles'):
+        shutil.copy2(src, dst)
+    else:
+        os.symlink(src, dst)
 
 def copyFileOrTree(src, dst):
     """
