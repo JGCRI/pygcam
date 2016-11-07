@@ -93,7 +93,7 @@ class ConfigCommand(SubcommandABC):
         from ..config import getParam, _ConfigParser, USR_CONFIG_FILE
 
         if args.edit:
-            cmd = "%s %s/%s" % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
+            cmd = '"%s" %s/%s' % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
             print(cmd)
             exitStatus = subprocess.call(cmd, shell=True)
             if exitStatus != 0:
