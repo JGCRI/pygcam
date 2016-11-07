@@ -12,9 +12,7 @@ from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
 from .utils import copyFileOrTree, removeFileOrTree, mkdirs
-from .windows import removeSymlink, IsWindows
-
-pathjoin = os.path.join
+from .windows import removeSymlink
 
 # Files specific to different versions of GCAM. This is explicit rather
 # than computed so we can easily detect an unknown version number, and
@@ -25,6 +23,11 @@ _VersionSpecificParameterName = {
 }
 
 _FilesToCopy = None
+
+def pathjoin(*args):
+    path = os.path.join(*args)
+    path = path.replace('\\', '/')  # normalize to unix paths
+    return path
 
 def _getVersionSpecificFiles():
     '''
@@ -72,12 +75,6 @@ def _getFilesToCopyAndLink(linkParam):
     filesToCopy = list(allFiles - filesToLinkSet)
     return filesToCopy, filesToLink
 
-
-# unused...
-def unixjoin(*args):
-    path = os.path.join(*args)
-    path = path.replace('\\', '/')
-    return path
 
 _logger = getLogger(__name__)
 
@@ -252,7 +249,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     # The lock just prevents two users from doing this at the same time,
     # though it's probably overkill.
     mkdirs(newWorkspace)
-    semaphoreFile = os.path.join(newWorkspace, '.creation_semaphore')
+    semaphoreFile = pathjoin(newWorkspace, '.creation_semaphore')
     lockfile = semaphoreFile + '.lock'
 
     with filelock.FileLock(lockfile):
