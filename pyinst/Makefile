@@ -17,14 +17,14 @@ VERSION  := $(shell python gt.py --version 2>&1)
 FULLNAME := $(VERSION)-$(NAME)
 ZIPFILE  := $(FULLNAME).zip
 
-BBPASS   := $(shell cat $HOME/.bbpass)
+BBPASS   := $(shell cat $(HOME)/.bbpass)
 
 # NOTE: A suggested solution is to eliminate mkl:
 # conda install nomkl numpy scipy scikit-learn numexpr
 # conda remove mkl mkl-service
 
-LOG_LEVEL = DEBUG
-#LOG_LEVEL = INFO
+#LOG_LEVEL = DEBUG
+LOG_LEVEL = INFO
 
 PYINSTALLER = pyinstaller --clean --log-level=$(LOG_LEVEL) -y gt.spec
 
@@ -36,10 +36,12 @@ one_dir:
 zip:
 	cd dist && zip -q -r $(ZIPFILE) $(FULLNAME)
 
-all: default zip
-
 clean:
 	rm -rf build dist one_dir one_file
 
+URL = https://api.bitbucket.org/2.0/repositories/plevin/pygcam/downloads
+
 upload:
-    curl -u "plevin:$(BBPASS)" -X POST https://api.bitbucket.org/2.0/repositories/plevin/pygcam/downloads -F files=@$(ZIPFILE)
+	cd dist && curl -u "plevin:$(BBPASS)" -X POST $(URL) -F files=@$(ZIPFILE) > curl.out && rm -f curl.out
+
+release: zip upload
