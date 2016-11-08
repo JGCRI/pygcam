@@ -15,6 +15,9 @@ endif
 
 VERSION  := $(shell python gt.py --version 2>&1)
 FULLNAME := $(VERSION)-$(NAME)
+ZIPFILE  := $(FULLNAME).zip
+
+BBPASS   := $(shell cat $HOME/.bbpass)
 
 # NOTE: A suggested solution is to eliminate mkl:
 # conda install nomkl numpy scipy scikit-learn numexpr
@@ -31,9 +34,12 @@ one_dir:
 	$(PYINSTALLER) --onedir --distpath=dist
 
 zip:
-	cd dist && zip -q -r $(FULLNAME).zip $(FULLNAME)
+	cd dist && zip -q -r $(ZIPFILE) $(FULLNAME)
 
 all: default zip
 
 clean:
-	rm -rf build dist one_dir one_file 
+	rm -rf build dist one_dir one_file
+
+upload:
+    curl -u "plevin:$(BBPASS)" -X POST https://api.bitbucket.org/2.0/repositories/plevin/pygcam/downloads -F files=@$(ZIPFILE)
