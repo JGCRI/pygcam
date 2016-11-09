@@ -186,7 +186,7 @@ def symlinkOrCopyFile(src, dst):
     :return: none
     """
     if getParamAsBoolean('GCAM.CopyAllFiles'):
-        shutil.copy2(src, dst)
+        copyFileOrTree(src, dst)
     else:
         os.symlink(src, dst)
 

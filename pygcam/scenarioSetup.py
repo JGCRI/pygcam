@@ -110,6 +110,9 @@ def _setupTempOutputDir(outputDir):
 def _remakeSymLink(source, linkname):
     if os.path.islink(linkname):
         removeSymlink(linkname)
+    elif os.path.isdir(linkname):
+        removeFileOrTree(linkname)
+
     symlinkOrCopyFile(source, linkname)
 
 def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
