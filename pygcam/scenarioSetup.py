@@ -11,7 +11,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
-from .utils import copyFileOrTree, removeFileOrTree, mkdirs
+from .utils import copyFileOrTree, removeFileOrTree, mkdirs, symlinkOrCopyFile
 from .windows import removeSymlink
 
 # Files specific to different versions of GCAM. This is explicit rather
@@ -110,7 +110,7 @@ def _setupTempOutputDir(outputDir):
 def _remakeSymLink(source, linkname):
     if os.path.islink(linkname):
         removeSymlink(linkname)
-    os.symlink(source, linkname)
+    symlinkOrCopyFile(source, linkname)
 
 def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
     '''
@@ -146,7 +146,7 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
             _logger.info('Copying %s to %s' % (srcPath, dstPath))
             copyFileOrTree(srcPath, dstPath)
         else:
-            os.symlink(srcPath, dstPath)
+            symlinkOrCopyFile(srcPath, dstPath)
 
 
 def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
