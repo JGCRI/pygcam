@@ -34,6 +34,13 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0b5 (9 Nov 2016)
+-----------------------------
+
+* Minor adjustments to setup to label documentation with correct version and
+  to allow symlink warning for Windows to be suppressed by setting config var
+  GCAM.SymlinkWarning = False
+
 Version 1.0b4 (9 Nov 2016)
 -----------------------------
 
