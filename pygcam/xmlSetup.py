@@ -212,7 +212,8 @@ class ScenarioGroup(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
+        self.srcGroupDir = node.get('srcGroupDir', '')
+        self.useGroupDir = bool(self.srcGroupDir) or getBooleanXML(node.get('useGroupDir', default='0'))
         self.isDefault = getBooleanXML(node.get('default', default='0'))
         self.iteratorName = node.get('iterator')
         self.baselineSource = node.get('baselineSource')
@@ -257,8 +258,8 @@ class ScenarioGroup(object):
 
     def writeXML(self, stream, indent=0):
         stream.write('\n')
-        stream.write(_tab * indent + '<scenarioGroup name="%s" useGroupDir="%s">\n' % \
-                     (self.name, int(self.useGroupDir)))
+        stream.write(_tab * indent + '<scenarioGroup name="%s" useGroupDir="%s" srcGroupDir="%s">\n' % \
+                     (self.name, int(self.useGroupDir), self.srcGroupDir))
 
         for obj in self.finalDict.values():
             obj.writeXML(stream, indent + 1)
@@ -450,17 +451,18 @@ def createXmlEditorSubclass(setupFile):
         superclass = XMLEditor
 
     class XmlEditorSubclass(superclass):
-        def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
+        def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
+                     srcGroupDir, subdir, parent=None):
             self.parentConfigPath = None
             self.mcsValues = None
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
                 # TBD: test this in FCIP case where baseline builds on FuelShock
-                parent = XMLEditor(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
+                parent = XMLEditor(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, srcGroupDir, subdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                                    refWorkspace, groupName, subdir, parent=parent)
+                                                    refWorkspace, groupName, srcGroupDir, subdir, parent=parent)
 
             self.paramFile = None
 

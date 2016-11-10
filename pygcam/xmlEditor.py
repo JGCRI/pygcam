@@ -308,7 +308,7 @@ class XMLEditor(object):
     generate and/or copy the required XML files into the XML output dir.
     '''
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
-                 groupDir, subdir, parent=None):
+                 groupDir, srcGroupDir, subdir, parent=None):
         self.name = name = scenario or baseline # if no scenario stated, assume baseline
         self.baseline = baseline
         self.scenario = scenario
@@ -321,9 +321,10 @@ class XMLEditor(object):
         self.setupArgs = None
 
         # Allow scenario name to have arbitrary subdirs between "../local-xml" and
-        # the scenario name, e.g., "../local-xml/client/scenario"
+        # the scenario name, e.g., "../local-xml/project/scenario"
         self.subdir = subdir or ''
         self.groupDir = groupDir
+        self.srcGroupDir = srcGroupDir or groupDir
 
         self.configPath = None
 
@@ -418,11 +419,11 @@ class XMLEditor(object):
         #self.recreateDir(scenDir)  # this trashed symlinks to Workspace/local-xml
         mkdirs(scenDir)
 
-        xmlSubdir = pathjoin(self.xmlSourceDir, self.groupDir, self.subdir or self.name, 'xml')
+        xmlSubdir = pathjoin(self.xmlSourceDir, self.srcGroupDir, self.subdir or self.name, 'xml')
         xmlFiles = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
-            _logger.info("Copy %d static XML files to %s", len(xmlFiles), scenDir)
+            _logger.info("Copy %d static XML files from %s to %s", len(xmlFiles), xmlSubdir, scenDir)
             for src in xmlFiles:
                 # dst = os.path.join(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
@@ -968,10 +969,10 @@ class XMLEditor(object):
             pairs.append((prefix + 'broyden-solver-component/ftol', broydenTolerance))
 
         if maxModelCalcs:
-            pairs.append(prefix + 'max-model-calcs', maxModelCalcs)
+            pairs.append((prefix + 'max-model-calcs', maxModelCalcs))
 
         if maxIterations:
-            pairs.append(prefix + 'broyden-solver-component/max-iterations', maxIterations)
+            pairs.append((prefix + 'broyden-solver-component/max-iterations', maxIterations))
 
         xmlEdit(solverFileAbs, pairs)
 
@@ -1077,7 +1078,7 @@ class XMLEditor(object):
 
         pairs = []
         for year, price in expandYearRanges(values):
-            pairs.append(prefix + ('/period[@year="%s"]' % year) + suffix, price)
+            pairs.append((prefix + ('/period[@year="%s"]' % year) + suffix, price))
 
         xmlEdit(enTransFileAbs, pairs)
 
@@ -1116,8 +1117,8 @@ class XMLEditor(object):
         pairs = []
 
         for year, value in expandYearRanges(values):
-            pairs.append(prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
-                         coercible(value, float))
+            pairs.append((prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
+                         coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
@@ -1167,8 +1168,8 @@ class XMLEditor(object):
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append(prefix + shareWeight.format(technology=stubTechnology, year=year),
-                         coercible(value, float))
+            pairs.append((prefix + shareWeight.format(technology=stubTechnology, year=year),
+                         coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
@@ -1209,8 +1210,7 @@ class XMLEditor(object):
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append(prefix + "/period[@year=%s]/share-weight" % year,
-                         coercible(value, float))
+            pairs.append((prefix + "/period[@year=%s]/share-weight" % year, coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
@@ -1247,59 +1247,7 @@ class XMLEditor(object):
 
         pairs = []
         for year, coef in expandYearRanges(values):
-            pairs.append("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef)
+            pairs.append(("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-    # deprecated
-    # def _addTimeStepYear(self, year, timestep=5):
-    #
-    #     _logger.info("Add timestep year %s" % year)
-    #
-    #     year = int(year)
-    #     modeltimeFileRel, modeltimeFileAbs = self.getLocalCopy(pathjoin(self.modeltime_dir_rel, "modeltime.xml"))
-    #
-    #     xmlEdit(modeltimeFileAbs,
-    #             '-i', '//modeltime/inter-year[1]',
-    #             '-t', 'elem',
-    #             '-n', 'TMP',
-    #             '-v', str(year),
-    #             '-i', '//TMP',
-    #             '-t', 'attr',
-    #             '-n', 'time-step',
-    #             '-v', str(timestep  - year % timestep),
-    #             '-r', '//TMP',
-    #             '-v', 'inter-year',
-    #             '-i', '//modeltime/inter-year[1]',
-    #             '-t', 'elem',
-    #             '-n', 'TMP',
-    #             '-v', str(year - year % timestep),
-    #             '-i', '//TMP',
-    #             '-t', 'attr',
-    #             '-n', 'time-step',
-    #             '-v', str(year % timestep),
-    #             '-r', '//TMP',
-    #             '-v', 'inter-year')
-    #
-    #     nextStep = year + timestep - year % timestep
-    #     args = ['-Q', '-t', '-v', '//model-time/inter-year[text()="%d"]' % nextStep]
-    #     if not xmlSel(modeltimeFileAbs, *args):
-    #         xmlEdit(modeltimeFileAbs,
-    #                 '-i', '//modeltime/inter-year[1]',
-    #                 '-t', 'elem',
-    #                 '-n', 'TMP',
-    #                 '-v', str(nextStep),
-    #                 '-i', '//TMP',
-    #                 '-t', 'attr',
-    #                 '-n', 'time-step',
-    #                 '-v', str(timestep),
-    #                 '-r', '//TMP',
-    #                 '-v', 'inter-year')
-    #
-    #     cfg = self.cfgPath()
-    #     xmlEdit(cfg,
-    #             '-u', "//Files/Value[@name='xmlInputFileName']",
-    #             '-v', modeltimeFileRel)
-
-    parser = None

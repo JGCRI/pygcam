@@ -503,7 +503,6 @@ class Project(XMLFile):
 
         # Push the groupName back into config system so vars can use it
         setParam('GCAM.ScenarioGroup', groupDir, section=projectName)
-        #setParam('GCAM.ScenarioGroup', scenarioGroupName, section=projectName)
 
         # Get the text values for all config variables, allowing variables
         # defined in the project to override them.
@@ -518,8 +517,9 @@ class Project(XMLFile):
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = scenarioGroupName
-        argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   groupDir, subdir), rmFinalSlash=True)
-        argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir, subdir), rmFinalSlash=True)
+        argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir
+        argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   srcGroupDir, subdir), rmFinalSlash=True)
+        argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir,    subdir), rmFinalSlash=True)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows

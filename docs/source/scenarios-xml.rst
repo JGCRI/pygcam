@@ -66,6 +66,8 @@ policy scenarios. It may also include zero or more ``<comment>`` elements.
 +----------------+------------+-----------+----------+
 | useGroupDir    | no         | "0"       | boolean  |
 +----------------+------------+-----------+----------+
+| groupSubdir    | no         | (name)    | text     |
++----------------+------------+-----------+----------+
 | iterator       | no         | (none)    | text     |
 +----------------+------------+-----------+----------+
 | baselineSource | no         | (none)    | text     |
@@ -77,7 +79,11 @@ scenario defined in the :doc:`project-xml` file.
 When a project contains multiple scenario groups, it can keep the groups
 separated by using the group dir in the path. The `useGroupDir` attribute
 indicates whether the name of the scenario group should be used when
-composing pathnames of the scenario group's XML files.
+composing pathnames of the scenario group's XML files. By default the
+group's name is used as the directory name, but this can be overridden
+by setting the `groupSubdir` parameter. This is useful when you have
+several scenarios that share static XML files. If `groupSubdir` is set,
+this implies ``useGroupDir="1"``.
 
 The `iterator` attribute identifies an iterator (defined withing
 the ``<scenarioGroup>`` to use to generate a series of scenario

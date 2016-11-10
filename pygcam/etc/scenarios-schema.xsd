@@ -62,6 +62,7 @@
             <xs:attribute name='name' use='required' type='xs:string'/>
             <!-- <xs:attribute name='default' type='xs:boolean' default='false'/> -->
             <xs:attribute name='useGroupDir' type='xs:boolean' default='false'/>
+            <xs:attribute name='srcGroupDir' type='xs:string'/>
             <xs:attribute name='iterator' type='xs:string'/>
             <xs:attribute name='baselineSource' type='xs:string'/>
         </xs:complexType>
