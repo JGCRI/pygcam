@@ -386,12 +386,13 @@ class XMLEditor(object):
         xmlFiles = glob.glob("%s/*.xml" % scenDir)
 
         if xmlFiles:
+            mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+            _logger.info("%s %d static XML files in %s to %s", mode, len(xmlFiles), scenDir, dynDir)
+
             for xml in xmlFiles:
                 base = os.path.basename(xml)
                 dst = os.path.join(dynDir, base)
                 src = os.path.join(scenDir, base)
-                mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
-                _logger.info("%s static XML files in %s to %s", mode, scenDir, dynDir)
                 symlinkOrCopyFile(src, dst)
         else:
             _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
