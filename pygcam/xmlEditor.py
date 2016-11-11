@@ -27,7 +27,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
-from .utils import coercible, mkdirs, unixPath, printSeries, symlinkOrCopyFile
+from .utils import coercible, mkdirs, unixPath, printSeries, symlinkOrCopyFile, removeTreeSafely
 
 # Deprecated: Set to True to see all xmlstarlet commands
 Verbose = False
@@ -364,7 +364,7 @@ class XMLEditor(object):
 
     @staticmethod
     def recreateDir(path):
-        shutil.rmtree(path)
+        removeTreeSafely(path)
         mkdirs(path)
 
     def setupDynamic(self, args):

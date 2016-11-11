@@ -11,7 +11,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
-from .utils import copyFileOrTree, removeFileOrTree, mkdirs, symlinkOrCopyFile
+from .utils import copyFileOrTree, removeFileOrTree, mkdirs, symlinkOrCopyFile, removeTreeSafely
 from .windows import removeSymlink
 
 # Files specific to different versions of GCAM. This is explicit rather
@@ -97,7 +97,7 @@ def _setupTempOutputDir(outputDir):
 
     if getParamAsBoolean('GCAM.MCS.UseTempOutput'): # TBD: define in system.cfg after merging MCS
         dirPath = _jobTmpDir()
-        shutil.rmtree(dirPath, ignore_errors=True)  # rm any files from prior run in this job
+        removeTreeSafely(dirPath, ignore_errors=True)  # rm any files from prior run in this job
         mkdirs(dirPath)
         _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
 
@@ -184,7 +184,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
         # avoid deleting the current directory
         from .utils import pushd
         with pushd('..'):
-            shutil.rmtree(sandbox, ignore_errors=True)
+            removeTreeSafely(sandbox, ignore_errors=True)
             os.mkdir(sandbox)
 
     # also makes sandbox and sandbox/exe
@@ -264,7 +264,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
             _logger.warn('GCAM.CopyAllFiles = True while running MCS')
 
         if forceCreate:
-            shutil.rmtree(newWorkspace, ignore_errors=True)
+            removeTreeSafely(newWorkspace, ignore_errors=True)
 
         mkdirs(newWorkspace)
         open(semaphoreFile, 'w').close()    # create empty semaphore file

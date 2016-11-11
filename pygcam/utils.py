@@ -207,6 +207,14 @@ def copyFileOrTree(src, dst):
     else:
         shutil.copy2(src, dst)
 
+def removeTreeSafely(path, ignore_errors=True):
+    refWorkspace = os.path.realpath(getParam('GCAM.RefWorkspace'))
+    thisPath = os.path.realpath(path)
+    if os.path.commonprefix((refWorkspace, thisPath)) == refWorkspace:
+        raise PygcamException("Refusing to delete %s, which is part of the reference workspace" % path)
+
+    shutil.rmtree(path, ignore_errors=ignore_errors)
+
 def removeFileOrTree(path, raiseError=True):
     """
     Remove a file or an entire directory tree. Handles removal of symlinks
@@ -226,7 +234,7 @@ def removeFileOrTree(path, raiseError=True):
             removeSymlink(path)
         else:
             if os.path.isdir(path):
-                shutil.rmtree(path)
+                removeTreeSafely(path)
             else:
                 os.remove(path)
     except Exception as e:
