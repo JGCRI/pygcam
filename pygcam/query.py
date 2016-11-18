@@ -17,7 +17,7 @@ from .error import PygcamException, ConfigFileError, FileFormatError, Commandlin
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
 from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
-                    saveToFile, getExeDir, writeXmldbDriverProperties)
+                    pathjoin, saveToFile, getExeDir, writeXmldbDriverProperties)
 
 _logger = getLogger(__name__)
 
@@ -165,7 +165,7 @@ def  readQueryResult(batchDir, baseline, queryName, years=None, interpolate=Fals
     :param cache: (bool) If True, files will be sought in and saved to a CSV cache
     :return: (DataFrame) the data in the computed filename.
     """
-    pathname = os.path.join(batchDir, '%s-%s.csv' % (queryName, baseline))
+    pathname = pathjoin(batchDir, '%s-%s.csv' % (queryName, baseline))
     df= readCsv(pathname, years=years, interpolate=interpolate, startYear=startYear, cache=cache)
     return df
 
@@ -188,7 +188,7 @@ def getRegionList(workspace=None):
     if not workspace:
         return GCAM_32_REGIONS
 
-    path = os.path.join(workspace, relpath)
+    path = pathjoin(workspace, relpath)
 
     _logger.debug("Reading:", path)
     df = readCsv(path, skiprows=3)  # this is a gcam-data-system input file (different format)
@@ -349,7 +349,7 @@ def _findOrCreateQueryFile(title, queryPath, regions, outputDir=None, tmpFiles=T
 
     for item in items:
         if os.path.isdir(item):
-            pathname = os.path.join(item, title + '.xml')
+            pathname = pathjoin(item, title + '.xml')
             if os.path.isfile(pathname):
                 return pathname
             else:
@@ -393,9 +393,9 @@ def _findOrCreateQueryFile(title, queryPath, regions, outputDir=None, tmpFiles=T
             path = getTempFile(suffix='.query.xml', delete=delete)
         else:
             outputDir = outputDir or getParam('GCAM.OutputDir')
-            queryDir = os.path.join(outputDir, 'queries')
+            queryDir = pathjoin(outputDir, 'queries')
             mkdirs(queryDir)
-            path = os.path.join(queryDir, title + '.xml')
+            path = pathjoin(queryDir, title + '.xml')
 
         _logger.debug("Writing extracted query for '%s' to '%s'", title, path)
         tree = ET.ElementTree(root)
@@ -512,7 +512,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
 
     outputDir = outputDir or getParam('GCAM.OutputDir')
     mkdirs(outputDir)
-    csvPath = os.path.abspath(os.path.join(outputDir, csvFile))
+    csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
 
     batchCommand = BatchCommandElement.format(scenario=scenario, queryFile=queryFile,
                                               csvFile=csvPath, xmldb=xmldb)
@@ -582,9 +582,9 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     if tmpFiles:
         batchFile = getTempFile(suffix='.batch.xml', delete=not noDelete, text=True)
     else:
-        queryDir = os.path.join(outputDir, 'queries')
+        queryDir = pathjoin(outputDir, 'queries')
         mkdirs(queryDir)
-        batchFile = os.path.join(queryDir, 'generated-batch-query.xml')
+        batchFile = pathjoin(queryDir, 'generated-batch-query.xml')
 
     batchCommands = ''.join(commands)
     contents = MultiCommandTemplate.format(batchCommands=batchCommands)
@@ -691,7 +691,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
         csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
         csvFile = csvFile.replace(' ', '_')             # eliminate spaces for convenience
 
-    csvPath = os.path.abspath(os.path.join(outputDir, csvFile))
+    csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
 
     # Create a batch file for ModelInterface to invoke the query on the named
     # scenario, and save the output where specified
@@ -922,8 +922,8 @@ def queryMain(args):
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
     groupDir    = args.groupDir
     scenario    = args.scenario
-    sandbox     = args.workspace or os.path.join(getParam('GCAM.SandboxDir'), groupDir, scenario)
-    xmldb       = args.xmldb     or os.path.join(sandbox, 'output', getParam('GCAM.DbFile'))
+    sandbox     = args.workspace or pathjoin(getParam('GCAM.SandboxDir'), groupDir, scenario)
+    xmldb       = args.xmldb     or pathjoin(sandbox, 'output', getParam('GCAM.DbFile'))
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     queryFile   = args.queryXmlFile
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
@@ -987,7 +987,7 @@ def queryMain(args):
     xmldb = os.path.abspath(xmldb)
 
     if miLogFile:
-        miLogFile = os.path.abspath(os.path.join(outputDir, miLogFile))
+        miLogFile = os.path.abspath(pathjoin(outputDir, miLogFile))
         deleteFile(miLogFile)       # remove it, if any, to start fresh
 
     # If not a prequery step, we're running queries post-GCAM, which means a database on disk

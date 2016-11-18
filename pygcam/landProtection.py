@@ -15,7 +15,7 @@ from .config import getParam
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, flatten, XMLFile, resourceStream
+from .utils import mkdirs, pathjoin, flatten, XMLFile, resourceStream
 
 _logger = getLogger(__name__)
 
@@ -366,8 +366,8 @@ def protectLandMain(args):
         raise CommandlineError('Workspace must be identified in command-line or config variable GCAM.RefWorkspace')
 
     landXmlFiles = ['land2.xml', 'land3.xml']
-    xmlDir = os.path.join(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
-    inFiles = map(lambda filename: os.path.join(xmlDir, filename), landXmlFiles)
+    xmlDir = pathjoin(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
+    inFiles = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
 
     if args.mkdir:
         mkdirs(outDir)
@@ -380,13 +380,13 @@ def protectLandMain(args):
         _logger.debug("Land-protection scenario '%s'", scenarioName)
 
         schemaStream = resourceStream('etc/protection-schema.xsd')
-        #schemaFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pygcam', 'etc', 'protection-schema.xsd')
+        #schemaFile = pathjoin(os.path.dirname(os.path.dirname(__file__)), 'pygcam', 'etc', 'protection-schema.xsd')
 
         xmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
         landProtection = xmlFile.getRoot()
         for inFile in inFiles:
             basename = os.path.basename(inFile)
-            outFile  = os.path.join(outDir, basename)
+            outFile  = pathjoin(outDir, basename)
 
             # check that we're not clobbering the input file
             if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
@@ -414,6 +414,6 @@ def protectLandMain(args):
         templateDict['basename'] = os.path.splitext(filename)[0]
 
         outFile = template.format(**templateDict)
-        outPath = os.path.join(outDir, outFile)
+        outPath = pathjoin(outDir, outFile)
         _logger.debug("protectLand(%s, %s, %0.2f, %s, %s)", path, outFile, fraction, landClasses, regions)
         protectLand(path, outPath, fraction, landClasses=landClasses, regions=regions)

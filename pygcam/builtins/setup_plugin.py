@@ -8,6 +8,7 @@
 '''
 from ..log import getLogger
 from ..subcommand import SubcommandABC
+from ..utils import pathjoin
 
 _logger = getLogger(__name__)
 
@@ -123,8 +124,8 @@ class SetupCommand(SubcommandABC):
         if args.workspace:
             workspace = args.workspace
         else:
-            groupDir  = os.path.normpath(os.path.join(projectDir, groupName))
-            workspace = os.path.join(groupDir, scenario)
+            groupDir  = os.path.normpath(pathjoin(projectDir, groupName))
+            workspace = pathjoin(groupDir, scenario)
 
         mcsMode = tool.getMcsMode()
         forceCreate = args.forceCreate or bool(mcsMode)
@@ -147,7 +148,7 @@ class SetupCommand(SubcommandABC):
                 if args.moduleSpec:
                     module = import_module(args.moduleSpec, package=None)
                 else:
-                    modulePath = args.modulePath or os.path.join(xmlSourceDir, srcGroupDir, 'scenarios.py')
+                    modulePath = args.modulePath or pathjoin(xmlSourceDir, srcGroupDir, 'scenarios.py')
                     _logger.debug('Setup using %s', modulePath)
                     module = loadModuleFromPath(modulePath)
 

@@ -11,7 +11,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
-from .utils import copyFileOrTree, removeFileOrTree, mkdirs, symlinkOrCopyFile, removeTreeSafely
+from .utils import copyFileOrTree, removeFileOrTree, mkdirs, pathjoin, symlinkOrCopyFile, removeTreeSafely
 from .windows import removeSymlink
 
 # Files specific to different versions of GCAM. This is explicit rather
@@ -23,11 +23,6 @@ _VersionSpecificParameterName = {
 }
 
 _FilesToCopy = None
-
-def pathjoin(*args):
-    path = os.path.join(*args)
-    path = path.replace('\\', '/')  # normalize to unix paths
-    return path
 
 def _getVersionSpecificFiles():
     '''
@@ -108,11 +103,7 @@ def _setupTempOutputDir(outputDir):
         mkdirs(outputDir)
 
 def _remakeSymLink(source, linkname):
-    if os.path.islink(linkname):
-        removeSymlink(linkname)
-    elif os.path.isdir(linkname):
-        removeFileOrTree(linkname)
-
+    removeFileOrTree(linkname)
     symlinkOrCopyFile(source, linkname)
 
 def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):

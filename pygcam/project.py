@@ -22,7 +22,7 @@ from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger, getLogLevel
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
-                    simpleFormat, resourceStream, QueryResultsDir, XMLFile)
+                    pathjoin, simpleFormat, resourceStream, QueryResultsDir, XMLFile)
 from .xmlSetup import ScenarioSetup
 
 __version__ = '0.2'
@@ -322,7 +322,7 @@ class Project(XMLFile):
         if len(nodes) != 1:
             raise FileFormatError("%s: <project> must define exactly one <scenariosFile> element" % xmlFile)
         filename = nodes[0].get('name')
-        setupFile = os.path.join(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
+        setupFile = pathjoin(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
         self.scenarioSetup = ScenarioSetup.parse(setupFile)
 
         filename = getParam('GCAM.ScenarioSetupOutputFile')

@@ -20,7 +20,7 @@ import shlex
 from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
-from .utils import systemOpenFile
+from .utils import systemOpenFile, pathjoin
 
 _logger = getLogger(__name__)
 
@@ -401,7 +401,7 @@ def chartGCAM(args, num=None, negate=False):
         prefix = "%d-" % num if num else ""
         imgFile = prefix + root + suffix
 
-    outFile = os.path.join(outputDir, imgFile)
+    outFile = pathjoin(outputDir, imgFile)
 
     _logger.debug("Generating %s", os.path.abspath(outFile))
 

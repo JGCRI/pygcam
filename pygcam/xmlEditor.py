@@ -27,14 +27,14 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
-from .utils import coercible, mkdirs, unixPath, printSeries, symlinkOrCopyFile, removeTreeSafely
+from .utils import coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile, removeTreeSafely
 
 # Deprecated: Set to True to see all xmlstarlet commands
 Verbose = False
 
 _logger = getLogger(__name__)
 
-pathjoin = os.path.join     # "alias" this since it's used frequently
+#pathjoin = os.path.join     # "alias" this since it's used frequently
 
 # methods callable from <function name="x">args</function> in
 # XML scenario setup scripts.
@@ -392,11 +392,11 @@ class XMLEditor(object):
 
             for xml in xmlFiles:
                 base = os.path.basename(xml)
-                dst = os.path.join(dynDir, base)
-                src = os.path.join(scenDir, base)
+                dst = pathjoin(dynDir, base)
+                src = pathjoin(scenDir, base)
                 symlinkOrCopyFile(src, dst)
         else:
-            _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
+            _logger.info("No XML files to link in %s", unixPath(os.path.abspath(scenDir)))
 
         CachedFile.decacheAll()
 
@@ -425,10 +425,10 @@ class XMLEditor(object):
         if xmlFiles:
             _logger.info("Copy %d static XML files from %s to %s", len(xmlFiles), xmlSubdir, scenDir)
             for src in xmlFiles:
-                # dst = os.path.join(scenDir, os.path.basename(src))
+                # dst = pathjoin(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
         else:
-            _logger.info("No XML files to copy in %s", os.path.abspath(xmlSubdir))
+            _logger.info("No XML files to copy in %s", unixPath(os.path.abspath(xmlSubdir)))
 
         configPath = self.cfgPath()
 
@@ -470,7 +470,6 @@ class XMLEditor(object):
 
         CachedFile.decacheAll()
 
-
     def setup(self, args):
         """
         Calls setupStatic and/or setupDynamic, depending on flags set in args.
@@ -489,7 +488,6 @@ class XMLEditor(object):
             self.setupDynamic(args)
 
         CachedFile.decacheAll()
-
 
     def makeScenarioComponentsUnique(self):
         """
@@ -532,7 +530,7 @@ class XMLEditor(object):
         """
         if not self.configPath:
             # compute the first time, then cache it
-            self.configPath = os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml'))
+            self.configPath = unixPath(os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml')))
 
         return self.configPath
 
@@ -551,7 +549,7 @@ class XMLEditor(object):
             '''
             if path.startswith(prefix):
                 tail = path[len(prefix):]
-                if tail[0] == os.path.sep:      # skip leading slash, if any
+                if tail[0] in "/\\":      # skip leading slash, if any
                     tail = tail[1:]
 
                 return tail
@@ -912,9 +910,9 @@ class XMLEditor(object):
                   applyTo)
 
         xmlEdit(enTransFileAbs,
-                (prefix + '/@from-year', fromYear),
-                (prefix + '/@to-year', toYear),
-                (prefix + '/interpolation-function/@name', funcName))
+                [(prefix + '/@from-year', fromYear),
+                 (prefix + '/@to-year', toYear),
+                 (prefix + '/interpolation-function/@name', funcName)])
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
@@ -1239,7 +1237,7 @@ class XMLEditor(object):
                      (energyInput, technology, subsector, values))
 
         enTransFileRel, enTransFileAbs = \
-            self.getLocalCopy(os.path.join(self.energy_dir_rel, "en_transformation.xml"))
+            self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
         prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
                  (subsector, technology)

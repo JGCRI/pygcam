@@ -11,7 +11,7 @@ from .config import getParamAsBoolean
 from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
-from .utils import mkdirs, getBatchDir, getYearCols, printSeries, symlinkOrCopyFile
+from .utils import mkdirs, pathjoin, getBatchDir, getYearCols, printSeries, symlinkOrCopyFile
 
 _logger = getLogger(__name__)
 
@@ -72,15 +72,16 @@ def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=No
     return xml
 
 
-def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName=''): #, fromMCS=False):
+def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName='',
+                       policySrcDir=None): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
     constraintFile = basename + '-constraint.xml'
     policyFile     = basename + '.xml'
 
-    dirname = os.path.join(dirname, groupName, scenario)
-    mkdirs(dirname)
+    fullDirname = pathjoin(dirname, groupName, scenario)
+    mkdirs(fullDirname)
 
-    pathname = os.path.join(dirname, constraintFile)
+    pathname = pathjoin(fullDirname, constraintFile)
     _logger.debug("Generating constraint file: %s", pathname)
     with open(pathname, 'w') as f:
         f.write(xml)
@@ -90,12 +91,23 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, group
     localxml = prefix + LOCAL_XML_NAME
 
     # ToDo: replace subdir with groupDir?
-    #source   = os.path.join(localxml, subdir, scenario, policyFile)
-    source   = os.path.join(localxml, groupName, scenario, policyFile)
-    linkname = os.path.join(dirname, policyFile)
+    #source   = pathjoin(localxml, subdir, scenario, policyFile)
+
+    # TBD: isn't this already handled by addMarketConstraint with baselinePolicy?
+    return
+
+    if policySrcDir:
+        scenario = policySrcDir
+        # parentName = os.path.basename(dirname)
+        # grandparentDir = os.path.dirname(os.path.dirname(dirname))
+        # fullDirname = pathjoin(grandparentDir, policySrcDir, parentName)
+        localxml = pathjoin('../..', policySrcDir, LOCAL_XML_NAME)
+
+    source   = pathjoin(localxml, groupName, scenario, policyFile)
+    linkname = pathjoin(fullDirname, policyFile)
 
     mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
-    _logger.debug("%sking to: %s", mode, source)
+    _logger.debug("%sing %s to %s", mode, source, linkname)
     if os.path.lexists(linkname):
         os.remove(linkname)
     symlinkOrCopyFile(source, linkname)
@@ -267,6 +279,7 @@ def genDeltaConstraints(**kwargs):
     fuelPolicyType = kwargs['fuelPolicyType']
     biomassPolicyType = kwargs.get('biomassPolicyType', None)
     purposeGrownPolicyType = kwargs.get('purposeGrownPolicyType', None)
+    policySrcDir = kwargs.get('policySrcDir', False)
 
     pd.set_option('display.width', None)    # discover width from terminal
 
@@ -311,7 +324,7 @@ def genDeltaConstraints(**kwargs):
     xml = fuelConstraintTemplate.format(**xmlArgs)
 
     saveConstraintFile(xml, xmlOutputDir, fuelTag, fuelPolicyType, policy,
-                       groupName=groupName)#, fromMCS=fromMCS)
+                       groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
 
     if switchgrass:
         # Calculate additional biomass required to meet required delta
@@ -341,7 +354,7 @@ def genDeltaConstraints(**kwargs):
                                     summary='Regional biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                           groupName=groupName)#, fromMCS=fromMCS)
+                           groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
 
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
 
@@ -349,4 +362,4 @@ def genDeltaConstraints(**kwargs):
                                     summary='Purpose-grown biomass constraint.')
 
         saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                           groupName=groupName)#, fromMCS=fromMCS)
+                           groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)

@@ -250,12 +250,18 @@ if IsWindows:
 
     def islinkWindows(path):
         """ Windows islink implementation. """
+        if not os.path.lexists(path):
+            return False
+
         return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
 
     def islinkWindows2(path):
+        if not os.path.lexists(path):
+            return False
+
         result = GetFileAttributesW(path)
         if result == INVALID_FILE_ATTRIBUTES:
-            raise ctypes.WinError()
+            raise PygcamException("Can't get file attributes for '%s': %s'" % (path, ctypes.WinError()))
 
         return bool(result & FILE_ATTRIBUTE_REPARSE_POINT)
 
