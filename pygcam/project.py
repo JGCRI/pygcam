@@ -318,10 +318,11 @@ class Project(XMLFile):
         hasDefaults = defaultsNode is not None
 
         # Read referenced scenarios.xml file and add it as a child of projectNode
+        # If no 'scenariosFile' element is found, use the value of GCAM.ScenarioSetupFile
         nodes = projectNode.findall('scenariosFile')
-        if len(nodes) != 1:
-            raise FileFormatError("%s: <project> must define exactly one <scenariosFile> element" % xmlFile)
-        filename = nodes[0].get('name')
+        if len(nodes) > 1:
+            raise FileFormatError("%s: <project> must define at most one <scenariosFile> element" % xmlFile)
+        filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenarioSetupFile')
         setupFile = pathjoin(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
         self.scenarioSetup = ScenarioSetup.parse(setupFile)
 

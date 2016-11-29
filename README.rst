@@ -34,6 +34,29 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0b6 (15 Nov 2016)
+-----------------------------
+* Made the <scenariosFile> element optional in project.xml, using the value of
+  GCAM.ScenarioSetupFile by default.
+
+* Added function callable from setup XML, <protectionScenario name="xxx"/>, which
+  indicates a protection scenario to use from the file defined by config variable
+  GCAM.ProtectionXmlFile.
+
+* Reversed previous modification to handling of "gt config -e" (edit config file)
+  which had placed quotes around the value of `GCAM.TextEditor`. This breaks
+  commands like "emacs -nw" since this is now seen as the command name. Solution is
+  for users with spaces within a command name to add the quotes in the config file, e.g.,
+
+  ``GCAM.TextEditor = "c:/Programs/Some Path With Spaces/someEditor.exe"``
+
+* Added check to prevent deletion of files within reference workspace, which could
+  happen under specific circumstances with symbolic links.
+
+* Added new "srcGroupDir" attribute to <scenario> element to identify a directory
+  holding static XML files for a scenario, allowing related scenarios to share these
+  files without requiring copying or symlinks.
+
 Version 1.0b5 (9 Nov 2016)
 -----------------------------
 
@@ -45,7 +68,6 @@ Version 1.0b4 (9 Nov 2016)
 -----------------------------
 
 * Fixed lingering symlink issues on Windows version.
-
 
 Version 1.0b3 (7 Nov 2016)
 -----------------------------

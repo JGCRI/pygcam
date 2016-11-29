@@ -19,6 +19,7 @@ from tempfile import mkstemp, mkdtemp
 from .config import getParam, getParamAsBoolean
 from .error import PygcamException, FileFormatError
 from .log import getLogger
+from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
@@ -211,6 +212,7 @@ def copyFileOrTree(src, dst):
     else:
         shutil.copy2(src, dst)
 
+# TBD: rename to removeTree
 def removeTreeSafely(path, ignore_errors=True):
     refWorkspace = os.path.realpath(getParam('GCAM.RefWorkspace'))
     thisPath = os.path.realpath(path)
@@ -294,14 +296,23 @@ def unixPath(path, rmFinalSlash=False):
            be removed, if present.
     :return: (str) the modified pathname
     """
-    path = path.replace('\\', '/')
+    if IsWindows:
+        path = path.replace('\\', '/')
+
     if rmFinalSlash and path[-1] == '/':
         path = path[0:-1]
 
     return path
 
-def pathjoin(*elements):
+def pathjoin(*elements, **kwargs):
     path = os.path.join(*elements)
+
+    if kwargs.get('normpath'):
+        path = os.path.normpath(path)
+
+    if kwargs.get('realpath'):
+        path = os.path.realpath(path)
+
     return unixPath(path, rmFinalSlash=True)
 
 def shellCommand(command, shell=True, raiseError=True):
@@ -761,8 +772,6 @@ class TempFile(object):
         :return: none
         :raises: PygcamException if the path is not related to a TempFile instance.
         """
-        from .windows import IsWindows
-
         path = self.path
 
         try:
