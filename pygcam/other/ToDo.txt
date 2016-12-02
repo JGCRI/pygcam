@@ -117,6 +117,38 @@ Long-term
 - To try:
   - Move run dir back to /pic/scratch/plev920
 
+Overarching
+-----------
+- Is it worth maintaining layered structure of coremcs and
+  gcammcs/gtapmcs if I can't maintain the latter?
+  - Could simplify a lot if this became GCAM-specific
+  - Another approach is to leave coremcs, but implement
+    gcammcs commands as plugins to pycam
+  - Might be difficult to integrate layered configuration files
+
+- Could also re-architect it around master/worker model
+  - Define an Abs Base Class describing what is run by a worker
+    - Mostly communication protocol, signal handling, and the like
+  - Master is the only process to communicate with database, so it
+    can safely use sqlite3, which is more convenient for moving data
+    between cluster and desktop.
+  - Distribute the generation of input files based on a single CSV
+    file containing all the trial data. The gensim command just generates
+    the CSV file rather than modifying all the XML files.
+    - Splitting trial data generation from XML file manipulation allows
+      use of DAKOTA, EMA, or other methods to generate trials.
+
+- Good time to update the database as well.
+  - Denormalize to make it easier to work with (put runId in some other tables?)
+  - Create a project table that links to runs so this can work under a
+    single postgresql database?
+
+- Rethink the "template" directory. This is underutilized and a little confusing.
+
+- Reimplement subcommands as pygcam plugins using pygcam.mcs.*
+
+- Integrate XML parsing code with pygcam's
+
 MCS Integration
 ---------------
 - Test pyfunc capability and use it to generate protected areas based on distro.
