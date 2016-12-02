@@ -3,6 +3,9 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from collections import defaultdict
+
+from .config import getParam
 from .error import PygcamException
 from .utils import XMLFile, getBooleanXML, resourceStream
 
@@ -79,7 +82,17 @@ class RewriteSet(object):
         return "<RewriteSet name='%s' level='%s' byAEZ='%s' append-values='%s'>" % \
                (self.name, self.level, self.byAEZ, self.appendValues)
 
+    def asRegionMap(self):
+        regionMap = defaultdict(list)
+        for rewrite in self.rewrites:
+            regionMap[rewrite.to].append(rewrite.From)
+
+        return regionMap
+
 class RewriteSetParser(object):
+    # store instances by filename to avoid repeated parsing
+    cache = {}
+
     def __init__(self, node, filename):
         rewriteSets = map(RewriteSet, node.findall('rewriteSet'))
         self.rewriteSets = {obj.name : obj for obj in rewriteSets}
@@ -92,12 +105,38 @@ class RewriteSetParser(object):
             raise PygcamException('RewriteSet "%s" not found in file "%s"' % (name, self.filename))
 
     @classmethod
-    def parse(cls, filename):
+    def parse(cls, filename=None):
         """
         Parse an XML file holding a list of query result rewrites.
-        :param filename: (str) the name of the XML file to read
-        :return: a list of RewriteSet instances
+        :param filename: (str) the name of the XML file to read, or, if
+           None, the value of config variable GCAM.XmlSetsFile is used.
+        :return: a RewriteSetParser instance
         """
+        filename = filename or getParam('GCAM.RewriteSetsFile')
+
+        obj = cls.cache.get(filename)
+        if obj:
+            return obj
+
         schemaStream = resourceStream('etc/rewriteSets-schema.xsd')
         xmlFile = XMLFile(filename, schemaFile=schemaStream)
-        return cls(xmlFile.tree.getroot(), filename)
+        obj = cls(xmlFile.tree.getroot(), filename)
+        cls.cache[filename] = obj
+        return obj
+
+    @classmethod
+    def getRegionMap(cls, rewriteSetName, filename=None):
+        """
+        Lookup a RewriteSet in the given file (or in GCAM.RewriteSetsFile)
+        and return it as dictionary.
+
+        :param rewriteSetName: (str) the name of the set to look up.
+        :param filename: (str or None) path to rewriteSets.xml file, or if
+           None, the value of config variable GCAM.RewriteSetsFile is used.
+        :return: (dict) a dictionary keyed by aggregate region names,
+           with values being a list of standard GCAM region names comprising
+           the aggregate.
+        """
+        rewriteParser = cls.parse()
+        rewriteSet = rewriteParser.getRewriteSet(rewriteSetName)
+        return rewriteSet.asRegionMap()
