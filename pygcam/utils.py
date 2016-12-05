@@ -278,7 +278,7 @@ def coercible(value, type, raiseError=True):
     """
     try:
         value = type(value)
-    except ValueError as e:
+    except (TypeError, ValueError) as e:
         if raiseError:
             raise PygcamException("%s: %r is not coercible to %s" % (getFuncName(1), value, type.__name__))
         else:
