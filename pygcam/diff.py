@@ -5,7 +5,7 @@
 import os
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs, ensureCSV, QueryResultsDir
+from .utils import mkdirs, pathjoin, ensureCSV, QueryResultsDir
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
@@ -204,7 +204,7 @@ def diffMain(args):
         baseline, policy = args.csvFiles
 
         def makePath(query, scenario):
-            return os.path.join(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
+            return pathjoin(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
 
         mainPart, extension = os.path.splitext(queryFile)
 
@@ -219,10 +219,10 @@ def diffMain(args):
         for query in queries:
             baselineFile = makePath(query, baseline)
             policyFile   = makePath(query, policy)
-            diffsDir = os.path.join(policy, 'diffs')
+            diffsDir = pathjoin(policy, 'diffs')
             mkdirs(diffsDir)
 
-            outFile = os.path.join(diffsDir, '%s-%s-%s.csv' % (query, policy, baseline))
+            outFile = pathjoin(diffsDir, '%s-%s-%s.csv' % (query, policy, baseline))
 
             _logger.debug("Writing %s", outFile)
 

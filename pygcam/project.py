@@ -22,7 +22,7 @@ from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger, getLogLevel
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
-                    simpleFormat, resourceStream, QueryResultsDir, XMLFile)
+                    pathjoin, simpleFormat, resourceStream, QueryResultsDir, XMLFile)
 from .xmlSetup import ScenarioSetup
 
 __version__ = '0.2'
@@ -318,11 +318,12 @@ class Project(XMLFile):
         hasDefaults = defaultsNode is not None
 
         # Read referenced scenarios.xml file and add it as a child of projectNode
+        # If no 'scenariosFile' element is found, use the value of GCAM.ScenarioSetupFile
         nodes = projectNode.findall('scenariosFile')
-        if len(nodes) != 1:
-            raise FileFormatError("%s: <project> must define exactly one <scenariosFile> element" % xmlFile)
-        filename = nodes[0].get('name')
-        setupFile = os.path.join(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
+        if len(nodes) > 1:
+            raise FileFormatError("%s: <project> must define at most one <scenariosFile> element" % xmlFile)
+        filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenarioSetupFile')
+        setupFile = pathjoin(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
         self.scenarioSetup = ScenarioSetup.parse(setupFile)
 
         filename = getParam('GCAM.ScenarioSetupOutputFile')
@@ -503,7 +504,6 @@ class Project(XMLFile):
 
         # Push the groupName back into config system so vars can use it
         setParam('GCAM.ScenarioGroup', groupDir, section=projectName)
-        #setParam('GCAM.ScenarioGroup', scenarioGroupName, section=projectName)
 
         # Get the text values for all config variables, allowing variables
         # defined in the project to override them.
@@ -518,8 +518,9 @@ class Project(XMLFile):
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = scenarioGroupName
-        argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   groupDir, subdir), rmFinalSlash=True)
-        argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir, subdir), rmFinalSlash=True)
+        argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir
+        argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   srcGroupDir, subdir), rmFinalSlash=True)
+        argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir,    subdir), rmFinalSlash=True)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows

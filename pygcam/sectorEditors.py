@@ -4,7 +4,7 @@
 '''
 from os import path
 from .log import getLogger
-from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology, callableMethod
+from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology, callableMethod, ENERGY_TRANSFORMATION_TAG
 
 _logger = getLogger(__name__)
 
@@ -21,14 +21,21 @@ TECH_BIODIESEL          = 'biodiesel'
 TECH_GTL                = 'gas to liquids'
 TECH_CTL                = 'coal to liquids'
 
+ENERGY_SUPPLY_TAG = "energy_supply"
+RESBIO_INPUT_TAG = "residue_bio"
+RESOURCES_TAG = "resources"
+AG_BASE_TAG = "ag_base"
+LAND_INPUT3_TAG = "land3"
+
 class BioenergyEditor(XMLEditor):
     """
     BioenergyEditor adds knowledge of biomass and biofuels.
     """
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, workspaceDir,
-                 groupDir, subdir, parent=None):
+                 groupDir, srcGroupDir, subdir, parent=None):
         super(BioenergyEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
-                                              workspaceDir, groupDir, subdir, parent=parent)
+                                              workspaceDir, groupDir, srcGroupDir, subdir,
+                                              parent=parent)
 
         # TBD: unclear whether this is useful or general
         cornEthanolUsaFile = 'cornEthanolUSA.xml'
@@ -70,7 +77,7 @@ class BioenergyEditor(XMLEditor):
              (self.name, target, loTarget, loFract, loPrice, hiTarget, hiFract, hiPrice))
 
         # Create modified version of resbio_input.xml and modify config to use it
-        resbioFileRel, resbioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "resbio_input.xml"))
+        resbioFileRel, resbioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "resbio_input.xml")) # TBD: use RESBIO_INPUT_TAG
 
         # Change all non-forest residue, all non-forest residue in the US, only corn residue in US, or corn residue everywhere.
         if target == 'all-crops':
@@ -97,7 +104,7 @@ class BioenergyEditor(XMLEditor):
 
     @callableMethod
     def setMswParameter(self, region, parameter, value):
-        resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
+        resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml")) # TBD: RESOURCES_TAG
 
         xpath = "//region[@name='%s']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/%s" % (region, parameter)
 
@@ -109,12 +116,12 @@ class BioenergyEditor(XMLEditor):
     def regionalizeBiomassMarket(self, region):
         _logger.info("Regionalize %s biomass market for %s" % (region, self.name))
 
-        resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml"))
+        resourcesFileRel, resourcesFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "resources.xml")) # TBD: RESOURCES_TAG
 
         xmlEdit(resourcesFileAbs, [("//region[@name='%s']/renewresource[@name='biomass']/market" % region, region)])
         self.updateScenarioComponent("resources", resourcesFileRel)
 
-        agForPastBioFileRel, agForPastBioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "ag_For_Past_bio_base.xml"))
+        agForPastBioFileRel, agForPastBioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "ag_For_Past_bio_base.xml")) # TBD: AG_BASE_TAG
 
         xmlEdit(agForPastBioFileAbs, [("//region[@name='%s']/AgSupplySector[@name='biomass']/market" % region, region)])
         self.updateScenarioComponent("ag_base", agForPastBioFileRel)
@@ -133,14 +140,14 @@ class BioenergyEditor(XMLEditor):
         # XPath applies to file energy-xml/en_supply.xml
         cornCoefXpath = '//technology[@name="regional corn for ethanol"]/period[@year>=2015]/minicam-energy-input[@name="Corn"]/coefficient'
 
-        enSupplyFileRel, enSupplyFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_supply.xml"))
+        enSupplyFileRel, enSupplyFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_supply.xml")) # TBD: ENERGY_SUPPLY_TAG
 
         xmlEdit(enSupplyFileAbs, [(cornCoefXpath, cornCoef)])
 
-        self.updateScenarioComponent("energy_supply", enSupplyFileRel)
+        self.updateScenarioComponent(ENERGY_SUPPLY_TAG, enSupplyFileRel)
 
         if gasCoef or elecCoef:
-            enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
+            enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml")) # TBD: ENERGY_TRANSFORMATION_TAG
             pairs = []
             xpath = '//technology[@name="corn ethanol"]/period[@year>=2015]/minicam-energy-input[@name="%s"]/coefficient'
 
@@ -182,13 +189,13 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Turn off purpose-grown biomass technology in %s for %s" % (region, self.name))
 
-        landInput3Rel, landInput3Abs = self.getLocalCopy(path.join(self.aglu_dir_rel, "land_input_3.xml"))
+        landInput3Rel, landInput3Abs = self.getLocalCopy(path.join(self.aglu_dir_rel, "land_input_3.xml")) # TBD: LAND_INPUT3_TAG
 
         if region == 'global':
              region='*'
 
         xmlEdit(landInput3Abs, [("//region[@name='%s']//isNewTechnology[@year='2020']" % region, 0)])
-        self.updateScenarioComponent("land3", landInput3Rel)
+        self.updateScenarioComponent(LAND_INPUT3_TAG, landInput3Rel)
 
     #
     # Various methods that operate on the USA specifically
@@ -205,7 +212,7 @@ class BioenergyEditor(XMLEditor):
         _logger.info("Adjust forest residue supply curves for %s" % self.name)
 
         # Create modified version of resbio_input.xml and modify config to use it
-        resbioFileRel, resbioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "resbio_input.xml"))
+        resbioFileRel, resbioFileAbs = self.getLocalCopy(path.join(self.aglu_dir_rel, "resbio_input.xml")) # TBD: RESBIO_INPUT_TAG
 
         # Forest residue appears in two places. First, operate on AgSupplySector "Forest"
         xPrefix = "//region[@name='%s']/AgSupplySector[@name='Forest']/AgSupplySubsector" % region
@@ -257,7 +264,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Add corn ethanol stub technology in USA")
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml")) # TBD: ENERGY_TRANSFORMATION_TAG
         extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol')
         extractStubTechnology('USA', enTransFileAbs, self.cornEthanolUsaAbs2, REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol', fromRegion=True)
 
@@ -273,7 +280,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Add cellulosic ethanol stub-technology in USA")
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml")) # TBD: ENERGY_TRANSFORMATION_TAG
         extractStubTechnology('USA', enTransFileAbs, self.cellEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'cellulosic ethanol')
 
         self.insertScenarioComponent('cell-etoh-USA', self.cellEthanolUsaRel, 'energy_transformation')
@@ -285,7 +292,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Add FT biofuels stub-technology in USA")
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml"))
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(path.join(self.energy_dir_rel, "en_transformation.xml")) # TBD: ENERGY_TRANSFORMATION_TAG
         extractStubTechnology('USA', enTransFileAbs, self.ftBiofuelsUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'FT biofuels')
 
         self.insertScenarioComponent('FT-biofuels-USA', self.ftBiofuelsUsaRel, 'energy_transformation')

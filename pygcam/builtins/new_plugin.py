@@ -13,6 +13,7 @@ import re
 from ..subcommand import SubcommandABC
 from ..log import getLogger
 
+
 _logger = getLogger(__name__)
 
 def driver(args, tool):
@@ -20,10 +21,8 @@ def driver(args, tool):
     import os
     import shutil
     from ..config import getParam, USR_CONFIG_FILE
-    from ..utils import mkdirs, copyResource, getResource
+    from ..utils import mkdirs, pathjoin, copyResource, getResource
     from ..error import CommandlineError
-
-    pathjoin = os.path.join
 
     projectName = args.name
     projectRoot = args.root or getParam('GCAM.ProjectRoot')

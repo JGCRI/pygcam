@@ -19,6 +19,7 @@ from tempfile import mkstemp, mkdtemp
 from .config import getParam, getParamAsBoolean
 from .error import PygcamException, FileFormatError
 from .log import getLogger
+from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
@@ -156,7 +157,7 @@ def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batc
        batch query messages (queries can be pretty verbose...)
     :return: none
     """
-    path = os.path.join(outputDir, 'XMLDBDriver.properties')
+    path = pathjoin(outputDir, 'XMLDBDriver.properties')
     memFlag = 'true' if inMemory else 'false'
     content = _XMLDBPropertiesTemplate.format(inMemory=memFlag, filterFile=filterFile,
                                               batchFile=batchFile, batchLog=batchLog)
@@ -199,13 +200,26 @@ def copyFileOrTree(src, dst):
     :param dst: (str) path to a destination file or directory.
     :return: none
     """
+    if getParamAsBoolean('GCAM.CopyAllFiles') and src[0] == '.':   # convert relative paths
+        src = unixPath(os.path.normpath(os.path.join(os.path.dirname(dst), src)))
+
     if os.path.islink(src):
         src = os.readlink(src)
 
     if os.path.isdir(src):
+        removeTreeSafely(dst)
         shutil.copytree(src, dst)
     else:
         shutil.copy2(src, dst)
+
+# TBD: rename to removeTree
+def removeTreeSafely(path, ignore_errors=True):
+    refWorkspace = os.path.realpath(getParam('GCAM.RefWorkspace'))
+    thisPath = os.path.realpath(path)
+    if os.path.commonprefix((refWorkspace, thisPath)) == refWorkspace:
+        raise PygcamException("Refusing to delete %s, which is part of the reference workspace" % path)
+
+    shutil.rmtree(path, ignore_errors=ignore_errors)
 
 def removeFileOrTree(path, raiseError=True):
     """
@@ -219,6 +233,9 @@ def removeFileOrTree(path, raiseError=True):
     """
     from .windows import removeSymlink
 
+    if not os.path.lexists(path):
+        return
+
     try:
         if os.path.islink(path):
             # Windows treats links to files and dirs differently.
@@ -226,7 +243,7 @@ def removeFileOrTree(path, raiseError=True):
             removeSymlink(path)
         else:
             if os.path.isdir(path):
-                shutil.rmtree(path)
+                removeTreeSafely(path)
             else:
                 os.remove(path)
     except Exception as e:
@@ -261,7 +278,7 @@ def coercible(value, type, raiseError=True):
     """
     try:
         value = type(value)
-    except ValueError as e:
+    except (TypeError, ValueError) as e:
         if raiseError:
             raise PygcamException("%s: %r is not coercible to %s" % (getFuncName(1), value, type.__name__))
         else:
@@ -279,11 +296,24 @@ def unixPath(path, rmFinalSlash=False):
            be removed, if present.
     :return: (str) the modified pathname
     """
-    path = path.replace('\\', '/')
+    if IsWindows:
+        path = path.replace('\\', '/')
+
     if rmFinalSlash and path[-1] == '/':
         path = path[0:-1]
 
     return path
+
+def pathjoin(*elements, **kwargs):
+    path = os.path.join(*elements)
+
+    if kwargs.get('normpath'):
+        path = os.path.normpath(path)
+
+    if kwargs.get('realpath'):
+        path = os.path.realpath(path)
+
+    return unixPath(path, rmFinalSlash=True)
 
 def shellCommand(command, shell=True, raiseError=True):
     """
@@ -376,7 +406,7 @@ def saveToFile(txt, dirname='', filename=''):
     if dirname:
         mkdirs(dirname)
 
-    pathname = os.path.join(dirname, filename)
+    pathname = pathjoin(dirname, filename)
 
     _logger.debug("Writing %s", pathname)
     with open(pathname, 'w') as f:
@@ -394,7 +424,7 @@ def getBatchDir(scenario, resultsDir):
            should be created
     :return: (str) the pathname to the batch results directory
     """
-    pathname = os.path.join(resultsDir, scenario, QueryResultsDir)
+    pathname = pathjoin(resultsDir, scenario, QueryResultsDir)
     return pathname
 
 
@@ -415,7 +445,7 @@ def mkdirs(newdir, mode=0o770):
 
 def getExeDir(workspace, chdir=False):
     workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
-    exeDir    = os.path.join(workspace, 'exe')
+    exeDir    = pathjoin(workspace, 'exe')
 
     if chdir:
         _logger.info("cd %s", exeDir)
@@ -742,8 +772,6 @@ class TempFile(object):
         :return: none
         :raises: PygcamException if the path is not related to a TempFile instance.
         """
-        from .windows import IsWindows
-
         path = self.path
 
         try:

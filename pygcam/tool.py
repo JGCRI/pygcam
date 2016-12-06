@@ -32,7 +32,7 @@ from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
-from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs
+from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs, pathjoin
 from .version import VERSION
 from .windows import IsWindows
 
@@ -95,7 +95,7 @@ class GcamTool(object):
         suffixLen = len(suffix)
 
         for d in pluginDirs:
-            pattern = os.path.join(d, '*' + suffix)
+            pattern = pathjoin(d, '*' + suffix)
             for path in glob(pattern):
                 basename = os.path.basename(path)
                 command = basename[:-suffixLen]
@@ -293,7 +293,7 @@ class GcamTool(object):
 
         if logFile:
             logDir = getParam('GCAM.BatchLogDir')
-            logFile = os.path.normpath(os.path.join(logDir, logFile))
+            logFile = os.path.normpath(pathjoin(logDir, logFile))
             mkdirs(os.path.dirname(logFile))
 
         otherArgs = "-d afterok:%s" % dependsOn if dependsOn else ''

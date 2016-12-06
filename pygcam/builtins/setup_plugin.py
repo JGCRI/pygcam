@@ -8,6 +8,7 @@
 '''
 from ..log import getLogger
 from ..subcommand import SubcommandABC
+from ..utils import pathjoin
 
 _logger = getLogger(__name__)
 
@@ -39,9 +40,11 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-g', '--group',
                             help='The scenario group to process. Defaults to the group labeled default="1".')
 
-        # mutually exclusive with --dynamicOnly
-        group1.add_argument('-G', '--staticOnly', action='store_true',
-                            help='''Generate only static XML for local-xml: don't create dynamic XML.''')
+        parser.add_argument('-G', '--srcGroupDir',
+                            help='''A sub-directory under xmlsrc in which to find scenario dirs for this group.
+                            Use this to consolidate static XML files shared by multiple scenario groups.
+                            If --useGroupDir is specified, srcGroupDir defaults to the scenario group name.
+                            Using --srcGroupDir implies --useGroupDir.''')
 
         # mutually exclusive with --moduleSpec and --setupXml
         group2.add_argument('-m', '--modulePath',
@@ -77,8 +80,12 @@ class SetupCommand(SubcommandABC):
                             help='''An XML scenario definition file. Overrides configuration variable
                              GCAM.ScenarioSetupFile.''')
 
+        # mutually exclusive with --dynamicOnly
+        group1.add_argument('-T', '--staticOnly', action='store_true',
+                            help='''Generate only static XML for local-xml: don't create dynamic XML.''')
+
         parser.add_argument('-u', '--useGroupDir', action='store_true',
-                            help='Use the group name as a subdir below xmlsrc, local-xml, and dyn-xml')
+                            help='Use the group name as a sub directory below xmlsrc, local-xml, and dyn-xml')
 
         parser.add_argument('-x', '--xmlSourceDir',
                             help='''The location of the xmlsrc directory.''')
@@ -112,12 +119,13 @@ class SetupCommand(SubcommandABC):
 
         projectDir = getParam('GCAM.ProjectDir')
         groupName = args.group if args.useGroupDir else ''
+        srcGroupDir = args.srcGroupDir or groupName
 
         if args.workspace:
             workspace = args.workspace
         else:
-            groupDir  = os.path.normpath(os.path.join(projectDir, groupName))
-            workspace = os.path.join(groupDir, scenario)
+            groupDir  = os.path.normpath(pathjoin(projectDir, groupName))
+            workspace = pathjoin(groupDir, scenario)
 
         mcsMode = tool.getMcsMode()
         forceCreate = args.forceCreate or bool(mcsMode)
@@ -140,7 +148,7 @@ class SetupCommand(SubcommandABC):
                 if args.moduleSpec:
                     module = import_module(args.moduleSpec, package=None)
                 else:
-                    modulePath = args.modulePath or os.path.join(xmlSourceDir, groupName, 'scenarios.py')
+                    modulePath = args.modulePath or pathjoin(xmlSourceDir, srcGroupDir, 'scenarios.py')
                     _logger.debug('Setup using %s', modulePath)
                     module = loadModuleFromPath(modulePath)
 
@@ -175,8 +183,8 @@ class SetupCommand(SubcommandABC):
             args.staticOnly  = True
 
         # TBD: Document that all setup classes must conform to this protocol
-        obj = scenClass(args.baseline, args.scenario, xmlOutputRoot,
-                        xmlSourceDir, refWorkspace, groupName, subdir)
+        obj = scenClass(args.baseline, args.scenario, xmlOutputRoot, xmlSourceDir,
+                        refWorkspace, groupName, srcGroupDir, subdir)
 
         obj.mcsMode = mcsMode
         obj.setup(args)

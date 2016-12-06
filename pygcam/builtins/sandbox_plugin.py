@@ -10,6 +10,7 @@
 from __future__ import print_function
 from ..log import getLogger
 from ..subcommand import SubcommandABC
+from ..utils import removeTreeSafely, pathjoin
 
 _logger = getLogger(__name__)
 
@@ -32,7 +33,7 @@ def driver(args, tool):
         raise CommandlineError("sandbox: must specify scenario and/or group name")
 
     sandboxProjectDir = getParam('GCAM.SandboxProjectDir')
-    sandbox = os.path.join(sandboxProjectDir, args.groupDir, args.scenario)
+    sandbox = pathjoin(sandboxProjectDir, args.groupDir, args.scenario)
 
     sandbox = os.path.normpath(os.path.abspath(os.path.expanduser(sandbox)))     # handle ~ in pathname
 
@@ -51,7 +52,7 @@ def driver(args, tool):
                 if os.path.islink(sandbox):
                     os.remove(sandbox)
                 else:
-                    shutil.rmtree(sandbox)
+                    removeTreeSafely(sandbox)
             else:
                 print("Would remove", sandbox)
         except Exception as e:

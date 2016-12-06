@@ -36,30 +36,30 @@
 
     <xs:element name='group'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='region'/>
-                <xs:element ref='comment' maxOccurs="unbounded"/>
-            </xs:sequence>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref='region'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
         </xs:complexType>
     </xs:element>
 
     <xs:element name='scenario'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='protectedRegion'/>
-                <xs:element ref='comment' maxOccurs="unbounded"/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref='protectedRegion'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
         </xs:complexType>
     </xs:element>
 
     <xs:element name='protectedRegion'>
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs='unbounded' ref='protection'/>
-                <xs:element maxOccurs='unbounded' ref='comment'/>
-            </xs:sequence>
+            <xs:choice maxOccurs='unbounded' >
+                <xs:element ref='protection'/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
         </xs:complexType>
     </xs:element>
@@ -68,10 +68,10 @@
         <xs:complexType>
             <xs:sequence>
 				<xs:element ref='fraction'/>
-				<xs:sequence maxOccurs='unbounded'>
+				<xs:choice maxOccurs='unbounded'>
 					<xs:element ref='landClass'/>
 					<xs:element ref='comment'/>
-				</xs:sequence>
+				</xs:choice>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

@@ -12,7 +12,7 @@ import sys
 from .config import getParam, getParamAsBoolean
 from .error import PygcamException, SetupException
 from .log import getLogger
-from .utils import XMLFile, getBooleanXML, resourceStream, symlinkOrCopyFile
+from .utils import XMLFile, getBooleanXML, resourceStream, symlinkOrCopyFile, unixPath, pathjoin
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 
 _logger = getLogger(__name__)
@@ -212,7 +212,8 @@ class ScenarioGroup(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.useGroupDir = getBooleanXML(node.get('useGroupDir', default='0'))
+        self.srcGroupDir = node.get('srcGroupDir', '')
+        self.useGroupDir = bool(self.srcGroupDir) or getBooleanXML(node.get('useGroupDir', default='0'))
         self.isDefault = getBooleanXML(node.get('default', default='0'))
         self.iteratorName = node.get('iterator')
         self.baselineSource = node.get('baselineSource')
@@ -257,8 +258,8 @@ class ScenarioGroup(object):
 
     def writeXML(self, stream, indent=0):
         stream.write('\n')
-        stream.write(_tab * indent + '<scenarioGroup name="%s" useGroupDir="%s">\n' % \
-                     (self.name, int(self.useGroupDir)))
+        stream.write(_tab * indent + '<scenarioGroup name="%s" useGroupDir="%s" srcGroupDir="%s">\n' % \
+                     (self.name, int(self.useGroupDir), self.srcGroupDir))
 
         for obj in self.finalDict.values():
             obj.writeXML(stream, indent + 1)
@@ -450,30 +451,34 @@ def createXmlEditorSubclass(setupFile):
         superclass = XMLEditor
 
     class XmlEditorSubclass(superclass):
-        def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir, parent=None):
+        def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
+                     srcGroupDir, subdir, parent=None):
             self.parentConfigPath = None
             self.mcsValues = None
+
+            self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
+            group = scenarioSetup.groupDict[groupName or scenarioSetup.defaultGroup]
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
                 # TBD: test this in FCIP case where baseline builds on FuelShock
-                parent = XMLEditor(baseline, None, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName, subdir)
+                baselineSubdir = None
+                baseXmlOutputRoot = pathjoin(os.path.dirname(xmlOutputRoot), baseline)
+                parent = XMLEditor(baseline, None, baseXmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
+                                   srcGroupDir, baselineSubdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                                    refWorkspace, groupName, subdir, parent=parent)
-
+                                                    refWorkspace, groupName, srcGroupDir, subdir, parent=parent)
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
             if self.parent and self.mcsMode:
                 # ../../trial-xml/local-xml/base-0/mcsValues.xml
-                self.paramFile = os.path.normpath(os.path.join(self.xmlOutputRoot, '../trial-xml/local-xml',
-                                                               self.groupDir, self.parent.name, MCSVALUES_FILE))
+                self.paramFile = unixPath(os.path.normpath(pathjoin(self.xmlOutputRoot, '../trial-xml/local-xml',
+                                                           self.groupDir, self.parent.name, MCSVALUES_FILE)))
 
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
                                   'baselineDir': self.baseline_dir_rel}
-            self.scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
-
 
         def setupDynamic(self, args):
             self.groupName = args.group
@@ -499,13 +504,12 @@ def createXmlEditorSubclass(setupFile):
                 _logger.info("%s additional static XML files in %s to %s", mode, scenDir, dynDir)
                 for xml in xmlFiles:
                     base = os.path.basename(xml)
-                    dst = os.path.join(dynDir, base)
-                    src = os.path.join(scenDir, base)
+                    dst = pathjoin(dynDir, base)
+                    src = pathjoin(scenDir, base)
                     if not os.path.lexists(dst):
                         symlinkOrCopyFile(src, dst)
 
             CachedFile.decacheAll()
-
 
         def setupStatic(self, args):
             self.groupName = args.group
@@ -529,7 +533,7 @@ def createXmlEditorSubclass(setupFile):
                     scenario = parentGroup.getFinalScenario(baselineName)
                     if scenario.isBaseline:
                         self.parent = XmlEditorSubclass(baselineName, None, self.xmlOutputRoot, self.xmlSourceDir,
-                                                        self.refWorkspace, groupName, self.subdir)
+                                                        self.refWorkspace, groupName, group.srcGroupDir, scenario.subdir)
             directoryDict = self.directoryDict
 
             # not an "else" since parent may be set in "if" above
@@ -542,9 +546,9 @@ def createXmlEditorSubclass(setupFile):
             # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
             # to be found in the config file to be able to apply distributions to the values.
             # TBD: Note that this was "if self.mcsMode and not self.parent:"
-            mcsValuesPath = os.path.join(self.scenario_dir_abs, MCSVALUES_FILE)
+            mcsValuesPath = pathjoin(self.scenario_dir_abs, MCSVALUES_FILE)
             if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
-                self.addScenarioComponent('mcsValues', os.path.join(self.scenario_dir_rel, MCSVALUES_FILE))
+                self.addScenarioComponent('mcsValues', pathjoin(self.scenario_dir_rel, MCSVALUES_FILE))
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
             CachedFile.decacheAll()

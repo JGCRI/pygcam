@@ -17,7 +17,7 @@ def driver(args, tool):
     import subprocess
     from ..utils import XMLFile
     from ..config import getParam
-    from ..utils import mkdirs
+    from ..utils import mkdirs, pathjoin
     from ..error import FileFormatError
 
     xmlStarlet = getParam('GCAM.XmlStarlet')
@@ -37,15 +37,15 @@ def driver(args, tool):
         return files
 
     def normalizeFiles(name, files, exedir):
-        subdir = os.path.join(args.outputDir, name)
+        subdir = pathjoin(args.outputDir, name)
         mkdirs(subdir)
 
         for fileTag, relPath in files.items():
-            fileDir = os.path.join(subdir, fileTag)
+            fileDir = pathjoin(subdir, fileTag)
             mkdirs(fileDir)
 
-            outfile = os.path.join(fileDir, os.path.basename(relPath))
-            infile  = os.path.join(exedir, relPath)
+            outfile = pathjoin(fileDir, os.path.basename(relPath))
+            infile  = pathjoin(exedir, relPath)
 
             files[fileTag] = outfile
 

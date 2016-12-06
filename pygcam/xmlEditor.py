@@ -27,14 +27,13 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
-from .utils import coercible, mkdirs, unixPath, printSeries, symlinkOrCopyFile
+from .utils import coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile, removeTreeSafely
 
-# Deprecated: Set to True to see all xmlstarlet commands
-Verbose = False
+# Names of key scenario components in reference GCAM 4.3 configuration.xml file
+ENERGY_TRANSFORMATION_TAG = "energy_transformation"
+SOLVER_TAG = "solver"
 
 _logger = getLogger(__name__)
-
-pathjoin = os.path.join     # "alias" this since it's used frequently
 
 # methods callable from <function name="x">args</function> in
 # XML scenario setup scripts.
@@ -135,7 +134,7 @@ class CachedFile(object):
             item.decache()
 
 
-def xmlSel(filename, xpath, useCache=True):
+def xmlSel(filename, xpath, asText=False):
     """
     Return True if the XML component identified by the xpath argument
     exists in `filename`. Useful for deciding whether to edit or
@@ -143,12 +142,15 @@ def xmlSel(filename, xpath, useCache=True):
 
     :param filename: (str) the file to edit
     :param xpath: (str) the xml element(s) to search for
-    :param useCache: (bool) if True, the etree is sought first in the XmlCache.
-    :return: (bool) True if found, False otherwise.
+    :param asText: (str) if True, return the text of the node, if found, else None
+    :return: (bool) True if found, False otherwise. (see asText)
     """
     item = CachedFile.getFile(filename)
+    result = item.tree.find(xpath)
 
-    result = item.tree.xpath(xpath)
+    if asText:
+        return result.text if result is not None else None
+
     return bool(result)
 
 AttributePattern = re.compile('(.*)/@([-\w]*)$')
@@ -300,6 +302,71 @@ def expandYearRanges(seq):
 
     return result
 
+# TBD: maybe xmlSetup should be the only approach rather than supporting original python approach.
+# TBD: this way we can assume scenario definition exists in xml format and create an API to get the
+# TBD: information about any scenario definition from xmlSetup.py.
+#
+# TBD: The question is whether command-line override capability is required, or if all should be in XML.
+# TBD: Need to think through alternative use cases.
+#
+# TBD: should be no need to pass baseline since this can be inferred from scenario and scenarioGroup.
+# TBD: also can tell if it's a baseline; if not, find and cache ref to baseline
+class ScenarioInfo(object):
+    def __init__(self, scenarioGroup, scenarioName, scenarioSubdir,
+                 xmlSourceDir, xmlGroupSubdir, sandboxRoot, sandboxGroupSubdir):
+
+        self.scenarioGroup  = scenarioGroup
+        self.scenarioName   = scenarioName
+        self.scenarioSubdir = scenarioSubdir or scenarioName
+
+        self.xmlSourceDir = xmlSourceDir
+        self.xmlGroupSubdir = xmlGroupSubdir or scenarioGroup
+
+        self.sandboxRoot  = sandboxRoot
+        self.sandboxGroupSubdir = sandboxGroupSubdir or scenarioGroup
+
+        self.isBaseline = False # TBD
+
+        if not self.isBaseline:
+            self.baselineName = 'something'
+            self.baselineInfo = self.fromXmlSetup(scenarioGroup, self.baselineName)
+
+        # TBD: after setting self.x for all x:
+        self.configPath = pathjoin(self.scenarioDir(), 'config.xml', realPath=True)
+
+    @classmethod
+    def fromXmlSetup(cls, scenarioGroup, scenarioName):
+        # TBD: lookup the group and scenario, grab all data and
+        # TBD: return ScenarioInfo(...)
+        pass
+
+    def absPath(self, x):
+        pass
+
+    def relPath(self, y):
+        pass
+
+    def scenarioXmlSourceDir(self):
+        return pathjoin(self.xmlSourceDir, self.xmlGroupSubdir, self.scenarioSubdir, 'xml') # TBD if keeping xml subdir
+
+    def scenarioXmlOutputDir(self):
+        return pathjoin(self.xmlOutputDir, self.scenarioGroup, self.scenarioName)
+
+    def scenarioXmlSourceFiles(self):
+        files = glob.glob(self.scenarioXmlSourceDir() + '/*.xml')
+        return files
+
+    def cfgPath(self):
+        """
+        Compute the name of the GCAM config file for the current scenario.
+
+        :return: (str) the pathname to the XML configuration file.
+        """
+        if not self.configPath:
+            # compute the first time, then cache it
+            self.configPath = unixPath(os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml')))
+
+        return self.configPath
 
 class XMLEditor(object):
     '''
@@ -307,8 +374,13 @@ class XMLEditor(object):
     Represents the information required to setup a scenario, i.e., to
     generate and/or copy the required XML files into the XML output dir.
     '''
+    # TBD: consider whether init should take an object describing the scenario
+    # TBD: that can be populated from a scenario instance from xmlSetup.py or something
+    # TBD: specific to the task. All these args are a pain, and there's no method API
+    # TBD: to perform common ops.
+    # TBD:
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
-                 groupDir, subdir, parent=None):
+                 groupDir, srcGroupDir, subdir, parent=None):
         self.name = name = scenario or baseline # if no scenario stated, assume baseline
         self.baseline = baseline
         self.scenario = scenario
@@ -318,26 +390,37 @@ class XMLEditor(object):
         self.parent = parent
         self.mcsMode = None
 
+        # TBD: store scenarioDir so abspath can always be computed using:
+        # def absPath(relPath):
+        #     return pathjoin(self.scenarioDir, 'exe', relPath, normpath=True)
+
         self.setupArgs = None
 
+        # TBD: this would be just ../local-xml "project/scenario" occurs once, above
         # Allow scenario name to have arbitrary subdirs between "../local-xml" and
-        # the scenario name, e.g., "../local-xml/client/scenario"
+        # the scenario name, e.g., "../local-xml/project/scenario"
         self.subdir = subdir or ''
         self.groupDir = groupDir
+        self.srcGroupDir = srcGroupDir or groupDir
 
         self.configPath = None
 
+        # TBD: xmlOutputRoot is now just scenario dir, so this parameter can disappear
         self.local_xml_abs = makeDirPath((xmlOutputRoot, LOCAL_XML_NAME), create=True)
-        self.dyn_xml_abs   = makeDirPath((xmlOutputRoot, DYN_XML_NAME), create=True)
+        self.dyn_xml_abs   = makeDirPath((xmlOutputRoot, DYN_XML_NAME), create=True) # TBD eliminate
 
         self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
-        self.dyn_xml_rel   = pathjoin("..", DYN_XML_NAME)
+        self.dyn_xml_rel   = pathjoin("..", DYN_XML_NAME)   # TBD eliminate
 
         # N.B. join helpfully drops out "" components
+        # TBD: order changes; use ScenarioInfo API
         self.scenario_dir_abs = makeDirPath((self.local_xml_abs, groupDir, name), create=True)
         self.scenario_dir_rel = pathjoin(self.local_xml_rel, groupDir, name)
+
+        # Get baseline from ScenarioGroup and use ScenarioInfo API to get this type of info
         self.baseline_dir_rel = pathjoin(self.local_xml_rel, groupDir, self.parent.name) if self.parent else None
 
+        # TBD eliminate
         self.scenario_dyn_dir_abs = makeDirPath((self.dyn_xml_abs, groupDir, name), create=True)
         self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, groupDir, name)
 
@@ -346,6 +429,7 @@ class XMLEditor(object):
         self.gcam_prefix_abs = prefix_abs = pathjoin(refWorkspace, gcam_xml)
         self.gcam_prefix_rel = prefix_rel = pathjoin('../', gcam_xml)
 
+        # TBD: maybe no need to store these since computable from rel paths
         self.aglu_dir_abs           = pathjoin(prefix_abs, 'aglu-xml')
         self.emissions_dir_abs      = pathjoin(prefix_abs, 'emissions-xml')
         self.energy_dir_abs         = pathjoin(prefix_abs, 'energy-xml')
@@ -358,12 +442,13 @@ class XMLEditor(object):
         self.modeltime_dir_rel      = pathjoin(prefix_rel, 'modeltime-xml')
         self.socioeconomics_dir_rel = pathjoin(prefix_rel, 'socioeconomics-xml')
 
+        # TBD: add climate and policy subdirs?
         self.solution_prefix_abs = pathjoin(refWorkspace, "input", "solution")
         self.solution_prefix_rel = pathjoin("..", "input", "solution")
 
     @staticmethod
     def recreateDir(path):
-        shutil.rmtree(path)
+        removeTreeSafely(path)
         mkdirs(path)
 
     def setupDynamic(self, args):
@@ -378,6 +463,7 @@ class XMLEditor(object):
 
         _logger.info("Generating dyn-xml for scenario %s" % self.name)
 
+        # TBD: maybe dyn subdir of local-xml so all can be deleted at once
         # Delete old generated scenario files
         dynDir = self.scenario_dyn_dir_abs
         self.recreateDir(dynDir)
@@ -385,16 +471,18 @@ class XMLEditor(object):
         scenDir = self.scenario_dir_abs
         xmlFiles = glob.glob("%s/*.xml" % scenDir)
 
+        # TBD: no need to link or copy if all in one place
         if xmlFiles:
+            mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+            _logger.info("%s %d static XML files in %s to %s", mode, len(xmlFiles), scenDir, dynDir)
+
             for xml in xmlFiles:
                 base = os.path.basename(xml)
-                dst = os.path.join(dynDir, base)
-                src = os.path.join(scenDir, base)
-                mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
-                _logger.info("%s static XML files in %s to %s", mode, scenDir, dynDir)
+                dst = pathjoin(dynDir, base)
+                src = pathjoin(scenDir, base)
                 symlinkOrCopyFile(src, dst)
         else:
-            _logger.info("No XML files to link in %s", os.path.abspath(scenDir))
+            _logger.info("No XML files to link in %s", unixPath(os.path.abspath(scenDir)))
 
         CachedFile.decacheAll()
 
@@ -410,23 +498,26 @@ class XMLEditor(object):
         """
         _logger.info("Generating local-xml for scenario %s" % self.name)
 
-        # Delete old generated scenario files
         scenDir = self.scenario_dir_abs
-        # dynDir = self.scenario_dyn_dir_abs
 
+        # deprecated
+        # Delete old generated scenario files
+        # dynDir = self.scenario_dyn_dir_abs
         #self.recreateDir(scenDir)  # this trashed symlinks to Workspace/local-xml
+
         mkdirs(scenDir)
 
-        xmlSubdir = pathjoin(self.xmlSourceDir, self.groupDir, self.subdir or self.name, 'xml')
+        # TBD: there's nothing else now in these dirs, so "xml" subdir is not needed
+        xmlSubdir = pathjoin(self.xmlSourceDir, self.srcGroupDir, self.subdir or self.name, 'xml')
         xmlFiles = glob.glob("%s/*.xml" % xmlSubdir)
 
         if xmlFiles:
-            _logger.info("Copy %d static XML files to %s", len(xmlFiles), scenDir)
+            _logger.info("Copy %d static XML files from %s to %s", len(xmlFiles), xmlSubdir, scenDir)
             for src in xmlFiles:
-                # dst = os.path.join(scenDir, os.path.basename(src))
+                # dst = pathjoin(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
         else:
-            _logger.info("No XML files to copy in %s", os.path.abspath(xmlSubdir))
+            _logger.info("No XML files to copy in %s", unixPath(os.path.abspath(xmlSubdir)))
 
         configPath = self.cfgPath()
 
@@ -468,7 +559,6 @@ class XMLEditor(object):
 
         CachedFile.decacheAll()
 
-
     def setup(self, args):
         """
         Calls setupStatic and/or setupDynamic, depending on flags set in args.
@@ -487,7 +577,6 @@ class XMLEditor(object):
             self.setupDynamic(args)
 
         CachedFile.decacheAll()
-
 
     def makeScenarioComponentsUnique(self):
         """
@@ -530,10 +619,20 @@ class XMLEditor(object):
         """
         if not self.configPath:
             # compute the first time, then cache it
-            self.configPath = os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml'))
+            self.configPath = unixPath(os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml')))
 
         return self.configPath
 
+    # TBD: test this
+    def componentPath(self, tag):
+        pathname = xmlSel(self.cfgPath(), '//Value[@name="%s"]' % tag, asText=True)
+
+        if pathname is None:
+            raise PygcamException("Failed to find scenario component with tag '%s'" % tag)
+
+        return pathname
+
+    # TBD: may be obsolete
     def _splitPath(self, path):
         """
         See if the path refers to a file in our scenario space, and if so,
@@ -549,7 +648,7 @@ class XMLEditor(object):
             '''
             if path.startswith(prefix):
                 tail = path[len(prefix):]
-                if tail[0] == os.path.sep:      # skip leading slash, if any
+                if tail[0] in "/\\":      # skip leading slash, if any
                     tail = tail[1:]
 
                 return tail
@@ -563,10 +662,12 @@ class XMLEditor(object):
                 result = self.parent._splitPath(path)
             else:
                 # At the top of the parent chain we check 2 standard GCAM locations
+                # TBD: add climate and policy subdirs?
                 result = (_split(path, self.gcam_prefix_rel) or
                           _split(path, self.solution_prefix_rel))
         return result
 
+    # TBD: may be obsolete
     def _closestCopy(self, tail):
         """
         Find the "closest" copy of the given relative path, `tail`,
@@ -587,35 +688,17 @@ class XMLEditor(object):
                 absPath = self.parent._closestCopy(tail)
             else:
                 # At the top of the parent chain we check 2 standard GCAM locations
+                # TBD: add climate and policy subdirs?
                 absPath = (_check(self.gcam_prefix_abs) or
                            _check(self.solution_prefix_abs))
 
         return absPath
 
-    # deprecated?
-    def parseRelPath(self, relPath):
-        '''
-        Parse a relative pathname and return a tuple with the scenario prefix, the
-        tail part (after the prefix) and the absolute path to this file. If a
-        scenario doesn't recognize the prefix as its own, it recursively asks its
-        parent, unless the parent is None, in which case the standard GCAM prefix
-        is checked, and if not present, and error is raised.
-
-        :param relPath: (str) a relative pathname
-        :return: (str) the pathname of the closest copy of the file
-        '''
-        tail = self._splitPath(relPath)
-        if not tail:
-            raise SetupException('File "%s" was not recognized by any scenario' % relPath)
-
-        result = self._closestCopy(tail)
-        if not result:
-            raise SetupException('File "%s" was not found in any scenario directory' % relPath)
-
-        return result
-
-    # TBD: should this operate instead on component name rather than path?
-    # TBD: advantage is not having to know where original file lives.
+    # TBD: should this operate instead on component tag rather than path?
+    # TBD: advantage is not having to know where original file lives. Also,
+    # TBD: if scenario has replaced a file with a functional equiv with diff name
+    # TBD: the current method won't recognize it.
+    # TBD: The only problem is the item is not already in config. Could fall back to this...
     def getLocalCopy(self, pathname):
         """
         Get the filename for the most local version (in terms of scenario hierarchy)
@@ -626,6 +709,10 @@ class XMLEditor(object):
         :return: (str, str) a tuple of the relative and absolute path of the
           local (i.e., within the current scenario) copy of the file.
         """
+
+        # TBD: use componentPath(tag) and check if already in our scenario dir (use commonprefix)
+        # TBD: Compute scenario/local-xml path for this file and copy if missing. Might still use
+        # TBD: _splitPath, but copy absPath(componentPath(tag)) to local path.
         tail = self._splitPath(pathname)
         if not tail:
             raise SetupException('File "%s" was not recognized by any scenario' % pathname)
@@ -637,9 +724,6 @@ class XMLEditor(object):
             absPath = self._closestCopy(tail)
             if not absPath:
                 raise SetupException('File "%s" was not found in any scenario directory' % pathname)
-
-            # if localRelPath == pathname:
-            #     raise SetupException("Referenced file does not exist: %s" % pathname)
 
             copyIfMissing(absPath, localAbsPath, makedirs=True)
 
@@ -796,8 +880,10 @@ class XMLEditor(object):
 
         xmlEdit(cfg, ("//ScenarioComponents/Value[text()='%s']/@name" % xmlfile, name))
 
+    # TBD dynamic kw might still be useful if subdir e.g. local-xml/dynamic but policy file would be in local-xml anyway
     @callableMethod
-    def addMarketConstraint(self, target, policy, dynamic=False, baselinePolicy=False):
+    def addMarketConstraint(self, target, policy, dynamic=False,
+                            baselinePolicy=False): # TBD: should be able to eliminate this arg
         """
         Adds references to a pair of files comprising a policy, i.e., a policy definition
         file and a constraint file. References to the two files--assumed to be named ``XXX-{subsidy,tax}.xml``
@@ -822,9 +908,10 @@ class XMLEditor(object):
 
         reldir = self.scenario_dyn_dir_rel if dynamic else self.scenario_dir_rel
 
+        # TBD: Could look for file in scenario, but if not found, look in baseline, eliminating this flag
         policyReldir = self.baseline_dir_rel if baselinePolicy else reldir
 
-        policyXML     = pathjoin(policyReldir, basename + ".xml")
+        policyXML     = pathjoin(policyReldir, basename + ".xml") # TBD: "-market.xml" for symmetry?
         constraintXML = pathjoin(reldir, basename + "-constraint.xml")
 
         # See if element exists in config file (-Q => quiet; just report exit status)
@@ -901,6 +988,7 @@ class XMLEditor(object):
         """
         _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
 
+        # ENERGY_TRANSFORMATION_TAG
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
         # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
@@ -910,9 +998,9 @@ class XMLEditor(object):
                   applyTo)
 
         xmlEdit(enTransFileAbs,
-                (prefix + '/@from-year', fromYear),
-                (prefix + '/@to-year', toYear),
-                (prefix + '/interpolation-function/@name', funcName))
+                [(prefix + '/@from-year', fromYear),
+                 (prefix + '/@to-year', toYear),
+                 (prefix + '/interpolation-function/@name', funcName)])
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
@@ -955,7 +1043,7 @@ class XMLEditor(object):
         maxIterations = coercibleAndPositive('maxIterations', maxIterations, int)
 
         solverFile = 'cal_broyden_config.xml'
-        solverFileRel, solverFileAbs = self.getLocalCopy(pathjoin(self.solution_prefix_rel, solverFile))
+        solverFileRel, solverFileAbs = self.getLocalCopy(pathjoin(self.solution_prefix_rel, solverFile))    # TBD: SOLVER_TAG
 
         prefix = "//scenario/user-configurable-solver[@year>=2010]/"
         pairs = []
@@ -967,10 +1055,10 @@ class XMLEditor(object):
             pairs.append((prefix + 'broyden-solver-component/ftol', broydenTolerance))
 
         if maxModelCalcs:
-            pairs.append(prefix + 'max-model-calcs', maxModelCalcs)
+            pairs.append((prefix + 'max-model-calcs', maxModelCalcs))
 
         if maxIterations:
-            pairs.append(prefix + 'broyden-solver-component/max-iterations', maxIterations)
+            pairs.append((prefix + 'broyden-solver-component/max-iterations', maxIterations))
 
         xmlEdit(solverFileAbs, pairs)
 
@@ -1006,12 +1094,38 @@ class XMLEditor(object):
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
         for num in [2, 3]:
             filename = 'land_input_%d.xml' % num
-            fileTag  = 'land%d' % num
+            fileTag  = 'land%d' % num   # TBD use tag rather than path
             landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
             self.updateScenarioComponent(fileTag, landFileRel)
+
+    @callableMethod
+    def protectionScenario(self, scenarioName):
+        from .landProtection import runProtectionScenario
+
+        _logger.info("Protection scenario %s", scenarioName)
+
+        landXmlFiles = []
+
+        # NB: this code depends on these being the tags assigned to the land files
+        # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
+        for num in [2, 3]:
+            filename = 'land_input_%d.xml' % num
+            fileTag  = 'land%d' % num   # TBD use tag rather than path
+            landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
+            landXmlFiles.append(landFileAbs)
+            self.updateScenarioComponent(fileTag, landFileRel)
+
+        tail = self._splitPath(landFileRel)
+        if not tail:
+            raise SetupException('File "%s" was not recognized by any scenario' % landFileRel)
+
+        outputDir = pathjoin(self.scenario_dir_abs, os.path.dirname(tail))
+
+        runProtectionScenario(scenarioName, outputDir, xmlFiles=landXmlFiles, inPlace=True)
+
 
     @callableMethod
     def taxCarbon(self, value, startYear=2020, endYear=2100, timestep=5,
@@ -1068,6 +1182,7 @@ class XMLEditor(object):
 
         #_logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
 
+        # TBD: ENERGY_TRANSFORMATION_TAG
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
         prefix = '//global-technology-database/location-info[@sector-name="%s" and @subsector-name="%s"]/technology[@name="%s"]' % \
@@ -1076,7 +1191,7 @@ class XMLEditor(object):
 
         pairs = []
         for year, price in expandYearRanges(values):
-            pairs.append(prefix + ('/period[@year="%s"]' % year) + suffix, price)
+            pairs.append((prefix + ('/period[@year="%s"]' % year) + suffix, price))
 
         xmlEdit(enTransFileAbs, pairs)
 
@@ -1107,6 +1222,7 @@ class XMLEditor(object):
         """
         _logger.info("Set shutdown rate for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
 
+        # TBD: ENERGY_TRANSFORMATION_TAG
         enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))
 
         prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
@@ -1115,8 +1231,8 @@ class XMLEditor(object):
         pairs = []
 
         for year, value in expandYearRanges(values):
-            pairs.append(prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
-                         coercible(value, float))
+            pairs.append((prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
+                         coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
@@ -1125,7 +1241,7 @@ class XMLEditor(object):
     def setRegionalShareWeights(self, region, sector, subsector, values,
                                stubTechnology=None,
                                xmlBasename='en_transformation.xml',
-                               configFileTag='energy_transformation'):
+                               configFileTag=ENERGY_TRANSFORMATION_TAG):    # TBD: use this instead of filename
         """
         Create a modified version of en_transformation.xml with the given share-weights
         for `technology` in `sector` based on the data in `values`.
@@ -1157,7 +1273,7 @@ class XMLEditor(object):
         if not xmlBasename.endswith('.xml'):
             xmlBasename += '.xml'
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, xmlBasename))
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, xmlBasename))  # TBD: configFileTag
 
         prefix = "//region[@name='%s']/supplysector[@name='%s']/subsector[@name='%s']" % (region, sector, subsector)
 
@@ -1166,8 +1282,8 @@ class XMLEditor(object):
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append(prefix + shareWeight.format(technology=stubTechnology, year=year),
-                         coercible(value, float))
+            pairs.append((prefix + shareWeight.format(technology=stubTechnology, year=year),
+                         coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
@@ -1176,7 +1292,7 @@ class XMLEditor(object):
     @callableMethod
     def setGlobalTechShareWeight(self, sector, subsector, technology, values,
                                  xmlBasename='en_transformation.xml',
-                                 configFileTag='energy_transformation'):
+                                 configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
         Create a modified version of en_transformation.xml with the given share-weights
         for `technology` in `sector` based on the data in `values`.
@@ -1201,15 +1317,14 @@ class XMLEditor(object):
         if not xmlBasename.endswith('.xml'):
             xmlBasename += '.xml'
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, xmlBasename))
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(pathjoin(self.energy_dir_rel, xmlBasename)) # TBD: use configFileTag
 
         prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append(prefix + "/period[@year=%s]/share-weight" % year,
-                         coercible(value, float))
+            pairs.append((prefix + "/period[@year=%s]/share-weight" % year, coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
@@ -1238,7 +1353,7 @@ class XMLEditor(object):
                      (energyInput, technology, subsector, values))
 
         enTransFileRel, enTransFileAbs = \
-            self.getLocalCopy(os.path.join(self.energy_dir_rel, "en_transformation.xml"))
+            self.getLocalCopy(pathjoin(self.energy_dir_rel, "en_transformation.xml"))   # TBD: ENERGY_TRANSFORMATION_TAG
 
         prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
                  (subsector, technology)
@@ -1246,59 +1361,7 @@ class XMLEditor(object):
 
         pairs = []
         for year, coef in expandYearRanges(values):
-            pairs.append("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef)
+            pairs.append(("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
-
-    # deprecated
-    # def _addTimeStepYear(self, year, timestep=5):
-    #
-    #     _logger.info("Add timestep year %s" % year)
-    #
-    #     year = int(year)
-    #     modeltimeFileRel, modeltimeFileAbs = self.getLocalCopy(pathjoin(self.modeltime_dir_rel, "modeltime.xml"))
-    #
-    #     xmlEdit(modeltimeFileAbs,
-    #             '-i', '//modeltime/inter-year[1]',
-    #             '-t', 'elem',
-    #             '-n', 'TMP',
-    #             '-v', str(year),
-    #             '-i', '//TMP',
-    #             '-t', 'attr',
-    #             '-n', 'time-step',
-    #             '-v', str(timestep  - year % timestep),
-    #             '-r', '//TMP',
-    #             '-v', 'inter-year',
-    #             '-i', '//modeltime/inter-year[1]',
-    #             '-t', 'elem',
-    #             '-n', 'TMP',
-    #             '-v', str(year - year % timestep),
-    #             '-i', '//TMP',
-    #             '-t', 'attr',
-    #             '-n', 'time-step',
-    #             '-v', str(year % timestep),
-    #             '-r', '//TMP',
-    #             '-v', 'inter-year')
-    #
-    #     nextStep = year + timestep - year % timestep
-    #     args = ['-Q', '-t', '-v', '//model-time/inter-year[text()="%d"]' % nextStep]
-    #     if not xmlSel(modeltimeFileAbs, *args):
-    #         xmlEdit(modeltimeFileAbs,
-    #                 '-i', '//modeltime/inter-year[1]',
-    #                 '-t', 'elem',
-    #                 '-n', 'TMP',
-    #                 '-v', str(nextStep),
-    #                 '-i', '//TMP',
-    #                 '-t', 'attr',
-    #                 '-n', 'time-step',
-    #                 '-v', str(timestep),
-    #                 '-r', '//TMP',
-    #                 '-v', 'inter-year')
-    #
-    #     cfg = self.cfgPath()
-    #     xmlEdit(cfg,
-    #             '-u', "//Files/Value[@name='xmlInputFileName']",
-    #             '-v', modeltimeFileRel)
-
-    parser = None

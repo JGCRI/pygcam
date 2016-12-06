@@ -15,7 +15,7 @@ from .config import getParam
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, flatten, XMLFile, resourceStream
+from .utils import mkdirs, pathjoin, flatten, XMLFile, resourceStream
 
 _logger = getLogger(__name__)
 
@@ -166,6 +166,11 @@ class ProtectedRegion(object):
         names = []
         Group.expandNames(self.name, names)
         return names
+
+class Protection(object):
+    def __init__(self, node):
+        self.fraction = float(node.find('fraction').text)
+        self.landClasses = _findChildren(node, 'landClass', cls=str)
 
 class Scenario(object):
     Instances = {}
@@ -348,6 +353,54 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
                     regions=regions, unprotectFirst=unprotectFirst)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
+_LandXmlFiles = ['land2.xml', 'land3.xml']
+
+def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
+    xmlDir = pathjoin(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
+    paths = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
+    return paths
+
+def runProtectionScenario(scenarioName, outputDir, workspace=None, scenarioFile=None,
+                          xmlFiles=None, inPlace=False):
+    """
+    Run a the protection named by `scenarioName`, found in `scenarioFile` if given,
+    or the value of config variable `GCAM.LandProtectionXmlFile` otherwise. The source
+    files are take from `workspace`, if given, otherwise from the value of `GCAM.RefWorkspace`.
+    Results are written to the given `outputDir`. In the even that the input and output
+    files are the same, `inPlace` must be set to True to indicate that overwriting is intended.
+    By default the two files `xmlFiles`, land2.xml and land3.xml in the aglu-xml directory,
+    are processed, though other files can be specified in the unlikely case that you have
+    alternatives.
+
+    :param scenarioName: (str) the name of a protection scenario defined in the `scenarioFile`
+    :param outputDir: (str) the directory under which to write the modified land files
+    :param workspace: (str) the location of the workspace holding the input files (ignored
+       if xmlFiles are specified explicitly)
+    :param scenarioFile: (str) the path to a protection.xml file defining `scenarioName`
+    :param xmlFiles: (list of str) the paths of the XML input files to modify
+    :param inPlace: (bool) if True, input and output files may be the same (output overwrites input).
+    :return: none
+    """
+    _logger.debug("Land-protection scenario '%s'", scenarioName)
+
+    schemaStream = resourceStream('etc/protection-schema.xsd')
+    scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
+
+    protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
+    landProtection = protectionXmlFile.getRoot()
+
+    workspace = workspace or getParam('GCAM.RefWorkspace')
+    xmlFiles = xmlFiles or _landXmlPaths(workspace)
+
+    for inFile in xmlFiles:
+        basename = os.path.basename(inFile)
+        outFile = pathjoin(outputDir, basename)
+
+        # check that we're not clobbering the input file
+        if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
+            raise CommandlineError("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
+
+        landProtection.protectLand(inFile, outFile, scenarioName)
 
 def protectLandMain(args):
 
@@ -359,43 +412,26 @@ def protectLandMain(args):
     outDir    = args.outDir
     workspace = args.workspace or getParam('GCAM.RefWorkspace')
     template  = args.template
-    inPlace   = args.inPlace
     backup    = args.backup
 
     if not workspace:
         raise CommandlineError('Workspace must be identified in command-line or config variable GCAM.RefWorkspace')
 
-    landXmlFiles = ['land2.xml', 'land3.xml']
-    xmlDir = os.path.join(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
-    inFiles = map(lambda filename: os.path.join(xmlDir, filename), landXmlFiles)
-
     if args.mkdir:
         mkdirs(outDir)
 
+    xmlFiles = _landXmlPaths(workspace)
+
+    # Process instructions from protection XML file
     if scenarioName:
         if not scenarioFile:
             raise CommandlineError('Scenario "%s" was specified, but a scenario file was not identified',
                                    scenarioName)
-
-        _logger.debug("Land-protection scenario '%s'", scenarioName)
-
-        schemaStream = resourceStream('etc/protection-schema.xsd')
-        #schemaFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pygcam', 'etc', 'protection-schema.xsd')
-
-        xmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
-        landProtection = xmlFile.getRoot()
-        for inFile in inFiles:
-            basename = os.path.basename(inFile)
-            outFile  = os.path.join(outDir, basename)
-
-            # check that we're not clobbering the input file
-            if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
-                raise CommandlineError("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
-
-            landProtection.protectLand(inFile, outFile, scenarioName, backup=backup)
-
+        runProtectionScenario(scenarioName, outDir, workspace=workspace,
+                              scenarioFile=scenarioFile, xmlFiles=xmlFiles, inPlace=args.inPlace)
         return
 
+    # If no scenario name given, process command-line args
     fraction = args.fraction
     if fraction is None:
         raise CommandlineError('If not using protection scenarios, fraction must be provided')
@@ -408,12 +444,12 @@ def protectLandMain(args):
                     'regions'  : '-'.join(regions) if regions else 'global',
                     'classes'  : '-'.join(landClasses) if args.landClasses else 'unmanaged'}
 
-    for path in inFiles:
+    for path in xmlFiles:
         filename = os.path.basename(path)
         templateDict['filename'] = filename
         templateDict['basename'] = os.path.splitext(filename)[0]
 
         outFile = template.format(**templateDict)
-        outPath = os.path.join(outDir, outFile)
+        outPath = pathjoin(outDir, outFile)
         _logger.debug("protectLand(%s, %s, %0.2f, %s, %s)", path, outFile, fraction, landClasses, regions)
         protectLand(path, outPath, fraction, landClasses=landClasses, regions=regions)
