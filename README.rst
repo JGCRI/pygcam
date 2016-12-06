@@ -34,7 +34,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b6 (15 Nov 2016)
+Version 1.0b6 (upcoming)
 -----------------------------
 * Made the <scenariosFile> element optional in project.xml, using the value of
   GCAM.ScenarioSetupFile by default.
