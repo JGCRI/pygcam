@@ -1157,6 +1157,38 @@ class XMLEditor(object):
                          timestep=timestep, rate=rate, regions=regions, market=market)
         self.addScenarioComponent(tag, fileRel)
 
+    @callableMethod
+    def taxBioCarbon(self, market='global', regions=None, forTax=True, forCap=False):
+        """
+        Create the XML for a linked policy to include LUC CO2 in a CO2 cap or tax policy (or both).
+        This function generates the equivalent of any of the 4 files in input/policy/:
+        global_ffict.xml               (forTax=False, forCap=False)
+        global_ffict_in_constraint.xml (forTax=False, forCap=True)
+        global_uct.xml                 (forTax=True,  forCap=False)
+        global_uct_in_constraint.xml   (forTax=True,  forCap=True)
+
+        However, unlike those files, the market need not be global, and the set of regions to
+        which to apply the policy can be specified.
+
+        :param market: (str) the name of the market for which to create the linked policy
+        :param regions: (list of str or None) the regions to apply the policy to, or None
+          to indicate all regions.
+        :param forTax: (bool) True if the linked policy should apply to a CO2 tax
+        :param forCap: (bool) True if the linked policy should apply to a CO2 cap
+        :return: (str) the generated XML text
+        """
+        from .carbonTax import genLinkedBioCarbonPolicyFile
+
+        tag = 'bio-carbon-tax-' + market
+        filename = tag + '.xml'
+        fileRel = pathjoin(self.scenario_dir_rel, filename)
+        fileAbs = pathjoin(self.scenario_dir_abs, filename)
+
+        genLinkedBioCarbonPolicyFile(fileAbs, market=market, regions=regions,
+                                     forTax=forTax, forCap=forCap)
+        self.addScenarioComponent(tag, fileRel)
+
+
     # TBD: test
     @callableMethod
     def setGlobalTechNonEnergyCost(self, sector, subsector, technology, values):
