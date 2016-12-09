@@ -17,14 +17,13 @@ _logger = getLogger(__name__)
 def driver(args, tool):
     # lazy imports to avoid loading anything that's not used by gcamtool
     import os
-    import shutil
     import subprocess
 
     from ..config import getParam
     from ..error import CommandlineError
     from ..scenarioSetup import createSandbox
 
-    project = args.configSection or getParam('GCAM.DefaultProject')
+    project = args.projectName or getParam('GCAM.DefaultProject')
 
     if not project:
         raise CommandlineError("sandbox: must specify project name or set config parameter GCAM.DefaultProject")

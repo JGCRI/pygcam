@@ -49,7 +49,7 @@ def iterateList(scenarioSetup, cls, node, expandFunc, iterators):
             expandFunc(obj)
 
 #
-# Classes to parse and run "simple" scenario setup files.
+# Classes to parse and run scenario setup files.
 # (See pygcam/etc/scenarios-schema.xsd).
 #
 class ScenarioSetup(object):
@@ -72,6 +72,13 @@ class ScenarioSetup(object):
         self.groupDict = OrderedDict()
         self.expandGroups(templateGroups)   # saves into groupDict
 
+    def scenariosInGroup(self, groupName=None):
+        group = self.groupDict[groupName or self.defaultGroup]
+        return group.scenarioNames()
+
+    def baselineForGroup(self, groupName=None):
+        group = self.groupDict[groupName or self.defaultGroup]
+        return group.baseline
 
     def getIterator(self, name):
         try:
@@ -227,6 +234,9 @@ class ScenarioGroup(object):
             return self.finalDict[name]
         except KeyError:
             raise PygcamException('Scenario "%s" was not found in group "%s"' % (name, self.name))
+
+    def scenarioNames(self):
+        return self.finalDict.keys()
 
     def expandScenarios(self, scenarioSetup, templateDict):
         # Replace the text context in all action elements with expanded version

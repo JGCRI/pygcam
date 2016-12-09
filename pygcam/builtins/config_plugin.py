@@ -100,7 +100,7 @@ class ConfigCommand(SubcommandABC):
                 raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
             return
 
-        section = 'DEFAULT' if args.useDefault else args.configSection
+        section = 'DEFAULT' if args.useDefault else args.projectName
 
         if not section:
             raise CommandlineError("Project was not specifed and GCAM.DefaultProject is not set")

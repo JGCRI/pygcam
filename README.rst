@@ -34,7 +34,18 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b6 (upcoming)
+Version 1.0b8 (upcoming)
+-----------------------------
+* Added label to identify default scenario group in listing groups via "gt run -G"
+
+* Added function to carbonTax.py to create linked land-use change CO2 to carbon
+  tax or cap policies:
+
+  ``genLinkedBioCarbonPolicyFile(filename, market='global', regions=None, forTax=True, forCap=False)``
+
+* Also added function (bioCarbonTax) callable from XML setup file to access this feature.
+
+Version 1.0b7 (6 Dec 2016)
 -----------------------------
 * Made the <scenariosFile> element optional in project.xml, using the value of
   GCAM.ScenarioSetupFile by default.

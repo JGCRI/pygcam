@@ -102,9 +102,9 @@ def getConfig():
     return _ConfigParser or readConfigFiles()
 
 
-def _readConfigResourceFile(filename, raiseError=True):
+def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
     try:
-        data = resource_string('pygcam', filename)
+        data = resource_string(package, filename)
     except IOError:
         if raiseError:
             raise
@@ -114,6 +114,9 @@ def _readConfigResourceFile(filename, raiseError=True):
     data = unicode(data)
     _ConfigParser.read_string(data, source=filename)
     return data
+
+def usingMCS():
+    return os.getenv('PYGCAM_USE_MCS')
 
 def readConfigFiles():
     """
@@ -151,6 +154,12 @@ def readConfigFiles():
 
     # Read platform-specific defaults, if defined. No error if file is missing.
     _readConfigResourceFile('etc/%s.cfg' % PlatformName, raiseError=False)
+
+    # if user is working with pygcam.mcs, we load additional defaults
+    if usingMCS():
+        import pygcammcs
+        print("Reading MCS configuration defaults")
+        _readConfigResourceFile('etc/mcs.cfg', package='pygcammcs', raiseError=True)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:

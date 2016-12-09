@@ -20,7 +20,7 @@ from lxml import etree as ET
 from .config import getParam, setParam, getConfigDict
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
-from .log import getLogger, getLogLevel
+from .log import getLogger
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
                     pathjoin, simpleFormat, resourceStream, QueryResultsDir, XMLFile)
 from .xmlSetup import ScenarioSetup
@@ -401,15 +401,16 @@ class Project(XMLFile):
         '''
         self.quit = False
 
-        def showList(strings, header):
+        def showList(strings, header, default=None):
             self.quit = True
             if header:
                 print(header)
             for s in strings:
-                print('  ' + s)
+                label = ' (default)' if s == default else ''
+                print('  ' + s + label)
 
         if args.listGroups:
-            showList(knownGroups, 'Scenario groups:')
+            showList(knownGroups, 'Scenario groups:', default=self.scenarioSetup.defaultGroup)
 
         if args.listScenarios:
             showList(knownScenarios, 'Scenarios:')
@@ -621,7 +622,7 @@ class Project(XMLFile):
 
 def projectMain(args, tool):
     if not args.project:
-        args.project = args.configSection or getParam('GCAM.DefaultProject')
+        args.project = args.projectName or getParam('GCAM.DefaultProject')
 
     if not args.project:
         raise CommandlineError("run: must specify project name")

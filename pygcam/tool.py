@@ -28,7 +28,7 @@ from .builtins.setup_plugin import SetupCommand
 from .builtins.compare_plugin import CompareCommand
 
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
-                     setParam, getSection, setSection, DEFAULT_SECTION)
+                     setParam, getSection, setSection, DEFAULT_SECTION, usingMCS)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
@@ -152,7 +152,7 @@ class GcamTool(object):
         parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'],
                             help='''Used only when running gcamtool from gcammcs.''')
 
-        parser.add_argument('-P', '--projectName', dest='configSection', metavar='name',
+        parser.add_argument('-P', '--projectName', metavar='name',
                             help='''The project name (the config file section to read from),
                             which defaults to the value of config variable GCAM.DefaultProject''')
 
@@ -182,6 +182,11 @@ class GcamTool(object):
         # load all built-in sub-commands
         map(self.instantiatePlugin, BuiltinSubcommands)
 
+        # If using MCS, load that set of plugins, too
+        if usingMCS():
+            from pygcammcs import MCSBuiltins
+            map(self.instantiatePlugin, MCSBuiltins)
+
         if loadPlugins:
             self._cachePlugins()
             # self.loadPlugins()
@@ -204,6 +209,7 @@ class GcamTool(object):
 
         sep = os.path.pathsep           # ';' on Windows, ':' on Unix
         items = pluginPath.split(sep)
+
         return items
 
     def loadPlugin(self, path):
@@ -229,7 +235,7 @@ class GcamTool(object):
         # sub-command so we can load the module if necessary.
         parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
         parser.add_argument('-h', '--help', action='store_true')
-        parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+        parser.add_argument('-P', '--projectName', metavar='name')
 
         ns, otherArgs = parser.parse_known_args(args=argv)
 
@@ -265,7 +271,7 @@ class GcamTool(object):
             if args.batch:
                 args.batch = False
 
-            args.configSection = section = args.configSection or getParam('GCAM.DefaultProject')
+            args.projectName = section = args.projectName or getParam('GCAM.DefaultProject')
             if section:
                  setSection(section)
 
@@ -434,11 +440,11 @@ def checkWindowsSymlinks():
 
 def _setDefaultProject(argv):
     parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
-    parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+    parser.add_argument('-P', '--projectName', metavar='name')
 
     ns, _otherArgs = parser.parse_known_args(args=argv)
 
-    section = ns.configSection
+    section = ns.projectName
     if section:
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
@@ -459,7 +465,7 @@ def _main(argv=None):
 
     parser.add_argument('-b', '--batch', action='store_true')
     parser.add_argument('-B', '--showBatch', action="store_true")
-    parser.add_argument('-P', '--projectName', dest='configSection', metavar='name')
+    parser.add_argument('-P', '--projectName', dest='projectName', metavar='name')
     parser.add_argument('--set', dest='configVars', action='append', default=[])
     parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'])
 
@@ -484,8 +490,8 @@ def _main(argv=None):
 
     if ns.batch:
         run = not ns.showBatch
-        if ns.configSection:        # add these back in for the batch script
-            otherArgs = ['-P', ns.configSection] + otherArgs
+        if ns.projectName:        # add these back in for the batch script
+            otherArgs = ['-P', ns.projectName] + otherArgs
 
         tool.runBatch(otherArgs, run=run)
     else:

@@ -23,7 +23,6 @@ from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
-
 def digitColumns(df, asInt=False):
     '''
     Get a list of columns with integer names (as strings, e.g., "2007") in df.
