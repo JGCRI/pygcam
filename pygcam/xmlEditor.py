@@ -280,7 +280,7 @@ def expandYearRanges(seq):
     """
     result = []
     try:
-        seq = list(seq.iteritems())     # convert dict or Series to list of pairs
+        seq = list(seq.items())     # convert dict or Series to list of pairs
     except:                             # of quietly fail, and just use 'seq' as is
         pass
 

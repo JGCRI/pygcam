@@ -116,7 +116,25 @@ def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
     return data
 
 def usingMCS():
-    return os.getenv('PYGCAM_USE_MCS')
+    """
+    Check if the user environment is configured to use pygcam-mcs, either
+    via environment variable USE_PYGCAM_MCS or the existence of the file
+    ~/.use_pygcam_mcs. This lets gcamtool know whether to load the corresponding
+    built-in sub-commands.
+
+    :return: (bool) True if user environment indicates to use pygcam-mcs.
+    """
+    def mcsSentinelFile():
+        path = os.path.join(os.getenv('HOME'), '.use_pygcam_mcs')
+        found = os.path.lexists(path)
+        if found:
+            # let user know this hidden file is active
+            print('Found sentinel file', path)
+            os.environ['USE_PYGCAM_MCS'] = 'True'   # set it to avoid subsequent messages
+        return found
+
+    value = os.environ.get('USE_PYGCAM_MCS', '')
+    return value.lower() in ('1', 'yes', 'true') or mcsSentinelFile()
 
 def readConfigFiles():
     """

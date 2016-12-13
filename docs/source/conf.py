@@ -47,6 +47,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'pygcam'
 copyright = u'2016, Richard Plevin'
+author = u'Richard Plevin'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -90,7 +91,7 @@ exclude_patterns = []
 show_authors = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'default'
+pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []

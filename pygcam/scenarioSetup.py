@@ -5,14 +5,14 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-import shutil
 
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
 from .utils import copyFileOrTree, removeFileOrTree, mkdirs, pathjoin, symlinkOrCopyFile, removeTreeSafely
-from .windows import removeSymlink
+
+_logger = getLogger(__name__)
 
 # Files specific to different versions of GCAM. This is explicit rather
 # than computed so we can easily detect an unknown version number, and
@@ -71,9 +71,6 @@ def _getFilesToCopyAndLink(linkParam):
     return filesToCopy, filesToLink
 
 
-_logger = getLogger(__name__)
-
-# Deprecated?
 def _jobTmpDir():
     '''
     Generate the name of a temporary directory based on the value of GCAM.TempDir
@@ -90,7 +87,7 @@ def _jobTmpDir():
 def _setupTempOutputDir(outputDir):
     removeFileOrTree(outputDir, raiseError=False)
 
-    if getParamAsBoolean('GCAM.MCS.UseTempOutput'): # TBD: define in system.cfg after merging MCS
+    if getParamAsBoolean('MCS.UseTempOutputDir'):
         dirPath = _jobTmpDir()
         removeTreeSafely(dirPath, ignore_errors=True)  # rm any files from prior run in this job
         mkdirs(dirPath)
@@ -262,7 +259,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
 
         # Spell out variable names rather than computing parameter names to
         # facilitate searching source files for parameter uses.
-        paramName = 'GCAM.MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink'
+        paramName = 'MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink'
 
         filesToCopy, filesToLink = _getFilesToCopyAndLink(paramName)
 
