@@ -176,7 +176,7 @@ def readConfigFiles():
     # if user is working with pygcam.mcs, we load additional defaults
     if usingMCS():
         import pygcammcs
-        print("Reading MCS configuration defaults")
+        #print("Reading MCS configuration defaults")
         _readConfigResourceFile('etc/mcs.cfg', package='pygcammcs', raiseError=True)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')

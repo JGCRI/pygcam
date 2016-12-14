@@ -153,7 +153,7 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
         configFile = os.path.abspath(configFile or os.path.join(exeDir, 'configuration.xml'))
 
     gcamPath = os.path.abspath(getParam('GCAM.Executable'))
-    gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM doesn't allow space between -C and filename
+    gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM (< 4.2) doesn't allow space between -C and filename
 
     command = ' '.join(gcamArgs)
     if noRun:
