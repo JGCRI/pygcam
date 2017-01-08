@@ -115,26 +115,34 @@ def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
     _ConfigParser.read_string(data, source=filename)
     return data
 
+_usingMCS = None
+
 def usingMCS():
     """
-    Check if the user environment is configured to use pygcam-mcs, either
-    via environment variable USE_PYGCAM_MCS or the existence of the file
-    ~/.use_pygcam_mcs. This lets gcamtool know whether to load the corresponding
+    Check if the user environment is configured to use pygcam-mcs, which requires
+    that the pygcammcs package is installed and that the file ~/.no_pycam_mcs is
+    NOT found. This lets gcamtool know whether to load the corresponding
     built-in sub-commands.
 
     :return: (bool) True if user environment indicates to use pygcam-mcs.
     """
-    def mcsSentinelFile():
-        path = os.path.join(os.getenv('HOME'), '.use_pygcam_mcs')
-        found = os.path.lexists(path)
-        if found:
-            # let user know this hidden file is active
-            print('Found sentinel file', path)
-            os.environ['USE_PYGCAM_MCS'] = 'True'   # set it to avoid subsequent messages
-        return found
+    global _usingMCS
 
-    value = os.environ.get('USE_PYGCAM_MCS', '')
-    return value.lower() in ('1', 'yes', 'true') or mcsSentinelFile()
+    if _usingMCS is None:
+        path = os.path.join(os.getenv('HOME'), '.no_pygcam_mcs')
+        if os.path.exists(path):
+            # let user know this hidden file is active
+            print('Not using pygcam-mcs: found sentinel file %s' % path)
+            _usingMCS = False
+        else:
+            try:
+                import pygcammcs
+                _usingMCS = True
+
+            except ImportError:
+                _usingMCS = False
+
+    return _usingMCS
 
 def readConfigFiles():
     """
@@ -173,10 +181,9 @@ def readConfigFiles():
     # Read platform-specific defaults, if defined. No error if file is missing.
     _readConfigResourceFile('etc/%s.cfg' % PlatformName, raiseError=False)
 
-    # if user is working with pygcam.mcs, we load additional defaults
+    # if user is working with pygcam.mcs, we load additional defaults. The
+    # function usingMCS() imports the package as part of the test...
     if usingMCS():
-        import pygcammcs
-        #print("Reading MCS configuration defaults")
         _readConfigResourceFile('etc/mcs.cfg', package='pygcammcs', raiseError=True)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')

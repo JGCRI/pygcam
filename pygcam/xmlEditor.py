@@ -389,6 +389,7 @@ class XMLEditor(object):
         self.xmlSourceDir = xmlSourceDir
         self.parent = parent
         self.mcsMode = None
+        self.mcsValues = None
 
         # TBD: store scenarioDir so abspath can always be computed using:
         # def absPath(relPath):

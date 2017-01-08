@@ -150,7 +150,7 @@ class GcamTool(object):
                             Overrides config parameter GCAM.Minutes. (Linux only)''')
 
         parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'],
-                            help='''Used only when running gcamtool from gcammcs.''')
+                            help='''Used only when running gcamtool from pygcam-mcs.''')
 
         parser.add_argument('-P', '--projectName', metavar='name',
                             help='''The project name (the config file section to read from),

@@ -17,7 +17,7 @@ from collections import defaultdict
 from .config import getParam, getParamAsBoolean, configLoaded
 from .error import PygcamException
 
-_formatter  = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+_formatter  = logging.Formatter('%(asctime)s %(levelname)s %(name)s:%(lineno)d %(message)s')
 _configured = False
 _loggers  = defaultdict(lambda: None)
 _consoles = defaultdict(lambda: False)

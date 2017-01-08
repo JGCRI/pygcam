@@ -4,6 +4,9 @@ For code release
 Document
 --------
 - Assumptions behind setup code
+  - scenarios.xml
+  - custom editor sub-class
+    - methods to implement and when they are called
 
 Cleanup
 -------
@@ -11,8 +14,12 @@ Cleanup
 
 Features
 --------
-- Provide a way to run a query with different rewrites to produce different
-  csv files.
+- New @query flag: "-rewrite regions8,crops" # replaces what's in project.xml
+
+If scen name is unique, determine the group
+
+
+- If pygcammcs is installed, assume it's being used, unless sentinel file exists
 
 Testing
 -------

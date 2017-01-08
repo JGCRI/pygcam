@@ -156,6 +156,8 @@ class ScenarioSetup(object):
         self.editor = editor
         group = self.groupDict[editor.groupName or self.defaultGroup]
         scenario = group.getFinalScenario(editor.scenario or editor.baseline)
+
+        _logger.debug('Running %s setup for scenario %s', 'dynamic' if dynamic else 'static', scenario.name)
         scenario.run(editor, directoryDict, dynamic=dynamic)
 
 # Iterators for float and int that *included* the stop value.
@@ -464,7 +466,7 @@ def createXmlEditorSubclass(setupFile):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
                      srcGroupDir, subdir, parent=None):
             self.parentConfigPath = None
-            self.mcsValues = None
+
 
             self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
             group = scenarioSetup.groupDict[groupName or scenarioSetup.defaultGroup]

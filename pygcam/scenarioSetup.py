@@ -10,7 +10,7 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
-from .utils import copyFileOrTree, removeFileOrTree, mkdirs, pathjoin, symlinkOrCopyFile, removeTreeSafely
+from .utils import copyFileOrTree, removeFileOrTree, mkdirs, pathjoin, symlinkOrCopyFile, removeTreeSafely, pushd
 
 _logger = getLogger(__name__)
 
@@ -140,7 +140,7 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
             symlinkOrCopyFile(srcPath, dstPath)
 
 
-def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
+def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     '''
     Set up a run-time sandbox in which to run GCAM. This involves copying
     from or linking to files and directories in `workspace`, which defaults
@@ -149,18 +149,21 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
     :param sandbox: (str) the directory to create
     :param srcWorkspace: (str) the workspace to link to or copy from
     :param forceCreate: (bool) if True, delete and recreate the sandbox
-    :param mcsMode: (bool) perform setup appropriate for gcammcs trials.
+    :param mcsMode: ('gensim', 'trial', or None) perform setup appropriate
+       for pygcam-mcs trials.
     :return: none
     '''
     if not srcWorkspace:
-        srcWorkspace = getParam('GCAM.RefWorkspace') if mcsMode == 'gensim' else getParam('GCAM.SandboxRefWorkspace')
+        srcWorkspace = getParam('GCAM.RefWorkspace') if mcsMode == 'gensim' \
+            else getParam('GCAM.SandboxRefWorkspace')
 
     # MCS "new" sub-command creates its ref workspace; for non-MCS
-    # we do it on demand, i.e., if it doesn't exist already.
+    # we do it here, on demand, i.e., if it doesn't exist already.
     if not mcsMode:
         copyWorkspace(srcWorkspace)
 
     if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
+        # Not prohibited; just a disk-hogging, suboptimal choice
         _logger.warn('GCAM.CopyAllFiles = True while running MCS')
 
     _logger.info("Setting up sandbox '%s'", sandbox)
@@ -170,7 +173,6 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=False):
 
     if forceCreate:
         # avoid deleting the current directory
-        from .utils import pushd
         with pushd('..'):
             removeTreeSafely(sandbox, ignore_errors=True)
             os.mkdir(sandbox)
