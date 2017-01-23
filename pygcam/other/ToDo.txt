@@ -18,8 +18,8 @@ Features
 
 If scen name is unique, determine the group
 
+- Allow <comment>s to nest. Not the case in scenarios.xml currently. Not clear why.
 
-- If pygcammcs is installed, assume it's being used, unless sentinel file exists
 
 Testing
 -------
@@ -39,8 +39,6 @@ Testing
   - setup
   - sandbox (mostly ok, but setup.createSandbox might be broken for groupDir case)
 
-- Finish implementing/testing the queryFile and rewriteSets features
-  - Looks good, but need to test interaction with old form
 - setup.py installer: test with full install
 - On Windows: test that CopyAllFiles is set to True automatically if linking fails.
 - Test bioconstraint command -- maybe move out?
@@ -104,17 +102,8 @@ Long-term
 - Allow overlay of, say, line chart using right Y axis on barchart
   using left Y axis, as in "US Land Cover and LUC Emissions"
 
-- Modify handling of named batchfile so it is copied to the tmp file and the
-  rest proceeds as with query definition files.
-
 - Generalize as many of the Bioenergy and Refining methods as possible
     - Goal should be to not need any sector-based methods
-
-- Integrate gcam-driver code / ideas
-    - Consider re-implementing using jug
-
-- Host the xsd files somewhere so they can be referenced in XML
-  files, allowing smart editing.
 
 - Generate multi-plot figures, or at least generate data in a useful format.
 
@@ -126,13 +115,6 @@ Long-term
 
 Overarching
 -----------
-- Is it worth maintaining layered structure of coremcs and
-  gcammcs/gtapmcs if I can't maintain the latter?
-  - Could simplify a lot if this became GCAM-specific
-  - Another approach is to leave coremcs, but implement
-    gcammcs commands as plugins to pycam
-  - Might be difficult to integrate layered configuration files
-
 - Could also re-architect it around master/worker model
   - Define an Abs Base Class describing what is run by a worker
     - Mostly communication protocol, signal handling, and the like
@@ -170,7 +152,7 @@ MCS Bugs
 
 MCS Cleanup
 -----------
-- Eliminate scenarios.xml file; this information can be found in project.xml
+- Eliminate mcs/scenarios.xml file; this information can be found in project.xml
 - Test "constant" distro
 - Test (or deprecate) FileChooser
 - Test xml db exists before running queries and raise a more targeted error
@@ -182,8 +164,8 @@ MCS Cleanup
 
     find . -type f -print0 | xargs -0 chmod -w
 
-- Optionally Use delta method from SALib instead of the CB method.
-- Incorporate SALib sampling as alternative. (Or just use external input files)
+- Incorporate SALib
+    - Optionally Use delta method from SALib instead of the CB method.
 
 Migration to worker model
 -------------------------

@@ -26,7 +26,7 @@ from lxml import etree as ET
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
-from .log import getLogger
+from .log import getLogger, getLogLevel
 from .utils import coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile, removeTreeSafely
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
@@ -972,19 +972,22 @@ class XMLEditor(object):
 
     @callableMethod
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
-                                 funcName, applyTo='share-weight', stubTechnology=None):
+                                 funcName='linear', applyTo='share-weight', stubTechnology=None,
+                                 delete=False):
         """
         Set the interpolation function for the share-weight of the `subsector`
         of `supplysector` to `funcName` between years `fromYear` to `toYear`
         in `region`. **Callable from XML setup files.**
 
-        :param region: the GCAM region to operate on
-        :param supplysector: the name of a supply sector
-        :param subsector: the name of a sub-sector
-        :param fromYear: the year to start interpolating
-        :param toYear: the year to stop interpolating
-        :param funcName: the name of an interpolation function
-        :param applyTo: what the interpolation function is applied to
+        :param region: (str) the GCAM region to operate on
+        :param supplysector: (str) the name of a supply sector
+        :param subsector: (str) the name of a sub-sector
+        :param fromYear: (str or int) the year to start interpolating
+        :param toYear: (str or int) the year to stop interpolating
+        :param funcName: (str) the name of an interpolation function
+        :param applyTo: (str) what the interpolation function is applied to
+        :param stubTechnology: (str) the name of a technology to apply function to
+        :param delete: (bool) if True, set delete="1", otherwise don't.
         :return: none
         """
         _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
@@ -998,10 +1001,14 @@ class XMLEditor(object):
                   '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '',
                   applyTo)
 
-        xmlEdit(enTransFileAbs,
-                [(prefix + '/@from-year', fromYear),
-                 (prefix + '/@to-year', toYear),
-                 (prefix + '/interpolation-function/@name', funcName)])
+        args = [(prefix + '/@from-year', str(fromYear)),
+                (prefix + '/@to-year', str(toYear)),
+                (prefix + '/interpolation-function/@name', funcName)]
+
+        if delete:
+            args.append((prefix + '/@delete', "1"))
+
+        xmlEdit(enTransFileAbs, args)
 
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
 
@@ -1296,7 +1303,7 @@ class XMLEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        if _logger.level.lower() in ['debug', 'info']:
+        if getLogLevel() in ['DEBUG', 'INFO']:
             from .utils import printSeries
 
             _logger.info("Set share-weights for (%s, %s, %s) for %s" % \

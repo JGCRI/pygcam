@@ -7,6 +7,7 @@
 '''
 import io
 import os
+from lxml import etree as ET
 import pkgutil
 import re
 import shutil
@@ -546,8 +547,6 @@ def readScenarioName(configFile):
     :param configFile: (str) the path to a GCAM configuration file
     :return: (str) the name of the scenario defined in `configFile`
     """
-    from lxml import etree as ET
-
     parser = ET.XMLParser(remove_blank_text=True)
     tree   = ET.parse(configFile, parser)
     scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
@@ -567,8 +566,6 @@ class XMLFile(object):
     """
     def __init__(self, xmlFile, schemaFile=None, raiseError=True,
                  rootClass=None, removeComments=True):
-        from lxml import etree as ET
-
         parser = ET.XMLParser(remove_blank_text=True, remove_comments=removeComments)
         self.tree = ET.parse(xmlFile, parser)
 

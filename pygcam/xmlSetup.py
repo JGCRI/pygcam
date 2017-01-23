@@ -557,10 +557,13 @@ def createXmlEditorSubclass(setupFile):
 
             # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
             # to be found in the config file to be able to apply distributions to the values.
-            # TBD: Note that this was "if self.mcsMode and not self.parent:"
-            mcsValuesPath = pathjoin(self.scenario_dir_abs, MCSVALUES_FILE)
-            if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
-                self.addScenarioComponent('mcsValues', pathjoin(self.scenario_dir_rel, MCSVALUES_FILE))
+            # TBD: (old) Note that this was "if self.mcsMode and not self.parent:"
+            # TBD: (new) No longer add this to config since GCAM 4.3 doesn't ignore it!
+            # TBD:       Current approach is to set e.g., name="../local-xml/baseline/mcsValues.xml"
+            # TBD:       in parameters.xml, which avoids lookup by tag in config.xml.
+            # mcsValuesPath = pathjoin(self.scenario_dir_abs, MCSVALUES_FILE)
+            # if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
+            #     self.addScenarioComponent('mcsValues', pathjoin(self.scenario_dir_rel, MCSVALUES_FILE))
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
             CachedFile.decacheAll()
