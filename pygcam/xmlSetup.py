@@ -433,7 +433,7 @@ class If(ConfigActionBase):
 
 MCSVALUES_FILE = 'mcsValues.xml'
 
-def createXmlEditorSubclass(setupFile):
+def createXmlEditorSubclass(setupFile, mcsMode=None):
     """
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
@@ -443,6 +443,7 @@ def createXmlEditorSubclass(setupFile):
     subclassed directly.
 
     :param setupFile: (str) the pathname of an XML setup file
+    :param mcsMode (str) must be 'trial', 'gensim', or None
     :return: (class) A subclass of the given `superclass`
     """
     setupClass = getParam('GCAM.ScenarioSetupClass')
@@ -459,6 +460,9 @@ def createXmlEditorSubclass(setupFile):
 
         except PygcamException as e:
             raise SetupException("Can't load setup class '%s' from '%s': %s" % (dotSpec, modPath, e))
+
+        # check that superclass inherits from or is an XMLEditor
+        assert issubclass(superclass, XMLEditor), 'GCAM.ScenarioSetupClass must be a subclass of pygcam.XMLEditor'
     else:
         superclass = XMLEditor
 
@@ -466,7 +470,6 @@ def createXmlEditorSubclass(setupFile):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
                      srcGroupDir, subdir, parent=None):
             self.parentConfigPath = None
-
 
             self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
             group = scenarioSetup.groupDict[groupName or scenarioSetup.defaultGroup]
@@ -484,7 +487,7 @@ def createXmlEditorSubclass(setupFile):
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
-            if self.parent and self.mcsMode:
+            if self.parent and mcsMode:
                 # ../../trial-xml/local-xml/base-0/mcsValues.xml
                 self.paramFile = unixPath(os.path.normpath(pathjoin(self.xmlOutputRoot, '../trial-xml/local-xml',
                                                            self.groupDir, self.parent.name, MCSVALUES_FILE)))

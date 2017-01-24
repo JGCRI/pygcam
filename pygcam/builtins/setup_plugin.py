@@ -140,7 +140,7 @@ class SetupCommand(SubcommandABC):
         if setupXml:
             from ..xmlSetup import createXmlEditorSubclass
             _logger.debug('Setup using %s, mcsMode=%s', setupXml, mcsMode)
-            scenClass = createXmlEditorSubclass(setupXml)
+            scenClass = createXmlEditorSubclass(setupXml, mcsMode=mcsMode)
 
         else:
             # If neither is defined, we assume a custom scenarios.py file is used
