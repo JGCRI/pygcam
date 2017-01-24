@@ -189,7 +189,8 @@ def readConfigFiles():
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:
         try:
-           _ConfigParser.read_file(open(siteConfig))
+            with open(siteConfig) as f:
+               _ConfigParser.read_file(f)
         except Exception as e:
             print("WARNING: Failed to read site config file: %s" % e)
 
@@ -198,13 +199,14 @@ def readConfigFiles():
 
     # os.path.exists doesn't always work on Windows, so just try opening it.
     try:
-       _ConfigParser.read_file(open(usrConfigPath))
+        with open(usrConfigPath) as f:
+           _ConfigParser.read_file(f)
 
     except IOError as e:
         # create a file with the system defaults if no file exists
-        with open(usrConfigPath, 'w') as fp:
+        with open(usrConfigPath, 'w') as f:
             commented = _getCommentedDefaults(systemDefaults)
-            fp.write(commented)
+            f.write(commented)
 
     # Create (if not defined) GCAM.ProjectName in each section, holding the
     # section (i.e., project) name. If user has set this, the value is unchanged.

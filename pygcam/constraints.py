@@ -303,7 +303,7 @@ def genDeltaConstraints(**kwargs):
     _logger.debug("Default fuel delta %.2f EJ", defaultDelta)
 
     deltas = pd.Series(data={year: defaultDelta for year in yearCols})
-    if annualDeltas:
+    if annualDeltas is not None:
         annuals = annualDeltas if isinstance(annualDeltas, pd.Series) else parseStringPairs(annualDeltas)
         deltas.loc[annuals.index] = annuals    # override any default for the given years
         printSeries(deltas, fuelTag, header='annual deltas:')
