@@ -8,6 +8,11 @@ Document
   - custom editor sub-class
     - methods to implement and when they are called
 
+- If matplotlib problem on mac os x owing to not installed in a framework, create
+  (or modify) a file ~/.matplotlib/matplotlibrc to add the following:
+
+        backend: TkAgg
+
 Cleanup
 -------
 - Consolidate generic code from sectorEditors and xmlEditor
@@ -68,6 +73,14 @@ Cleanup
   - queries
   - setup
 
+Logging
+=======
+- Each module has a unique logger name, so in principle, these can be controlled
+  independently. Do this in the config file, allowing values like:
+  LogLevel = WARNING;tool:DEBUG;utils:INFO;pygcammcs.util=INFO; and so on
+
+  Level without module sets default for all, then set by module. If not package
+  specified, "pygcam." is prepended. Maybe allow regex to match names?
 
 MCS-only
 --------

@@ -413,6 +413,8 @@ class XMLEditor(object):
         self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
         self.dyn_xml_rel   = pathjoin("..", DYN_XML_NAME)   # TBD eliminate
 
+        self.trail_xml_rel = self.trial_xml_abs = None      # used by MCS only
+
         # N.B. join helpfully drops out "" components
         # TBD: order changes; use ScenarioInfo API
         self.scenario_dir_abs = makeDirPath((self.local_xml_abs, groupDir, name), create=True)
@@ -795,6 +797,9 @@ class XMLEditor(object):
         :param xmlfile: (str) the location of the XML file, relative to the `exe` directory
         :return: none
         """
+        # Ensure no duplicates tags
+        self.deleteScenarioComponent(name)
+
         xmlfile = unixPath(xmlfile)
         _logger.info("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
 
@@ -817,6 +822,9 @@ class XMLEditor(object):
         :param after: (str) the name of the element after which to insert the new component
         :return: none
         """
+        # Ensure no duplicates tags
+        self.deleteScenarioComponent(name)      # TBD: test this
+
         xmlfile = unixPath(xmlfile)
         _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
 
@@ -1134,6 +1142,14 @@ class XMLEditor(object):
 
         runProtectionScenario(scenarioName, outputDir, xmlFiles=landXmlFiles, inPlace=True)
 
+    def getScenarioOrTrialDirs(self, subdir=''):
+        dirRel = pathjoin(self.trial_xml_rel, subdir) if self.mcsMode == 'trial' \
+            else self.scenario_dir_rel
+
+        dirAbs = pathjoin(self.trial_xml_abs, subdir) if self.mcsMode == 'trial' \
+            else self.scenario_dir_abs
+
+        return dirRel, dirAbs
 
     @callableMethod
     def taxCarbon(self, value, startYear=2020, endYear=2100, timestep=5,
@@ -1158,8 +1174,12 @@ class XMLEditor(object):
 
         tag = 'carbon-tax-' + market
         filename = tag + '.xml'
-        fileRel = pathjoin(self.scenario_dir_rel, filename)
-        fileAbs = pathjoin(self.scenario_dir_abs, filename)
+
+        # TBD: need to generalize this since any modification can be per-trial or universal
+        dirRel, dirAbs = self.getScenarioOrTrialDirs(subdir='local-xml')
+
+        fileRel = pathjoin(dirRel, filename)
+        fileAbs = pathjoin(dirAbs, filename)
 
         genCarbonTaxFile(fileAbs, value, startYear=startYear, endYear=endYear,
                          timestep=timestep, rate=rate, regions=regions, market=market)
@@ -1189,13 +1209,16 @@ class XMLEditor(object):
 
         tag = 'bio-carbon-tax-' + market
         filename = tag + '.xml'
-        fileRel = pathjoin(self.scenario_dir_rel, filename)
-        fileAbs = pathjoin(self.scenario_dir_abs, filename)
+
+        # TBD: need to generalize this since any modification can be per-trial or universal
+        dirRel, dirAbs = self.getScenarioOrTrialDirs(subdir='local-xml')
+
+        fileRel = pathjoin(dirRel, filename)
+        fileAbs = pathjoin(dirAbs, filename)
 
         genLinkedBioCarbonPolicyFile(fileAbs, market=market, regions=regions,
                                      forTax=forTax, forCap=forCap)
         self.addScenarioComponent(tag, fileRel)
-
 
     # TBD: test
     @callableMethod

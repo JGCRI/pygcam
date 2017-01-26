@@ -487,10 +487,15 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
-            if self.parent and mcsMode:
+            #if self.parent and mcsMode:
+            if mcsMode == 'trial':
                 # ../../trial-xml/local-xml/base-0/mcsValues.xml
-                self.paramFile = unixPath(os.path.normpath(pathjoin(self.xmlOutputRoot, '../trial-xml/local-xml',
-                                                           self.groupDir, self.parent.name, MCSVALUES_FILE)))
+                self.trial_xml_abs = pathjoin(self.xmlOutputRoot, '../trial-xml', normpath=True)
+                self.trial_xml_rel = pathjoin('../..', 'trial-xml')
+
+                scenName = self.parent.name if self.parent else self.name
+                self.paramFile = pathjoin(self.trial_xml_abs, 'local-xml', self.groupDir,
+                                          scenName, MCSVALUES_FILE, normpath=True)
 
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
                                   'baselineDir': self.baseline_dir_rel}
