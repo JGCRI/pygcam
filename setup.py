@@ -4,18 +4,22 @@ from pygcam.version import VERSION
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
     import ez_setup
-    ez_setup.use_setuptools()
+    ez_setup.use_setuptools(version='32.0.0')
 
 from setuptools import setup
 
-requirements = ['configparser',     # backport of python 3.5 version
-                'lxml',
-                'numpy',
-                'pandas',
-                'seaborn',
-                'sphinx-argparse',
-                'filelock',
-                ]
+requirements = [
+    'appdir',       # needed by setuptools >= 34.1.0
+    'packaging',
+
+    'configparser',     # backport of python 3.5 version
+    'lxml',
+    'numpy',
+    'pandas',
+    'seaborn',
+    'sphinx-argparse',
+    'filelock',
+]
 
 long_description = '''
 pygcam

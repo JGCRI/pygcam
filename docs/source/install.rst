@@ -141,9 +141,9 @@ See the specific instructions for Macintosh and Windows users, below.
 
 Macintosh users
 ^^^^^^^^^^^^^^^^
-1. Download `gt-1.0b2-mac.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b2-mac.zip>`_.
+1. Download `gt-1.0b8-mac.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b8-mac.zip>`_.
 
-2. Double-click on the downloaded zip file to unzip it, creating the directory ``gt-1.0b2-mac`` (or similar,
+2. Double-click on the downloaded zip file to unzip it, creating the directory ``gt-1.0b8-mac`` (or similar,
    depending on the version). Move that directory anywhere you like. You might move it to your home directory,
    or to where you store GCAM-related files.
 
@@ -162,13 +162,13 @@ Macintosh users
 
 Windows users
 ^^^^^^^^^^^^^^
-1. Download `gt-1.0b2-win.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b2-win.zip>`_.
+1. Download `gt-1.0b2-win.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b8-win.zip>`_.
 
 2. Right click on the zip file and select "Extract all...". If you accept the default path presented
-   in the dialog box, Windows will create a redundant directory level, i.e., ``gt-1.0b2/gt-1.0b2``.
+   in the dialog box, Windows will create a redundant directory level, i.e., ``gt-1.0b8/gt-1.0b8``.
    If you do this, move the inner directory to where you would like to keep the gcamtool files and
    then delete the outer directory. Alternatively, you can edit the path presented in the dialog box
-   to remove the final ``gt-1.0b2``, so that the unzipped folder will have only one level called ``gt-1.0b2``.
+   to remove the final ``gt-1.0b8``, so that the unzipped folder will have only one level called ``gt-1.0b8``.
 
 3. To add the location of the gcamtool folder to your PATH, see this
    `page <http://www.computerhope.com/issues/ch000549.htm>`_.
