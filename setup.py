@@ -9,9 +9,6 @@ if platform.system() != 'Windows':
 from setuptools import setup
 
 requirements = [
-    'appdir',       # needed by setuptools >= 34.1.0
-    'packaging',
-
     'configparser',     # backport of python 3.5 version
     'lxml',
     'numpy',
