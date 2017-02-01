@@ -5,7 +5,7 @@ block_cipher = None
 pygcam = '/Users/rjp/bitbucket/pygcam/pygcam'
 
 datas = [
-    (pygcam + '/etc/*',      'pygcam/etc'), 
+    (pygcam + '/etc/*',      'pygcam/etc'),
     (pygcam + '/builtins/*', 'pygcam/builtins')
 ]
 
@@ -15,7 +15,11 @@ binaries = []
 
 excludes = ['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'PyQt5', 'gtk', 'gi']
 
-hiddenimports = ['pygcam.builtins.*', 'pygcam.sectorEditors', 'pygcam.carbonTax', 'pygcam.constraints']
+import glob
+
+pluginPaths = glob.glob('pygcam/builtins/*_plugin.py')
+plugins = map(lambda path: 'pygcam.builtins.' + os.path.splitext(os.path.basename(path))[0], pluginPaths)
+hiddenimports = plugins + ['pygcam.sectorEditors', 'pygcam.carbonTax', 'pygcam.constraints']
 
 from pygcam.version import VERSION
 import platform
@@ -29,7 +33,7 @@ else:
     name = 'gt-' + VERSION + '-mac'
 
     excludes += ['win32con', 'win32com.shell', 'win32com.client', 'win32com.client.gencache',
-                'win32clipboard', 'win32evtlog', 'win32evtlogutil', 'win32file', 'win32api', 
+                'win32clipboard', 'win32evtlog', 'win32evtlogutil', 'win32file', 'win32api',
                 'win32pdh', 'win32pipe', 'win32security', 'win32wnet']
 
     binaries += [('/usr/local/bin/fc-list', '')]

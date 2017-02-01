@@ -46,8 +46,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pygcam'
-copyright = u'2016, Richard Plevin'
 author = u'Richard Plevin'
+copyright = u'2016-2017, Richard Plevin'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
