@@ -9,7 +9,7 @@ import argparse
 import os
 
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
