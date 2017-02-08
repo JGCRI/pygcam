@@ -48,9 +48,9 @@ DEFAULT_POLICY = 'policy-portfolio-standard'
 DEFAULT_REGION = 'USA'
 DEFAULT_MARKET = 'USA'
 
-def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=None,
-                          region=DEFAULT_REGION, market=DEFAULT_MARKET,
-                          preConstraint='', summary=''):
+def _generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=None,
+                           region=DEFAULT_REGION, market=DEFAULT_MARKET,
+                           preConstraint='', summary=''):
 
     def genConstraint(year):
         constraint = _ConstraintTemplate.format(year=year, value="{year%s}" % year)
@@ -72,8 +72,8 @@ def generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=No
     return xml
 
 
-def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName='',
-                       policySrcDir=None): #, fromMCS=False):
+def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, groupName='',
+                        policySrcDir=None): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
     constraintFile = basename + '-constraint.xml'
     policyFile     = basename + '.xml'
@@ -112,7 +112,7 @@ def saveConstraintFile(xml, dirname, constraintName, policyType, scenario, group
         os.remove(linkname)
     symlinkOrCopyFile(source, linkname)
 
-def parseStringPairs(argString, datatype=float):
+def _parseStringPairs(argString, datatype=float):
     """
     Convert a string of comma-separated pairs of colon-delimited values to
     a pandas Series where the first value of each pair is the index name and
@@ -170,7 +170,7 @@ def genBioConstraints(**kwargs):
     biomassPolicyType = kwargs['biomassPolicyType']
     purposeGrownPolicyType = kwargs['purposeGrownPolicyType']
     cellEtohPolicyType = kwargs['cellEtohPolicyType']
-    coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
+    coefficients = _parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
     batchDir = getBatchDir(baseline, resultsDir)
@@ -196,7 +196,7 @@ def genBioConstraints(**kwargs):
 
     desiredCellEtoh = pd.Series(data={year: defaultLevel for year in yearCols})
     if annualLevels:
-        annuals = parseStringPairs(annualLevels)
+        annuals = _parseStringPairs(annualLevels)
         desiredCellEtoh[annuals.index] = annuals    # override any default values
         _logger.debug("Annual levels set to:", annualLevels)
 
@@ -209,10 +209,10 @@ def genBioConstraints(**kwargs):
     biomassConstraint = totalBiomassUSA.iloc[0] + deltaCellulose.iloc[0]
     _logger.debug('biomassConstraint:\n', biomassConstraint)
 
-    xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint,
-                                policyType=biomassPolicyType, summary='Regional biomass constraint.')
-    saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                       groupName=subdir)#, fromMCS=fromMCS)
+    xml = _generateConstraintXML('regional-biomass-constraint', biomassConstraint,
+                                 policyType=biomassPolicyType, summary='Regional biomass constraint.')
+    _saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
+                        groupName=subdir)#, fromMCS=fromMCS)
 
     # For switchgrass, we generate a constraint file to adjust purpose-grown biomass
     # by the same amount as the total regional biomass, forcing the change to come from switchgrass.
@@ -221,18 +221,18 @@ def genBioConstraints(**kwargs):
     else:
         constraint = purposeGrownUSA.iloc[0]
 
-    xml = generateConstraintXML('purpose-grown-constraint', constraint, policyType=purposeGrownPolicyType,
-                                summary='Purpose-grown biomass constraint.')
-    saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                       groupName=subdir)#, fromMCS=fromMCS)
+    xml = _generateConstraintXML('purpose-grown-constraint', constraint, policyType=purposeGrownPolicyType,
+                                 summary='Purpose-grown biomass constraint.')
+    _saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
+                        groupName=subdir)#, fromMCS=fromMCS)
 
     # Create dictionary to use for template processing
     xmlArgs = {"level" + year : value for year, value in desiredCellEtoh.iteritems()}
     xmlArgs['cellEtohPolicyType'] = 'subsidy' if cellEtohPolicyType == 'subs' else cellEtohPolicyType
 
     xml = cellEtohConstraintTemplate.format(**xmlArgs)
-    saveConstraintFile(xml, xmlOutputDir, 'cell-etoh', cellEtohPolicyType, policy,
-                       groupName=subdir)#, fromMCS=fromMCS)
+    _saveConstraintFile(xml, xmlOutputDir, 'cell-etoh', cellEtohPolicyType, policy,
+                        groupName=subdir)#, fromMCS=fromMCS)
 
 
 def bioMain(args):
@@ -273,7 +273,7 @@ def genDeltaConstraints(**kwargs):
     resultsDir  = kwargs['resultsDir']
     switchgrass = kwargs.get('switchgrass', False)
     defaultDelta = float(kwargs.get('defaultDelta', 0))
-    coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
+    coefficients = _parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     annualDeltas = kwargs.get('annualDeltas', None)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
     fuelPolicyType = kwargs['fuelPolicyType']
@@ -304,7 +304,7 @@ def genDeltaConstraints(**kwargs):
 
     deltas = pd.Series(data={year: defaultDelta for year in yearCols})
     if annualDeltas is not None:
-        annuals = annualDeltas if isinstance(annualDeltas, pd.Series) else parseStringPairs(annualDeltas)
+        annuals = annualDeltas if isinstance(annualDeltas, pd.Series) else _parseStringPairs(annualDeltas)
         deltas.loc[annuals.index] = annuals    # override any default for the given years
         printSeries(deltas, fuelTag, header='annual deltas:')
         #_logger.debug("Annual deltas: %s", deltas)
@@ -323,8 +323,8 @@ def genDeltaConstraints(**kwargs):
 
     xml = fuelConstraintTemplate.format(**xmlArgs)
 
-    saveConstraintFile(xml, xmlOutputDir, fuelTag, fuelPolicyType, policy,
-                       groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
+    _saveConstraintFile(xml, xmlOutputDir, fuelTag, fuelPolicyType, policy,
+                        groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
 
     if switchgrass:
         # Calculate additional biomass required to meet required delta
@@ -350,16 +350,16 @@ def genDeltaConstraints(**kwargs):
         purposeGrownDF.fillna(0, inplace=True)
         purposeGrownUSA  = purposeGrownDF.query(US_REGION_QUERY)[yearCols]
 
-        xml = generateConstraintXML('regional-biomass-constraint', biomassConstraint, policyType=biomassPolicyType,
-                                    summary='Regional biomass constraint.')
+        xml = _generateConstraintXML('regional-biomass-constraint', biomassConstraint, policyType=biomassPolicyType,
+                                     summary='Regional biomass constraint.')
 
-        saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
-                           groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
+        _saveConstraintFile(xml, xmlOutputDir, 'regional-biomass', biomassPolicyType, policy,
+                            groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
 
         constraint = purposeGrownUSA.iloc[0] + deltaCellulose.iloc[0]
 
-        xml = generateConstraintXML('purpose-grown-constraint', constraint,  policyType=purposeGrownPolicyType,
-                                    summary='Purpose-grown biomass constraint.')
+        xml = _generateConstraintXML('purpose-grown-constraint', constraint, policyType=purposeGrownPolicyType,
+                                     summary='Purpose-grown biomass constraint.')
 
-        saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
-                           groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)
+        _saveConstraintFile(xml, xmlOutputDir, 'purpose-grown', purposeGrownPolicyType, policy,
+                            groupName=groupName, policySrcDir=policySrcDir)#, fromMCS=fromMCS)

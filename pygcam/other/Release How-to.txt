@@ -1,0 +1,11 @@
+Notes on what to do to issue a new release
+------------------------------------------
+
+1. Merge develop etc. into master
+2. Do 'make clean html' in docs
+   - check API for missing doc files or func descriptions
+3. Update Release Notes section in README.rst
+3. Increment version in version.py
+4. Commit in master to generate tag
+5. Make in pyinst and upload to pypi
+6. Merge master back to develop

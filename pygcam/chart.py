@@ -8,9 +8,7 @@
 import argparse
 import os
 
-import matplotlib as mpl
-mpl.use('TkAgg')
-import matplotlib.pyplot as plt
+from .matplotlibFix import plt
 from matplotlib.ticker import FuncFormatter
 
 import numpy as np
@@ -23,8 +21,6 @@ from .query import dropExtraCols, readCsv
 from .utils import systemOpenFile, pathjoin
 
 _logger = getLogger(__name__)
-
-__version__  = "0.3"
 
 #%matplotlib inline
 

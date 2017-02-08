@@ -34,7 +34,8 @@ def parseArgs():
                         help='''Print commands that would be executed, but don't run them.''')
 
     parser.add_argument('-r', '--reuseTarFiles', action='store_true',
-                        help='''Use the already-downloaded tar files rather then retrieving them again.''')
+                        help='''Use the already-downloaded tar files rather then retrieving them again.
+                        Implies -k/--keepTarFiles.''')
 
     args = parser.parse_args()
     return args
@@ -55,6 +56,43 @@ def curl(url, name, printOnly=False):
 def untar(tarfile, directory='.', printOnly=False):
     tar = '/usr/bin/tar' if PlatformName == 'Darwin' else 'tar'
     run("%s xzf %s -C '%s'" % (tar, tarfile, directory), printOnly=printOnly)
+
+#
+# Comment taken from exe/run-gcam.command:
+#
+# We need to find where the Java development kit is installed.
+# This could be the Apple supplied version which was provided up
+# to 1.6 however was dropped subsequently and instead users may
+# have an Oracle provided JDK.  The each take slightly different
+# approaches to where libraries live and how to reference them so
+# we will have to try to detect the appropriate location.
+#
+def fixMacJava(coreDir, printOnly=False):
+    cmd = '/usr/libexec/java_home'
+    javaHome = ''
+    try:
+        javaHome = subprocess.check_output(cmd).strip()
+    except Exception:
+        pass
+
+    if not javaHome:
+        print('ERROR: Could not find Java install location')
+        sys.exit(-1)
+
+    # If javaHome contains "1.6", use the Apple supplied version of java 1.6
+    libPath = 'lib-stub' if '1.6' in javaHome else javaHome + '/jre/lib/server'
+
+    owd = os.getcwd()
+    if not printOnly:
+        os.chdir(coreDir)
+
+    # Create a symlink to satisfy @rpath searches
+    linkName = 'libs/java/lib'
+    if not os.path.islink(linkName):
+        run("ln -s %s %s" % (libPath, linkName), printOnly=printOnly)
+
+    os.chdir(owd)
+
 
 def main():
     args = parseArgs()
@@ -108,12 +146,14 @@ def main():
         untar(os.path.join(downloadDir, binTarFile), coreDir, printOnly=printOnly)
         tarFiles.append(binTarFile)
 
+        fixMacJava(coreDir, printOnly=printOnly)
+
     if printOnly:
         return 0
 
     print("Installed GCAM into %s" % installDir)
 
-    if args.keepTarFiles:
+    if args.reuseTarFiles or args.keepTarFiles:
         print("Keeping tar files in %s" % downloadDir)
     else:
         for tarFile in tarFiles:
