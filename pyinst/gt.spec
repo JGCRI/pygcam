@@ -5,8 +5,9 @@ block_cipher = None
 pygcam = '/Users/rjp/bitbucket/pygcam/pygcam'
 
 datas = [
-    (pygcam + '/etc/*',      'pygcam/etc'),
-    (pygcam + '/builtins/*', 'pygcam/builtins')
+    (pygcam + '/etc/*.*',          'pygcam/etc'),
+    (pygcam + '/etc/examples/*.*', 'pygcam/etc/examples'),
+    (pygcam + '/builtins/*.py',    'pygcam/builtins'),
 ]
 
 lib = '/Users/rjp/anaconda/lib'

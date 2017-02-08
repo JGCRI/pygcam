@@ -1,8 +1,7 @@
 pygcam
 =======
 
-``pygcam`` is a Python package
-that provides classes, functions, and scripts for working with GCAM.
+``pygcam`` is a Python package that provides classes, functions, and scripts for working with GCAM.
 
 Core functionality
 ------------------
@@ -34,7 +33,22 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b8 (upcoming)
+Version 1.0b9 (8 Feb 2017)
+-----------------------------
+* Changed default value of GCAM.SandboxRoot from {GCAM.Root}/ws to
+  {GCAM.Root}/sandbox
+
+* Added "mi" sub-command to invoke ModelInterface from the command-line after
+  creating a model_interface.properties file that refers to the project's
+  custom query file (if GCAM.MI.QueryFile is set) or to the reference query file.
+
+* Various fixes for the "one-directory" version of pygcam installer
+
+* Improved install-gcam.py script
+
+* Addressed matplotlib issue on Macs
+
+Version 1.0b8 (31 Jan 2017)
 -----------------------------
 * Added label to identify default scenario group in listing groups via "gt run -G"
 
@@ -44,6 +58,8 @@ Version 1.0b8 (upcoming)
   ``genLinkedBioCarbonPolicyFile(filename, market='global', regions=None, forTax=True, forCap=False)``
 
 * Also added function (bioCarbonTax) callable from XML setup file to access this feature.
+
+* Added initial support to integrate pygcam-mcs (coming soon!)
 
 Version 1.0b7 (6 Dec 2016)
 -----------------------------

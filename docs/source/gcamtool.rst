@@ -8,7 +8,8 @@ by the pygcam library. Project-specific features can be added via
 
   .. note::
      Quick links to sub-commands: :ref:`chart <chart-label>`, :ref:`config <config-label>`,
-     :ref:`diff <diff-label>`, :ref:`gcam <gcam-label>`, :ref:`new <new-label>`,
+     :ref:`diff <diff-label>`, :ref:`gcam <gcam-label>`, :ref:`mi <mi-label>`,
+     :ref:`new <new-label>`,
      :ref:`protect <protect-label>`, :ref:`query <query-label>`, :ref:`run <run-label>`,
      :ref:`setup <setup-label>`, :ref:`sandbox <sandbox-label>`
 
@@ -248,6 +249,27 @@ Usage
       ``~/sandboxes/MyProject/MyScenario`` using the configuration file
       ``~/MyProject/scenarios/MyScenario/config.xml``.
 
+
+   mi : @replace
+      .. _mi-label:
+
+      Invoke ModelInterface from the command-line after changing directory to the value
+      of config variable ``GCAM.QueryDir``. If the file ``model_interface.properties`` is found,
+      it is used as is, unless the ``-u/--updateProperties`` flag is specified, in which case
+      the file is modified so that the ``queryFile`` entry refers to the value of
+      ``GCAM.MI.QueryFile``, if this refer to an existing file, otherwise, by variable the
+      ``GCAM.MI.RefQueryFile``.
+
+      If the file ``model_interface.properties`` is not found, it is created automatically
+      before invoking ModelInterface.
+
+      If the ``-d/--useDefault`` flag is given, the ``model_interface.properties`` file is
+      modified to refer to the GCAM reference ``Main_Queries.xml`` file.
+
+      If you have a customized queries XML file, set the config variable ``GCAM.MI.QueryFile``
+      to the path to this file and it will be loaded into ModelInterface via this command.
+
+
    new : @replace
       .. _new-label:
 
@@ -284,7 +306,6 @@ Usage
       (i.e., removed from consideration), as in the reference GCAM scenario. In the
       other scenario group, this protection is not performed, so all land is
       considered available for use.
-
 
    protect : @replace
       .. _protect-label:

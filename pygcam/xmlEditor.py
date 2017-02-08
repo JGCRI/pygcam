@@ -195,7 +195,10 @@ def xmlEdit(filename, pairs, useCache=True):
                     elt.text = value
 
     if updated:
-        item.setEdited()
+        if useCache:
+            item.setEdited()
+        else:
+            item.write()
 
     return updated
 

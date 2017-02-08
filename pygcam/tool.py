@@ -19,6 +19,7 @@ from .builtins.chart_plugin import ChartCommand
 from .builtins.config_plugin import ConfigCommand
 from .builtins.diff_plugin import DiffCommand
 from .builtins.gcam_plugin import GcamCommand
+from .builtins.mi_plugin import ModelInterfaceCommand
 from .builtins.new_plugin import NewProjectCommand
 from .builtins.protect_plugin import ProtectLandCommand
 from .builtins.query_plugin import QueryCommand
@@ -41,8 +42,9 @@ _logger = getLogger(__name__)
 PROGRAM = 'gt'
 
 BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
-                      GcamCommand, NewProjectCommand, ProtectLandCommand,
-                      QueryCommand, ProjectCommand, SandboxCommand, SetupCommand]
+                      GcamCommand, ModelInterfaceCommand, NewProjectCommand,
+                      ProtectLandCommand, QueryCommand, ProjectCommand,
+                      SandboxCommand, SetupCommand]
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
