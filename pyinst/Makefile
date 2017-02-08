@@ -13,7 +13,7 @@ else
   NAME=win
 endif
 
-VERSION  := $(shell python gt.py --version 2>&1)
+VERSION  := $(shell python gt.py --VERSION)
 FULLNAME := $(VERSION)-$(NAME)
 ZIPFILE  := $(FULLNAME).zip
 

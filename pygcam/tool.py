@@ -176,7 +176,9 @@ class GcamTool(object):
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s-' + VERSION)
+        parser.add_argument('--version', action='version', version='%(prog)s-' + VERSION)   # goes to stderr, handled by argparse
+
+        parser.add_argument('--VERSION', action='store_true')   # goes to stdout, but handled by gt
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
@@ -459,6 +461,15 @@ def _main(argv=None):
 
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
+
+    # This parser handles only --VERSION flag.
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+    parser.add_argument('--VERSION', action='store_true')
+    ns, otherArgs = parser.parse_known_args(args=argv)
+    if ns.VERSION:
+        import sys
+        print(PROGRAM + '-' + VERSION)
+        sys.exit(0)
 
     # This parser handles only --batch, --showBatch, and --projectName args.
     # If --batch is given, we need to create a script and call the GCAM.BatchCommand
