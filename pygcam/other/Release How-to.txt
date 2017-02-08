@@ -7,5 +7,6 @@ Notes on what to do to issue a new release
 3. Update Release Notes section in README.rst
 3. Increment version in version.py
 4. Commit in master to generate tag
-5. Make in pyinst and upload to pypi
-6. Merge master back to develop
+5. Make in pyinst for Win & Mac and upload to bitbucket
+6. Update pypi
+7. Merge master back to develop

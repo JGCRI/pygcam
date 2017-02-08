@@ -131,8 +131,9 @@ def usingMCS():
     if _usingMCS is None:
         path = os.path.join(os.getenv('HOME'), '.no_pygcam_mcs')
         if os.path.exists(path):
+            import sys
             # let user know this hidden file is active
-            print('Not using pygcam-mcs: found sentinel file %s' % path)
+            sys.stderr.write('Not using pygcam-mcs: found sentinel file %s\n' % path)
             _usingMCS = False
         else:
             try:
