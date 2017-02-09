@@ -1,9 +1,10 @@
 #!/usr/bin/env python2
 
 from pygcam import tool
+from pygcam.config import setUsingMCS
 
-#import matplotlib as mpl
-#print "File: ", mpl.__file__
-#print "Cache dir:", mpl.get_cachedir()
+# Turn this off for pyinstaller-run versions since MCS works only
+# Linux and pyinstaller is currently used only for Mac and Windows.
+setUsingMCS(False)
 
 tool.main()

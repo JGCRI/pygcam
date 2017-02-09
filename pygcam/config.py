@@ -117,6 +117,10 @@ def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
 
 _usingMCS = None
 
+def setUsingMCS(value):
+    global _usingMCS
+    _usingMCS = value
+
 def usingMCS():
     """
     Check if the user environment is configured to use pygcam-mcs, which requires
@@ -134,14 +138,14 @@ def usingMCS():
             import sys
             # let user know this hidden file is active
             sys.stderr.write('Not using pygcam-mcs: found sentinel file %s\n' % path)
-            _usingMCS = False
+            setUsingMCS(False)
         else:
             try:
                 import pygcammcs
-                _usingMCS = True
+                setUsingMCS(True)
 
             except ImportError:
-                _usingMCS = False
+                setUsingMCS(False)
 
     return _usingMCS
 
