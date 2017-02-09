@@ -14,7 +14,8 @@ lib = '/Users/rjp/anaconda/lib'
 
 binaries = []
 
-excludes = ['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'PyQt5', 'gtk', 'gi']
+#excludes = ['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'PyQt5', 'gtk', 'gi']
+excludes = ['PyQt5', 'gtk', 'gi']
 
 import glob
 
