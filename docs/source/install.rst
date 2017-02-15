@@ -141,7 +141,7 @@ See the specific instructions for Macintosh and Windows users, below.
 
 Macintosh users
 ^^^^^^^^^^^^^^^^
-1. Download `gt-1.0b8-mac.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b8-mac.zip>`_.
+1. Download the latest version of `gt-*-mac.zip <https://bitbucket.org/plevin/pygcam/downloads`_.
 
 2. Double-click on the downloaded zip file to unzip it, creating the directory ``gt-1.0b8-mac`` (or similar,
    depending on the version). Move that directory anywhere you like. You might move it to your home directory,
@@ -162,7 +162,7 @@ Macintosh users
 
 Windows users
 ^^^^^^^^^^^^^^
-1. Download `gt-1.0b2-win.zip <https://bitbucket.org/plevin/pygcam/downloads/gt-1.0b8-win.zip>`_.
+1. Download the latest version of `gt-*-win.zip <https://bitbucket.org/plevin/pygcam/downloads`_.
 
 2. Right click on the zip file and select "Extract all...". If you accept the default path presented
    in the dialog box, Windows will create a redundant directory level, i.e., ``gt-1.0b8/gt-1.0b8``.
