@@ -167,7 +167,9 @@ def readConfigFiles():
         # otherwise, we use HOMESHARE if set, or HOMEPATH, in that order.
         env = os.environ
         homedir = env.get('PYGCAM_HOME') or env.get('HOMESHARE') or env.get('HOMEPATH')
-        home = os.path.realpath(homedir)          # adds home drive
+        drive, path = os.path.splitdrive(homedir)
+        drive = drive or env.get('HOMEDRIVE') or 'C:'
+        home = os.path.realpath(drive + path)
         home = home.replace('\\', '/')            # avoids '\' quoting issues
     else:
         home = os.getenv('HOME')
