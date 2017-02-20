@@ -11,6 +11,9 @@ import sys
 import argparse
 import subprocess
 import platform
+import urllib
+from urlparse import urlparse
+import tarfile
 
 PlatformName = platform.system()
 
@@ -40,6 +43,7 @@ def parseArgs():
     args = parser.parse_args()
     return args
 
+
 def run(cmd, ignoreError=False, printOnly=False):
     print(cmd)
     if printOnly:
@@ -50,12 +54,28 @@ def run(cmd, ignoreError=False, printOnly=False):
     if not ignoreError and status != 0:
         sys.exit(status)
 
-def curl(url, name, printOnly=False):
-    run("curl -L %s -o %s" % (url, name), printOnly=printOnly)
+def download(url, filename, printOnly=False):
+    def _report(blocks, blockSize, fileSize):
+        print('\r%2.0f%% ...' % (100. * blocks * blockSize / fileSize), )
 
-def untar(tarfile, directory='.', printOnly=False):
-    tar = '/usr/bin/tar' if PlatformName == 'Darwin' else 'tar'
-    run("%s xzf %s -C '%s'" % (tar, tarfile, directory), printOnly=printOnly)
+    if not filename:
+        obj = urlparse(url)
+        filename = os.path.basename(obj.path)
+
+    print('Download "%s" -> "%s"\n' % (url, filename))
+    if printOnly:
+        return
+
+    filename, headers = urllib.urlretrieve(url, filename=filename, reporthook=_report)
+    return filename
+
+def untar(filename, directory='.', printOnly=False):
+    print("untar '%s' in '%s'" % (filename, directory))
+    if printOnly:
+        return
+
+    with tarfile.open(filename, mode='r:gz') as tar:
+        tar.extractall(path=directory)
 
 #
 # Comment taken from exe/run-gcam.command:
@@ -109,8 +129,8 @@ def main():
 
     madeDownloadDir = False
 
-    downloadDir = args.downloadDir
-    installDir  = args.installDir
+    downloadDir = os.path.abspath(args.downloadDir)
+    installDir  = os.path.abspath(args.installDir)
     printOnly   = args.noRun
 
     if not os.path.lexists(downloadDir):
@@ -125,8 +145,8 @@ def main():
         os.chdir(downloadDir)
 
     if not args.reuseTarFiles:
-        curl(coreURL, coreTarFile, printOnly=printOnly)
-        curl(dataURL, dataTarFile, printOnly=printOnly)
+        download(coreURL, coreTarFile, printOnly=printOnly)
+        download(dataURL, dataTarFile, printOnly=printOnly)
 
     if not os.path.isdir(installDir):
         run('mkdir ' + installDir, printOnly=printOnly)
@@ -141,7 +161,7 @@ def main():
         binURL = downloadPrefix + binTarFile
 
         if not args.reuseTarFiles:
-            curl(binURL, binTarFile, printOnly=printOnly)
+            download(binURL, binTarFile, printOnly=printOnly)
 
         untar(os.path.join(downloadDir, binTarFile), coreDir, printOnly=printOnly)
         tarFiles.append(binTarFile)
