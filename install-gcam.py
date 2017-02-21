@@ -16,6 +16,10 @@ from urlparse import urlparse
 import tarfile
 
 PlatformName = platform.system()
+isWindows = (PlatformName == 'Windows')
+isDarwin  = (PlatformName == 'Darwinv')
+isLinux   = (PlatformName == 'Linux')
+
 
 Home = os.environ['HOME'] = os.environ['HOME']
 DefaultInstallDir  = os.path.join(Home, 'gcam-v4.3-install-dir')
@@ -56,7 +60,7 @@ def run(cmd, ignoreError=False, printOnly=False):
 
 def download(url, filename, printOnly=False):
     def _report(blocks, blockSize, fileSize):
-        print('\r%2.0f%% ...' % (100. * blocks * blockSize / fileSize), )
+        print('\r%2.0f%% ...' % (100. * blocks * blockSize / fileSize), end='')
 
     if not filename:
         obj = urlparse(url)
@@ -67,6 +71,7 @@ def download(url, filename, printOnly=False):
         return
 
     filename, headers = urllib.urlretrieve(url, filename=filename, reporthook=_report)
+    print('') # for the newline
     return filename
 
 def untar(filename, directory='.', printOnly=False):
@@ -141,6 +146,8 @@ def main():
         print('Specified download dir is not a directory: %s' % downloadDir)
         return -1
 
+    startDir = os.getcwd()
+
     if not printOnly:
         os.chdir(downloadDir)
 
@@ -156,8 +163,8 @@ def main():
     untar(os.path.join(downloadDir, coreTarFile), installDir, printOnly=printOnly)
     untar(os.path.join(downloadDir, dataTarFile), coreDir,    printOnly=printOnly)
 
-    if PlatformName == 'Darwin':
-        binTarFile = 'mac_binaries.tar.gz'
+    if isDarwin or isWindows:
+        binTarFile = '%s_binaries.tar.gz' % ('mac' if isDarwin else 'windows')
         binURL = downloadPrefix + binTarFile
 
         if not args.reuseTarFiles:
@@ -166,7 +173,8 @@ def main():
         untar(os.path.join(downloadDir, binTarFile), coreDir, printOnly=printOnly)
         tarFiles.append(binTarFile)
 
-        fixMacJava(coreDir, printOnly=printOnly)
+        if isDarwin:
+            fixMacJava(coreDir, printOnly=printOnly)
 
     if printOnly:
         return 0
@@ -181,6 +189,7 @@ def main():
 
         if madeDownloadDir:
             # only remove this dir if we created it
+            os.chdir(startDir)
             os.rmdir(downloadDir)
 
     return 0
