@@ -9,8 +9,6 @@
 from ..subcommand import SubcommandABC
 from ..constants import UnmanagedLandClasses
 
-__version__ = '0.1'
-
 DefaultTemplate = 'prot_{fraction}_{filename}'
 
 
@@ -79,8 +77,6 @@ class ProtectLandCommand(SubcommandABC):
         parser.add_argument('-S', '--scenarioFile', default=None,
                             help='''An XML file defining land-protection scenarios. Default is the value
                             of configuration file parameter GCAM.LandProtectionXmlFile.''')
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-w', '--workspace', type=str, default=None,
                             help='''Specify the path to the GCAM workspace to use. The files in

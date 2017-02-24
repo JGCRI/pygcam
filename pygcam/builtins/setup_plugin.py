@@ -13,8 +13,6 @@ from ..utils import pathjoin
 _logger = getLogger(__name__)
 
 class SetupCommand(SubcommandABC):
-    __version__ = '0.1'
-
     def __init__(self, subparsers):
         kwargs = {'help': '''Setup a scenario by creating modified XML input files.'''}
 

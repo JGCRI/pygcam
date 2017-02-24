@@ -8,8 +8,6 @@
 '''
 from ..subcommand import SubcommandABC
 
-__version__ = "0.2"
-
 class GcamCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run GCAM for the indicated configFile, scenario, or workspace.'''}
@@ -45,8 +43,6 @@ class GcamCommand(SubcommandABC):
         parser.add_argument('-S', '--scenariosDir', default='',
                             help='''Specify the directory holding scenario files. Default is the value of
                             config variable GCAM.ScenariosDir, if set, otherwise it's the current directory.''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-w', '--workspace',
                             help='''Specify the path to the GCAM workspace to use. If it doesn't exist, the

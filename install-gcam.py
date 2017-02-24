@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# Install gcam v4.3 on Mac OS X or Linux. Windows to come later...
+# Installs gcam v4.3 on Windows, Mac OS X, and Linux
 #
-# Author: Rich Plevin
+# Author: Rich Plevin (rich@plevin.com)
 # Created: 10 Nov 2016
 #
 from __future__ import print_function

@@ -6,8 +6,6 @@ Created on 4/26/15
 '''
 from ..subcommand import SubcommandABC
 
-__version__ = "0.1"
-
 class BioConstraintsCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Bioenergy constraint generator'''}
@@ -58,8 +56,6 @@ class BioConstraintsCommand(SubcommandABC):
 
         parser.add_argument('-S', '--subdir', default='',
                              help='Sub-directory for local-xml files, if any')
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-x', '--xmlOutputDir',
                              help='''The directory into which to generate XML files. Defaults to

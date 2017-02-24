@@ -9,8 +9,6 @@ from ..error import PygcamException, CommandlineError
 from ..subcommand import SubcommandABC
 
 class ConfigCommand(SubcommandABC):
-    VERSION = '0.2'
-
     def __init__(self, subparsers):
         kwargs = {'help' : '''List the values of configuration variables from
                   ~/.pygcam.cfg configuration file.'''}
@@ -41,8 +39,6 @@ class ConfigCommand(SubcommandABC):
                             help='''Test the settings in the configuration file to ensure
                             that the basic setup is ok, i.e., required parameters have
                             values that make sense. If specified, no variables are displayed.''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + self.VERSION)
 
         return parser
 
