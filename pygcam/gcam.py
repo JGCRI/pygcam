@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 from .config import getParam, getParamAsBoolean, getParamAsFloat
-from .error import ProgramExecutionError, GcamBaseXError, GcamSolverError, PygcamException
+from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
 from .utils import writeXmldbDriverProperties, getExeDir, pushd
@@ -99,7 +99,7 @@ def _gcamWrapper(args):
             if match.group(1) == modelDidNotSolve:
                 raise GcamSolverError(msg)
             else:
-                raise GcamBaseXError(msg)
+                raise GcamError(msg)
 
     _logger.debug('gcamWrapper found EOF. Waiting for GCAM to exit...')
     status = gcamProc.wait()
