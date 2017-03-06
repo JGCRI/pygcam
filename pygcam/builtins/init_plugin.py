@@ -1,126 +1,133 @@
 '''
 .. codeauthor:: Richard Plevin
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2017 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from __future__ import print_function
+import os
+
 from ..error import PygcamException, CommandlineError
+from ..log import getLogger
 from ..subcommand import SubcommandABC
+from ..utils import mkdirs
 
-class ConfigCommand(SubcommandABC):
+_logger = getLogger(__name__)
+
+class AbortInput(Exception):
+    pass
+
+Home = os.path.expanduser('~')
+
+DefaultGcamDir    = Home + '/gcam/gcam-v4.3'
+DefaultProjectDir = Home + '/gcam/projects'
+DefaultSandboxDir = Home + '/gcam/sandboxes'
+
+# TBD
+def askYesNo(msg):
+    value = None
+    while value is None:
+        value = raw_input(msg + ' (y/N)?')
+        if value == '':
+            value = 'n'
+
+        if value not in 'yYnN':
+            print("Please answer y or n.")
+            value = None
+
+    return value in 'yY'
+
+def askPath(msg, default):
+    path = None
+    while path is None:
+        path = raw_input(msg + ' (default=%s)?' % default)
+        if path == '':
+            path = default
+
+        if not os.path.lexists(path):
+            create = askYesNo("Path %s does not exist. Create it" % path)
+            if not create:
+                raise AbortInput()
+
+            mkdirs(path)
+
+    return path
+
+def askString(msg, default):
+    value = None
+    while value is None:
+        value = raw_input(msg + ' (default=%s)?' % default)
+        if value == '':
+            value = default
+
+    return value
+
+class InitCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''List the values of configuration variables from
-                  ~/.pygcam.cfg configuration file.'''}
+        kwargs = {'help' : '''Initialize key variables in the  ~/.pygcam.cfg
+            configuration file. Values not provided on the command-line are
+            requested interactively.'''}
 
-        super(ConfigCommand, self).__init__('config', subparsers, kwargs)
+        super(InitCommand, self).__init__('init', subparsers, kwargs)
 
     def addArgs(self, parser):
-        parser.add_argument('-d', '--useDefault', action='store_true',
-                            help='''Indicates to operate on the DEFAULT
-                                    section rather than the project section.''')
+        import os
+        parser.add_argument('-P', '--defaultProject', type=str,
+                            help='''Set the value of config var GCAM.DefaultProject to
+                                    the given value.''')
 
-        parser.add_argument('-e', '--edit', action='store_true',
-                            help='''Edit the configuration file. The command given by the
-                            value of config variable GCAM.TextEditor is run with the
-                            .pygcam.cfg file as an argument.''')
+        parser.add_argument('-g', '--gcamRoot', type=str,
+                            help='''The top-level directory holding a GCAM v4.3
+                            workspace. Sets config var GCAM.RootDir. Default is
+                            "%s".''' % DefaultGcamDir)
 
-        parser.add_argument('name', nargs='?', default='',
-                            help='''Show the names and values of all parameters whose
-                            name contains the given value. The match is case-insensitive.
-                            If not specified, all variable values are shown.''')
+        parser.add_argument('--overwrite', action='store_true',
+                            help='''Overwrite an existing config file. (Actually, it makes
+                            a backup first in ~/.pygcam.cfg-, but user is required to
+                            confirm overwrite to avoid surprises.)''')
 
-        parser.add_argument('-x', '--exact', action='store_true',
-                            help='''Treat the text not as a substring to match, but
-                            as the name of a specific variable. Match is case-sensitive.
-                            Prints only the value.''')
+        parser.add_argument('-p', '--projectRoot', type=str,
+                            help='''The directory in which to create pygcam project
+                            directories. Sets config var GCAM.ProjectRoot. Default
+                            is "%s".''' % DefaultProjectDir)
 
-        parser.add_argument('-t', '--test', action='store_true',
-                            help='''Test the settings in the configuration file to ensure
-                            that the basic setup is ok, i.e., required parameters have
-                            values that make sense. If specified, no variables are displayed.''')
+        parser.add_argument('-s', '--sandboxRoot', type=str,
+                            help='''The directory in which to create pygcam project
+                            directories. Sets config var GCAM.SandboxRoot. Default
+                            is "%s".''' % DefaultSandboxDir)
 
         return parser
 
-    def testConfig(self, section):
-        import os
-        from ..config import getParam
-
-        requiredDirs = ['SandboxRoot', 'ProjectRoot', 'ProjectDir',
-                        'QueryDir', 'MI.Dir', 'RefWorkspace', 'TempDir']
-        requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'MI.JarFile']
-        optionalDirs  = ['UserTempDir']
-        optionalFiles = ['RegionMapFile', 'RewriteSetsFile']
-
-        dirVars  = requiredDirs  + optionalDirs
-        fileVars = requiredFiles + optionalFiles
-
-        optionalVars = optionalDirs + optionalFiles
-
-        errors = []
-
-        for item in dirVars + fileVars:
-            var = 'GCAM.' + item
-            value = getParam(var)
-
-            if not value:
-                if item in optionalVars:
-                    continue
-                print("Config variable", var, "is empty")
-
-            elif not os.path.lexists(value) and item not in optionalVars:
-                errors.append("%s = '%s' : non-existent path" % (var, value))
-
-            elif not os.path.isfile(value) and item in fileVars:
-                errors.append("%s = '%s' : does not refer to a file" % (var, value))
-
-            elif not os.path.isdir(value) and item in dirVars:
-                errors.append("%s = '%s' : does not refer to a directory" % (var, value))
-
-            print('OK: %s = %s' %(var, value))
-        if errors:
-            print('')
-            for error in errors:
-                print('Error:', error)
-
     def run(self, args, tool):
-        import re
-        import subprocess
-        from ..config import getParam, _ConfigParser, USR_CONFIG_FILE
+        from ..config import USR_CONFIG_FILE
 
-        if args.edit:
-            cmd = '%s %s/%s' % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
-            print(cmd)
-            exitStatus = subprocess.call(cmd, shell=True)
-            if exitStatus != 0:
-                raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
+        configPath = os.path.join(Home, USR_CONFIG_FILE)
+
+        try:
+            dfltProject = args.defaultProject or askString('Enter default project name?', 'ctax')
+            gcamRoot    = args.gcamRoot       or askPath('GCAM root directory?', DefaultGcamDir)
+            projectRoot = args.projectRoot    or askPath('Project root directory?', DefaultProjectDir)
+            sandboxRoot = args.sandboxRoot    or askPath('Sandbox root directory?', DefaultSandboxDir)
+
+            # make backup of configuration file if not exists
+            if os.path.lexists(configPath):
+                overwrite = args.overwrite or askYesNo('Overwrite %s' % configPath)
+                if not overwrite:
+                    raise AbortInput()
+
+                backup = configPath + '-'
+                os.rename(configPath, backup)
+                print('Moved %s to %s' % (configPath, backup))
+
+        except AbortInput as e:
+            _logger.warn('Aborting "init" command')
             return
 
-        section = 'DEFAULT' if args.useDefault else args.projectName
+        # initialize configuration file
 
-        if not section:
-            raise CommandlineError("Project was not specifed and GCAM.DefaultProject is not set")
+        print('Default project:', dfltProject)
+        print('GCAM root:', gcamRoot)
+        print('project root:', projectRoot)
+        print('sandbox root:', sandboxRoot)
 
-        if section != 'DEFAULT' and not _ConfigParser.has_section(section):
-            raise CommandlineError("Unknown configuration file section '%s'" % section)
-
-        if args.test:
-            self.testConfig(section)
-            return
-
-        if args.name and args.exact:
-            value = getParam(args.name, section=section, raiseError=False)
-            if value is not None:
-                print(value)
-            return
-
-        # if no name is given, the pattern matches all variables
-        pattern = re.compile('.*' + args.name + '.*', re.IGNORECASE)
-
-        print("[%s]" % section)
-        for name, value in sorted(_ConfigParser.items(section)):
-            if pattern.match(name):
-                print("%25s = %s" % (name, value))
-
-
-PluginClass = ConfigCommand
+PluginClass = InitCommand

@@ -14,10 +14,10 @@ from ..subcommand import SubcommandABC
 _logger = getLogger(__name__)
 
 
-class ProjectCommand(SubcommandABC):
+class RunCommand(SubcommandABC):
     def __init__(self, subparsers, name='run', help='Run the steps for a project defined in a project.xml file'):
         kwargs = {'help' : help}
-        super(ProjectCommand, self).__init__(name, subparsers, kwargs)
+        super(RunCommand, self).__init__(name, subparsers, kwargs)
 
     def addArgs(self, parser):
 

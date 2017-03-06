@@ -10,10 +10,12 @@ from setuptools import setup
 
 requirements = [
     'configparser',     # backport of python 3.5 version
+    'future',
     'lxml',
     'numpy',
     'pandas',
     'seaborn',
+    'six',
     'sphinx-argparse',
     'filelock',
 ]
@@ -98,7 +100,6 @@ setup(
     include_package_data = True,
 
     url='https://bitbucket.org/plevin/pygcam',
-    # download_url='ssh://git@bitbucket.org/plevin/pygcam.git',
     download_url='https://plevin@bitbucket.org/plevin/pygcam.git',
     license='MIT License',
     author='Richard Plevin',

@@ -19,11 +19,12 @@ from .builtins.chart_plugin import ChartCommand
 from .builtins.config_plugin import ConfigCommand
 from .builtins.diff_plugin import DiffCommand
 from .builtins.gcam_plugin import GcamCommand
+from .builtins.init_plugin import InitCommand
 from .builtins.mi_plugin import ModelInterfaceCommand
 from .builtins.new_plugin import NewProjectCommand
 from .builtins.protect_plugin import ProtectLandCommand
 from .builtins.query_plugin import QueryCommand
-from .builtins.run_plugin import ProjectCommand
+from .builtins.run_plugin import RunCommand
 from .builtins.sandbox_plugin import SandboxCommand
 from .builtins.setup_plugin import SetupCommand
 from .builtins.compare_plugin import CompareCommand
@@ -42,9 +43,9 @@ _logger = getLogger(__name__)
 PROGRAM = 'gt'
 
 BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
-                      GcamCommand, ModelInterfaceCommand, NewProjectCommand,
-                      ProtectLandCommand, QueryCommand, ProjectCommand,
-                      SandboxCommand, SetupCommand]
+                      GcamCommand, InitCommand, ModelInterfaceCommand,
+                      NewProjectCommand, ProtectLandCommand, QueryCommand,
+                      RunCommand, SandboxCommand, SetupCommand]
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
@@ -188,7 +189,7 @@ class GcamTool(object):
 
         # If using MCS, load that set of plugins, too
         if usingMCS():
-            from pygcammcs import MCSBuiltins
+            from pygcammcs.plugins import MCSBuiltins
             map(self.instantiatePlugin, MCSBuiltins)
 
         if loadPlugins:
