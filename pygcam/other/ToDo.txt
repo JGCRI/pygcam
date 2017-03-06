@@ -1,5 +1,30 @@
-For code release
-================
+Installer script
+-----------------
+. Ask if using pygcam for development or just using the "gcamtool"?
+  - Select single file installer vs anaconda + pygcam
+. If using anaconda, look for it, then if missing, offer to download it?
+  Or just print out instructions.
+. Maybe develop a GUI so a single .app works on Mac and similar on Win?
+
+- Create subcommand "gt config --setup" or maybe this is what happens if
+  no configuration file is found? Rather than just copying defaults.
+  - Maybe copy defaults into a separate file instead of creating so much
+    junk in the main config?
+. save prior .pygcam.cfg as .pygcam.cfg~
+. Ask user:
+  - where GCAM lives
+    - try to run gcam exe --version or whatever to check it's 4.3
+    - offer to download/install it on request
+  - where to store project setup files (default to ~/gcam/projects, expanded)
+  - where to store run-time sandboxes (default to ~/gcam/sandboxes, expanded)
+  - offer to run 'gt new -c ctax' and set the DefaultProject to ctax initially.
+
+. Run install-gcam.py (python included on Mac and Linux, but can't
+  assume on Windows)
+  - add interactive mode that asks for various paths
+  - Better yet, help JGCRI develop single file downloads so this is
+    straightforward rather than a nuisance.
+
 
 Document
 --------
@@ -25,6 +50,17 @@ If scen name is unique, determine the group
 
 - Allow <comment>s to nest. Not the case in scenarios.xml currently. Not clear why.
 
+- Have a mode flag to "run" that can be tested, as in:
+  <if var="{mode}" value="mcs">
+    stuff
+    <else> other stuff
+    </else>
+  </if>
+
+- Review all command-line args to avoid overlaps with gt "main" args.
+  Is there a better way to handle this?
+  - Maybe use prefix_chars='-+' when creating the argument parser, then
+    have all "main" args use + to avoid conflicting with sub-command args
 
 Testing
 -------

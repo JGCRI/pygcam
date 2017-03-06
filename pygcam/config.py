@@ -210,6 +210,9 @@ def readConfigFiles():
            _ConfigParser.read_file(f)
 
     except IOError as e:
+        # TBD: rather than this, write a file .pygcam.defaults for ref
+        # TBD: and invoke the "init" sub-command. Then write a basic config
+        # TBD: file with user's values in [DEFAULT] and section for default proj.
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as f:
             commented = _getCommentedDefaults(systemDefaults)
