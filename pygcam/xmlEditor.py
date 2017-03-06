@@ -21,6 +21,7 @@ import glob
 import os
 import re
 import shutil
+import six
 from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean
@@ -289,7 +290,7 @@ def expandYearRanges(seq):
 
     for year, value in seq:
         value = float(value)
-        if isinstance(year, basestring) and '-' in year:
+        if isinstance(year, six.string_types) and '-' in year:
             m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
             if not m:
                 raise SetupException('Unrecognized year range specification: %s' % year)
@@ -1302,6 +1303,69 @@ class XMLEditor(object):
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
+
+    #
+    # //region[@name=""]/energy-final-demand[@name=""]/price-elasticity[@year=""]
+    #
+    # names of energy-final-demand:
+    # 'aglu-xml/demand_input.xml': "Exports_Meat", "FoodDemand_Crops", "FoodDemand_Meat", "NonFoodDemand_Crops", "NonFoodDemand_Forest", "NonFoodDemand_Meat"
+    # 'energy-xml/transportation_UCD.xml': "trn_aviation_intl", "trn_freight", "trn_pass", "trn_shipping_intl"
+    # 'energy-xml/cement.xml: "cement"
+    # 'energy-xml/industry.xml: "industry"
+    #
+    @callableMethod
+    def setPriceElasticity(self, regions, sectors, configFileTag, values):
+        """
+        Modify price-elasticity values for the given `regions` and `sectors` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
+
+        :param regions: (str or list of str) the name(s) of a GCAM region or regions, or "global"
+           to indicate that price elasticity should be set in all regions.
+        :param sector: (str or list of str) the name of a GCAM (demand) sector. In GCAM v4.3, this
+            should be one of {"cement", "industry", "trn_aviation_intl", "trn_freight", "trn_pass",
+            "trn_shipping_intl", "Exports_Meat", "FoodDemand_Crops", "FoodDemand_Meat",
+            "NonFoodDemand_Crops", "NonFoodDemand_Forest", "NonFoodDemand_Meat"}, however if input
+            files have been customized, other values can be used.
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. This determines which file is edited, so it must correspond to
+           the indicated sector(s).
+        :param values: (dict-like or iterable of tuples of (year, elasticity)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.iteritems() after
+            which the rest of the explanation above applies. The `elasticity` can be
+            anything coercible to float.
+        :return: none
+        """
+        _logger.info("Set price-elasticity for (%s, %s) to %s for %s" % (regions, sectors, values, self.name))
+
+        pathname = self.componentPath(configFileTag)
+        if not pathname:
+            raise SetupException('Config file tag "%s" was not found' % configFileTag)
+
+        filenameRel, filenameAbs = self.getLocalCopy(pathname)
+
+        def nameExpression(values):
+            '''
+            Turn ['a', 'b'] into '@name="a" or @name="b"'
+            '''
+            if isinstance(values, six.string_types):
+                values = [values]
+            names = ['@name="%s"' % v for v in values]
+            return ' or '.join(names)
+
+        regionNames = nameExpression(regions)
+        sectorNames = nameExpression(sectors)
+        prefix = '//region[%s]/energy-final-demand[%s]' % (regionNames, sectorNames)
+
+        pairs = []
+        for year, value in expandYearRanges(values):
+            pairs.append((prefix + "/price-elasticity[@year='%s']" % year, coercible(value, float)))
+
+        xmlEdit(filenameAbs, pairs)
+        self.updateScenarioComponent(configFileTag, filenameRel)
+
 
     @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,

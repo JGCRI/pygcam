@@ -9,8 +9,6 @@
 """
 from ..subcommand import SubcommandABC
 
-__version__ = '0.2'
-
 class QueryCommand(SubcommandABC):
 
     def __init__(self, subparsers):
@@ -76,8 +74,6 @@ class QueryCommand(SubcommandABC):
         parser.add_argument('-S', '--rewriteSetsFile',
                             help='''An XML file defining query maps by name (default taken from
                             config parameter "GCAM.RewriteSetsFile")''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-w', '--workspace', default='',
                             help='''The workspace directory in which to find the XML database.

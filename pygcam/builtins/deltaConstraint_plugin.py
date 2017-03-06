@@ -6,8 +6,6 @@ Created on 4/26/15
 '''
 from ..subcommand import SubcommandABC
 
-__version__ = "0.1"
-
 DefaultName  = 'cellulosic ethanol'
 DefaultTag   = 'cell-etoh'
 DefaultType  = 'subsidy'
@@ -67,8 +65,6 @@ class DeltaConstraintsCommand(SubcommandABC):
 
         parser.add_argument('-T', '--policyType', choices=PolicyChoices, default=DefaultType,
                              help='Type of policy to use for the fuel. Default is %s.' % DefaultType)
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('-x', '--xmlOutputDir',
                              help='''The directory into which to generate XML files.

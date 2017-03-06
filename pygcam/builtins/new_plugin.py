@@ -13,7 +13,6 @@ import re
 from ..subcommand import SubcommandABC
 from ..log import getLogger
 
-
 _logger = getLogger(__name__)
 
 def driver(args, tool):
@@ -116,7 +115,6 @@ def driver(args, tool):
 
 
 class NewProjectCommand(SubcommandABC):
-    __version__ = '0.1'
 
     def __init__(self, subparsers):
         kwargs = {'help' : '''Create the structure and files required for a new pygcam project.'''}
@@ -139,8 +137,6 @@ class NewProjectCommand(SubcommandABC):
         parser.add_argument('-r', '--projectRoot', dest='root', metavar='PATH',
                             help='''The directory in which to create a subdirectory for the named
                             project. Default is the value of config variable GCAM.ProjectRoot''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
 
         return parser   # for auto-doc generation
 

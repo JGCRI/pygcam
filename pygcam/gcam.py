@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 from .config import getParam, getParamAsBoolean, getParamAsFloat
-from .error import ProgramExecutionError, GcamRuntimeError, PygcamException
+from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
 from .utils import writeXmldbDriverProperties, getExeDir, pushd
@@ -78,9 +78,10 @@ def _gcamWrapper(args):
 
     except Exception as e:
         cmd = ' '.join(args)
-        raise GcamRuntimeError('gcamWrapper failed to run command: %s (%s)' % (cmd, e))
+        raise ProgramExecutionError('gcamWrapper failed to run command: %s (%s)' % (cmd, e))
 
-    pattern = re.compile('(.*(BaseXException|Model did not solve).*)')
+    modelDidNotSolve = 'Model did not solve'
+    pattern = re.compile('(.*(BaseXException|%s).*)' % modelDidNotSolve)
 
     gcamOut = gcamProc.stdout
     while True:
@@ -94,8 +95,11 @@ def _gcamWrapper(args):
         match = re.search(pattern, line)
         if match:
             gcamProc.terminate()
-            reason = match.group(0)
-            raise GcamRuntimeError('GCAM reported error: ' + reason)
+            msg = 'GCAM error: ' + match.group(0)
+            if match.group(1) == modelDidNotSolve:
+                raise GcamSolverError(msg)
+            else:
+                raise GcamError(msg)
 
     _logger.debug('gcamWrapper found EOF. Waiting for GCAM to exit...')
     status = gcamProc.wait()

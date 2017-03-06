@@ -11,15 +11,13 @@
 from ..log import getLogger
 from ..subcommand import SubcommandABC
 
-__version__ = '0.2'
-
 _logger = getLogger(__name__)
 
 
-class ProjectCommand(SubcommandABC):
+class RunCommand(SubcommandABC):
     def __init__(self, subparsers, name='run', help='Run the steps for a project defined in a project.xml file'):
         kwargs = {'help' : help}
-        super(ProjectCommand, self).__init__(name, subparsers, kwargs)
+        super(RunCommand, self).__init__(name, subparsers, kwargs)
 
     def addArgs(self, parser):
 
@@ -84,8 +82,6 @@ class ProjectCommand(SubcommandABC):
                             be run. Multiple scenarios can be given in a single (comma-delimited)
                             argument, or the -S flag can be repeated to indicate additional scenarios.
                             By default, all active scenarios are run.''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
 
         parser.add_argument('--vars', action='store_true', help='''List variables and their values''')
 

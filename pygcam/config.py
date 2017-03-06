@@ -167,7 +167,9 @@ def readConfigFiles():
         # otherwise, we use HOMESHARE if set, or HOMEPATH, in that order.
         env = os.environ
         homedir = env.get('PYGCAM_HOME') or env.get('HOMESHARE') or env.get('HOMEPATH')
-        home = os.path.realpath(homedir)          # adds home drive
+        drive, path = os.path.splitdrive(homedir)
+        drive = drive or env.get('HOMEDRIVE') or 'C:'
+        home = os.path.realpath(drive + path)
         home = home.replace('\\', '/')            # avoids '\' quoting issues
     else:
         home = os.getenv('HOME')
@@ -208,6 +210,9 @@ def readConfigFiles():
            _ConfigParser.read_file(f)
 
     except IOError as e:
+        # TBD: rather than this, write a file .pygcam.defaults for ref
+        # TBD: and invoke the "init" sub-command. Then write a basic config
+        # TBD: file with user's values in [DEFAULT] and section for default proj.
         # create a file with the system defaults if no file exists
         with open(usrConfigPath, 'w') as f:
             commented = _getCommentedDefaults(systemDefaults)

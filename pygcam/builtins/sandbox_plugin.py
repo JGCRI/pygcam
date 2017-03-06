@@ -74,8 +74,6 @@ def driver(args, tool):
             print("Would run:", cmdStr)
 
 class SandboxCommand(SubcommandABC):
-    __version__ = '0.2'
-
     def __init__(self, subparsers):
         kwargs = {'help' : '''Perform operations on a sandbox.'''}
         super(SandboxCommand, self).__init__('sandbox', subparsers, kwargs)
@@ -108,8 +106,6 @@ class SandboxCommand(SubcommandABC):
 
         parser.add_argument('-s', '--scenario', default='',
                             help='''The scenario for the computed sandbox root.''')
-
-        parser.add_argument('--version', action='version', version='%(prog)s ' + self.__version__)
 
         return parser   # for auto-doc generation
 
