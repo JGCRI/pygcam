@@ -112,7 +112,7 @@ def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, grou
         os.remove(linkname)
     symlinkOrCopyFile(source, linkname)
 
-def _parseStringPairs(argString, datatype=float):
+def parseStringPairs(argString, datatype=float):
     """
     Convert a string of comma-separated pairs of colon-delimited values to
     a pandas Series where the first value of each pair is the index name and
@@ -170,7 +170,7 @@ def genBioConstraints(**kwargs):
     biomassPolicyType = kwargs['biomassPolicyType']
     purposeGrownPolicyType = kwargs['purposeGrownPolicyType']
     cellEtohPolicyType = kwargs['cellEtohPolicyType']
-    coefficients = _parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
+    coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
     batchDir = getBatchDir(baseline, resultsDir)
@@ -196,7 +196,7 @@ def genBioConstraints(**kwargs):
 
     desiredCellEtoh = pd.Series(data={year: defaultLevel for year in yearCols})
     if annualLevels:
-        annuals = _parseStringPairs(annualLevels)
+        annuals = parseStringPairs(annualLevels)
         desiredCellEtoh[annuals.index] = annuals    # override any default values
         _logger.debug("Annual levels set to:", annualLevels)
 
@@ -273,7 +273,7 @@ def genDeltaConstraints(**kwargs):
     resultsDir  = kwargs['resultsDir']
     switchgrass = kwargs.get('switchgrass', False)
     defaultDelta = float(kwargs.get('defaultDelta', 0))
-    coefficients = _parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
+    coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     annualDeltas = kwargs.get('annualDeltas', None)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
     fuelPolicyType = kwargs['fuelPolicyType']
@@ -304,7 +304,7 @@ def genDeltaConstraints(**kwargs):
 
     deltas = pd.Series(data={year: defaultDelta for year in yearCols})
     if annualDeltas is not None:
-        annuals = annualDeltas if isinstance(annualDeltas, pd.Series) else _parseStringPairs(annualDeltas)
+        annuals = annualDeltas if isinstance(annualDeltas, pd.Series) else parseStringPairs(annualDeltas)
         deltas.loc[annuals.index] = annuals    # override any default for the given years
         printSeries(deltas, fuelTag, header='annual deltas:')
         #_logger.debug("Annual deltas: %s", deltas)
