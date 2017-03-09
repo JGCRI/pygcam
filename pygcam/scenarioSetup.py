@@ -175,7 +175,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
         # avoid deleting the current directory
         with pushd('..'):
             removeTreeSafely(sandbox, ignore_errors=True)
-            os.mkdir(sandbox)
+            mkdirs(sandbox)
 
     # also makes sandbox and sandbox/exe
     logPath = pathjoin(sandbox, 'exe', 'logs')

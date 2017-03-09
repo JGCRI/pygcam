@@ -219,7 +219,8 @@ def removeTreeSafely(path, ignore_errors=True):
     if os.path.commonprefix((refWorkspace, thisPath)) == refWorkspace:
         raise PygcamException("Refusing to delete %s, which is part of the reference workspace" % path)
 
-    shutil.rmtree(path, ignore_errors=ignore_errors)
+    _logger.debug("shutil.rmtree('%s')", thisPath)
+    shutil.rmtree(thisPath, ignore_errors=ignore_errors)
 
 def removeFileOrTree(path, raiseError=True):
     """

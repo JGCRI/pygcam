@@ -115,7 +115,7 @@ class GcamTool(object):
 
     def __init__(self, loadPlugins=True):
 
-        # TODO: This is a patch to so address re-entry issue, prior to proper integration
+        # address re-entry issue
         decacheVariables()
 
         self.mcsMode = ''
@@ -361,36 +361,6 @@ class GcamTool(object):
 
         return self.runBatch2(shellArgs, jobName=args.jobName, queueName=args.queueName,
                               logFile=args.logFile, minutes=args.minutes, run=run)
-
-    # deprecated
-    # @staticmethod
-    # def writeBatchScript(args, delete=False):
-    #     """
-    #     Create a shell script in a temporary file which calls gt with the
-    #     given `args`.
-    #     :param args: (list of str) arguments to "gt" to write into a
-    #         script to be executed as a batch job
-    #     :param delete: (bool) if True, mark the tmp file for deletion.
-    #     :return: (str) the pathname of the script
-    #     """
-    #     tmpDir = getParam('GCAM.UserTempDir')
-    #     mkdirs(tmpDir)
-    #
-    #     scriptFile = getTempFile(suffix='.pygcam.sh', tmpDir=tmpDir, delete=delete)
-    #     _logger.info("Creating batch script '%s'", scriptFile)
-    #
-    #     with open(scriptFile, 'w') as f:
-    #         f.write("#!%s\n" % os.getenv('SHELL', '/bin/bash'))
-    #         if delete:
-    #             f.write("rm -f %s\n" % pipes.quote(scriptFile)) # file removes itself once running
-    #         else:
-    #             _logger.info('Batch script file will not be deleted.')
-    #
-    #         shellArgs = map(pipes.quote, args)
-    #         f.write("gt %s\n" % ' '.join(shellArgs))
-    #
-    #     os.chmod(scriptFile, 0o755)
-    #     return scriptFile
 
 def _getMainParser():
     '''
