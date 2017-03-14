@@ -43,6 +43,14 @@ def _mkdirs(newdir, mode=0o770):
         if e.errno != EEXIST:
             raise
 
+# Loggers for top-level package names, e.g., 'pygcam' and 'pygcammcs'
+_PkgLoggers = {}
+
+def _createPkgLogger(dotspec):
+    pkgName = dotspec.split('.')[0]
+
+    if pkgName and pkgName not in _PkgLoggers:
+        _PkgLoggers[pkgName] = logging.getLogger(pkgName)
 
 def getLogger(name):
     '''
@@ -54,6 +62,9 @@ def getLogger(name):
     '''
     _debug('getLogger("%s")' % name)
     logger = logging.getLogger(name)
+
+    _createPkgLogger(name)
+
     configureLogs()
     return logger
 
@@ -69,31 +80,11 @@ def configureLogs(force=False):
     '''
     global _configured, _logLevel
 
-    if not force and _configured:
+    if _configured and not force:
         return
 
     if not configLoaded():
         return
-
-    fileFormat    = getParam('GCAM.LogFileFormat')
-    consoleFormat = getParam('GCAM.LogConsoleFormat')
-
-    logger = logging.getLogger()
-
-    if force:
-        # Remove all handlers from root logger
-        for handler in logger.handlers:
-            logger.removeHandler(handler)
-
-
-    logConsole = getParamAsBoolean('GCAM.LogConsole')
-    logFile    = getParam('GCAM.LogFile')
-
-    _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
-    if _logLevel:
-        logger.setLevel(_logLevel)
-
-    _debug("\nConfiguring root, level=%s" % _logLevel)
 
     def addHandler(formatStr, logFile=None):
         if logFile:
@@ -104,20 +95,31 @@ def configureLogs(force=False):
         logger.addHandler(handler)
         _debug("Added %s handler to root logger" % ('file' if logFile else 'console'))
 
-    if logConsole:
-        addHandler(consoleFormat)
-    else:
-        _debug("Console logging is disabled")
+    fileFormat    = getParam('GCAM.LogFileFormat')
+    consoleFormat = getParam('GCAM.LogConsoleFormat')
+    logFile       = getParam('GCAM.LogFile')
+    logConsole    = getParamAsBoolean('GCAM.LogConsole')
 
-    if logFile:
-        addHandler(fileFormat, logFile=logFile)
-    else:
-        _debug("File logging is disabled")
+    _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
 
-    if not logger.handlers:
-        # Add a null handler if there are no others
-        logger.addHandler(logging.NullHandler())
-        _debug("Added NullHandler to root logger")
+    for name, logger in _PkgLoggers.items():
+        _debug("\nConfiguring %s, level=%s" % (name, _logLevel))
+        logger.setLevel(_logLevel)
+
+        for handler in logger.handlers:
+            if not isinstance(handler, logging.NullHandler):
+                handler.flush()
+            logger.removeHandler(handler)
+
+        if logConsole:
+            addHandler(consoleFormat)
+
+        if logFile:
+            addHandler(fileFormat, logFile=logFile)
+
+        if not logger.handlers:
+            logger.addHandler(logging.NullHandler())
+            _debug("Added NullHandler to root logger")
 
     _configured = True
 
