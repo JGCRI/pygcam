@@ -13,14 +13,20 @@
 """
 import os
 import logging
-from collections import defaultdict
 from .config import getParam, getParamAsBoolean, configLoaded
 from .error import PygcamException
 
+# TBD: have a format string in config space
+# TBD: allow user to configure logLevel at the package or module level
+# TBD: using something like LogLevels = pkg.module:DEBUG pkg:INFO and so on
+# TBD: and similarly for LogConsole and LogFile?
+
 _formatter  = logging.Formatter('%(asctime)s %(levelname)s %(name)s:%(lineno)d %(message)s')
 _configured = False
-_loggers  = defaultdict(lambda: None)
-_consoles = defaultdict(lambda: False)
+_consoleHandler = False
+_fileHandler = False
+_nullHandler = False
+
 _logLevel = None
 _verbose  = False
 
@@ -29,7 +35,7 @@ def _debug(msg):
         print(msg)
 
 #
-# Copied here from utils.py to avoid an "import loop"
+# Copied here from utils.py to avoid an import loop
 #
 def _mkdirs(newdir, mode=0o770):
     """
@@ -46,50 +52,61 @@ def _mkdirs(newdir, mode=0o770):
         if e.errno != EEXIST:
             raise
 
-def _configureLogger(logger):
+def _configureRootLogger():
     '''
-    Configure the given logger using the info in the cfg object.
-    :param logger: a logger instance to configure
+    Configure the root logger using the info in the cfg object.
     :return: none
     '''
     if not configLoaded():
-        raise PygcamException("Error: Can't configure logger %s: configuration object is None." % logger)
+        raise PygcamException("Error: Can't configure logger: configuration object is None.")
 
-    _debug("Configuring logger %s; level=%s" % (logger.name, _logLevel))
+    logger = logging.getLogger()
+    _debug("\nConfiguring root, level=%s" % _logLevel)
+
+    logConsole = getParamAsBoolean('GCAM.LogConsole')
+    logFile = getParam('GCAM.LogFile')
+
     if _logLevel:
         logger.setLevel(_logLevel)
 
-    logConsole = getParamAsBoolean('GCAM.LogConsole')
-    loggerName = logger.name
-
     if logConsole:
-        if _consoles[loggerName]:
-            _debug("Console for %s previously added" % loggerName)
+        global _consoleHandler
+
+        if _consoleHandler:
+            _debug("Console handler previously added")
         else:
-            _debug("Adding console logger for %s" % loggerName)
-            _consoles[loggerName] = True
+            _consoleHandler = True
             handler = logging.StreamHandler()
             handler.setFormatter(_formatter)
             logger.addHandler(handler)
+            _debug("Added console handler to root logger")
     else:
         _debug("Console logging is disabled")
 
-    logFile = getParam('GCAM.LogFile')
     if logFile:
-        _debug("Configuring file logger for %s" % loggerName)
-        _mkdirs(os.path.dirname(logFile))
-        handler = logging.FileHandler(logFile, mode='a')
-        handler.setFormatter(_formatter)
-        logger.addHandler(handler)
+        global _fileHandler
+
+        if _fileHandler:
+            _debug("LogFile handler previously added")
+        else:
+            _fileHandler = True
+            _mkdirs(os.path.dirname(logFile))
+            handler = logging.FileHandler(logFile, mode='a')
+            handler.setFormatter(_formatter)
+            logger.addHandler(handler)
+            _debug("Added file handler to root logger")
+    else:
+        _debug("File logging is disabled")
 
     if not (logConsole or logFile):
-        # NullHandler doesn't work: logger code references handler.level, which
-        # doesn't exist for NullHandler. Instead we use a "null" FileHandler the
-        # old-school UNIX way.
-        #handler = logging.NullHandler
-        _debug("Configuring null logger for %s" % loggerName)
-        handler = logging.FileHandler("/dev/null")
-        logger.addHandler(handler)
+        global _nullHandler
+
+        if _nullHandler:
+            _debug("NullHandler previously added")
+        else:
+            _nullHandler = True
+            logger.addHandler(logging.NullHandler())
+            _debug("Added null logger to root logger")
 
 
 def getLogger(name):
@@ -100,16 +117,9 @@ def getLogger(name):
     :param name: the name of the logger, conventionally passed as __name__.
     :return: a logging logger instance
     '''
-    global _loggers
-
-    logger = _loggers[name]
-    if not logger:
-        logger = logging.getLogger(name)
-        _loggers[name] = logger
-
-    if configLoaded():
-        _configureLogger(logger)
-
+    _debug('getLogger("%s")' % name)
+    logger = logging.getLogger(name)
+    configureLogs()
     return logger
 
 
@@ -127,13 +137,9 @@ def configureLogs(force=False):
     if not force and _configured:
         return
 
+    _debug("Configuring root logger from config")
     _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
-
-    _debug("Configuring all loggers from config")
-
-    for logger in _loggers.values():
-        _configureLogger(logger)
-
+    _configureRootLogger()
     _configured = True
 
 def getLogLevel():
@@ -153,9 +159,8 @@ def setLogLevel(level):
     '''
     global _logLevel
     _logLevel = level.upper()
-
-    for logger in _loggers.values():
-        logger.setLevel(_logLevel)
+    logger = logging.getLogger()
+    logger.setLevel(_logLevel)
 
 
 def resetLogLevel():
@@ -165,5 +170,5 @@ def resetLogLevel():
 
     :return: none
     '''
-    level = getParam('GCAM.LogLevel', default='ERROR').upper()
+    level = getParam('GCAM.LogLevel')
     setLogLevel(level)
