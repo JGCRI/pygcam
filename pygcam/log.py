@@ -14,21 +14,15 @@
 import os
 import logging
 from .config import getParam, getParamAsBoolean, configLoaded
-from .error import PygcamException
 
-# TBD: have a format string in config space
-# TBD: allow user to configure logLevel at the package or module level
+# TBD: Allow user to configure logLevel at the package or module level
 # TBD: using something like LogLevels = pkg.module:DEBUG pkg:INFO and so on
 # TBD: and similarly for LogConsole and LogFile?
 
-_formatter  = logging.Formatter('%(asctime)s %(levelname)s %(name)s:%(lineno)d %(message)s')
 _configured = False
-_consoleHandler = False
-_fileHandler = False
-_nullHandler = False
+_logLevel   = None
 
-_logLevel = None
-_verbose  = False
+_verbose    = False
 
 def _debug(msg):
     if _verbose:
@@ -40,9 +34,6 @@ def _debug(msg):
 def _mkdirs(newdir, mode=0o770):
     """
     Try to create the full path `newdir` and ignore the error if it already exists.
-
-    :param newdir: the directory to create (along with any needed parent directories)
-    :return: nothing
     """
     from errno import EEXIST
 
@@ -51,62 +42,6 @@ def _mkdirs(newdir, mode=0o770):
     except OSError as e:
         if e.errno != EEXIST:
             raise
-
-def _configureRootLogger():
-    '''
-    Configure the root logger using the info in the cfg object.
-    :return: none
-    '''
-    if not configLoaded():
-        raise PygcamException("Error: Can't configure logger: configuration object is None.")
-
-    logger = logging.getLogger()
-    _debug("\nConfiguring root, level=%s" % _logLevel)
-
-    logConsole = getParamAsBoolean('GCAM.LogConsole')
-    logFile = getParam('GCAM.LogFile')
-
-    if _logLevel:
-        logger.setLevel(_logLevel)
-
-    if logConsole:
-        global _consoleHandler
-
-        if _consoleHandler:
-            _debug("Console handler previously added")
-        else:
-            _consoleHandler = True
-            handler = logging.StreamHandler()
-            handler.setFormatter(_formatter)
-            logger.addHandler(handler)
-            _debug("Added console handler to root logger")
-    else:
-        _debug("Console logging is disabled")
-
-    if logFile:
-        global _fileHandler
-
-        if _fileHandler:
-            _debug("LogFile handler previously added")
-        else:
-            _fileHandler = True
-            _mkdirs(os.path.dirname(logFile))
-            handler = logging.FileHandler(logFile, mode='a')
-            handler.setFormatter(_formatter)
-            logger.addHandler(handler)
-            _debug("Added file handler to root logger")
-    else:
-        _debug("File logging is disabled")
-
-    if not (logConsole or logFile):
-        global _nullHandler
-
-        if _nullHandler:
-            _debug("NullHandler previously added")
-        else:
-            _nullHandler = True
-            logger.addHandler(logging.NullHandler())
-            _debug("Added null logger to root logger")
 
 
 def getLogger(name):
@@ -125,7 +60,7 @@ def getLogger(name):
 
 def configureLogs(force=False):
     '''
-    Do basicConfig setup and configure all known loggers based on the information
+    Do basicConfig setup and configure root logger based on the information
     in the config instance given. If already configured, just return, unless
     force == True.
 
@@ -137,10 +72,55 @@ def configureLogs(force=False):
     if not force and _configured:
         return
 
-    _debug("Configuring root logger from config")
+    if not configLoaded():
+        return
+
+    fileFormat    = getParam('GCAM.LogFileFormat')
+    consoleFormat = getParam('GCAM.LogConsoleFormat')
+
+    logger = logging.getLogger()
+
+    if force:
+        # Remove all handlers from root logger
+        for handler in logger.handlers:
+            logger.removeHandler(handler)
+
+
+    logConsole = getParamAsBoolean('GCAM.LogConsole')
+    logFile    = getParam('GCAM.LogFile')
+
     _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
-    _configureRootLogger()
+    if _logLevel:
+        logger.setLevel(_logLevel)
+
+    _debug("\nConfiguring root, level=%s" % _logLevel)
+
+    def addHandler(formatStr, logFile=None):
+        if logFile:
+            _mkdirs(os.path.dirname(logFile))
+
+        handler = logging.FileHandler(logFile, mode='a') if logFile else logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(formatStr))
+        logger.addHandler(handler)
+        _debug("Added %s handler to root logger" % ('file' if logFile else 'console'))
+
+    if logConsole:
+        addHandler(consoleFormat)
+    else:
+        _debug("Console logging is disabled")
+
+    if logFile:
+        addHandler(fileFormat, logFile=logFile)
+    else:
+        _debug("File logging is disabled")
+
+    if not logger.handlers:
+        # Add a null handler if there are no others
+        logger.addHandler(logging.NullHandler())
+        _debug("Added NullHandler to root logger")
+
     _configured = True
+
 
 def getLogLevel():
     """

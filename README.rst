@@ -37,6 +37,9 @@ Version 1.0b11 (forthcoming)
 -----------------------------
 * Created "init" command to interactively set key config variables
 
+* Added config variables GCAM.LogFileFormat and GCAM.LogConsoleFormat to
+  customize the messages produced by the logging system.
+
 
 Version 1.0b10 (9 Feb 2017)
 -----------------------------
