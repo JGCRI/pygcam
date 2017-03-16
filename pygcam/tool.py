@@ -467,6 +467,9 @@ def main(argv=None, raiseError=False):
         print(e)
 
     except SignalException as e:
+        if raiseError:
+            raise
+
         _logger.error("%s: %s" % (PROGRAM, e))
         return e.signum
 
