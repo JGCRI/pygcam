@@ -11,7 +11,6 @@ import argparse
 import os
 import pipes
 import re
-import signal
 import subprocess
 from glob import glob
 
@@ -34,6 +33,7 @@ from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
+from .signals import SignalException, catchSignals
 from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs, pathjoin
 from .version import VERSION
 from .windows import IsWindows
@@ -371,32 +371,6 @@ def _getMainParser():
     tool = GcamTool.getInstance(loadPlugins=False)
     return tool.parser
 
-# We catch only these 3 signals. Can extend this if needed.
-def signame(signum):
-    if signum == signal.SIGTERM:
-        return 'SIGTERM'
-
-    if signum == signal.SIGQUIT:
-        return 'SIGQUIT'
-
-    if signum == signal.SIGALRM:
-        return 'SIGALRM'
-
-    return 'signal %d' % signum
-
-class SignalException(Exception):
-    pass
-
-def _sigHandler(signum, _frame):
-    # msg = "gt process received " + signame(signum)
-    raise SignalException(signum)
-
-def catchSignals():
-    signals = [signal.SIGTERM, signal.SIGINT]
-    signals.append(signal.SIGABRT if IsWindows else signal.SIGQUIT)
-
-    for sig in signals:
-        signal.signal(sig, _sigHandler)
 
 def checkWindowsSymlinks():
     '''
@@ -491,6 +465,10 @@ def main(argv=None, raiseError=False):
 
     except CommandlineError as e:
         print(e)
+
+    except SignalException as e:
+        _logger.error("%s: %s" % (PROGRAM, e))
+        return e.signum
 
     except Exception as e:
         if raiseError:

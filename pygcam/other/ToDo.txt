@@ -41,6 +41,8 @@ Cleanup
 -------
 - Consolidate generic code from sectorEditors and xmlEditor
 
+- Split utils.py into logical parts and merge where possible with pygcammcs.util
+
 Features
 --------
 - New @query flag: "-rewrite regions8,crops" # replaces what's in project.xml
@@ -77,6 +79,10 @@ If scen name is unique, determine the group
   Is there a better way to handle this?
   - Maybe use prefix_chars='-+' when creating the argument parser, then
     have all "main" args use + to avoid conflicting with sub-command args
+  - Alternatively, before calling parse_args, look for all known subcmds,
+    split argv into pre- and post-subcmd args, then call parse_known_args
+    for global args, before parsing the rest?
+  - Note that "future" (3.x) argparse supports aliases=['co'] ...
 
 
 Testing
