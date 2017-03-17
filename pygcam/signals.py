@@ -5,17 +5,16 @@ import signal
 from .windows import IsWindows
 
 # Windows has only SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, or SIGTERM
-_sigmap = {signal.SIGABRT: 'SIGABRT',
-           signal.SIGTERM: 'SIGTERM',
-           signal.SIGINT:  'SIGINT'}
+if IsWindows:
+    signal.SIGALRM = signal.SIGTERM
+    signal.SIGQUIT = signal.SIGTERM
 
-if not IsWindows:
-    _sigmap[signal.SIGHUP]  = 'SIGHUP'
-    _sigmap[signal.SIGUSR1] = 'SIGUSR1'
-    _sigmap[signal.SIGUSR2] = 'SIGUSR2'
-    _sigmap[signal.SIGALRM] = 'SIGALRM'
-    _sigmap[signal.SIGQUIT] = 'SIGQUIT'
-
+_sigmap = {
+    signal.SIGALRM: 'SIGALRM',
+    signal.SIGTERM: 'SIGTERM',
+    signal.SIGQUIT: 'SIGQUIT',
+    signal.SIGINT:  'SIGINT',
+}
 
 def _signame(signum):
     return _sigmap[signum] if signum in _sigmap else 'signal %d' % signum
@@ -27,11 +26,23 @@ class SignalException(Exception):
         self.signame = _signame(signum)
 
     def __str__(self):
-        return "SignalException: process received %s" % self.signame
+        return "Process received %s" % self.signame
 
+class AlarmSignalException(SignalException):
+    pass
+
+class TimeoutSignalException(SignalException):
+    pass
 
 def raiseSignalException(signum, _frame):
-    raise SignalException(signum)
+    if signum == signal.SIGARLM:
+        raise AlarmSignalException(signum)
+
+    elif signum == signal.SIGTERM:      # TBD: this is sent by SLURM. Same for PBS??
+        raise TimeoutSignalException(signum)
+
+    else:
+        raise SignalException(signum)
 
 
 def catchSignals(handler=raiseSignalException):

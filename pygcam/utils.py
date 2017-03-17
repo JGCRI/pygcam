@@ -14,7 +14,6 @@ import shutil
 import subprocess
 import sys
 from contextlib import contextmanager
-from itertools import chain
 from tempfile import mkstemp, mkdtemp
 
 from .config import getParam, getParamAsBoolean
@@ -343,6 +342,8 @@ def flatten(listOfLists):
     :param listOfLists: a list of lists, obviously
     :return: the flattened list
     """
+    from itertools import chain
+
     return list(chain.from_iterable(listOfLists))
 
 def ensureExtension(filename, ext):
