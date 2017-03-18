@@ -50,7 +50,9 @@ def _createPkgLogger(dotspec):
     pkgName = dotspec.split('.')[0]
 
     if pkgName and pkgName not in _PkgLoggers:
-        _PkgLoggers[pkgName] = logging.getLogger(pkgName)
+        logger = logging.getLogger(pkgName)
+        logger.propagate = 0    # traitlets library uses root logger...
+        _PkgLoggers[pkgName] = logger
 
 def getLogger(name):
     '''
@@ -93,7 +95,7 @@ def configureLogs(force=False):
         handler = logging.FileHandler(logFile, mode='a') if logFile else logging.StreamHandler()
         handler.setFormatter(logging.Formatter(formatStr))
         logger.addHandler(handler)
-        _debug("Added %s handler to root logger" % ('file' if logFile else 'console'))
+        _debug("Added %s handler to '%s' logger" % ('file' if logFile else 'console', logger.name))
 
     fileFormat    = getParam('GCAM.LogFileFormat')
     consoleFormat = getParam('GCAM.LogConsoleFormat')
