@@ -35,7 +35,7 @@ class TimeoutSignalException(SignalException):
     pass
 
 def raiseSignalException(signum, _frame):
-    if signum == signal.SIGARLM:
+    if signum == signal.SIGALRM:
         raise AlarmSignalException(signum)
 
     elif signum == signal.SIGTERM:      # TBD: this is sent by SLURM. Same for PBS??
