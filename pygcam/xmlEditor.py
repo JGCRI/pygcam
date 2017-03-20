@@ -630,7 +630,6 @@ class XMLEditor(object):
 
         return self.configPath
 
-    # TBD: test this
     def componentPath(self, tag):
         pathname = xmlSel(self.cfgPath(), '//Value[@name="%s"]' % tag, asText=True)
 
@@ -674,7 +673,7 @@ class XMLEditor(object):
                           _split(path, self.solution_prefix_rel))
         return result
 
-    # TBD: may be obsolete
+    # TBD: may be obsolete if switching to tag-based lookup
     def _closestCopy(self, tail):
         """
         Find the "closest" copy of the given relative path, `tail`,
@@ -827,7 +826,7 @@ class XMLEditor(object):
         :return: none
         """
         # Ensure no duplicates tags
-        self.deleteScenarioComponent(name)      # TBD: test this
+        self.deleteScenarioComponent(name)
 
         xmlfile = unixPath(xmlfile)
         _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
@@ -855,7 +854,6 @@ class XMLEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
-        _logger.info("Update ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
 
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
@@ -1113,9 +1111,13 @@ class XMLEditor(object):
         # NB: this code depends on these being the tags assigned to the land files
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
         for num in [2, 3]:
-            filename = 'land_input_%d.xml' % num
-            fileTag  = 'land%d' % num   # TBD use tag rather than path
-            landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
+            fileTag  = 'land%d' % num
+            path = self.componentPath(fileTag)
+            landFileRel, landFileAbs = self.getLocalCopy(path)
+
+            # deprecated
+            # filename = 'land_input_%d.xml' % num
+            # landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
@@ -1132,9 +1134,14 @@ class XMLEditor(object):
         # NB: this code depends on these being the tags assigned to the land files
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
         for num in [2, 3]:
-            filename = 'land_input_%d.xml' % num
-            fileTag  = 'land%d' % num   # TBD use tag rather than path
-            landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
+            fileTag  = 'land%d' % num
+            path = self.componentPath(fileTag)
+            landFileRel, landFileAbs = self.getLocalCopy(path)
+
+            # deprecated
+            # filename = 'land_input_%d.xml' % num
+            # landFileRel, landFileAbs = self.getLocalCopy(pathjoin(self.aglu_dir_rel, filename))
+
             landXmlFiles.append(landFileAbs)
             self.updateScenarioComponent(fileTag, landFileRel)
 

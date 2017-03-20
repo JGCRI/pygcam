@@ -37,6 +37,15 @@ Version 1.0b11 (forthcoming)
 -----------------------------
 * Created "init" command to interactively set key config variables
 
+* Added config variables GCAM.LogFileFormat and GCAM.LogConsoleFormat to
+  customize the messages produced by the logging system.
+
+* Added setPriceElasticity function, callable from scenarios.xml scripts
+
+* Improved install script to work across all 3 GCAM platforms.
+
+* Fixed home drive / home directory access on Windows
+
 
 Version 1.0b10 (9 Feb 2017)
 -----------------------------

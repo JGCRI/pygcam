@@ -73,6 +73,7 @@ def setJavaPath(exeDir):
 
 def _gcamWrapper(args):
     try:
+        _logger.debug('Starting gcam with wrapper')
         gcamProc = subprocess.Popen(args, bufsize=0, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, close_fds=True)
 
@@ -89,8 +90,9 @@ def _gcamWrapper(args):
         if line == '':
             break
 
-        sys.stdout.write(line)
-        sys.stdout.flush()
+        # sys.stdout.write(line)
+        # sys.stdout.flush()
+        _logger.info(line.rstrip())          # see if this ends up in worker.log
 
         match = re.search(pattern, line)
         if match:
@@ -132,7 +134,7 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     :return: none
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
-    workspace = workspace or (os.path.join(getParam('GCAM.SandboxDir'), scenario) \
+    workspace = workspace or (os.path.join(getParam('GCAM.SandboxDir'), scenario)
                                        if scenario else getParam('GCAM.RefWorkspace'))
 
     if not os.path.lexists(workspace) or forceCreate:
@@ -143,7 +145,7 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     version = getParamAsFloat('GCAM.VersionNumber')
 
     # These features didn't exist in version 4.2
-    if version > 4.2 and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or \
+    if version > 4.2 and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
                               getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)

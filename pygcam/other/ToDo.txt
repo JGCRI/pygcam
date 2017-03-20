@@ -25,7 +25,6 @@ Installer script
   - Better yet, help JGCRI develop single file downloads so this is
     straightforward rather than a nuisance.
 
-
 Document
 --------
 - Assumptions behind setup code
@@ -42,6 +41,8 @@ Cleanup
 -------
 - Consolidate generic code from sectorEditors and xmlEditor
 
+- Split utils.py into logical parts and merge where possible with pygcammcs.util
+
 Features
 --------
 - New @query flag: "-rewrite regions8,crops" # replaces what's in project.xml
@@ -50,17 +51,39 @@ If scen name is unique, determine the group
 
 - Allow <comment>s to nest. Not the case in scenarios.xml currently. Not clear why.
 
+- Add iteration construct as per discussion with Chris
+  - iterate a fixed number of times, or over a list
+    - Run gcam until a given end date, extract results, run to next
+      time-step, iterate over given list of end dates, e.g., to 2100.
+  - iterate until some plugin or script returns a 'stop' sentinel value
+  <iterate name="gcam" var="end-date" values="2050-2100:5">
+     <sub-step>@gcam ... --endDate={end-date}</sub-step>
+     <sub-step>@postProcessor ... --endDate={end-date}</sub-step>
+  </iterate>
+
+  <iterate name="gcam" until="/path/to/script args..." eq="whatever">
+  <iterate name="gcam" until="@plugin args..." neq="whatever">
+  ...
+  Support operators eq, neq, gt, lt, gte, lte
+
 - Have a mode flag to "run" that can be tested, as in:
-  <if var="{mode}" value="mcs">
+  <if var="{mode}" eq="mcs">
     stuff
     <else> other stuff
     </else>
   </if>
 
+- Also modify scenarios.xml syntax to allow <else></else>
+
 - Review all command-line args to avoid overlaps with gt "main" args.
   Is there a better way to handle this?
   - Maybe use prefix_chars='-+' when creating the argument parser, then
     have all "main" args use + to avoid conflicting with sub-command args
+  - Alternatively, before calling parse_args, look for all known subcmds,
+    split argv into pre- and post-subcmd args, then call parse_known_args
+    for global args, before parsing the rest?
+  - Note that "future" (3.x) argparse supports aliases=['co'] ...
+
 
 Testing
 -------
