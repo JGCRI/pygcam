@@ -1327,7 +1327,8 @@ class XMLEditor(object):
         **Callable from XML setup files.**
 
         :param regions: (str or list of str) the name(s) of a GCAM region or regions, or "global"
-           to indicate that price elasticity should be set in all regions.
+           to indicate that price elasticity should be set in all regions. (Or more precisely,
+           the change should not be restricted by region.)
         :param sector: (str or list of str) the name of a GCAM (demand) sector. In GCAM v4.3, this
             should be one of {"cement", "industry", "trn_aviation_intl", "trn_freight", "trn_pass",
             "trn_shipping_intl", "Exports_Meat", "FoodDemand_Crops", "FoodDemand_Meat",
@@ -1353,22 +1354,32 @@ class XMLEditor(object):
 
         filenameRel, filenameAbs = self.getLocalCopy(pathname)
 
+        def listifyString(value, aliasForNone=None):
+            if isinstance(value, six.string_types):
+                value = [value]
+
+            # Treat "global" as not restricting by region
+            if aliasForNone and len(value) == 1 and value[0] == aliasForNone:
+                return None
+
+            return value
+
         def nameExpression(values):
             '''
             Turn ['a', 'b'] into '@name="a" or @name="b"'
             '''
-            if isinstance(values, six.string_types):
-                values = [values]
             names = ['@name="%s"' % v for v in values]
             return ' or '.join(names)
 
-        regionNames = nameExpression(regions)
-        sectorNames = nameExpression(sectors)
-        prefix = '//region[%s]/energy-final-demand[%s]' % (regionNames, sectorNames)
+        regions = listifyString(regions, aliasForNone='global')
+        nameExpr = '[' + nameExpression(regions) + ']' if regions else ''
+        regionExpr = '//region' + nameExpr
+
+        prefix = regionExpr + '/energy-final-demand[%s]' % nameExpression(sectors)
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append((prefix + "/price-elasticity[@year='%s']" % year, coercible(value, float)))
+            pairs.append((prefix + '/price-elasticity[@year="%s"]' % year, coercible(value, float)))
 
         xmlEdit(filenameAbs, pairs)
         self.updateScenarioComponent(configFileTag, filenameRel)
