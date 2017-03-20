@@ -1353,22 +1353,32 @@ class XMLEditor(object):
 
         filenameRel, filenameAbs = self.getLocalCopy(pathname)
 
+        def listifyString(value, aliasForNone=None):
+            if isinstance(value, six.string_types):
+                value = [value]
+
+            # Treat "global" as not restricting by region
+            if aliasForNone and len(value) == 1 and value[0] == aliasForNone:
+                return None
+
+            return value
+
         def nameExpression(values):
             '''
             Turn ['a', 'b'] into '@name="a" or @name="b"'
             '''
-            if isinstance(values, six.string_types):
-                values = [values]
             names = ['@name="%s"' % v for v in values]
             return ' or '.join(names)
 
-        regionNames = nameExpression(regions)
-        sectorNames = nameExpression(sectors)
-        prefix = '//region[%s]/energy-final-demand[%s]' % (regionNames, sectorNames)
+        regions = listifyString(regions, aliasForNone='global')
+        nameExpr = '[' + nameExpression(regions) + ']' if regions else ''
+        regionExpr = '//region' + nameExpr
+
+        prefix = regionExpr + '/energy-final-demand[%s]' % nameExpression(sectors)
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append((prefix + "/price-elasticity[@year='%s']" % year, coercible(value, float)))
+            pairs.append((prefix + '/price-elasticity[@year="%s"]' % year, coercible(value, float)))
 
         xmlEdit(filenameAbs, pairs)
         self.updateScenarioComponent(configFileTag, filenameRel)
