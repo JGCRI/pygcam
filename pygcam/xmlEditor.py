@@ -1327,7 +1327,8 @@ class XMLEditor(object):
         **Callable from XML setup files.**
 
         :param regions: (str or list of str) the name(s) of a GCAM region or regions, or "global"
-           to indicate that price elasticity should be set in all regions.
+           to indicate that price elasticity should be set in all regions. (Or more precisely,
+           the change should not be restricted by region.)
         :param sector: (str or list of str) the name of a GCAM (demand) sector. In GCAM v4.3, this
             should be one of {"cement", "industry", "trn_aviation_intl", "trn_freight", "trn_pass",
             "trn_shipping_intl", "Exports_Meat", "FoodDemand_Crops", "FoodDemand_Meat",
