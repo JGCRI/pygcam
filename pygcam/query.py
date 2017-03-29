@@ -464,7 +464,7 @@ def _copyToLogFile(logFile, filename, msg=''):
 
 def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, tmpFiles=True,
                                xmldb='', csvFile=None, regions=None, regionMap=None,
-                               rewriters=None, rewriteParser=None, noDelete=False):
+                               rewriters=None, rewriteParser=None, noDelete=False, saveAs=None):
     """
     Generate a <command> element for use in a multi-query batch file. The indicated
     query will be copied into a temporary file that is referenced by this <command>
@@ -488,6 +488,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         rewriteSets.xml
     :param noDelete: (bool) if True, temporary files created by this function are
         not deleted (use for debugging)
+    :param saveAs (str): alternative name to use to save the query results as
     :return: (str) the generated batch command string
     """
     basename = os.path.basename(queryName)
@@ -507,8 +508,8 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
                               (basename, queryPath))
 
     if not csvFile:
-        csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
-        csvFile = csvFile.replace(' ', '_')             # eliminate spaces for convenience
+        csvFile = "%s-%s.csv" % (saveAs or mainPart, scenario)    # compute default filename
+        csvFile = csvFile.replace(' ', '_')                       # eliminate spaces for convenience
 
     outputDir = outputDir or getParam('GCAM.OutputDir')
     mkdirs(outputDir)
@@ -550,15 +551,19 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     commands = []
 
     for obj in queries:
-        if isinstance(obj, Query):      # handle Query instances and simple query name strings
+        # handle both Query instances and simple query name strings
+        if isinstance(obj, Query):
             queryName = obj.name
             rewriters = obj.rewriters
+            saveAs    = obj.saveAs
 
             if not rewriteParser:
                 raise PygcamException("No rewriteParser defined. Pass filename as argument to query sub-command or define GCAM.RewriteSetsFile")
         else:
+            # Deprecated? Old style, simple list of query names.
             queryName = obj
             rewriters = None
+            saveAs    = None
 
         queryName = queryName.strip()
 
@@ -571,7 +576,7 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         command = _createBatchCommandElement(scenario, queryName, queryPath, outputDir=outputDir,
                                              xmldb=xmldb, regions=regions, regionMap=regionMap,
                                              rewriters=rewriters, rewriteParser=rewriteParser,
-                                             tmpFiles=tmpFiles, noDelete=noDelete)
+                                             tmpFiles=tmpFiles, noDelete=noDelete, saveAs=saveAs)
         commands.append(command)
 
 
@@ -645,7 +650,8 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
 
 def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
                   csvFile=None, miLogFile=None, regions=None, regionMap=None,
-                  rewriters=None, rewriteParser=None, noRun=False, noDelete=False):
+                  rewriters=None, rewriteParser=None, noRun=False, noDelete=False,
+                  saveAs=None):
     """
     Run a single query against GCAM's XML database given by `xmldb` (or computed
     from other parameters), optionally saving the results into `outfile`.
@@ -670,6 +676,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
     :param noRun: (bool) if True, the command is printed but not executed
     :param noDelete: (bool) if True, temporary files created by this function are
         not deleted (use for debugging)
+    :param saveAs (str): alternative name to use to save the query results as
     :return: (str) the absolute path to the generated .CSV file, or None
     """
     basename = os.path.basename(queryName)
@@ -688,8 +695,8 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
         raise PygcamException("runBatchQuery: file for query '%s' was not found." % basename)
 
     if not csvFile:
-        csvFile = "%s-%s.csv" % (mainPart, scenario)    # compute default filename
-        csvFile = csvFile.replace(' ', '_')             # eliminate spaces for convenience
+        csvFile = "%s-%s.csv" % (saveAs or mainPart, scenario)    # compute default filename
+        csvFile = csvFile.replace(' ', '_')                       # eliminate spaces for convenience
 
     csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
 
@@ -772,12 +779,13 @@ def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], query
 
     for queryNode in queryNodes:
         queryName = queryNode.name
+        saveAs    = queryNode.saveAs
         rewriters = queryNode.rewriters
 
         runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=xmldb,
                       miLogFile=miLogFile, regions=regions, regionMap=regionMap,
                       rewriters=rewriters, rewriteParser=rewriteParser,
-                      noRun=noRun, noDelete=noDelete)
+                      noRun=noRun, noDelete=noDelete, saveAs=saveAs)
 
 def sumYears(files, skiprows=1, interpolate=False):
     """

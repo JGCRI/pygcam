@@ -17,7 +17,7 @@ import tarfile
 
 PlatformName = platform.system()
 isWindows = (PlatformName == 'Windows')
-isDarwin  = (PlatformName == 'Darwinv')
+isDarwin  = (PlatformName == 'Darwin')
 isLinux   = (PlatformName == 'Linux')
 
 

@@ -121,60 +121,60 @@ class GcamTool(object):
         self.mcsMode = ''
         self.shellArgs = None
 
-        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM)
+        self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
 
-        parser.add_argument('-b', '--batch', action='store_true',
+        parser.add_argument('+b', '--batch', action='store_true',
                             help='''Run the commands by submitting a batch job using the command
                             given by config variable GCAM.BatchCommand. (Linux only)''')
 
-        parser.add_argument('-B', '--showBatch', action="store_true",
+        parser.add_argument('+B', '--showBatch', action="store_true",
                             help="Show the batch command to be run, but don't run it. (Linux only)")
 
-        parser.add_argument('-e', '--enviroVars',
+        parser.add_argument('+e', '--enviroVars',
                             help='''Comma-delimited list of environment variable assignments to pass
                             to queued batch job, e.g., -E "FOO=1,BAR=2". (Linux only)''')
 
-        parser.add_argument('-j', '--jobName', default='gt',
+        parser.add_argument('+j', '--jobName', default='gt',
                             help='''Specify a name for the queued batch job. Default is "gt".
                             (Linux only)''')
 
-        parser.add_argument('-l', '--logLevel', type=str.lower, metavar='level',
+        parser.add_argument('+l', '--logLevel', type=str.lower, metavar='level',
                             choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
                             help='Sets the log level of the program.')
 
-        parser.add_argument('-L', '--logFile',
+        parser.add_argument('+L', '--logFile',
                             help='''Sets the name of a log file for batch runs. Default is "gt-$j.out"
                             where "$j" is replaced by "%%j", which (in SLURM) is the jobid. If the
                             argument is not an absolute pathname, it is treated as relative to the
                             value of GCAM.LogDir.''')
 
-        parser.add_argument('-m', '--minutes', type=float,
+        parser.add_argument('+m', '--minutes', type=float,
                             help='''Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)''')
 
-        parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'],
+        parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'],
                             help='''Used only when running gcamtool from pygcam-mcs.''')
 
-        parser.add_argument('-P', '--projectName', metavar='name',
+        parser.add_argument('+P', '--projectName', metavar='name',
                             help='''The project name (the config file section to read from),
                             which defaults to the value of config variable GCAM.DefaultProject''')
 
-        parser.add_argument('-q', '--queueName',
+        parser.add_argument('+q', '--queueName',
                             help='''Specify the name of the queue to which to submit the batch job.
                             Default is given by config variable GCAM.DefaultQueue. (Linux only)''')
 
-        parser.add_argument('-r', '--resources', default='',
+        parser.add_argument('+r', '--resources', default='',
                             help='''Specify resources for the queued batch command. Can be a comma-delimited
                             list of assignments of the form NAME=value, e.g., -r 'pvmem=6GB'. (Linux only)''')
 
-        parser.add_argument('--set', dest='configVars', metavar='name=value', action='append', default=[],
+        parser.add_argument('+s', '--set', dest='configVars', metavar='name=value', action='append', default=[],
                             help='''Assign a value to override a configuration file parameter. For example,
                             to set batch commands to start after a prior job of the same name completes,
                             use --set "GCAM.OtherBatchArgs=-d singleton". Enclose the argument in quotes if
                             it contains spaces or other characters that would confuse the shell.
                             Use multiple --set flags and arguments to set multiple variables.''')
 
-        parser.add_argument('-v', '--verbose', action='store_true',
+        parser.add_argument('+v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 
         parser.add_argument('--version', action='version', version='%(prog)s-' + VERSION)   # goes to stderr, handled by argparse
@@ -238,9 +238,9 @@ class GcamTool(object):
     def _loadRequiredPlugins(self, argv):
         # Create a dummy subparser to allow us to identify the requested
         # sub-command so we can load the module if necessary.
-        parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+        parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
         parser.add_argument('-h', '--help', action='store_true')
-        parser.add_argument('-P', '--projectName', metavar='name')
+        parser.add_argument('+P', '--projectName', metavar='name')
 
         ns, otherArgs = parser.parse_known_args(args=argv)
 
@@ -388,8 +388,8 @@ def checkWindowsSymlinks():
             setParam('GCAM.CopyAllFiles', 'True')
 
 def _setDefaultProject(argv):
-    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
-    parser.add_argument('-P', '--projectName', metavar='name')
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
+    parser.add_argument('+P', '--projectName', metavar='name')
 
     ns, _otherArgs = parser.parse_known_args(args=argv)
 
@@ -408,7 +408,7 @@ def _main(argv=None):
     tool._loadRequiredPlugins(argv)
 
     # This parser handles only --VERSION flag.
-    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
     parser.add_argument('--VERSION', action='store_true')
     ns, otherArgs = parser.parse_known_args(args=argv)
     if ns.VERSION:
@@ -419,13 +419,13 @@ def _main(argv=None):
     # This parser handles only --batch, --showBatch, and --projectName args.
     # If --batch is given, we need to create a script and call the GCAM.BatchCommand
     # on it. We grab --projectName so we can set PluginPath by project
-    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False)
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
 
-    parser.add_argument('-b', '--batch', action='store_true')
-    parser.add_argument('-B', '--showBatch', action="store_true")
-    parser.add_argument('-P', '--projectName', dest='projectName', metavar='name')
-    parser.add_argument('--set', dest='configVars', action='append', default=[])
-    parser.add_argument('--mcs', dest='mcsMode', choices=['trial','gensim'])
+    parser.add_argument('+b', '--batch', action='store_true')
+    parser.add_argument('+B', '--showBatch', action="store_true")
+    parser.add_argument('+P', '--projectName', dest='projectName', metavar='name')
+    parser.add_argument('+s', '--set', dest='configVars', action='append', default=[])
+    parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'])
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 

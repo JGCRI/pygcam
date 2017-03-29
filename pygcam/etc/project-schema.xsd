@@ -208,6 +208,7 @@
                 <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
+            <xs:attribute name='saveAs' type='xs:string'/>
             <xs:attribute name='useDefault' type='xs:boolean'/>
         </xs:complexType>
     </xs:element>

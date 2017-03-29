@@ -46,6 +46,10 @@ Version 1.0b11 (forthcoming)
 
 * Fixed home drive / home directory access on Windows
 
+* Added "saveAs" attribute to query specification to allow a query
+  to be rewritten (aggregated) different ways and saved to CSV files
+  with different names.
+
 
 Version 1.0b10 (9 Feb 2017)
 -----------------------------

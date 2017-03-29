@@ -196,6 +196,7 @@ class UnitNamespace(object):
         s.ha_to_km2 = 1 / s.km2_to_ha
         s.kkm2_to_ha = 1000 * s.km2_to_ha
         s.thous_km2_to_ha = s.kkm2_to_ha    # alias,
+        s.kkm2_to_Mha = s.kkm2_to_ha / 1e6
         s.bm2_to_ha =  1e5
         s.ha_to_bm2 =  1e-5
         s.ha_to_m2 =   1e4

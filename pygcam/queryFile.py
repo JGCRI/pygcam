@@ -17,6 +17,7 @@ from .utils import XMLFile, getBooleanXML, resourceStream
 class Query(object):
     def __init__(self, node, defaultMap):
         self.name = node.get('name')
+        self.saveAs = node.get('saveAs', self.name)
         self.delete = getBooleanXML(node.get('delete', '1'))
         self.useDefault = useDefault = getBooleanXML(node.get('useDefault', '1'))
 
@@ -32,8 +33,6 @@ class Query(object):
         if defaultMap and ((rewriters and explicitUseDefault) or (not rewriters and useDefault)):
             self.rewriters.append((defaultMap, None))
 
-    def getName(self):
-        return self.name
 
 class QueryFile(object):
     def __init__(self, node):
@@ -42,8 +41,13 @@ class QueryFile(object):
         nodes = node.findall('query')
         self.queries = [Query(node, defaultMap) for node in nodes]
 
-    def queryNames(self):
-        names = map(Query.getName, self.queries)
+    def queryFilenames(self):
+        """
+        Return the name used to compose the filename for this query, which
+        may differ from the original query name, e.g., if the same query
+        needs to be rewritten differently for different purposes.
+        """
+        names = map(lambda q: q.saveAs, self.queries)
         return names
 
     @classmethod

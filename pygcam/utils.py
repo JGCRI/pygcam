@@ -419,12 +419,11 @@ QueryResultsDir = 'queryResults'
 
 def getBatchDir(scenario, resultsDir):
     """
-    Get the name of the directory holding batch query results. This differs
-    when running in pygcam's "gt" or when running in GCAM-MCS.
+    Get the name of the directory holding batch query results..
 
     :param scenario: (str) the name of a scenario
-    :param resultsDir: (str) the directory in which the batch results directory
-           should be created
+    :param resultsDir: (str) the directory in which the batch
+        results directory should be created
     :return: (str) the pathname to the batch results directory
     """
     pathname = pathjoin(resultsDir, scenario, QueryResultsDir)

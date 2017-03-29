@@ -178,11 +178,45 @@ def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, 
     writer(outFile, referenceFile, otherFiles, skiprows=skiprows, interpolate=interpolate,
            years=years, startYear=startYear)
 
-def diffMain(args):
-    mkdirs(args.workingDir)
-    os.chdir(args.workingDir)
 
-    _logger.debug('Working dir: %s', args.workingDir)
+def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', createDir=False):
+    """
+    Compute the path to the CSV file containing differences between `policy` and
+    `baseline` scenarios for `query`.
+    :param query: (str) the base file name of the query result
+    :param baseline: (str) the baseline scenario
+    :param policy: (str) the policy scenario
+    :param workingDir: (str) the directory immediately above the baseline
+        and policy sandboxes.
+    :param createDir: (bool) whether to create the diffs directory, if needed.
+    :return: (str) the pathname of the CSV file
+    """
+    diffsDir = diffsDir or pathjoin(workingDir, policy, 'diffs')
+    if createDir:
+        mkdirs(diffsDir)
+
+    pathname = pathjoin(diffsDir, '%s-%s-%s.csv' % (query, policy, baseline))
+    return pathname
+
+def queryCsvPathname(query, scenario, workingDir='.'):
+    """
+    Compute the path to the CSV file containing results for the given
+    `query` and `scenario`.
+    :param query: (str) the base file name of the query result
+    :param scenario: (str) the scenario name
+    :param workingDir: (str) the directory immediately above the baseline
+        and policy sandboxes.
+    :return: (str) the pathname of the CSV file
+    """
+    pathname = pathjoin(workingDir, scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
+    return pathname
+
+def diffMain(args):
+    workingDir = args.workingDir
+    mkdirs(workingDir)
+    os.chdir(workingDir)
+
+    _logger.debug('Working dir: %s', workingDir)
 
     convertOnly = args.convertOnly
     skiprows    = args.skiprows
@@ -210,20 +244,17 @@ def diffMain(args):
 
         if extension.lower() == '.xml':
             queryFileObj = QueryFile.parse(queryFile)
-            queries = queryFileObj.queryNames()
+            queries = queryFileObj.queryFilenames()
         else:
             with open(queryFile, 'rU') as f:    # 'U' converts line separators to '\n' on Windows
                 lines = f.read()
                 queries = filter(None, lines.split('\n'))   # eliminates blank lines
 
         for query in queries:
-            baselineFile = makePath(query, baseline)
-            policyFile   = makePath(query, policy)
-            diffsDir = pathjoin(policy, 'diffs')
-            mkdirs(diffsDir)
+            baselineFile = queryCsvPathname(query, baseline, workingDir=workingDir)
+            policyFile   = queryCsvPathname(query, policy,   workingDir=workingDir)
 
-            outFile = pathjoin(diffsDir, '%s-%s-%s.csv' % (query, policy, baseline))
-
+            outFile = diffCsvPathname(query, baseline, policy, workingDir=workingDir, createDir=True)
             _logger.debug("Writing %s", outFile)
 
             writeDiffsToFile(outFile, baselineFile, [policyFile], ext='.csv', skiprows=skiprows,
