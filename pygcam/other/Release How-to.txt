@@ -1,13 +1,17 @@
 Notes on what to do to issue a new release
 ------------------------------------------
 
-1. Merge develop etc. into master
-2. Do 'make clean html' in docs
-   - check API for missing doc files or func descriptions
-3. Update Release Notes section in README.rst
-3. Increment version in version.py
-4. Commit in master to generate tag
-5. Make in pyinst for Win & Mac and upload to bitbucket
-6. Test pyinst version on both platforms
-7. Update pypi
-8. Merge master back to develop etc.
+ 1. Merge to develop
+ 2. Do 'make clean html' in docs
+    - check API for missing doc files or func descriptions
+ 3. Update Release Notes section in README.rst
+ 4. Make in pyinst for Win & Mac
+ 5. Test pyinst version on both platforms
+ 6. Test setup.py installer on all three platforms
+ 7. Merge to master
+ 8. Increment version in version.py
+ 9. Rebuild pyinst versions with updated version and upload to bitbucket
+10. Commit in master to generate tag
+11. Update pypi
+12. Merge master back to develop etc.
+13. Build doc on readthedocs.org

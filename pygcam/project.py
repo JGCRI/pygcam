@@ -365,6 +365,18 @@ class Project(XMLFile):
         projTmpFileNodes = projectNode.findall('tmpFile')
         self.tmpFiles = map(_TmpFile, dfltTmpFileNodes + projTmpFileNodes)
 
+    instance = None
+
+    @classmethod
+    def readProjectFile(cls, projectName, group=None, projectFile=None):
+
+        # return cached project if already read, otherwise read project.xml
+        if not cls.instance or cls.project.projectName != projectName:
+            projectFile = projectFile or getParam('GCAM.ProjectXmlFile', section=projectName)
+            cls.instance = Project(projectFile, projectName, group)
+
+        return cls.instance
+
     @staticmethod
     def validateXML(doc, raiseError=True):
         '''
@@ -618,6 +630,8 @@ class Project(XMLFile):
         print('\nTmpFiles:')
         for t in self.tmpFiles:
             print("  " + t.varName)
+
+_project = None
 
 
 def projectMain(args, tool):
