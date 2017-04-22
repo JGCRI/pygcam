@@ -576,7 +576,7 @@ class Project(XMLFile):
             # Construct gt command that does this scenario's steps
             # setting the -S flag for one scenario at a time.
             if args.distribute:
-                newArgs = ['-P', projectName] + shellArgs + ['-S', scenarioName] + ['-g', scenarioGroupName]
+                newArgs = ['+P', projectName] + shellArgs + ['-S', scenarioName] + ['-g', scenarioGroupName]
                 jobId = tool.runBatch2(newArgs, jobName=scenarioName, queueName=args.queueName,
                                        logFile=args.logFile, minutes=args.minutes,
                                        dependsOn=baselineJobId, run=run)

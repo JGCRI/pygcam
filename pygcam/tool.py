@@ -449,7 +449,7 @@ def _main(argv=None):
     if ns.batch:
         run = not ns.showBatch
         if ns.projectName:        # add these back in for the batch script
-            otherArgs = ['-P', ns.projectName] + otherArgs
+            otherArgs = ['+P', ns.projectName] + otherArgs
 
         tool.runBatch(otherArgs, run=run)
     else:
