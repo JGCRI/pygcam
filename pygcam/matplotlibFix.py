@@ -6,12 +6,14 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import matplotlib as mpl
+import platform
 
-major, minor, rev = map(int, mpl.__version__.split('.'))
-if major >= 2:
-    import platform
-    if platform.system() == 'Darwin':
-        mpl.use('TkAgg')
+_backend = 'Agg'
+if platform.system() == 'Darwin':
+    major, minor, rev = map(int, mpl.__version__.split('.'))
+    if major >= 2:
+        _backend = 'TkAgg'
 
-#import matplotlib.pylab as pylab
+mpl.use(_backend)
+
 import matplotlib.pyplot as plt
