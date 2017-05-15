@@ -33,7 +33,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b11 (forthcoming)
+Version 1.0b11 (15 May 2017)
 -----------------------------
 * Created "init" command to interactively set key config variables
 
@@ -42,13 +42,13 @@ Version 1.0b11 (forthcoming)
 
 * Added setPriceElasticity function, callable from scenarios.xml scripts
 
-* Improved install script to work across all 3 GCAM platforms.
+* Improved GCAM installation script to work across all 3 GCAM platforms.
 
 * Fixed home drive / home directory access on Windows
 
 * Added "saveAs" attribute to query specification to allow a query
-  to be rewritten (aggregated) different ways and saved to CSV files
-  with different names.
+  to be rewritten (i.e., aggregated) different ways and saved to CSV
+  files with different names.
 
 
 Version 1.0b10 (9 Feb 2017)

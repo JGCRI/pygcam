@@ -1,3 +1,9 @@
+Add to query.py the ability to run a pre-formed batch script, as one would by
+running it interactively in MI. Specify input name, output name, whether to
+split into separate output files, and so on. Use this to run the OTAQ batch
+query file. Make it cmd-line accessible in query sub-command.
+
+
 Installer script
 -----------------
 . Ask if using pygcam for development or just using the "gcamtool"?
@@ -24,6 +30,19 @@ Installer script
   - add interactive mode that asks for various paths
   - Better yet, help JGCRI develop single file downloads so this is
     straightforward rather than a nuisance.
+
+. Also extract Anaconda environment info and document commands required to
+  build out a new "pygcam" environment with known-working versions of files.
+  - To export it:
+        conda env export > environment.yml
+  - To use it:
+        conda env create -f environment.yml
+        source activate pygcam [Mac, Linux] or activate pygcam [Windows]
+  - For explicit list, do:
+        conda list --explicit > spec-file.txt
+    and use it with:
+        conda create --name pygcam --file spec-file.txt
+    Note that there may be a unique file for each OS.
 
 Document
 --------
