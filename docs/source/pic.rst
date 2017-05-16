@@ -103,14 +103,14 @@ example, to run the default scenario group for project "Foo", you can run:
 
       ::
 
-         gt -P Foo run -D
+         gt +P Foo run -D
 
 This will queue the baseline scenario and then queue the policy scenarios
 with a dependency on successful completion of the baseline scenario job.
 
       ::
 
-         gt -P Foo run -D -S baseline,policy-1
+         gt +P Foo run -D -S baseline,policy-1
 
 If scenarios are explicitly named, only those scenarios are run, as usual.
 If none of the named scenarios is a baseline, the jobs are all queued
@@ -121,7 +121,7 @@ by specifying the ``-a`` or ``--allGroups`` flag:
 
     ::
 
-       gt -P Foo run -D -a
+       gt +P Foo run -D -a
 
 This command is equivalent to iterates over all groups and running ``gt run -D``
 on each group. All the baselines will start immediately, and all the policy
