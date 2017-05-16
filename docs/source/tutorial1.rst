@@ -96,21 +96,21 @@ Similarly, lines 7 and 8 are run only for "policy" (i.e., non-baseline) scenario
 
 1.2 Minimal scenarios file
 ---------------------------
-The standard GCAM distribution includes files that define various
+The GCAM 4.3 distribution includes files that define various
 levels of carbon taxes:
 
 .. code-block:: sh
 
-    rjp@bebop:~/GCAM/current/input/policy $ ls -l carbon*
-    -rw-rw-r--  1 rjp  staff  5462 Jul 28 07:10 carbon_tax_10_5.xml
-    -rw-rw-r--  1 rjp  staff  5463 Jul 28 07:10 carbon_tax_15_5.xml
-    -rw-rw-r--  1 rjp  staff  5463 Jul 28 07:10 carbon_tax_20_5.xml
-    -rw-rw-r--  1 rjp  staff  4123 Jul 28 07:10 carbon_tax_25_5.xml
+    rjp@bebop:~/GCAM/gcam-4.3/input/policy $ ls -l carbon*
+    -rw-rw-r--  1 rjp  staff  5462 Oct 10  2016 carbon_tax_10_5.xml
+    -rw-rw-r--  1 rjp  staff  5463 Oct 10  2016 carbon_tax_15_5.xml
+    -rw-rw-r--  1 rjp  staff  5463 Oct 10  2016 carbon_tax_20_5.xml
+    -rw-rw-r--  1 rjp  staff  4123 Oct 10  2016 carbon_tax_25_5.xml
 
 We will use these files in our example.
 
-The following ``scenarios.xml`` file defines a baseline that does nothing (i.e., it
-replicates the GCAM reference scenario) and a single scenario implementing a $25 per
+The following ``scenarios.xml`` file defines a baseline that modifies nothing in
+the GCAM reference scenario, and a single scenario implementing a $25 per
 tonne carbon tax.
 
 .. code-block:: xml
@@ -133,7 +133,7 @@ We can see all steps from ``project.xml`` that would be run using the command:
 
 .. code-block:: sh
 
-    $ gt -P tutorial run -n
+    $ gt +P tutorial run -n
     2016-10-04 11:32:14,197 INFO [base, 1, step1] echo "step 1 (baseline)"
     2016-10-04 11:32:14,198 INFO [base, 2, step2] echo "step 2 (baseline)"
     2016-10-04 11:32:14,198 INFO [base, 5, step5] echo "step 5 (all)"
@@ -150,7 +150,7 @@ To run them, we use the same command without the ``-n``:
 
 .. code-block:: sh
 
-    $ gt -P tutorial run
+    $ gt +P tutorial run
     2016-10-04 11:27:08,649 INFO [base, 1, step1] echo "step 1 (baseline)"
     step 1(baseline)
     2016-10-04 11:27:08,653 INFO [base, 2, step2] echo "step 2 (baseline)"
@@ -176,14 +176,14 @@ together or separately:
 
 .. code-block:: sh
 
-    $ gt -P tutorial run -G
+    $ gt +P tutorial run -G
     Scenario groups:
       tax
-    $ gt -P tutorial run -L
+    $ gt +P tutorial run -L
     Scenarios:
       base
       tax-25
-    $ gt -P tutorial run -l
+    $ gt +P tutorial run -l
     Steps:
       step1
       step2
@@ -191,8 +191,8 @@ together or separately:
       step4
       step5
       step6
-    $ gt -P tutorial run -l -L -G
-    $ gt -P tutorial run -G
+    $ gt +P tutorial run -l -L -G
+    $ gt +P tutorial run -G
     Scenario groups:
       tax
     Scenarios:
@@ -221,7 +221,7 @@ for the baseline scenario "base", we would use this command:
 .. code-block:: bash
 
     $ gt run -S base -s step1,step2
-    rjp@bebop:~ $ gt -P ctax run -s setup -S base-0
+    rjp@bebop:~ $ gt +P ctax run -s setup -S base-0
     2016-10-04 12:03:13,746 INFO [base, 1, step1] echo "step 1 (baseline)"
     step 1 (baseline)
     2016-10-04 12:03:13,750 INFO [base, 2, step2] echo "step 2 (baseline)"
@@ -238,7 +238,7 @@ This command runs all scenarios other than "base":
 
 .. code-block:: bash
 
-    $ gt -P tutorial run -K base
+    $ gt +P tutorial run -K base
     2016-10-04 12:06:08,430 INFO [tax-25, 3, step3] echo "step 3 (policy)"
     step 3 (policy)
     2016-10-04 12:06:08,434 INFO [tax-25, 4, step4] echo "step 4 (policy)"
@@ -253,7 +253,7 @@ steps 3 and 5:
 
 .. code-block:: bash
 
-    $ gt -P tutorial run -K base -k step3,step5
+    $ gt +P tutorial run -K base -k step3,step5
     2016-10-04 12:06:44,010 INFO [tax-25, 4, step4] echo "step 4 (policy)"
     step 4 (policy)
     2016-10-04 12:06:44,014 INFO [tax-25, 6, step6] echo "step 6 (all)"
@@ -296,14 +296,14 @@ run using the ``-n`` flag:
 
 .. code-block:: sh
 
-    $ gt -P tutorial run -L
+    $ gt +P tutorial run -L
     Scenarios:
       base
       tax-10
       tax-15
       tax-20
       tax-25
-    rjp@bebop:~/GCAM/current/input/policy $ gt -P tutorial run -n
+    rjp@bebop:~/GCAM/current/input/policy $ gt +P tutorial run -n
     2016-10-04 12:11:22,926 INFO [base, 1, step1] echo "step 1 (baseline)"
     2016-10-04 12:11:22,927 INFO [base, 2, step2] echo "step 2 (baseline)"
     2016-10-04 12:11:22,927 INFO [base, 5, step5] echo "step 5 (all)"
@@ -359,7 +359,7 @@ The following is equivalent to our "cut & paste" example above:
 
 The example above defines an iterator named "tax", with values 10, 15, 20, and 25.
 The scenario group includes the same baseline as before, but now there's only one
-``<scenario>`` definition for the four policy cases. The term "{tax}" is replaced
+``<scenario>`` definition for the four policy cases. The term ``{tax}`` is replaced
 by each value of the iterator in turn, defining a new scenario, and the file that
 is included by the ``<add>`` element likewise uses the iterator value.
 

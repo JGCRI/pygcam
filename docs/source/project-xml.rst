@@ -227,7 +227,7 @@ Config file variables
 ~~~~~~~~~~~~~~~~~~~~~
 
 Value for the current project are loaded from the configuration file
-(``~/.config/pygcam.cfg``) automatically. Note that the names are
+(``~/.pygcam.cfg``) automatically. Note that the names are
 case sensitive. See :doc:`config` for a list of defined variables.
 
 
@@ -400,7 +400,7 @@ Example project.xml file
   .. code-block:: xml
 
      <projects>
-        <defaults>
+        <project name="paper1">
           <vars>
             <!-- User variables, used only by defined steps -->
             <var name="startYear">2015</var>
@@ -409,6 +409,7 @@ Example project.xml file
             <var name="shockYear">2020</var>
             <var name="queryPath" eval="1">{GCAM.QueryDir}:{GCAM.QueryDir}/Main_queries_customized.xml</var>
           </vars>
+
           <steps>
             <step name="setup" runFor="baseline">@setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -p {endYear} -y {shockYear}-{endYear}</step>
             <step name="gcam" runFor="baseline">@gcam -S {projectXmlDir} -s {baseline} -w {scenarioWsDir}</step>
@@ -421,17 +422,24 @@ Example project.xml file
             <step name="plotDiff" runFor="policy">@chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}</step>
             <step name="xlsx" runFor="policy">@diff -D {diffsDir} -c -y {years} -Y {shockYear} -o "{scenario}-annual.xlsx" -i {diffsDir}/*.csv</step>
           </steps>
-          <tmpFile varName="queryFile" eval="0">
-            <text>Residue_biomass_production</text>
-            <text>refined-liquids-prod-by-tech</text>
-            <text>Purpose-grown_biomass_production</text>
-            <text>Kyoto_gas_forcing</text>
-          </tmpFile>
+
+          <queries varName="queryXmlFile" defaultMap="regions">
+            <query name="Land_Allocation">
+              <rewriter name="GTAP-BIO-ADV"/>
+              <rewriter name="landCover"/>
+            </query>
+            <query name="Ag_Production_by_Crop_Type">
+              <rewriter name="eightRegions"/>
+              <rewriter name="landCover"/>
+            </query>
+          </queries>
+
           <vars>
             <var name="scenPlotArgs" eval="1">--verbose -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box --enumerate</var>
             <var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years}</var>
             <var name="scenRefCsv" eval="1">{scenario}-{reference}.csv</var>
           </vars>
+
           <tmpFile varName="diffPlots">
             <text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x sector-by-year.png -I sector</text>
             <text>Residue_biomass_production-{scenRefCsv} -Y 'EJ biomass' -n 4 -T '$\Delta$ Residue biomass production' -x region-by-year.png -I region</text>
@@ -439,22 +447,6 @@ Example project.xml file
             <text>Purpose-grown_biomass_production-{scenRefCsv} -Y "EJ biomass" -n 4 -c output -I region -z -T '$\Delta$ Purpose-grown biomass production' -x by-region.png</text>
             <text>Kyoto_gas_forcing-{scenRefCsv} -Y 'W/m$^2$' --timeseries -T '$\Delta$ Kyoto Gas Forcing'</text>
           </tmpFile>
-        </defaults>
-        <project name="Paper1">
-          <scenarioGroup name="group1" default="1">
-            <scenario name="base-1" subdir="baseline" baseline="1"/>
-            <scenario name="corn-1" subdir="corn"/>
-            <scenario name="stover-1" subdir="stover" active="0"/>
-            <scenario name="switchgrass-1" subdir="switchgrass"/>
-            <scenario name="biodiesel-1" subdir="biodiesel"/>
-          </scenarioGroup>
-          <scenarioGroup name="group2" default="0">
-            <scenario name="base-2" subdir="baseline" baseline="1"/>
-            <scenario name="corn-2" subdir="corn"/>
-            <scenario name="stover-2" subdir="stover"/>
-            <scenario name="switchgrass-2" subdir="switchgrass"/>
-            <scenario name="biodiesel-2" subdir="biodiesel"/>
-          </scenarioGroup>
         </project>
      </projects>
 

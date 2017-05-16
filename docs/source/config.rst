@@ -204,12 +204,12 @@ using the command:
 which will print out a listing of files and their status.
 
 You can also specify a project to check that project's variables. For example,
-I can test the values set for project ``Paper1`` with the following command,
+I can test the values set for project ``paper1`` with the following command,
 shown with command output:
 
   .. code-block:: bash
 
-     $ gt -P paper1 config -t
+     $ gt +P paper1 config -t
 
     OK: GCAM.SandboxRoot = /people/plev920/ws
     OK: GCAM.SandboxDir = /people/plev920/ws/paper1/
@@ -229,7 +229,7 @@ shown with command output:
 Location of GCAM program and data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The configuration variable ``GCAM.RefWorkspace`` must point to a directory
-structured like the standard GCAM ``Main_User_Workspace``, with sub-directories
+structured like the standard GCAM workspace, with sub-directories
 for ``input``, ``output``, ``libs``, and ``exe``. These files are the reference
 files used by :doc:`gcamtool` to set up "sandbox" workspaces in which to run GCAM.
 
@@ -255,7 +255,7 @@ For Windows:
 .. literalinclude:: ../../pygcam/etc/Windows.cfg
    :language: cfg
 
-For Macintosh OS X:
+For MacOS:
 ~~~~~~~~~~~~~~~~~~~~~
 .. literalinclude:: ../../pygcam/etc/Darwin.cfg
    :language: cfg

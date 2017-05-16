@@ -16,15 +16,6 @@ copies the original file to the local directory. Local copies are
 modified in place. Each function updates the local config file
 so that it loads the modified file.
 
-XML Starlet
------------
-The ``xmlEditor`` module relies on the XML Starlet
-program, a command-line tool that can search and edit XML files (among other
-tricks.) It is available for all three GCAM platforms.
-`Download XML Starlet <http://xmlstar.sourceforge.net/download.php>`_.
-It should be included on Linux systems. It is available in binary (executable)
-form for Windows, but must be compiled on Mac OS X.
-
 
 API
 ----

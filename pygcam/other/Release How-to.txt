@@ -3,6 +3,7 @@ Notes on what to do to issue a new release
 
  1. Merge to develop
  2. Do 'make clean html' in docs
+    - touch
     - check API for missing doc files or func descriptions
  3. Update Release Notes section in README.rst
  4. Make in pyinst for Win & Mac

@@ -34,14 +34,6 @@ module, but ``pygcam`` is under active development, and the version installed in
 ``/pic/projects/GCAM`` will be kept current with respect to python module requirements.
 
 
-XML Starlet
-------------
-This command-line XML file manipulation program is required by some
-features of ``pygcam``. A copy has been installed at
-``/pic/projects/GCAM/pygcam-support/bin/xml``. The directory
-``/pic/projects/GCAM/pygcam-support/bin`` should appear in your ``PATH``.
-(This is done for you in the ``pygcam.sh`` script described below.)
-
 pygcam.sh
 ---------------
 The shell script ``/pic/projects/GCAM/pygcam-support/pygcam.sh`` can be

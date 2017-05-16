@@ -34,9 +34,19 @@ the latest version of Java available from `Oracle <http://www.oracle.com>`_.
 
 GCAM
 ^^^^^^^^
-You probably already have GCAM or you wouldn't be reading this. But for completeness:
+You probably already have GCAM or you wouldn't be reading this. You can follow the
+installation instructions on the official `GCAM <https://github.com/JGCRI/gcam-core/releases>`_
+website, but many users have found these confusing.
 
-  - `Download GCAM <https://github.com/JGCRI/gcam-core/releases>`_
+Alternatively, you can use the
+`install-gcam.py <https://bitbucket.org/plevin/pygcam/downloads/install-gcam.py>`_ script
+which handles downloading, unpacking, and setting up GCAM (on the Mac this requires setting
+a symbolic link to the java libraries.)
+
+The script requires Python 2.x (as does pygcam). Follow the instructions for
+:ref:`installing Anaconda <install-anaconda>` , then you can download and run the
+install script. The installation script runs on all three GCAM platforms (MacOS,
+Windows, and Linux.)
 
 Create a file structure for GCAM and pygcam
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -70,58 +80,6 @@ file is ``.pygcam.cfg`` found in your home directory.
 
 ---------------------------------------------------------------------------
 
-.. _xmlstarlet-label:
-
-XML starlet
-^^^^^^^^^^^^
-
-.. note::
-
-   Prior to version 1.0b2, ``pygcam`` required the xmlstarlet command-line program,
-   however, subsequent versions have eliminated this dependency by implementing
-   the required functionality using the Python lxml library. The following instructions
-   pertain only to 1.0b1 and earlier, and will be removed after beta testing is complete.
-
-The `XML Starlet <http://xmlstar.sourceforge.net/download.php>`_ program is a
-command-line tool that can search and edit XML files, among other tricks.
-It is available for all three GCAM platforms, and should already be included on all
-modern Linux systems. It is available from the download page in
-binary (executable) form for Windows, but must be compiled on Mac OS X. Binary versions
-are available on https://bitbucket.org/plevin/pygcam/downloads, but owing to differences
-in library versions and locations, these are not guaranteed to work on you system. (A
-better solution is in the works...)
-
-Mac users might first try the version provided
-`here <https://bitbucket.org/plevin/pygcam/downloads/xmlstarlet-osx.zip>`_. Simply
-download the file, double-click on it in finder to unzip it, and move the resulting
-``xml`` file to somewhere in your path, which might include ``/usr/local/bin`` or ``$HOME/bin``.
-
-For Mac users,
-a `homebrew recipe <http://macappstore.org/xmlstarlet/>`_ is available to build it on
-your machine if you have homebrew and developer tools (Xcode) installed. Alternatively,
-here are `instructions <http://michael-joseph.me/en/linux-en/how-to-install-xmlstarlet-on-mac-osx/>`_
-on downloading and building xmlstarlet.
-
-Once installed, be sure the ``xml`` (starlet) program is available on your ``PATH``
-or set the ``GCAM.XmlStarlet`` config variable to the program, either in your own
-``$HOME/.pygcam.cfg`` file or the site configuration file, if one is used.
-The default setting requires that the program be found on your ``PATH``:
-
-  .. code-block:: cfg
-
-     GCAM.XmlStarlet = xml
-
-Note that the official site provides a binary version only for Windows. My own copies of binaries
-are provided here:
-
-  - `Download binaries of XML Starlet from the pygcam site <https://bitbucket.org/plevin/pygcam/downloads>`_.
-
-Unfortunately, given the vagaries of dynamic libraries, I cannot guarantee that these
-binaries will work on your machine. I provide them in the hope that they will help someone!
-A future version of pygcam may eliminate this dependency.
-
----------------------------------------------------------------------------
-
 .. _option1:
 
 Option 1: Download the all-in-one zip file
@@ -141,7 +99,7 @@ See the specific instructions for Macintosh and Windows users, below.
 
 Macintosh users
 ^^^^^^^^^^^^^^^^
-1. Download the latest version of `gt-*-mac.zip <https://bitbucket.org/plevin/pygcam/downloads`_.
+1. Download the latest version of `gt-*-mac.zip <https://bitbucket.org/plevin/pygcam/downloads>`_.
 
 2. Double-click on the downloaded zip file to unzip it, creating the directory ``gt-1.0b8-mac`` (or similar,
    depending on the version). Move that directory anywhere you like. You might move it to your home directory,
@@ -162,7 +120,7 @@ Macintosh users
 
 Windows users
 ^^^^^^^^^^^^^^
-1. Download the latest version of `gt-*-win.zip <https://bitbucket.org/plevin/pygcam/downloads`_.
+1. Download the latest version of `gt-*-win.zip <https://bitbucket.org/plevin/pygcam/downloads>`_.
 
 2. Right click on the zip file and select "Extract all...". If you accept the default path presented
    in the dialog box, Windows will create a redundant directory level, i.e., ``gt-1.0b8/gt-1.0b8``.
@@ -196,6 +154,8 @@ Quick Links
   - `Download Anaconda 2 <https://www.continuum.io/downloads>`_
   - :ref:`Install pygcam <pygcam_install_label>`
 
+
+.. _install-anaconda:
 
 Install Anaconda
 ^^^^^^^^^^^^^^^^^

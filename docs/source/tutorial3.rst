@@ -345,18 +345,18 @@ We can batch the job on SLURM by adding a single command-line option.
 
  .. code-block:: bash
 
-    $ gt -b run
+    $ gt +b run
 
 We can set the default time limit in our configuration file, or we can
 set it on the command-line.
 
-The ``-B`` flag displays what would occur if we ran in batch mode. The command
+The ``+B`` flag displays what would occur if we ran in batch mode. The command
 (minus the batch-related arguments) is written as a script to a temporary file,
 which is then queued using the ``sbatch`` command. The script deletes itself.
 
  .. code-block:: bash
 
-    $ gt -b -m 60 -j job1 -B run
+    $ gt +b +m 60 +j job1 +B run
 
     2016-09-25 15:16:51,666 INFO Creating batch script '/people/plev920/tmp/tmprpRPq7.pygcam.sh'
 
@@ -368,14 +368,14 @@ which is then queued using the ``sbatch`` command. The script deletes itself.
 
     #!/bin/bash
     rm -f /people/plev920/tmp/tmprpRPq7.pygcam.sh
-    $ gt -m 60 -j job1 run
+    $ gt +m 60 +j job1 run
 
 
 .. _sample-config-label:
 
 Sample configuration file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Below is a sample configuration file for a project called ``Paper1``. By convention,
+Below is a sample configuration file for the ``ctax``. By convention,
 variables are named with a prefix identifying where they are defined. All variables
 defined by ``pygcam`` begin with ``GCAM.``, so if you create your own variables (e.g.,
 to define values used in defining other variables) you should avoid confusion by avoiding
@@ -384,7 +384,7 @@ this prefix. You can use any prefix desired, or none at all.
  .. code-block:: cfg
 
     [DEFAULT]
-    GCAM.DefaultProject = paper1
+    GCAM.DefaultProject = ctax
     GCAM.Version        = 4.3
 
     GCAM.ProjectRoot    = %(Home)s/GCAM/projects

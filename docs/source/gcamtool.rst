@@ -7,11 +7,19 @@ by the pygcam library. Project-specific features can be added via
 :ref:`plugins <plugins-label>`.
 
   .. note::
-     Quick links to sub-commands: :ref:`chart <chart-label>`, :ref:`config <config-label>`,
-     :ref:`diff <diff-label>`, :ref:`gcam <gcam-label>`, :ref:`mi <mi-label>`,
+     Quick links to sub-commands:
+     :ref:`chart <chart-label>`,
+     :ref:`config <config-label>`,
+     :ref:`diff <diff-label>`,
+     :ref:`gcam <gcam-label>`,
+     :ref:`init <init-label>`,
+     :ref:`mi <mi-label>`,
      :ref:`new <new-label>`,
-     :ref:`protect <protect-label>`, :ref:`query <query-label>`, :ref:`run <run-label>`,
-     :ref:`setup <setup-label>`, :ref:`sandbox <sandbox-label>`
+     :ref:`protect <protect-label>`,
+     :ref:`query <query-label>`,
+     :ref:`run <run-label>`,
+     :ref:`setup <setup-label>`,
+     :ref:`sandbox <sandbox-label>`
 
 The sub-commands support all the major workflow setups, including
 
@@ -51,7 +59,7 @@ For example, the command:
 
 .. code-block:: bash
 
-   gt -b -P MyProject run -S MyScenario
+   gt +b +P MyProject run -S MyScenario
 
 runs all steps for scenario ``MyScenario`` in the project ``MyProject`` by
 queuing a batch job on the default queue. Arguments to ``gt`` allow
@@ -65,6 +73,15 @@ and ``GCAM.QueuePBS``, respectively.
 Command-line usage is described below. Note that some command-line
 (e.g., batch-related) options must precede the sub-command, whereas
 sub-command specific options must follow it.
+
+  .. note::
+
+    Note that arguments that pertain regardless of the sub-command
+    (e.g., ``+P`` to identify the project name) are specified *prior to*
+    the sub-command, and use ``+`` rather than ``-``. This is to avoid
+    conflicts between these "main" arguments and sub-command arguments.
+    (An exception is ``gt -h``, which retains the ``-``.) Long-form
+    argument names use two hyphens, as in ``--projectName``.)
 
 Usage
 -----
@@ -87,34 +104,34 @@ Usage
 
       ::
 
-          gt -P Foo run
+          gt +P Foo run
 
       Run all steps for scenario group 'test' for project 'Foo', but only for
       scenarios 'baseline' and 'policy-1':
 
       ::
 
-          gt -P Foo run -g test -S baseline,policy1
+          gt +P Foo run -g test -S baseline,policy1
 
       or, equivalently:
 
       ::
 
-          gt -P Foo run --group test --scenario baseline --step policy1
+          gt +P Foo run --group test --scenario baseline --step policy1
 
       Run only the 'setup' and 'gcam' steps for scenario 'baseline' in the
       default scenario group:
 
       ::
 
-          gt -P Foo run -s setup,gcam -S baseline,policy-1
+          gt +P Foo run -s setup,gcam -S baseline,policy-1
 
       Same as above, but queue a batch job to run these commands on the queue
       'short':
 
       ::
 
-          gt -b -q short -P Foo run -s setup,gcam -S baseline,policy-1
+          gt +b +q short +P Foo run -s setup,gcam -S baseline,policy-1
 
 
       Note that the command above will run the two scenarios ('baseline' and
@@ -123,7 +140,7 @@ Usage
 
       ::
 
-         gt -q short -P Foo run -D -S baseline,policy-1
+         gt +q short +P Foo run -D -S baseline,policy-1
 
       The "distribute" option knows that various project steps for non-baseline
       scenarios may  depend on baseline scenarios, so the baseline is always run first,
@@ -136,7 +153,7 @@ Usage
 
       ::
 
-          gt -P Foo run -s setup,gcam -S baseline,policy-1 -n
+          gt +P Foo run -s setup,gcam -S baseline,policy-1 -n
 
 
    chart : @replace
@@ -186,12 +203,12 @@ Usage
          MyProject
 
          $ gt config sand
-        [MyProject]
-              GCAM.SandboxRoot = /Users/rjp/ws/myProject
+         MyProject]
+         GCAM.SandboxRoot = /Users/rjp/ws/myProject
 
          $ gt config sand -d
          [DEFAULT]
-              GCAM.SandboxRoot = /Users/rjp/ws
+         GCAM.SandboxRoot = /Users/rjp/ws
 
 
    diff : @replace
@@ -248,6 +265,12 @@ Usage
       would run the scenario ``MyScenario`` in the newly created sandbox (workspace)
       ``~/sandboxes/MyProject/MyScenario`` using the configuration file
       ``~/MyProject/scenarios/MyScenario/config.xml``.
+
+   init : @replace
+      .. _init-label:
+
+      Initialize key variables in the ~/.pygcam.cfg configuration file. Values not provided on
+      the command-line are requested interactively.
 
 
    mi : @replace

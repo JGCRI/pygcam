@@ -18,7 +18,7 @@ run the following command:
 This both creates the initial file structure in ``/Users/rjp/projects/ctax``,
 and (because I specified the ``-c`` flag) adds a section for ``ctax`` to my
 configuration file, which is found in my home directory. In my case, it is
-in ``/Users/rjp/projects/.pygcam.cfg``.
+in ``/Users/rjp/.pygcam.cfg``.
 
 When ``gt`` runs, it checks whether this file exists. If the file is not found,
 it is created with all available configuration parameters shown in comments (i.e.,
@@ -47,11 +47,12 @@ The next step is to customize this to our environment.
 2.1 Customize .pygcam.cfg
 ----------------------------
 Our first task will be to set ``GCAM.DefaultProject`` so we don't have to keep typing
-``gt -P ctax``. We add this setting the ``[DEFAULT]`` section
+``gt +P ctax``. We add this setting the ``[DEFAULT]`` section
 
 .. code-block:: cfg
 
-   GCAM.DefaultProject = ctax
+    [DEFAULT]
+    GCAM.DefaultProject = ctax
 
 You can edit the configuration file with any editor capable of working with plain text.
 (Word-processors such as Word introduce formatting information into the file which
@@ -159,7 +160,7 @@ on a slower disk.
 
     $ gt run -S base-0 -s setup
 
-    rjp@bebop:~ $ gt -P ctax run -s setup -S base-0
+    rjp@bebop:~ $ gt +P ctax run -s setup -S base-0
     2016-09-25 15:33:03,705 INFO [base-0, 1, setup] @setup -b base-0 -g protect-0 -S base-0 -w /Users/rjp/ws/ctax/base-0 -p 2050 -y 2015-2050
     2016-09-25 15:33:03,713 INFO Setting up GCAM workspace '/Users/rjp/ws/ctax/Workspace' for GCAM 4.3
     2016-09-25 15:33:03,714 WARNING Ignoring unknown files specified in GCAM.WorkspaceFilesToLink: ['libs']

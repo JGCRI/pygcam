@@ -38,8 +38,8 @@ with appropriate ``True`` or ``False`` values to configure GCAM as you wish.
 
 .. code-block:: cfg
 
-    GCAM.InMemoryDatabase     = False
-    GCAM.RunQueriesInGCAM     = False
+    GCAM.InMemoryDatabase = False
+    GCAM.RunQueriesInGCAM = False
 
 Note that setting ``GCAM.InMemoryDatabase`` to ``True`` forces
 ``GCAM.RunQueriesInGCAM`` to be ``True`` as well, since no other option is
@@ -65,7 +65,7 @@ See :doc:`rewrite sets <rewrites-xml>` for more information.
 The following is an example of defining a set of queries for a project:
 
 .. code-block:: xml
-   :linenos:
+    :linenos:
 
     <queries varName="queryXmlFile" defaultMap="eightRegions">
         <query name="Land_Allocation">

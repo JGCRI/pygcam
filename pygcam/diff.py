@@ -1,6 +1,6 @@
 '''
-.. Copyright (c) 2016 Richard Plevin
-   See the https://opensource.org/licenses/MIT for license details.
+  .. Copyright (c) 2016 Richard Plevin
+  See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
 from .log import getLogger
@@ -183,6 +183,7 @@ def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', crea
     """
     Compute the path to the CSV file containing differences between `policy` and
     `baseline` scenarios for `query`.
+    
     :param query: (str) the base file name of the query result
     :param baseline: (str) the baseline scenario
     :param policy: (str) the policy scenario
@@ -202,6 +203,7 @@ def queryCsvPathname(query, scenario, workingDir='.'):
     """
     Compute the path to the CSV file containing results for the given
     `query` and `scenario`.
+    
     :param query: (str) the base file name of the query result
     :param scenario: (str) the scenario name
     :param workingDir: (str) the directory immediately above the baseline

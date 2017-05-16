@@ -1,5 +1,5 @@
 '''
-.. Facilities setting up / customizing GCAM project's XML files.
+   Facilities setting up / customizing GCAM project's XML files.
 
    Common variables and functions for manipulating XML files.
    Basic approach is to create a directory for each defined scenario,
@@ -374,9 +374,9 @@ class ScenarioInfo(object):
 
 class XMLEditor(object):
     '''
-    Base class for scenario setup. Actual scenarios must subclass this.
-    Represents the information required to setup a scenario, i.e., to
-    generate and/or copy the required XML files into the XML output dir.
+    Base class for scenario setup. Custom scenario processing classes must 
+    subclass this. Represents the information required to setup a scenario, i.e., 
+    to generate and/or copy the required XML files into the XML output dir.
     '''
     # TBD: consider whether init should take an object describing the scenario
     # TBD: that can be populated from a scenario instance from xmlSetup.py or something
