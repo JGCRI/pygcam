@@ -1,22 +1,24 @@
 '''
-   Facilities setting up / customizing GCAM project's XML files.
-
-   Common variables and functions for manipulating XML files.
-   Basic approach is to create a directory for each defined scenario,
-   in which modified files and a corresponding configuration XML file
-   are stored.
-
-   To allow functions to be called in any order or combination, each
-   copies (if needed) the source file to the local scenario dir, then
-   edits it in place. If was previously modified by another function,
-   the copy is skipped, and the new edits are applied to the local,
-   already modified file. Each function updates the local config file
-   to refer to the modified file. (This may be done multiple times, to
-   no ill effect.)
-
 .. Copyright (c) 2016 Richard Plevin
+
    See the https://opensource.org/licenses/MIT for license details.
 '''
+#
+#  Facilities setting up / customizing GCAM project's XML files.
+#
+# Common variables and functions for manipulating XML files.
+# Basic approach is to create a directory for each defined scenario,
+# in which modified files and a corresponding configuration XML file
+# are stored.
+#
+# To allow functions to be called in any order or combination, each
+# copies (if needed) the source file to the local scenario dir, then
+# edits it in place. If was previously modified by another function,
+# the copy is skipped, and the new edits are applied to the local,
+# already modified file. Each function updates the local config file
+# to refer to the modified file. (This may be done multiple times, to
+# no ill effect.)
+#
 import glob
 import os
 import re

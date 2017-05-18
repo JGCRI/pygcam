@@ -1,5 +1,6 @@
 '''
   .. Copyright (c) 2016 Richard Plevin
+
   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
@@ -9,8 +10,6 @@ from .utils import mkdirs, pathjoin, ensureCSV, QueryResultsDir
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
-
-__version__ = "0.2"
 
 
 def computeDifference(df1, df2, resetIndex=True):
