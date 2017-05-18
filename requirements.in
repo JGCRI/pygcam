@@ -1,0 +1,11 @@
+configparser
+filelock
+future
+lxml
+matplotlib
+numpy
+pandas
+seaborn
+setuptools
+six
+sphinx-argparse

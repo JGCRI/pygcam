@@ -32,10 +32,25 @@ clean-setup:
 sdist:
 	python setup.py sdist
 
-wheel: 
+wheel:
 	python setup.py bdist_wheel
 
-clean: clean-html clean-setup
+clean: clean-html clean-setup clean-requirements
 
 dev:
-	pip install -e 
+	pip install -e
+
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+RQMTS := $(shell cat requirements.in)
+MODS  := $(subst $(SPACE),|,$(RQMTS))
+EXPR  := $(shell printf "^(%s)=\n" '$(MODS)')
+
+RTD_RQMTS = rtd.requirements.txt
+
+clean-requirements:
+	rm $(RTD_RQMTS)
+
+rtd-reqs $(RTD_RQMTS): requirements.in
+	pip freeze | egrep '$(EXPR)' > $(RTD_RQMTS)
+
