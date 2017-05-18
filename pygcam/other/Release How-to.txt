@@ -10,8 +10,8 @@ Notes on what to do to issue a new release
  6. Test setup.py installer on all three platforms
  7. Merge to master
  8. Increment version in version.py
- 9. Rebuild pyinstaller versions with updated version and upload to bitbucket
-10. Commit in master to generate tag
+ 9. Commit in master to generate tag
+10. Rebuild pyinstaller versions with updated version and upload to bitbucket
 11. Update pypi
 12. Merge master back to develop etc.
 13. Build doc on readthedocs.org

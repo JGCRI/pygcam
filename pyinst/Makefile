@@ -14,7 +14,7 @@ else
 endif
 
 VERSION  := $(shell python gt.py --VERSION)
-FULLNAME := $(VERSION)-$(NAME)
+FULLNAME := $(strip $(VERSION) )-$(NAME)
 ZIPFILE  := $(FULLNAME).zip
 
 BBPASS   := $(shell cat $(HOME)/.bbpass)
