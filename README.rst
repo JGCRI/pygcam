@@ -33,7 +33,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b11 (15 May 2017)
+Version 1.0b11 (17 May 2017)
 -----------------------------
 * Created "init" command to interactively set key config variables
 

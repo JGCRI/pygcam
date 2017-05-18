@@ -68,8 +68,16 @@ elements.
 +=============+============+===========+==========+
 | name        | yes        | (none)    | text     |
 +-------------+------------+-----------+----------+
+| saveAs      | no         | name      | text     |
++-------------+------------+-----------+----------+
 | useDefault  | no         | "1"       | boolean  |
 +-------------+------------+-----------+----------+
+
+By default, the results for the query are saved to a file based on
+`name` and the scenario name. However, using the `saveAs` option
+allows you to save results to a different name, allowing a single
+query to be run multiple times with different rewrites to produce
+multiple CSV files.
 
 The `useDefault` attribute provides a way to override any
 `defaultMap` specified in the surrounding ``<queries>`` element.
