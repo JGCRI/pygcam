@@ -16,7 +16,7 @@ requirements = [
     'pandas',
     'seaborn',
     'six',
-    'sphinx-argparse',
+    'sphinx-argparse==0.1.17',
     'filelock',
 ]
 
