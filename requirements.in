@@ -8,4 +8,5 @@ pandas
 seaborn
 setuptools
 six
+sphinx-rtd-theme
 sphinx-argparse
