@@ -1,5 +1,5 @@
 configparser==3.5.0
-filelock==2.0.6
+filelock
 future==0.16.0
 lxml==3.6.4
 matplotlib==2.0.2
