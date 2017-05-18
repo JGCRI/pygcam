@@ -1,0 +1,9 @@
+configparser==3.5.0
+filelock
+future
+lxml==3.6.4
+numpy==1.12.1
+pandas==0.20.1
+seaborn==0.7.1
+six==1.10.0
+sphinx-argparse==0.1.17
