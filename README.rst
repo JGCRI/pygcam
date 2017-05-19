@@ -30,8 +30,10 @@ Who do I talk to?
 
 * Richard Plevin (rich@plevin.com)
 
+
 Release Notes
 ==============
+
 
 Version 1.0b11 (17 May 2017)
 -----------------------------
@@ -54,6 +56,7 @@ Version 1.0b11 (17 May 2017)
 Version 1.0b10 (9 Feb 2017)
 -----------------------------
 * Fixed bugs in pyinstaller versions
+
 
 Version 1.0b9 (8 Feb 2017)
 -----------------------------

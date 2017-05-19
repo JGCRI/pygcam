@@ -121,6 +121,22 @@ class GcamTool(object):
         self.mcsMode = ''
         self.shellArgs = None
 
+        self.parser = self.subparsers = None
+        self.addParsers()
+
+        # load all built-in sub-commands
+        map(self.instantiatePlugin, BuiltinSubcommands)
+
+        # If using MCS, load that set of plugins, too
+        if usingMCS():
+            from pygcammcs.plugins import MCSBuiltins
+            map(self.instantiatePlugin, MCSBuiltins)
+
+        if loadPlugins:
+            self._cachePlugins()
+            # self.loadPlugins()
+
+    def addParsers(self):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
 
         parser.add_argument('+b', '--batch', action='store_true',
@@ -183,18 +199,6 @@ class GcamTool(object):
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
-
-        # load all built-in sub-commands
-        map(self.instantiatePlugin, BuiltinSubcommands)
-
-        # If using MCS, load that set of plugins, too
-        if usingMCS():
-            from pygcammcs.plugins import MCSBuiltins
-            map(self.instantiatePlugin, MCSBuiltins)
-
-        if loadPlugins:
-            self._cachePlugins()
-            # self.loadPlugins()
 
     def setMcsMode(self, mode):
         self.mcsMode = mode
