@@ -306,5 +306,5 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 intersphinx_mapping = {
-    'pygcammcs': ('http://pygcam-mcs.readthedocs.org/en/latest/', None),
+    'pygcammcs' : ('https://pygcam-mcs.readthedocs.io/en/latest/',  None),
  }

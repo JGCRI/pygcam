@@ -4,7 +4,7 @@ from pygcam.version import VERSION
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
     import ez_setup
-    ez_setup.use_setuptools(version='32.0.0')
+    ez_setup.use_setuptools() # version='32.0.0') ... this version not avail on RTD
 
 from setuptools import setup
 
