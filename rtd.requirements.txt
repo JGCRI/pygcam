@@ -1,3 +1,4 @@
+appdirs
 configparser==3.5.0
 filelock
 future==0.16.0
