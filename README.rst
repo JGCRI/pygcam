@@ -34,6 +34,10 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0b12 (22 May 2017)
+-----------------------------
+* No new features, just updates to get documentation building
+  properly on ReadTheDocs.org.
 
 Version 1.0b11 (17 May 2017)
 -----------------------------

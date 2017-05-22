@@ -1,1 +1,1 @@
-VERSION="1.0b11"
+VERSION="1.0b12"
