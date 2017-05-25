@@ -22,7 +22,7 @@ from .config import getParam, getParamAsBoolean, configLoaded
 _configured = False
 _logLevel   = None
 
-_verbose    = False
+_verbose    = True
 
 def _debug(msg):
     if _verbose:
@@ -47,12 +47,15 @@ def _mkdirs(newdir, mode=0o770):
 _PkgLoggers = {}
 
 def _createPkgLogger(dotspec):
+    _debug('_createPkgLogger("%s")' % dotspec)
     pkgName = dotspec.split('.')[0]
 
     if pkgName and pkgName not in _PkgLoggers:
+        _debug('creating logger("%s")' % pkgName)
         logger = logging.getLogger(pkgName)
         logger.propagate = 0    # traitlets library uses root logger...
         _PkgLoggers[pkgName] = logger
+        configureLogs(force=True, names=[pkgName])
 
 def getLogger(name):
     '''
@@ -71,12 +74,13 @@ def getLogger(name):
     return logger
 
 
-def configureLogs(force=False):
+def configureLogs(names=None, force=False):
     '''
     Do basicConfig setup and configure root logger based on the information
     in the config instance given. If already configured, just return, unless
     force == True.
 
+    :param names: (list of str) if not None, the names of the loggers to configure.
     :param force: (bool) if True, reconfigure the logs even if already configured.
     :return: none
     '''
@@ -105,7 +109,10 @@ def configureLogs(force=False):
     _logLevel = _logLevel or getParam('GCAM.LogLevel').upper() or 'ERROR'
 
     for name, logger in _PkgLoggers.items():
-        _debug("\nConfiguring %s, level=%s" % (name, _logLevel))
+        if names and name not in names:
+            continue
+
+        _debug("Configuring %s, level=%s" % (name, _logLevel))
         logger.setLevel(_logLevel)
 
         for handler in logger.handlers:
