@@ -194,7 +194,9 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     if mcsMode:
         # link {sandbox}/dyn-xml to ../dyn-xml
         dynXmlDir = pathjoin('..', DYN_XML_NAME)
-        mkdirs(dynXmlDir)
+
+        dynXmlAbsPath = pathjoin(os.path.dirname(sandbox), DYN_XML_NAME)
+        mkdirs(dynXmlAbsPath)
 
         # deal with link and tmp dir...
         _setupTempOutputDir(outputDir)
