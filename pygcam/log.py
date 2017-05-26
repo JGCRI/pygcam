@@ -20,10 +20,11 @@ from .error import PygcamException
 # TBD: using something like LogLevels = pkg.module:DEBUG pkg:INFO and so on
 # TBD: and similarly for LogConsole and LogFile?
 
-_configured = False
-_logLevel   = None
+# deprecated
+#_configured = False
 
-_verbose    = True
+_logLevel   = None
+_verbose    = False
 
 def _debug(msg):
     if _verbose:
