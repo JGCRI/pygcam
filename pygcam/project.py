@@ -31,6 +31,12 @@ _logger = getLogger(__name__)
 
 DefaultProjectFile = './project.xml'
 
+def minWhitespace(text):
+    text = text.strip().replace('\n', ' ')
+    text = re.sub('\s\s+', ' ', text)
+    return text
+
+
 def dropArgs(args, shortArg, longArg, takesArgs=True):
     args = copy(args)
 
@@ -175,7 +181,7 @@ class Step(object):
         self.runFor = node.get('runFor', 'all')
         self.group  = node.get('group', None)
         self.optional = getBooleanXML(node.get('optional', 0))
-        self.command  = node.text.strip()
+        self.command = minWhitespace(node.text)
 
         if not self.command:
             raise FileFormatError("<step name='%s'> is missing command text" % self.name)
@@ -566,6 +572,8 @@ class Project(XMLFile):
 
         scenarios = self.sortScenarios(scenarios)
         sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
+
+        argDict['baselineDir'] = unixPath(join(sandboxDir, baseline))
 
         # Delete all variants of scenario specification from shellArgs
         # so we can queue these one at a time.
