@@ -34,6 +34,13 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0b13 (pending)
+-----------------------------
+* Added "optional" attribute to the "<step>" element to allow some steps
+  to be defined for occasional use. Elements marked optional="true" are
+  run only if explicitly mentioned on the command-line (via the -s flag).
+
+
 Version 1.0b12 (22 May 2017)
 -----------------------------
 * No new features, just updates to get documentation building

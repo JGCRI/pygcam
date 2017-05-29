@@ -138,6 +138,7 @@
                     <xs:attribute name='runFor' type='runForType' default='all'/>
                     <xs:attribute name='group' type='xs:string' default=''/>
                     <xs:attribute name='seq' type='xs:integer' default='0'/>
+                    <xs:attribute name='optional' type='xs:boolean' default='false'/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>

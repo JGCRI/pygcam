@@ -170,11 +170,12 @@ class Step(object):
     Represents the ``<step>`` element in the projects.xml file.
     """
     def __init__(self, node):
-        self.seq     = int(node.get('seq', 0))
-        self.name    = node.get('name')
-        self.runFor  = node.get('runFor', 'all')
-        self.group   = node.get('group', None)
-        self.command = node.text
+        self.seq    = int(node.get('seq', 0))
+        self.name   = node.get('name')
+        self.runFor = node.get('runFor', 'all')
+        self.group  = node.get('group', None)
+        self.optional = getBooleanXML(node.get('optional', 0))
+        self.command  = node.text.strip()
 
         if not self.command:
             raise FileFormatError("<step name='%s'> is missing command text" % self.name)
@@ -407,7 +408,7 @@ class Project(XMLFile):
 
         return self.scenarioGroup
 
-    def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownSteps):
+    def maybeListProjectArgs(self, args, knownGroups, knownScenarios, knownStepObjs):
         '''
         If user asked to list scenarios, steps, or variables, do so and quit.
         '''
@@ -428,7 +429,11 @@ class Project(XMLFile):
             showList(knownScenarios, 'Scenarios:')
 
         if args.listSteps:
-            showList(knownSteps, 'Steps:')
+            self.quit = True
+            print('Steps:')
+            for step in knownStepObjs:
+                label = ' (optional)' if step.optional else ''
+                print('  ' + step.name + label)
 
         if args.vars:
             varList = ["%15s = %s" % (name, value) for name, value in sorted(self.argDict.items())]
@@ -437,7 +442,7 @@ class Project(XMLFile):
         if self.quit:
             sys.exit(0)
 
-    def getKnownSteps(self):
+    def getKnownSteps(self, asTuple=False):
         '''
         Return a list of known steps in seq order, without duplicates.
         '''
@@ -452,8 +457,9 @@ class Project(XMLFile):
             return key       # first time for this name
 
         self.sortedSteps = sortedSteps = sorted(self.stepsDict.values(), key=lambda node: node.seq)
-        knownSteps = [step.name for step in sortedSteps if uniqStep(step)]
-        return knownSteps
+        knownStepObjs  = [step for step in sortedSteps if uniqStep(step)]
+        knownStepNames = [step.name for step in knownStepObjs]
+        return (knownStepNames, knownStepObjs) if asTuple else knownStepNames
 
     def getKnownScenarios(self):
         '''
@@ -540,9 +546,12 @@ class Project(XMLFile):
 
         knownGroups    = self.getKnownGroups()
         knownScenarios = self.getKnownScenarios()
-        knownSteps     = self.getKnownSteps()
+        knownSteps, knownStepObjs = self.getKnownSteps(asTuple=True)
 
-        self.maybeListProjectArgs(args, knownGroups, knownScenarios, knownSteps)
+        self.maybeListProjectArgs(args, knownGroups, knownScenarios, knownStepObjs)
+
+        # explicit statement is the only way to run "optional" steps
+        explicitSteps = steps
 
         # Set steps / scenarios to all known values if user doesn't specify any
         steps = set(steps or knownSteps) - set(skipSteps or [])
@@ -610,6 +619,10 @@ class Project(XMLFile):
                     if step.name in steps and (not group or                            # no group specified
                                                group == scenarioGroupName or           # exact match
                                                re.match(group, scenarioGroupName)):    # pattern match
+                        # Skip optional steps unless explicitly mentioned
+                        if (step.optional and step.name not in explicitSteps):
+                            continue
+
                         argDict['step'] = step.name
                         step.run(self, baseline, scenario, argDict, tool, noRun=args.noRun)
             except PygcamException as e:

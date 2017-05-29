@@ -95,6 +95,8 @@ takes no attributes. Multiple ``<steps>`` elements are allowed.
 +-------------+------------+-----------+---------------------------------+
 | group       | no         | ""        | the name of a scenario group    |
 +-------------+------------+-----------+---------------------------------+
+| optional    | no         | "false"   | {"true", "false"}               |
++-------------+------------+-----------+---------------------------------+
 
 A ``<step>`` describes one step in the workflow. Each step has a name
 and an integer sequence number. Sequence numbers can be specified using
@@ -136,6 +138,12 @@ command-line, then only those steps are run. If the attribute
 baseline scenario. If ``runFor="policy"`` is set, the step is run only
 or *non*-baseline strategies. By default steps are run for both baseline
 and policy scenarios.
+
+If a step's "optional" attribute is set to "true", the step is run only if
+it is explicitly mentioned via the ``-s`` flag; by default it is not run.
+This allows you to define steps that are used only occasionally. Optional
+steps are identified as such in the output of the ``run -l`` sub-command
+and flag.
 
 If the ``group`` attribute is set, the step is run only when processing
 the named scenario group. This allows you to define steps specific to
