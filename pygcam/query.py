@@ -443,6 +443,9 @@ BatchCommandElement = """
         </command>
 """
 
+#
+# TBD: use new (in 4.3) -l flag to MI to route output to log file.
+#
 def _createJavaCommand(batchFile, miLogFile):
     # javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
     # command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
@@ -476,7 +479,8 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         by a colon (on Unix) or a semi-colon (on Windows)
     :param outputDir: (str) the directory in which to write the .CSV
         with query results. Defaults to value of GCAM.OutputDir.
-    :param xmldb: (str) the pathname to the XML database to query
+    :param xmldb: (str) the pathname to the XML database to query, or '' to 
+        use in-memory DB
     :param csvFile: if None, query results are written to a computed filename.
     :param regions: (iterable of str) the regions you want to include in the query
     :param regionMap: (dict-like) keys are the names of regions that should be rewritten.
@@ -494,7 +498,8 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
-    regions = regions or GCAM_32_REGIONS # set default here so it doesn't mess up doc for this method
+    # set default here so sphinx doc doesn't list all 32 regions
+    regions = regions or GCAM_32_REGIONS
 
     delete = not noDelete
 
@@ -523,6 +528,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
 
 def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
                     regions=None, regionMap=None, rewriteParser=None,
+                    batchFileIn=None, batchFileOut=None,
                     tmpFiles=True, noDelete=False):
     """
     Create an optionally-temporary XML file that will run multiple queries, by extracting
@@ -540,6 +546,8 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         The value is the name of the aggregate region to map into.
     :param rewriteParser: (RewriteSetParser instance) parsed representation of
         rewriteSets.xml
+    :param batchFileIn: (str) the name of a pre-formed batch file to run
+    :param batchFileOut: (str) where to write output from batchFileIn, if given        
     :param tmpFiles: (bool) if True temporary files are used and deleted when the
         program exits, otherwise normal files are create in outputDir.
     :param noDelete: (bool) if True, temporary files created by this function are
@@ -579,6 +587,11 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
                                              tmpFiles=tmpFiles, noDelete=noDelete, saveAs=saveAs)
         commands.append(command)
 
+    # Add command to run pre-formed batch file, if given
+    if batchFileIn:
+        command = BatchCommandElement.format(scenario=scenario, queryFile=batchFileIn,
+                                             csvFile=batchFileOut, xmldb=xmldb)
+        commands.append(command)
 
     # Create the file batch-query.xml in the same dir as the CSV files. It can't be
     # a temp file because this step runs separately from the step running GCAM, and
@@ -600,7 +613,7 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
 
 def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=None,
                        miLogFile=None, regions=None, regionMap=None, rewriteParser=None,
-                       noRun=False, noDelete=False):
+                       batchFileIn=None, batchFileOut=None, noRun=False, noDelete=False):
     """
     Create a single GCAM XML batch file that runs multiple queries, placing the
     each query's results in a file named of the form {queryName}-{scenario}.csv.
@@ -617,6 +630,8 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
         The value is the name of the aggregate region to map into.
     :param rewriteParser: (RewriteSetParser instance) parsed representation of
         rewriteSets.xml
+    :param batchFileIn: (str) the name of a pre-formed batch file to run
+    :param batchFileOut: (str) where to write output from batchFileIn, if given
     :param noRun: (bool) if True, print the command that would be executed, but
         don't run it.
     :param noDelete: (bool) if True, temporary files created by this function are
@@ -625,36 +640,138 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
     """
     batchFile = createBatchFile(scenario, queries, xmldb=xmldb, queryPath=queryPath,
                                 outputDir=outputDir, regions=regions, regionMap=regionMap,
-                                rewriteParser=rewriteParser, noDelete=noDelete)
+                                rewriteParser=rewriteParser, noDelete=noDelete,
+                                batchFileIn=batchFileIn, batchFileOut=batchFileOut)
+
+    runModelInterface(scenario, outputDir, xmldb=xmldb, batchFile=batchFile,
+                      miLogFile=miLogFile, noDelete=noDelete, noRun=noRun)
+
+    # Deprecated: replaced with call to runModelInterface. Delete after testing.
+    #
+    # if miLogFile:
+    #     mkdirs(os.path.dirname(miLogFile))
+    #     _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
+    #
+    # command = _createJavaCommand(batchFile, miLogFile)
+    #
+    # if noRun:
+    #     print(command)
+    #     return
+    #
+    # _logger.debug(command)
+    #
+    # try:
+    #     if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):
+    #         with Xvfb():
+    #             subprocess.call(command, shell=True)
+    #     else:
+    #         subprocess.call(command, shell=True)
+    #
+    # except:
+    #     raise
+
+
+def runModelInterface(scenario, outputDir, csvFile=None, queryFile=None, xmldb='',
+                      batchFile=None, miLogFile=None, noDelete=False, noRun=False):
+    """
+    Run a query file on the XML database given by `xmldb`, saving results 
+    in a CSV file.
+
+    :param scenario: (str) the name of the scenario to perform the query on
+    :param outputDir: (str) the directory in which to write the CSV
+        with query results
+    :param csvFile: (str) the file to create; ignored if batchFile is not None.
+    :param queryFile: (str) the path to the XML file holding the queries, or None
+        if the batchFile is not None, in which case the queryFile should already 
+        be referenced in the batchFile.
+    :param xmldb: (str) the path to the XML database or '' to use in-memory DB
+    :param batchFile: (str) the path to an existing batchFile; if not is given,
+        a temporary one will be created based on the other arguments. In no batchFile
+        is specified, a csvFile must be provided.
+    :param miLogFile: (str) optional name of a log file to write ModelInterface output to.
+        The value is the name of the aggregate region to map into.
+    :param noRun: (bool) if True, the command is printed but not executed
+    :param noDelete: (bool) if True, temporary files created by this function are
+        not deleted (use for debugging)
+    :return: (str) the absolute path to the generated CSV file if one was passed in, else None.
+    """
+    if batchFile:
+        if queryFile:
+            _logger.warn('runModelInterface called with both batchFile and queryFile; the latter is ignored.')
+
+        if csvFile:
+            _logger.warn('runModelInterface called with both batchFile and csvFile; the latter is ignored.')
+
+    if csvFile and not batchFile:
+        csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
+        _logger.debug("Writing results to: %s", csvPath)
+    else:
+        csvPath = None
+
+    if not batchFile:
+        # Create a batch file for ModelInterface to invoke the query on the named
+        # scenario, and save the output where specified
+        delete = not noDelete
+        batchFile = getTempFile(suffix='.batch.xml', delete=delete)
+        batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=queryFile,
+                                                  csvFile=csvPath, xmldb=xmldb)
+
+        _logger.debug("Creating temporary batch file '%s'", batchFile)
+        saveToFile(batchFileText, filename=batchFile)
+
     if miLogFile:
         mkdirs(os.path.dirname(miLogFile))
+        if queryFile:
+            _copyToLogFile(miLogFile, queryFile, "Query file: '%s'\n\n" % queryFile)
         _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
 
     command = _createJavaCommand(batchFile, miLogFile)
 
     if noRun:
         print(command)
-        return
+    else:
+        _logger.debug(command)
 
-    _logger.debug(command)
-
-    try:
-        if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):      # deprecated in next release of GCAM
-            with Xvfb():
+        try:
+            if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):   # deprecated as of GCAM 4.3
+                with Xvfb():
+                    subprocess.call(command, shell=True)
+            else:
                 subprocess.call(command, shell=True)
-        else:
-            subprocess.call(command, shell=True)
 
-    except:
-        raise
+            # The java program always exits with 0 status, but when the query fails,
+            # it writes an error message to the CSV file. If this occurs, we delete
+            # the file.
+            if csvPath:
+                failed = False
+                try:
+                    with open(csvPath, 'r') as f:
+                        line = f.readline()
 
-def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
+                    if re.search('java.*Exception', line, flags=re.IGNORECASE):
+                        failed = True
+
+                except Exception:
+                    failed = True
+
+                finally:
+                    if failed:
+                        _logger.error("Batch file '%s' failed. Deleting '%s'", queryFile, csvPath)
+                        deleteFile(csvPath)
+
+        except:
+            raise
+
+    return csvPath
+
+
+def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb='',
                   csvFile=None, miLogFile=None, regions=None, regionMap=None,
                   rewriters=None, rewriteParser=None, noRun=False, noDelete=False,
                   saveAs=None):
     """
-    Run a single query against GCAM's XML database given by `xmldb` (or computed
-    from other parameters), optionally saving the results into `outfile`.
+    Run a single query against GCAM's XML database given by `xmldb` (or 
+    computed from other parameters), saving the results into a CSV file.
 
     :param scenario: (str) the name of the scenario to perform the query on
     :param queryName: (str) the name of a query to execute
@@ -662,7 +779,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
         by a colon (on Unix) or a semi-colon (on Windows)
     :param outputDir: (str) the directory in which to write the .CSV
         with query results
-    :param xmldb: (str) the pathname to the XML database to query
+    :param xmldb: (str) the path to the XML database, or '' to use in-memory DB
     :param csvFile: if None, query results are written to a computed filename.
     :param miLogFile: (str) optional name of a log file to write ModelInterface output to.
     :param regions: (iterable of str) the regions you want to include in the query
@@ -690,7 +807,6 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
     filename = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap,
                                       rewriteSetList=rewriters, rewriteParser=rewriteParser,
                                       delete=delete)
-
     if not filename:
         raise PygcamException("runBatchQuery: file for query '%s' was not found." % basename)
 
@@ -698,64 +814,69 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb=None,
         csvFile = "%s-%s.csv" % (saveAs or mainPart, scenario)    # compute default filename
         csvFile = csvFile.replace(' ', '_')                       # eliminate spaces for convenience
 
-    csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
+    csvPath = runModelInterface(scenario, filename, outputDir, csvFile, xmldb=xmldb,
+                                miLogFile=miLogFile, noDelete=noDelete, noRun=noRun)
+    return csvPath
 
-    # Create a batch file for ModelInterface to invoke the query on the named
-    # scenario, and save the output where specified
-    batchFile = getTempFile(suffix='.batch.xml', delete=delete)
-    batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=filename,
-                                              csvFile=csvPath, xmldb=xmldb)
-
-    _logger.debug("Creating temporary batch file '%s'", batchFile)
-    saveToFile(batchFileText, filename=batchFile)
-
-    _logger.debug("Writing results to: %s", csvPath)
-
-    if miLogFile:
-        mkdirs(os.path.dirname(miLogFile))
-        _copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
-        _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
-
-    command = _createJavaCommand(batchFile, miLogFile)
-
-    if noRun:
-        print(command)
-    else:
-        _logger.debug(command)
-
-    if not noRun:
-        try:
-            if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):
-                with Xvfb():
-                    subprocess.call(command, shell=True)
-            else:
-                subprocess.call(command, shell=True)
-
-            # The java program always exits with 0 status, but when the query fails,
-            # it writes an error message to the CSV file. If this occurs, we delete
-            # the file.
-            failed = False
-            try:
-                with open(csvPath, 'r') as f:
-                    line = f.readline()
-
-                if re.search('java.*Exception', line, flags=re.IGNORECASE):
-                    failed = True
-
-            except Exception:
-                failed = True
-
-            finally:
-                if failed:
-                    _logger.error("Query '%s' failed. Deleting '%s'", queryName, csvPath)
-                    deleteFile(csvPath)
-        except:
-            raise
-
-        finally:
-            if delete:
-                TempFile.remove(filename,  raiseError=False)
-                TempFile.remove(batchFile, raiseError=False)
+    # Deprecated: Refactored into call to runModelInterface. Delete this once debugged.
+    #
+    # csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
+    #
+    # # Create a batch file for ModelInterface to invoke the query on the named
+    # # scenario, and save the output where specified
+    # batchFile = getTempFile(suffix='.batch.xml', delete=delete)
+    # batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=filename,
+    #                                           csvFile=csvPath, xmldb=xmldb)
+    #
+    # _logger.debug("Creating temporary batch file '%s'", batchFile)
+    # saveToFile(batchFileText, filename=batchFile)
+    #
+    # _logger.debug("Writing results to: %s", csvPath)
+    #
+    # if miLogFile:
+    #     mkdirs(os.path.dirname(miLogFile))
+    #     _copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
+    #     _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
+    #
+    # command = _createJavaCommand(batchFile, miLogFile)
+    #
+    # if noRun:
+    #     print(command)
+    # else:
+    #     _logger.debug(command)
+    #
+    #     try:
+    #         if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):
+    #             with Xvfb():
+    #                 subprocess.call(command, shell=True)
+    #         else:
+    #             subprocess.call(command, shell=True)
+    #
+    #         # The java program always exits with 0 status, but when the query fails,
+    #         # it writes an error message to the CSV file. If this occurs, we delete
+    #         # the file.
+    #         failed = False
+    #         try:
+    #             with open(csvPath, 'r') as f:
+    #                 line = f.readline()
+    #
+    #             if re.search('java.*Exception', line, flags=re.IGNORECASE):
+    #                 failed = True
+    #
+    #         except Exception:
+    #             failed = True
+    #
+    #         finally:
+    #             if failed:
+    #                 _logger.error("Query '%s' failed. Deleting '%s'", queryName, csvPath)
+    #                 deleteFile(csvPath)
+    #     except:
+    #         raise
+    #
+    #     finally:
+    #         if delete:
+    #             TempFile.remove(filename,  raiseError=False)
+    #             TempFile.remove(batchFile, raiseError=False)
 
 # Deprecated: there no need for this once multiple queries is working
 def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], queryPath=None,
@@ -944,6 +1065,8 @@ def queryMain(args):
     internalQueries = version > 4.2 and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
     batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
+    batchFileIn  = args.batchFile
+    batchFileOut = os.path.abspath(pathjoin(outputDir, args.batchOutput))
 
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
@@ -963,14 +1086,15 @@ def queryMain(args):
     if not (xmldb or inMemory):
         raise CommandlineError('Must specify xmldb if not using in-memory database')
 
-    _logger.debug("Query names: %s", queryNames)
+    if queryNames:
+        _logger.debug("Query names: %s", queryNames)
 
     queryFileObj = QueryFile.parse(queryFile) if queryFile else None
     queryNodes = queryFileObj.queries if queryFileObj else []
     queries = queryNames + queryNodes
 
-    if not (queryNames or queryFileObj):
-        raise CommandlineError("Error: At least one query name or a query XML file must be specified")
+    if not (queryNames or queryFileObj or batchFileIn):
+        raise CommandlineError("Error: At least one query name, query XML, or batch file must be specified")
 
     rewriteParser = RewriteSetParser.parse(rewriteSetsFile) if rewriteSetsFile else None
     regionMap = readRegionMap(regionFile) if regionFile else None
@@ -985,6 +1109,7 @@ def queryMain(args):
         exeDir = getExeDir(sandbox, chdir=True)
         batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
                                     regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
+                                    batchFileIn=batchFileIn, batchFileOut=batchFileOut,
                                     tmpFiles=False, noDelete=noDelete) \
             if batchMultiple else ''
 
@@ -1004,6 +1129,7 @@ def queryMain(args):
     if batchMultiple:
         runMultiQueryBatch(scenario, queries, xmldb=xmldb, queryPath=queryPath, outputDir=outputDir,
                            miLogFile=miLogFile, regions=regions, regionMap=regionMap,
+                           batchFileIn=batchFileIn, batchFileOut=batchFileOut,
                            rewriteParser=rewriteParser, noRun=args.noRun, noDelete=noDelete)
     else:
         # (Deprecated) Otherwise run them individually.

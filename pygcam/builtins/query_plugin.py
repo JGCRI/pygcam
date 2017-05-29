@@ -27,6 +27,15 @@ class QueryCommand(SubcommandABC):
                             to run in a file (one per line) and just reference the file by preceding the filename
                             argument with "@".''')
 
+        parser.add_argument('-b', '--batchFile',
+                             help='''An XML batch file to run. The file will typically contain 
+                             multiple queries. By default, output is written to 
+                             {outputDir}/{batchFile basename}.csv. Use '-B' to change this.''')
+
+        parser.add_argument('-B', '--batchOutput',
+                             help='''Where to write the output of the XML batch file given by 
+                             the '-b' flag. Non-absolute paths are treated as relative to the given outputDir.''')
+
         parser.add_argument('-d', '--xmldb',
                              help='''The XML database to query (default is computed as
                              {GCAM.SandboxDir}/output/{GCAM.DbFile}. Overrides the -w flag.''')

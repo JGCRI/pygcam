@@ -118,13 +118,13 @@ def getBooleanXML(value):
     Get a value from an XML file and convert it into a boolean True or False.
 
     :param value: any value (it's first converted to a string)
-    :return: True if the value is in ['true', '1'], False if the value
-             is in ['false', '0']. An exception is raised if any other
+    :return: True if the value is in ['true', 'yes', '1'], False if the value
+             is in ['false', 'no', '0']. An exception is raised if any other
              value is passed.
     :raises: PygcamException
     """
-    false = ["false", "0"]
-    true  = ["true", "1"]
+    false = ["false", "no", "0"]
+    true  = ["true", "yes", "1"]
 
     val = str(value).strip()
     if val not in true + false:
