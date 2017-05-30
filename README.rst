@@ -40,6 +40,9 @@ Version 1.0b13 (pending)
   to be defined for occasional use. Elements marked optional="true" are
   run only if explicitly mentioned on the command-line (via the -s flag).
 
+* The "query" sub-command now accepts arguments (-b and -B) to control
+  processing of pre-formed batch query files.
+
 
 Version 1.0b12 (22 May 2017)
 -----------------------------
