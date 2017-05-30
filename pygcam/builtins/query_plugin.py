@@ -32,7 +32,7 @@ class QueryCommand(SubcommandABC):
                              multiple queries. By default, output is written to 
                              {outputDir}/{batchFile basename}.csv. Use '-B' to change this.''')
 
-        parser.add_argument('-B', '--batchOutput',
+        parser.add_argument('-B', '--batchOutput', default='',
                              help='''Where to write the output of the XML batch file given by 
                              the '-b' flag. Non-absolute paths are treated as relative to the given outputDir.''')
 

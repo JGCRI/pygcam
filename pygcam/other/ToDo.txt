@@ -1,7 +1,15 @@
-Add to query.py the ability to run a pre-formed batch script, as one would by
+For OTAQ project:
+
+- Add to query.py the ability to run a pre-formed batch script, as one would by
 running it interactively in MI. Specify input name, output name, whether to
 split into separate output files, and so on. Use this to run the OTAQ batch
 query file. Make it cmd-line accessible in query sub-command.
+
+- Problem is integrating existing queries, which are specified individually
+  and are output to individual CSV files, with the pre-formed batch file
+  that presumes all output is written to a single file.
+  - Maybe run queries individually and then just combine the results to
+    produce the file that's input to the R script process?
 
 
 Installer script
@@ -58,15 +66,26 @@ Document
 
 Cleanup
 -------
+- Eliminate pre-4.3 code since 4.4 is coming out in a few months...
+
 - Consolidate generic code from sectorEditors and xmlEditor
 
 - Split utils.py into logical parts and merge where possible with pygcammcs.util
+
+- Deprecated: single-query code in query.py, and GCAM.BatchMultipleQueries parameter
+
+From GCAM git pages on calling MI in batch mode:
+ - Note if a batch file named - is specified then the “batch commands” are read from the STDIN.
+   Users can also instruct the ModelInterface to save log output to a file by using the flags
+   -l path/to/log/output.txt. [TBD: use this flag rather than redirecting to my own log file.]
+
 
 Features
 --------
 - New @query flag: "-rewrite regions8,crops" # replaces what's in project.xml
 
-If scen name is unique, determine the group
+- If scen name is unique, determine the group automatically
+  - requires reading / generating all groups & scenarios upon reading scenarios.xml
 
 - Allow <comment>s to nest. Not the case in scenarios.xml currently. Not clear why.
 
@@ -91,6 +110,9 @@ If scen name is unique, determine the group
     <else> other stuff
     </else>
   </if>
+
+- Alternatively, have a flag to set a project variable, e.g., --vars mode=mcs,other=value
+  - Have generic <if> in project file as in scenarios file
 
 - Also modify scenarios.xml syntax to allow <else></else>
 
@@ -183,8 +205,7 @@ Near-term
 
 Medium-term
 -----------
-- If scenario has unique name among groups, run it even if group isn't specified?
-    - Will require restructuring since it's assumed there's one group name
+
 
 Long-term
 ---------
@@ -204,28 +225,14 @@ Long-term
 - To try:
   - Move run dir back to /pic/scratch/plev920
 
-Overarching
------------
-- Could also re-architect it around master/worker model
-  - Define an Abs Base Class describing what is run by a worker
-    - Mostly communication protocol, signal handling, and the like
-  - Master is the only process to communicate with database, so it
-    can safely use sqlite3, which is more convenient for moving data
-    between cluster and desktop.
-  - Distribute the generation of input files based on a single CSV
-    file containing all the trial data. The gensim command just generates
-    the CSV file rather than modifying all the XML files.
-    - Splitting trial data generation from XML file manipulation allows
-      use of DAKOTA, EMA, or other methods to generate trials.
-
 - Good time to update the database as well.
   - Denormalize to make it easier to work with (put runId in some other tables?)
   - Create a project table that links to runs so this can work under a
     single postgresql database?
 
-- Rethink the "template" directory. This is underutilized and a little confusing.
+- Rethink the "template" directory. This is probably deprecated.
 
-- Reimplement subcommands as pygcam plugins using pygcam.mcs.*
+- Reimplement mcs as subproject in pygcam.mcs?
 
 - Integrate XML parsing code with pygcam's
 
@@ -243,7 +250,6 @@ MCS Bugs
 
 MCS Cleanup
 -----------
-- Eliminate mcs/scenarios.xml file; this information can be found in project.xml
 - Test "constant" distro
 - Test (or deprecate) FileChooser
 - Test xml db exists before running queries and raise a more targeted error
@@ -255,46 +261,6 @@ MCS Cleanup
 
     find . -type f -print0 | xargs -0 chmod -w
 
-- Incorporate SALib
-    - Optionally Use delta method from SALib instead of the CB method.
-
-Migration to worker model
--------------------------
-- Can be even simpler than jug given that we have a database available
-- Bust out gensim loop innards to run this in separate worker processes
-    - Have gensim just write a csv file with trial data
-        - each worker reads their own row and generates XML as needed
-    - need to normalize column-names somehow
-        - if independent vars, colname[index] ?
-- Each worker finds next available run, runs it, repeats until no more
-- Batch a script like the following, where the # workers depends on config var:
-    for i in {1..$x}
-    do
-        runWorker &
-    done
-    wait    # waits for all children to complete
-
-- Easier than python method below
-
-    procs = []
-
-    # check for exited children on signal
-    def reap():
-        for proc in procs:
-            if proc.poll():
-               procs.remove(proc)
-               del proc # to avoid zombies
-
-    signal(signal.SIGCHLD, reap)
-
-    for i in range(count):
-        proc = Popen('runworker')
-        procs.append(proc)
-
-    while procs:
-        sleep(60)
-
-
 MCS docs
 --------
 - New <Parameter active="0"> attribute
@@ -304,19 +270,6 @@ MCS docs
 
 MCS Notes
 ---------
-- Needs wrapper (runner.py) or jug-type master-slave approach
-    - master-slave avoids stacking jobs in advance
-    - jug handles tracking incomplete jobs
-
-- Using jug
-    - Slave asks for next task
-        - identified by path to .json file, which has all needed args
-    - Does stuff that runner.py does now
-        - signal handling
-        - sets per-task alarm
-        - database updates (unless jug results mgmt obviates this)
-        - returns status or tuple/dict with more info?
-
 Useful command:
 
     gcammcs iterate -s1 -e corn -t0,7-11 -c 'gt mcs -S corn -s CI --sandbox {trialDir} --localXml {expDir}/local-xml'
