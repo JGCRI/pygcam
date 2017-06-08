@@ -115,7 +115,12 @@ def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
     _ConfigParser.read_string(data, source=filename)
     return data
 
+
 _usingMCS = None
+
+def mcsSentinelFile():
+    path = os.path.join(os.getenv('HOME'), '.use_pygcam_mcs')
+    return path
 
 def setUsingMCS(value):
     global _usingMCS
@@ -133,19 +138,16 @@ def usingMCS():
     global _usingMCS
 
     if _usingMCS is None:
-        path = os.path.join(os.getenv('HOME'), '.no_pygcam_mcs')
+        path = mcsSentinelFile()
         if os.path.exists(path):
-            import sys
-            # let user know this hidden file is active
-            sys.stderr.write('Not using pygcam-mcs: found sentinel file %s\n' % path)
-            setUsingMCS(False)
-        else:
             try:
                 import pygcammcs
                 setUsingMCS(True)
 
             except ImportError:
                 setUsingMCS(False)
+        else:
+            setUsingMCS(False)
 
     return _usingMCS
 

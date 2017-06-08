@@ -14,20 +14,7 @@ import re
 import subprocess
 from glob import glob
 
-from .builtins.chart_plugin import ChartCommand
-from .builtins.config_plugin import ConfigCommand
-from .builtins.diff_plugin import DiffCommand
-from .builtins.gcam_plugin import GcamCommand
-from .builtins.init_plugin import InitCommand
-from .builtins.mi_plugin import ModelInterfaceCommand
-from .builtins.new_plugin import NewProjectCommand
-from .builtins.protect_plugin import ProtectLandCommand
-from .builtins.query_plugin import QueryCommand
-from .builtins.run_plugin import RunCommand
-from .builtins.sandbox_plugin import SandboxCommand
-from .builtins.setup_plugin import SetupCommand
-from .builtins.compare_plugin import CompareCommand
-
+from .builtins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, DEFAULT_SECTION, usingMCS)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
@@ -41,11 +28,6 @@ from .windows import IsWindows
 _logger = getLogger(__name__)
 
 PROGRAM = 'gt'
-
-BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
-                      GcamCommand, InitCommand, ModelInterfaceCommand,
-                      NewProjectCommand, ProtectLandCommand, QueryCommand,
-                      RunCommand, SandboxCommand, SetupCommand]
 
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
