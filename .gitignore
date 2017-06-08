@@ -32,9 +32,7 @@ pygcam-saved.tgz
 pygcam-saved-2.tgz
 setuptools-*.egg
 setuptools-*.zip
-pygcam/jugdir
 test.py
 pyinst/build
 pyinst/dist
 pyinst/zips
-gt-1.0b1-win.zip
