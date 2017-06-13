@@ -29,11 +29,11 @@ class MCSCommand(SubcommandABC):
 
         sentinelFile = mcsSentinelFile()
 
-        if args.mcsmode == 'on':
+        if args.mode == 'on':
             # Touch the file
             open(sentinelFile, 'w').close()
 
-        elif args.mcsmode == 'off':
+        elif args.mode == 'off':
             # remove it if it exists
             try:
                 os.remove(sentinelFile)
