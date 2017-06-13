@@ -19,7 +19,7 @@ class MCSCommand(SubcommandABC):
         super(MCSCommand, self).__init__('mcs', subparsers, kwargs)
 
     def addArgs(self, parser):
-        parser.add_argument('mcsmode', choices=['on', 'off', 'status'],
+        parser.add_argument('mode', choices=['on', 'off', 'status'],
                             help='''Turn MCS mode on or off, or report current setting''')
         return parser
 

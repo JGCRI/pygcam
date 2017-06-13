@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+	<!-- Attribute types -->
+	<xs:simpleType name="ScenarioType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="reference"/>
+			<xs:enumeration value="baseline"/>
+			<xs:enumeration value="derived"/>
+        </xs:restriction>
+	</xs:simpleType>
+
+	<!-- Elements -->
+	<xs:element name='Generator' type='xs:string'/>
+	<xs:element name='Description' type='xs:string'/>
+
+	<xs:element name="Scenario">
+		<xs:complexType>
+			<xs:all>
+				<xs:element ref="Generator" minOccurs="0"/>
+				<xs:element ref="Description" minOccurs="0"/>
+			</xs:all>
+			<xs:attribute name="parent" type="xs:string"/>
+			<xs:attribute name="subdir" type="xs:string"/>
+			<xs:attribute name="name" use="required" type="xs:string"/>
+			<xs:attribute name="type" type="ScenarioType" default="derived"/>
+			<xs:attribute name="active" type="xs:boolean"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="Scenarios">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded">
+				<xs:element ref="Scenario"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>

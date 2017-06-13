@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ResultList>
+    <comment>
+        <Result name="ci-rfs" type="diff"
+                desc="Carbon intensity, RFS-style, g CO2e/MJ">
+            <File name="carbon_intensity"/>
+            <Column name="value"/>
+            <Constraint column="method" op="equal" value="ci-rfs-style"/>
+        </Result>
+    </comment>
+
+    <Result name="ci-luc" type="diff"
+            desc="Carbon intensity, LUC-only, g CO2e/MJ">
+        <File name="carbon_intensity"/>
+        <Column name="value"/>
+        <Constraint column="method" op="equal" value="ci-luc-only"/>
+    </Result>
+
+    <Result name="ci-all" type="diff"
+            desc="Carbon intensity, All GHGs, g CO2e/MJ">
+        <File name="carbon_intensity"/>
+        <Column name="value"/>
+        <Constraint column="method" op="equal" value="ci-all-ghgs"/>
+    </Result>
+
+    <Result name="delta-total-forcing" type="diff"
+            desc="The change in total forcing between scenarios by timestep (W/m2)">
+        <File name="Climate_forcing"/>
+    </Result>
+
+    <Result name="delta-total-forcing-2050" type="diff"
+            desc="The change in total forcing in 2050 between scenarios (W/m2)">
+        <File name="Climate_forcing"/>
+        <Column name="2050"/>
+    </Result>
+
+    <Result name="fuelEJ" type="diff"
+            desc="Change in use of the shocked fuel (EJ)">
+        <File name="fuelEJ.csv"/>
+        <Column name="value"/>
+    </Result>
+
+    <Result name="rebound" desc="Fuel rebound effect" type="diff">
+        <File name="fuel_rebound.csv"/>
+        <Column name="value"/>
+    </Result>
+
+    <Result name="liquidFuelPrice" type="scenario"
+            desc="Refined liquids enduse price">
+        <File name="Prices_by_sector.csv"/>
+        <Constraint column="region" op="equal" value="USA"/>
+        <Constraint column="sector" op="equal" value="refined liquids enduse"/>
+    </Result>
+
+    <Result name="deltaLiquidFuelPrice" type="diff"
+            desc="Change in refined liquids enduse price">
+        <File name="Prices_by_sector.csv"/>
+        <Constraint column="region" op="equal" value="USA"/>
+        <Constraint column="sector" op="equal" value="refined liquids enduse"/>
+    </Result>
+
+    <!-- scalar value for correlation plots -->
+    <Result name="deltaLiquidFuelPrice-2050" type="diff"
+            desc="The change in the price of refined liquids in 2050">
+        <File name="Prices_by_sector.csv"/>
+        <Column name="2050"/>
+        <Constraint column="region" op="equal" value="USA"/>
+        <Constraint column="sector" op="equal" value="refined liquids enduse"/>
+    </Result>
+
+</ResultList>

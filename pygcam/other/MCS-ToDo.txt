@@ -1,0 +1,194 @@
+Command clean-up
+-----------------
+
+The following are probably obsolete or can be merged into other commands:
+- addexp : this is now automatic. Is there ever a need to add one manually?
+- delsim : (used to be initdb) may be useful; not clear. Maybe just an option to gensim.
+- newsim : build this into gensim as well. Just builds out the Workspace copy; do
+  this if not found, or if a flag indicates to rebuild it.
+
+
+Logging stuff
+-------------
+Consolidate log output to make this process debuggable!
+
+
+API
+---
+Create function to read inputs and results from db and
+create joined or separate DataFrames from these.
+
+Redesign analytic and plotting functions to expect use these.
+
+Should be compatible with SALib (or layer built on that).
+
+Build MonteCarlo class in sensitivity.py to conform with
+other versions.
+
+CorrelationDef.py appears unused. Is this all now handled in
+XMLParameterFile?
+
+Merge pygcamSupport.py into appropriate modules.
+
+
+tsplot
+------
+The monkey patch at
+http://stackoverflow.com/questions/34293687/standard-deviation-and-errors-bars-in-seaborn-tsplot-function-in-python
+might be preferable to current approach.
+
+Documentation
+-------------
+- Setup read the docs project
+
+MCS / SALib
+-----------
+- Test both adding engines dynamically and adding runs.
+  - Test runsim --addTrials
+
+- shutdownWhenIdle happens in all cases
+
+- It would be useful to have conditional evaluation in project.xml and scenarios.xml
+  e.g., to have different behavior in MCS mode.
+
+- Need to be able to
+  - Add engines to existing cluster
+    - gt engine does this but might want to specify a different queue
+    - currently it reuses the batch file created by startCluster. No need to do this.
+
+- Seem to have solved the sqlite thread problem, but the start/end times are not
+  being updated. Is this because the call-back is registered in one thread only?
+
+- Modify legacy approach to sampling and SA to look like SALib versions, i.e.,
+  subclass sensitivity.SensitivityAnalysis and write _sample / _analyze methods.
+
+- Shouldn't be necessary to run queries for gensim. See what side-effect is required
+  and remove it to separate function.
+  - one side-effect is storing parameter names/descs in DB.
+  - test by commenting out runQueries() and see what breaks.
+
+- Document: If SALib methods are used, must define as triangle or uniform
+  so fixed max and min.
+
+- Create Workspace and Sandbox classes that encapsulate the diffs
+  between stochastic and non-stochastic runs, simplifying the creation
+  of these directories and their various symlinks (and avoiding the
+  currently redundant links), and access to various logical paths.
+
+- Generate tornado plot from Sobol analysis.
+  - Should "just work" once values are in the database
+  - See how Platypus presents Sobol results.
+
+- Seems too fragile currently
+  - Generation of trial data in baseline
+  - If process fails, should back out and files written (e.g., to Workspace)
+  - Needs to be idempotent
+
+Once paper1 analysis is done:
+- Create new branch
+- Drop InValue row and col columns from schema, Database, uses
+- Add variable number?
+  - Useful only for independent (non-shared) RVs, which currently don't work.
+
+- Create an "export" subcommand that can output inputs/outputs in various
+  formats, e.g., for SALib, for EMAWorkbench? and so on.
+
+- Also, "plotsim" to provide various types of plots
+- Also, "sa" to run the global sensitivity analysis associated with
+  the sampling method used in "gensim".
+
+- Might be able to eliminate distinction between static and dynamic
+
+- Merge mcs-cluster.py into analysis.py
+
+- Test each new sub-command
+  - Step through all code
+  - Fix config vars one at a time.
+
+- Have "newsim" command append to .pygcam.cfg as "new" does (optional)
+
+- Make MCS.Years obsolete
+  - need single point of modification, either project.xml or config file, not both!
+  - in the meantime, might check that the designated years are correct in the database
+
+- Modify XMLConfigFile to use xmlEditor since same features exist there?
+  - different calling assumptions might make this difficult
+
+Master/worker architecture
+---------------------------
+- Maybe one more architectural revision is required:
+  - start loop by collecting available engines and initializing new ones (Add to a set?)
+  - see if controller adds these to the pool and uses them automatically
+  - Or does master send the function to the client, which means the execute('import ...;) is not needed?
+    - commenting it out seems to work anyway, so yeah.
+
+- Master quit, presumably after receiving results, but before saving to DB.
+  - How to recover from this? Probably a using the task DB.
+
+- Flush queue stats so counts are accurate for running 'runsim' command?
+  - add runsim flag for this
+
+- Why the 3 sec delay between adding results for each run? Looks like programmed sleep.
+  - runsim keeps processing results long after all the engines have exited. Speed it up!
+
+- Seems workers are added for 30min only.
+  - Check logic on that. Might be adding workers up to 300 before adding time?
+  - Added engines, but didn't seem to be picked up by master, not sure though. CHECK LOGS.
+
+- Quitting and restarting runsim didn't work.
+  - Next time after adding engines, try runsim with --addTrials (-a) flag
+  - Looks like newly added tasks (via -a flag) tried to compute diff between
+    baseline and baseline (e.g., carbon_intensity-baseline-baseline.csv) WHY?
+    - Might be stale info from context? Must excise this approach! ***
+
+- Test that timeout signal is making it through to setting database result
+
+- Rather than calling ipcluster -n 0 and ipengine --daemonize, just call
+  ipcontroller and sbatch the generated engine batch file.
+  - Generate these into profile dir, but set the working dir for log output
+    to {simdir}/logs
+
+- Runsim prints both console and "file" log messages
+  - need to be able to assign log level and log file per module. Can't have it both ways.
+
+- Consolidate logging / console msgs
+  - GCAM output going to exe/logs/main_log.txt
+  - Engine output going to trialDir/log/{scenario}.log
+  - Non-GCAM (logger) output going to ~/tmp/slurm-*.log files
+  - unclear where controller is logging to with --log-to-file=True
+
+- Eliminate args.json; just pass this info from cmd line from
+  (revised) runsim to clients as a dict via vars(args).
+  - No need to write this to disk or to pass via environment vars.
+
+- Setup stuff
+  - Automate configuration of ipyparallel files (ipcluster and ipcontroller files)
+
+  - conda update conda
+  - conda install packaging appdirs
+  - python setup.py develop in pygcam and pygcam-mcs
+
+  - Create new profile:
+    ipython profile create --parallel --profile=pygcam
+
+  - on PIC set these in ~/.ipython/profile_pygcam/ipcontroler_config.py:
+    # seems to be a name changed... in 5.2.0 there are only
+    # c.HubFactory.client_ip and c.HubFactory.engine_ip
+    c.HubFactory.ip = '*'
+
+    # Set engines to use Slurm, but leave controller on login node to avoid
+    # hogging an additional node for this mostly-idle task
+    c.IPClusterEngines.engine_launcher_class = 'Slurm'
+
+    # It’s also useful on systems with shared filesystems to run the engines
+    # in some scratch directory. This can be set with:
+    c.IPEngineApp.work_dir = u'/path/to/scratch/'
+
+- Delete after harvesting useful bits:
+  - Runner.py
+  - QueueRunner.py
+  - runGcamTool.py
+  - CorePackage.py
+  - XMLScenarioFile
+
+- Revise file layout to minimize need for copying (see notes in pygcam files)

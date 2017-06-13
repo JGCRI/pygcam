@@ -13,7 +13,7 @@ class TestLandProtection(unittest.TestCase):
         Run diff on two files and test that there is no difference.
         '''
         # print "diff %s %s" % (outfile, testfile)
-        diffCmd = "c:\\cygwin64\\bin\\diff" if IsWindows else "diff"
+        diffCmd = r"c:\cygwin64\bin\diff" if IsWindows else "diff"
         status = subprocess.call([diffCmd, '-w', outfile, testfile], shell=False)  # -w => ignore whitespace
         self.assertEqual(status, 0, 'Files %s and %s differ' % (outfile, testfile))
         if deleteOnSuccess:

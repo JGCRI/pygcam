@@ -1,6 +1,6 @@
 from pygcam.xmlEditor import xmlSel, xmlEdit, extractStubTechnology
 
-cfg = '/Users/rjp/tmp/configuration_ref.xml'
+cfg = './data/xml/configuration_ref.xml'
 
 def testSel(xpath):
     print('%s: %s' % (xpath, xmlSel(cfg, xpath)))

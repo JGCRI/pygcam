@@ -2,14 +2,14 @@ import unittest
 import os
 from glob import glob
 import shutil
-import time
 
 from pygcam.utils import TempFile, getTempFile
 
 class TestTempFile(unittest.TestCase):
     def setUp(self):
-        self.tmpDir = '/tmp/test'
+        self.tmpDir = './data/tmp/test'
         self.removeTmpDir()
+        os.mkdir(self.tmpDir)
 
     def tearDown(self):
         self.removeTmpDir()
@@ -37,10 +37,6 @@ class TestTempFile(unittest.TestCase):
 
         files = glob(os.path.join(self.tmpDir, '*'))
         self.assertEqual(len(files), fileCount)
-
-        # duration = 2
-        # print 'sleeping %.2f' % duration
-        # time.sleep(duration)
 
         TempFile.deleteAll()
 

@@ -45,7 +45,8 @@ def _mkdirs(newdir, mode=0o770):
         if e.errno != EEXIST:
             raise
 
-# Loggers for top-level package names, e.g., 'pygcam' and 'pygcammcs'
+# Loggers for top-level package names, e.g., 'pygcam'.
+# TBD: perhaps have separate setting for pygcam.mcs?
 _PkgLoggers = {}
 
 def _createPkgLogger(dotspec):

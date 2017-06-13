@@ -306,5 +306,6 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 intersphinx_mapping = {
-    'pygcammcs' : ('https://pygcam-mcs.readthedocs.io/en/latest/',  None),
+    'ipyparallel': ('https://ipyparallel.readthedocs.io/en/latest/', None),
+    'SALib': ('http://salib.readthedocs.io/en/latest/', None),
  }

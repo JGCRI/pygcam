@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ParameterList>
+  <!--
+  The distribution on fraction of land protected is processed via the
+  function 'protectTrial' in paper1/mcs/trialFuncs.py
+   -->
+  <InputFile name="land2">
+    <Parameter name="protected-fraction" active="1">
+      <Distribution apply="trialFuncs.protectTrial">
+        <Uniform min="0.8" max="1.0"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <!-- Takes values from parameter 'protected-fraction' -->
+  <InputFile name="land3">
+    <Parameter name="protected-fraction-linked" active="1">
+      <Distribution apply="trialFuncs.protectTrial">
+          <Linked parameter="protected-fraction"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <!-- N2O emissions intensity -->
+  <InputFile name="nonco2_aglu">
+    <Parameter name="n2o-emissions">
+      <Query>//AgProductionTechnology/period[@year="2005"]/Non-CO2[@name="N2O_AGR"]/input-emissions</Query>
+      <Distribution apply="multiply">
+        <LogUniform factor="2"/>  <!-- i.e., from half to double -->
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <InputFile name="energy_supply">
+    <Parameter name="bd-biomassOil-coef">
+      <Query>//global-technology-database/location-info[@sector-name="regional biomassOil"]/technology[@name="OilCrop"]/period[@year>"2010"]/minicam-energy-input/coefficient</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.20"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="corn-etoh-corn-coef">
+      <Query>//global-technology-database/location-info/technology[@name="regional corn for ethanol"]/period[@year>"2010"]/minicam-energy-input/coefficient</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.20"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="corn-ddgs-output-ratio">
+      <Query>//stub-technology[@name="regional corn for ethanol"]/period[@year>"2010"]/fractional-secondary-output[@name="DDGS and feedcakes"]/output-ratio</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.20"/>
+      </Distribution>
+    </Parameter>
+
+  </InputFile>
+
+  <!-- Logit exponents -->
+  <InputFile name="land1">
+    <Parameter name="agro-forest-logit-exp">
+      <!-- competition between forest-grass-crop and pasture (283 nodes) -->
+      <Query>//LandAllocatorRoot/LandNode[starts-with(@name, "AgroForestLandAEZ")]/logit-exponent</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.25"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <InputFile name="land3">
+    <Parameter name="forest-logit-exp">
+      <!-- Managed vs unmanaged forest (283 nodes) -->
+      <Query>//LandNode/LandNode[starts-with(@name,"AgroForest_NonPasture")]/LandNode[starts-with(@name,"AllForestLand")]/logit-exponent</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.25"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="crop-logit-exp">
+      <!-- Crops (283 nodes) -->
+      <Query>//LandNode/LandNode[starts-with(@name,"AgroForest_NonPasture")]/LandNode[starts-with(@name,"CropLand")]/logit-exponent</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.25"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="grass-shrub-logit-exp">
+      <!-- Grass vs shrubland (283 nodes; value is 0.05 everywhere) -->
+      <Query>//LandNode/LandNode[starts-with(@name,"AgroForest_NonPasture")]/LandNode[starts-with(@name,"GrassShrubLand")]/logit-exponent</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.25"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <InputFile name="land2">
+    <Parameter name="pasture-logit-exp">
+      <!-- Managed vs unmanaged pasture (283 nodes) -->
+      <Query>//LandNode[starts-with(@name,"AgroForestLand")]/LandNode[starts-with(@name,"AllPastureLand")]/logit-exponent</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.25"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="forest-grass-crop-logit-exp">
+      <!-- Forest vs grassland vs cropland (283 nodes) -->
+      <Query>//LandNode[starts-with(@name,"AgroForestLand")]/LandNode[starts-with(@name,"AgroForest_NonPasture")]/logit-exponent</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.25"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <!-- Carbon densities -->
+  <InputFile name="land3">
+    <Parameter name="crop-biomass-c">
+      <!-- All crops (3636 nodes) -->
+      <Query>//LandNode/LandNode/LandNode[starts-with(@name,"CropLand")]/LandLeaf/land-carbon-densities/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="crop-soil-c">
+      <!-- All crops (3636 nodes) -->
+      <Query>//LandNode/LandNode/LandNode[starts-with(@name,"CropLand")]/LandLeaf/land-carbon-densities/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Managed forest (566 nodes; the "*" captures both <land-use-history> and <no-emiss-carbon-calc> elements) -->
+    <Parameter name="mgd-forest-biomass-c">
+      <Query>//LandNode/LandNode/LandNode[starts-with(@name,"AllForestLand")]/LandLeaf[starts-with(@name,"ForestAEZ")]/*/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="mgd-forest-soil-c">
+      <Query>//LandNode/LandNode/LandNode[starts-with(@name,"AllForestLand")]/LandLeaf[starts-with(@name,"ForestAEZ")]/*/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Unmanaged forest (283 nodes) -->
+    <Parameter name="unmgd-forest-biomass-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"UnmanagedForest")]/no-emiss-carbon-calc/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="unmgd-forest-soil-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"UnmanagedForest")]/no-emiss-carbon-calc/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Other arable land (283 nodes) -->
+    <Parameter name="other-arable-biomass-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"OtherArableLand")]/land-carbon-densities/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="other-arable-soil-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"OtherArableLand")]/land-carbon-densities/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Unmanaged shrubland (283 nodes) -->
+    <Parameter name="shrub-biomass-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"Shrubland")]/land-carbon-densities/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="shrub-soil-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"Shrubland")]/land-carbon-densities/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Unmanaged grassland (283 nodes) -->
+    <Parameter name="grass-biomass-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"Grassland")]/land-carbon-densities/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="grass-soil-c">
+      <Query>//LandNode/LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"Grassland")]/land-carbon-densities/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <!-- Carbon densities -->
+  <InputFile name="land2">
+    <!-- Managed pasture (283 nodes) -->
+    <Parameter name="mgd-pasture-biomass-c">
+      <Query>//LandNode/LandNode/LandLeaf[starts-with(@name,"Pasture")]/land-carbon-densities/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="mgd-pasture-soil-c">
+      <Query>//LandNode/LandNode/LandLeaf[starts-with(@name,"Pasture")]/land-carbon-densities/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Unmanaged pasture (283 nodes) -->
+    <Parameter name="unmgd-pasture-biomass-c">
+      <Query>//LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"UnmanagedPasture")]/land-carbon-densities/above-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+    <Parameter name="unmgd-pasture-soil-c">
+      <Query>//LandNode/LandNode/UnmanagedLandLeaf[starts-with(@name,"UnmanagedPasture")]/land-carbon-densities/below-ground-carbon-density</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <!-- Agricultural productivity (yield) (66,222 nodes) -->
+  <InputFile name="ag_prodchange">
+    <Parameter name="crop-productivity">
+      <Query>//region/AgSupplySector/AgSupplySubsector/AgProductionTechnology/period[@year>"2010"]/agProdChange</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.30"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+  <!-- Food demand -->
+  <InputFile name="demand">
+    <!-- Price elasticity of food crop demand (558 nodes; currently zero everywhere, so can't multiply) -->
+    <Parameter name="food-crop-price-elast">
+      <Query>//energy-final-demand[@name="FoodDemand_Crops"]/price-elasticity[@year>"2010"]</Query>
+      <Distribution apply="direct">
+        <Uniform min="-0.2" max="0"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Price elasticity of meat demand (558 nodes) -->
+    <Parameter name="meat-price-elast">
+      <Query>//energy-final-demand[@name="FoodDemand_Meat"]/price-elasticity[@year>"2010"]</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.2"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Income elasticity of food crop demand (558 nodes) -->
+    <Parameter name="food-crop-income-elast">
+      <Query>//energy-final-demand[@name="FoodDemand_Crops"]/income-elasticity[@year>"2010"]</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.2"/>
+      </Distribution>
+    </Parameter>
+
+    <!-- Income elasticity of meat demand (558 nodes) -->
+    <Parameter name="meat-income-elast">
+      <Query>//energy-final-demand[@name="FoodDemand_Meat"]/income-elasticity[@year>"2010"]</Query>
+      <Distribution apply="multiply">
+        <Uniform factor="0.4"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
+
+</ParameterList>

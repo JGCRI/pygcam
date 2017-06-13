@@ -13,6 +13,7 @@ by the pygcam library. Project-specific features can be added via
      :ref:`diff <diff-label>`,
      :ref:`gcam <gcam-label>`,
      :ref:`init <init-label>`,
+     :ref:`mcs <mcs-label>`,
      :ref:`mi <mi-label>`,
      :ref:`new <new-label>`,
      :ref:`protect <protect-label>`,
@@ -272,6 +273,12 @@ Usage
       Initialize key variables in the ~/.pygcam.cfg configuration file. Values not provided on
       the command-line are requested interactively.
 
+
+   mcs : @replace
+      .. _mcs-label:
+
+      Enable or disable Monte Carlo Simulation (MCS) mode, or check whether MCS mode
+      is currently enabled or disabled.
 
    mi : @replace
       .. _mi-label:

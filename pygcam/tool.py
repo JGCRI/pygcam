@@ -95,7 +95,7 @@ class GcamTool(object):
 
         return cls._instance
 
-    def __init__(self, loadPlugins=True):
+    def __init__(self, loadPlugins=True, loadBuiltins=True):
 
         # address re-entry issue
         decacheVariables()
@@ -107,13 +107,15 @@ class GcamTool(object):
         self.addParsers()
 
         # load all built-in sub-commands
-        map(self.instantiatePlugin, BuiltinSubcommands)
+        if loadBuiltins:
+            map(self.instantiatePlugin, BuiltinSubcommands)
 
-        # If using MCS, load that set of plugins, too
+        # If using MCS, load that set of built-ins, too
         if usingMCS():
-            from pygcammcs.plugins import MCSBuiltins
+            from .mcs.builtins import MCSBuiltins
             map(self.instantiatePlugin, MCSBuiltins)
 
+        # Load external plug-ins found in plug-in path
         if loadPlugins:
             self._cachePlugins()
             # self.loadPlugins()

@@ -128,10 +128,9 @@ def setUsingMCS(value):
 
 def usingMCS():
     """
-    Check if the user environment is configured to use pygcam-mcs, which requires
-    that the pygcammcs package is installed and that the file ~/.no_pycam_mcs is
-    NOT found. This lets gcamtool know whether to load the corresponding
-    built-in sub-commands.
+    Check if the user environment is configured to use pygcam.mcs, which requires
+    that the file ~/.use_pycam_mcs exists. This lets gcamtool know whether to load
+    the corresponding built-in sub-commands.
 
     :return: (bool) True if user environment indicates to use pygcam-mcs.
     """
@@ -139,15 +138,7 @@ def usingMCS():
 
     if _usingMCS is None:
         path = mcsSentinelFile()
-        if os.path.exists(path):
-            try:
-                import pygcammcs
-                setUsingMCS(True)
-
-            except ImportError:
-                setUsingMCS(False)
-        else:
-            setUsingMCS(False)
+        setUsingMCS(os.path.exists(path))
 
     return _usingMCS
 
@@ -193,7 +184,7 @@ def readConfigFiles():
     # if user is working with pygcam.mcs, we load additional defaults. The
     # function usingMCS() imports the package as part of the test...
     if usingMCS():
-        _readConfigResourceFile('etc/mcs.cfg', package='pygcammcs', raiseError=True)
+        _readConfigResourceFile('mcs/etc/mcs.cfg', raiseError=True)
 
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:

@@ -3,7 +3,7 @@ import shutil
 from unittest import TestCase
 
 from pygcam.query import readCsv, readQueryResult
-from pygcam.diff import computeDifference, writeDiffsToCSV
+from pygcam.diff import computeDifference
 from pygcam.utils import QueryResultsDir, mkdirs
 
 class TestDiffCmd(TestCase):

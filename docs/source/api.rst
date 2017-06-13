@@ -1,5 +1,5 @@
-Python API
-===========
+pygcam Python API
+===================
 
 See the https://opensource.org/licenses/MIT for license details.
 

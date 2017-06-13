@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <!-- Simple elements -->
+    <xs:element name="Binary"/>
+    <xs:element name="File" type="xs:string"/>
+    <xs:element name="PythonFunc" type="PythonFuncRef"/>
+    <xs:element name="WriteFunc" type="PythonFuncRef"/>
+    <xs:element name="Query" type="xs:string"/>
+    <xs:element name="DataFile" type="xs:string"/>
+
+    <!-- Attributes types -->
+    <xs:simpleType name="ApplyType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="dir"/>
+            <xs:pattern value="direct"/>
+            <xs:pattern value="replace"/>
+            <xs:pattern value="add"/>
+            <xs:pattern value="multiply"/>
+            <xs:pattern value="mult"/>
+            <xs:pattern value="([a-zA-Z_][a-zA-Z0-9_]*)+(\.[a-zA-Z_][a-zA-Z0-9_]*)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="ModeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="shared"/>
+            <xs:enumeration value="independent"/>
+            <xs:enumeration value="ind"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="PythonFuncRef">
+        <!-- Allow fully specified vars as in pkg.mod1.mod2.var -->
+        <xs:restriction base="xs:token">
+            <xs:pattern value="([a-zA-Z_][a-zA-Z0-9_]*)+(\.[a-zA-Z_][a-zA-Z0-9_]*)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Complex elements -->
+    <xs:element name='comment'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="With">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:decimal">
+                    <xs:attribute name="name" use="required" type="xs:string"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Correlation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="With" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="FileChooser">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="File" minOccurs="1"/>
+            </xs:sequence>
+            <xs:attribute name="directory"/>
+            <xs:attribute name="name" use="required" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Uniform">
+        <xs:complexType>
+            <xs:attribute name="min" type="xs:decimal"/>
+            <xs:attribute name="max" type="xs:decimal"/>
+            <xs:attribute name="range" type="xs:decimal"/>
+            <xs:attribute name="factor" type="xs:decimal"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Integers">
+        <xs:complexType>
+            <xs:attribute name="min" type="xs:decimal"/>
+            <xs:attribute name="max" type="xs:decimal"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="LogUniform">
+        <xs:complexType>
+            <xs:attribute name="factor" type="xs:decimal"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Constant">
+        <xs:complexType>
+            <xs:attribute name="value" type="xs:decimal"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Grid">
+        <xs:complexType>
+            <xs:attribute name="min" type="xs:decimal"/>
+            <xs:attribute name="max" type="xs:decimal"/>
+            <xs:attribute name="count" type="xs:decimal"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Triangle">
+        <xs:complexType>
+            <xs:attribute name="min" type="xs:decimal"/>
+            <xs:attribute name="max" type="xs:decimal"/>
+            <xs:attribute name="mode" type="xs:decimal"/>
+            <xs:attribute name="factor" type="xs:decimal"/>
+            <xs:attribute name="range" type="xs:decimal"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Normal">
+        <xs:complexType>
+            <xs:attribute name="mean"/>
+            <xs:attribute name="stdev"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Lognormal">
+        <xs:complexType>
+            <xs:attribute name="mean"/>
+            <xs:attribute name="stdev"/>
+            <xs:attribute name="low95"/>
+            <xs:attribute name="high95"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Linked">  <!-- Use values from the named parameter -->
+        <xs:complexType>
+            <xs:attribute name="parameter"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Distribution">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element ref="Constant"/>
+                <xs:element ref="Binary"/>
+                <xs:element ref="Integers"/>
+                <xs:element ref="Grid"/>
+                <xs:element ref="Lognormal"/>
+                <xs:element ref="LogUniform"/>
+                <xs:element ref="Normal"/>
+                <xs:element ref="Triangle"/>
+                <xs:element ref="Uniform"/>
+                <xs:element ref="Linked"/>
+                <xs:element ref="DataFile"/>
+                <xs:element ref="PythonFunc"/>
+                <xs:element ref="comment"/>
+            </xs:choice>
+            <xs:attribute name="apply" type="ApplyType" default="direct"/>
+
+            <!-- These are not yet implemented in the code... -->
+            <!--
+            <xs:attribute name="highbound" type="xs:decimal"/>
+            <xs:attribute name="lowbound" type="xs:decimal"/>
+            <xs:attribute name="updatezero" type="xs:boolean" default="0"/>
+            -->
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Parameter">
+        <xs:complexType>
+            <xs:all>
+                <xs:element ref="Distribution"/>
+                <xs:element ref="Correlation" minOccurs="0"/>
+                <xs:element ref="Query" minOccurs="0"/>        <!-- required if not a trialFunc in apply="x.y" -->
+                <xs:element ref="comment" minOccurs="0"/>
+            </xs:all>
+            <xs:attribute name="name" use="required" type="xs:NCName"/>
+            <xs:attribute name="mode" type="ModeType" default="shared"/>
+            <xs:attribute name="active" type="xs:boolean" default="1"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="InputFile">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Parameter" minOccurs="1"/>
+                <xs:element ref="WriteFunc"/>
+                <xs:element ref="comment"/>
+            </xs:choice>
+            <xs:attribute name="name" use="required"/>
+            <xs:attribute name="external" type="xs:boolean" default="0"/> <!-- deprecated? -->
+        </xs:complexType>
+    </xs:element>
+
+    <!--
+    <xs:element name="TrialFuncs">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Parameter"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    -->
+
+    <xs:element name="ParameterList">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="InputFile"/>
+                <xs:element ref="comment"/>
+                <!-- deprecated?
+                <xs:element ref="FileChooser"/>
+                <xs:element ref="TrialFuncs"/>
+                -->
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

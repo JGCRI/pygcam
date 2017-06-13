@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<!-- Attribute types -->
+    <xs:simpleType name="OperatorType">
+        <xs:restriction base="xs:string">
+			<xs:pattern value="==|=|eq|equal|!=|&gt;&lt;|neq|notEqual|not equal"/>
+        </xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="ResultType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="diff"/>
+			<xs:enumeration value="scenario"/>
+        </xs:restriction>
+	</xs:simpleType>
+
+	<!-- Elements -->
+    <xs:element name='comment'>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+	<xs:element name="File">
+		<xs:complexType>
+			<xs:attribute name="name" use="required" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="Constraint">
+		<xs:complexType>
+			<xs:attribute name="column" use="required" type="xs:string"/>
+			<xs:attribute name="groupby" type="xs:string"/>
+			<xs:attribute name="op" use="required" type="OperatorType"/>
+			<xs:attribute name="value" use="required" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="Column">
+		<xs:complexType>
+			<xs:attribute name="name" use="required" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="Result">
+		<xs:complexType>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element ref="comment" minOccurs="0"/>
+				<xs:element ref="File" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="Column" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="Constraint" minOccurs="0"/>
+			</xs:choice>
+			<xs:attribute name="desc" type="xs:string"/>
+			<xs:attribute name="name" use="required" type="xs:string"/>
+			<xs:attribute name="type" use="required" type="ResultType"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="ResultList">
+		<xs:complexType>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element ref="comment" minOccurs="0"/>
+				<xs:element ref="Result" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:choice>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>

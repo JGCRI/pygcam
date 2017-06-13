@@ -1,0 +1,135 @@
+- Convert existing tests from unittest to pytest.
+- Prepare the 'minimal' input files needed for tests.
+
+
+General use
+--------------------
+- Create a function to perform a diff on two XML files by
+  canonicalizing them to remove whitespace diffs and comparing
+  for equality.
+- Similar for CSV files, compare text cols directly, and compare
+  that numbers differ by < epsilon (arg to test)
+
+
+carbonTax.py
+---------------------
+- create mini version of files that are manipulated and test
+  result of fn call against expected result.
+
+
+chart.py
+---------------------
+- unclear
+
+
+config.py
+---------------------
+- Read dummy config file
+- test conversions (asInt, asBool, etc.)
+- test setting and getting a value
+- test getting DEFAULT vs non-DEFAULT
+
+constants.py
+---------------------
+- None
+
+constraints.py
+---------------------
+- Compute constraints from a known result and compare XML files.
+
+diff.py
+---------------------
+- See TestDiffCmd and possibly add more
+
+error.py
+---------------------
+- None
+
+gcam.py
+---------------------
+- Test trapping of errors while running GCAM
+  - reference a non-existent XML file
+  - create conditions for market to not solve in 2015 (huge amt of cellulosic ethanol?)
+
+landProtection.py
+---------------------
+- Test simple mode of protecting fixed percentage
+- Test a more complex example on an extracted bit of XML
+  and compare XML output
+- Test via protectLandMain using argparse to generate Namespace, e.g.
+  args = parser.parse_args(['--sum', '7', '-1', '42'])
+
+log.py
+---------------------
+- Set and get log level
+- Add and remove handlers
+
+matplotlibFix.py
+---------------------
+- None
+
+project.py
+---------------------
+- Read a sample project file that has all syntactic options in it
+  - query
+- Read a sample project file with a syntax error
+
+query.py
+---------------------
+- Run query against saved database? Shame they're so huge...
+
+queryFile.py
+---------------------
+- Parse a queryfile with all syntactic options
+
+scenarioSetup.py
+---------------------
+
+sectorEditors.py
+---------------------
+- Unclear whether this module survives in current form.
+- Generalize and see if still needed as separate module.
+
+signals.py
+---------------------
+- None
+
+subcommand.py
+---------------------
+- Tested by running tool.py
+
+tool.py
+---------------------
+- Run help and metadata commands by calling main(argv, raiseError=True)
+
+units.py
+---------------------
+- Test a few units to be sure mechanism is working. No need to test all.
+
+utils.py
+---------------------
+- test writeXmldbDriverProperties
+
+version.py
+---------------------
+- None
+
+windows.py
+---------------------
+- Can't test effectively on Travis
+
+xmlEditor.py
+---------------------
+- Perform transformations on "extract" XML files and compare
+  with expected results
+
+xmlSetup.py
+---------------------
+- Create scenarios.xml with all syntactic features
+- "Expand" into XML file and compare with expected result.
+
+
+mcs
+---
+
+TBD.

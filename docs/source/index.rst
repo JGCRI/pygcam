@@ -27,6 +27,7 @@ XML File Formats
    :maxdepth: 1
 
    xmlFiles
+   mcs/pygcam.mcs.XML
 
 Application Programming Interface (API)
 ----------------------------------------
@@ -35,6 +36,14 @@ Application Programming Interface (API)
    :maxdepth: 1
 
    api
+
+Monte Carlo Simulation support
+---------------------------------
+
+  .. toctree::
+   :maxdepth: 1
+
+   mcs/index
 
 For PIC Users
 -------------

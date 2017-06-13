@@ -1,6 +1,11 @@
 import platform
 from pygcam.version import VERSION
 
+# Build the full version with MCS on when running on ReadTheDocs.
+# In normal mode, MCS is an optional install.
+import os
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
     import ez_setup
@@ -18,6 +23,15 @@ requirements = [
     'six',
     'sphinx-argparse==0.1.17',
     'filelock',
+]
+
+mcs_requirements = [
+    'ipyparallel',
+    'numexpr',
+    # 'psycopg2',
+    'salib',
+    'scipy',
+    'sqlalchemy',
 ]
 
 long_description = '''
@@ -98,6 +112,10 @@ setup(
     entry_points={'console_scripts': ['gt = pygcam.tool:main']},
     install_requires=requirements,
     include_package_data = True,
+
+    extras_require={
+        'mcs':  mcs_requirements,
+    },
 
     url='https://bitbucket.org/plevin/pygcam',
     download_url='https://plevin@bitbucket.org/plevin/pygcam.git',
