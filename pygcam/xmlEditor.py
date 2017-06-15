@@ -376,8 +376,8 @@ class ScenarioInfo(object):
 
 class XMLEditor(object):
     '''
-    Base class for scenario setup. Custom scenario processing classes must 
-    subclass this. Represents the information required to setup a scenario, i.e., 
+    Base class for scenario setup. Custom scenario processing classes must
+    subclass this. Represents the information required to setup a scenario, i.e.,
     to generate and/or copy the required XML files into the XML output dir.
     '''
     # TBD: consider whether init should take an object describing the scenario
@@ -839,7 +839,10 @@ class XMLEditor(object):
 
         elt = item.tree.find('//ScenarioComponents')
         afterNode = elt.find('Value[@name="%s"]' % after)
-        index = elt.index(afterNode)
+        if afterNode is None:
+            raise SetupException("Can't insert %s after %s, as the latter doesn't exist" % (name, after))
+
+        index = elt.index(afterNode) + 1
 
         node = ET.Element('Value')
         node.set('name', name)
