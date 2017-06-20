@@ -14,7 +14,7 @@ import re
 import subprocess
 from glob import glob
 
-from .builtins import BuiltinSubcommands
+from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, DEFAULT_SECTION, usingMCS)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
@@ -112,7 +112,7 @@ class GcamTool(object):
 
         # If using MCS, load that set of built-ins, too
         if usingMCS():
-            from .mcs.builtins import MCSBuiltins
+            from .mcs.built_ins import MCSBuiltins
             map(self.instantiatePlugin, MCSBuiltins)
 
         # Load external plug-ins found in plug-in path
