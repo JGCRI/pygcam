@@ -16,6 +16,7 @@ import sys
 from time import sleep
 from IPython.paths import locate_profile
 
+import ipyparallel as ipp
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
@@ -34,6 +35,8 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
+export MKL_NUM_THREADS=1
+export MKL_DOMAIN_NUM_THREADS="BLAS=5"
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 
@@ -84,8 +87,7 @@ class Master(object):
         self.foundWorkers = False
 
     def waitForWorkers(self):
-        import ipyparallel as ipp
-        from pygcam.config import getParam, getParamAsInt
+        from pygcam.config import getParamAsInt
 
         maxTries = getParamAsInt('IPP.StartupWaitTries')
         seconds  = getParamAsInt('IPP.StartupWaitSecs')
@@ -240,6 +242,13 @@ class Master(object):
         return flatten(ids)
 
     def completedTasks(self):
+        # def getId(rec):
+        #     try:
+        #         return rec['msg_id']
+        #     except KeyError:
+        #         # shouldn't happen, but something is blowing out...
+        #         _logger.error('completedTasks: rec is missing msg_id field')
+
         recs = self.client.db_query({'completed': {'$ne': None}}, keys=['msg_id'])
         ids = [rec['msg_id'] for rec in recs] if recs else None
         return ids
@@ -300,6 +309,7 @@ class Master(object):
             completed = self.completedTasks()
             if completed:
                 ar = client.get_result(completed)
+                _logger.debug('Completed msg_ids: %s', completed)
                 results = ar.get()
 
                 # filter out results from execute command (e.g. imports)
@@ -625,7 +635,6 @@ def startCluster(**kwargs):
 
 
 def stopCluster(profile=None, cluster_id=None, other_args=None):
-    import ipyparallel as ipp
     from pygcam.config import getParam
 
     # This allows user to pass empty string (e.g., -c='') to override default
