@@ -679,16 +679,19 @@ class CoreDatabase(object):
         #_logger.debug("getRunIdFromContext returning runId %s", run.runId if run else None)
         return run
 
-    def setRunStatus(self, runId, status, jobNum=None):
+    def setRunStatus(self, runId, status): #, jobNum=None):
         '''
         Set the runStatus to the value for the given string and
         optionally set the job number.'''
         session = self.Session()
         try:
             run = session.query(Run).filter_by(runId=runId).one()
+            if run.status == status:
+                return  # nothing to do here
+
             run.status = status    # insert/update listener sets status code and timestamps
-            if jobNum:
-                run.jobNum = jobNum
+            # if jobNum:
+            #     run.jobNum = jobNum
 
             self.commitWithRetry(session)
             return run
@@ -745,61 +748,6 @@ class CoreDatabase(object):
         self.endSession(session)
 
         return rslt
-
-    # Deprecated?
-    def dequeueRun(self, simId, jobNum, expList=None, statusList="queued"):
-        """
-        Get the experiment names and trial numbers for `count` runs in "queued"
-        status (or, if `otherStatus` is not None, then any of the status values
-        in that list), setting the status to "running" within a transaction to
-        avoid race conditions.
-
-        :param simId: (int) the id of the simulation to work on
-        :param expList: (str or list(str)) experiments to limit the query to.
-           By default no constraint is placed on experiment name.
-        :param count: (int) the number of available trials to get
-        :param statusList: (str or list(str)) status strings for trials to
-           consider running. Defaults to "queued".
-        :return: (list(tuple)) A list of one or more tuples (experimentName,
-            trialNumber) is returned..
-        """
-        Session = sessionmaker(autocommit=True)
-        #session = Session(bind=self.engine.execution_options(isolation_level='SERIALIZABLE'))
-        session = Session()
-        session.begin()
-
-        if isinstance(expList, six.string_types):
-            expList = [expList]
-
-        if isinstance(statusList, six.string_types):
-            statusList = [statusList]
-
-        # select e."expName", r."trialNum" from run r, experiment e where
-        # r."simId" = 1 and r.status in ('queued') and r."expId" = e."expId"
-        # and e.expName in ('foo', 'bar') limit 1
-
-        query = session.query(Run, Experiment.expName).filter_by(simId=simId).join(Experiment).filter(Run.status.in_(statusList))
-
-        if expList:
-            query = query.filter(Experiment.expName.in_(expList))
-
-        tuple = query.with_for_update(nowait=True, of=Run).first()
-        if not tuple:
-            return None
-
-        run, expName = tuple
-        run.status = RUN_RUNNING
-        run.jobNum = jobNum
-        results = (run.runId, run.trialNum, expName)
-
-        try:
-            self.commitWithRetry(session)
-        except:
-            session.rollback()
-        finally:
-            self.endSession(session)
-
-        return results
 
     def createSim(self, trials, description, simId=None):
         '''

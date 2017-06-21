@@ -306,7 +306,7 @@ class Master(object):
             # Check for newly running tasks
             running = self.runningTasks()
             if running:
-                _logger.debug("%d tasks are running", len(running))
+                # _logger.debug("Found %d running tasks", len(running))
                 ar = client.get_result(running, block=False)
 
                 for dataDict in ar.data:
@@ -357,7 +357,7 @@ class Master(object):
                     qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
                     break
 
-                _logger.debug('wait(%d)', args.waitSecs)
+                _logger.debug('sleep(%d)', args.waitSecs)
                 sleep(args.waitSecs)
 
             # Shutdown idle engines when desired and possible
@@ -658,7 +658,7 @@ def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None)
     template = "ipcluster stop --profile={profile} --cluster-id={cluster_id} {other_args}"
     cmd = template.format(profile=profile, cluster_id=cluster_id, other_args=other_args)
 
-    # shutdown engines that cluster may not be tracking directly
+    # shutdown engines, including those that cluster may not be tracking directly
     try:
         client = ipp.Client(profile=profile, cluster_id=cluster_id, timeout=1)
         client.shutdown(hub=False)
@@ -666,6 +666,8 @@ def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None)
         pass
 
     status = _clusterCommand(cmd)
+
+    # kill the engines
     if stop_jobs:
         cmd = getParam('IPP.StopJobsCommand').strip()
         if cmd:
