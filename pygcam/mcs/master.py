@@ -35,11 +35,12 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
-export OMP_NUM_THREADS=5
-export MKL_NUM_THREADS=1
-export MKL_DOMAIN_NUM_THREADS="BLAS=5"
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
+# These attempts accomplished nothing since TBB doesn't use them
+# export OMP_NUM_THREADS=5
+# export MKL_NUM_THREADS=1
+# export MKL_DOMAIN_NUM_THREADS="BLAS=5"
 
 # No need to run the controller on a compute node, but just in case
 _slurmControllerBatchTemplate = """#!/bin/sh
