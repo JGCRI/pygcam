@@ -176,21 +176,21 @@ class CoreDatabase(object):
             _logger.debug("Can't remove Session: %s", e)
             session.close()
 
-    # TBD: unused currently. Deprecated?
-    @contextmanager
-    def session_scope(self):
-        """
-        Provide a transactional scope around a series of operations.
-        """
-        session = self.Session()
-        try:
-            yield session
-            session.commit()
-        except:
-            session.rollback()
-            raise
-        finally:
-            self.endSession(session)
+    # Deprecated?
+    # @contextmanager
+    # def session_scope(self):
+    #     """
+    #     Provide a transactional scope around a series of operations.
+    #     """
+    #     session = self.Session()
+    #     try:
+    #         yield session
+    #         session.commit()
+    #     except:
+    #         session.rollback()
+    #         raise
+    #     finally:
+    #         self.endSession(session)
 
     # create_engine(*args, **kwargs)
     # The string form of the URL is dialect+driver://user:password@host/dbname[?key=value..],

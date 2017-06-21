@@ -115,6 +115,17 @@ class XMLResultFile(XMLFile):
     XMLResultFile manipulation class.
     """
 
+    cache = {}
+
+    @classmethod
+    def getInstance(cls, filename):
+        try:
+            return cls.cache[filename]
+
+        except KeyError:
+            obj = cls.cache[filename] = cls(filename)
+            return obj
+
     def __init__(self, filename):
         super(XMLResultFile, self).__init__(filename, load=True)
         root = self.tree.getroot()
@@ -244,7 +255,7 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
     run = db.getRunByRunId(runId)
 
     resultsFile = getSimResultFile(run.simId)
-    rf = XMLResultFile(resultsFile)
+    rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 
     if not outputDefs:
@@ -324,15 +335,3 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
     db.commitWithRetry(session)
     db.endSession(session)
     _logger.debug("Exiting saveResults")
-
-if __name__ == '__main__':
-    import sys
-    from pygcam import log
-
-    log.configureLogs()
-
-    filename = '/Users/rjp/bitbucket/mcs/gcammcs/template/app/_appName_/programs/gcam/results.xml'
-    rf = XMLResultFile(filename)
-    rf.saveOutputDefs()
-
-    sys.exit(0)
