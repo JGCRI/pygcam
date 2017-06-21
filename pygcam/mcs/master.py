@@ -97,7 +97,7 @@ class Master(object):
         profile = self.args.profile
         clusterId = self.args.clusterId
 
-        for i in range(maxTries):
+        for i in range(1, maxTries+1):
             if not client:
                 try:
                     # default timeout is 10 seconds
@@ -107,12 +107,12 @@ class Master(object):
                     if i == maxTries - 1:
                         raise
 
-                    _logger.info("Waiting for client (try %d of %d)", i, maxTries)
+                    _logger.info("Waiting for client (%d/%d)", i, maxTries)
                     sleep(seconds)
                     continue
 
             if len(client) == 0:
-                _logger.info("Waiting for engines (try %d of %d)", i, maxTries)
+                _logger.info("Waiting for engines (%d/%d)", i, maxTries)
                 sleep(seconds)
 
         if not client or len(client) == 0:
