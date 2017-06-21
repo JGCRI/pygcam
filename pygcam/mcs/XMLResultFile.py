@@ -256,8 +256,6 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
         names = map(XMLResult.getName, outputDefs)
         ids = db.getOutputIds(names)
         db.deleteRunResults(runId, outputIds=ids, session=session)
-
-        # TBD: changed to use commitWithRetry. Test this...
         db.commitWithRetry(session, maxSleep=5)
 
     if not baseline:
@@ -273,6 +271,7 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
     diffsOutputDir = os.path.join(trialDir, scenario, 'diffs')
 
     # Don't autoflush since that wouldn't use commitWithRetry and could result in lock failure
+    # Deprecated? (no_autoflush wrapper)
     with session.no_autoflush:
         outputDir = scenarioOutputDir if type == RESULT_TYPE_SCENARIO else diffsOutputDir
 

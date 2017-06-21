@@ -547,67 +547,67 @@ def getCurTrialDir():
     context = getContext()
     return getTrialDir(context.simId, context.trialNum)
 
-
-def randomSleep(minSleep, maxSleep):
-    '''
-    Sleep for a random number of seconds between minSleep and maxSleep.
-    '''
-    import random
-    import time
-
-    delay = minSleep + random.random() * (maxSleep - minSleep)
-    _logger.debug('randomSleep: sleeping %.1f seconds', delay)
-    time.sleep(delay)
-
-# Support for saving and loading runtime arguments passed from the "queue"
-# command to the program running on the compute node.
-_RUNTIME_ARGS_FILENAME = 'args.json'
-
-def saveRuntimeArgs(args, context=None):
-    import json     # lazy import
-
-    expDir = getExpDirFromContext(context=context, create=True)
-    args['expName'] = context.expName
-    pathname = os.path.join(expDir, _RUNTIME_ARGS_FILENAME)
-    with open(pathname, 'w') as fp:
-        json.dump(args, fp, indent=4)
-        fp.write("\n")
-
-def loadRuntimeArgs(dirname=None, context=None, asNamespace=False):
-    '''
-    Load arguments from args.json file, but retry to allow for transient
-    timeout errors resulting from many jobs starting at once.
-    '''
-    import json     # lazy import
-
-    if not dirname:
-        dirname = getExpDirFromContext(context=context)
-
-    pathname = os.path.join(dirname, _RUNTIME_ARGS_FILENAME)
-
-    minSleep = 1
-    maxSleep = 1 # 3
-    maxTries = 1 # 3
-
-    args = None
-    for i in range(maxTries):
-        try:
-            with open(pathname, 'r') as fp:
-                args = json.load(fp)
-            break
-
-        except IOError as e:
-            _logger.error("loadRuntimeArgs: %s", e)
-            randomSleep(minSleep, maxSleep)
-
-    if i == maxTries:
-        raise PygcamMcsSystemError("Failed to read '%s' after %d tries" % (pathname, maxTries))
-
-    if args and asNamespace:
-        from argparse import Namespace
-        return Namespace(**args)
-
-    return args
+# deprecated
+# def randomSleep(minSleep, maxSleep):
+#     '''
+#     Sleep for a random number of seconds between minSleep and maxSleep.
+#     '''
+#     import random
+#     import time
+#
+#     delay = minSleep + random.random() * (maxSleep - minSleep)
+#     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
+#     time.sleep(delay)
+#
+# # Support for saving and loading runtime arguments passed from the "queue"
+# # command to the program running on the compute node.
+# _RUNTIME_ARGS_FILENAME = 'args.json'
+#
+# def saveRuntimeArgs(args, context=None):
+#     import json     # lazy import
+#
+#     expDir = getExpDirFromContext(context=context, create=True)
+#     args['expName'] = context.expName
+#     pathname = os.path.join(expDir, _RUNTIME_ARGS_FILENAME)
+#     with open(pathname, 'w') as fp:
+#         json.dump(args, fp, indent=4)
+#         fp.write("\n")
+#
+# def loadRuntimeArgs(dirname=None, context=None, asNamespace=False):
+#     '''
+#     Load arguments from args.json file, but retry to allow for transient
+#     timeout errors resulting from many jobs starting at once.
+#     '''
+#     import json     # lazy import
+#
+#     if not dirname:
+#         dirname = getExpDirFromContext(context=context)
+#
+#     pathname = os.path.join(dirname, _RUNTIME_ARGS_FILENAME)
+#
+#     minSleep = 1
+#     maxSleep = 1 # 3
+#     maxTries = 1 # 3
+#
+#     args = None
+#     for i in range(maxTries):
+#         try:
+#             with open(pathname, 'r') as fp:
+#                 args = json.load(fp)
+#             break
+#
+#         except IOError as e:
+#             _logger.error("loadRuntimeArgs: %s", e)
+#             randomSleep(minSleep, maxSleep)
+#
+#     if i == maxTries:
+#         raise PygcamMcsSystemError("Failed to read '%s' after %d tries" % (pathname, maxTries))
+#
+#     if args and asNamespace:
+#         from argparse import Namespace
+#         return Namespace(**args)
+#
+#     return args
 
 
 def findParamData(paramList, name):

@@ -327,6 +327,7 @@ def shellCommand(command, shell=True, raiseError=True):
     :return: exit status of executed command
     :raises: ToolError
     """
+    _logger.info(command)
     exitStatus = subprocess.call(command, shell=shell)
     if exitStatus != 0:
         if raiseError:

@@ -297,7 +297,9 @@ class Master(object):
             # Check for newly running tasks
             running = self.runningTasks()
             if running:
-                ar = client.get_result(running)
+                _logger.debug("%d tasks are running", len(running))
+                ar = client.get_result(running, block=False)
+
                 for dataDict in ar.data:
                     for runId, status in iteritems(dataDict):
                         _logger.debug('runId:%s status:%s', runId, status)
@@ -309,12 +311,13 @@ class Master(object):
 
             completed = self.completedTasks()
             if completed:
-                ar = client.get_result(completed)
-                _logger.debug('Completed msg_ids: %s', completed)
+                ar = client.get_result(completed, owner=True)
+                # _logger.debug('Completed msg_ids: %s', completed)
                 results = ar.get()
 
                 # filter out results from execute command (e.g. imports)
                 results = [r for r in results if not isinstance(r, ExecuteReply)]
+                _logger.debug("%d completed tasks with results", len(results))
 
                 # update database status
                 if updateDatabase:
@@ -329,6 +332,7 @@ class Master(object):
                         scenario = context.expName
                         baseline = context.baseline
 
+                        _logger.debug('Setting runId %s to %s', runId, status)
                         db.setRunStatus(runId, status)
 
                         if status == RUN_SUCCEEDED:
@@ -340,19 +344,24 @@ class Master(object):
                 # remove processed results from client and hub
                 client.purge_results(jobs=completed)
 
-            # See if anything remains outstanding
-            qtotals = self.queueTotals()
-            _logger.debug('All engines: %s' % qtotals)
-            if (qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
-                if args.shutdownWhenIdle and not self.completedTasks():   # avoid race condition
+            moreCompleted = self.completedTasks()
+
+            if not moreCompleted:
+                # See if anything remains outstanding
+                qtotals = self.queueTotals()
+                _logger.debug('All engines: %s' % qtotals)
+                if (args.shutdownWhenIdle and
+                    qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
                     break
 
-            _logger.debug('wait(%d)', args.waitSecs)
-            sleep(args.waitSecs)
+                _logger.debug('wait(%d)', args.waitSecs)
+                sleep(args.waitSecs)
 
+            # Shutdown idle engines when desired and possible
             if args.shutdownWhenIdle:
                 self.shutdownIdleEngines()
 
+        # Shutdown the hub
         if args.shutdownWhenIdle:
             _logger.info("Shutting down hub...")
             sleep(3)   # allow sockets to clear
@@ -517,14 +526,13 @@ def _saveBatchFiles(numTrials, argDict):
 def _clusterCommand(cmd):
     from pygcam.utils import shellCommand
 
-    _logger.info(cmd)
     status = shellCommand(cmd, shell=True, raiseError=False)
 
     if status:
         statusStrings = {
             ALREADY_STOPPED: 'Cluster already stopped',
             ALREADY_STARTED: 'Cluster already started',
-            NO_CLUSTER: 'No cluster found',
+            NO_CLUSTER:      'No cluster found',
         }
         msg = statusStrings.get(status, 'Exit status: %d' % status)
         _logger.warning(msg)
@@ -635,8 +643,9 @@ def startCluster(**kwargs):
     return status
 
 
-def stopCluster(profile=None, cluster_id=None, other_args=None):
+def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None):
     from pygcam.config import getParam
+    from pygcam.utils import shellCommand
 
     # This allows user to pass empty string (e.g., -c='') to override default
     cluster_id = getParam('IPP.ClusterId') if cluster_id is None else cluster_id
@@ -654,6 +663,11 @@ def stopCluster(profile=None, cluster_id=None, other_args=None):
         pass
 
     status = _clusterCommand(cmd)
+    if stop_jobs:
+        cmd = getParam('IPP.StopJobsCommand').strip()
+        if cmd:
+            shellCommand(cmd, shell=True, raiseError=False)
+
     return status
 
 
