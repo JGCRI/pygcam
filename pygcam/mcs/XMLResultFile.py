@@ -227,8 +227,6 @@ class QueryResult(object):
             df['ScenarioName'] = name
             df['ScenarioDate'] = date
 
-        _logger.debug("exiting readCSV")
-
     def getFilename(self):
         return self.filename
 
@@ -333,4 +331,3 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
 
     db.commitWithRetry(session)
     db.endSession(session)
-    _logger.debug("Exiting saveResults")

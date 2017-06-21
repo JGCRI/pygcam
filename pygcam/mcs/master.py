@@ -317,7 +317,13 @@ class Master(object):
             if completed:
                 ar = client.get_result(completed, owner=True)
                 # _logger.debug('Completed msg_ids: %s', completed)
-                results = ar.get()
+                results = []
+                try:
+                    results = ar.get()
+                except ipp.EngineError:
+                    # raised if an engine dies, e.g., walltime expired.
+                    # unclear how to recover from this.
+                    pass
 
                 # filter out results from execute command (e.g. imports)
                 results = [r for r in results if not isinstance(r, ExecuteReply)]
@@ -352,7 +358,7 @@ class Master(object):
             if not moreCompleted:
                 # See if anything remains outstanding
                 qtotals = self.queueTotals()
-                _logger.debug('All engines: %s' % qtotals)
+                _logger.debug('%d engines: %s' % (len(client), qtotals))
                 if (args.shutdownWhenIdle and
                     qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
                     break

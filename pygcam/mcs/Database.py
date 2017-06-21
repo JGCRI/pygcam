@@ -344,34 +344,33 @@ class CoreDatabase(object):
                 _logger.debug("Postgres database '%s' already exists", dbName)
 
     def commitWithRetry(self, session, maxTries=20, maxSleep=15.0):
-        # With master/worker architecture, this should no longer be necessary
-        session.commit()
+        # N.B. With master/worker architecture, this should no longer be necessary, but
+        # there are still occasional failures due to inability to acquire file lock.
+        import sqlite3
+        import random
+        import time
 
-        # import sqlite3
-        # import random
-        # import time
-        #
-        # tries = 0
-        #
-        # done = False
-        # while not done:
-        #     try:
-        #         session.commit()
-        #         done = True
-        #
-        #     except sqlite3.OperationalError as e:
-        #         _logger.debug('sqlite3 operational error: %s', e)
-        #
-        #         if tries >= maxTries:
-        #             raise PygcamMcsSystemError("Failed to acquire database lock")
-        #
-        #         delay = random.random() * maxSleep    # sleep for a random number of seconds up to maxSleep
-        #         _logger.warn("Database locked (retry %d); sleeping %.1f sec" % (tries, delay))
-        #         time.sleep(delay)
-        #         tries += 1
-        #
-        #     except Exception as e:
-        #         raise PygcamMcsSystemError("commitWithRetry error: %s" % e)
+        tries = 0
+
+        done = False
+        while not done:
+            try:
+                session.commit()
+                done = True
+
+            except sqlite3.OperationalError as e:
+                _logger.debug('sqlite3 operational error: %s', e)
+
+                if tries >= maxTries:
+                    raise PygcamMcsSystemError("Failed to acquire database lock")
+
+                delay = random.random() * maxSleep    # sleep for a random number of seconds up to maxSleep
+                _logger.warn("Database locked (retry %d); sleeping %.1f sec" % (tries, delay))
+                time.sleep(delay)
+                tries += 1
+
+            except Exception as e:
+                raise PygcamMcsSystemError("commitWithRetry error: %s" % e)
 
 
     def execute(self, sql):
