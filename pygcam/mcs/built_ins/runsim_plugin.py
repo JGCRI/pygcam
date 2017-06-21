@@ -61,7 +61,7 @@ class RunSimCommand(SubcommandABC):
         defaultQueue      = getParam('IPP.Queue')
         defaultMaxEngines = getParamAsInt('IPP.MaxEngines')
         defaultMinutes    = getParamAsFloat('IPP.MinutesPerRun')
-        defaultWaitSecs   = 30
+        defaultWaitSecs   = getParamAsFloat('IPP.ResultLoopWaitSecs')
 
         # TBD: document this variable
         defaultScenario = getParam('MCS.DefaultScenario', raiseError=False)

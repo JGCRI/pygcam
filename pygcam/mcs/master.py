@@ -294,6 +294,14 @@ class Master(object):
         client = self.client
         trialStatus = {}
 
+        def setRunStatus(runId, status):
+            currStatus = trialStatus.get(runId)
+            if currStatus is None or currStatus != status:
+                trialStatus[runId] = status
+                if updateDatabase:
+                    _logger.debug('Setting runId %s to %s', runId, status)
+                    db.setRunStatus(runId, status)
+
         while True:
             # Check for newly running tasks
             running = self.runningTasks()
@@ -303,12 +311,7 @@ class Master(object):
 
                 for dataDict in ar.data:
                     for runId, status in iteritems(dataDict):
-                        _logger.debug('runId:%s status:%s', runId, status)
-                        if status == RUN_RUNNING and trialStatus.get(runId) is None:
-                            trialStatus[runId] = status
-                            if updateDatabase:
-                                _logger.debug('Setting runId %s to %s', runId, RUN_RUNNING)
-                                db.setRunStatus(runId, RUN_RUNNING)
+                        setRunStatus(runId, status)
 
             completed = self.completedTasks()
             if completed:
@@ -333,8 +336,7 @@ class Master(object):
                         scenario = context.expName
                         baseline = context.baseline
 
-                        _logger.debug('Setting runId %s to %s', runId, status)
-                        db.setRunStatus(runId, status)
+                        setRunStatus(runId, status)
 
                         if status == RUN_SUCCEEDED:
                             saveResults(runId, scenario, RESULT_TYPE_SCENARIO)

@@ -1141,7 +1141,7 @@ class GcamDatabase(CoreDatabase):
         """
         Augment core method by deleting timeseries data, too.
         """
-        _logger.debug("deleteRunResults: deleting results for runId %d, outputIds=%s" % (runId, outputIds))
+        # _logger.debug("deleteRunResults: deleting results for runId %d, outputIds=%s" % (runId, outputIds))
         sess = session or self.Session()
         super(GcamDatabase, self).deleteRunResults(runId, outputIds=outputIds, session=sess)
 
