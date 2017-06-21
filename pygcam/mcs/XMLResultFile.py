@@ -223,10 +223,9 @@ class QueryResult(object):
         df['ScenarioDate'] = None
 
         if 'scenario' in df.columns:        # not the case for "diff" files
-            for idx, row in df.iterrows():
-                name, date = self.parseScenarioString(row.scenario)
-                df.loc[idx, 'ScenarioName'] = name
-                df.loc[idx, 'ScenarioDate'] = date
+            name, date = self.parseScenarioString(df.loc[0].scenario)
+            df['ScenarioName'] = name
+            df['ScenarioDate'] = date
 
         _logger.debug("exiting readCSV")
 
