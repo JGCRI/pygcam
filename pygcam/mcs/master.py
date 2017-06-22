@@ -17,11 +17,15 @@ from time import sleep
 from IPython.paths import locate_profile
 
 import ipyparallel as ipp
+from ipyparallel.client.client import ExecuteReply
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
+from .Database import RUN_SUCCEEDED, getDatabase
 from .error import IpyparallelError
-from pygcam.log import getLogger
+from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
+
+from ..log import getLogger
 
 _logger = getLogger(__name__)
 
@@ -81,12 +85,12 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
 
 class Master(object):
     def __init__(self, args):
-        from .Database import getDatabase
 
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
         self.foundWorkers = False
+        self.statusDict = {}
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -219,22 +223,6 @@ class Master(object):
         results = map(lambda run: (run.runId, run.trialNum), runs)
         return results
 
-    # deprecated
-    # def gather(self, category):
-    #     """
-    #     Collect message ids from the hub for the given `category`.
-    #
-    #     :param category: (str) one of 'queue', 'tasks', or 'completed'.
-    #     :return: (list of str) message ids of the tasks in the category.
-    #     """
-    #     result = []
-    #
-    #     for key, value in self.client.queue_status(verbose=False).items():
-    #         if type(key) == int:
-    #             result.extend(value[category])
-    #
-    #     return result
-
     def runningTasks(self):
         from pygcam.utils import flatten
 
@@ -255,6 +243,60 @@ class Master(object):
         ids = [rec['msg_id'] for rec in recs] if recs else None
         return ids
 
+    def setRunStatus(self, runId, status):
+        statusDict = self.statusDict
+        currStatus = statusDict.get(runId)
+
+        if currStatus is None or currStatus != status:
+            statusDict[runId] = status
+            if self.args.updateDatabase:
+                _logger.debug('Setting runId %s to %s', runId, status)
+                self.db.setRunStatus(runId, status)
+
+    def checkCompleted(self):
+        client = self.client
+        completed = self.completedTasks()
+        updateDatabase = self.args.updateDatabase
+
+        while completed:
+            ar = client.get_result(completed, owner=True)
+            # _logger.debug('Completed msg_ids: %s', completed)
+            results = []
+            try:
+                results = ar.get()
+            except ipp.EngineError:
+                # raised if an engine dies, e.g., walltime expired.
+                # unclear how to recover from this.
+                pass
+
+            # filter out results from execute command (e.g. imports)
+            results = [r for r in results if not isinstance(r, ExecuteReply)]
+            _logger.debug("%d completed tasks with results", len(results))
+
+            # update database status
+            if updateDatabase:
+                for resultsList in results:
+                    result = resultsList[0]
+
+                    runId = result.runId
+                    status = result.status
+                    context = result.context
+                    scenario = context.expName
+                    baseline = context.baseline
+
+                    self.setRunStatus(runId, status)
+
+                    if status == RUN_SUCCEEDED:
+                        saveResults(runId, scenario, RESULT_TYPE_SCENARIO)
+
+                        if baseline:  # also save 'diff' results
+                            saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
+
+            # remove processed results from client and hub
+            client.purge_results(jobs=completed)
+            sleep(3)    # brief sleep before checking for more completed tasks
+            completed = self.completedTasks()
+
     def processTrials(self, loopOnly=False, addTrials=False):
         """
         If `loopOnly` is False, run the trials identified in self.args. If
@@ -269,10 +311,6 @@ class Master(object):
            don't wait for their results; presumably another client is doing that.)
         :return: none
         """
-        from .Database import RUN_RUNNING, RUN_SUCCEEDED
-        from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
-        from ipyparallel.client.client import ExecuteReply
-
         db = self.db
         args = self.args
 
@@ -313,60 +351,21 @@ class Master(object):
                     for runId, status in iteritems(dataDict):
                         setRunStatus(runId, status)
 
-            completed = self.completedTasks()
-            if completed:
-                ar = client.get_result(completed, owner=True)
-                # _logger.debug('Completed msg_ids: %s', completed)
-                results = []
-                try:
-                    results = ar.get()
-                except ipp.EngineError:
-                    # raised if an engine dies, e.g., walltime expired.
-                    # unclear how to recover from this.
-                    pass
+            self.checkCompleted()
 
-                # filter out results from execute command (e.g. imports)
-                results = [r for r in results if not isinstance(r, ExecuteReply)]
-                _logger.debug("%d completed tasks with results", len(results))
-
-                # update database status
-                if updateDatabase:
-                    for resultsList in results:
-                        result = resultsList[0]
-
-                        runId    = result.runId
-                        status   = result.status
-                        context  = result.context
-                        scenario = context.expName
-                        baseline = context.baseline
-
-                        setRunStatus(runId, status)
-
-                        if status == RUN_SUCCEEDED:
-                            saveResults(runId, scenario, RESULT_TYPE_SCENARIO)
-
-                            if baseline:  # also save 'diff' results
-                                saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
-
-                # remove processed results from client and hub
-                client.purge_results(jobs=completed)
-
-            moreCompleted = self.completedTasks()
-
-            if not moreCompleted:
-                # See if anything remains outstanding
-                qtotals = self.queueTotals()
-                _logger.debug('%d engines: %s' % (len(client), qtotals))
-                if (args.shutdownWhenIdle and
-                    qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
-                    break
-
-                _logger.debug('sleep(%d)', args.waitSecs)
-                sleep(args.waitSecs)
+            # See if anything remains outstanding
+            qtotals = self.queueTotals()
+            _logger.debug('%d engines: %s' % (len(client), qtotals))
+            if (args.shutdownWhenIdle and
+                qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
+                break
 
             # Shutdown idle engines when desired and possible
             if args.shutdownWhenIdle:
                 self.shutdownIdleEngines()
+
+            _logger.debug('sleep(%d)', args.waitSecs)
+            sleep(args.waitSecs)
 
         # Shutdown the hub
         if args.shutdownWhenIdle:
