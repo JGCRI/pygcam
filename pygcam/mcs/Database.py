@@ -358,7 +358,8 @@ class CoreDatabase(object):
                 session.commit()
                 done = True
 
-            except sqlite3.OperationalError as e:
+            except Exception as e:
+            # except sqlite3.OperationalError as e:
                 _logger.debug('sqlite3 operational error: %s', e)
 
                 if tries >= maxTries:
@@ -369,8 +370,8 @@ class CoreDatabase(object):
                 time.sleep(delay)
                 tries += 1
 
-            except Exception as e:
-                raise PygcamMcsSystemError("commitWithRetry error: %s" % e)
+            # except Exception as e:
+            #     raise PygcamMcsSystemError("commitWithRetry error: %s" % e)
 
 
     def execute(self, sql):
@@ -686,7 +687,7 @@ class CoreDatabase(object):
         try:
             run = session.query(Run).filter_by(runId=runId).one()
             if run.status == status:
-                return  # nothing to do here
+                return run # nothing to do here
 
             run.status = status    # insert/update listener sets status code and timestamps
             # if jobNum:

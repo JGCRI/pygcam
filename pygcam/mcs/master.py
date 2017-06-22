@@ -176,7 +176,7 @@ class Master(object):
                     idleEngines.append(id)
 
         if idleEngines:
-            _logger.info('Shutting down engines %s', idleEngines)
+            _logger.info('Shutting down %d idle engines', len(idleEngines))
             self.client.shutdown(targets=idleEngines, block=True)
 
             maxTries = 4
