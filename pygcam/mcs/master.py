@@ -157,8 +157,8 @@ class Master(object):
         dview = self.client[:]
         status = dview.queue_status()
 
-        for key, value in iteritems(status):
-            _logger.debug('  %s: %s', key, value)
+        # for key, value in iteritems(status):
+        #     _logger.debug('  %s: %s', key, value)
 
         idleEngines = []
 
@@ -322,8 +322,6 @@ class Master(object):
 
         self.waitForWorkers()    # wait for engines to spin up
 
-        updateDatabase = args.updateDatabase
-
         if not loopOnly:
             self.runTrials()
 
@@ -332,15 +330,6 @@ class Master(object):
             return
 
         client = self.client
-        trialStatus = {}
-
-        def setRunStatus(runId, status):
-            currStatus = trialStatus.get(runId)
-            if currStatus is None or currStatus != status:
-                trialStatus[runId] = status
-                if updateDatabase:
-                    _logger.debug('Setting runId %s to %s', runId, status)
-                    db.setRunStatus(runId, status)
 
         while True:
             # Check for newly running tasks
@@ -351,7 +340,7 @@ class Master(object):
 
                 for dataDict in ar.data:
                     for runId, status in iteritems(dataDict):
-                        setRunStatus(runId, status)
+                        self.setRunStatus(runId, status)
 
             self.checkCompleted()
 
