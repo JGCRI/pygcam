@@ -11,6 +11,7 @@ from pygcam.subcommand import SubcommandABC
 _logger = getLogger(__name__)
 
 def driver(args, tool):
+    from ipyparallel import NoEnginesRegistered
     from ..master import Master, pidFileExists, startCluster
 
     if args.startCluster:
@@ -30,7 +31,7 @@ def driver(args, tool):
     master = Master(args)
     try:
         master.processTrials(loopOnly=args.loopOnly, addTrials=args.addTrials)
-    except ipp.NoEnginesRegistered as e:
+    except NoEnginesRegistered as e:
         raise PygcamException("processTrials aborted: %s" % e)
 
 #
