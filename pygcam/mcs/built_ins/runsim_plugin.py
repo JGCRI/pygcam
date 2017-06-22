@@ -4,7 +4,7 @@
 from __future__ import print_function
 import argparse
 from six import iteritems
-
+from pygcam.error import PygcamException
 from pygcam.log import getLogger
 from pygcam.subcommand import SubcommandABC
 
@@ -28,7 +28,10 @@ def driver(args, tool):
             startCluster(**kwargs)
 
     master = Master(args)
-    master.processTrials(loopOnly=args.loopOnly, addTrials=args.addTrials)
+    try:
+        master.processTrials(loopOnly=args.loopOnly, addTrials=args.addTrials)
+    except ipp.NoEnginesRegistered as e:
+        raise PygcamException("processTrials aborted: %s" % e)
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists

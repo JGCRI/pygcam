@@ -331,8 +331,6 @@ class Master(object):
 
                 # update database status
                 if updateDatabase:
-                    _logger.info("Processing %d results", len(results))
-
                     for resultsList in results:
                         result = resultsList[0]
 
