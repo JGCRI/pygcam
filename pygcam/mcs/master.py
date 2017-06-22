@@ -264,10 +264,11 @@ class Master(object):
             results = []
             try:
                 results = ar.get()
-            except ipp.EngineError:
+            except ipp.EngineError as e:
                 # raised if an engine dies, e.g., walltime expired.
                 # unclear how to recover from this.
-                pass
+                _logger.warning('checkCompleted: %s', e)
+                return
 
             # filter out results from execute command (e.g. imports)
             results = [r for r in results if not isinstance(r, ExecuteReply)]
