@@ -171,7 +171,7 @@ class Master(object):
                 if id == unassigned:    # ignore
                     continue
 
-                _logger.debug('%d: %s', id, stats)
+                # _logger.debug('%d: %s', id, stats)
                 if stats[u'tasks'] == 0 and stats[u'queue'] == 0:
                     idleEngines.append(id)
 
