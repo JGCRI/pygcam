@@ -294,7 +294,9 @@ class Master(object):
 
             # remove processed results from client and hub
             client.purge_results(jobs=completed)
-            sleep(3)    # brief sleep before checking for more completed tasks
+            seconds = 3
+            _logger('sleep(%d) before checking for more completed tasks', seconds)
+            sleep(seconds)    # brief sleep before checking for more completed tasks
             completed = self.completedTasks()
 
     def processTrials(self, loopOnly=False, addTrials=False):
