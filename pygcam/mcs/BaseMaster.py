@@ -26,12 +26,12 @@ class BaseMaster(object):
     instance = None
 
     @classmethod
-    def getInstance(cls, sleepSeconds=SLEEP_SECONDS):
+    def getInstance(cls, profile=None, cluster_id=None, sleepSeconds=SLEEP_SECONDS):
         """
         Return singleton instance of this class
         """
         if not cls.instance:
-            cls.instance = cls()
+            cls.instance = cls(profile=profile, cluster_id=cluster_id)
 
         cls.instance.setSleepSeconds(sleepSeconds)
         return cls.instance
@@ -158,7 +158,7 @@ def runTrial(argDict):
     runId = argDict['runId']
 
     publish_data({runId: 'running'})
-    randomSleep(1, 5)
+    randomSleep(20, 60)
     publish_data({runId: 'finishing'})
     sleep(2)
     return argDict
@@ -203,8 +203,8 @@ if __name__ == '__main__':
         m = BaseMaster.getInstance(sleepSeconds=5)
         m.runTasks(6, clearStatus=True)
     else:
-        m = NewMaster.getInstance(sleepSeconds=2)
-        tuples = ((10, 1), (11, 2), (12, 3), (13, 8), (14, 9), (15, 12), (16, 20))
+        m = NewMaster.getInstance(sleepSeconds=2, profile='pygcam', cluster_id='mcs')
+        tuples = [(runId, trialNum) for runId, trialNum in enumerate(range(1000, 1050))]
         m.runTrials(tuples, clearStatus=True)
 
     m.processResults()
