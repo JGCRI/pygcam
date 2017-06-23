@@ -89,7 +89,6 @@ class Master(object):
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
-        self.foundWorkers = False
         self.statusDict = {}
 
     def waitForWorkers(self):
@@ -121,12 +120,6 @@ class Master(object):
 
         if not client or len(client) == 0:
             raise IpyparallelError('Failed to connect to engines')
-
-        # Apparently this is not necessary...
-        # _logger.debug('Connected to controller; initializing workers.')
-        # dview = client[:]
-        # dview.execute('from pygcam.mcs.worker import runTrial')
-        self.foundWorkers = True
 
     def queueTotals(self):
         """
@@ -223,6 +216,15 @@ class Master(object):
         results = map(lambda run: (run.runId, run.trialNum), runs)
         return results
 
+    def setRunStatus(self, runId, status):
+        currStatus = self.statusDict.get(runId)
+
+        if currStatus != status:
+            self.statusDict[runId] = status
+            if self.args.updateDatabase:
+                _logger.debug('Setting runId %s to %s', runId, status)
+                self.db.setRunStatus(runId, status)
+
     def runningTasks(self):
         from pygcam.utils import flatten
 
@@ -232,47 +234,56 @@ class Master(object):
         return flatten(ids)
 
     def completedTasks(self):
-        # def getId(rec):
-        #     try:
-        #         return rec['msg_id']
-        #     except KeyError:
-        #         # shouldn't happen, but something is blowing out...
-        #         _logger.error('completedTasks: rec is missing msg_id field')
-
         recs = self.client.db_query({'completed': {'$ne': None}}, keys=['msg_id'])
         ids = [rec['msg_id'] for rec in recs] if recs else None
         return ids
 
-    def setRunStatus(self, runId, status):
-        statusDict = self.statusDict
-        currStatus = statusDict.get(runId)
+    def checkRunning(self):
+        """
+        Check for newly running tasks
+        """
+        running = self.runningTasks()
+        if running:
+            # _logger.debug("Found %d running tasks", len(running))
+            ar = self.client.get_result(running, block=False)
 
-        if currStatus is None or currStatus != status:
-            statusDict[runId] = status
-            if self.args.updateDatabase:
-                _logger.debug('Setting runId %s to %s', runId, status)
-                self.db.setRunStatus(runId, status)
+            for dataDict in ar.data:
+                for runId, status in iteritems(dataDict):
+                    self.setRunStatus(runId, status)
+
+    def getResults(self, tasks):
+        if not tasks:
+            return None
+
+        client = self.client
+        ar = client.get_result(tasks, owner=True, block=False)
+
+        try:
+            results = ar.get()
+
+        except ipp.EngineError as e:
+            # raised if an engine dies, e.g., walltime expired.
+            # unclear how to recover from this.
+            _logger.warning('error in getResults: %s', e)
+            return None
+
+        client.purge_results(jobs=tasks) # so we don't see them again
+
+        # filter out results from execute commands (e.g. imports)
+        results = [r for r in results if not isinstance(r, ExecuteReply)]
+
+        _logger.debug("%d completed tasks with results", len(results))
+        return results
 
     def checkCompleted(self):
-        client = self.client
-        completed = self.completedTasks()
         updateDatabase = self.args.updateDatabase
 
-        while completed:
-            ar = client.get_result(completed, owner=True)
-            # _logger.debug('Completed msg_ids: %s', completed)
-            results = []
-            try:
-                results = ar.get()
-            except ipp.EngineError as e:
-                # raised if an engine dies, e.g., walltime expired.
-                # unclear how to recover from this.
-                _logger.warning('checkCompleted: %s', e)
+        while True:
+            completed = self.completedTasks()
+            if not completed:
                 return
 
-            # filter out results from execute command (e.g. imports)
-            results = [r for r in results if not isinstance(r, ExecuteReply)]
-            _logger.debug("%d completed tasks with results", len(results))
+            results = self.getResults(completed)
 
             # update database status
             if updateDatabase:
@@ -293,12 +304,17 @@ class Master(object):
                         if baseline:  # also save 'diff' results
                             saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
 
-            # remove processed results from client and hub
-            client.purge_results(jobs=completed)
-            seconds = 3
+            seconds = 5
             _logger.debug('sleep(%d) before checking for more completed tasks', seconds)
             sleep(seconds)    # brief sleep before checking for more completed tasks
-            completed = self.completedTasks()
+
+    def outstandingTasks(self):
+        '''
+        Return True if any tasks remain to be completed.
+        '''
+        tot = self.queueTotals()
+        _logger.debug('%d engines: %s' % (len(self.client), tot))
+        return tot['tasks'] or tot['queue'] or tot['unassigned'] or self.completedTasks()
 
     def processTrials(self, loopOnly=False, addTrials=False):
         """
@@ -327,32 +343,13 @@ class Master(object):
             self.runTrials()
 
         if addTrials:
-            # don't wait for results; just add trials to running cluster
+            # don't wait for results; just add trials to running cluster and return
             return
 
-        client = self.client
+        while self.outstandingTasks():
+            self.checkRunning()         # Check for newly running tasks
+            self.checkCompleted()       # Check for completed tasks
 
-        while True:
-            # Check for newly running tasks
-            running = self.runningTasks()
-            if running:
-                # _logger.debug("Found %d running tasks", len(running))
-                ar = client.get_result(running, block=False)
-
-                for dataDict in ar.data:
-                    for runId, status in iteritems(dataDict):
-                        self.setRunStatus(runId, status)
-
-            self.checkCompleted()
-
-            # See if anything remains outstanding
-            qtotals = self.queueTotals()
-            _logger.debug('%d engines: %s' % (len(client), qtotals))
-            if (args.shutdownWhenIdle and
-                qtotals['unassigned'] == 0 and qtotals['queue'] == 0 and qtotals['tasks'] == 0):
-                break
-
-            # Shutdown idle engines when desired and possible
             if args.shutdownWhenIdle:
                 self.shutdownIdleEngines()
 

@@ -11,7 +11,7 @@ This module includes contributions by Sam Fendell and Ryan Jones.
 '''
 import six
 from collections import Iterable
-from contextlib import contextmanager
+# from contextlib import contextmanager
 from datetime import datetime
 from operator import itemgetter
 import sys
@@ -256,6 +256,7 @@ class CoreDatabase(object):
         if args and args.empty:
             return
 
+        # Deprecated?
         _logger.debug('Adding standard codes')
         # Add standard app status codes
         session.add(Code(codeName=RUN_QUEUED,    description='Trial queued'))
@@ -346,7 +347,7 @@ class CoreDatabase(object):
     def commitWithRetry(self, session, maxTries=20, maxSleep=15.0):
         # N.B. With master/worker architecture, this should no longer be necessary, but
         # there are still occasional failures due to inability to acquire file lock.
-        import sqlite3
+        # import sqlite3
         import random
         import time
 
