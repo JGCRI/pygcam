@@ -55,7 +55,12 @@ class BaseMaster(object):
         """
         Return totals for queue status across all engines
         """
-        dv = self.client[:]
+        try:
+            dv = self.client[:]
+        except ipp.NoEnginesRegistered as e:
+            print('queueTotals: %s' % e)
+            return
+
         qstatus = dv.queue_status()
 
         totals = dict(queue=0, completed=0, tasks=0)
@@ -84,7 +89,12 @@ class BaseMaster(object):
             return None
         client = self.client
         ar = client.get_result(tasks, owner=True, block=False)
-        results = ar.get()
+        try:
+            results = ar.get()
+        except Exception as e:
+            print('getResults: %s' % e)
+            return
+
         client.purge_results(jobs=tasks) # so we don't see them again
 
         # filter out results from execute commands (e.g. imports)
@@ -108,15 +118,19 @@ class BaseMaster(object):
     def checkRunning(self):
         running = self.runningTasks()
         if running:
-            # _logger.debug("Found %d running tasks", len(running))
-            ar = self.client.get_result(running, block=False)
-            statusDict = self.statusDict
-            print('statusDict:', statusDict)
-            for dataDict in ar.data:
-                for key, status in iteritems(dataDict):
-                    currStatus = statusDict.get(key)
-                    if currStatus != status:
-                        self.setStatus(key, status)
+            try:
+                # _logger.debug("Found %d running tasks", len(running))
+                ar = self.client.get_result(running, block=False)
+                statusDict = self.statusDict
+                # print('statusDict:', statusDict)
+                for dataDict in ar.data:
+                    for key, status in iteritems(dataDict):
+                        currStatus = statusDict.get(key)
+                        if currStatus != status:
+                            self.setStatus(key, status)
+            except Exception as e:
+                print("checkRunning: %s" % e)
+                return
 
     def processResult(self, result):
         key = result[self.keyField]
@@ -139,74 +153,85 @@ class BaseMaster(object):
             completed = self.completedTasks()
             if completed:
                 results = self.getResults(completed)
+                if not results:
+                    print("Completed tasks have no results: engine died?")
+                    continue    # is this recoverable?
+
                 for result in results:
                     self.processResult(result)
 
-#
-# Test with custom worker func and subclass
-#
-def runTrial(argDict):
-    from time import sleep
-    from random import random
-    from ipyparallel.datapub import publish_data
-
-    def randomSleep(minSleep, maxSleep):
-        delay = minSleep + random() * (maxSleep - minSleep)
-        sleep(delay)
-        argDict['slept'] = '%.2f' % delay
-
-    runId = argDict['runId']
-
-    publish_data({runId: 'running'})
-    randomSleep(20, 60)
-    publish_data({runId: 'finishing'})
-    sleep(2)
-    return argDict
-
-
-class NewMaster(BaseMaster):
-    def __init__(self, profile=None, cluster_id=None):
-        super(NewMaster, self).__init__(profile=profile, cluster_id=cluster_id)
-        self.keyField = 'runId'
-
-    def runTrials(self, tuples, clearStatus=False):
-        if clearStatus:
-            self.clearStatus()
-
-        view = self.client.load_balanced_view()
-        asyncResults = []
-        argDict = {}
-
-        try:
-            for runId, trialNum in tuples:
-                argDict['trialNum'] = trialNum
-                argDict['runId'] = runId
-
-                # Easier to deal with a list of AsyncResults than a single
-                # instance that contains info about all "future" results.
-                result = view.map_async(runTrial, [argDict])
-                asyncResults.append(result)
-                self.setStatus(runId, 'queued')
-
-        except Exception as e:
-            print("Exception running 'runTrial': %s", e)
-
-    def processResult(self, result):
-        key = result[self.keyField]
-        self.setStatus(key, 'completed')
-        print("Completed", result)
 
 if __name__ == '__main__':
+
+    #
+    # Test with custom worker func and subclass
+    #
+    def runTrial(argDict):
+        from time import sleep
+        from random import random
+        from ipyparallel.datapub import publish_data
+
+        def randomSleep(minSleep, maxSleep):
+            delay = minSleep + random() * (maxSleep - minSleep)
+            sleep(delay)
+            argDict['slept'] = '%.2f' % delay
+
+        runId = argDict['runId']
+
+        publish_data({runId: 'running'})
+        randomSleep(10, 15)
+        publish_data({runId: 'finishing'})
+        sleep(2)
+        return argDict
+
+
+    class NewMaster(BaseMaster):
+        def __init__(self, profile=None, cluster_id=None):
+            super(NewMaster, self).__init__(profile=profile, cluster_id=cluster_id)
+            self.keyField = 'runId'
+
+        def runTrials(self, tuples, clearStatus=False):
+            if clearStatus:
+                self.clearStatus()
+
+            view = self.client.load_balanced_view(retries=1)    # in case engine fails, retry job once only
+            asyncResults = []
+            argDict = {}
+
+            try:
+                for runId, trialNum in tuples:
+                    argDict['trialNum'] = trialNum
+                    argDict['runId'] = runId
+
+                    # Easier to deal with a list of AsyncResults than a single
+                    # instance that contains info about all "future" results.
+                    result = view.map_async(runTrial, [argDict])
+                    asyncResults.append(result)
+                    self.setStatus(runId, 'queued')
+
+            except Exception as e:
+                print("Exception running 'runTrial': %s", e)
+
+        def processResult(self, result):
+            key = result[self.keyField]
+            self.setStatus(key, 'completed')
+            print("Completed", result)
+
+
     testBase = False
+    profile  = None
+    cluster_id = None
 
     if testBase:
         m = BaseMaster.getInstance(sleepSeconds=5)
         m.runTasks(6, clearStatus=True)
     else:
-        m = NewMaster.getInstance(sleepSeconds=2, profile='pygcam', cluster_id='mcs')
-        tuples = [(runId, trialNum) for runId, trialNum in enumerate(range(1000, 1050))]
+        m = NewMaster.getInstance(sleepSeconds=3, profile=profile, cluster_id=cluster_id)
+        tuples = [(runId, trialNum) for runId, trialNum in enumerate(range(1000, 1020))]
         m.runTrials(tuples, clearStatus=True)
 
     m.processResults()
-    print("Done.")
-    print('final status:', m.statusDict)
+    print('Status:')
+    d = m.statusDict
+    for runId in sorted(d.keys()):
+        print('  runId %s: %s' %(runId, d[runId]))

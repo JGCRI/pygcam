@@ -21,6 +21,8 @@ from ipyparallel.client.client import ExecuteReply
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
+from ipyparallel import RemoteError
+
 from .Database import RUN_SUCCEEDED, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
@@ -89,6 +91,9 @@ class Master(object):
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
+        self.statusDict = {}
+
+    def clearStatus(self):
         self.statusDict = {}
 
     def waitForWorkers(self):
@@ -220,15 +225,13 @@ class Master(object):
         currStatus = self.statusDict.get(runId)
 
         if currStatus != status:
+            _logger.debug('Setting runId %s to %s', runId, status)
             self.statusDict[runId] = status
-            if self.args.updateDatabase:
-                _logger.debug('Setting runId %s to %s', runId, status)
-                self.db.setRunStatus(runId, status)
+            self.db.setRunStatus(runId, status)
 
     def runningTasks(self):
         from pygcam.utils import flatten
 
-        # recs = self.client.db_query({'started': {'$ne': None}, 'completed': None}, keys=['msg_id'])
         qstatus = self.client.queue_status(verbose=True)
         ids = [rec['tasks'] for key, rec in iteritems(qstatus) if isinstance(key, (int, long))]
         return flatten(ids)
@@ -244,12 +247,17 @@ class Master(object):
         """
         running = self.runningTasks()
         if running:
-            # _logger.debug("Found %d running tasks", len(running))
-            ar = self.client.get_result(running, block=False)
+            try:
+                # _logger.debug("Found %d running tasks", len(running))
+                ar = self.client.get_result(running, block=False)
 
-            for dataDict in ar.data:
-                for runId, status in iteritems(dataDict):
-                    self.setRunStatus(runId, status)
+                for dataDict in ar.data:
+                    for runId, status in iteritems(dataDict):
+                        self.setRunStatus(runId, status)
+
+            except Exception as e:
+                _logger.warning("checkRunning: %s" % e)
+                return
 
     def getResults(self, tasks):
         if not tasks:
@@ -261,22 +269,21 @@ class Master(object):
         try:
             results = ar.get()
 
-        except ipp.EngineError as e:
-            # raised if an engine dies, e.g., walltime expired.
-            # unclear how to recover from this.
-            _logger.warning('error in getResults: %s', e)
+        except Exception as e:
+            # Raised if an engine dies, e.g., walltime expired.
+            # With retries=1, should be able to recover from this.
+            _logger.warning('getResults: %s', e)
             return None
 
         client.purge_results(jobs=tasks) # so we don't see them again
 
         # filter out results from execute commands (e.g. imports)
-        results = [r for r in results if not isinstance(r, ExecuteReply)]
+        results = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
 
         _logger.debug("%d completed tasks with results", len(results))
         return results
 
     def checkCompleted(self):
-        updateDatabase = self.args.updateDatabase
 
         while True:
             completed = self.completedTasks()
@@ -284,25 +291,25 @@ class Master(object):
                 return
 
             results = self.getResults(completed)
+            if not results:
+                _logger.warning("Completed tasks have no results; an engine probably died.")
+                continue    # retries=1 should take care of it
 
             # update database status
-            if updateDatabase:
-                for resultsList in results:
-                    result = resultsList[0]
+            for result in results:
+                runId = result.runId
+                status = result.status
+                context = result.context
+                scenario = context.expName
+                baseline = context.baseline
 
-                    runId = result.runId
-                    status = result.status
-                    context = result.context
-                    scenario = context.expName
-                    baseline = context.baseline
+                self.setRunStatus(runId, status)
 
-                    self.setRunStatus(runId, status)
+                if status == RUN_SUCCEEDED:
+                    saveResults(runId, scenario, RESULT_TYPE_SCENARIO)
 
-                    if status == RUN_SUCCEEDED:
-                        saveResults(runId, scenario, RESULT_TYPE_SCENARIO)
-
-                        if baseline:  # also save 'diff' results
-                            saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
+                    if baseline:  # also save 'diff' results
+                        saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
 
             seconds = 5
             _logger.debug('sleep(%d) before checking for more completed tasks', seconds)
@@ -374,7 +381,7 @@ class Master(object):
         scenarios = args.scenarios
 
         asyncResults = []
-        view = self.client.load_balanced_view()
+        view = self.client.load_balanced_view(retries=1)
 
         for scenario in scenarios:
 
