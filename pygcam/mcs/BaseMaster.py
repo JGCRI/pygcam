@@ -1,11 +1,12 @@
 from __future__ import print_function
-import ipyparallel as ipp
 from six import iteritems
 from itertools import chain
+import ipyparallel as ipp
+from ipyparallel.client.client import ExecuteReply
 
 
 # Remotely-called function; imports requirement internally.
-def runTrial(key):
+def dummyTask(key):
     from os import getpid
     from time import sleep
     from ipyparallel.datapub import publish_data
@@ -35,10 +36,11 @@ class BaseMaster(object):
         cls.instance.setSleepSeconds(sleepSeconds)
         return cls.instance
 
-    def __init__(self):
-        self.client = ipp.Client()
+    def __init__(self, profile=None, cluster_id=None):
+        self.client = ipp.Client(profile=profile, cluster_id=cluster_id)
         self.statusDict = {}
         self.sleepSeconds = SLEEP_SECONDS
+        self.keyField = 'key'
 
     def setSleepSeconds(self, secs):
         self.sleepSeconds = secs
@@ -84,19 +86,24 @@ class BaseMaster(object):
         ar = client.get_result(tasks, owner=True, block=False)
         results = ar.get()
         client.purge_results(jobs=tasks) # so we don't see them again
+
+        # filter out results from execute commands (e.g. imports)
+        results = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
         return results
 
-    def runTrials(self, count, clearStatus=False):
+    def runTasks(self, count, clearStatus=False):
         if clearStatus:
             self.clearStatus()
 
         view = self.client.load_balanced_view()
-        arlist = []
+        arList = []
+
         for key in range(1, count + 1):
-            ar = view.apply_async(runTrial, key)
-            arlist.append(ar)
+            ar = view.apply_async(dummyTask, key)
+            arList.append(ar)
             self.setStatus(key, 'queued')
-        return arlist
+
+        return arList
 
     def checkRunning(self):
         running = self.runningTasks()
@@ -112,7 +119,7 @@ class BaseMaster(object):
                         self.setStatus(key, status)
 
     def processResult(self, result):
-        key = result['key']
+        key = result[self.keyField]
         self.setStatus(key, 'completed')
         print("Completed", key)
 
@@ -135,8 +142,71 @@ class BaseMaster(object):
                 for result in results:
                     self.processResult(result)
 
+#
+# Test with custom worker func and subclass
+#
+def runTrial(argDict):
+    from time import sleep
+    from random import random
+    from ipyparallel.datapub import publish_data
+
+    def randomSleep(minSleep, maxSleep):
+        delay = minSleep + random() * (maxSleep - minSleep)
+        sleep(delay)
+        argDict['slept'] = '%.2f' % delay
+
+    runId = argDict['runId']
+
+    publish_data({runId: 'running'})
+    randomSleep(1, 5)
+    publish_data({runId: 'finishing'})
+    sleep(2)
+    return argDict
+
+
+class NewMaster(BaseMaster):
+    def __init__(self, profile=None, cluster_id=None):
+        super(NewMaster, self).__init__(profile=profile, cluster_id=cluster_id)
+        self.keyField = 'runId'
+
+    def runTrials(self, tuples, clearStatus=False):
+        if clearStatus:
+            self.clearStatus()
+
+        view = self.client.load_balanced_view()
+        asyncResults = []
+        argDict = {}
+
+        try:
+            for runId, trialNum in tuples:
+                argDict['trialNum'] = trialNum
+                argDict['runId'] = runId
+
+                # Easier to deal with a list of AsyncResults than a single
+                # instance that contains info about all "future" results.
+                result = view.map_async(runTrial, [argDict])
+                asyncResults.append(result)
+                self.setStatus(runId, 'queued')
+
+        except Exception as e:
+            print("Exception running 'runTrial': %s", e)
+
+    def processResult(self, result):
+        key = result[self.keyField]
+        self.setStatus(key, 'completed')
+        print("Completed", result)
+
 if __name__ == '__main__':
-    m = BaseMaster.getInstance(sleepSeconds=5)
-    m.runTrials(6, clearStatus=True)
+    testBase = False
+
+    if testBase:
+        m = BaseMaster.getInstance(sleepSeconds=5)
+        m.runTasks(6, clearStatus=True)
+    else:
+        m = NewMaster.getInstance(sleepSeconds=2)
+        tuples = ((10, 1), (11, 2), (12, 3), (13, 8), (14, 9), (15, 12), (16, 20))
+        m.runTrials(tuples, clearStatus=True)
+
     m.processResults()
     print("Done.")
+    print('final status:', m.statusDict)
