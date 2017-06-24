@@ -5,15 +5,13 @@
 # Copyright (c) 2014-2015. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
-import sys
 import time
-
 from pygcam.config import getParam
 from pygcam.log import getLogger
 from .constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from .error import TimeoutError, AlarmError, GcamToolError
 from .util import getContext, readTrialDataFile
-from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
+# from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 from .XMLParameterFile import readParameterInfo, applySingleTrialData
 
 _logger = getLogger(__name__)

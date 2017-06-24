@@ -14,7 +14,7 @@ from pygcam.mcs.error import PygcamMcsUserError, TimeoutError, AlarmError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED,
                                 RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
                                 RUN_GCAMERROR, RUN_RUNNING)
-from pygcam.mcs.GCAM import runGcamTool
+from pygcam.mcs.gcamtool import runGcamTool
 
 _logger = getLogger(__name__)
 

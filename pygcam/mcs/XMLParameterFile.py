@@ -45,7 +45,7 @@ DISTRO_META_ATTRS     = ['name', 'type', 'apply']
 DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 
 # TBD: this is the setup required in each trial, if distributing trial generation.
-# Called only from GCAM.py:runGcamTool()
+# Called only from gcamtool.py:runGcamTool()
 def readParameterInfo(simId, paramPath, groupName):
     from pygcam.xmlSetup import ScenarioSetup
 
