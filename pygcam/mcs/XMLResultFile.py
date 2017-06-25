@@ -251,12 +251,16 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
     db = getDatabase()
     run = db.getRunByRunId(runId)
 
+    if not run:
+        _logger.warning("saveResults: Can't save results; runId %d not found", runId)
+        return
+
     resultsFile = getSimResultFile(run.simId)
     rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 
     if not outputDefs:
-        _logger.debug('No outputs defined for type %s', type)
+        _logger.debug('saveResults: No outputs defined for type %s', type)
         return
 
     session = db.Session()
