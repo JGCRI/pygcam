@@ -218,6 +218,10 @@ class Master(object):
 
         session.commit()
         db.endSession(session)
+
+        for run in runs:
+            self.statusDict[run.runId] = run.status
+
         results = map(lambda run: (run.runId, run.trialNum), runs)
         return results
 
@@ -228,6 +232,8 @@ class Master(object):
             _logger.debug('Setting runId %s to %s', runId, status)
             self.statusDict[runId] = status
             self.db.setRunStatus(runId, status)
+        else:
+            _logger.debug('runId %s was already set to status %s', runId, status)
 
     def runningTasks(self):
         from pygcam.utils import flatten
@@ -248,7 +254,7 @@ class Master(object):
         running = self.runningTasks()
         if running:
             try:
-                # _logger.debug("Found %d running tasks", len(running))
+                _logger.debug("Found %d running tasks", len(running))
                 ar = self.client.get_result(running, block=False)
 
                 for dataDict in ar.data:
@@ -275,6 +281,7 @@ class Master(object):
             _logger.warning('getResults: %s', e)
             return None
 
+        _logger.debug('Purging results for %d tasks', len(tasks))
         client.purge_results(jobs=tasks) # so we don't see them again
 
         # filter out results from execute commands (e.g. imports)
@@ -289,6 +296,8 @@ class Master(object):
             completed = self.completedTasks()
             if not completed:
                 return
+
+            _logger.debug('%d tasks have completed', len(completed))
 
             results = self.getResults(completed)
             if not results:

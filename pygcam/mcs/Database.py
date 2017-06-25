@@ -632,7 +632,7 @@ class CoreDatabase(object):
         self.appId = self.getAppId(appName)
         return self.appId
 
-    def createRun(self, simId, trialNum, jobNum=None, expName=None, expId=None, status=RUN_NEW, session=None):
+    def createRun(self, simId, trialNum, jobNum=None, expName=None, expId=None, status=RUN_QUEUED, session=None):
         """
         Create an entry for a single model run, initially in "queued" state
         """
@@ -655,11 +655,12 @@ class CoreDatabase(object):
 
         return run
 
-    def createRunFromContext(self, context, status=RUN_QUEUED, session=None):
-        run = self.createRun(context.simId, context.trialNum, expName=context.expName,
-                             status=status, session=session)
-        _logger.debug("createRunFromContext returning runId %s", run.runId)
-        return run
+    # Deprecated
+    # def createRunFromContext(self, context, status=RUN_QUEUED, session=None):
+    #     run = self.createRun(context.simId, context.trialNum, expName=context.expName,
+    #                          status=status, session=session)
+    #     _logger.debug("createRunFromContext returning runId %s", run.runId)
+    #     return run
 
     def getRun(self, simId, trialNum, expName):
         session = self.Session()
