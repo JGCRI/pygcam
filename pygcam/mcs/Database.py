@@ -344,7 +344,7 @@ class CoreDatabase(object):
 
                 _logger.debug("Postgres database '%s' already exists", dbName)
 
-    def commitWithRetry(self, session, maxTries=20, maxSleep=15.0):
+    def commitWithRetry(self, session, maxTries=20, maxSleep=2.0):
         # N.B. With master/worker architecture, this should no longer be necessary, but
         # there are still occasional failures due to inability to acquire file lock.
         # import sqlite3
