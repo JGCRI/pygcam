@@ -294,7 +294,11 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
             csvPath = output.csvPathname(scenario, baseline=baseline, outputDir=outputDir, type=type)
 
             if not outputCache[csvPath]:
-                outputCache[csvPath] = QueryResult(csvPath)
+                try:
+                    outputCache[csvPath] = QueryResult(csvPath)
+                except Exception as e:
+                    _logger.warning('saveResults: Failed to read query result: %s', e)
+                    continue
 
             queryResult = outputCache[csvPath]
             paramName   = output.name
