@@ -92,7 +92,11 @@ class Master(object):
         self.db = getDatabase(checkInit=False)
         self.client = None
         self.statusDict = {}    # status keyed by runId
-        self.trialDict = {}     # trialNums keyed by runId
+
+        # load these once from database and amend as necessary when creating runs
+        pairs = self.db.getTrialNums()
+        self.trialDict = {runId : trialNum for runId, trialNum in pairs}
+
 
     # def clearStatus(self):
     #     self.statusDict = {}

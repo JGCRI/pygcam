@@ -782,6 +782,12 @@ class CoreDatabase(object):
         self.endSession(session)
         return trialCount
 
+    def getTrialNums(self):
+        session = self.Session()
+        rows = session.query(Run.runId, Run.trialNum).all()
+        self.endSession(session)
+        return rows
+
     def createExp(self, name, description=None):
         'Insert a row for the given experiment'
         session = self.Session()
