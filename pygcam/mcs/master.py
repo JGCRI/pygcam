@@ -227,7 +227,7 @@ class Master(object):
         currStatus = self.statusDict.get(runId)
 
         if currStatus != status:
-            trialNum = self.trialDict[runId],
+            trialNum = self.trialDict.get(runId, '?')
             _logger.debug('Setting runId %s, trialNum %s to %s', runId, trialNum, status)
             self.statusDict[runId] = status
             self.db.setRunStatus(runId, status)
