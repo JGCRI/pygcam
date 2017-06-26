@@ -235,8 +235,8 @@ class Master(object):
             _logger.debug('Setting runId %s, trialNum %s to %s', runId, trialNum, status)
             self.statusDict[runId] = status
             self.db.setRunStatus(runId, status)
-        else:
-            _logger.debug('runId %s was already set to status %s', runId, status)
+        # else:
+        #     _logger.debug('runId %s was already set to status %s', runId, status)
 
     def runningTasks(self):
         from pygcam.utils import flatten
@@ -323,7 +323,7 @@ class Master(object):
                     if baseline:  # also save 'diff' results
                         saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
 
-            seconds = 5
+            seconds = 2
             _logger.debug('sleep(%d) before checking for more completed tasks', seconds)
             sleep(seconds)    # brief sleep before checking for more completed tasks
 
