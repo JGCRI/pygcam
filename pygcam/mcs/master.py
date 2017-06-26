@@ -21,9 +21,9 @@ from ipyparallel.client.client import ExecuteReply
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
-from ipyparallel import RemoteError
+# from ipyparallel import RemoteError
 
-from .Database import RUN_SUCCEEDED, getDatabase
+from .Database import RUN_SUCCEEDED, RUN_QUEUED, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
@@ -91,10 +91,11 @@ class Master(object):
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
-        self.statusDict = {}
+        self.statusDict = {}    # status keyed by runId
+        self.trialDict = {}     # trialNums keyed by runId
 
-    def clearStatus(self):
-        self.statusDict = {}
+    # def clearStatus(self):
+    #     self.statusDict = {}
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -219,9 +220,6 @@ class Master(object):
         session.commit()
         db.endSession(session)
 
-        for run in runs:
-            self.statusDict[run.runId] = run.status
-
         results = map(lambda run: (run.runId, run.trialNum), runs)
         return results
 
@@ -229,7 +227,8 @@ class Master(object):
         currStatus = self.statusDict.get(runId)
 
         if currStatus != status:
-            _logger.debug('Setting runId %s to %s', runId, status)
+            trialNum = self.trialDict[runId],
+            _logger.debug('Setting runId %s, trialNum %s to %s', runId, trialNum, status)
             self.statusDict[runId] = status
             self.db.setRunStatus(runId, status)
         else:
@@ -436,6 +435,11 @@ class Master(object):
                     # single instance that contains info about all "future" results.
                     result = view.map_async(runTrial, [trialArgs])
                     asyncResults.append(result)
+
+                    status = RUN_QUEUED
+                    self.statusDict[runId] = status
+                    self.trialDict[runId]  = trialNum
+                    _logger.debug('Queued run %d for trial %d with status %s', runId, trialNum, status)
 
             except Exception as e:
                 _logger.error("Exception running 'runTrial': %s", e)
