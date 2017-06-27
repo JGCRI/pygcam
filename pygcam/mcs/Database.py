@@ -782,14 +782,20 @@ class CoreDatabase(object):
         self.endSession(session)
         return trialCount
 
-    def getTrialNums(self):
+    def getTrialNums(self, succeeded=False):
         session = self.Session()
-        rows = session.query(Run.runId, Run.trialNum).all()
+        # rows = session.query(Run.runId, Run.trialNum).all()
+        q = session.query(Run.runId, Run.trialNum)
+        if not succeeded:
+            q = q.filter(Run.status != 'succeeded')
+        rows = q.all()
         self.endSession(session)
         return rows
 
     def createExp(self, name, description=None):
-        'Insert a row for the given experiment'
+        '''
+        Insert a row for the given experiment
+        '''
         session = self.Session()
         exp = Experiment(expName=name, description=description)
         session.add(exp)
@@ -824,7 +830,6 @@ class CoreDatabase(object):
         return exp
 
     def addExperiments(self, scenarioNames, baseline, filename):
-        from sqlalchemy.exc import IntegrityError
         from .error import PygcamMcsSystemError
 
         desc = 'Added from ' + filename
@@ -833,9 +838,6 @@ class CoreDatabase(object):
             parent = None if name == baseline else baseline
             try:
                 self.createExp(name, description=desc, parent=parent)
-
-            except IntegrityError:
-                self.updateExp(name, description=desc, parent=parent)
 
             except Exception as e:
                 raise PygcamMcsSystemError("Failed to create experiment: %s" % e)
@@ -881,24 +883,39 @@ class GcamDatabase(CoreDatabase):
     def createExp(self, name, parent=None, description=None):
         '''
         Insert a row for the given experiment. Replaces superclass method
-        to add 'parent' argument.
+        to add 'parent' argument. Also, if it fails, updates existing row.
         '''
+        from sqlalchemy.exc import IntegrityError
+
         session = self.Session()
         exp = Experiment(expId=None, expName=name, description=description)
         exp.parent = parent # not in Experiment's __init__ signature
-        session.add(exp)
-        session.commit()
-        expId = exp.expId
-        self.endSession(session)
+
+        try:
+            session.add(exp)
+            session.commit()
+            expId = exp.expId
+
+        except (IntegrityError):
+            session.rollback()
+            expId = self.updateExp(name, description=description, parent=parent, session=session)
+
+        finally:
+            self.endSession(session)
+
         return expId
 
-    def updateExp(self, name, parent=None, description=None):
-        session = self.Session()
-        exp = self.getExp(name, session=session)
+    def updateExp(self, name, parent=None, description=None, session=None):
+        sess = session or self.Session()
+        exp = self.getExp(name, session=sess)
         exp.description = description
         exp.parent = parent
-        session.commit()
-        self.endSession(session)
+        sess.commit()
+
+        if not session:
+            self.endSession(sess)
+
+        return exp.expId
 
     def getExp(self, expName, session=None, raiseError=True):
         sess = session or self.Session()

@@ -93,6 +93,7 @@ class Master(object):
         self.client = None
         self.statusDict = {}    # status keyed by runId
 
+        # TBD: probably no reason to get 'succeeded', which will be most of them
         # load these once from database and amend as necessary when creating runs
         pairs = self.db.getTrialNums()
         self.trialDict = {runId : trialNum for runId, trialNum in pairs}

@@ -557,7 +557,7 @@ class Project(XMLFile):
         self.maybeListProjectArgs(args, knownGroups, knownScenarios, knownStepObjs)
 
         # explicit statement is the only way to run "optional" steps
-        explicitSteps = steps
+        explicitSteps = steps or []
 
         # Set steps / scenarios to all known values if user doesn't specify any
         steps = set(steps or knownSteps) - set(skipSteps or [])
