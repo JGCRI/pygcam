@@ -21,7 +21,7 @@ from ipyparallel.client.client import ExecuteReply
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
-from .Database import RUN_SUCCEEDED, RUN_QUEUED, getDatabase
+from .Database import RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
@@ -332,6 +332,23 @@ class Master(object):
         _logger.debug("%d completed tasks with results", len(results))
         return results
 
+    def saveResults(self, result):
+        runId = result.runId
+        status = result.status
+        context = result.context
+        scenario = context.expName
+        baseline = context.baseline
+
+        self.setRunStatus(runId, status)
+
+        if status == RUN_SUCCEEDED:
+            saveResults(runId, scenario, RESULT_TYPE_SCENARIO)
+
+            if baseline:  # also save 'diff' results
+                saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
+        elif result.errorMsg:
+            _logger.warning('Run %d, trial %d failed: %s', runId, context.trialNum, result.errorMsg)
+
     def checkCompleted(self):
 
         while True:
@@ -348,21 +365,7 @@ class Master(object):
 
             # update database status
             for result in results:
-                runId = result.runId
-                status = result.status
-                context = result.context
-                scenario = context.expName
-                baseline = context.baseline
-
-                self.setRunStatus(runId, status)
-
-                if status == RUN_SUCCEEDED:
-                    saveResults(runId, scenario, RESULT_TYPE_SCENARIO)
-
-                    if baseline:  # also save 'diff' results
-                        saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
-                elif result.errorMsg:
-                    _logger.warning('Run %d, trial %d failed: %s', runId, context.trialNum, result.errorMsg)
+                self.saveResults(result)
 
             seconds = 2
             _logger.debug('sleep(%d) before checking for more completed tasks', seconds)
@@ -484,7 +487,9 @@ class Master(object):
                     # Easier to deal with a list of AsyncResults instances than a
                     # single instance that contains info about all "future" results.
                     if runLocal:
+                        self.db.setRunStatus(runId, RUN_RUNNING)
                         result = runTrial(trialArgs)
+                        self.saveResults(result)
                     else:
                         result = view.map_async(runTrial, [trialArgs])
 

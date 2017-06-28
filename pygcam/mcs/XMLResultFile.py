@@ -270,7 +270,7 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
         names = map(XMLResult.getName, outputDefs)
         ids = db.getOutputIds(names)
         db.deleteRunResults(runId, outputIds=ids, session=session)
-        db.commitWithRetry(session, maxSleep=5)
+        db.commitWithRetry(session)
 
     if not baseline:
         baseline = db.getExpParent(scenario)
@@ -286,56 +286,60 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
 
     # Don't autoflush since that wouldn't use commitWithRetry and could result in lock failure
     # Deprecated? (no_autoflush wrapper)
-    with session.no_autoflush:
-        outputDir = scenarioOutputDir if type == RESULT_TYPE_SCENARIO else diffsOutputDir
+    #with session.no_autoflush:
 
-        # A single result DF can have data for multiple outputs, so we cache the files
-        for output in outputDefs:
-            csvPath = output.csvPathname(scenario, baseline=baseline, outputDir=outputDir, type=type)
+    outputDir = scenarioOutputDir if type == RESULT_TYPE_SCENARIO else diffsOutputDir
 
-            if not outputCache[csvPath]:
-                try:
-                    outputCache[csvPath] = QueryResult(csvPath)
-                except Exception as e:
-                    _logger.warning('saveResults: Failed to read query result: %s', e)
-                    continue
+    # A single result DF can have data for multiple outputs, so we cache the files
+    for output in outputDefs:
+        csvPath = output.csvPathname(scenario, baseline=baseline, outputDir=outputDir, type=type)
 
-            queryResult = outputCache[csvPath]
-            paramName   = output.name
-            whereClause = output.whereClause
-
-            selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
-            count = selected.shape[0]
-
-            if 'region' in selected.columns:
-                if count == 0:
-                    raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
-
-                firstRegion = selected.region.iloc[0]
-                if count == 1:
-                    regionName = firstRegion
-                else:
-                    _logger.debug("Query where clause (%r) yielded %d rows; year columns will be summed" % (whereClause, count))
-                    regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
-            else:
-                regionName = 'global'
-
-            regionId = db.getRegionId(regionName)
-
-            # Save the values to the database
+        if not outputCache[csvPath]:
             try:
-                if output.isScalar():
-                    colName = output.columnName()
-                    value = selected[colName].iloc[0]
-                    db.setOutValue(runId, paramName, value, program=GCAM_PROGRAM, session=session)  # TBD: need regionId?
-                else:
-                    # When no column name is specified, assume this is a time-series result, so save all years.
-                    # Use sum() to collapse values to a single time series; it's a no-op for a single row
-                    values = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, activeYears)}
-                    db.saveTimeSeries(runId, regionId, paramName, values, units=queryResult.units, session=session)
+                outputCache[csvPath] = QueryResult(csvPath)
             except Exception as e:
-                # TBD: distinguish database save errors from data access errors?
-                raise PygcamMcsSystemError("saveResults failed: %s" % e)
+                _logger.warning('saveResults: Failed to read query result: %s', e)
+                continue
+
+        queryResult = outputCache[csvPath]
+        paramName   = output.name
+        whereClause = output.whereClause
+
+        selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
+        count = selected.shape[0]
+
+        if 'region' in selected.columns:
+            if count == 0:
+                raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
+
+            firstRegion = selected.region.iloc[0]
+            if count == 1:
+                regionName = firstRegion
+            else:
+                _logger.debug("Query where clause (%r) yielded %d rows; year columns will be summed" % (whereClause, count))
+                regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
+        else:
+            regionName = 'global'
+
+        regionId = db.getRegionId(regionName)
+
+        # Save the values to the database
+        try:
+            if output.isScalar():
+                colName = output.columnName()
+                value = selected[colName].iloc[0]
+                db.setOutValue(runId, paramName, value, program=GCAM_PROGRAM, session=session)  # TBD: need regionId?
+            else:
+                # When no column name is specified, assume this is a time-series result, so save all years.
+                # Use sum() to collapse values to a single time series; it's a no-op for a single row
+                values = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, activeYears)}
+                db.saveTimeSeries(runId, regionId, paramName, values, units=queryResult.units, session=session)
+
+            db.commitWithRetry(session)
+
+        except Exception as e:
+            # TBD: distinguish database save errors from data access errors?
+            raise PygcamMcsSystemError("saveResults failed: %s" % e)
 
     db.commitWithRetry(session)
     db.endSession(session)
