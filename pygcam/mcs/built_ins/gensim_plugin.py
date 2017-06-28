@@ -20,7 +20,6 @@ def _methodMap():
 
 
 def genSALibData(trials, method, paramFileObj, args):
-    import os
     from ..error import PygcamMcsUserError
     from ..sensitivity import DFLT_PROBLEM_FILE
     from ..util import getSimDir
@@ -226,7 +225,6 @@ def genSimulation(simId, trials, paramPath, args):
     '''
     Generate a simulation based on the given parameters.
     '''
-    import os
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
     from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy, getSimDir
@@ -287,12 +285,61 @@ def genSimulation(simId, trials, paramPath, args):
     simParamFile = getSimParameterFile(simId)
     filecopy(paramPath, simParamFile)
 
+
+def _newsim(runDir):
+    '''
+    Setup the app and run directories for a given user app.
+    '''
+    import pkgutil
+
+    from pygcam.scenarioSetup import copyWorkspace
+    from pygcam.utils import mkdirs
+    from ..Database import getDatabase
+    from ..error import PygcamMcsUserError
+    from ..XMLResultFile import XMLResultFile
+
+    if not runDir:
+        raise PygcamMcsUserError("RunRoot was not set on command line or in configuration file")
+
+    # Create the run dir, if needed
+    mkdirs(runDir)
+
+    srcDir = getParam('GCAM.RefWorkspace')
+    dstDir = getParam('MCS.RunWorkspace')
+
+    copyWorkspace(dstDir, refWorkspace=srcDir, forceCreate=True, mcsMode=True)
+
+    db = getDatabase()   # ensures database initialization
+    XMLResultFile.addOutputs()
+
+    # Load SQL script to create convenient views
+    text = pkgutil.get_data('pygcam', 'mcs/etc/views.sql')
+    db.executeScript(text=text)
+
+
 def driver(args, tool):
     '''
     Generate a simulation. Do generic setup, then call genSimulation().
     '''
+    from pygcam.utils import removeTreeSafely
     from ..Database import getDatabase
     from ..util import getSimDir, saveDict
+
+    projectName = args.projectName
+    runRoot = args.runRoot
+    if runRoot:
+        # TBD: write this to config file under [project] section
+        setParam('MCS.Root', runRoot, section=projectName)
+        _logger.info('Please add "MCS.Root = %s" to your .pygcam.cfg file in the [%s] section.',
+                     runRoot, projectName)
+
+    runDir = getParam('MCS.RunDir', section=projectName)
+
+    if args.delete:
+        removeTreeSafely(runDir, ignore_errors=False)
+
+    if not os.path.exists(runDir):
+        _newsim(runDir)
 
     simId  = args.simId
     trials = args.trials
@@ -319,16 +366,17 @@ class GensimCommand(SubcommandABC):
         super(GensimCommand, self).__init__('gensim', subparsers, kwargs)
 
     def addArgs(self, parser):
+        parser.add_argument('--delete', action='store_true',
+                            help='''DELETE and recreate the simulation "run" directory.''')
+
         parser.add_argument('-D', '--desc', type=str, default='',
                             help='A brief (<= 256 char) description the simulation.')
 
         parser.add_argument('-g', '--groupName', default='',
                             help='''The name of a scenario group to process.''')
 
-        parser.add_argument('-p', '--paramFile', default=None,
-                            help='''Specify an XML file containing parameter definitions.
-                            Defaults to the value of config parameter MCS.ParametersFile
-                            (currently %s)''' % getParam('MCS.ParametersFile'))
+        parser.add_argument('-m', '--method', choices=['montecarlo'] + _methodMap().keys(), default='montecarlo',
+                            help='''Use the specified method to generate trial data. Default is "montecarlo".''')
 
         parser.add_argument('-o', '--outFile',
                             help='''For methods other than "montecarlo". The path to a "package 
@@ -339,8 +387,15 @@ class GensimCommand(SubcommandABC):
                             the chosen method's sampling method. If an outFile is not specified, a package
                             of the name 'data.sa' is created in the simulation run-time directory.''')
 
-        parser.add_argument('-m', '--method', choices=['montecarlo'] + _methodMap().keys(), default='montecarlo',
-                            help='''Use the specified method to generate trial data. Default is "montecarlo".''')
+        parser.add_argument('-p', '--paramFile', default=None,
+                            help='''Specify an XML file containing parameter definitions.
+                            Defaults to the value of config parameter MCS.ParametersFile
+                            (currently %s)''' % getParam('MCS.ParametersFile'))
+
+        runRoot = getParam('MCS.Root')
+        parser.add_argument('-r', '--runRoot', default=None,
+                            help='''Root of the run-time directory for running user programs. Defaults to
+                            value of config parameter MCS.Root (currently %s)''' % runRoot)
 
         parser.add_argument('-S', '--calcSecondOrder', action='store_true',
                             help='''For Sobol method only -- calculate second-order sensitivities.''')

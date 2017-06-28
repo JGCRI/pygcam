@@ -658,12 +658,12 @@ def printSeries(series, label, header='', loglevel='DEBUG'):
     :param label: (str) a label to print for the data
     :return: none
     """
+    import pandas as pd
+
     func = _logger.debug if loglevel == 'DEBUG' else \
         (_logger.info if loglevel == 'INFO' else None)
 
     if func:
-        import pandas as pd
-
         if type(series) == pd.DataFrame:
             df = series
             df = df.T
