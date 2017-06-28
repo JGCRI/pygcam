@@ -251,8 +251,9 @@ def genSimulation(simId, trials, paramPath, args):
     # Run static setup for all scenarios in the given group
     runStaticSetup(runWorkspace, groupName)
 
+    # setParam('MCS.ScenarioGroup', groupName)                    # TBD: apparently unused
+
     # TBD: Use pygcam scenario def and copy pygcam files, too
-    setParam('MCS.ScenarioGroup', groupName)
     scenarioFile = getParam('GCAM.ScenarioSetupFile')
     scenarioSetup = ScenarioSetup.parse(scenarioFile)
     scenarioNames = scenarioSetup.scenariosInGroup(groupName)

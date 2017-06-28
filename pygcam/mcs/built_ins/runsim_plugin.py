@@ -110,8 +110,8 @@ class RunSimCommand(SubcommandABC):
                             outstanding tasks, and shutdown controller when there are no
                             engines running.''')
 
-        # parser.add_argument('-l', '--runLocal', action='store_true',
-        #                     help='''Runs the program locally instead of submitting a batch job.''')
+        parser.add_argument('-l', '--runLocal', action='store_true',
+                            help='''Runs the program locally instead of submitting a batch job.''')
 
         parser.add_argument('-L', '--loopOnly', action='store_true',
                             help='''Don't run any new trials; just enter the wait loop to 

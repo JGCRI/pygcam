@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from lxml import etree as ET
 
-from pygcam.config import getParam
+from pygcam.config import getParam, setParam
 from pygcam.log import getLogger
 from pygcam.utils import importFromDotSpec
 
@@ -44,11 +44,11 @@ WRITE_FUNC_ELT       = 'WriteFunc'
 DISTRO_META_ATTRS     = ['name', 'type', 'apply']
 DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 
-# TBD: this is the setup required in each trial, if distributing trial generation.
 # Called only from gcamtool.py:runGcamTool()
 def readParameterInfo(simId, paramPath, groupName):
     from pygcam.xmlSetup import ScenarioSetup
 
+    setParam('MCS.ScenarioSubdir', groupName)
     scenarioFile  = getParam('GCAM.ScenarioSetupFile')
     scenarioSetup = ScenarioSetup.parse(scenarioFile)
     scenarioNames = scenarioSetup.scenariosInGroup(groupName)
@@ -58,7 +58,6 @@ def readParameterInfo(simId, paramPath, groupName):
     paramFile.runQueries()
     return paramFile
 
-# TBD: Must read parameter info in each trial setup to apply trial data to XML.
 def applySingleTrialData(df, simId, trialNum, paramFile):
     trialDir = getTrialDir(simId, trialNum, create=True)
     XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
@@ -751,18 +750,13 @@ class XMLRelFile(XMLFile):
     that was indicated in the config file identifying this file.
     """
     def __init__(self, inputFile, relPath, simId):
-        from .util import getCurExpDir, getSimLocalXmlDir
+        from .util import getSimLocalXmlDir
 
         self.inputFile = inputFile
         self.relPath = relPath
 
-        # Old way
         scenarioDir = getSimLocalXmlDir(simId)
         absPath = os.path.abspath(os.path.join(scenarioDir, relPath))
-
-        # Tried this, but at gensim time, there's no trialNum
-        # expDir = getCurExpDir()
-        # absPath = os.path.abspath(os.path.join(expDir, 'exe', relPath))
 
         super(XMLRelFile, self).__init__(absPath)
 

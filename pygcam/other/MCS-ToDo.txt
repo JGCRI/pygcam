@@ -1,3 +1,75 @@
+* If status == 'killed', resubmit the task.
+
+* Had a few blowouts in saveResults with funky filename. Why only occasionally?
+  /people/plev920/mcs/paper1/sims/s001/000/320/baseline/diffs/carbon_intensity-baseline-baseline.csv
+
+* Trials are not setting running status if either added via -a or via newly added engines.
+
+* Got this:
+  2017-06-24 21:50:20,775 WARNING setRunStatus failed to find record for runId 8835
+
+* Need a simple test suite to try out a few things and understand error modes
+  * Start cluster with N engines
+  * Add engines to running cluster
+  * Add tasks to running cluster (some tasks are added, others go "missing". Why?)
+  * Recover from engine being killed
+  * Recover from failures getting results (unclear when/why)
+
+
+* Simplify database handling of duration
+  * Have worker track start / end time, store these in result structure
+  * Master can compute duration and write this to run table
+
+* If exactly the desired number of engines are run, but all don't start, some will
+  start new trials without adequate time remaining.
+  * Engines could track their run-time to see if they should start new jobs or not.
+  * Probably should double time required per job when setting walltime
+
+* When adding engines and tasks, the new tasks' run.status isn't updated from new
+  as it is with jobs created by master itself.
+
+* Add a -q option to engine command to allow additional engines on other queue
+
+* Adding runs sort of worked -- 3 of 10 got started right away; the rest might still run.
+* Adding engines did not work. Added 2 jobs (10 engines) but additional runs weren't started.
+  - unclear if this is a problem adding jobs or adding engines
+  - ah! added another job with the already added engines, and the job started right away
+
+* If results are found, reduce length of wait from 30 to 3 sec. If no results after 3
+  iterations, increase back to 30 sec.
+
+* Weak element of current design is that if trial completes and master doesn't update
+  the data base, the run results are lost.
+  * Save results object to results.json in expDir
+  * Have subcmd that scavenges for these by:
+    * rename(results.json, results.json-)
+    * write results to database (ensure idempotency)
+    * if write succeeds, delete results.json-
+
+* Provide a way to run only the saving of results to database given all result CVS files
+  * Should be able to use --noGCAM and (not yet implemented) --noQueries so that only
+    post-processing steps (verify that these are CI and computing results to send
+    back to master.py to save to the DB).
+
+* Looks like 2000 runs completed on savio, but DB wasn't updated.
+
+* Might be an issue with one client calling get_result() on task queued by other client.
+  * Try using db_query to get this instead?
+
+$ find . -name Climate_forcing-baseline.csv > finished.txt
+
+$ wc -l */finished.txt
+   978 000/finished.txt
+   953 002/finished.txt
+   204 003/finished.txt
+  2135 total
+
+* Need to test runsim --loopOnly : Why not DB writes?
+* Need way to see what's actually running
+* Need better diagnostics when failures occur.
+  * Test structure of results & identify unexpected conditions
+* Exceptions are blowing out engines. Shouldn't ever happen.
+
 Command clean-up
 -----------------
 

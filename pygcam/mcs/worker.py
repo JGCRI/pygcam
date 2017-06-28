@@ -4,12 +4,12 @@
 import os
 from signal import alarm, SIGTERM, SIGQUIT, SIGALRM
 
-from pygcam.config import getConfig, setParam, getSection, getParamAsFloat, getParamAsBoolean
+from pygcam.config import getConfig, setParam, getParamAsFloat, getParamAsBoolean
 from pygcam.error import GcamError, GcamSolverError
 from pygcam.log import getLogger, configureLogs
 from pygcam.signals import catchSignals, SignalException, TimeoutSignalException, AlarmSignalException
 
-import pygcam.mcs.util as U
+from pygcam.mcs.util import Context, getExpDirFromContext
 from pygcam.mcs.error import PygcamMcsUserError, TimeoutError, AlarmError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED,
                                 RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
@@ -52,32 +52,13 @@ class Worker(object):
     '''
     Defines the methods and data associated with a worker task.
     '''
-    instance = None
+    def __init__(self, args):
+        getConfig()
+        configureLogs()
 
-    def __init__(self, context):
-        self.context = context
-        self.isBaseline = None
-
-    @classmethod
-    def getInstance(cls):
-        """
-        Get the single worker instance for this engine.
-
-        :returns: (Worker) singleton instance
-        """
-        if not cls.instance:
-            getConfig()
-            configureLogs()
-
-            # Set what we can; the rest are passed by the client per task.
-            simId = scenario = trialNum = None
-            jobNum = U.getJobNum()
-            appName = getSection()
-            context = U.Context(simId, trialNum, scenario, appName, jobNum=jobNum)
-
-            cls.instance = cls(context)
-
-        return cls.instance
+        self.context = Context(runId=args.runId,  simId=args.simId, trialNum=args.trialNum,
+                               expName=args.scenario, baseline=args.baseline,
+                               appName=args.projectName, groupName=args.groupName)
 
     @classmethod
     def runTrial(cls, args):
@@ -92,20 +73,10 @@ class Worker(object):
 
         getConfig()
 
-        worker = cls.getInstance()
+        worker = cls(args)
         context = worker.context
 
-        runId = args.runId
-        simId = args.simId
-        trialNum = args.trialNum
-        scenario = args.scenario
-        baseline = args.baseline
-
-        # TBD: eliminate "context" and pass via args instead?
-        context.setVars(simId=simId, trialNum=trialNum,
-                        expName=scenario, baseline=baseline)
-
-        runDir = U.getExpDirFromContext(context, create=True)
+        runDir = getExpDirFromContext(context, create=True)
         _logger.info("runDir is %s", runDir)
 
         trialDir = os.path.dirname(runDir)
@@ -117,12 +88,16 @@ class Worker(object):
         setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
         configureLogs(force=True)
 
-        publish_data({runId: RUN_RUNNING})
+        runId = args.runId
+
+        if not args.runLocal:
+            publish_data({runId: RUN_RUNNING})
 
         status, errorMsg = worker._runTrial(args)
         result = WorkerResult(context, runId, status, errorMsg)
 
-        publish_data({runId: status})
+        if not args.runLocal:
+            publish_data({runId: status})
 
         return result
 
@@ -150,7 +125,7 @@ class Worker(object):
                 _logger.debug('Alarm set for %d sec' % seconds)
 
             try:
-                exitCode = runGcamTool(args)
+                exitCode = runGcamTool(args, self.context)
                 status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
             except TimeoutSignalException:

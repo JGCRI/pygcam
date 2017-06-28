@@ -632,7 +632,7 @@ class CoreDatabase(object):
         self.appId = self.getAppId(appName)
         return self.appId
 
-    def createRun(self, simId, trialNum, jobNum=None, expName=None, expId=None, status=RUN_QUEUED, session=None):
+    def createRun(self, simId, trialNum, expName=None, expId=None, status=RUN_QUEUED, session=None):
         """
         Create an entry for a single model run, initially in "queued" state
         """
@@ -646,7 +646,7 @@ class CoreDatabase(object):
         # if prior run record exists for this {simId, trialNum, expId} tuple, delete it
         sess.query(Run).filter_by(simId=simId, trialNum=trialNum, expId=expId).delete()
 
-        run = Run(simId=simId, trialNum=trialNum, expId=expId, jobNum=jobNum, status=status)
+        run = Run(simId=simId, trialNum=trialNum, expId=expId, status=status, jobNum=None)
         sess.add(run)
 
         if not session:     # if we created the session locally, commit; else call must do so
@@ -654,13 +654,6 @@ class CoreDatabase(object):
             self.endSession(sess)
 
         return run
-
-    # Deprecated
-    # def createRunFromContext(self, context, status=RUN_QUEUED, session=None):
-    #     run = self.createRun(context.simId, context.trialNum, expName=context.expName,
-    #                          status=status, session=session)
-    #     _logger.debug("createRunFromContext returning runId %s", run.runId)
-    #     return run
 
     def getRun(self, simId, trialNum, expName):
         session = self.Session()
@@ -681,7 +674,7 @@ class CoreDatabase(object):
         #_logger.debug("getRunIdFromContext returning runId %s", run.runId if run else None)
         return run
 
-    def setRunStatus(self, runId, status): #, jobNum=None):
+    def setRunStatus(self, runId, status):
         '''
         Set the runStatus to the value for the given string and
         optionally set the job number.'''
@@ -692,8 +685,6 @@ class CoreDatabase(object):
                 return run # nothing to do here
 
             run.status = status    # insert/update listener sets status code and timestamps
-            # if jobNum:
-            #     run.jobNum = jobNum
 
             self.commitWithRetry(session)
             return run
@@ -1213,29 +1204,29 @@ def dropTable(tableName, meta):
         table.drop()
         meta.remove(table)
 
+# DEPRECATED
+# #
+# # Below are functions meant to be used by the program or function invoked by Runner.
+# # All simIds, trialNums, expNames are the current simId, trialNum, and expName
+# #
 #
-# Below are functions meant to be used by the program or function invoked by Runner.
-# All simIds, trialNums, expNames are the current simId, trialNum, and expName
+# def getContextRunId():
+#     '''
+#     Return the runId associated with the current context
+#     '''
+#     db  = getDatabase()
+#     ctx = U.getContext()
+#     run = db.getRunFromContext(ctx)
+#     return run.runId
 #
-
-def getContextRunId():
-    '''
-    Return the runId associated with the current context
-    '''
-    db  = getDatabase()
-    ctx = U.getContext()
-    run = db.getRunFromContext(ctx)
-    return run.runId
-
-
-def setOutValue(outputName, value, program=DFLT_PROGRAM, session=None):
-    '''
-    Record the numeric result of user's program named "program".
-    Optional session arg facilitates writing multiple results at once.
-    '''
-    db    = getDatabase()
-    runId = getContextRunId()
-    db.setOutValue(runId, outputName, value, program, session)
+# def setOutValue(outputName, value, program=DFLT_PROGRAM, session=None):
+#     '''
+#     Record the numeric result of user's program named "program".
+#     Optional session arg facilitates writing multiple results at once.
+#     '''
+#     db    = getDatabase()
+#     runId = getContextRunId()
+#     db.setOutValue(runId, outputName, value, program, session)
 
 def canonicalizeRegion(name):
     '''

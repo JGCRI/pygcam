@@ -21,8 +21,6 @@ from ipyparallel.client.client import ExecuteReply
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
-# from ipyparallel import RemoteError
-
 from .Database import RUN_SUCCEEDED, RUN_QUEUED, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
@@ -85,22 +83,53 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                              'controller' : _pbsControllerBatchTemplate}
                   }
 
+# TBD: add projectName, errorMsg to this and use it in place of Context throughout pygcam
+# TBD: could be a subclass of Context, which adds 'status' and 'errorMsg' (restate slots!)
+# class RunInfo(object):
+#     instances = {}
+#
+#     __slots__ = ['runId', 'trialNum', 'scenario', 'baseline']
+#     def __init__(self, runId, trialNum=None, scenario=None, baseline=None, status=None):
+#         self.runId    = runId
+#         self.trialNum = trialNum
+#         self.scenario = scenario
+#         self.baseline = baseline
+#         self.status   = status
+#
+#     def __str__(self):
+#         return "<RunInfo id=%s, trial=%s, scen=%s, base=%s, stat=%s>" % (
+#             self.runId, self.trialNum, self.scenario, self.baseline, self.status)
+#
+#     @classmethod
+#     def getInfo(cls, runId):
+#         try:
+#             info = cls.instances[runId]
+#         except KeyError:
+#             info = cls.instances[runId] = cls(runId)
+#
+#         return info
+#
+#     @classmethod
+#     def saveInfo(cls, runId, trialNum=None, scenario=None, baseline=None, status=None):
+#         info = cls.getInfo(runId)
+#         info.__init__(runId, trialNum=trialNum, scenario=scenario,
+#                       baseline=baseline, status=status)
+#         return info
+
 class Master(object):
     def __init__(self, args):
 
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
-        self.statusDict = {}    # status keyed by runId
+        self.statusDict = {}    # status keyed by runId # TBD: not needed with RunInfo
+        self.runInfo = {}       # RunInfo instances keyed by runId
 
-        # TBD: probably no reason to get 'succeeded', which will be most of them
         # load these once from database and amend as necessary when creating runs
+        # TBD: probably no reason to get 'succeeded', which will be most of them
+        # TBD: get more complete set of trial info from DB to create RunInfo
         pairs = self.db.getTrialNums()
         self.trialDict = {runId : trialNum for runId, trialNum in pairs}
-
-
-    # def clearStatus(self):
-    #     self.statusDict = {}
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -230,11 +259,20 @@ class Master(object):
 
     def setRunStatus(self, runId, status):
         currStatus = self.statusDict.get(runId)
+        # TBD: do this instead:
+        # info = self.getInfo(runId)
+        # if info.status != status
 
         if currStatus != status:
+            # TBD: delete this:
             trialNum = self.trialDict.get(runId, '?')
+
+            # TBD instead: _logger.debug('Set status: %s', info)
             _logger.debug('Setting runId %s, trialNum %s to %s', runId, trialNum, status)
+
             self.statusDict[runId] = status
+            # TBD: do instead:
+            # info.status = status
             self.db.setRunStatus(runId, status)
         # else:
         #     _logger.debug('runId %s was already set to status %s', runId, status)
@@ -323,6 +361,8 @@ class Master(object):
 
                     if baseline:  # also save 'diff' results
                         saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)
+                elif result.errorMsg:
+                    _logger.warning('Run %d, trial %d failed: %s', runId, context.trialNum, result.errorMsg)
 
             seconds = 2
             _logger.debug('sleep(%d) before checking for more completed tasks', seconds)
@@ -357,16 +397,17 @@ class Master(object):
             listTrialsToRedo(db, args.simId, args.scenarios, args.statuses)
             return
 
-        self.waitForWorkers()    # wait for engines to spin up
+        if not args.runLocal:
+            self.waitForWorkers()    # wait for engines to spin up
 
         if not loopOnly:
             self.runTrials()
 
-        if addTrials:
+        if addTrials or args.runLocal:
             # don't wait for results; just add trials to running cluster and return
             return
 
-        while self.outstandingTasks():
+        while True:
             self.checkRunning()         # Check for newly running tasks
             self.checkCompleted()       # Check for completed tasks
 
@@ -375,6 +416,9 @@ class Master(object):
 
             _logger.debug('sleep(%d)', args.waitSecs)
             sleep(args.waitSecs)
+
+            if not self.outstandingTasks():
+                break
 
         # Shutdown the hub
         if args.shutdownWhenIdle:
@@ -392,9 +436,10 @@ class Master(object):
         simId     = args.simId
         statuses  = args.statuses
         scenarios = args.scenarios
+        runLocal  = args.runLocal
 
         asyncResults = []
-        view = self.client.load_balanced_view(retries=1)
+        view = None if args.runLocal else self.client.load_balanced_view(retries=1)
 
         for scenario in scenarios:
 
@@ -428,7 +473,7 @@ class Master(object):
 
             argDict = vars(args)
             argDict['scenario'] = scenario
-            argDict['baseline'] = self.db.getExpParent(scenario)
+            argDict['baseline'] = baseline = self.db.getExpParent(scenario)
 
             try:
                 for runId, trialNum in tuples:
@@ -438,13 +483,20 @@ class Master(object):
 
                     # Easier to deal with a list of AsyncResults instances than a
                     # single instance that contains info about all "future" results.
-                    result = view.map_async(runTrial, [trialArgs])
+                    if runLocal:
+                        result = runTrial(trialArgs)
+                    else:
+                        result = view.map_async(runTrial, [trialArgs])
+
                     asyncResults.append(result)
 
                     status = RUN_QUEUED
                     self.statusDict[runId] = status
                     self.trialDict[runId]  = trialNum
                     _logger.debug('Queued run %d for trial %d with status %s', runId, trialNum, status)
+                    # TBD: instead:
+                    # self.saveInfo(runId, trialNum=trialNum, scenario=scenario, baseline=baseline, status=RUN_QUEUED)
+                    # _logger.debug('Queued %s', info)
 
             except Exception as e:
                 _logger.error("Exception running 'runTrial': %s", e)
@@ -560,6 +612,7 @@ def _clusterCommand(cmd):
     return status
 
 
+# TBD: need to be able to run this on Mac or Windows without SLURM, too
 def startEngines(numTrials, batchTemplate):
     """
     Uses the batch file created when the cluster was started, so it has
@@ -640,8 +693,8 @@ def startCluster(**kwargs):
     clusterId = _defaultFromConfig(kwargs, 'clusterId', 'IPP.ClusterId')
     profile   = _defaultFromConfig(kwargs, 'profile',   'IPP.Profile')
     _defaultFromConfig(kwargs, 'minutesPerRun', 'IPP.MinutesPerRun')
-    _defaultFromConfig(kwargs, 'otherArgs',     'IPP.OtherArgs')
-    _defaultFromConfig(kwargs, 'workDir',       'IPP.WorkDir')
+    _defaultFromConfig(kwargs, 'otherArgs', 'IPP.OtherArgs')
+    _defaultFromConfig(kwargs, 'workDir', 'IPP.WorkDir')
 
     numTrials = kwargs['numTrials']
     templates = _saveBatchFiles(numTrials, kwargs)
@@ -649,7 +702,7 @@ def startCluster(**kwargs):
 
     # If the pid file exists, stop the cluster first
     if pidFileExists(profile, clusterId):
-        stopCluster(profile=profile, cluster_id=clusterId)
+        stopCluster(profile=profile, cluster_id=clusterId, stop_jobs=True)
         sleep(1)
 
     # Start cluster with no engines; we add them later based on trial count

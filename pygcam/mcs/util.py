@@ -107,37 +107,50 @@ def stripYearPrefix(s):
     return s
 
 #
-# TBD: the whole "context" approach may be obsolete with ipp master/worker setup
+# TBD: Use this "Context" without enviro vars
 #
 class Context(object):
-    def __init__(self, simId, trialNum, expName, appName,
-                 baseline=None, groupName=None, jobNum=None):
+
+    __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
+                 'groupName', 'appName', 'jobNum']
+
+    def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
+                 expName=None, baseline=None, groupName=None):
+        self.runId     = runId
         self.simId     = simId
         self.trialNum  = trialNum
         self.expName   = expName
         self.baseline  = baseline
         self.groupName = groupName
-        self.jobNum    = jobNum
         self.appName   = appName
-
+        self.jobNum    = getJobNum()
 
     def __str__(self):
-        return "proj=%s exp=%s grp=%s sim=%s trial=%s job=%s" % \
-               (self.appName, self.expName, self.groupName, self.simId, self.trialNum, self.jobNum)
+        return "<Context proj=%s exp=%s grp=%s sim=%s trial=%s run=%s job=%s>" % \
+               (self.appName, self.expName, self.groupName,
+                self.simId, self.trialNum, self.runId, self.jobNum)
 
-    def setEnvironment(self):
-        '''
-        Update the environment vars to represent the context
-        '''
-        os.environ['MCS_APP']      = self.appName or ''
-        os.environ['MCS_SIMID']    = str(self.simId) if self.simId is not None else ''
-        os.environ['MCS_TRIALNUM'] = str(self.trialNum) if self.trialNum is not None else ''
-        os.environ['MCS_EXPNAME']  = self.expName or ''
-        os.environ['MCS_BASELINE'] = self.baseline or ''
-        os.environ['MCS_GROUP']    = self.groupName or ''
+    # @classmethod
+    # def fromArgs(cls, args):
+    #     ctx = Context(runId=args.runId, simId=args.simId, trialNum=args.trialNum,
+    #                   expName=args.scenario, baseline=args.baseline,
+    #                   appName=args.projectName, groupName=args.groupName)
+    #     return ctx
+
+    # Deprecated
+    # def setEnvironment(self):
+    #     '''
+    #     Update the environment vars to represent the context
+    #     '''
+    #     os.environ['MCS_APP']      = self.appName or ''
+    #     os.environ['MCS_SIMID']    = str(self.simId) if self.simId is not None else ''
+    #     os.environ['MCS_TRIALNUM'] = str(self.trialNum) if self.trialNum is not None else ''
+    #     os.environ['MCS_EXPNAME']  = self.expName or ''
+    #     os.environ['MCS_BASELINE'] = self.baseline or ''
+    #     os.environ['MCS_GROUP']    = self.groupName or ''
 
     def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
-                baseline=None, groupName=None, jobNum=None):
+                baseline=None, groupName=None):
         '''
         Set elements of a context structure, updating the environment as well.
         '''
@@ -159,66 +172,32 @@ class Context(object):
         if groupName:
             self.groupName = groupName
 
-        if jobNum:
-            self.jobNum = jobNum
+        # deprecated
+        # self.setEnvironment()
 
-        self.setEnvironment()
-
-
-def getContext():
-    '''
-    Get the "context" from environment variables.
-    '''
-    appName = os.getenv('MCS_APP') or getSection()
-    setSection(appName)
-
-    trialNum = os.getenv('MCS_TRIALNUM')
-    if trialNum:
-        trialNum = int(trialNum)
-
-    simId = os.getenv('MCS_SIMID')
-    if simId:
-        simId = int(simId)
-
-    expName  = os.getenv('MCS_EXPNAME')
-    baseline = os.getenv('MCS_BASELINE')
-
-    jobNum  = getJobNum()
-
-    groupName = os.getenv('MCS_GROUP')
-
-    return Context(simId, trialNum, expName, appName,
-                   baseline=baseline, groupName=groupName, jobNum=jobNum)
-
-
-def setContext(context, appName=None, simId=None, trialNum=None,
-               expName=None, baseline=None, jobNum=None):
-    '''
-    Set elements of a context structure, updating the environment as well.
-    '''
-    if appName:
-        context.appName = appName
-        os.environ['MCS_APP'] = appName
-
-    if simId is not None:
-        context.simId = int(simId)
-        os.environ['MCS_SIMID'] = str(simId)
-
-    if trialNum is not None:
-        context.trialNum = int(trialNum)
-        os.environ['MCS_TRIALNUM'] = str(trialNum)
-
-    if expName:
-        context.expName = expName
-        os.environ['MCS_EXPNAME'] = expName
-
-    if baseline:
-        context.baseline = baseline
-        os.environ['MCS_BASELINE'] = baseline
-
-    if jobNum:
-        context.jobNum = jobNum
-
+# Deprecated
+# def getContext():
+#     '''
+#     Get the "context" from environment variables.
+#     '''
+#     appName = os.getenv('MCS_APP') or getSection()
+#     setSection(appName)
+#
+#     trialNum = os.getenv('MCS_TRIALNUM')
+#     if trialNum:
+#         trialNum = int(trialNum)
+#
+#     simId = os.getenv('MCS_SIMID')
+#     if simId:
+#         simId = int(simId)
+#
+#     expName  = os.getenv('MCS_EXPNAME')
+#     baseline = os.getenv('MCS_BASELINE')
+#
+#     groupName = os.getenv('MCS_GROUP')
+#
+#     return Context(simId, trialNum, expName, appName,
+#                    baseline=baseline, groupName=groupName)
 
 def getJobNum():
     batchSystem = getParam('MCS.BatchSystem')
@@ -267,35 +246,35 @@ def tail(filename, count):
 LogLinesToSave = 100
 QuarterGigabyte = 1024 * 1024 * 128
 
-# TBD: still needed?
-def truncateBigFile(filename, maxSize=QuarterGigabyte, linesToSave=LogLinesToSave, delete=True, raiseError=True):
-    '''
-    If the named file is greater than maxSize (default 128 MB), read the last
-    `count` lines (default 100) from the file, write the saved lines in a
-    file with new extension of .truncated.out, and if `delete` is non-False,
-    delete the original file.
-    '''
-    try:
-        fileSize = os.path.getsize(filename)
-        if fileSize <= maxSize:
-            return
-    except Exception as e:
-        msg = "Failed to get size of file '%s': %s" % (filename, e)
-        if raiseError:
-            raise PygcamMcsSystemError(msg)
-        else:
-            return
-
-    text = tail(filename, linesToSave)
-
-    base, ext = os.path.splitext(filename)
-    newName = base + '.truncated' + ext
-
-    with open(newName, "w") as f:
-        f.write(text)
-
-    if delete:
-        os.unlink(filename)
+# Deprecated
+# def truncateBigFile(filename, maxSize=QuarterGigabyte, linesToSave=LogLinesToSave, delete=True, raiseError=True):
+#     '''
+#     If the named file is greater than maxSize (default 128 MB), read the last
+#     `count` lines (default 100) from the file, write the saved lines in a
+#     file with new extension of .truncated.out, and if `delete` is non-False,
+#     delete the original file.
+#     '''
+#     try:
+#         fileSize = os.path.getsize(filename)
+#         if fileSize <= maxSize:
+#             return
+#     except Exception as e:
+#         msg = "Failed to get size of file '%s': %s" % (filename, e)
+#         if raiseError:
+#             raise PygcamMcsSystemError(msg)
+#         else:
+#             return
+#
+#     text = tail(filename, linesToSave)
+#
+#     base, ext = os.path.splitext(filename)
+#     newName = base + '.truncated' + ext
+#
+#     with open(newName, "w") as f:
+#         f.write(text)
+#
+#     if delete:
+#         os.unlink(filename)
 
 def computeLogPath(simId, expName, logDir, trials):
     trialMin = min(trials)
@@ -525,27 +504,28 @@ def getExpDir(simId, trialNum, expName, create=False):
 
     return expDir
 
-def getExpDirFromContext(context=None, create=False):
+def getExpDirFromContext(context, create=False):
     '''
     Return and optionally create the path to the directory for a specific experiment.
     '''
-    if context is None:
-        context = getContext()
+    # if context is None:
+    #     context = getContext()
 
     return getExpDir(context.simId, context.trialNum, context.expName, create=create)
 
-def getCurExpDir():
-    '''
-    Gets the current experiment directory based on current context.
-    '''
-    return getExpDirFromContext(getContext())
-
-def getCurTrialDir():
-    '''
-    Gets the current trial dir based on current context.
-    '''
-    context = getContext()
-    return getTrialDir(context.simId, context.trialNum)
+# Deprecated
+# def getCurExpDir():
+#     '''
+#     Gets the current experiment directory based on current context.
+#     '''
+#     return getExpDirFromContext(getContext())
+#
+# def getCurTrialDir():
+#     '''
+#     Gets the current trial dir based on current context.
+#     '''
+#     context = getContext()
+#     return getTrialDir(context.simId, context.trialNum)
 
 # deprecated
 # def randomSleep(minSleep, maxSleep):
@@ -763,9 +743,3 @@ def getRunQueryDir():
 
     path = os.path.join(workspace, QueryDirName)
     return path
-
-# if __name__ == "__main__":
-#     filename = '/Users/rjp/tmp/final-energy-by-fuel-Reference.csv'
-#
-#     truncateBigFile(filename, 100000, linesToSave=10, delete=False)
-#     truncateBigFile(filename, 10000,  linesToSave=50, delete=True)

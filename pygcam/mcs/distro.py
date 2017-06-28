@@ -6,7 +6,7 @@
 # Copyright (c) 2012-2015. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 '''
-This module is based on code originally developed by Sam Fendell. 
+This module is based on code originally developed by Sam Fendell.
 '''
 import math
 import re
@@ -139,7 +139,7 @@ class constant():
         self.value = value
 
     def ppf(self, q):
-        n = np.array(len(q))
+        n = np.ndarray(len(q))
         n[:] = self.value
         return n
 

@@ -6,12 +6,11 @@
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
 import time
-from pygcam.config import getParam
+from pygcam.config import getParam, setParam
 from pygcam.log import getLogger
 from .constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from .error import TimeoutError, AlarmError, GcamToolError
-from .util import getContext, readTrialDataFile
-# from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
+from .util import readTrialDataFile
 from .XMLParameterFile import readParameterInfo, applySingleTrialData
 
 _logger = getLogger(__name__)
@@ -54,7 +53,7 @@ def runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     return status
 
 
-def runGcamTool(args):
+def runGcamTool(args, context):
     '''
     Run GCAM in the current working directory and return exit status.
     '''
@@ -65,23 +64,17 @@ def runGcamTool(args):
     # For running in an ipyparallel engine, forget instances from last run
     decache()
 
-    context = getContext()
-    # db = getDatabase(GcamDatabase)
-    # run = db.getRunFromContext(context)
-    # runId = context.runId = run.runId
-    runId = args.runId
+    _logger.debug("runGcamTool: %s", context)
 
-    # Load runtime args from json file in saved to expDir by QUEUE cmd
-    # args = loadRuntimeArgs(context=context, asNamespace=True)
-    _logger.debug("args: %s", args)
-
-    expName   = context.expName
     simId     = context.simId
     groupName = context.groupName
     trialNum  = context.trialNum
 
     baselineName = args.baseline
     isBaseline = not baselineName
+
+    # TBD: treatment of subdirs is hokey. Fix this!
+    setParam('MCS.ScenarioSubdir', groupName)
 
     if isBaseline and not args.noGCAM:
         paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
@@ -120,13 +113,6 @@ def runGcamTool(args):
                 if steps:
                     runPygcamSteps(steps, context)
 
-            # Deprecated: this is now done in master.py so workers avoid touching the DB
-            # if args.updateDatabase:
-            #     saveResults(runId, expName, RESULT_TYPE_SCENARIO)
-            #
-            #     if not isBaseline:  # also save 'diff' results
-            #         saveResults(runId, expName, RESULT_TYPE_DIFF, baseline=baselineName)
-
             status = RUNNER_SUCCESS
         else:
             status = RUNNER_FAILURE
@@ -138,6 +124,7 @@ def runGcamTool(args):
     except GcamToolError as e:
         status = RUNNER_FAILURE
         _logger.error("runGcamTool: %s" % e)
+        raise   # see if this produces desired result
 
     except Exception as e:
         _logger.error("runGcamTool: %s" % e)

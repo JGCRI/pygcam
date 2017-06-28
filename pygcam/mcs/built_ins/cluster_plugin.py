@@ -29,10 +29,12 @@ class ClusterCommand(SubcommandABC):
     def addArgs(self, parser):
         from pygcam.config import getParam, getParamAsFloat, getParamAsInt
 
-        defaultProfile    = getParam('IPP.Profile')
-        defaultClusterId  = getParam('IPP.ClusterId')
-        defaultQueue      = getParam('IPP.Queue')
-        defaultWorkDir    = getParam('IPP.WorkDir')
+        defaultProfile     = getParam('IPP.Profile')
+        defaultClusterId   = getParam('IPP.ClusterId')
+        defaultQueue       = getParam('IPP.Queue')
+        defaultWorkDir     = getParam('IPP.WorkDir')
+        defaultStopJobsCmd = getParam('IPP.StopJobsCommand')
+
         defaultMaxEngines = getParamAsInt('IPP.MaxEngines')
         defaultMinutes    = getParamAsFloat('IPP.MinutesPerRun')
 
@@ -70,6 +72,10 @@ class ClusterCommand(SubcommandABC):
                             help='''The queue or partition on which to create the controller
                             and engines. Overrides config var IPP.Queue, currently
                             "%s".''' % defaultQueue)
+
+        parser.add_argument('-s', '--stopJobs', action='store_true',
+                            help='''Stop running jobs using the value if IPP.StopJobsCommand,
+                            currently "%s". (Ignored for mode "start".)''' % defaultStopJobsCmd)
 
         parser.add_argument('-w', '--workDir', type=str, default=defaultWorkDir,
                             help='''Where to run the ipcluster command. Overrides the

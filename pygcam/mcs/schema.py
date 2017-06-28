@@ -103,7 +103,7 @@ class Run(CoreMCSMixin, ORMBase):
     simId     = Column(Integer, ForeignKey('sim.simId', ondelete="CASCADE"))
     expId     = Column(Integer, ForeignKey('experiment.expId', ondelete="CASCADE"))
     trialNum  = Column(Integer)
-    jobNum    = Column(String)
+    jobNum    = Column(String,   nullable=True)
     queueTime = Column(DateTime, default=datetime.now)
     startTime = Column(DateTime, nullable=True)
     endTime   = Column(DateTime, nullable=True)
