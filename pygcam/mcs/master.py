@@ -496,9 +496,8 @@ class Master(object):
                     else:
                         result = view.map_async(worker.runTrial, [trialArgs])
 
-                    asyncResults.append(result)
-
-                    self.setRunStatus(runId, RUN_QUEUED)
+                        asyncResults.append(result)
+                        self.setRunStatus(runId, RUN_QUEUED)
 
             except Exception as e:
                 _logger.error("Exception running 'runTrial': %s", e)

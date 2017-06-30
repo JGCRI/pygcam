@@ -6,7 +6,7 @@
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
 import time
-from pygcam.config import getParam, setParam
+from pygcam.config import getParam
 from pygcam.log import getLogger
 from .constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from .error import TimeoutError, AlarmError, GcamToolError

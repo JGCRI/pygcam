@@ -247,18 +247,17 @@ def saveResults(context, type, delete=True):
     scenario = context.expName
 
     if type == RESULT_TYPE_DIFF:
-        assert (baseline ), "saveResults: must specify baseline for DIFF results"
+        assert baseline, "saveResults: must specify baseline for DIFF results"
 
     _logger.debug("Saving results for scenario=%s, type=%s", scenario, type)
 
-    db = getDatabase()
-    run = db.getRunByRunId(runId)
+    # run = db.getRunByRunId(runId)
+    #
+    # if not run:
+    #     _logger.warning("saveResults: Can't save results; runId %d not found", runId)
+    #     return
 
-    if not run:
-        _logger.warning("saveResults: Can't save results; runId %d not found", runId)
-        return
-
-    resultsFile = getSimResultFile(run.simId)
+    resultsFile = getSimResultFile(context.simId)
     rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 
@@ -266,6 +265,7 @@ def saveResults(context, type, delete=True):
         _logger.debug('saveResults: No outputs defined for type %s', type)
         return
 
+    db = getDatabase()
     session = db.Session()
 
     if delete:

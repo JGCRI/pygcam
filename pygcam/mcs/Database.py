@@ -690,7 +690,7 @@ class CoreDatabase(object):
             return run
 
         except NoResultFound:
-            _logger.warn("setRunStatus failed to find record for runId %d", runId)
+            _logger.warn("db.setRunStatus failed to find record for runId %d", runId)
             return None
 
         finally:
@@ -776,12 +776,14 @@ class CoreDatabase(object):
     def getRunInfo(self, succeeded=False):
         session = self.Session()
 
-        q = session.query(Run.runId, Run.simId, Run.trialNum, Experiment.expName, Run.status)
+        q = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).add_columns(Experiment.expName).join(Experiment)
         if not succeeded:
             q = q.filter(Run.status != 'succeeded')
 
         rows = q.all()
         self.endSession(session)
+
+        # for row in rows: print row
         return rows
 
     def createExp(self, name, description=None):
