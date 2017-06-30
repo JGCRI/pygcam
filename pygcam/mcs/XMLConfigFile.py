@@ -6,7 +6,6 @@ from lxml import etree as ET
 from pygcam.log import getLogger
 from .error import PygcamMcsUserError
 from .XML import XMLFile
-from .util import getSimConfigFile
 
 _logger = getLogger(__name__)
 
@@ -18,6 +17,21 @@ INTS_GROUP    = 'Ints'
 BOOLS_GROUP   = 'Bools'
 DOUBLES_GROUP = 'Doubles'
 
+def getSimScenarioDir(context):
+    from .util import getSimLocalXmlDir
+    localXmlDir = getSimLocalXmlDir(context.simId)
+    scenDir = os.path.join(localXmlDir, context.groupName, context.expName)
+    return scenDir
+
+def getSimConfigFile(context):
+    """
+    Returns the path to sim's copy of the config.xml file for the given scenario.
+    """
+    from .util import ConfigFileName
+    scenDir = getSimScenarioDir(context)
+    configFile = os.path.join(scenDir, ConfigFileName)
+    return configFile
+
 # TBD: create interface to load "most local" version of config file.
 class XMLConfigFile(XMLFile):
     '''
@@ -25,17 +39,16 @@ class XMLConfigFile(XMLFile):
     '''
     instances = {}  # XMLConfigFile instances keyed by scenario name
 
-    def __init__(self, simId, scenario, useCopy=False):
+    def __init__(self, context, useCopy=False):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
-        self.simId = simId
-        self.scenario  = scenario
+        self.context   = context
 
         if useCopy:
             path = self.getBackupPath()
         else:
-            path = getSimConfigFile(simId, scenario)
+            path = getSimConfigFile(context)
             self.copyOriginal() # make a copy for use by runsim
 
         # Default writePath is where we were read from.
@@ -48,30 +61,28 @@ class XMLConfigFile(XMLFile):
         cls.instances = {}
 
     @classmethod
-    def getConfigForScenario(cls, simId, scenario, useCopy=False):
+    def getConfigForScenario(cls, context, useCopy=False):
         '''
         Return the path to the run-tree version of the config file
         for the given scenario.
         '''
-        key = (scenario, useCopy)
+        key = (context.expName, useCopy)
         try:
             return cls.instances[key]
 
         except KeyError:
-            obj = XMLConfigFile(simId, scenario, useCopy=useCopy)
+            obj = XMLConfigFile(context, useCopy=useCopy)
             cls.instances[key] = obj
             return obj
 
     @classmethod
-    def writeAll(cls):
+    def writeAll(cls, context):
         """
         Write all configuration files to disk.
-        :return: 
+        :return:
         """
-        from .util import getSimConfigFile
-
         for cfg in cls.instances.values():
-            configPath = getSimConfigFile(cfg.simId, cfg.scenario)
+            configPath = getSimConfigFile(cfg.context)
             cfg.write(path=configPath)
 
     def copyOriginal(self):
@@ -81,7 +92,7 @@ class XMLConfigFile(XMLFile):
         '''
         import shutil
 
-        configPath = getSimConfigFile(self.simId, self.scenario)
+        configPath = getSimConfigFile(self.context)
         backupPath = self.getBackupPath()
 
         # Copy only if the backupPath doesn't exist or is older than configPath
@@ -91,7 +102,7 @@ class XMLConfigFile(XMLFile):
             shutil.copy2(configPath, backupPath)
 
     def getBackupPath(self):
-        pathname = getSimConfigFile(self.simId, self.scenario)
+        pathname = getSimConfigFile(self.context)
         basename, ext = os.path.splitext(pathname)
         return basename + '-original' + ext       # i.e., [path...]/config-original.xml
 
@@ -99,8 +110,8 @@ class XMLConfigFile(XMLFile):
         """
         Write out the modified configuration file tree to the
         same path that it was read from, or to the given path.
-        
-        :param path: (str) pathname to write to 
+
+        :param path: (str) pathname to write to
         :return:  none
         """
         if path:

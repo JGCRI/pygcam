@@ -342,6 +342,7 @@ class Master(object):
         self.setRunStatus(runId, status)
 
         if status == RUN_SUCCEEDED:
+            _logger.debug("Saving results for trial %s", context.trialNum)
             saveResults(runId, scenario, RESULT_TYPE_SCENARIO)  # TBD: pass context instead
 
             if baseline:  # also save 'diff' results

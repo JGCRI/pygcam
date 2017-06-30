@@ -83,14 +83,14 @@ class Worker(object):
         logDir = os.path.join(trialDir, 'log')
         mkdirs(logDir)
 
-        logFile = os.path.join(logDir, args.scenario + '.log')
-        setParam('GCAM.LogFile', logFile)
-        setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
-        configureLogs(force=True)
-
         runId = args.runId
 
         if not args.runLocal:
+            logFile = os.path.join(logDir, args.scenario + '.log')
+            setParam('GCAM.LogFile', logFile)
+            setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
+            configureLogs(force=True)
+
             publish_data({runId: RUN_RUNNING})
 
         status, errorMsg = worker._runTrial(args)

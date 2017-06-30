@@ -8,7 +8,6 @@ Created on Dec 19, 2012
 Copyright (c) 2012-2015. The Regents of the University of California (Regents)
 and Richard Plevin. See the file COPYRIGHT.txt for details.
 '''
-import re
 
 # Status codes for invoked programs
 RUNNER_SUCCESS = 0

@@ -489,21 +489,6 @@ def getSimLocalXmlDir(simId):
     path = os.path.join(simDir, SimLocalXmlDirName)
     return path
 
-def getSimScenarioDir(simId, scenarioName):
-    subdir = getParam('MCS.ScenarioSubdir')
-
-    localXmlDir = getSimLocalXmlDir(simId)
-    scenDir = os.path.join(localXmlDir, subdir, scenarioName)
-    return scenDir
-
-def getSimConfigFile(simId, scenarioName):
-    """
-    Returns the path to sim's copy of the config.xml file for the given scenario.
-    """
-    scenDir = getSimScenarioDir(simId, scenarioName)
-    configFile = os.path.join(scenDir, ConfigFileName)
-    return configFile
-
 def getRunQueryDir():
     """
     Returns the path to sim's copy of the scenarios.xml file.

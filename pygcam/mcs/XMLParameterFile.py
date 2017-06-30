@@ -45,16 +45,19 @@ DISTRO_META_ATTRS     = ['name', 'type', 'apply']
 DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 
 # Called only from gcamtool.py:runGcamTool()
-def readParameterInfo(simId, paramPath, groupName):
+def readParameterInfo(context, paramPath):
     from pygcam.xmlSetup import ScenarioSetup
 
-    setParam('MCS.ScenarioSubdir', groupName)
+    # deprecated
+    # groupName = context.groupName
+    # setParam('MCS.ScenarioSubdir', groupName)
+
     scenarioFile  = getParam('GCAM.ScenarioSetupFile')
     scenarioSetup = ScenarioSetup.parse(scenarioFile)
-    scenarioNames = scenarioSetup.scenariosInGroup(groupName)
+    scenarioNames = scenarioSetup.scenariosInGroup(context.groupName)
 
     paramFile = XMLParameterFile(paramPath)
-    paramFile.loadInputFiles(simId, scenarioNames, writeConfigFiles=False)
+    paramFile.loadInputFiles(context, scenarioNames, writeConfigFiles=False)
     paramFile.runQueries()
     return paramFile
 
@@ -843,19 +846,25 @@ class XMLInputFile(XMLWrapper):
 
         self.findAndSaveParams(element)
 
-    def loadFiles(self, simId, scenNames, writeConfigFiles=True):
+    def loadFiles(self, context, scenNames, writeConfigFiles=True):
         """
         Find the distinct pathnames associated with our component name. Each scenario
         that refers to this path is stored in a set in self.inputFiles, keyed by pathname.
         The point is to read and update the target file only once, even if referred to
         multiple times.
         """
+        import copy
+
         compName = self.getComponentName()  # an identifier in the config file, e.g., "land2"
 
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
 
+        ctx = copy.copy(context)
+        simId = context.simId
+
         for scenName in scenNames:
-            configFile = XMLConfigFile.getConfigForScenario(simId, scenName, useCopy=useCopy)
+            ctx.setVars(expName=scenName)
+            configFile = XMLConfigFile.getConfigForScenario(ctx, useCopy=useCopy)
 
             # If compName ends in '.xml', assume its value is the full relative path, with
             # substitution for {scenario}, e.g., "../local-xml/{scenario}/mcsValues.xml"
@@ -941,18 +950,18 @@ class XMLParameterFile(XMLFile):
 
         _logger.debug("Loaded parameter file: %s", filename)
 
-    def loadInputFiles(self, simId, scenNames, writeConfigFiles=True):
+    def loadInputFiles(self, context, scenNames, writeConfigFiles=True):
         """
         Load the input files, for each scenario in scenNames. Scenarios are
         found in {simDir}/{scenName}.
         """
         for inputFile in self.inputFiles.values():
-            inputFile.loadFiles(simId, scenNames, writeConfigFiles=writeConfigFiles)
+            inputFile.loadFiles(context, scenNames, writeConfigFiles=writeConfigFiles)
 
         if writeConfigFiles:
             # Writes all modified configs. Config files' XML trees are updated
             # as InputFile elements are processed.
-            XMLConfigFile.writeAll()
+            XMLConfigFile.writeAll(context)
 
     def getFilename(self):
         return self.filename

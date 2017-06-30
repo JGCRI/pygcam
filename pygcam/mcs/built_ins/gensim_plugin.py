@@ -225,6 +225,7 @@ def genSimulation(simId, trials, paramPath, args):
     '''
     Generate a simulation based on the given parameters.
     '''
+    from ..context import Context
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
     from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
@@ -271,8 +272,10 @@ def genSimulation(simId, trials, paramPath, args):
     db = getDatabase()
     db.addExperiments(scenarioNames, baseline, scenarioFile)
 
+    context = Context(appName=args.projectName, simId=simId, groupName=groupName)
+
     paramFileObj = XMLParameterFile(paramPath)
-    paramFileObj.loadInputFiles(simId, scenarioNames, writeConfigFiles=True)
+    paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
     paramFileObj.runQueries()
 
     _logger.info("Generating %d trials to %r", trials, simDir)

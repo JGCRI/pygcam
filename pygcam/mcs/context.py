@@ -47,21 +47,6 @@ def _dirFromNumber(n, prefix="", create=False):
     return directory
 
 
-# Deprecated
-# def getLogDir(simId, create=False):
-#     '''
-#     :param simId: simulation id
-#     :param create: if True, create the directory if needed
-#     :return: the pathname of the log directory
-#     '''
-#     simDir = getSimDir(simId, create=create)
-#     logDir = os.path.join(simDir, 'log')
-#     if create:
-#         mkdirs(logDir)
-#
-#     return logDir
-
-
 def getSimDir(simId, create=False):
     '''
     Return and optionally create the path to the top-level simulation

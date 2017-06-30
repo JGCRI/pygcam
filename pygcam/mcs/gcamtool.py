@@ -58,25 +58,22 @@ def runGcamTool(args, context):
     '''
     from XMLParameterFile import XMLParameter, decache
 
-    _logger.info("runGcamTool: entering")
+    _logger.debug("runGcamTool: %s", context)
 
     # For running in an ipyparallel engine, forget instances from last run
     decache()
 
-    _logger.debug("runGcamTool: %s", context)
-
-    simId     = context.simId
-    groupName = context.groupName
-
+    simId = context.simId
     baselineName = args.baseline
     isBaseline = not baselineName
 
-    # TBD: treatment of subdirs is hokey. Fix this!
-    setParam('MCS.ScenarioSubdir', groupName)
+    # deprecated
+    # groupName = context.groupName
+    # setParam('MCS.ScenarioSubdir', groupName, section=context.appName)
 
     if isBaseline and not args.noGCAM:
         paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
-        paramFile = readParameterInfo(simId, paramPath, groupName)
+        paramFile = readParameterInfo(context, paramPath)
 
         df = readTrialDataFile(simId)
         columns = df.columns
