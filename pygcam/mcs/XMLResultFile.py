@@ -237,10 +237,14 @@ class QueryResult(object):
         return self.df
 
 
-def saveResults(runId, scenario, type, baseline=None, delete=True):
+def saveResults(context, type, delete=True):
     from collections import defaultdict
     from .Database import getDatabase, GCAM_PROGRAM
-    from .util import getTrialDir, getSimResultFile, activeYears
+    from .util import getSimResultFile, activeYears
+
+    runId    = context.runId
+    baseline = context.baseline
+    scenario = context.expName
 
     # If "diff" type, must specify a baseline, else must not do so
     assert (baseline if type == RESULT_TYPE_DIFF else not baseline), \
@@ -280,9 +284,9 @@ def saveResults(runId, scenario, type, baseline=None, delete=True):
 
     outputCache = defaultdict(lambda: None)
 
-    trialDir = getTrialDir(run.simId, run.trialNum)
-    scenarioOutputDir = os.path.join(trialDir, scenario, 'queryResults')
-    diffsOutputDir = os.path.join(trialDir, scenario, 'diffs')
+    trialDir = context.getTrialDir()
+    scenarioOutputDir = os.path.join(trialDir, scenario, 'queryResults')    # TBD: create context.getQueryResultsDir() ?
+    diffsOutputDir    = os.path.join(trialDir, scenario, 'diffs')           # TBD: create context.getDiffsDir() ?
 
     # Don't autoflush since that wouldn't use commitWithRetry and could result in lock failure
     # Deprecated? (no_autoflush wrapper)

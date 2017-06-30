@@ -9,15 +9,15 @@
 from __future__ import with_statement, print_function
 
 import os
-import re
 from inspect import stack, getargspec
 
 from pygcam.config import setSection, getSection, getParam, getParamAsInt
 from pygcam.log import getLogger
 from pygcam.utils import mkdirs
 
-from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
 from .constants import COMMENT_CHAR
+from .context import getSimDir
+from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
 
 _logger = getLogger(__name__)
 
@@ -106,117 +106,60 @@ def stripYearPrefix(s):
             pass
     return s
 
+# Deprecated. Moved to context.py
+# class Context(object):
 #
-# TBD: Use this "Context" without enviro vars
+#     __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
+#                  'groupName', 'appName', 'jobNum']
 #
-class Context(object):
-
-    __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
-                 'groupName', 'appName', 'jobNum']
-
-    def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
-                 expName=None, baseline=None, groupName=None):
-        self.runId     = runId
-        self.simId     = simId
-        self.trialNum  = trialNum
-        self.expName   = expName
-        self.baseline  = baseline
-        self.groupName = groupName
-        self.appName   = appName
-        self.jobNum    = getJobNum()
-
-    def __str__(self):
-        return "<Context proj=%s exp=%s grp=%s sim=%s trial=%s run=%s job=%s>" % \
-               (self.appName, self.expName, self.groupName,
-                self.simId, self.trialNum, self.runId, self.jobNum)
-
-    # @classmethod
-    # def fromArgs(cls, args):
-    #     ctx = Context(runId=args.runId, simId=args.simId, trialNum=args.trialNum,
-    #                   expName=args.scenario, baseline=args.baseline,
-    #                   appName=args.projectName, groupName=args.groupName)
-    #     return ctx
-
-    # Deprecated
-    # def setEnvironment(self):
-    #     '''
-    #     Update the environment vars to represent the context
-    #     '''
-    #     os.environ['MCS_APP']      = self.appName or ''
-    #     os.environ['MCS_SIMID']    = str(self.simId) if self.simId is not None else ''
-    #     os.environ['MCS_TRIALNUM'] = str(self.trialNum) if self.trialNum is not None else ''
-    #     os.environ['MCS_EXPNAME']  = self.expName or ''
-    #     os.environ['MCS_BASELINE'] = self.baseline or ''
-    #     os.environ['MCS_GROUP']    = self.groupName or ''
-
-    def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
-                baseline=None, groupName=None):
-        '''
-        Set elements of a context structure, updating the environment as well.
-        '''
-        if appName:
-            self.appName = appName
-
-        if simId is not None:
-            self.simId = int(simId)
-
-        if trialNum is not None:
-            self.trialNum = int(trialNum)
-
-        if expName:
-            self.expName = expName
-
-        if baseline:
-            self.baseline = baseline
-
-        if groupName:
-            self.groupName = groupName
-
-        # deprecated
-        # self.setEnvironment()
-
-# Deprecated
-# def getContext():
-#     '''
-#     Get the "context" from environment variables.
-#     '''
-#     appName = os.getenv('MCS_APP') or getSection()
-#     setSection(appName)
+#     def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
+#                  expName=None, baseline=None, groupName=None):
+#         self.runId     = runId
+#         self.simId     = simId
+#         self.trialNum  = trialNum
+#         self.expName   = expName
+#         self.baseline  = baseline
+#         self.groupName = groupName
+#         self.appName   = appName
+#         self.jobNum    = getJobNum()
 #
-#     trialNum = os.getenv('MCS_TRIALNUM')
-#     if trialNum:
-#         trialNum = int(trialNum)
+#     def __str__(self):
+#         return "<Context proj=%s exp=%s grp=%s sim=%s trial=%s run=%s job=%s>" % \
+#                (self.appName, self.expName, self.groupName,
+#                 self.simId, self.trialNum, self.runId, self.jobNum)
 #
-#     simId = os.getenv('MCS_SIMID')
-#     if simId:
-#         simId = int(simId)
+#     def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
+#                 baseline=None, groupName=None):
+#         '''
+#         Set elements of a context structure, updating the environment as well.
+#         '''
+#         if appName:
+#             self.appName = appName
 #
-#     expName  = os.getenv('MCS_EXPNAME')
-#     baseline = os.getenv('MCS_BASELINE')
+#         if simId is not None:
+#             self.simId = int(simId)
 #
-#     groupName = os.getenv('MCS_GROUP')
+#         if trialNum is not None:
+#             self.trialNum = int(trialNum)
 #
-#     return Context(simId, trialNum, expName, appName,
-#                    baseline=baseline, groupName=groupName)
+#         if expName:
+#             self.expName = expName
+#
+#         if baseline:
+#             self.baseline = baseline
+#
+#         if groupName:
+#             self.groupName = groupName
 
-def getJobNum():
-    batchSystem = getParam('MCS.BatchSystem')
-    job_id_var  = getParam("%s.%s" % (batchSystem, 'JOB_ID_VAR'))
-    jobIdStr  = os.getenv(job_id_var, '')
-
-    result = re.search('\d+', jobIdStr)
-    jobNum = int(result.group(0)) if result else os.getpid()
-    return jobNum
-
-def jobTmpDir():
-    '''
-    Generate the name of a temporary directory based on the value of $MCS_TMP (if set,
-    or '/tmp' if not) and the job ID from the environment.
-    '''
-    tmpDir = getParam('GCAM.TempDir')
-    dirName = "mcs.%s.tmp" % getJobNum()
-    dirPath = os.path.join(tmpDir, dirName)
-    return dirPath
+# Deprecated: used only in Context. (transition to context.py)
+# def getJobNum():
+#     batchSystem = getParam('MCS.BatchSystem')
+#     job_id_var  = getParam("%s.%s" % (batchSystem, 'JOB_ID_VAR'))
+#     jobIdStr  = os.getenv(job_id_var, '')
+#
+#     result = re.search('\d+', jobIdStr)
+#     jobNum = int(result.group(0)) if result else os.getpid()
+#     return jobNum
 
 def tail(filename, count):
     '''
@@ -242,39 +185,6 @@ def tail(filename, count):
             pipe.close()
 
     return lines
-
-LogLinesToSave = 100
-QuarterGigabyte = 1024 * 1024 * 128
-
-# Deprecated
-# def truncateBigFile(filename, maxSize=QuarterGigabyte, linesToSave=LogLinesToSave, delete=True, raiseError=True):
-#     '''
-#     If the named file is greater than maxSize (default 128 MB), read the last
-#     `count` lines (default 100) from the file, write the saved lines in a
-#     file with new extension of .truncated.out, and if `delete` is non-False,
-#     delete the original file.
-#     '''
-#     try:
-#         fileSize = os.path.getsize(filename)
-#         if fileSize <= maxSize:
-#             return
-#     except Exception as e:
-#         msg = "Failed to get size of file '%s': %s" % (filename, e)
-#         if raiseError:
-#             raise PygcamMcsSystemError(msg)
-#         else:
-#             return
-#
-#     text = tail(filename, linesToSave)
-#
-#     base, ext = os.path.splitext(filename)
-#     newName = base + '.truncated' + ext
-#
-#     with open(newName, "w") as f:
-#         f.write(text)
-#
-#     if delete:
-#         os.unlink(filename)
 
 def computeLogPath(simId, expName, logDir, trials):
     trialMin = min(trials)
@@ -365,16 +275,15 @@ def loadModuleFromPath(modulePath):
     _logger.info('loading module %s' % base)
 
     # Load the compiled code if it's a '.pyc', otherwise load the source code
-    module = None
     try:
         module = load_source(moduleName, modulePath)
+        return module
 
     except Exception as e:
         errorString = "Can't load module %s from path %s: %s" % (moduleName, modulePath, e)
         _logger.error(errorString)
         raise PygcamMcsUserError(errorString)
 
-    return module
 
 def loadObjectFromPath(objName, modulePath, required=True):
     '''
@@ -456,139 +365,6 @@ def dirFromNumber(n, prefix="", create=False):
         mkdirs(directory)
 
     return directory
-
-
-def getLogDir(simId, create=False):
-    '''
-    :param simId: simulation id
-    :param create: if True, create the directory if needed
-    :return: the pathname of the log directory
-    '''
-    simDir = getSimDir(simId, create=create)
-    logDir = os.path.join(simDir, 'log')
-    if create:
-        mkdirs(logDir)
-
-    return logDir
-
-def getSimDir(simId, create=False):
-    '''
-    Return and optionally create the path to the top-level simulation
-    directory for the given simulation number, based on the SimsDir
-    parameter specified in the config file.
-    '''
-    simsDir = getParam('MCS.RunSimsDir')
-    if not simsDir:
-        raise PygcamMcsUserError("Missing required config parameter 'RunSimsDir'")
-
-    simDir = os.path.join(simsDir, 's%03d' % simId)  # name is of format ".../s001/"
-    if create:
-        mkdirs(simDir)
-
-    return simDir
-
-def getTrialDir(simId, trialNum, create=False):
-    '''
-    Return and optionally create the path to the directory for a specific
-    simulation id and trial id.
-    '''
-    simDir = getSimDir(simId, create=False)
-    trialDir = dirFromNumber(trialNum, prefix=simDir, create=create)
-    return trialDir
-
-def getExpDir(simId, trialNum, expName, create=False):
-    trialDir = getTrialDir(simId, trialNum, create=create)
-    expDir = os.path.join(trialDir, expName)
-    if create:
-        mkdirs(expDir)
-
-    return expDir
-
-def getExpDirFromContext(context, create=False):
-    '''
-    Return and optionally create the path to the directory for a specific experiment.
-    '''
-    # if context is None:
-    #     context = getContext()
-
-    return getExpDir(context.simId, context.trialNum, context.expName, create=create)
-
-# Deprecated
-# def getCurExpDir():
-#     '''
-#     Gets the current experiment directory based on current context.
-#     '''
-#     return getExpDirFromContext(getContext())
-#
-# def getCurTrialDir():
-#     '''
-#     Gets the current trial dir based on current context.
-#     '''
-#     context = getContext()
-#     return getTrialDir(context.simId, context.trialNum)
-
-# deprecated
-# def randomSleep(minSleep, maxSleep):
-#     '''
-#     Sleep for a random number of seconds between minSleep and maxSleep.
-#     '''
-#     import random
-#     import time
-#
-#     delay = minSleep + random.random() * (maxSleep - minSleep)
-#     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
-#     time.sleep(delay)
-#
-# # Support for saving and loading runtime arguments passed from the "queue"
-# # command to the program running on the compute node.
-# _RUNTIME_ARGS_FILENAME = 'args.json'
-#
-# def saveRuntimeArgs(args, context=None):
-#     import json     # lazy import
-#
-#     expDir = getExpDirFromContext(context=context, create=True)
-#     args['expName'] = context.expName
-#     pathname = os.path.join(expDir, _RUNTIME_ARGS_FILENAME)
-#     with open(pathname, 'w') as fp:
-#         json.dump(args, fp, indent=4)
-#         fp.write("\n")
-#
-# def loadRuntimeArgs(dirname=None, context=None, asNamespace=False):
-#     '''
-#     Load arguments from args.json file, but retry to allow for transient
-#     timeout errors resulting from many jobs starting at once.
-#     '''
-#     import json     # lazy import
-#
-#     if not dirname:
-#         dirname = getExpDirFromContext(context=context)
-#
-#     pathname = os.path.join(dirname, _RUNTIME_ARGS_FILENAME)
-#
-#     minSleep = 1
-#     maxSleep = 1 # 3
-#     maxTries = 1 # 3
-#
-#     args = None
-#     for i in range(maxTries):
-#         try:
-#             with open(pathname, 'r') as fp:
-#                 args = json.load(fp)
-#             break
-#
-#         except IOError as e:
-#             _logger.error("loadRuntimeArgs: %s", e)
-#             randomSleep(minSleep, maxSleep)
-#
-#     if i == maxTries:
-#         raise PygcamMcsSystemError("Failed to read '%s' after %d tries" % (pathname, maxTries))
-#
-#     if args and asNamespace:
-#         from argparse import Namespace
-#         return Namespace(**args)
-#
-#     return args
-
 
 def findParamData(paramList, name):
     '''
@@ -678,19 +454,12 @@ QueryDirName      = "queries"
 SimAppXmlDirName   = "app-xml"
 SimLocalXmlDirName = "local-xml"
 
-def getSimXmlDir(simId):
-    """
-    Returns the top-level simulation-specific App xml dir, e.g., {simDir}/app-xml
-    """
-    simDir = getSimDir(simId)
-    path = os.path.join(simDir, SimAppXmlDirName)
-    return path
-
 def getSimXmlFile(simId, filename):
     """
     Returns the path to a file in the sim's XML dir, e.g., {simDir}/app-xml/foo.xml
     """
-    xmlDir = getSimXmlDir(simId)
+    simDir = getSimDir(simId)
+    xmlDir = os.path.join(simDir, SimAppXmlDirName)
     path = os.path.join(xmlDir, filename)
     return path
 

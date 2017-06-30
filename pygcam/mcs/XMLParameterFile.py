@@ -16,7 +16,7 @@ from pygcam.log import getLogger
 from pygcam.utils import importFromDotSpec
 
 from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecError
-from .util import mkdirs, loadObjectFromPath, getTrialDir, symlink
+from .util import mkdirs, loadObjectFromPath, symlink
 from .Database import getDatabase
 from .distro import DistroGen
 
@@ -58,8 +58,11 @@ def readParameterInfo(simId, paramPath, groupName):
     paramFile.runQueries()
     return paramFile
 
-def applySingleTrialData(df, simId, trialNum, paramFile):
-    trialDir = getTrialDir(simId, trialNum, create=True)
+def applySingleTrialData(df, context, paramFile):
+    simId    = context.simId
+    trialNum = context.trialNum
+    trialDir = context.getTrialDir(create=True)
+
     XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
     paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
 

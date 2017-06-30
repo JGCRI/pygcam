@@ -479,7 +479,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
         by a colon (on Unix) or a semi-colon (on Windows)
     :param outputDir: (str) the directory in which to write the .CSV
         with query results. Defaults to value of GCAM.OutputDir.
-    :param xmldb: (str) the pathname to the XML database to query, or '' to 
+    :param xmldb: (str) the pathname to the XML database to query, or '' to
         use in-memory DB
     :param csvFile: if None, query results are written to a computed filename.
     :param regions: (iterable of str) the regions you want to include in the query
@@ -547,7 +547,7 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
     :param rewriteParser: (RewriteSetParser instance) parsed representation of
         rewriteSets.xml
     :param batchFileIn: (str) the name of a pre-formed batch file to run
-    :param batchFileOut: (str) where to write output from batchFileIn, if given        
+    :param batchFileOut: (str) where to write output from batchFileIn, if given
     :param tmpFiles: (bool) if True temporary files are used and deleted when the
         program exits, otherwise normal files are create in outputDir.
     :param noDelete: (bool) if True, temporary files created by this function are
@@ -674,7 +674,7 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
 def runModelInterface(scenario, outputDir, csvFile=None, queryFile=None, xmldb='',
                       batchFile=None, miLogFile=None, noDelete=False, noRun=False):
     """
-    Run a query file on the XML database given by `xmldb`, saving results 
+    Run a query file on the XML database given by `xmldb`, saving results
     in a CSV file.
 
     :param scenario: (str) the name of the scenario to perform the query on
@@ -682,7 +682,7 @@ def runModelInterface(scenario, outputDir, csvFile=None, queryFile=None, xmldb='
         with query results
     :param csvFile: (str) the file to create; ignored if batchFile is not None.
     :param queryFile: (str) the path to the XML file holding the queries, or None
-        if the batchFile is not None, in which case the queryFile should already 
+        if the batchFile is not None, in which case the queryFile should already
         be referenced in the batchFile.
     :param xmldb: (str) the path to the XML database or '' to use in-memory DB
     :param batchFile: (str) the path to an existing batchFile; if not is given,
@@ -770,7 +770,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb='',
                   rewriters=None, rewriteParser=None, noRun=False, noDelete=False,
                   saveAs=None):
     """
-    Run a single query against GCAM's XML database given by `xmldb` (or 
+    Run a single query against GCAM's XML database given by `xmldb` (or
     computed from other parameters), saving the results into a CSV file.
 
     :param scenario: (str) the name of the scenario to perform the query on
@@ -1113,7 +1113,8 @@ def queryMain(args):
                                     tmpFiles=False, noDelete=noDelete) \
             if batchMultiple else ''
 
-        writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir,
+        filterFile = getParam('GCAM.FilterFile')
+        writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, filterFile=filterFile,
                                    batchFile=batchFile, batchLog='batchQuery.log')
         return
 

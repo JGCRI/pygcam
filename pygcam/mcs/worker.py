@@ -9,7 +9,7 @@ from pygcam.error import GcamError, GcamSolverError
 from pygcam.log import getLogger, configureLogs
 from pygcam.signals import catchSignals, SignalException, TimeoutSignalException, AlarmSignalException
 
-from pygcam.mcs.util import Context, getExpDirFromContext
+from pygcam.mcs.context import Context
 from pygcam.mcs.error import PygcamMcsUserError, TimeoutError, AlarmError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED,
                                 RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
@@ -76,7 +76,7 @@ class Worker(object):
         worker = cls(args)
         context = worker.context
 
-        runDir = getExpDirFromContext(context, create=True)
+        runDir = context.getExpDir(create=True)
         _logger.info("runDir is %s", runDir)
 
         trialDir = os.path.dirname(runDir)

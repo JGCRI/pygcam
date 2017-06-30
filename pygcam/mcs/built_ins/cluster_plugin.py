@@ -17,7 +17,8 @@ def driver(args, tool):
         argDict = vars(args)
         startCluster(**argDict)
     else:
-        stopCluster(profile=args.profile, cluster_id=args.clusterId, other_args=args.otherArgs)
+        stopCluster(profile=args.profile, cluster_id=args.clusterId,
+                    stop_jobs=args.stopJobs, other_args=args.otherArgs)
 
 
 class ClusterCommand(SubcommandABC):

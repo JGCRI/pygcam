@@ -17,6 +17,7 @@ def driver(args, tool):
 
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
+    from ..context import Context
     from .. import util as U
 
     simId   = args.simId
@@ -34,7 +35,7 @@ def driver(args, tool):
         count = db.getTrialCount(simId)
         trials = xrange(count)
 
-    context = U.Context(simId, 0, expName, appName)
+    context = Context(simId=simId, expName=expName, appName=appName)
     _logger.info('Running iterator for appName=%s, simId=%d, expName=%s, trials=%s, command="%s"',
                  appName, simId, expName, trialStr, command)
 
@@ -47,9 +48,9 @@ def driver(args, tool):
 
     for trialNum in trials:
         argDict['trialNum'] = context.trialNum = trialNum
-        argDict['trialDir'] = U.getTrialDir(simId, trialNum)
-        argDict['simDir']   = U.getSimDir(simId)
-        argDict['expDir']   = U.getExpDirFromContext(context, create=True)
+        argDict['expDir']   = context.getExpDir(create=True)
+        argDict['trialDir'] = context.getTrialDir()
+        argDict['simDir']   = context.getSimDir()
 
         try:
             cmd = command.format(**argDict)

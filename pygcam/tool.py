@@ -3,7 +3,7 @@
 '''
 .. The "gt" (gcamtool) commandline program
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2017 Richard Plevin and UC Regents
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from __future__ import print_function
@@ -32,16 +32,17 @@ PROGRAM = 'gt'
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
 
-def _randomSleep(minSleep, maxSleep):
-    '''
-    Sleep for a random number of seconds between minSleep and maxSleep.
-    '''
-    import random
-    import time
-
-    delay = minSleep + random.random() * (maxSleep - minSleep)
-    _logger.debug('randomSleep: sleeping %.1f seconds', delay)
-    time.sleep(delay)
+# Deprecated
+# def _randomSleep(minSleep, maxSleep):
+#     '''
+#     Sleep for a random number of seconds between minSleep and maxSleep.
+#     '''
+#     import random
+#     import time
+#
+#     delay = minSleep + random.random() * (maxSleep - minSleep)
+#     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
+#     time.sleep(delay)
 
 
 class GcamTool(object):

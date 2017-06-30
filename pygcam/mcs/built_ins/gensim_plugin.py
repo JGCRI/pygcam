@@ -8,6 +8,7 @@ from pygcam.config import getParam, setParam
 from pygcam.log import getLogger
 from pygcam.subcommand import SubcommandABC
 from pygcam.utils import mkdirs
+from ..context import getSimDir
 
 _logger = getLogger(__name__)
 
@@ -22,7 +23,6 @@ def _methodMap():
 def genSALibData(trials, method, paramFileObj, args):
     from ..error import PygcamMcsUserError
     from ..sensitivity import DFLT_PROBLEM_FILE
-    from ..util import getSimDir
     from pygcam.utils import ensureExtension, removeTreeSafely, mkdirs, pathjoin
 
     SupportedDistros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
@@ -227,7 +227,7 @@ def genSimulation(simId, trials, paramPath, args):
     '''
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
-    from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy, getSimDir
+    from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
     from pygcam.constants import LOCAL_XML_NAME
     from pygcam.xmlSetup import ScenarioSetup
 
@@ -323,7 +323,7 @@ def driver(args, tool):
     '''
     from pygcam.utils import removeTreeSafely
     from ..Database import getDatabase
-    from ..util import getSimDir, saveDict
+    from ..util import saveDict
 
     projectName = args.projectName
     runRoot = args.runRoot

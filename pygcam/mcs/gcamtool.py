@@ -28,11 +28,10 @@ def runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     For Monte Carlo trials.
     """
     import pygcam.tool
-    from .util import getTrialDir
 
     runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
 
-    trialDir = getTrialDir(context.simId, context.trialNum)
+    trialDir = context.getTrialDir()
     groupArg = ['-g', context.groupName] if context.groupName else []
 
     # N.B. gcammcs' RunWorkspace is the gcamtool's RefWorkspace
@@ -68,7 +67,6 @@ def runGcamTool(args, context):
 
     simId     = context.simId
     groupName = context.groupName
-    trialNum  = context.trialNum
 
     baselineName = args.baseline
     isBaseline = not baselineName
@@ -89,7 +87,7 @@ def runGcamTool(args, context):
             if linkName not in columns:
                 df[linkName] = df[dataCol]
 
-        applySingleTrialData(df, simId, trialNum, paramFile)
+        applySingleTrialData(df, context, paramFile)
 
     try:
         if args.noGCAM:
