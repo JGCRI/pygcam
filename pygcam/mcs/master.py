@@ -336,17 +336,16 @@ class Master(object):
         runId = result.runId
         status = result.status
         context = result.context
-        scenario = context.expName
         baseline = context.baseline
 
         self.setRunStatus(runId, status)
 
         if status == RUN_SUCCEEDED:
             _logger.debug("Saving results for trial %s", context.trialNum)
-            saveResults(runId, scenario, RESULT_TYPE_SCENARIO)  # TBD: pass context instead
+            saveResults(context, RESULT_TYPE_SCENARIO)
 
             if baseline:  # also save 'diff' results
-                saveResults(runId, scenario, RESULT_TYPE_DIFF, baseline=baseline)   # TBD: pass context instead
+                saveResults(context, RESULT_TYPE_DIFF)
         elif result.errorMsg:
             _logger.warning('Run %d, trial %d failed: %s', runId, context.trialNum, result.errorMsg)
 

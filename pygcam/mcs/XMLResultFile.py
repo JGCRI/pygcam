@@ -246,9 +246,8 @@ def saveResults(context, type, delete=True):
     baseline = context.baseline
     scenario = context.expName
 
-    # If "diff" type, must specify a baseline, else must not do so
-    assert (baseline if type == RESULT_TYPE_DIFF else not baseline), \
-        "saveResults: must specify baseline for DIFF results and not for SCENARIO results"
+    if type == RESULT_TYPE_DIFF:
+        assert (baseline ), "saveResults: must specify baseline for DIFF results"
 
     _logger.debug("Saving results for scenario=%s, type=%s", scenario, type)
 
