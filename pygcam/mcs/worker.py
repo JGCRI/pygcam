@@ -35,17 +35,14 @@ class WorkerResult(object):
     '''
     Encapsulates the results returned from a worker task.
     '''
-    def __init__(self, context, runId, status, errorMsg):
+    def __init__(self, context, errorMsg):
         self.context  = context
-        self.runId    = runId
-        self.status   = status
         self.errorMsg = errorMsg
 
     def __str__(self):
         c = self.context
-        error = ' error:"%s"' % self.errorMsg if self.errorMsg else ''
-        return "<WorkerResult run=%s sim=%s trial=%s, scenario=%s, status=%s%s>" % \
-               (self.runId, c.simId, c.trialNum, c.expName, self.status, error)
+        return "<WorkerResult run=%s sim=%s trial=%s, scenario=%s, status=%s error=%s>" % \
+               (self.runId, c.simId, c.trialNum, c.expName, c.status, self.errorMsg)
 
 
 class Worker(object):
@@ -59,6 +56,8 @@ class Worker(object):
         self.context = Context(runId=args.runId,  simId=args.simId, trialNum=args.trialNum,
                                expName=args.scenario, baseline=args.baseline,
                                appName=args.projectName, groupName=args.groupName)
+        self.errorMsg = None
+        self.runLocal = args.runLocal
 
     @classmethod
     def runTrial(cls, args):
@@ -68,7 +67,6 @@ class Worker(object):
         :param args: (argparse.Namespace) command-line args plus a few added elements
         :return: (WorkerResult) holds run identification info and completion status
         """
-        from ipyparallel.datapub import publish_data
         from pygcam.utils import mkdirs
 
         getConfig()
@@ -83,23 +81,25 @@ class Worker(object):
         logDir = os.path.join(trialDir, 'log')
         mkdirs(logDir)
 
-        runId = args.runId
-
         if not args.runLocal:
             logFile = os.path.join(logDir, args.scenario + '.log')
             setParam('GCAM.LogFile', logFile)
             setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
             configureLogs(force=True)
 
-            publish_data({runId: RUN_RUNNING})
+            worker.setStatus(RUN_RUNNING)
 
-        status, errorMsg = worker._runTrial(args)
-        result = WorkerResult(context, runId, status, errorMsg)
-
-        if not args.runLocal:
-            publish_data({runId: status})
-
+        result = worker._runTrial(args)
         return result
+
+    def setStatus(self, status):
+        from ipyparallel.datapub import publish_data
+
+        context = self.context
+        context.setVars(status=status)
+
+        if not self.runLocal:
+            publish_data({context.runId: context})
 
     def _runTrial(self, args):
         """
@@ -110,8 +110,9 @@ class Worker(object):
         """
         catchSignals(_sighandler)
 
+        context  = self.context
+        trialNum = context.trialNum
         errorMsg = None
-        trialNum = args.trialNum
 
         try:
             # Set an internal time limit for each trial
@@ -125,7 +126,7 @@ class Worker(object):
                 _logger.debug('Alarm set for %d sec' % seconds)
 
             try:
-                exitCode = runGcamTool(args, self.context)
+                exitCode = runGcamTool(args, context)
                 status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
             except TimeoutSignalException:
@@ -168,7 +169,9 @@ class Worker(object):
         else:
             _logger.info('Trial status: %s', status)
 
-        return status, errorMsg
+        self.setStatus(status)
+        result = WorkerResult(self.context, errorMsg)
+        return result
 
 
 def runTrial(args):

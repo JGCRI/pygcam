@@ -67,10 +67,10 @@ def getSimDir(simId, create=False):
 class Context(object):
 
     __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
-                 'groupName', 'appName', 'jobNum']
+                 'groupName', 'appName', 'jobNum', 'status']
 
     def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
-                 expName=None, baseline=None, groupName=None):
+                 expName=None, baseline=None, groupName=None, status=None):
         self.runId     = runId
         self.simId     = simId
         self.trialNum  = trialNum
@@ -78,15 +78,17 @@ class Context(object):
         self.baseline  = baseline
         self.groupName = groupName
         self.appName   = appName        # TBD: change to projectName
+        self.status    = status
         self.jobNum    = _getJobNum()
 
     def __str__(self):
-        return "<Context proj=%s exp=%s grp=%s sim=%s trial=%s run=%s job=%s>" % \
+        return "<Context prj=%s exp=%s grp=%s sim=%s trl=%s run=%s job=%s sta=%s>" % \
                (self.appName, self.expName, self.groupName,
-                self.simId, self.trialNum, self.runId, self.jobNum)
+                self.simId, self.trialNum, self.runId,
+                self.jobNum, self.status)
 
     def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
-                baseline=None, groupName=None):
+                baseline=None, groupName=None, status=None):
         '''
         Set elements of a context structure for all args that are not None.
         '''
@@ -107,6 +109,9 @@ class Context(object):
 
         if groupName:
             self.groupName = groupName
+
+        if status:
+            self.status = status
 
     def getSimDir(self, create=False):
         '''

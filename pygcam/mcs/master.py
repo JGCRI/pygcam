@@ -118,18 +118,23 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
 
 class Master(object):
     def __init__(self, args):
+        from .context import Context
 
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
-        self.statusDict = {}    # status keyed by runId # TBD: not needed with RunInfo
-        self.runInfo = {}       # RunInfo instances keyed by runId
+        self.statusDict = {}            # status keyed by runId # TBD: not needed with RunInfo
+        self.runInfo = runInfo = {}     # Context instances keyed by runId
 
         # load these once from database and amend as necessary when creating runs
         # TBD: probably no reason to get 'succeeded', which will be most of them
         # TBD: get more complete set of trial info from DB to create RunInfo
-        pairs = self.db.getTrialNums()
-        self.trialDict = {runId : trialNum for runId, trialNum in pairs}
+        rows = self.db.getRunInfo()
+        for row in rows:
+            runId, simId, trialNum, expName, status = row
+            c = Context(runId=runId, simId=simId, trialNum=trialNum,
+                        expName=expName, status=status)
+            runInfo[runId] = c
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -258,24 +263,15 @@ class Master(object):
         return results
 
     def setRunStatus(self, runId, status):
-        currStatus = self.statusDict.get(runId)
-        # TBD: do this instead:
-        # info = self.getInfo(runId)
-        # if info.status != status
+        context = self.runInfo.get(runId)
+        if not context:
+            _logger.error("Didn't find run info for runId %d", runId)
+            return
 
-        if currStatus != status:
-            # TBD: delete this:
-            trialNum = self.trialDict.get(runId, '?')
-
-            # TBD instead: _logger.debug('Set status: %s', info)
-            _logger.debug('Setting runId %s, trialNum %s to %s', runId, trialNum, status)
-
-            self.statusDict[runId] = status
-            # TBD: do instead:
-            # info.status = status
+        if context.status != status:
+            context.setVars(status=status)
+            _logger.debug('Setting status: %s', context)
             self.db.setRunStatus(runId, status)
-        # else:
-        #     _logger.debug('runId %s was already set to status %s', runId, status)
 
     def runningTasks(self):
         from pygcam.utils import flatten
@@ -333,21 +329,24 @@ class Master(object):
         return results
 
     def saveResults(self, result):
-        runId = result.runId
-        status = result.status
-        context = result.context
+        errorMsg = result.errorMsg
+        context  = result.context
+        runId    = context.runId
+        trialNum = context.trialNum
+        status   = context.status
         baseline = context.baseline
 
         self.setRunStatus(runId, status)
 
         if status == RUN_SUCCEEDED:
-            _logger.debug("Saving results for trial %s", context.trialNum)
+            _logger.debug("Saving results for trial %s", trialNum)
             saveResults(context, RESULT_TYPE_SCENARIO)
 
             if baseline:  # also save 'diff' results
                 saveResults(context, RESULT_TYPE_DIFF)
-        elif result.errorMsg:
-            _logger.warning('Run %d, trial %d failed: %s', runId, context.trialNum, result.errorMsg)
+
+        elif errorMsg:
+            _logger.warning('Run %d, trial %d failed: %s', runId, trialNum, errorMsg)
 
     def checkCompleted(self):
 
@@ -431,8 +430,9 @@ class Master(object):
 
     def runTrials(self):
         from argparse import Namespace
+        from .context import Context
         from .util import parseTrialString
-        from .worker import runTrial
+        import worker
 
         args = self.args
 
@@ -487,21 +487,18 @@ class Master(object):
                     # Easier to deal with a list of AsyncResults instances than a
                     # single instance that contains info about all "future" results.
                     if runLocal:
-                        self.db.setRunStatus(runId, RUN_RUNNING)
-                        result = runTrial(trialArgs)
+                        context = Context(appName=args.projectName, runId=runId, trialNum=trialNum,
+                                          expName=scenario, baseline=baseline, groupName=args.groupName)
+                        self.runInfo[runId] = context
+                        self.setRunStatus(runId, RUN_RUNNING)   # set separately so it's written to DB
+                        result = worker.runTrial(trialArgs)
                         self.saveResults(result)
                     else:
-                        result = view.map_async(runTrial, [trialArgs])
+                        result = view.map_async(worker.runTrial, [trialArgs])
 
                     asyncResults.append(result)
 
-                    status = RUN_QUEUED
-                    self.statusDict[runId] = status
-                    self.trialDict[runId]  = trialNum
-                    _logger.debug('Queued run %d for trial %d with status %s', runId, trialNum, status)
-                    # TBD: instead:
-                    # self.saveInfo(runId, trialNum=trialNum, scenario=scenario, baseline=baseline, status=RUN_QUEUED)
-                    # _logger.debug('Queued %s', info)
+                    self.setRunStatus(runId, RUN_QUEUED)
 
             except Exception as e:
                 _logger.error("Exception running 'runTrial': %s", e)

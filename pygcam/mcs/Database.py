@@ -11,7 +11,6 @@ This module includes contributions by Sam Fendell and Ryan Jones.
 '''
 import six
 from collections import Iterable
-# from contextlib import contextmanager
 from datetime import datetime
 from operator import itemgetter
 import sys
@@ -177,6 +176,7 @@ class CoreDatabase(object):
             session.close()
 
     # Deprecated?
+    # from contextlib import contextmanager
     # @contextmanager
     # def session_scope(self):
     #     """
@@ -773,12 +773,13 @@ class CoreDatabase(object):
         self.endSession(session)
         return trialCount
 
-    def getTrialNums(self, succeeded=False):
+    def getRunInfo(self, succeeded=False):
         session = self.Session()
-        # rows = session.query(Run.runId, Run.trialNum).all()
-        q = session.query(Run.runId, Run.trialNum)
+
+        q = session.query(Run.runId, Run.simId, Run.trialNum, Experiment.expName, Run.status)
         if not succeeded:
             q = q.filter(Run.status != 'succeeded')
+
         rows = q.all()
         self.endSession(session)
         return rows
@@ -1203,30 +1204,6 @@ def dropTable(tableName, meta):
         table = meta.tables[tableName]
         table.drop()
         meta.remove(table)
-
-# DEPRECATED
-# #
-# # Below are functions meant to be used by the program or function invoked by Runner.
-# # All simIds, trialNums, expNames are the current simId, trialNum, and expName
-# #
-#
-# def getContextRunId():
-#     '''
-#     Return the runId associated with the current context
-#     '''
-#     db  = getDatabase()
-#     ctx = U.getContext()
-#     run = db.getRunFromContext(ctx)
-#     return run.runId
-#
-# def setOutValue(outputName, value, program=DFLT_PROGRAM, session=None):
-#     '''
-#     Record the numeric result of user's program named "program".
-#     Optional session arg facilitates writing multiple results at once.
-#     '''
-#     db    = getDatabase()
-#     runId = getContextRunId()
-#     db.setOutValue(runId, outputName, value, program, session)
 
 def canonicalizeRegion(name):
     '''

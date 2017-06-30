@@ -20,3 +20,10 @@ create view param AS
 
 create view ci AS
   select * from result where name like 'ci%';
+
+drop view if exists runinfo;
+
+create view runinfo AS
+  select r.runid, r.simid, r.trialnum, e.expname, r.status
+  from run r, experiment e
+  where r.expid=e.expid;
