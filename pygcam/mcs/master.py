@@ -21,7 +21,8 @@ from ipyparallel.client.client import ExecuteReply
 # Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
-from .Database import RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, getDatabase
+from .context import Context
+from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
@@ -83,58 +84,19 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                              'controller' : _pbsControllerBatchTemplate}
                   }
 
-# TBD: add projectName, errorMsg to this and use it in place of Context throughout pygcam
-# TBD: could be a subclass of Context, which adds 'status' and 'errorMsg' (restate slots!)
-# class RunInfo(object):
-#     instances = {}
-#
-#     __slots__ = ['runId', 'trialNum', 'scenario', 'baseline']
-#     def __init__(self, runId, trialNum=None, scenario=None, baseline=None, status=None):
-#         self.runId    = runId
-#         self.trialNum = trialNum
-#         self.scenario = scenario
-#         self.baseline = baseline
-#         self.status   = status
-#
-#     def __str__(self):
-#         return "<RunInfo id=%s, trial=%s, scen=%s, base=%s, stat=%s>" % (
-#             self.runId, self.trialNum, self.scenario, self.baseline, self.status)
-#
-#     @classmethod
-#     def getInfo(cls, runId):
-#         try:
-#             info = cls.instances[runId]
-#         except KeyError:
-#             info = cls.instances[runId] = cls(runId)
-#
-#         return info
-#
-#     @classmethod
-#     def saveInfo(cls, runId, trialNum=None, scenario=None, baseline=None, status=None):
-#         info = cls.getInfo(runId)
-#         info.__init__(runId, trialNum=trialNum, scenario=scenario,
-#                       baseline=baseline, status=status)
-#         return info
-
 class Master(object):
     def __init__(self, args):
-        from .context import Context
-
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
-        self.statusDict = {}            # status keyed by runId # TBD: not needed with RunInfo
-        self.runInfo = runInfo = {}     # Context instances keyed by runId
+        projectName = args.projectName
 
         # load these once from database and amend as necessary when creating runs
-        # TBD: probably no reason to get 'succeeded', which will be most of them
-        # TBD: get more complete set of trial info from DB to create RunInfo
         rows = self.db.getRunInfo()
         for row in rows:
             runId, simId, trialNum, expName, status = row
-            c = Context(runId=runId, simId=simId, trialNum=trialNum,
-                        expName=expName, status=status)
-            runInfo[runId] = c
+            Context(appName=projectName, runId=runId, simId=simId,
+                    trialNum=trialNum, expName=expName, status=status)
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -226,7 +188,6 @@ class Master(object):
                     sleep(seconds)
 
             # TBD: handle timeout waiting for engines to stop
-
             _logger.debug("%d engines active", len(self.client))
 
     def createRuns(self, simId, scenario, trialNums):
@@ -236,36 +197,44 @@ class Master(object):
         :param simId: (int) simulation ID
         :param scenario: (str) scenario name
         :param trialNums: (list of int) trial numbers
-        :return: list of (runId, trialNum) tuples
+        :return: list of Context instances
         '''
         from .error import PygcamMcsUserError
 
         db = self.db
         session = db.Session()
 
-        expId = db.getExpId(scenario)
-        if expId is None:
+        exp = db.getExp(scenario)
+        if exp is None:
             raise PygcamMcsUserError("Unknown scenario '%s'" % scenario)
 
+        expId = exp.expId
+        baseline = exp.parent
+
         runs = []
+        projectName = self.args.projectName
+        groupName   = self.args.groupName
 
         # Add a run record for each trial in this chunk
         for trialNum in trialNums:
             # Add a record in the "run" table listing this trial as "new"
             # (row for this simid, trialnum and expid is deleted if it exists)
-            newRun = db.createRun(simId, trialNum, expId=expId, session=session)
-            runs.append(newRun)
+            run = db.createRun(simId, trialNum, expId=expId, session=session, status=RUN_NEW)
+            runs.append(run)
 
         session.commit()
         db.endSession(session)
 
-        results = map(lambda run: (run.runId, run.trialNum), runs)
-        return results
+        contexts = map(lambda r: Context(appName=projectName, runId=r.runId,
+                                         simId=r.simId, trialNum=trialNum,
+                                         expName=scenario, groupName=groupName,
+                                         baseline=baseline, status=r.status), runs)
+        return contexts
 
     def setRunStatus(self, runId, status):
-        context = self.runInfo.get(runId)
+        context = Context.getRunInfo(runId)
         if not context:
-            _logger.error("Didn't find run info for runId %d", runId)
+            _logger.error("Didn't find run info for runId %s", runId)
             return
 
         if context.status != status:
@@ -430,7 +399,6 @@ class Master(object):
 
     def runTrials(self):
         from argparse import Namespace
-        from .context import Context
         from .util import parseTrialString
         import worker
 
@@ -440,17 +408,27 @@ class Master(object):
         statuses  = args.statuses
         scenarios = args.scenarios
         runLocal  = args.runLocal
+        projectName = args.projectName
+        groupName   = args.groupName
 
         asyncResults = []
         view = None if args.runLocal else self.client.load_balanced_view(retries=1)
 
+        def storeTupleAsContext(tuple, simId, scenario):
+            runId, trialNum = tuple
+            ctx = Context(appName=projectName, simId=simId, runId=runId,
+                          trialNum=trialNum, expName=scenario)
+            return ctx
+
         for scenario in scenarios:
 
             if statuses:
+                # Change this to return Run instances
                 # If any of the "redo" options find trials, use these instead of args.trials
-                tuples = self.db.getRunsByStatus(simId, scenario, statuses)
+                contexts = self.db.getRunsByStatus(simId, scenario, statuses, projectName=projectName,
+                                                   groupName=groupName)
 
-                if not tuples:
+                if not contexts:
                     _logger.warn("No trials found for simId=%s, scenario=%s with statuses=%s",
                                  simId, scenario, statuses)
                     continue
@@ -472,14 +450,16 @@ class Master(object):
                     # if trials aren't specified, queue all of them
                     trialNums = range(trialCount)
 
-                tuples = self.createRuns(simId, scenario, trialNums)
+                contexts = self.createRuns(simId, scenario, trialNums)
 
             argDict = vars(args)
             argDict['scenario'] = scenario
             argDict['baseline'] = baseline = self.db.getExpParent(scenario)
 
             try:
-                for runId, trialNum in tuples:
+                for context in contexts:
+                    runId    = context.runId
+                    trialNum = context.trialNum
                     argDict['trialNum'] = trialNum
                     argDict['runId'] = runId
                     trialArgs = Namespace(**argDict)
@@ -487,10 +467,14 @@ class Master(object):
                     # Easier to deal with a list of AsyncResults instances than a
                     # single instance that contains info about all "future" results.
                     if runLocal:
-                        context = Context(appName=args.projectName, runId=runId, trialNum=trialNum,
-                                          expName=scenario, baseline=baseline, groupName=args.groupName)
-                        self.runInfo[runId] = context
+                        # TBD: if both branches of "if" above produce lists of contexts, no
+                        # TBD: need to recreate here. Just store them and set to running
+                        ctx = Context(appName=args.projectName, runId=runId, trialNum=trialNum,
+                                      expName=scenario, baseline=baseline, groupName=args.groupName)
+
+                        # TBD: no need to do separately if status is set to NEW when run created/revived
                         self.setRunStatus(runId, RUN_RUNNING)   # set separately so it's written to DB
+
                         result = worker.runTrial(trialArgs)
                         self.saveResults(result)
                     else:

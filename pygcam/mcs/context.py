@@ -69,17 +69,30 @@ class Context(object):
     __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
                  'groupName', 'appName', 'jobNum', 'status']
 
+    instances = {}      # Context instances keyed by runId
+
     def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
-                 expName=None, baseline=None, groupName=None, status=None):
+                 expName=None, baseline=None, groupName=None, status=None,
+                 store=True):
         self.runId     = runId
         self.simId     = simId
         self.trialNum  = trialNum
-        self.expName   = expName        # TBD: change to scenario?
+        self.expName   = expName        # TBD: change to scenario
         self.baseline  = baseline
         self.groupName = groupName
         self.appName   = appName        # TBD: change to projectName
         self.status    = status
         self.jobNum    = _getJobNum()
+
+        if store and runId:
+            self.store()
+
+    def store(self):
+        Context.instances[self.runId] = self
+
+    @classmethod
+    def getRunInfo(cls, runId):
+        return cls.instances.get(runId, None)
 
     def __str__(self):
         return "<Context prj=%s exp=%s grp=%s sim=%s trl=%s run=%s job=%s sta=%s>" % \

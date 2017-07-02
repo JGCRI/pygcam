@@ -55,7 +55,7 @@ class Worker(object):
 
         self.context = Context(runId=args.runId,  simId=args.simId, trialNum=args.trialNum,
                                expName=args.scenario, baseline=args.baseline,
-                               appName=args.projectName, groupName=args.groupName)
+                               appName=args.projectName, groupName=args.groupName, store=False)
         self.errorMsg = None
         self.runLocal = args.runLocal
 

@@ -632,9 +632,9 @@ class CoreDatabase(object):
         self.appId = self.getAppId(appName)
         return self.appId
 
-    def createRun(self, simId, trialNum, expName=None, expId=None, status=RUN_QUEUED, session=None):
+    def createRun(self, simId, trialNum, expName=None, expId=None, status=RUN_NEW, session=None):
         """
-        Create an entry for a single model run, initially in "queued" state
+        Create an entry for a single model run, initially in "new" state
         """
         assert (expName or expId), "Database createRun called with neither expName nor expId"
 
@@ -723,23 +723,34 @@ class CoreDatabase(object):
         return rslt
 
     # New version returns runId as well, for use with ipp_driver.py
-    def getRunsByStatus(self, simId, scenario, statusList):
+    def getRunsByStatus(self, simId, scenario, statusList, groupName=None, projectName=None):
         '''
         Returns tuples of (runId, trialNum) for the given scenario that have
         any of the statuses in statusList (which can be a single status string or
-        a list of strings.)
+        a list of strings.) If groupName or projectName are not None, results are
+        converted to a list of Context instances.
         '''
+        from .context import Context
+
         if isinstance(statusList, six.string_types):
             statusList = [statusList]
 
         session = self.Session()
-        expId = self.getExpId(scenario, session=session)
 
-        query = session.query(Run.runId, Run.trialNum).filter_by(simId=simId, expId=expId).filter(Run.status.in_(statusList))
+        # expId = self.getExpId(scenario, session=session)
+        # query = session.query(Run.runId, Run.trialNum).filter_by(simId=simId, expId=expId).filter(Run.status.in_(statusList))
+
+        # Return all data required to create Context (except projectName and groupName)
+        query = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).filter_by(simId=simId).filter(Run.status.in_(statusList))
+        query = query.add_columns(Experiment.expName, Experiment.parent).join(Experiment).filter_by(expName=scenario)
 
         rslt = query.order_by(Run.trialNum).all()
         self.endSession(session)
 
+        if groupName or projectName:
+            rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], expName=r[4],
+                                         baseline=r[5], groupName=groupName, projectName=projectName),
+                       rslt)
         return rslt
 
     def createSim(self, trials, description, simId=None):
