@@ -69,6 +69,7 @@ class Context(object):
     __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
                  'groupName', 'appName', 'jobNum', 'status']
 
+    # deprecated (maybe)
     instances = {}      # Context instances keyed by runId
 
     def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
@@ -85,11 +86,13 @@ class Context(object):
         self.jobNum    = _getJobNum()
 
         if store and runId:
-            self.store()
+            self.cache()
 
-    def store(self):
+    def cache(self):
         Context.instances[self.runId] = self
+        return self
 
+    # deprecated? currently unused. Not needed?
     @classmethod
     def getRunInfo(cls, runId):
         return cls.instances.get(runId, None)

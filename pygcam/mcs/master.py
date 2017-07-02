@@ -18,7 +18,6 @@ from IPython.paths import locate_profile
 
 import ipyparallel as ipp
 from ipyparallel.client.client import ExecuteReply
-# Exit codes for ipcluster command
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
@@ -204,26 +203,32 @@ class Master(object):
         db = self.db
         session = db.Session()
 
-        exp = db.getExp(scenario)
-        if exp is None:
-            raise PygcamMcsUserError("Unknown scenario '%s'" % scenario)
+        try:
+            exp = db.getExp(scenario)
+            if exp is None:
+                raise PygcamMcsUserError("Unknown scenario '%s'" % scenario)
 
-        expId = exp.expId
-        baseline = exp.parent
+            expId    = exp.expId
+            baseline = exp.parent
 
-        runs = []
-        projectName = self.args.projectName
-        groupName   = self.args.groupName
+            runs = []
+            projectName = self.args.projectName
+            groupName   = self.args.groupName
 
-        # Add a run record for each trial in this chunk
-        for trialNum in trialNums:
-            # Add a record in the "run" table listing this trial as "new"
-            # (row for this simid, trialnum and expid is deleted if it exists)
-            run = db.createRun(simId, trialNum, expId=expId, session=session, status=RUN_NEW)
-            runs.append(run)
+            # Add a run record for each trial in this chunk
+            for trialNum in trialNums:
+                # Add a record in the "run" table listing this trial as "new"
+                # (row for this simid, trialnum and expid is deleted if it exists)
+                run = db.createRun(simId, trialNum, expId=expId, status=RUN_NEW, session=session)
+                runs.append(run)
 
-        session.commit()
-        db.endSession(session)
+            session.commit()
+
+        except Exception as e:
+            raise
+
+        finally:
+            db.endSession(session)
 
         contexts = map(lambda r: Context(appName=projectName, runId=r.runId,
                                          simId=r.simId, trialNum=trialNum,
@@ -231,16 +236,25 @@ class Master(object):
                                          baseline=baseline, status=r.status), runs)
         return contexts
 
-    def setRunStatus(self, runId, status):
-        context = Context.getRunInfo(runId)
-        if not context:
-            _logger.error("Didn't find run info for runId %s", runId)
-            return
+    def setRunStatus(self, context, status=None):
+        """
+        Cache the status of this run, and if it has changed, save the new
+        status to the database. Some context objects are retrieved from the
+        worker tasks, so we lookup the equivalent in our local cache to test
+        for whether a change has occurred.
+        """
+        cached = Context.getRunInfo(context.runId) or context.cache()
 
-        if context.status != status:
-            context.setVars(status=status)
-            _logger.debug('Setting status: %s', context)
-            self.db.setRunStatus(runId, status)
+        if status is None:
+            if context == cached:
+                return
+
+            status = context.status
+
+        if cached.status != status:
+            _logger.debug('%s -> %s', cached, status)
+            cached.setVars(status=status)
+            self.db.setRunStatus(context.runId, status)
 
     def runningTasks(self):
         from pygcam.utils import flatten
@@ -264,9 +278,10 @@ class Master(object):
                 _logger.debug("Found %d running tasks", len(running))
                 ar = self.client.get_result(running, block=False)
 
+                # TBD: check this doesn't reset DB status to 'running' redundantly
                 for dataDict in ar.data:
-                    for runId, status in iteritems(dataDict):
-                        self.setRunStatus(runId, status)
+                    for runId, context in iteritems(dataDict):
+                        self.setRunStatus(context)
 
             except Exception as e:
                 _logger.warning("checkRunning: %s" % e)
@@ -305,7 +320,7 @@ class Master(object):
         status   = context.status
         baseline = context.baseline
 
-        self.setRunStatus(runId, status)
+        self.setRunStatus(context)
 
         if status == RUN_SUCCEEDED:
             _logger.debug("Saving results for trial %s", trialNum)
@@ -414,12 +429,6 @@ class Master(object):
         asyncResults = []
         view = None if args.runLocal else self.client.load_balanced_view(retries=1)
 
-        def storeTupleAsContext(tuple, simId, scenario):
-            runId, trialNum = tuple
-            ctx = Context(appName=projectName, simId=simId, runId=runId,
-                          trialNum=trialNum, expName=scenario)
-            return ctx
-
         for scenario in scenarios:
 
             if statuses:
@@ -453,35 +462,26 @@ class Master(object):
                 contexts = self.createRuns(simId, scenario, trialNums)
 
             argDict = vars(args)
-            argDict['scenario'] = scenario
-            argDict['baseline'] = baseline = self.db.getExpParent(scenario)
 
             try:
                 for context in contexts:
-                    runId    = context.runId
-                    trialNum = context.trialNum
-                    argDict['trialNum'] = trialNum
-                    argDict['runId'] = runId
+                    argDict['runId']    = context.runId
+                    argDict['trialNum'] = context.trialNum
+                    argDict['baseline'] = context.baseline
+                    argDict['scenario'] = context.expName
+
                     trialArgs = Namespace(**argDict)
 
-                    # Easier to deal with a list of AsyncResults instances than a
-                    # single instance that contains info about all "future" results.
                     if runLocal:
-                        # TBD: if both branches of "if" above produce lists of contexts, no
-                        # TBD: need to recreate here. Just store them and set to running
-                        ctx = Context(appName=args.projectName, runId=runId, trialNum=trialNum,
-                                      expName=scenario, baseline=baseline, groupName=args.groupName)
-
-                        # TBD: no need to do separately if status is set to NEW when run created/revived
-                        self.setRunStatus(runId, RUN_RUNNING)   # set separately so it's written to DB
-
+                        self.setRunStatus(context, status=RUN_RUNNING)
                         result = worker.runTrial(trialArgs)
                         self.saveResults(result)
                     else:
+                        # Easier to deal with a list of AsyncResults instances than a
+                        # single instance that contains info about all "future" results.
                         result = view.map_async(worker.runTrial, [trialArgs])
-
                         asyncResults.append(result)
-                        self.setRunStatus(runId, RUN_QUEUED)
+                        self.setRunStatus(context, status=RUN_QUEUED)
 
             except Exception as e:
                 _logger.error("Exception running 'runTrial': %s", e)

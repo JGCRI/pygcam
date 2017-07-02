@@ -749,7 +749,7 @@ class CoreDatabase(object):
 
         if groupName or projectName:
             rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], expName=r[4],
-                                         baseline=r[5], groupName=groupName, projectName=projectName),
+                                         baseline=r[5], groupName=groupName, appName=projectName),
                        rslt)
         return rslt
 
@@ -805,9 +805,8 @@ class CoreDatabase(object):
         exp = Experiment(expName=name, description=description)
         session.add(exp)
         self.commitWithRetry(session)
-        expId = exp.expId
         self.endSession(session)
-        return expId
+        return exp.expId
 
     def getExpId(self, expName, session=None):
         exp = self.getExp(expName, session)
