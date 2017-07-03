@@ -109,6 +109,9 @@ class Master(object):
         client = None
 
         for i in range(1, maxTries+1):
+            if client and len(client) > 0:
+                return
+
             if not client:
                 try:
                     # default timeout is 10 seconds

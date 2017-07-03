@@ -89,6 +89,7 @@ class Worker(object):
 
             worker.setStatus(RUN_RUNNING)
 
+        os.chdir(trialDir)
         result = worker._runTrial(args)
         return result
 
