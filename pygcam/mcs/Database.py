@@ -21,7 +21,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, load_only
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import QueuePool
 
 from pygcam.config import getSection, getParam, getParamAsBoolean
 from pygcam.log import getLogger
@@ -228,8 +228,8 @@ class CoreDatabase(object):
 
         connect_args = {'connect_timeout': 15} if usingPostgres() else {}
 
-        # Use NullPool to avoid having hundreds of trials holding connections open
-        self.engine = engine = create_engine(url, echo=echo, poolclass=NullPool, connect_args=connect_args)
+        self.engine = engine = create_engine(url, echo=echo, connect_args=connect_args,
+                                             poolclass=QueuePool) #, pool_pre_ping=True)
         self.Session.configure(bind=engine)
 
         self.url = url
