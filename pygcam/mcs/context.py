@@ -147,11 +147,8 @@ class Context(object):
         Return and optionally create the path to the directory for a given experiment.
         '''
         trialDir = self.getTrialDir(create=False)
-        expDir = os.path.join(trialDir, self.expName)
+        scenarioDir = os.path.join(trialDir, self.expName)
         if create:
-            mkdirs(expDir)
+            mkdirs(scenarioDir)
 
-        return expDir
-
-    # def getLogDir(self, create=False):
-    #     return getLogDir(self.simId, create=create)
+        return scenarioDir

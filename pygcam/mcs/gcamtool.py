@@ -67,10 +67,6 @@ def runGcamTool(args, context):
     baselineName = args.baseline
     isBaseline = not baselineName
 
-    # deprecated
-    # groupName = context.groupName
-    # setParam('MCS.ScenarioSubdir', groupName, section=context.appName)
-
     if isBaseline and not args.noGCAM:
         paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
         paramFile = readParameterInfo(context, paramPath)
@@ -113,7 +109,7 @@ def runGcamTool(args, context):
             status = RUNNER_FAILURE
 
     except (TimeoutError, AlarmError):
-        # handled by Runner.py
+        # handled by caller
         raise
 
     except GcamToolError as e:

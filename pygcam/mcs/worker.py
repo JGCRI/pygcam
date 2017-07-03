@@ -76,6 +76,7 @@ class Worker(object):
 
         runDir = context.getScenarioDir(create=True)
         _logger.info("runDir is %s", runDir)
+        os.chdir(runDir)
 
         trialDir = os.path.dirname(runDir)
         logDir = os.path.join(trialDir, 'log')
@@ -89,7 +90,6 @@ class Worker(object):
 
             worker.setStatus(RUN_RUNNING)
 
-        os.chdir(trialDir)
         result = worker._runTrial(args)
         return result
 

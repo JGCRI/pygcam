@@ -186,6 +186,8 @@ class CoreDatabase(object):
            with sessionScope() as session:
         """
         session = self.Session()
+        session.expire_on_commit = False
+
         try:
             yield session
             if withRetry:
