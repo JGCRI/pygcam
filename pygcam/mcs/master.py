@@ -233,7 +233,7 @@ class Master(object):
             db.endSession(session)
 
         contexts = map(lambda r: Context(appName=projectName, runId=r.runId,
-                                         simId=r.simId, trialNum=trialNum,
+                                         simId=simId, trialNum=r.trialNum,
                                          expName=scenario, groupName=groupName,
                                          baseline=baseline, status=r.status), runs)
         return contexts
