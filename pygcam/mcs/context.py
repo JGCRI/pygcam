@@ -86,13 +86,12 @@ class Context(object):
         self.jobNum    = _getJobNum()
 
         if store and runId:
-            self.cache()
+            self.saveRunInfo()
 
-    def cache(self):
+    def saveRunInfo(self):
         Context.instances[self.runId] = self
         return self
 
-    # deprecated? currently unused. Not needed?
     @classmethod
     def getRunInfo(cls, runId):
         return cls.instances.get(runId, None)
@@ -143,8 +142,7 @@ class Context(object):
         trialDir = _dirFromNumber(self.trialNum, prefix=simDir, create=create)
         return trialDir
 
-    # TBD: change to getScenarioDir
-    def getExpDir(self, create=False):
+    def getScenarioDir(self, create=False):
         '''
         Return and optionally create the path to the directory for a given experiment.
         '''

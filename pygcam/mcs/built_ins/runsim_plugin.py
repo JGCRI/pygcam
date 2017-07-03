@@ -14,7 +14,7 @@ def driver(args, tool):
     from ipyparallel import NoEnginesRegistered
     from ..master import Master, pidFileExists, startCluster
 
-    if args.startCluster:
+    if args.numTrials:
         # If the pid file doesn't exist, we assume the cluster is
         # not running and we run it with the given profile and
         # cluster ID, relying on the config file for other parameters.
@@ -31,6 +31,7 @@ def driver(args, tool):
     master = Master(args)
     try:
         master.processTrials(loopOnly=args.loopOnly, addTrials=args.addTrials)
+
     except NoEnginesRegistered as e:
         raise PygcamException("processTrials aborted: %s" % e)
 
@@ -82,12 +83,12 @@ class RunSimCommand(SubcommandABC):
                             help='''A string to identify this cluster. Default is the
                             value of config var IPP.ClusterId, currently
                             "%s".''' % defaultClusterId)
-
-        parser.add_argument('-C', '--startCluster', action='store_true',
-                            help='''Start the cluster, if not already running, using the given
-                            profile name and cluster ID with other parameters taken from the
-                            config file. To start a cluster with other parameters, see run the
-                            "gt cluster start" command before running runsim.''')
+        # deprecated
+        # parser.add_argument('-C', '--startCluster', action='store_true',
+        #                     help='''Start the cluster, if not already running, using the given
+        #                     profile name and cluster ID with other parameters taken from the
+        #                     config file. To start a cluster with other parameters, see run the
+        #                     "gt cluster start" command before running runsim.''')
 
         parser.add_argument('-D', '--noDatabase', dest='updateDatabase', action='store_false',
                             help='''Don't save query results to the SQL database.''')
@@ -122,9 +123,8 @@ class RunSimCommand(SubcommandABC):
                             per GCAM run. Ignored unless -C flag is specified. Overrides 
                             config parameter IPP.MinutesPerRun, currently %s.''' % defaultMinutes)
 
-        parser.add_argument('-n', '--numTrials', type=int, default=10,
-                            help='''The total number of GCAM trials that will be run on this
-                            cluster. (Relevant only if starting the cluster via the -C flag.)''')
+        parser.add_argument('-n', '--numTrials', type=int, default=0,
+                            help='''The total number of GCAM trials to be run on this cluster.''')
 
         parser.add_argument('-N', '--noPostProcessor', action='store_true', default=False,
                             help='''Don't run post-processor steps.''')

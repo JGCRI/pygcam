@@ -11,6 +11,7 @@ This module includes contributions by Sam Fendell and Ryan Jones.
 '''
 import six
 from collections import Iterable
+from contextlib import contextmanager
 from datetime import datetime
 from operator import itemgetter
 import sys
@@ -87,10 +88,12 @@ RUN_ALARMED   = 'alarmed'
 RUN_UNSOLVED  = 'unsolved'
 RUN_GCAMERROR = 'gcamerror'     # any other GCAM runtime error
 
-RUN_STATUSES  = [RUN_NEW, RUN_QUEUED, RUN_RUNNING, RUN_SUCCEEDED, RUN_FAILED,
-                 RUN_KILLED, RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED, RUN_GCAMERROR]
+RUN_FAILURES  = [RUN_FAILED, RUN_KILLED, RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
+                 RUN_GCAMERROR]
+RUN_STATUSES  = [RUN_NEW, RUN_QUEUED, RUN_RUNNING, RUN_SUCCEEDED] + RUN_FAILURES
 
 
+# TBD: maybe drop this and store it from Context instead
 def beforeSavingRun(_mapper, _connection, run):
     '''
     Before inserting/updating a Run instance, set numerical status and
@@ -175,22 +178,25 @@ class CoreDatabase(object):
             _logger.debug("Can't remove Session: %s", e)
             session.close()
 
-    # Deprecated?
-    # from contextlib import contextmanager
-    # @contextmanager
-    # def session_scope(self):
-    #     """
-    #     Provide a transactional scope around a series of operations.
-    #     """
-    #     session = self.Session()
-    #     try:
-    #         yield session
-    #         session.commit()
-    #     except:
-    #         session.rollback()
-    #         raise
-    #     finally:
-    #         self.endSession(session)
+    @contextmanager
+    def sessionScope(self, withRetry=True):
+        """
+        Provide a transactional scope around a series of operations.
+        Usage:
+           with sessionScope() as session:
+        """
+        session = self.Session()
+        try:
+            yield session
+            if withRetry:
+                self.commitWithRetry(session)
+            else:
+                session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            self.endSession(session)
 
     # create_engine(*args, **kwargs)
     # The string form of the URL is dialect+driver://user:password@host/dbname[?key=value..],
@@ -378,10 +384,8 @@ class CoreDatabase(object):
     def execute(self, sql):
         'Execute the given SQL string'
         _logger.debug('Executing SQL: %s' % sql)
-        session = self.Session()
-        session.execute(sql)
-        self.commitWithRetry(session)
-        self.endSession(session)
+        with self.sessionScope() as session:
+            session.execute(sql)
 
     def executeScript(self, filename=None, text=None):
         if not (filename or text):
@@ -389,32 +393,25 @@ class CoreDatabase(object):
 
         lines = parseSqlScript(filename=filename, text=text)
 
-        session = self.Session()
-
-        for sql in lines:
-            _logger.debug('Executing script SQL: %s' % sql)
-            session.execute(sql)
-
-        self.commitWithRetry(session)
-        self.endSession(session)
+        with self.sessionScope() as session:
+            for sql in lines:
+                _logger.debug('Executing script SQL: %s' % sql)
+                session.execute(sql)
 
     def dropAll(self):
         '''
         Drop all objects in the database, even those not defined in SqlAlchemy.
         '''
-        session = self.Session()
-        engine  = session.get_bind()
+        with self.sessionScope() as session:
+            engine  = session.get_bind()
 
-        meta = MetaData(bind=engine)
-        meta.reflect()
+            meta = MetaData(bind=engine)
+            meta.reflect()
 
-        if usingPostgres():
-            self.dropAllPostgres(meta)
-        else:
-            meta.drop_all()
-
-        session.commit()
-        self.endSession(session)
+            if usingPostgres():
+                self.dropAllPostgres(meta)
+            else:
+                meta.drop_all()
 
     def dropAllPostgres(self, meta):
         """
@@ -430,10 +427,9 @@ class CoreDatabase(object):
                     print e
 
     def setSqlEcho(self, value=True):
-        session = self.Session()
-        engine = session.get_bind()
-        engine.echo = value
-        self.endSession(session)
+        with self.sessionScope() as session:
+            engine = session.get_bind()
+            engine.echo = value
 
     def addColumns(self, tableClass, columns):
         '''
@@ -446,30 +442,28 @@ class CoreDatabase(object):
         if not isinstance(columns, Iterable):
             columns = [columns]
 
-        session = self.Session()
-        engine  = session.get_bind()
-        table   = tableClass.__table__
-        tableName  = table.description
-        for column in columns:
-            table.append_column(column)                     # add it to the metadata
-            setattr(tableClass, column.name, column)        # add attribute to class, which maps it to the column
-            columnName = column.name                        # column.compile(dialect=engine.dialect)
-            columnType = column.type.compile(engine.dialect)
-            engine.execute('ALTER TABLE %s ADD COLUMN "%s" %s' % (tableName, columnName, columnType))
-        self.endSession(session)
+        with self.sessionScope() as session:
+            engine  = session.get_bind()
+            table   = tableClass.__table__
+            tableName  = table.description
+            for column in columns:
+                table.append_column(column)                     # add it to the metadata
+                setattr(tableClass, column.name, column)        # add attribute to class, which maps it to the column
+                columnName = column.name                        # column.compile(dialect=engine.dialect)
+                columnType = column.type.compile(engine.dialect)
+                engine.execute('ALTER TABLE %s ADD COLUMN "%s" %s' % (tableName, columnName, columnType))
 
-    def createAttribute(self, attrName, attrType, description):
-        '''
-        Create a new attribute. Unclear if this is needed, or if this will be
-        handled using the database customization module. Useful for testing.
-        '''
-        session = self.Session()
-        attr = Attribute(attrName=attrName, attrType=attrType, description=description)
-        session.add(attr)
-        session.commit()
-        attrId = attr.attrId
-        self.endSession(session)
-        return attrId
+    # deprecated
+    # def createAttribute(self, attrName, attrType, description):
+    #     '''
+    #     Create a new attribute. Unclear if this is needed, or if this will be
+    #     handled using the database customization module. Useful for testing.
+    #     '''
+    #     with self.sessionScope() as session:
+    #         attr = Attribute(attrName=attrName, attrType=attrType, description=description)
+    #         session.add(attr)
+    #
+    #     return attr.attrId
 
     def createOutput(self, name, description=None, program=DFLT_PROGRAM, session=None):
         '''
@@ -489,21 +483,22 @@ class CoreDatabase(object):
 
             if not session:
                 sess.commit()
-                outputId = output.outputId
                 self.endSession(sess)
+                outputId = output.outputId
 
         return outputId
 
-    def getOutputIds(self, nameList, program=DFLT_PROGRAM, session=None):
-        sess = session or self.Session()
-        ids = sess.query(Output.outputId).filter(Output.name.in_(nameList)).all()
+    def getOutputIds(self, nameList):
+        with self.sessionScope() as session:
+            ids = session.query(Output.outputId).filter(Output.name.in_(nameList)).all()
+
         return zip(*ids)[0] if ids else []
 
     #
     # Very much like setAttrVal. So much so that perhaps the Result table can be
     # eliminated in favor of using the generic attribute/value system?
     #
-    def setOutValue(self, runId, paramName, value, program=DFLT_PROGRAM, session=None):
+    def setOutValue(self, runId, paramName, value, program=GCAM_PROGRAM, session=None):
         '''
         Set the given named output parameter to the given numeric value. Overwrite a
         previous value for this runId and attribute, if found, otherwise create a new value
@@ -735,17 +730,16 @@ class CoreDatabase(object):
         if isinstance(statusList, six.string_types):
             statusList = [statusList]
 
-        session = self.Session()
+        with self.sessionScope() as session:
 
-        # expId = self.getExpId(scenario, session=session)
-        # query = session.query(Run.runId, Run.trialNum).filter_by(simId=simId, expId=expId).filter(Run.status.in_(statusList))
+            # expId = self.getExpId(scenario, session=session)
+            # query = session.query(Run.runId, Run.trialNum).filter_by(simId=simId, expId=expId).filter(Run.status.in_(statusList))
 
-        # Return all data required to create Context (except projectName and groupName)
-        query = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).filter_by(simId=simId).filter(Run.status.in_(statusList))
-        query = query.add_columns(Experiment.expName, Experiment.parent).join(Experiment).filter_by(expName=scenario)
+            # Return all data required to create Context (except projectName and groupName)
+            query = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).filter_by(simId=simId).filter(Run.status.in_(statusList))
+            query = query.add_columns(Experiment.expName, Experiment.parent).join(Experiment).filter_by(expName=scenario)
 
-        rslt = query.order_by(Run.trialNum).all()
-        self.endSession(session)
+            rslt = query.order_by(Run.trialNum).all()
 
         if groupName or projectName:
             rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], expName=r[4],
@@ -757,56 +751,44 @@ class CoreDatabase(object):
         '''
         Creates a new simulation with the given number of trials and description
         '''
-        session = self.Session()
-        if simId is None:
-            newSim = Sim(trials=trials, description=description)
-        else:
-            session.query(Sim).filter_by(simId=simId).delete()
-            newSim = Sim(trials=trials, description=description, simId=simId)
+        with self.sessionScope() as session:
+            if simId is None:
+                newSim = Sim(trials=trials, description=description)
+            else:
+                session.query(Sim).filter_by(simId=simId).delete()
+                newSim = Sim(trials=trials, description=description, simId=simId)
 
-        session.add(newSim)
-        self.commitWithRetry(session)
+            session.add(newSim)
 
-        newSimId = newSim.simId
-        self.endSession(session)
-        return newSimId
+        return newSim.simId
 
     def updateSimTrials(self, simId, trials):
-       session = self.Session()
-       sim = session.query(Sim).filter_by(simId=simId).one()
-       sim.trials = trials
-       session.commit()
-       self.endSession(session)
+        with self.sessionScope() as session:
+           sim = session.query(Sim).filter_by(simId=simId).one()
+           sim.trials = trials
 
     def getTrialCount(self, simId):
-        session = self.Session()
-        trialCount = session.query(Sim.trials).filter_by(simId=simId).scalar()
-        self.endSession(session)
-        return trialCount
+        with self.sessionScope() as session:
+            trialCount = session.query(Sim.trials).filter_by(simId=simId).scalar()
+            return trialCount
 
-    def getRunInfo(self, succeeded=False):
-        session = self.Session()
+    def getRunInfo(self, includeSucceededRuns=False):
+        with self.sessionScope() as session:
+            q = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).add_columns(Experiment.expName).join(Experiment)
+            if not includeSucceededRuns:
+                q = q.filter(Run.status != 'succeeded')
 
-        q = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).add_columns(Experiment.expName).join(Experiment)
-        if not succeeded:
-            q = q.filter(Run.status != 'succeeded')
-
-        rows = q.all()
-        self.endSession(session)
-
-        # for row in rows: print row
-        return rows
+            rows = q.all()
+            return rows
 
     def createExp(self, name, description=None):
         '''
         Insert a row for the given experiment
         '''
-        session = self.Session()
-        exp = Experiment(expName=name, description=description)
-        session.add(exp)
-        self.commitWithRetry(session)
-        self.endSession(session)
-        return exp.expId
+        with self.sessionScope() as session:
+            exp = Experiment(expName=name, description=description)
+            session.add(exp)
+            return exp.expId
 
     def getExpId(self, expName, session=None):
         exp = self.getExp(expName, session)
@@ -847,15 +829,16 @@ class CoreDatabase(object):
                 raise PygcamMcsSystemError("Failed to create experiment: %s" % e)
 
     def getProgramId(self, program):
-        session = self.Session()
-        programId = session.query(Program.programId).filter_by(name=program).scalar()
-        self.endSession(session)
-        return programId
+        with self.sessionScope() as session:
+            programId = session.query(Program.programId).filter_by(name=program).scalar()
+            return programId
 
 
 class GcamDatabase(CoreDatabase):
     _yearColsAdded = False
     _expColsAdded = False
+
+    instance = None     # singleton class
 
     def __init__(self):
         super(GcamDatabase, self).__init__()
@@ -866,6 +849,14 @@ class GcamDatabase(CoreDatabase):
         for regionName, regionId in RegionMap.items():
             canonName = canonicalizeRegion(regionName)
             self.canonicalRegionMap[canonName] = regionId
+
+    @classmethod
+    def getDatabase(cls, checkInit=True):
+        if cls.instance is None:
+            cls.instance = GcamDatabase()
+            cls.instance.startDb(checkInit=checkInit)
+
+        return cls.instance
 
     def initDb(self, args=None):
         'Add GCAM-specific tables to the coremcs database'
@@ -900,7 +891,7 @@ class GcamDatabase(CoreDatabase):
             session.commit()
             expId = exp.expId
 
-        except (IntegrityError):
+        except IntegrityError:
             session.rollback()
             expId = self.updateExp(name, description=description, parent=parent, session=session)
 
@@ -940,18 +931,6 @@ class GcamDatabase(CoreDatabase):
                 self.endSession(sess)
 
         return exp
-
-    # TBD: filter by program name, too? Or eliminate program name.
-    def getExpParent(self, expName, session=None):
-        sess = session or self.Session()
-
-        exp = self.getExp(expName, sess)
-        parent = exp.parent
-
-        if not session:
-            self.endSession(sess)
-
-        return parent
 
     # TBD: generalize and add to CoreDatabase since often modified? Or just add to base schema.
     def addExpCols(self, alterTable=True):
@@ -1001,45 +980,40 @@ class GcamDatabase(CoreDatabase):
         if self._yearColsAdded:
             return
 
-        session = self.Session()
-        engine = session.get_bind()
-        meta = ORMBase.metadata
-        meta.bind = engine
-        meta.reflect()
+        with self.sessionScope() as session:
+            engine = session.get_bind()
+            meta = ORMBase.metadata
+            meta.bind = engine
+            meta.reflect()
 
-        colNames = self.yearCols()
+            colNames = self.yearCols()
 
-        timeSeries = Table('timeseries', meta, autoload=True, autoload_with=engine)
+            timeSeries = Table('timeseries', meta, autoload=True, autoload_with=engine)
 
-        # Add columns for all the years used in this analysis
-        for colName in colNames:
-            if colName not in timeSeries.columns:
-                column = Column(colName, Float)
-                if alterTable:
-                    self.addColumns(TimeSeries, column)
-                else:
-                    setattr(TimeSeries, column.name, column)        # just add the mapping
+            # Add columns for all the years used in this analysis
+            for colName in colNames:
+                if colName not in timeSeries.columns:
+                    column = Column(colName, Float)
+                    if alterTable:
+                        self.addColumns(TimeSeries, column)
+                    else:
+                        setattr(TimeSeries, column.name, column)        # just add the mapping
 
-        self._yearColsAdded = True
-        self.endSession(session)
+            self._yearColsAdded = True
 
     def addRegions(self, regionMap):
         # TBD: read region map from file identified in config file, or use default values
         # For now, use default mapping
-        session = self.Session()
-
-        for name, regId in regionMap.iteritems():
-            self.addRegion(regId, name, session=session)
-
-        session.commit()
-        self.endSession(session)
+        with self.sessionScope() as session:
+            for name, regId in regionMap.iteritems():
+                self.addRegion(regId, name, session=session)
 
     def addRegion(self, regionId, name, session=None):
         sess = session or self.Session()
         obj = Region(regionId=regionId, displayName=name, canonName=canonicalizeRegion(name))
         sess.add(obj)
 
-        if session:         # otherwise, caller must commit
+        if session:
             sess.commit()
             self.endSession(sess)
 
@@ -1102,17 +1076,13 @@ class GcamDatabase(CoreDatabase):
         Save the value of the given parameter in the database. Tuples are
         of the format: (trialNum, paramId, value, varNum)
         '''
-        session = self.Session()
-
-        for trialNum, paramId, value, varNum in tuples:
-            # We save varNum to distinguish among independent values for the same variable name.
-            # The only purpose this serves is to ensure uniqueness, enforced by the database.
-            inValue = InValue(inputId=paramId, simId=simId, trialNum=trialNum,
-                              value=value, row=0, col=varNum)
-            session.add(inValue)
-
-        session.commit()
-        self.endSession(session)
+        with self.sessionScope() as session:
+            for trialNum, paramId, value, varNum in tuples:
+                # We save varNum to distinguish among independent values for the same variable name.
+                # The only purpose this serves is to ensure uniqueness, enforced by the database.
+                inValue = InValue(inputId=paramId, simId=simId, trialNum=trialNum,
+                                  value=value, row=0, col=varNum)
+                session.add(inValue)
 
     def deleteRunResults(self, runId, outputIds=None, session=None):
         """
@@ -1168,47 +1138,38 @@ class GcamDatabase(CoreDatabase):
            results for.
         :return: list of TimeSeries tuples or None
         '''
-        session = self.Session()
-
         cols = ['seriesId', 'runId', 'outputId', 'units'] + self.yearCols()
 
-        query = session.query(TimeSeries, Experiment.expName).options(load_only(*cols)). \
-            join(Run).filter_by(simId=simId).filter_by(status='succeeded'). \
-            join(Experiment).filter(Experiment.expName.in_(expList)). \
-            join(Output).filter_by(name=paramName)
+        with self.sessionScope() as session:
+            query = session.query(TimeSeries, Experiment.expName).options(load_only(*cols)). \
+                join(Run).filter_by(simId=simId).filter_by(status='succeeded'). \
+                join(Experiment).filter(Experiment.expName.in_(expList)). \
+                join(Output).filter_by(name=paramName)
 
-        rslt = query.all()
-        self.endSession(session)
-        return rslt
+            rslt = query.all()
+            return rslt
 
 
 # Single instance of the class. Use 'getDatabase' constructor
 # to ensure that this instance is returned if already created.
 _DbInstance = None
 
-def getDatabase(dbClass=None, checkInit=True):
+def getDatabase(checkInit=True):
     '''
     Return the instantiated CoreDatabase, or created one and return it.
     The optional dbClass argument is provided to facilitate subclassing.
     '''
-    global _DbInstance
+    return GcamDatabase.getDatabase(checkInit=checkInit)
 
-    if _DbInstance is None:
-        _DbInstance = GcamDatabase()
-        _DbInstance.startDb(checkInit=checkInit)
-
-    return _DbInstance
-
-
-def getSession():
-    '''
-    Convenience method for functions that need only a session, not the db object.
-    If a subclass of CoreDatabase is required, getDatabase should be called the
-    first time with that dbClass.
-    '''
-    db = getDatabase()
-    return db.Session()
-
+# Deprecated
+# def getSession():
+#     '''
+#     Convenience method for functions that need only a session, not the db object.
+#     If a subclass of CoreDatabase is required, getDatabase should be called the
+#     first time with that dbClass.
+#     '''
+#     db = getDatabase()
+#     return db.Session()
 
 def dropTable(tableName, meta):
     if tableName in meta.tables:

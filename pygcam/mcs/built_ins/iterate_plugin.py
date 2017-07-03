@@ -35,7 +35,8 @@ def driver(args, tool):
         count = db.getTrialCount(simId)
         trials = xrange(count)
 
-    context = Context(simId=simId, expName=expName, appName=appName)
+    # TBD: Add groupName
+    context = Context(appName=appName, simId=simId, expName=expName)
     _logger.info('Running iterator for appName=%s, simId=%d, expName=%s, trials=%s, command="%s"',
                  appName, simId, expName, trialStr, command)
 
@@ -48,7 +49,7 @@ def driver(args, tool):
 
     for trialNum in trials:
         argDict['trialNum'] = context.trialNum = trialNum
-        argDict['expDir']   = context.getExpDir(create=True)
+        argDict['expDir']   = context.getScenarioDir(create=True)
         argDict['trialDir'] = context.getTrialDir()
         argDict['simDir']   = context.getSimDir()
 

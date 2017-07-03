@@ -21,7 +21,8 @@ from ipyparallel.client.client import ExecuteReply
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
-from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, getDatabase
+from .Database import (RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_FAILURES,
+                       getDatabase)
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
@@ -91,8 +92,9 @@ class Master(object):
         projectName = args.projectName
 
         # load these once from database and amend as necessary when creating runs
-        rows = self.db.getRunInfo()
+        rows = self.db.getRunInfo(includeSucceededRuns=False)
         for row in rows:
+            assert len(row) == 5, 'db.getRunInfo failed to return 5 values'
             runId, simId, trialNum, expName, status = row
             Context(appName=projectName, runId=runId, simId=simId,
                     trialNum=trialNum, expName=expName, status=status)
@@ -100,11 +102,11 @@ class Master(object):
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
 
-        maxTries = getParamAsInt('IPP.StartupWaitTries')
-        seconds  = getParamAsInt('IPP.StartupWaitSecs')
-        client = None
-        profile = self.args.profile
+        maxTries  = getParamAsInt('IPP.StartupWaitTries')
+        seconds   = getParamAsInt('IPP.StartupWaitSecs')
+        profile   = self.args.profile
         clusterId = self.args.clusterId
+        client = None
 
         for i in range(1, maxTries+1):
             if not client:
@@ -243,7 +245,7 @@ class Master(object):
         worker tasks, so we lookup the equivalent in our local cache to test
         for whether a change has occurred.
         """
-        cached = Context.getRunInfo(context.runId) or context.cache()
+        cached = Context.getRunInfo(context.runId) or context.saveRunInfo()
 
         if status is None:
             if context == cached:
@@ -251,10 +253,12 @@ class Master(object):
 
             status = context.status
 
-        if cached.status != status:
-            _logger.debug('%s -> %s', cached, status)
-            cached.setVars(status=status)
-            self.db.setRunStatus(context.runId, status)
+        if cached.status == status:
+            return
+
+        _logger.debug('%s -> %s', cached, status)
+        cached.setVars(status=status)
+        self.db.setRunStatus(context.runId, status)
 
     def runningTasks(self):
         from pygcam.utils import flatten

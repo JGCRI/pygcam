@@ -74,7 +74,7 @@ class Worker(object):
         worker = cls(args)
         context = worker.context
 
-        runDir = context.getExpDir(create=True)
+        runDir = context.getScenarioDir(create=True)
         _logger.info("runDir is %s", runDir)
 
         trialDir = os.path.dirname(runDir)
@@ -110,11 +110,11 @@ class Worker(object):
         """
         catchSignals(_sighandler)
 
-        context  = self.context
-        trialNum = context.trialNum
-        errorMsg = None
-
         try:
+            context = self.context
+            trialNum = context.trialNum
+            errorMsg = None
+
             # Set an internal time limit for each trial
             minPerTask = getParamAsFloat('GCAM.Minutes')
             seconds = max(30, int(minPerTask * 60) - 45)

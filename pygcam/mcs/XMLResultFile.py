@@ -275,8 +275,8 @@ def saveResults(context, type, delete=True):
         db.deleteRunResults(runId, outputIds=ids, session=session)
         db.commitWithRetry(session)
 
-    if not baseline:
-        baseline = db.getExpParent(scenario)
+    # if not baseline:
+    #     baseline = db.getExpParent(scenario)
 
     yearCols    = db.yearCols()    # constructed from activeYears, so order is identical
     activeYears = activeYears()
@@ -331,16 +331,16 @@ def saveResults(context, type, delete=True):
             if output.isScalar():
                 colName = output.columnName()
                 value = selected[colName].iloc[0]
-                db.setOutValue(runId, paramName, value, program=GCAM_PROGRAM, session=session)  # TBD: need regionId?
+                db.setOutValue(runId, paramName, value, session=session)  # TBD: need regionId?
             else:
                 # When no column name is specified, assume this is a time-series result, so save all years.
                 # Use sum() to collapse values to a single time series; it's a no-op for a single row
                 values = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, activeYears)}
                 db.saveTimeSeries(runId, regionId, paramName, values, units=queryResult.units, session=session)
 
-            db.commitWithRetry(session)
-
         except Exception as e:
+            session.rollback()
+            db.endSession(session)
             # TBD: distinguish database save errors from data access errors?
             raise PygcamMcsSystemError("saveResults failed: %s" % e)
 

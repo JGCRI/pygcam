@@ -13,7 +13,7 @@ from pygcam.log import getLogger
 from pygcam.utils import mkdirs
 
 from .error import PygcamMcsSystemError, PygcamMcsUserError
-from .Database import getDatabase, getSession, Input
+from .Database import getDatabase, Input
 
 _logger = getLogger(__name__)
 
@@ -402,8 +402,10 @@ def plotGroupSensitivityResults(varName, data, filename=None, extra=None, printI
     # Sort by absolute value
     df.sort_values('absval', ascending=False, inplace=True)
 
-    session  = getSession()
-    result   = session.query(Input.paramName, Input.description).distinct().all()
+    db = getDatabase()
+    with db.sessionScope() as session:
+        result = session.query(Input.paramName, Input.description).distinct().all()
+
     resultDF = pd.DataFrame(result)
     resultDF.fillna('')
     df['description'] = resultDF['description']
@@ -450,7 +452,8 @@ def plotOutputDistribution(simId, expName, resultSeries, resultName, xlabel, tri
 # TBD: If row/col are obsolete, this info can now be read from trialData.csv or data.sa
 def readParameterValues(simId, trials):
     def makeKey(paramName, row, col):
-        return "%s[%d][%d]" % (paramName, row, col) if row or col else paramName
+        return paramName
+        #return "%s[%d][%d]" % (paramName, row, col) if row or col else paramName
 
     db = getDatabase()
 
@@ -519,7 +522,7 @@ def saveForEMA(simId, expNames, resultNames, inputDF, filename):
     for each of the columns in the x array. Unlike the version of this function
     in the EMA Workbench, this version collects data from the SQL database to
     generate a file in the required format.
-    
+
     :param simId: (int) the id of the simulation
     :param expNames: (list of str) the names of the experiments to save results for
     :param resultNames: (list of str) all model input values, each row holding values for 1 trial
@@ -1027,7 +1030,7 @@ def analyzeSimulation(args):
         exportInputs(inputsFile, inputDF)
 
     expList = expNames and expNames.split(',')
-    if (not expList[0] and resultName):
+    if (not (expList and expList[0] and resultName)):
         raise PygcamMcsUserError("expName and resultName must be specified")
 
     if resultFile:
