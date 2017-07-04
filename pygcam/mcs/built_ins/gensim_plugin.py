@@ -248,7 +248,7 @@ def genSimulation(simId, trials, paramPath, args):
     projectName = getParam('GCAM.ProjectName')
     project = Project.readProjectFile(projectName, groupName=args.groupName)
 
-    groupName = args.groupName or project.scenarioSetup.defaultGroup
+    args.groupName = groupName = args.groupName or project.scenarioSetup.defaultGroup
 
     # Run static setup for all scenarios in the given group
     runStaticSetup(runWorkspace, project, groupName)

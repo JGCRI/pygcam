@@ -386,6 +386,13 @@ class Project(XMLFile):
 
         return cls.instance
 
+    @classmethod
+    def defaultGroupName(cls):
+        from pygcam.config import getParam
+        projectName = getParam('GCAM.ProjectName')
+        obj = cls.readProjectFile(projectName)
+        return obj.scenarioSetup.defaultGroup
+
     @staticmethod
     def validateXML(doc, raiseError=True):
         '''

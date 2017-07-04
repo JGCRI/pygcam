@@ -12,6 +12,7 @@ _logger = getLogger(__name__)
 
 def driver(args, tool):
     from ipyparallel import NoEnginesRegistered
+    from pygcam.project import Project
     from ..master import Master, pidFileExists, startCluster
 
     if args.numTrials:
@@ -27,6 +28,8 @@ def driver(args, tool):
                       for key in ('profile', 'clusterId', 'numTrials',
                                   'maxEngines', 'minutesPerRun', 'queue')}
             startCluster(**kwargs)
+
+    args.groupName = args.groupName or Project.defaultGroupName()
 
     master = Master(args)
     try:
