@@ -641,7 +641,8 @@ class CoreDatabase(object):
             expId = exp.expId
 
         # if prior run record exists for this {simId, trialNum, expId} tuple, delete it
-        sess.query(Run).filter_by(simId=simId, trialNum=trialNum, expId=expId).delete()
+        with session.no_autoflush:
+            sess.query(Run).filter_by(simId=simId, trialNum=trialNum, expId=expId).delete()
 
         run = Run(simId=simId, trialNum=trialNum, expId=expId, status=status, jobNum=None)
         sess.add(run)

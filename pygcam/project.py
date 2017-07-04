@@ -308,6 +308,8 @@ class Project(XMLFile):
         super(Project, self).__init__(xmlFile, schemaFile=schemaStream)
 
         self.projectName = projectName
+        self.scenarioGroupName = groupName
+
         tree = self.tree
         projectNodes = tree.findall('project[@name="%s"]' % projectName)
 
@@ -345,7 +347,7 @@ class Project(XMLFile):
         # TBD: new approach
         self.scenarioGroupDict = self.scenarioSetup.groupDict
 
-        self.setGroup(groupName)    # if None, default group is set
+        self.setGroup(groupName)    # if None, resets scenarioGroupName to default group
 
         dfltSteps = map(Step, defaultsNode.findall('./steps/step')) if hasDefaults else []
         projSteps = map(Step, projectNode.findall('./steps/step'))
@@ -375,12 +377,12 @@ class Project(XMLFile):
     instance = None
 
     @classmethod
-    def readProjectFile(cls, projectName, group=None, projectFile=None):
+    def readProjectFile(cls, projectName, groupName=None, projectFile=None):
 
         # return cached project if already read, otherwise read project.xml
         if not cls.instance or cls.project.projectName != projectName:
             projectFile = projectFile or getParam('GCAM.ProjectXmlFile', section=projectName)
-            cls.instance = Project(projectFile, projectName, group)
+            cls.instance = Project(projectFile, projectName, groupName)
 
         return cls.instance
 
@@ -675,7 +677,9 @@ def projectMain(args, tool):
 
     project = Project(projectFile, args.project, args.group)
 
-    groups = project.getKnownGroups() if args.allGroups else [args.group]
+    # TBD: probably don't need this:
+    # defaultGroup = project.scenarioSetup.defaultGroup
+    groups = project.getKnownGroups() if args.allGroups else [args.group] # or defaultGroup]
 
     for group in groups:
         project.setGroup(group)

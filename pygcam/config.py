@@ -248,10 +248,11 @@ def setParam(name, value, section=None):
     :param section: (str) if given, the name of the section in which to set the value.
        If not given, the value is set in the established project section, or DEFAULT
        if no project section has been set.
-    :return: none
+    :return: value
     """
     section = section or getSection()
     _ConfigParser.set(section, name, value)
+    return value
 
 def getParam(name, section=None, raw=False, raiseError=True):
     """

@@ -168,7 +168,7 @@ def saveTrialData(df, simId, start=0):
     _logger.info('Generated %d trials for simId %d', trials, simId)
 
 
-def runStaticSetup(runWorkspace, groupName):
+def runStaticSetup(runWorkspace, project, groupName):
     """
     Run the --staticOnly setup in the MCS copy of the workspace, for all scenarios.
     This is called from gensim, so we fake the "context" for trial 0, since all
@@ -181,9 +181,8 @@ def runStaticSetup(runWorkspace, groupName):
     from ..util import symlink
     from ..error import GcamToolError
 
-    projectName = getParam('GCAM.ProjectName')
+    projectName = project.projectName
 
-    project = Project.readProjectFile(projectName, group=groupName)
     scenarios = project.getKnownScenarios()
     scenariosArg = ','.join(scenarios)
 
@@ -230,6 +229,7 @@ def genSimulation(simId, trials, paramPath, args):
     from ..XMLParameterFile import XMLParameterFile
     from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
     from pygcam.constants import LOCAL_XML_NAME
+    from pygcam.project import Project
     from pygcam.xmlSetup import ScenarioSetup
 
     runInputDir = getParam('MCS.RunInputDir')
@@ -245,12 +245,13 @@ def genSimulation(simId, trials, paramPath, args):
     simLocalXmlDir = os.path.join(simDir, LOCAL_XML_NAME)
     symlink(workspaceLocalXml, simLocalXmlDir)
 
-    groupName = args.groupName
+    projectName = getParam('GCAM.ProjectName')
+    project = Project.readProjectFile(projectName, groupName=args.groupName)
+
+    groupName = args.groupName or project.scenarioSetup.defaultGroup
 
     # Run static setup for all scenarios in the given group
-    runStaticSetup(runWorkspace, groupName)
-
-    # setParam('MCS.ScenarioGroup', groupName)                    # TBD: apparently unused
+    runStaticSetup(runWorkspace, project, groupName)
 
     # TBD: Use pygcam scenario def and copy pygcam files, too
     scenarioFile = getParam('GCAM.ScenarioSetupFile')
