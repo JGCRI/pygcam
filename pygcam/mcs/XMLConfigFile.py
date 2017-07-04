@@ -1,5 +1,6 @@
 # Copyright (c) 2015 Richard Plevin. See the file COPYRIGHT.txt for details.
 
+from copy import copy
 import os
 from lxml import etree as ET
 
@@ -43,13 +44,13 @@ class XMLConfigFile(XMLFile):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
-        self.context   = context
+        self.context = context = copy(context)
 
         if useCopy:
             path = self.getBackupPath()
         else:
             path = getSimConfigFile(context)
-            self.copyOriginal() # make a copy for use by runsim
+            self.copyOriginal() # make a copy of the config file for use by runsim
 
         # Default writePath is where we were read from.
         self.writePath = path
