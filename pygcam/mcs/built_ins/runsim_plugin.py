@@ -33,7 +33,7 @@ def driver(args, tool):
 
     master = Master(args)
     try:
-        master.processTrials(loopOnly=args.loopOnly, addTrials=args.addTrials)
+        master.processTrials()
 
     except NoEnginesRegistered as e:
         raise PygcamException("processTrials aborted: %s" % e)
@@ -86,12 +86,11 @@ class RunSimCommand(SubcommandABC):
                             help='''A string to identify this cluster. Default is the
                             value of config var IPP.ClusterId, currently
                             "%s".''' % defaultClusterId)
-        # deprecated
-        # parser.add_argument('-C', '--startCluster', action='store_true',
-        #                     help='''Start the cluster, if not already running, using the given
-        #                     profile name and cluster ID with other parameters taken from the
-        #                     config file. To start a cluster with other parameters, see run the
-        #                     "gt cluster start" command before running runsim.''')
+
+        parser.add_argument('-C', '--collectResults', action='store_true',
+                            help='''Equivalent to specifying --noGCAM --noBatchQueries 
+                            --noPostProcessor --runLocal. Useful if runs have actually
+                            succeeded but results have not been saved to the SQL database.''')
 
         parser.add_argument('-D', '--noDatabase', dest='updateDatabase', action='store_false',
                             help='''Don't save query results to the SQL database.''')
@@ -179,6 +178,9 @@ class RunSimCommand(SubcommandABC):
 
 
     def run(self, args, tool):
+        if args.collectResults:
+            args.noGCAM = args.noBatchQueries = args.noPostProcessor = args.runLocal = True
+
         if args.statuses:
             from ..Database import RUN_STATUSES
             from pygcam.error import CommandlineError

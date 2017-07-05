@@ -17,11 +17,11 @@ from time import sleep
 from IPython.paths import locate_profile
 
 import ipyparallel as ipp
-from ipyparallel.client.client import ExecuteReply
+# from ipyparallel.client.client import ExecuteReply
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
-from .Database import (RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_FAILURES,
+from .Database import (RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, # RUN_FAILURES,
                        getDatabase)
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
@@ -279,42 +279,48 @@ class Master(object):
         """
         Check for newly running tasks
         """
-        running = self.runningTasks()
-        if running:
+        tasks = self.runningTasks()
+        # _logger.debug("Found %d running tasks", len(running))
+
+        for task in tasks:
             try:
-                _logger.debug("Found %d running tasks", len(running))
-                ar = self.client.get_result(running, block=False)
+                ar = self.client.get_result(task, owner=False, block=False)
 
                 # TBD: check this doesn't reset DB status to 'running' redundantly
-                for dataDict in ar.data:
-                    for runId, context in iteritems(dataDict):
-                        self.setRunStatus(context)
+                # for dataDict in ar.data:
+                for runId, context in iteritems(ar.data):
+                    self.setRunStatus(context)
 
             except Exception as e:
                 _logger.warning("checkRunning: %s" % e)
-                return
+
 
     def getResults(self, tasks):
         if not tasks:
             return None
 
         client = self.client
-        ar = client.get_result(tasks, owner=True, block=False)
+        results = []
 
-        try:
-            results = ar.get()
+        _logger.debug('Getting results for %d tasks', len(tasks))
 
-        except Exception as e:
-            # Raised if an engine dies, e.g., walltime expired.
-            # With retries=1, should be able to recover from this.
-            _logger.warning('getResults: %s', e)
-            return None
+        for task in tasks:
+            try:
+                ar = client.get_result(task, owner=False, block=False)
+                chunk = ar.get()
+                workerResult = chunk[0]
 
-        _logger.debug('Purging results for %d tasks', len(tasks))
-        client.purge_results(jobs=tasks) # so we don't see them again
+            except Exception as e:
+                # Raised if an engine dies, e.g., walltime expired.
+                # With retries=1, should be able to recover from this.
+                _logger.warning('getResults: %s', e)
 
-        # filter out results from execute commands (e.g. imports)
-        results = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
+            client.purge_results(jobs=task)
+
+            # filter out results from execute commands (e.g. imports)
+            #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
+            #results.extend(partialResults)
+            results.append(workerResult)
 
         _logger.debug("%d completed tasks with results", len(results))
         return results
@@ -350,7 +356,8 @@ class Master(object):
 
             results = self.getResults(completed)
             if not results:
-                _logger.warning("Completed tasks have no results; an engine probably died.")
+                _logger.warning('Purging %d completed tasks with no results (engine died?)', len(completed))
+                self.client.purge_results(jobs=completed)
                 continue    # retries=1 should take care of it
 
             # update database status
@@ -369,18 +376,15 @@ class Master(object):
         _logger.debug('%d engines: %s' % (len(self.client), tot))
         return tot['tasks'] or tot['queue'] or tot['unassigned'] or self.completedTasks()
 
-    def processTrials(self, loopOnly=False, addTrials=False):
+    def processTrials(self):
         """
-        If `loopOnly` is False, run the trials identified in self.args. If
-        `addTrials` is True, exit after running the trials, otherwise, loop
-        until all tasks are completed, if "shutdown when idle" was given as
-        a command-line arg, or loop indefinitely, allowing another task to
+        Takes parameters from arguments passed from runsim plugin.
+        If `args.loopOnly` is False, run the trials identified in self.args.
+        If `args.addTrials` is True, exit after running the trials, otherwise,
+        loop until all tasks are completed, if "shutdown when idle" was given
+        as a command-line arg, or loop indefinitely, allowing another task to
         add more trials to run.
 
-        :param loopOnly: (bool) If True, run no trials; just enter the processing
-            loop, otherwise run the trials given in self.args.trials
-        :param addTrials: (bool) If True, exit after starting the trials (i.e.,
-           don't wait for their results; presumably another client is doing that.)
         :return: none
         """
         db = self.db
@@ -393,10 +397,10 @@ class Master(object):
         if not args.runLocal:
             self.waitForWorkers()    # wait for engines to spin up
 
-        if not loopOnly:
+        if not args.loopOnly:
             self.runTrials()
 
-        if addTrials or args.runLocal:
+        if args.addTrials or args.runLocal:
             # don't wait for results; just add trials to running cluster and return
             return
 
@@ -406,6 +410,8 @@ class Master(object):
 
             if args.shutdownWhenIdle:
                 self.shutdownIdleEngines()
+                if len(self.client) == 0:   # if we shut the last engine...
+                    break
 
             _logger.debug('sleep(%d)', args.waitSecs)
             sleep(args.waitSecs)
@@ -416,7 +422,7 @@ class Master(object):
         # Shutdown the hub
         if args.shutdownWhenIdle:
             _logger.info("Shutting down hub...")
-            sleep(3)   # allow sockets to clear
+            sleep(2)   # allow sockets to clear
             self.client.shutdown(hub=True, block=True)
 
     def runTrials(self):

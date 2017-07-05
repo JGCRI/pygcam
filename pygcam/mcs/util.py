@@ -106,61 +106,6 @@ def stripYearPrefix(s):
             pass
     return s
 
-# Deprecated. Moved to context.py
-# class Context(object):
-#
-#     __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
-#                  'groupName', 'appName', 'jobNum']
-#
-#     def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
-#                  expName=None, baseline=None, groupName=None):
-#         self.runId     = runId
-#         self.simId     = simId
-#         self.trialNum  = trialNum
-#         self.expName   = expName
-#         self.baseline  = baseline
-#         self.groupName = groupName
-#         self.appName   = appName
-#         self.jobNum    = getJobNum()
-#
-#     def __str__(self):
-#         return "<Context proj=%s exp=%s grp=%s sim=%s trial=%s run=%s job=%s>" % \
-#                (self.appName, self.expName, self.groupName,
-#                 self.simId, self.trialNum, self.runId, self.jobNum)
-#
-#     def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
-#                 baseline=None, groupName=None):
-#         '''
-#         Set elements of a context structure, updating the environment as well.
-#         '''
-#         if appName:
-#             self.appName = appName
-#
-#         if simId is not None:
-#             self.simId = int(simId)
-#
-#         if trialNum is not None:
-#             self.trialNum = int(trialNum)
-#
-#         if expName:
-#             self.expName = expName
-#
-#         if baseline:
-#             self.baseline = baseline
-#
-#         if groupName:
-#             self.groupName = groupName
-
-# Deprecated: used only in Context. (transition to context.py)
-# def getJobNum():
-#     batchSystem = getParam('MCS.BatchSystem')
-#     job_id_var  = getParam("%s.%s" % (batchSystem, 'JOB_ID_VAR'))
-#     jobIdStr  = os.getenv(job_id_var, '')
-#
-#     result = re.search('\d+', jobIdStr)
-#     jobNum = int(result.group(0)) if result else os.getpid()
-#     return jobNum
-
 def tail(filename, count):
     '''
     Return the last `count` lines from a text file by running the

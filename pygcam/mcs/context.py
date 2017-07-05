@@ -9,16 +9,16 @@ from pygcam.config import getParam, getParamAsInt
 from pygcam.utils import mkdirs
 from .error import PygcamMcsUserError
 
-def _getJobNum():
-    import re
-
-    batchSystem = getParam('MCS.BatchSystem')
-    job_id_var = getParam("%s.%s" % (batchSystem, 'JOB_ID_VAR'))
-    jobIdStr = os.getenv(job_id_var, '')
-
-    result = re.search('\d+', jobIdStr)
-    jobNum = int(result.group(0)) if result else os.getpid()
-    return jobNum
+# def _getJobNum():
+#     import re
+#
+#     batchSystem = getParam('MCS.BatchSystem')
+#     job_id_var = getParam("%s.%s" % (batchSystem, 'JOB_ID_VAR'))
+#     jobIdStr = os.getenv(job_id_var, '')
+#
+#     result = re.search('\d+', jobIdStr)
+#     jobNum = int(result.group(0)) if result else os.getpid()
+#     return jobNum
 
 
 def _dirFromNumber(n, prefix="", create=False):
@@ -66,10 +66,9 @@ def getSimDir(simId, create=False):
 
 class Context(object):
 
-    __slots__ = ['runId', 'simId', 'trialNum', 'expName', 'baseline',
-                 'groupName', 'appName', 'jobNum', 'status']
+    __slots__ = ['runId', 'simId', 'trialNum', 'expName',
+                 'baseline', 'groupName', 'appName', 'status']
 
-    # deprecated (maybe)
     instances = {}      # Context instances keyed by runId
 
     def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
@@ -83,7 +82,6 @@ class Context(object):
         self.groupName = groupName
         self.appName   = appName        # TBD: change to projectName
         self.status    = status
-        self.jobNum    = _getJobNum()
 
         if store and runId:
             self.saveRunInfo()
@@ -97,10 +95,9 @@ class Context(object):
         return cls.instances.get(runId, None)
 
     def __str__(self):
-        return "<Context prj=%s exp=%s grp=%s sim=%s trl=%s run=%s job=%s sta=%s>" % \
+        return "<Context prj=%s exp=%s grp=%s sim=%s trl=%s run=%s sta=%s>" % \
                (self.appName, self.expName, self.groupName,
-                self.simId, self.trialNum, self.runId,
-                self.jobNum, self.status)
+                self.simId, self.trialNum, self.runId, self.status)
 
     def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
                 baseline=None, groupName=None, status=None):
