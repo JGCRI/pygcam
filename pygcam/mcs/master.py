@@ -302,13 +302,18 @@ class Master(object):
         client = self.client
         results = []
 
-        _logger.debug('Getting results for %d tasks', len(tasks))
+        _logger.debug('Results available for %d tasks', len(tasks))
 
         for task in tasks:
             try:
                 ar = client.get_result(task, owner=False, block=False)
                 chunk = ar.get()
                 workerResult = chunk[0]
+
+                # filter out results from execute commands (e.g. imports)
+                #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
+                #results.extend(partialResults)
+                results.append(workerResult)
 
             except Exception as e:
                 # Raised if an engine dies, e.g., walltime expired.
@@ -317,12 +322,7 @@ class Master(object):
 
             client.purge_results(jobs=task)
 
-            # filter out results from execute commands (e.g. imports)
-            #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
-            #results.extend(partialResults)
-            results.append(workerResult)
-
-        _logger.debug("%d completed tasks with results", len(results))
+        # _logger.debug("%d completed tasks with results", len(results))
         return results
 
     def saveResults(self, result):
@@ -336,11 +336,11 @@ class Master(object):
         self.setRunStatus(context)
 
         if status == RUN_SUCCEEDED:
-            _logger.debug("Saving results for trial %s", trialNum)
+            _logger.debug("Saving results for %s", context)
             saveResults(context, RESULT_TYPE_SCENARIO)
 
             if baseline:  # also save 'diff' results
-                saveResults(context, RESULT_TYPE_DIFF)
+                saveResults(context, RESULT_TYPE_DIFF)  
 
         elif errorMsg:
             _logger.warning('Run %d, trial %d failed: %s', runId, trialNum, errorMsg)
@@ -364,8 +364,8 @@ class Master(object):
             for result in results:
                 self.saveResults(result)
 
-            seconds = 2
-            _logger.debug('sleep(%d) before checking for more completed tasks', seconds)
+            seconds = 3
+            #_logger.debug('sleep(%d) before checking for more completed tasks', seconds)
             sleep(seconds)    # brief sleep before checking for more completed tasks
 
     def outstandingTasks(self):

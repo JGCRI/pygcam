@@ -249,7 +249,7 @@ def saveResults(context, type, delete=True):
     if type == RESULT_TYPE_DIFF:
         assert baseline, "saveResults: must specify baseline for DIFF results"
 
-    _logger.debug("Saving results for scenario=%s, type=%s", scenario, type)
+    # _logger.debug("Saving results for scenario=%s, type=%s", scenario, type)
 
     # run = db.getRunByRunId(runId)
     #
@@ -274,9 +274,6 @@ def saveResults(context, type, delete=True):
         ids = db.getOutputIds(names)
         db.deleteRunResults(runId, outputIds=ids, session=session)
         db.commitWithRetry(session)
-
-    # if not baseline:
-    #     baseline = db.getExpParent(scenario)
 
     yearCols    = db.yearCols()    # constructed from activeYears, so order is identical
     activeYears = activeYears()
