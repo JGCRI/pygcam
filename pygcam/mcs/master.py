@@ -340,7 +340,7 @@ class Master(object):
             saveResults(context, RESULT_TYPE_SCENARIO)
 
             if baseline:  # also save 'diff' results
-                saveResults(context, RESULT_TYPE_DIFF)  
+                saveResults(context, RESULT_TYPE_DIFF)
 
         elif errorMsg:
             _logger.warning('Run %d, trial %d failed: %s', runId, trialNum, errorMsg)

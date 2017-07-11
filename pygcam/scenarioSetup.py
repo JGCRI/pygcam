@@ -229,7 +229,8 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
     :return: none
     '''
-    import filelock
+    #import filelock
+    #getLogger('filelock') # seems to be necessary
 
     version = getParam('GCAM.VersionNumber')
     _logger.info("Setting up GCAM workspace '%s' for GCAM %s", newWorkspace, version)
@@ -243,39 +244,44 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     # if we failed, in which case we forceCreate on the next attempt.
     # The lock just prevents two users from doing this at the same time,
     # though it's probably overkill.
+    # Updated 7/10/17: filelocking failed on Cray (NERSC) so was disabled for now.
     mkdirs(newWorkspace)
     semaphoreFile = pathjoin(newWorkspace, '.creation_semaphore')
-    lockfile = semaphoreFile + '.lock'
+    #lockfile = semaphoreFile + '.lock'
 
-    with filelock.FileLock(lockfile):
-        if os.path.lexists(semaphoreFile):
-            os.remove(semaphoreFile)
-            forceCreate = True
-
-        if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
-            _logger.warn('GCAM.CopyAllFiles = True while running MCS')
-
-        if forceCreate:
-            removeTreeSafely(newWorkspace, ignore_errors=True)
-
-        mkdirs(newWorkspace)
-        open(semaphoreFile, 'w').close()    # create empty semaphore file
-
-        # Spell out variable names rather than computing parameter names to
-        # facilitate searching source files for parameter uses.
-        paramName = 'MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink'
-
-        filesToCopy, filesToLink = _getFilesToCopyAndLink(paramName)
-
-        for filename in filesToCopy:
-            _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=True)
-
-        for filename in filesToLink:
-            _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=False)
-
-        for filename in ['local-xml', 'dyn-xml']:
-            dirname = pathjoin(newWorkspace, filename)
-            mkdirs(dirname)
-
-        # if successful, remove semaphore
+    #with filelock.FileLock(lockfile):
+    try:
         os.remove(semaphoreFile)
+        forceCreate = True          # if we can remove it, last attempt failed
+    except OSError as e:
+        import errno
+        if e.errno != errno.ENOENT: # ENOENT => no such file exists
+            raise
+
+    if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
+        _logger.warn('GCAM.CopyAllFiles = True while running MCS')
+
+    if forceCreate:
+        removeTreeSafely(newWorkspace, ignore_errors=True)
+
+    mkdirs(newWorkspace)
+    open(semaphoreFile, 'w').close()    # create empty semaphore file
+
+    # Spell out variable names rather than computing parameter names to
+    # facilitate searching source files for parameter uses.
+    paramName = 'MCS.WorkspaceFilesToLink' if mcsMode else 'GCAM.WorkspaceFilesToLink'
+
+    filesToCopy, filesToLink = _getFilesToCopyAndLink(paramName)
+
+    for filename in filesToCopy:
+        _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=True)
+
+    for filename in filesToLink:
+        _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=False)
+
+    for filename in ['local-xml', 'dyn-xml']:
+        dirname = pathjoin(newWorkspace, filename)
+        mkdirs(dirname)
+
+    # if successful, remove semaphore
+    os.remove(semaphoreFile)
