@@ -9,15 +9,10 @@ import StringIO
 import subprocess
 import types
 
-from .error import PygcamMcsException
-from ..log import getLogger
-
+from pygcam.mcs.error import PygcamMcsException
+from pygcam.log import getLogger
 
 _logger = getLogger(__name__)
-
-# $ squeue -u nand374 -o '%all'
-# ACCOUNT|GRES|MIN_CPUS|MIN_TMP_DISK|END_TIME|FEATURES|GROUP|SHARED|JOBID|NAME|COMMENT|TIMELIMIT|MIN_MEMORY|REQ_NODES|COMMAND|PRIORITY|QOS|REASON||ST|USER|RESERVATION|WCKEY|EXC_NODES|NICE|S:C:T|JOBID |EXEC_HOST |CPUS |NODES |DEPENDENCY |ARRAY_JOB_ID |GROUP |SOCKETS_PER_NODE |CORES_PER_SOCKET |THREADS_PER_CORE |ARRAY_TASK_ID |TIME_LEFT |TIME |NODELIST |CONTIGUOUS |PARTITION |PRIORITY |NODELIST(REASON) |START_TIME |STATE |USER |SUBMIT_TIME |LICENSES |CORE_SPECWORK_DIR
-# ms3_slkmc|(null)|1|0|2017-07-09T17:55:00|(null)|users|no|3519210|targz|(null)|1:00:00|0||/pic/projects/interfaces/fenicr/gamma_only/In_Pure_Fe/targz.pic NEB_RUNS_6I NEB_RUNS_6I|0.00000021164306|normal|None||R|nand374|(null)|(null)||0|*:*:*|3519210 |node012 |24 |1 | |3519210 |100 |* |* |* |N/A |59:22 |0:38 |node012 |0 |short |909 |node012 |2017-07-09T16:55:00 |RUNNING |3271 |2017-07-09T16:54:22 |(null) |0/pic/projects/interfaces/fenicr/gamma_only/In_Pure_Fe
 
 class Slurm(object):
     def __init__(self, *args, **kwargs):
@@ -44,10 +39,25 @@ class Slurm(object):
         _logger.debug(command)
 
         # Run command and read all results
-        output = subprocess.check_output(command, shell=False)
+        output = subprocess.check_output(command, shell=True)
 
         df = pd.read_table(StringIO.StringIO(output), sep=sep, header=0, engine='c')
         df.fillna('', inplace=True)
+
+        # Parse the overloaded nodelist column into separate columns
+        colName = 'NODELIST(REASON)'
+        if colName in df.columns:
+            values = df[colName]
+            pat1 = re.compile('([^\(]*)')       # anything up to a '('
+            pat2 = re.compile('(\(.+\))') # anything between '(' and ')'
+
+            def search(pat, s):
+                matchObj = re.search(pat, s)
+                return matchObj.group(1) if matchObj else ''
+
+            df['NODELIST'] = map(lambda s: search(pat1, s), values)
+            df['REASON']   = map(lambda s: search(pat2, s), values)
+        
         return df
 
     def scancel(self, jobs):
@@ -65,7 +75,7 @@ class Slurm(object):
         command = "scancel " + jobStr
         _logger.debug(command)
 
-        exitStatus = subprocess.call(command, shell=False)
+        exitStatus = subprocess.call(command, shell=True)
         if exitStatus != 0:
             raise PygcamMcsException("Command failed: %s; exit status %s\n" % (command, exitStatus))
 
@@ -79,10 +89,18 @@ class Slurm(object):
         command = "sbatch %s" % (script)
 
         # Run the sbatch command, parse the jobId if command succeeds
-        jobStr = subprocess.check_output(command, shell=False)
+        jobStr = subprocess.check_output(command, shell=True)
         result = re.search('\d+', jobStr)
         jobId = int(result.group(0)) if result else -1
         return jobId
+
+    def jobsInState(self, state):
+        command = "squeue -u %s -t %s -o '%%i'" % (self.username, state.upper())
+        _logger.debug(command)
+
+        output = subprocess.check_output(command, shell=True)
+        jobs = [int(s) for s in output.split() if str.isdigit(s)]
+        return jobs
 
 if __name__ == "__main__":
     output = '''JOBID|PARTITION|NAME|STATE|TIME|NODES|NODELIST(REASON)|TIMELIMIT|USER
@@ -101,8 +119,16 @@ if __name__ == "__main__":
 3515334|shared|t14_4_2|RUNNING|2-03:15:30|1|node141|7-00:00:00|nand374
 3515333|shared|t14_4_1|RUNNING|2-03:15:50|1|node141|7-00:00:00|nand374
 '''
-    df = pd.read_table(output, sep='|', header=0, engine='c')
-
-    slurm = Slurm(username='plevin')
-    df = slurm.squeue()
+    pd.set_option('display.width', 1000)
+    # df = pd.read_table(StringIO.StringIO(output), sep='|', header=0, engine='c')
+    
+    slurm = Slurm(username='plev920')
+    df = slurm.squeue(formatStr="%i|%P|%j|%u|%T|%M|%D|%R|%l")
     print(df)
+
+    jobs = slurm.jobsInState('pending')
+    print("Pending: %s" % jobs)
+
+    jobs = slurm.jobsInState('running')
+    print("Running: %s" % jobs)
+
