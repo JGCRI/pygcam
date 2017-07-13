@@ -341,12 +341,7 @@ class Project(XMLFile):
             with open(filename, 'w') as stream:
                 self.scenarioSetup.writeXML(stream)
 
-        # deprecated (old approach)
-        # self.scenarioGroups = scenarioGroups = map(ScenarioGroup, projectNode.findall('scenarios/scenarioGroup'))
-        # self.scenarioGroupDict = {group.name : group for group in scenarioGroups}
-        # TBD: new approach
         self.scenarioGroupDict = self.scenarioSetup.groupDict
-
         self.setGroup(groupName)    # if None, resets scenarioGroupName to default group
 
         dfltSteps = map(Step, defaultsNode.findall('./steps/step')) if hasDefaults else []

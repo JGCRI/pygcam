@@ -447,7 +447,8 @@ class Master(object):
             if statuses:
                 # Change this to return Run instances
                 # If any of the "redo" options find trials, use these instead of args.trials
-                contexts = self.db.getRunsByStatus(simId, scenario, statuses, projectName=projectName,
+                contexts = self.db.getRunsByStatus(simId, scenario, statuses,
+                                                   projectName=projectName,
                                                    groupName=groupName)
 
                 if not contexts:

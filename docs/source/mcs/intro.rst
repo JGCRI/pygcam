@@ -14,12 +14,10 @@ Running an MCS with ``pygcam`` involves the following steps:
 #. :doc:`Define parameters and distributions <parameters>` in the
    file ``parameters.xml``.
 
-#. Run the :ref:`newsim <newsim-label>` sub-command to create the file
-   structure and database required for the MCS.
-
-#. Run the :ref:`gensim <gensim-label>` sub-command to create a CSV file
-   containing the data for the Monte Carlo trials. Several sampling methods
-   are available.
+#. Run the :ref:`gensim <gensim-label>` sub-command to create the file
+   structure and database required for the MCS and a CSV file containing
+   the data for the Monte Carlo trials. Several sampling methods are
+   available.
 
 #. Run the simulation by running the :ref:`cluster <cluster-label>` sub-command.
    You can run as many "worker" processes as resources allow.

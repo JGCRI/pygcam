@@ -10,6 +10,13 @@ from pygcam.subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
+def enginesPending():
+    from ..slurm import Slurm
+
+    slurm = Slurm()
+    jobs = slurm.jobsInState('pending', jobName='mcs-engine')
+    return len(jobs)
+
 def driver(args, tool):
     from ipyparallel import NoEnginesRegistered
     from pygcam.project import Project
@@ -32,10 +39,14 @@ def driver(args, tool):
     args.groupName = args.groupName or Project.defaultGroupName()
 
     master = Master(args)
+    # while True:
     try:
         master.processTrials()
 
     except NoEnginesRegistered as e:
+        # if enginesPending()
+        #    sleep(30)
+        # else:
         raise PygcamException("processTrials aborted: %s" % e)
 
 #

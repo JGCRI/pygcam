@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from lxml import etree as ET
 
-from pygcam.config import getParam, setParam
+from pygcam.config import getParam
 from pygcam.log import getLogger
 from pygcam.utils import importFromDotSpec
 

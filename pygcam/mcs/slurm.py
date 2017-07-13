@@ -26,16 +26,17 @@ class Slurm(object):
 
         self.username = kwargs.get('username') or getpass.getuser()
 
-    def squeue(self, formatStr='%all', sep='|'):
+    def squeue(self, formatStr='%all', sep='|', otherArgs=''):
         """
         Run the squeue command and return a DataFrame with the results.
 
         :param formatStr: (str) format string indicating which data columns
            to list. Default is to list all columns, separated by '|'.
         :param sep: (str) separator to use between data columns
+        :param otherArgs (str) other args to pass to squeue
         :return: status of shell command
         """
-        command = "squeue -u %s -o '%s'" % (self.username, formatStr)
+        command = "squeue -u %s -o '%s' %s" % (self.username, formatStr, otherArgs)
         _logger.debug(command)
 
         # Run command and read all results
@@ -57,8 +58,20 @@ class Slurm(object):
 
             df['NODELIST'] = map(lambda s: search(pat1, s), values)
             df['REASON']   = map(lambda s: search(pat2, s), values)
-        
+
         return df
+
+    def jobsInState(self, state, jobName=None):     # TBD: test this again
+        """
+        Return a list of jobIds for jobs in the given state.
+
+        :param state: (str) standard SLURM state string (PENDING, RUNNING, etc.)
+        :return: (list of int) the ids of the jobs owned by the user in the given
+            state.
+        """
+        df = self.squeue(formatStr='%i|%j', otherArgs='-t ' + state.upper())
+        jobs = df.loc[df.NAME == jobName, 'JOBID'] if jobName else df.JOBID
+        return jobs
 
     def scancel(self, jobs):
         """
@@ -79,7 +92,6 @@ class Slurm(object):
         if exitStatus != 0:
             raise PygcamMcsException("Command failed: %s; exit status %s\n" % (command, exitStatus))
 
-
     def sbatch(self, script, queue):
         """
         Submit the given script to the given queue.
@@ -94,13 +106,6 @@ class Slurm(object):
         jobId = int(result.group(0)) if result else -1
         return jobId
 
-    def jobsInState(self, state):
-        command = "squeue -u %s -t %s -o '%%i'" % (self.username, state.upper())
-        _logger.debug(command)
-
-        output = subprocess.check_output(command, shell=True)
-        jobs = [int(s) for s in output.split() if str.isdigit(s)]
-        return jobs
 
 if __name__ == "__main__":
     output = '''JOBID|PARTITION|NAME|STATE|TIME|NODES|NODELIST(REASON)|TIMELIMIT|USER
@@ -121,7 +126,7 @@ if __name__ == "__main__":
 '''
     pd.set_option('display.width', 1000)
     # df = pd.read_table(StringIO.StringIO(output), sep='|', header=0, engine='c')
-    
+
     slurm = Slurm(username='plev920')
     df = slurm.squeue(formatStr="%i|%P|%j|%u|%T|%M|%D|%R|%l")
     print(df)

@@ -1,6 +1,7 @@
 # Copyright (c) 2012-2016. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
+# from datetime import datetime
 import os
 from signal import alarm, SIGTERM, SIGQUIT, SIGALRM
 
@@ -49,6 +50,8 @@ class Worker(object):
     '''
     Defines the methods and data associated with a worker task.
     '''
+    # startTime = datetime.now()
+
     def __init__(self, args):
         getConfig()
         configureLogs()
@@ -127,6 +130,12 @@ class Worker(object):
                 _logger.debug('Alarm set for %d sec' % seconds)
 
             try:
+                # endTime = datetime.now()
+                # elapsedMinutes = (endTime - cls.startTime) / 60
+                # timeRemaining = allocatedMinutes - elapsedMinutes
+                # if timeRemaining < getParamAsFloat('IPP.MinimumTimeToRun'):
+                #     what?
+
                 exitCode = runGcamTool(args, context)
                 status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 

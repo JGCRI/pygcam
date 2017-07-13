@@ -177,7 +177,6 @@ def runStaticSetup(runWorkspace, project, groupName):
     import pygcam.tool
     from pygcam.utils import mkdirs
     from pygcam.constants import LOCAL_XML_NAME
-    from pygcam.project import Project
     from ..util import symlink
     from ..error import GcamToolError
 
@@ -207,7 +206,7 @@ def runStaticSetup(runWorkspace, project, groupName):
     toolArgs = ['+P', projectName, '--mcs=gensim', 'run', '-s', 'setup',
                 '-S', scenariosArg, '--sandboxDir=' + sandboxDir]
 
-    if groupName:
+    if useGroupDir:
         toolArgs += ['-g', groupName]
 
     _logger.debug('Running: %s', 'gt ' + ' '.join(toolArgs))

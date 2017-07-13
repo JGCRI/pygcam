@@ -23,7 +23,6 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
    :ref:`discrete <discrete-label>`,
    :ref:`gensim <gensim-label>`,
    :ref:`iterate <iterate-label>`,
-   :ref:`newsim <newsim-label>`,
    :ref:`runsim <runsim-label>`,
 
 .. argparse::
@@ -66,8 +65,8 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
       .. _delsim-label:
 
       Delete simulation results and re-initialize the database for the given user
-      application. This is done automatically by the sub-command ``newsim`` and
-      should be used only to recreate the database from scratch.
+      application. This is done automatically by the sub-command ``gensim`` when
+      the ``--delete`` flag is specified.
 
    iterate : @replace
       .. _iterate-label:
@@ -79,10 +78,6 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
       “foo” in each trialDir for a given set of parameters, you might write::
 
         gt iterate -s1 -c “foo -s{simId} -t{trialNum} -i{trialDir}/x -o{trialDir}/y/z.txt”.
-
-   newsim : @replace
-      .. _newsim-label:
-
 
    parallelPlot : @replace
       .. _parallelPlot-label:
