@@ -1,4 +1,4 @@
-``pygcammcs.schema``
+``pygcam.mcs.schema``
 ============================
 
 This module defines the object-relational mapping used to interface
@@ -8,6 +8,6 @@ using `SqlAlchemy <https://www.sqlalchemy.org>`_.
 API
 ---
 
-.. automodule:: pygcammcs.schema
+.. automodule:: pygcam.mcs.schema
    :members:
 
