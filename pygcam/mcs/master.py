@@ -96,7 +96,7 @@ class Master(object):
         for row in rows:
             assert len(row) == 5, 'db.getRunInfo failed to return 5 values'
             runId, simId, trialNum, expName, status = row
-            Context(appName=projectName, runId=runId, simId=simId,
+            Context(projectName=projectName, runId=runId, simId=simId,
                     trialNum=trialNum, expName=expName, status=status)
 
     def waitForWorkers(self):
@@ -235,7 +235,7 @@ class Master(object):
         finally:
             db.endSession(session)
 
-        contexts = map(lambda r: Context(appName=projectName, runId=r.runId,
+        contexts = map(lambda r: Context(projectName=projectName, runId=r.runId,
                                          simId=simId, trialNum=r.trialNum,
                                          expName=scenario, groupName=groupName,
                                          baseline=baseline, status=r.status), runs)
@@ -488,7 +488,7 @@ class Master(object):
 
                     if runLocal:
                         self.setRunStatus(context, status=RUN_RUNNING)
-                        result = worker.runTrial(trialArgs)
+                        result = worker.runTrial(trialArgs)                 # TBD: pass context and args
                         self.saveResults(result)
                     else:
                         # Easier to deal with a list of AsyncResults instances than a

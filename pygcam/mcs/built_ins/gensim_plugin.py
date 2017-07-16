@@ -272,7 +272,7 @@ def genSimulation(simId, trials, paramPath, args):
     db = getDatabase()
     db.addExperiments(scenarioNames, baseline, scenarioFile)
 
-    context = Context(appName=args.projectName, simId=simId, groupName=groupName)
+    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
 
     paramFileObj = XMLParameterFile(paramPath)
     paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)

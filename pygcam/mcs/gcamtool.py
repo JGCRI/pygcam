@@ -35,7 +35,7 @@ def runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     groupArg = ['-g', context.groupName] if context.groupName else []
 
     # N.B. gcammcs' RunWorkspace is the gcamtool's RefWorkspace
-    toolArgs = ['+P', context.appName, '--mcs=trial',
+    toolArgs = ['+P', context.projectName, '--mcs=trial',
                 '--set=GCAM.SandboxRefWorkspace=' + runWorkspace,
                 'run', '-s', steps, '-S', context.expName,
                 '--sandboxDir=' + trialDir] + groupArg

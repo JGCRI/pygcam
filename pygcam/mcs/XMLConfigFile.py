@@ -20,8 +20,9 @@ DOUBLES_GROUP = 'Doubles'
 
 def getSimScenarioDir(context):
     from .util import getSimLocalXmlDir
+
     localXmlDir = getSimLocalXmlDir(context.simId)
-    scenDir = os.path.join(localXmlDir, context.groupName, context.expName)
+    scenDir = os.path.join(localXmlDir, context.groupDir, context.expName)
     return scenDir
 
 def getSimConfigFile(context):

@@ -56,14 +56,14 @@ class Worker(object):
         getConfig()
         configureLogs()
 
-        self.context = Context(runId=args.runId,  simId=args.simId, trialNum=args.trialNum,
+        self.context = Context(runId=args.runId, simId=args.simId, trialNum=args.trialNum,
                                expName=args.scenario, baseline=args.baseline,
-                               appName=args.projectName, groupName=args.groupName, store=False)
+                               projectName=args.projectName, groupName=args.groupName, store=False)
         self.errorMsg = None
         self.runLocal = args.runLocal
 
     @classmethod
-    def runTrial(cls, args):
+    def runTrial(cls, args): # TBD: pass context, too
         """
         Run a single trial on the current engine using the local Worker.
 
@@ -93,7 +93,7 @@ class Worker(object):
 
             worker.setStatus(RUN_RUNNING)
 
-        result = worker._runTrial(args)
+        result = worker._runTrial(args) # TBD: pass context
         return result
 
     def setStatus(self, status):
@@ -184,7 +184,7 @@ class Worker(object):
         return result
 
 
-def runTrial(args):
+def runTrial(args): # TBD: pass context and args
     '''
     Remotely-callable function providing an interface to the Worker
     class.
@@ -192,6 +192,7 @@ def runTrial(args):
     :param args: (argparse.Namespace) arguments to pass to the worker
     :return: (WorkerResult) run identification info and completion status
     '''
+    # TBD: worker = Worker(context) or runTrial(context, args)
     return Worker.runTrial(args)
 
 if __name__ == '__main__':

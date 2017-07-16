@@ -375,7 +375,7 @@ class Project(XMLFile):
     def readProjectFile(cls, projectName, groupName=None, projectFile=None):
 
         # return cached project if already read, otherwise read project.xml
-        if not cls.instance or cls.project.projectName != projectName:
+        if not cls.instance or cls.instance.projectName != projectName:
             projectFile = projectFile or getParam('GCAM.ProjectXmlFile', section=projectName)
             cls.instance = Project(projectFile, projectName, groupName)
 

@@ -221,7 +221,7 @@ class ScenarioGroup(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.srcGroupDir = node.get('srcGroupDir', '')
+        self.srcGroupDir = node.get('srcGroupDir', '')  # TBD: fix XML docs to refer to this name
         self.useGroupDir = bool(self.srcGroupDir) or getBooleanXML(node.get('useGroupDir', default='0'))
         self.isDefault = getBooleanXML(node.get('default', default='0'))
         self.iteratorName = node.get('iterator')

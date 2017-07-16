@@ -9,7 +9,7 @@ _logger = getLogger(__name__)
 def driver(args, tool):
     """
     Run a command for each trialDir or expDir, using str.format to pass required args.
-    Possible format args are: appName, simId, trialNum, expName, simDir, trialDir, and expDir.
+    Possible format args are: projectName, simId, trialNum, expName, simDir, trialDir, and expDir.
     """
     from subprocess import call
 
@@ -26,7 +26,7 @@ def driver(args, tool):
     noRun   = args.noRun
     trialStr = args.trials
 
-    appName = getSection()
+    projectName = getSection()
 
     if trialStr:
         trials = U.parseTrialString(trialStr)
@@ -36,13 +36,13 @@ def driver(args, tool):
         trials = xrange(count)
 
     # TBD: Add groupName
-    context = Context(appName=appName, simId=simId, expName=expName)
-    _logger.info('Running iterator for appName=%s, simId=%d, expName=%s, trials=%s, command="%s"',
-                 appName, simId, expName, trialStr, command)
+    context = Context(projectName=projectName, simId=simId, expName=expName)
+    _logger.info('Running iterator for projectName=%s, simId=%d, expName=%s, trials=%s, command="%s"',
+                 projectName, simId, expName, trialStr, command)
 
     # Create a dict to pass to str.format. These are constant across trials.
     argDict = {
-        'appName' : appName,
+        'projectName' : projectName,
         'simId'   : args.simId,
         'expName' : args.expName,
     }
@@ -72,7 +72,7 @@ class IterateCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''(MCS) Run a command in each trialDir, or if expName is given, 
         in each expDir. The following arguments are available for use in the command string,
-        specified within curly braces: appName, simId, trialNum, expName, trialDir, expDir.
+        specified within curly braces: projectName, simId, trialNum, expName, trialDir, expDir.
         For example, to run the fictional program "foo" in each trialDir for a given set of
         parameters, you might write:
         gt iterate -s1 -c "foo -s{simId} -t{trialNum} -i{trialDir}/x -o{trialDir}/y/z.txt".'''}
@@ -86,7 +86,7 @@ class IterateCommand(SubcommandABC):
         parser.add_argument('-c', '--command', type=str, required=True,
                             help='''A command string to execute for each trial. The following
                             arguments are available for use in the command string, specified
-                            within curly braces: appName, simId, trialNum, expName, trialDir, 
+                            within curly braces: projectName, simId, trialNum, expName, trialDir, 
                             expDir.''')
 
         parser.add_argument('-e', '--expName', type=str, default="",

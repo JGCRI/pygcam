@@ -615,19 +615,20 @@ class CoreDatabase(object):
         self.endSession(session)
         return rslt
 
-    def getAppId(self, appName):
-        session = self.Session()
-        appId = session.query(Application).filter_by(appName=appName).scalar()
-        self.endSession(session)
-        return appId # N.B. scalar() returns None if no rows are found
-
-    def currentAppId(self):
-        if self.appId is not None:
-            return self.appId
-
-        appName = getSection()
-        self.appId = self.getAppId(appName)
-        return self.appId
+    # Deprecated
+    # def getAppId(self, appName):
+    #     session = self.Session()
+    #     appId = session.query(Application).filter_by(appName=appName).scalar()
+    #     self.endSession(session)
+    #     return appId # N.B. scalar() returns None if no rows are found
+    #
+    # def currentAppId(self):
+    #     if self.appId is not None:
+    #         return self.appId
+    #
+    #     appName = getSection()
+    #     self.appId = self.getAppId(appName)
+    #     return self.appId
 
     def createRun(self, simId, trialNum, expName=None, expId=None, status=RUN_NEW, session=None):
         """
@@ -720,7 +721,6 @@ class CoreDatabase(object):
         #_logger.debug("for simid=%d, expList=%s, status=%s, rslt=%s" % (simId, expList, status, rslt))
         return rslt
 
-    # New version returns runId as well, for use with ipp_driver.py
     def getRunsByStatus(self, simId, scenario, statusList, groupName=None, projectName=None):
         '''
         Returns tuples of (runId, trialNum) for the given scenario that have
@@ -746,7 +746,7 @@ class CoreDatabase(object):
 
         if groupName or projectName:
             rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], expName=r[4],
-                                         baseline=r[5], groupName=groupName, appName=projectName),
+                                         baseline=r[5], groupName=groupName, projectName=projectName),
                        rslt)
         return rslt
 

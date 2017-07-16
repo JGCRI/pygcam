@@ -7,6 +7,7 @@
 import os
 from pygcam.config import getParam, getParamAsInt
 from pygcam.utils import mkdirs
+from pygcam.project import Project
 from .error import PygcamMcsUserError
 
 # def _getJobNum():
@@ -67,11 +68,12 @@ def getSimDir(simId, create=False):
 class Context(object):
 
     __slots__ = ['runId', 'simId', 'trialNum', 'expName',
-                 'baseline', 'groupName', 'appName', 'status']
+                 'baseline', 'groupName', 'projectName',
+                 'useGroupDir', 'status']
 
     instances = {}      # Context instances keyed by runId
 
-    def __init__(self, runId=None, appName=None, simId=None, trialNum=None,
+    def __init__(self, runId=None, projectName=None, simId=None, trialNum=None,
                  expName=None, baseline=None, groupName=None, status=None,
                  store=True):
         self.runId     = runId
@@ -79,9 +81,13 @@ class Context(object):
         self.trialNum  = trialNum
         self.expName   = expName        # TBD: change to scenario
         self.baseline  = baseline
-        self.groupName = groupName
-        self.appName   = appName        # TBD: change to projectName
         self.status    = status
+
+        self.projectName = projectName = projectName or getParam('GCAM.DefaultProject')
+        project = Project.readProjectFile(projectName)
+
+        self.groupName = groupName or project.scenarioSetup.defaultGroup
+        self.useGroupDir = project.scenarioGroup.useGroupDir
 
         if store and runId:
             self.saveRunInfo()
@@ -95,17 +101,17 @@ class Context(object):
         return cls.instances.get(runId, None)
 
     def __str__(self):
-        return "<Context prj=%s exp=%s grp=%s sim=%s trl=%s run=%s sta=%s>" % \
-               (self.appName, self.expName, self.groupName,
+        return "<Context prj=%s exp=%s grp=%s use=%s sim=%s trl=%s run=%s sta=%s>" % \
+               (self.projectName, self.expName, self.groupName, self.useGroupDir,
                 self.simId, self.trialNum, self.runId, self.status)
 
-    def setVars(self, appName=None, simId=None, trialNum=None, expName=None,
+    def setVars(self, projectName=None, simId=None, trialNum=None, expName=None,
                 baseline=None, groupName=None, status=None):
         '''
         Set elements of a context structure for all args that are not None.
         '''
-        if appName:
-            self.appName = appName
+        if projectName:
+            self.projectName = projectName
 
         if simId is not None:
             self.simId = int(simId)
@@ -149,3 +155,11 @@ class Context(object):
             mkdirs(scenarioDir)
 
         return scenarioDir
+
+    @property
+    def groupDir(self):
+        return self.groupName if self.useGroupDir else ''
+
+if __name__ == '__main__':
+    c = Context()
+    print(c)

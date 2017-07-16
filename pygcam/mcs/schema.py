@@ -17,6 +17,7 @@ class CoreMCSMixin(object):
     def __tablename__(cls):
         return cls.__name__.lower()
 
+# Deprecated? or change to Project?
 class Application(CoreMCSMixin, ORMBase):
     '''
     Application table defining the "application" name
