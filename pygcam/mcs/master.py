@@ -250,15 +250,21 @@ class Master(object):
         worker tasks, so we lookup the equivalent in our local cache to test
         for whether a change has occurred.
         """
-        cached = Context.getRunInfo(context.runId) or context.saveRunInfo()
+        cached = Context.getRunInfo(context.runId)
+        if not cached:
+            _logger.debug('context for runId %d not found in cache', context.runId)
+            cached = context.saveRunInfo()
 
         if status is None:
+            _logger.debug('setRunStatus: status is None')
             if context == cached:
+                _logger.debug('setRunStatus: status is None and context==cached; returning')
                 return
 
             status = context.status
 
         if cached.status == status:
+            _logger.debug('setRunStatus: cached.status==status; returning')
             return
 
         _logger.debug('%s -> %s', cached, status)
