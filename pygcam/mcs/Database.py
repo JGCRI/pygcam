@@ -723,15 +723,18 @@ class CoreDatabase(object):
 
     def getRunsByStatus(self, simId, scenario, statusList, groupName=None, projectName=None):
         '''
-        Returns tuples of (runId, trialNum) for the given scenario that have
-        any of the statuses in statusList (which can be a single status string or
-        a list of strings.) If groupName or projectName are not None, results are
-        converted to a list of Context instances.
+        By default, returns tuples of (runId, trialNum) for the given scenario that have
+        any of the statuses in statusList (which can be a single status string or a list
+        of strings.) If groupName or projectName are not None, results are converted to
+        a list of Context instances.
         '''
         from .context import Context
 
         if isinstance(statusList, six.string_types):
             statusList = [statusList]
+
+        if len(statusList) == 0:
+            return []
 
         with self.sessionScope() as session:
 
@@ -775,13 +778,54 @@ class CoreDatabase(object):
             trialCount = session.query(Sim.trials).filter_by(simId=simId).scalar()
             return trialCount
 
-    def getRunInfo(self, includeSucceededRuns=False):
+    def getMissingTrials(self, simId, scenario):
+        """
+        Return a list of trial numbers that are not present in the database
+        for the given simId and scenario.
+
+        :param simId: (int) simulation ID
+        :param scenario: (str) scenario name
+        :return: (list of int) trial numbers of missing trials
+        """
+        count = self.getTrialCount(simId)
+        possible = set(xrange(count))
+
+        df = self.getRunInfo(simId, scenario, includeSucceededRuns=True, asDataFrame=True)
+        present = set() if df is None else set(df.trialNum)
+
+        missing = possible - present
+        return sorted(missing)
+
+    def getRunInfo(self, simId, scenario, includeSucceededRuns=False, asDataFrame=False):
+        """
+        Return info for runs for the given simId and scenario, as a list of tuples
+        or as a pandas.DataFrame.
+
+        :param simId: (int) simulation ID
+        :param scenario: (str) scenario name
+        :param includeSucceededRuns: (bool) if True, runs of status 'succeeded' are
+           included; by default they are not.
+        :param asDataFrame: (bool) whether to return the result as a list of tuples
+           (the default) or as a DataFrame
+        :return:
+        """
+        from pandas import DataFrame
+
         with self.sessionScope() as session:
-            q = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).add_columns(Experiment.expName).join(Experiment)
+            q = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).\
+                    filter_by(simId=simId).join(Experiment).filter_by(expName=scenario)
+
             if not includeSucceededRuns:
                 q = q.filter(Run.status != 'succeeded')
 
             rows = q.all()
+            if asDataFrame:
+                if rows:
+                    cols = map(lambda d: d['name'], q.column_descriptions)
+                    df = DataFrame.from_records(rows, columns=cols, index='runId')
+                    return df
+                return None
+
             return rows
 
     def createExp(self, name, description=None):

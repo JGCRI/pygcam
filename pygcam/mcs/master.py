@@ -91,8 +91,9 @@ class Master(object):
         self.client = None
         projectName = args.projectName
 
+        # TBD: test this
         # load these once from database and amend as necessary when creating runs
-        rows = self.db.getRunInfo(includeSucceededRuns=False)
+        rows = self.db.getRunInfo(args.simId, includeSucceededRuns=False)
         for row in rows:
             assert len(row) == 5, 'db.getRunInfo failed to return 5 values'
             runId, simId, trialNum, expName, status = row
@@ -112,7 +113,7 @@ class Master(object):
             if client and len(client) > 0:
                 return
 
-            if not client:
+            if client is None:
                 try:
                     # default timeout is 10 seconds
                     self.client = client = ipp.Client(profile=profile, cluster_id=clusterId)
@@ -241,6 +242,7 @@ class Master(object):
                                          baseline=baseline, status=r.status), runs)
         return contexts
 
+    # TBD: test this. Restarting runsim doesn't update status to RUNNING
     def setRunStatus(self, context, status=None):
         """
         Cache the status of this run, and if it has changed, save the new
@@ -506,13 +508,24 @@ class Master(object):
 def listTrialsToRedo(db, simId, scenarios, statuses):
     from .util import createTrialString
 
+    # 'missing' is not a real status found in the database
+    missing = 'missing' in statuses
+    if missing:
+        statuses.remove('missing')
+
     for scenario in scenarios:
+        trialNums = []
+
         # If any of the "redo" options find trials, use these instead of args.trials
         tuples = db.getRunsByStatus(simId, scenario, statuses)
-
         if tuples:
             # Just print the corresponding trial string
-            trialNums = map(lambda tuple: tuple[1], tuples)  # unpack(runId, trialNum) tuple
+            trialNums += map(lambda tuple: tuple[2], tuples)  # unpack(runId, simId, trialNum, ...) tuple
+
+        if missing:
+            trialNums += db.getMissingTrials(simId, scenario)
+
+        if trialNums:
             trialStr = createTrialString(trialNums)
             print("%s:\n%s" % (scenario, trialStr))
         else:
