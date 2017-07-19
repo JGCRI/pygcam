@@ -91,14 +91,15 @@ class Master(object):
         self.client = None
         projectName = args.projectName
 
-        # TBD: test this
-        # load these once from database and amend as necessary when creating runs
-        rows = self.db.getRunInfo(args.simId, includeSucceededRuns=False)
-        for row in rows:
-            assert len(row) == 5, 'db.getRunInfo failed to return 5 values'
-            runId, simId, trialNum, expName, status = row
-            Context(projectName=projectName, runId=runId, simId=simId,
-                    trialNum=trialNum, expName=expName, status=status)
+        # cache run definitions from the database and amend as necessary when creating runs
+        for scenario in args.scenarios:
+            rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
+            _logger.debug('Caching info for %d runs of scenario %s', len(rows), scenario)
+            for row in rows:
+                assert len(row) == 5, 'db.getRunInfo failed to return 5 values'
+                runId, simId, trialNum, expName, status = row
+                Context(projectName=projectName, runId=runId, simId=simId,
+                        trialNum=trialNum, expName=expName, status=status)
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
