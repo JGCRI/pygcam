@@ -298,7 +298,7 @@ class Master(object):
 
         for task in tasks:
             try:
-                ar = self.client.get_result(task, owner=False, block=False)
+                ar = self.client.get_result(task, owner=True, block=False)
 
                 # for dataDict in ar.data:
                 if ar is not None:
@@ -306,7 +306,7 @@ class Master(object):
                         self.setRunStatus(context)
 
             except Exception as e:
-                _logger.warning("checkRunning: %s" % e)
+                _logger.warning("checkRunning: %s: task=%s, ar=%s", e, task, ar)
 
 
     def getResults(self, tasks):
@@ -320,7 +320,7 @@ class Master(object):
 
         for task in tasks:
             try:
-                ar = client.get_result(task, owner=False, block=False)
+                ar = client.get_result(task, owner=True, block=False)
                 chunk = ar.get()
                 workerResult = chunk[0]
 
