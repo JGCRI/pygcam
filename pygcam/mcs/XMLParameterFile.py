@@ -44,7 +44,7 @@ WRITE_FUNC_ELT       = 'WriteFunc'
 DISTRO_META_ATTRS     = ['name', 'type', 'apply']
 DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 
-# Called only from gcamtool.py:runGcamTool()
+# TBD: Move this? Called only from worker.py:_runGcamTool()
 def readParameterInfo(context, paramPath):
     from pygcam.xmlSetup import ScenarioSetup
 
@@ -863,7 +863,7 @@ class XMLInputFile(XMLWrapper):
         simId = context.simId
 
         for scenName in scenNames:
-            ctx.setVars(expName=scenName)
+            ctx.setVars(scenario=scenName)
             configFile = XMLConfigFile.getConfigForScenario(ctx, useCopy=useCopy)
 
             # If compName ends in '.xml', assume its value is the full relative path, with

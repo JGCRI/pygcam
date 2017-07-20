@@ -9,6 +9,7 @@
 # controller and engines using the values in the template.
 #
 from __future__ import division, print_function
+import copy
 from six import iteritems
 import os
 import stat
@@ -76,7 +77,7 @@ _pbsControllerBatchTemplate = """#!/bin/sh
 %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 
-# TBD: test PBS (where?)
+# TBD: test PBS (where? everything seems to use SLURM these days)
 batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                              'controller' : _slurmControllerBatchTemplate},
 
@@ -96,10 +97,11 @@ class Master(object):
             rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
             _logger.debug('Caching info for %d runs of scenario %s', len(rows), scenario)
             for row in rows:
-                assert len(row) == 5, 'db.getRunInfo failed to return 5 values'
-                runId, simId, trialNum, expName, status = row
-                Context(projectName=projectName, runId=runId, simId=simId,
-                        trialNum=trialNum, expName=expName, status=status)
+                assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
+                runId, simId, trialNum, status = row
+                context = Context(projectName=projectName, runId=runId, simId=simId,
+                                  trialNum=trialNum, scenario=scenario, status=status)
+                _logger.debug("Loaded %s", context)
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -239,7 +241,7 @@ class Master(object):
 
         contexts = map(lambda r: Context(projectName=projectName, runId=r.runId,
                                          simId=simId, trialNum=r.trialNum,
-                                         expName=scenario, groupName=groupName,
+                                         scenario=scenario, groupName=groupName,
                                          baseline=baseline, status=r.status), runs)
         return contexts
 
@@ -251,22 +253,19 @@ class Master(object):
         worker tasks, so we lookup the equivalent in our local cache to test
         for whether a change has occurred.
         """
+        _logger.debug('setRunStatus: %s', context)
+        status = status or context.status
+
         cached = Context.getRunInfo(context.runId)
-        if not cached:
-            _logger.debug('context for runId %d not found in cache', context.runId)
-            cached = context.saveRunInfo()
+        if cached:
+            _logger.debug('setRunStatus: cache hit: %s', cached)
 
-        if status is None:
-            _logger.debug('setRunStatus: status is None')
-            if context == cached:
-                _logger.debug('setRunStatus: status is None and context==cached; returning')
+            if cached.status == status:
+                _logger.debug('setRunStatus: no change; returning')
                 return
-
-            status = context.status
-
-        if cached.status == status:
-            _logger.debug('setRunStatus: cached.status==status; returning')
-            return
+        else:
+            _logger.debug('adding context for runId %d to cache', context.runId)
+            context.saveRunInfo()
 
         _logger.debug('%s -> %s', cached, status)
         cached.setVars(status=status)
@@ -435,26 +434,29 @@ class Master(object):
             self.client.shutdown(hub=True, block=True)
 
     def runTrials(self):
-        from argparse import Namespace
         from .util import parseTrialString
         import worker
 
-        args = self.args
+        args = vars(self.args)
+        argDict = {}
+        for key in ('runLocal', 'noGCAM', 'noBatchQueries', 'noPostProcessor'):
+            argDict[key] = args.get(key, False)
 
-        simId     = args.simId
-        statuses  = args.statuses
-        scenarios = args.scenarios
-        runLocal  = args.runLocal
-        projectName = args.projectName
-        groupName   = args.groupName
+        simId       = args['simId']
+        statuses    = args['statuses']
+        scenarios   = args['scenarios']
+        projectName = args['projectName']
+        groupName   = args['groupName']
+        trialStr    = args['trials']
+        runLocal    = args['runLocal']
 
         asyncResults = []
-        view = None if args.runLocal else self.client.load_balanced_view(retries=1)
+        view = None if runLocal else self.client.load_balanced_view(retries=1)
 
         for scenario in scenarios:
 
             if statuses:
-                # Change this to return Run instances
+                # Change this to return Run instances?
                 # If any of the "redo" options find trials, use these instead of args.trials
                 contexts = self.db.getRunsByStatus(simId, scenario, statuses,
                                                    projectName=projectName,
@@ -467,13 +469,13 @@ class Master(object):
             else:
                 trialCount = self.db.getTrialCount(simId)
 
-                if args.trials:
+                if trialStr:
                     # convert arg string like "4,7,9-12,42" to a list of ints
-                    trials = parseTrialString(args.trials)
-                    userTrials = len(trials)
+                    trialList = parseTrialString(trialStr)
+                    userTrials = len(trialList)
 
-                    # remove values that don't make sense, and warn user about them
-                    trialNums = filter(lambda trial: 0 <= trial < trialCount, trials)
+                    # remove nonsense values and warn user about them
+                    trialNums = filter(lambda trial: 0 <= trial < trialCount, trialList)
                     goodTrials = len(trialNums)
                     if goodTrials != userTrials:
                         _logger.warn('Ignoring %d trial numbers that are out of range [0,%d]',
@@ -484,30 +486,23 @@ class Master(object):
 
                 contexts = self.createRuns(simId, scenario, trialNums)
 
-            argDict = vars(args)
-
-            try:
-                for context in contexts:
-                    argDict['runId']    = context.runId
-                    argDict['trialNum'] = context.trialNum
-                    argDict['baseline'] = context.baseline
-                    argDict['scenario'] = context.expName
-
-                    trialArgs = Namespace(**argDict)
-
+            for context in contexts:
+                try:
                     if runLocal:
                         self.setRunStatus(context, status=RUN_RUNNING)
-                        result = worker.runTrial(trialArgs)                 # TBD: pass context and args
+                        ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
+                        result = worker.runTrial(ctx, argDict)
                         self.saveResults(result)
                     else:
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
-                        result = view.map_async(worker.runTrial, [trialArgs])
-                        asyncResults.append(result)
+                        result = view.map_async(worker.runTrial, [context], [argDict])
                         self.setRunStatus(context, status=RUN_QUEUED)
 
-            except Exception as e:
-                _logger.error("Exception running 'runTrial': %s", e)
+                    asyncResults.append(result)
+
+                except Exception as e:
+                    _logger.error("Exception running 'runTrial': %s", e)
 
         return asyncResults
 
@@ -631,7 +626,6 @@ def _clusterCommand(cmd):
     return status
 
 
-# TBD: need to be able to run this on Mac or Windows without SLURM, too
 def startEngines(numTrials, batchTemplate):
     """
     Uses the batch file created when the cluster was started, so it has

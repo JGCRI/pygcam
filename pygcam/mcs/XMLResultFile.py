@@ -239,23 +239,15 @@ class QueryResult(object):
 
 def saveResults(context, type, delete=True):
     from collections import defaultdict
-    from .Database import getDatabase, GCAM_PROGRAM
+    from .Database import getDatabase
     from .util import getSimResultFile, activeYears
 
     runId    = context.runId
     baseline = context.baseline
-    scenario = context.expName
+    scenario = context.scenario
 
     if type == RESULT_TYPE_DIFF:
         assert baseline, "saveResults: must specify baseline for DIFF results"
-
-    # _logger.debug("Saving results for scenario=%s, type=%s", scenario, type)
-
-    # run = db.getRunByRunId(runId)
-    #
-    # if not run:
-    #     _logger.warning("saveResults: Can't save results; runId %d not found", runId)
-    #     return
 
     resultsFile = getSimResultFile(context.simId)
     rf = XMLResultFile.getInstance(resultsFile)

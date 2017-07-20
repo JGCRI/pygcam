@@ -42,12 +42,6 @@ class ShellCommandError(PygcamMcsSystemError):
 class GcamToolError(PygcamMcsSystemError):  # TBD: define in pygcam?
     pass
 
-class TimeoutError(PygcamMcsException):
-    pass
-
-class AlarmError(PygcamMcsException):
-    pass
-
 class BaseSpecError(PygcamMcsSystemError):
     filename = ''
     lineNum = 0

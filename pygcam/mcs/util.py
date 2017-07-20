@@ -131,12 +131,12 @@ def tail(filename, count):
 
     return lines
 
-def computeLogPath(simId, expName, logDir, trials):
+def computeLogPath(simId, scenario, logDir, trials):
     trialMin = min(trials)
     trialMax = max(trials)
     trialRange = trialMin if trialMin == trialMax else "%d-%d" % (trialMin, trialMax)
-    jobName  = "%s-s%d-%s" % (expName, simId, trialRange)   # for displaying in job queue
-    logFile  = "%s-%s.out" % (expName, trialRange)          # for writing diagnostic output
+    jobName  = "%s-s%d-%s" % (scenario, simId, trialRange)   # for displaying in job queue
+    logFile  = "%s-%s.out" % (scenario, trialRange)          # for writing diagnostic output
     logPath  = os.path.join(logDir, logFile)
     return logPath, logFile, jobName
 

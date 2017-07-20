@@ -544,7 +544,7 @@ class CoreDatabase(object):
 
         # This is essentially this query, but with "JOIN xx ON" syntax generated:
         #   select r.trialNum, v.value from run r, outvalue v, experiment e, output o
-        #   where e.expName='test exp' and r.expid=e.expid and r.simid=1 and
+        #   where e.scenario='test exp' and r.expid=e.expid and r.simid=1 and
         #         o.name='p1' and o.outputid=v.outputid;
         query = session.query(Run.trialNum).add_columns(OutValue.value).filter_by(simId=simId).\
         join(Experiment).filter_by(expName=expName).join(OutValue).join(Output).filter_by(name=outputName).\
@@ -669,7 +669,7 @@ class CoreDatabase(object):
         return run    # scalar() returns None if no rows are found
 
     def getRunFromContext(self, context):
-        run = self.getRun(context.simId, context.trialNum, context.expName)
+        run = self.getRun(context.simId, context.trialNum, context.scenario)
         #_logger.debug("getRunIdFromContext returning runId %s", run.runId if run else None)
         return run
 
@@ -748,7 +748,7 @@ class CoreDatabase(object):
             rslt = query.order_by(Run.trialNum).all()
 
         if groupName or projectName:
-            rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], expName=r[4],
+            rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], scenario=r[4],
                                          baseline=r[5], groupName=groupName, projectName=projectName),
                        rslt)
         return rslt

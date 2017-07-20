@@ -34,6 +34,9 @@ class AlarmSignalException(SignalException):
 class TimeoutSignalException(SignalException):
     pass
 
+class UserInterruptException(SignalException):
+    pass
+
 def raiseSignalException(signum, _frame):
     if signum == signal.SIGALRM:
         raise AlarmSignalException(signum)
@@ -41,12 +44,15 @@ def raiseSignalException(signum, _frame):
     elif signum == signal.SIGTERM:      # TBD: this is sent by SLURM. Same for PBS??
         raise TimeoutSignalException(signum)
 
+    elif signum == signal.SIGINT:       # control-c by user
+        raise UserInterruptException(signum)
+
     else:
         raise SignalException(signum)
 
 
 def catchSignals(handler=raiseSignalException):
-    signals = [signal.SIGTERM, signal.SIGINT]
+    signals = [signal.SIGTERM, signal.SIGINT, signal.SIGALRM]
     signals.append(signal.SIGABRT if IsWindows else signal.SIGQUIT)
 
     for sig in signals:

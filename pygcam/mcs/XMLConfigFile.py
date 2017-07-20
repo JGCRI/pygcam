@@ -22,7 +22,7 @@ def getSimScenarioDir(context):
     from .util import getSimLocalXmlDir
 
     localXmlDir = getSimLocalXmlDir(context.simId)
-    scenDir = os.path.join(localXmlDir, context.groupDir, context.expName)
+    scenDir = os.path.join(localXmlDir, context.groupDir, context.scenario)
     return scenDir
 
 def getSimConfigFile(context):
@@ -68,7 +68,7 @@ class XMLConfigFile(XMLFile):
         Return the path to the run-tree version of the config file
         for the given scenario.
         '''
-        key = (context.expName, useCopy)
+        key = (context.scenario, useCopy)
         try:
             return cls.instances[key]
 

@@ -1,35 +1,122 @@
 # Copyright (c) 2012-2016. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
-# from datetime import datetime
 import os
-from signal import alarm, SIGTERM, SIGQUIT, SIGALRM
+from signal import alarm
+import time
 
-from pygcam.config import getConfig, setParam, getParamAsFloat, getParamAsBoolean
+from pygcam.config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
 from pygcam.error import GcamError, GcamSolverError
 from pygcam.log import getLogger, configureLogs
-from pygcam.signals import catchSignals, SignalException, TimeoutSignalException, AlarmSignalException
+from pygcam.signals import catchSignals, TimeoutSignalException, AlarmSignalException, UserInterruptException
+from pygcam.utils import mkdirs
 
+from pygcam.mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from pygcam.mcs.context import Context
-from pygcam.mcs.error import PygcamMcsUserError, TimeoutError, AlarmError
+from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED,
-                                RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
-                                RUN_GCAMERROR, RUN_RUNNING)
-from pygcam.mcs.gcamtool import runGcamTool
+                                 RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
+                                 RUN_GCAMERROR, RUN_RUNNING)
+from pygcam.mcs.util import readTrialDataFile
+from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
 
 _logger = getLogger(__name__)
 
-def _sighandler(signum, _frame):
-    err = SignalException(signum)   # convenient way to compose msg
 
-    if signum == SIGALRM:
-        raise AlarmError(str(err))
+def _secondsToStr(t):
+    minutes, seconds = divmod(t, 60)
+    hours, minutes   = divmod(minutes, 60)
+    return "%d:%02d:%02d" % (hours, minutes, seconds)
 
-    elif signum in (SIGQUIT, SIGTERM):
-        raise TimeoutError(str(err))
 
+def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
+    """
+    run "gt +P {project} --mcs=trial run -s {step[,step,...]} -S {scenarioName} ..."
+    For Monte Carlo trials.
+    """
+    import pygcam.tool
+
+    runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
+
+    trialDir = context.getTrialDir()
+    groupArg = ['-g', context.groupName] if context.groupName else []
+
+    # N.B. gcammcs' RunWorkspace is the gcamtool's RefWorkspace
+    toolArgs = ['+P', context.projectName, '--mcs=trial',
+                '--set=GCAM.SandboxRefWorkspace=' + runWorkspace,
+                'run', '-s', steps, '-S', context.scenario,
+                '--sandboxDir=' + trialDir] + groupArg
+
+    command = 'gt ' + ' '.join(toolArgs)
+    _logger.debug('Running: %s', command)
+    status = pygcam.tool.main(argv=toolArgs, raiseError=True)
+    msg = '"%s" exited with status %d' % (command, status)
+
+    if status != 0 and raiseError:
+        raise GcamToolError(msg)
+
+    _logger.info("_runSteps: " + msg)
+    return status
+
+
+def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
+                noPostProcessor=False):
+    '''
+    Run GCAM in the current working directory and return exit status.
+    '''
+    from XMLParameterFile import XMLParameter, decache
+
+    _logger.debug("_runGcamTool: %s", context)
+
+    # For running in an ipyparallel engine, forget instances from last run
+    decache()
+
+    simId = context.simId
+    baselineName = context.baseline
+    isBaseline = not baselineName
+
+    if isBaseline and not noGCAM:
+        paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
+        paramFile = readParameterInfo(context, paramPath)
+
+        df = readTrialDataFile(simId)
+        columns = df.columns
+
+        # add data for linked columns if not present
+        linkPairs = XMLParameter.getParameterLinks()
+        for linkName, dataCol in linkPairs:
+            if linkName not in columns:
+                df[linkName] = df[dataCol]
+
+        applySingleTrialData(df, context, paramFile)
+
+    if noGCAM:
+        _logger.info('_runGcamTool: skipping GCAM')
+        gcamStatus = 0
     else:
-        raise SignalException(signum)
+        start = time.time()
+
+        # N.B. setup step calls pygcam.setup.setupWorkspace
+        gcamStatus = _runPygcamSteps('setup,prequery,gcam', context)
+
+        stop = time.time()
+        _logger.info("_runGcamTool: elapsed time: %s", _secondsToStr(stop - start))
+
+    if gcamStatus == 0:
+        if not noBatchQueries:
+            _runPygcamSteps('query', context)
+
+        if not noPostProcessor:
+            steps = getParam('MCS.PostProcessorSteps')     # e.g., "diff,CI"
+            if steps:
+                _runPygcamSteps(steps, context)
+
+        status = RUNNER_SUCCESS
+    else:
+        status = RUNNER_FAILURE
+
+    _logger.info("_runGcamTool: exiting with status %d", status)
+    return status
 
 
 class WorkerResult(object):
@@ -43,7 +130,7 @@ class WorkerResult(object):
     def __str__(self):
         c = self.context
         return "<WorkerResult run=%s sim=%s trial=%s, scenario=%s, status=%s error=%s>" % \
-               (self.runId, c.simId, c.trialNum, c.expName, c.status, self.errorMsg)
+               (self.runId, c.simId, c.trialNum, c.scenario, c.status, self.errorMsg)
 
 
 class Worker(object):
@@ -52,31 +139,29 @@ class Worker(object):
     '''
     # startTime = datetime.now()
 
-    def __init__(self, args):
+    def __init__(self, context, argDict):
+        """
+        Initialize a Worker instance
+
+        :param context: (Context) description of trial to run
+        :param argDict: (dict) various args passed from command-line
+        """
         getConfig()
         configureLogs()
 
-        self.context = Context(runId=args.runId, simId=args.simId, trialNum=args.trialNum,
-                               expName=args.scenario, baseline=args.baseline,
-                               projectName=args.projectName, groupName=args.groupName, store=False)
         self.errorMsg = None
-        self.runLocal = args.runLocal
+        self.context  = context
+        self.argDict  = argDict
+        self.runLocal = argDict.get('runLocal', False)
 
-    @classmethod
-    def runTrial(cls, args): # TBD: pass context, too
+    def runTrial(self):
         """
         Run a single trial on the current engine using the local Worker.
 
-        :param args: (argparse.Namespace) command-line args plus a few added elements
+        :param context: (Context) description of trial to run
         :return: (WorkerResult) holds run identification info and completion status
         """
-        from pygcam.utils import mkdirs
-
-        getConfig()
-
-        worker = cls(args)
-        context = worker.context
-
+        context = self.context
         runDir = context.getScenarioDir(create=True)
         _logger.info("runDir is %s", runDir)
         os.chdir(runDir)
@@ -85,15 +170,15 @@ class Worker(object):
         logDir = os.path.join(trialDir, 'log')
         mkdirs(logDir)
 
-        if not args.runLocal:
-            logFile = os.path.join(logDir, args.scenario + '.log')
+        if not self.runLocal:
+            logFile = os.path.join(logDir, context.scenario + '.log')
             setParam('GCAM.LogFile', logFile)
             setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
             configureLogs(force=True)
 
-            worker.setStatus(RUN_RUNNING)
+            self.setStatus(RUN_RUNNING)
 
-        result = worker._runTrial(args) # TBD: pass context
+        result = self._runTrial()
         return result
 
     def setStatus(self, status):
@@ -105,17 +190,22 @@ class Worker(object):
         if not self.runLocal:
             publish_data({context.runId: context})
 
-    def _runTrial(self, args):
+    def _runTrial(self):
         """
         Run a single Monte Carlo trial.
 
-        :param args: (argparse.Namespace) args passed from Master
         :return: (str) execution status, one of {'succeeded', 'failed', 'alarmed', 'aborted', 'killed'}
         """
-        catchSignals(_sighandler)
+        catchSignals()
+
+        context = self.context
+        argDict = self.argDict
+
+        noGCAM          = argDict.get('noGCAM', False)
+        noBatchQueries  = argDict.get('noBatchQueries', False)
+        noPostProcessor = argDict.get('noPostProcessor', False)
 
         try:
-            context = self.context
             trialNum = context.trialNum
             errorMsg = None
 
@@ -130,13 +220,9 @@ class Worker(object):
                 _logger.debug('Alarm set for %d sec' % seconds)
 
             try:
-                # endTime = datetime.now()
-                # elapsedMinutes = (endTime - cls.startTime) / 60
-                # timeRemaining = allocatedMinutes - elapsedMinutes
-                # if timeRemaining < getParamAsFloat('IPP.MinimumTimeToRun'):
-                #     what?
-
-                exitCode = runGcamTool(args, context)
+                exitCode = _runGcamTool(context, noGCAM=noGCAM,
+                                        noBatchQueries=noBatchQueries,
+                                        noPostProcessor=noPostProcessor)
                 status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
             except TimeoutSignalException:
@@ -146,6 +232,14 @@ class Worker(object):
             except AlarmSignalException:
                 errorMsg = "Trial %d terminated by internal alarm" % trialNum
                 status = RUN_ALARMED
+
+            except UserInterruptException:
+                errorMsg = "Interrupted by user"
+                status = RUN_KILLED
+
+            except GcamToolError as e:
+                errorMsg = "%s" % e
+                status = RUN_FAILED
 
             except PygcamMcsUserError as e:
                 errorMsg = "%s" % e
@@ -180,26 +274,32 @@ class Worker(object):
             _logger.info('Trial status: %s', status)
 
         self.setStatus(status)
-        result = WorkerResult(self.context, errorMsg)
+        result = WorkerResult(context, errorMsg)
         return result
 
 
-def runTrial(args): # TBD: pass context and args
+def runTrial(context, argDict):
     '''
     Remotely-callable function providing an interface to the Worker
     class.
 
-    :param args: (argparse.Namespace) arguments to pass to the worker
+    :param context: (Context) information describing the run
+    :param argDict: (dict) with bool values for keys 'runLocal',
+        'noGCAM', 'noBatchQueries', and 'noPostProcessor'
     :return: (WorkerResult) run identification info and completion status
     '''
-    # TBD: worker = Worker(context) or runTrial(context, args)
-    return Worker.runTrial(args)
+    worker = Worker(context, argDict)
+    result = worker.runTrial()
+    return result
+
 
 if __name__ == '__main__':
-    from argparse import Namespace
-    args = Namespace(runId=1001, simId=1, trialNum=2, scenario='baseline',
-                     noGCAM=False, noBatchQueries=False,
-                     updateDatabase=True, shutdownIdleEngines=False,
-                     noPostProcessor=False, waitSecs=5)
-    result = runTrial(args)
+    context = Context(runId=1001, simId=1, trialNum=2, scenario='baseline',
+                      projectName='paper1', groupName='mcs', store=False)
+
+    argDict = {'runLocal': True,
+               'noGCAM': False,
+               'noBatchQueries': False,
+               'noPostProcessor': False}
+    result = runTrial(context, argDict)
     print(result)

@@ -67,19 +67,19 @@ def getSimDir(simId, create=False):
 
 class Context(object):
 
-    __slots__ = ['runId', 'simId', 'trialNum', 'expName',
+    __slots__ = ['runId', 'simId', 'trialNum', 'scenario',
                  'baseline', 'groupName', 'projectName',
                  'useGroupDir', 'status']
 
     instances = {}      # Context instances keyed by runId
 
     def __init__(self, runId=None, projectName=None, simId=None, trialNum=None,
-                 expName=None, baseline=None, groupName=None, status=None,
+                 scenario=None, baseline=None, groupName=None, status=None,
                  store=True):
         self.runId     = runId
         self.simId     = simId
         self.trialNum  = trialNum
-        self.expName   = expName        # TBD: change to scenario
+        self.scenario  = scenario
         self.baseline  = baseline
         self.status    = status
 
@@ -101,11 +101,11 @@ class Context(object):
         return cls.instances.get(runId, None)
 
     def __str__(self):
-        return "<Context prj=%s exp=%s grp=%s use=%s sim=%s trl=%s run=%s sta=%s>" % \
-               (self.projectName, self.expName, self.groupName, self.useGroupDir,
+        return "<Context id=%s prj=%s scn=%s grp=%s use=%s sim=%s trl=%s run=%s sta=%s>" % \
+               (id(self), self.projectName, self.scenario, self.groupName, self.useGroupDir,
                 self.simId, self.trialNum, self.runId, self.status)
 
-    def setVars(self, projectName=None, simId=None, trialNum=None, expName=None,
+    def setVars(self, projectName=None, simId=None, trialNum=None, scenario=None,
                 baseline=None, groupName=None, status=None):
         '''
         Set elements of a context structure for all args that are not None.
@@ -119,8 +119,8 @@ class Context(object):
         if trialNum is not None:
             self.trialNum = int(trialNum)
 
-        if expName:
-            self.expName = expName
+        if scenario:
+            self.scenario = scenario
 
         if baseline:
             self.baseline = baseline
@@ -150,7 +150,7 @@ class Context(object):
         Return and optionally create the path to the directory for a given experiment.
         '''
         trialDir = self.getTrialDir(create=False)
-        scenarioDir = os.path.join(trialDir, self.expName)
+        scenarioDir = os.path.join(trialDir, self.scenario)
         if create:
             mkdirs(scenarioDir)
 
