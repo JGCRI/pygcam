@@ -101,7 +101,7 @@ class Master(object):
                 runId, simId, trialNum, status = row
                 context = Context(projectName=projectName, runId=runId, simId=simId,
                                   trialNum=trialNum, scenario=scenario, status=status)
-                _logger.debug("Loaded %s", context)
+                #_logger.debug("Loaded %s", context)
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -253,18 +253,24 @@ class Master(object):
         worker tasks, so we lookup the equivalent in our local cache to test
         for whether a change has occurred.
         """
-        _logger.debug('setRunStatus: %s', context)
+        debug = False   # set to True for extra diagnostic msgs
+
+        if debug:
+            _logger.debug('setRunStatus: %s', context)
         status = status or context.status
 
         cached = Context.getRunInfo(context.runId)
         if cached:
-            _logger.debug('setRunStatus: cache hit: %s', cached)
+            if debug:
+                _logger.debug('setRunStatus: cache hit: %s', cached)
 
             if cached.status == status:
-                _logger.debug('setRunStatus: no change; returning')
+                if debug:
+                    _logger.debug('setRunStatus: no change; returning')
                 return
         else:
-            _logger.debug('adding context for runId %d to cache', context.runId)
+            if debug:
+                _logger.debug('adding context for runId %d to cache', context.runId)
             context.saveRunInfo()
 
         _logger.debug('%s -> %s', cached, status)
@@ -294,10 +300,10 @@ class Master(object):
             try:
                 ar = self.client.get_result(task, owner=False, block=False)
 
-                # TBD: check this doesn't reset DB status to 'running' redundantly
                 # for dataDict in ar.data:
-                for runId, context in iteritems(ar.data):
-                    self.setRunStatus(context)
+                if ar is not None:
+                    for runId, context in iteritems(ar.data):
+                        self.setRunStatus(context)
 
             except Exception as e:
                 _logger.warning("checkRunning: %s" % e)
