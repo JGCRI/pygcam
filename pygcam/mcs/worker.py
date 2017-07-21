@@ -188,7 +188,7 @@ class Worker(object):
         context.setVars(status=status)
 
         if not self.runLocal:
-            publish_data({context.runId: context})
+            publish_data(dict(context=context))
 
     def _runTrial(self):
         """

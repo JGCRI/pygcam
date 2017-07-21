@@ -298,15 +298,14 @@ class Master(object):
 
         for task in tasks:
             try:
-                ar = self.client.get_result(task, owner=True, block=False)
+                ar = self.client.get_result(task, owner=False, block=False)
 
-                # for dataDict in ar.data:
-                if ar is not None:
-                    for runId, context in iteritems(ar.data):
-                        self.setRunStatus(context)
+                if ar.data:
+                    context = ar.data['context']
+                    self.setRunStatus(context)
 
             except Exception as e:
-                _logger.warning("checkRunning: %s: task=%s, ar=%s", e, task, ar)
+                _logger.warning("checkRunning: %s", e)
 
 
     def getResults(self, tasks):
@@ -334,6 +333,7 @@ class Master(object):
                 # With retries=1, should be able to recover from this.
                 _logger.warning('getResults: %s', e)
 
+            # TBD: might not be needed with owner=True after ar.get()
             client.purge_results(jobs=task)
 
         # _logger.debug("%d completed tasks with results", len(results))
@@ -366,7 +366,7 @@ class Master(object):
             if not completed:
                 return
 
-            _logger.debug('%d tasks have completed', len(completed))
+            _logger.debug('%d completed tasks', len(completed))
 
             results = self.getResults(completed)
             if not results:
@@ -378,7 +378,7 @@ class Master(object):
             for result in results:
                 self.saveResults(result)
 
-            seconds = 3
+            seconds = 5
             #_logger.debug('sleep(%d) before checking for more completed tasks', seconds)
             sleep(seconds)    # brief sleep before checking for more completed tasks
 

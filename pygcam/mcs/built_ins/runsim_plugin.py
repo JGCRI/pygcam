@@ -4,6 +4,8 @@
 from __future__ import print_function
 import argparse
 from six import iteritems
+import time
+
 from pygcam.error import PygcamException
 from pygcam.log import getLogger
 from pygcam.subcommand import SubcommandABC
@@ -39,15 +41,16 @@ def driver(args, tool):
     args.groupName = args.groupName or Project.defaultGroupName()
 
     master = Master(args)
-    # while True:
-    try:
-        master.processTrials()
+    while True:
+        try:
+            master.processTrials()
 
-    except NoEnginesRegistered as e:
-        # if enginesPending()
-        #    sleep(30)
-        # else:
-        raise PygcamException("processTrials aborted: %s" % e)
+        except NoEnginesRegistered as e:
+            if enginesPending():
+                _logger.debug('Waiting for PENDING engine tasks...')
+                time.sleep(30)
+            else:
+                raise PygcamException("processTrials aborted: %s" % e)
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists
@@ -209,7 +212,6 @@ class RunSimCommand(SubcommandABC):
 #
 if __name__ == '__main__':
     import ipyparallel as ipp
-    import time
 
     clusterId = 'mcs'
     profile = 'pygcam'
