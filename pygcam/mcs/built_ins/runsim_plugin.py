@@ -4,23 +4,13 @@
 from __future__ import print_function
 import argparse
 from six import iteritems
-import time
 
-from pygcam.error import PygcamException
 from pygcam.log import getLogger
 from pygcam.subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
-def enginesPending():
-    from ..slurm import Slurm
-
-    slurm = Slurm()
-    jobs = slurm.jobsInState('pending', jobName='mcs-engine')
-    return len(jobs)
-
 def driver(args, tool):
-    from ipyparallel import NoEnginesRegistered
     from pygcam.project import Project
     from ..master import Master, pidFileExists, startCluster
 
@@ -41,16 +31,8 @@ def driver(args, tool):
     args.groupName = args.groupName or Project.defaultGroupName()
 
     master = Master(args)
-    while True:
-        try:
-            master.processTrials()
+    master.mainloop()
 
-        except NoEnginesRegistered as e:
-            if enginesPending():
-                _logger.debug('Waiting for PENDING engine tasks...')
-                time.sleep(30)
-            else:
-                raise PygcamException("processTrials aborted: %s" % e)
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists
@@ -74,9 +56,6 @@ class RunSimCommand(SubcommandABC):
 
     def addArgs(self, parser):
         from pygcam.config import getParam, getParamAsInt, getParamAsFloat
-
-        # deprecated
-        # defaultMinutes   = getParamAsFloat('IPP.MinutesPerRun')
 
         defaultProfile    = getParam('IPP.Profile')
         defaultClusterId  = getParam('IPP.ClusterId')
@@ -201,6 +180,8 @@ class RunSimCommand(SubcommandABC):
 
             statusSet = set(args.statuses)
             known = set(RUN_STATUSES)
+            known.add('missing') # not stored in the DB, but a pseudo-status that can be specified
+
             unknown = statusSet - known
             if unknown:
                 raise CommandlineError("Unknown status code(s): %s" % ', '.join(map(repr, unknown)))

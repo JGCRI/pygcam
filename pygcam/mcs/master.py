@@ -90,6 +90,8 @@ class Master(object):
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
+        self.finished = False
+
         projectName = args.projectName
 
         # cache run definitions from the database and amend as necessary when creating runs
@@ -307,7 +309,6 @@ class Master(object):
             except Exception as e:
                 _logger.warning("checkRunning: %s", e)
 
-
     def getResults(self, tasks):
         if not tasks:
             return None
@@ -418,7 +419,7 @@ class Master(object):
             # don't wait for results; just add trials to running cluster and return
             return
 
-        while True:
+        while not self.finished:
             self.checkRunning()         # Check for newly running tasks
             self.checkCompleted()       # Check for completed tasks
 
@@ -430,14 +431,33 @@ class Master(object):
             _logger.debug('sleep(%d)', args.waitSecs)
             sleep(args.waitSecs)
 
-            if not self.outstandingTasks():
-                break
+            # set flag for runsim to quit outer loop
+            self.finished = not self.outstandingTasks()
 
         # Shutdown the hub
         if args.shutdownWhenIdle:
             _logger.info("Shutting down hub...")
             sleep(2)   # allow sockets to clear
             self.client.shutdown(hub=True, block=True)
+
+    def mainloop(self):
+        from ipyparallel import NoEnginesRegistered
+        from pygcam.error import PygcamException
+        from .slurm import Slurm
+
+        slurm = Slurm()
+
+        while not self.finished:
+            try:
+                self.processTrials()
+
+            except NoEnginesRegistered as e:
+                jobs = slurm.jobsInState('pending', jobName='mcs-engine')
+                if len(jobs):
+                    _logger.debug('Waiting for %d PENDING engine tasks', jobs)
+                    sleep(30)
+                else:
+                    raise PygcamException("processTrials aborted: %s" % e)
 
     def runTrials(self):
         from .util import parseTrialString

@@ -101,8 +101,10 @@ class Context(object):
         return cls.instances.get(runId, None)
 
     def __str__(self):
+        idTail = str(id(self))[-6:] # show last 6 digits only; enough to distinguish objs
+
         return "<Context id=%s prj=%s scn=%s grp=%s use=%s sim=%s trl=%s run=%s sta=%s>" % \
-               (id(self), self.projectName, self.scenario, self.groupName, self.useGroupDir,
+               (idTail, self.projectName, self.scenario, self.groupName, self.useGroupDir,
                 self.simId, self.trialNum, self.runId, self.status)
 
     def setVars(self, projectName=None, simId=None, trialNum=None, scenario=None,
