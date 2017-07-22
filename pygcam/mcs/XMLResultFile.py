@@ -208,7 +208,7 @@ class QueryResult(object):
         are comma-delimited, and strings with spaces are double-quoted. Assume units are
         the same as in the first row of data.
         '''
-        _logger.debug("readCSV: reading %s", self.filename)
+        #_logger.debug("readCSV: reading %s", self.filename)
         with open(self.filename) as f:
             self.title  = f.readline().strip()
             self.df = pd.read_table(f, sep=',', header=0, index_col=False, quoting=0)
