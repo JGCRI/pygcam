@@ -443,6 +443,8 @@ class Master(object):
             # set flag for runsim to quit outer loop
             self.finished = not self.outstandingTasks()
 
+        self.finished = True
+
         # Shutdown the hub
         if args.shutdownWhenIdle:
             _logger.info("Shutting down hub...")
