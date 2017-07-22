@@ -150,6 +150,7 @@ class Worker(object):
         configureLogs()
 
         self.errorMsg = None
+        self.taskId   = None
         self.context  = context
         self.argDict  = argDict
         self.runLocal = argDict.get('runLocal', False)

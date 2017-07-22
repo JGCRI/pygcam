@@ -22,7 +22,7 @@ import ipyparallel as ipp
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
-from .Database import (RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, # RUN_FAILURES,
+from .Database import (RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED,
                        getDatabase)
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
@@ -306,6 +306,9 @@ class Master(object):
                     context = ar.data['context']
                     self.setRunStatus(context)
 
+            except KeyError:        # TBD: test this. Could it lose results?
+                self.client.purge_results(jobs=task)
+
             except Exception as e:
                 _logger.warning("checkRunning: %s", e)
 
@@ -327,6 +330,7 @@ class Master(object):
                 # filter out results from execute commands (e.g. imports)
                 #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
                 #results.extend(partialResults)
+                workerResult.taskId = task      # might be needed for resubmit
                 results.append(workerResult)
 
             except Exception as e:
@@ -356,6 +360,9 @@ class Master(object):
 
             if baseline:  # also save 'diff' results
                 saveResults(context, RESULT_TYPE_DIFF)
+
+        elif status == RUN_KILLED:
+            self.client.resubmit(result.taskId)     # TBD: test this
 
         elif errorMsg:
             _logger.warning('Run %d, trial %d failed: %s', runId, trialNum, errorMsg)
