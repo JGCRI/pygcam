@@ -306,8 +306,9 @@ class Master(object):
                 ar = self.client.get_result(task, owner=False, block=False)
 
                 if ar.data:
-                    context = ar.data['context']
-                    self.setRunStatus(context)
+                    context = ar.data.get('context')
+                    if context:
+                        self.setRunStatus(context)
 
             except KeyError:        # TBD: test this. Could it lose results?
                 self.client.purge_results(jobs=task)
@@ -348,12 +349,8 @@ class Master(object):
         return results
 
     def saveResults(self, result):
-        errorMsg = result.errorMsg
         context  = result.context
-        runId    = context.runId
-        trialNum = context.trialNum
         status   = context.status
-        baseline = context.baseline
 
         self.setRunStatus(context)
 
@@ -361,14 +358,14 @@ class Master(object):
             _logger.debug("Saving results for %s", context)
             saveResults(context, RESULT_TYPE_SCENARIO)
 
-            if baseline:  # also save 'diff' results
+            if context.baseline:  # also save 'diff' results
                 saveResults(context, RESULT_TYPE_DIFF)
 
         elif status == RUN_KILLED:
             self.client.resubmit(result.taskId)     # TBD: test this
 
-        elif errorMsg:
-            _logger.warning('Run %d, trial %d failed: %s', runId, trialNum, errorMsg)
+        else:
+            _logger.warning('%s failed: %s', context, result.errorMsg)
 
     def checkCompleted(self):
 
@@ -385,16 +382,15 @@ class Master(object):
                 self.client.purge_results(jobs=completed)
                 continue    # retries=1 should take care of it
 
-            # update database status
+            _logger.debug('Saving %d results', len(results))
             for result in results:
                 self.saveResults(result)
 
-            # TBD: return len(results) so caller can decide to shorten wait
+            # TBD: return len(results) so caller can decide to shorten wait?
             # if len(results) > 20:
             #     return
 
             seconds = 3
-            #_logger.debug('sleep(%d) before checking for more completed tasks', seconds)
             sleep(seconds)    # brief sleep before checking for more completed tasks
 
     def outstandingTasks(self):
