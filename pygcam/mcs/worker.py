@@ -2,13 +2,14 @@
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
 import os
-from signal import alarm
+import signal
 import time
 
 from pygcam.config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
 from pygcam.error import GcamError, GcamSolverError
 from pygcam.log import getLogger, configureLogs
-from pygcam.signals import catchSignals, TimeoutSignalException, AlarmSignalException, UserInterruptException
+from pygcam.signals import (catchSignals, TimeoutSignalException, AlarmSignalException,
+                            UserInterruptException)
 from pygcam.utils import mkdirs
 
 from pygcam.mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
@@ -22,6 +23,11 @@ from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
 
 _logger = getLogger(__name__)
 
+_GotSignalUSR1 = False
+
+def _handleSIGUSR1(_signum, _frame):
+    global _GotSignalUSR1
+    _GotSignalUSR1 = True
 
 def _secondsToStr(t):
     minutes, seconds = divmod(t, 60)
@@ -130,15 +136,13 @@ class WorkerResult(object):
     def __str__(self):
         c = self.context
         return "<WorkerResult run=%s sim=%s trial=%s, scenario=%s, status=%s error=%s>" % \
-               (self.runId, c.simId, c.trialNum, c.scenario, c.status, self.errorMsg)
+               (c.runId, c.simId, c.trialNum, c.scenario, c.status, self.errorMsg)
 
 
 class Worker(object):
     '''
     Defines the methods and data associated with a worker task.
     '''
-    # startTime = datetime.now()
-
     def __init__(self, context, argDict):
         """
         Initialize a Worker instance
@@ -148,6 +152,9 @@ class Worker(object):
         """
         getConfig()
         configureLogs()
+
+        catchSignals()
+        signal.signal(signal.SIGUSR1, _handleSIGUSR1)
 
         self.errorMsg = None
         self.taskId   = None
@@ -159,7 +166,6 @@ class Worker(object):
         """
         Run a single trial on the current engine using the local Worker.
 
-        :param context: (Context) description of trial to run
         :return: (WorkerResult) holds run identification info and completion status
         """
         context = self.context
@@ -197,8 +203,6 @@ class Worker(object):
 
         :return: (str) execution status, one of {'succeeded', 'failed', 'alarmed', 'aborted', 'killed'}
         """
-        catchSignals()
-
         context = self.context
         argDict = self.argDict
 
@@ -217,7 +221,7 @@ class Worker(object):
             _logger.info('Running trial %d' % trialNum)
 
             if seconds:
-                alarm(seconds) # don't let any job use more than its allotted time
+                signal.alarm(seconds) # don't let any job use more than its allotted time
                 _logger.debug('Alarm set for %d sec' % seconds)
 
             try:
@@ -263,7 +267,7 @@ class Worker(object):
             status = RUN_ABORTED
 
         finally:
-            alarm(0)  # turn off timer
+            signal.alarm(0)  # turn off timer
 
         if errorMsg:
             _logger.error("Trial status: %s: %s", status, errorMsg)
@@ -289,6 +293,15 @@ def runTrial(context, argDict):
         'noGCAM', 'noBatchQueries', and 'noPostProcessor'
     :return: (WorkerResult) run identification info and completion status
     '''
+    import sys
+
+    # SIGUSR1 is sent when there's not enough time to run another job. The
+    # signal handler sets GotSignalUSR1 = True. If this has occurred, we
+    # exit on the next remote invocation, raising an error in master and
+    # triggering a retry.
+    if _GotSignalUSR1:
+        sys.exit(0)
+
     worker = Worker(context, argDict)
     result = worker.runTrial()
     return result

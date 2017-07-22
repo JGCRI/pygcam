@@ -18,16 +18,18 @@ from time import sleep
 from IPython.paths import locate_profile
 
 import ipyparallel as ipp
-# from ipyparallel.client.client import ExecuteReply
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
-from .Database import (RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED,
-                       getDatabase)
+from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
 from ..log import getLogger
+
+# Exit values for Master.processTrials()
+CONTINUE = 1
+EXIT = 2
 
 _logger = getLogger(__name__)
 
@@ -41,6 +43,7 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
+#SBATCH --signal=USR1@{min_secs_to_run)
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 # These attempts accomplished nothing since TBB doesn't use them
@@ -407,15 +410,14 @@ class Master(object):
         as a command-line arg, or loop indefinitely, allowing another task to
         add more trials to run.
 
-        :return: none
+        :return: (int) CONTINUE or EXIT
         """
         db = self.db
         args = self.args
 
         if args.redoListOnly and args.statuses:
             listTrialsToRedo(db, args.simId, args.scenarios, args.statuses)
-            self.finished = True
-            return
+            return EXIT
 
         if not args.runLocal:
             self.waitForWorkers()    # wait for engines to spin up
@@ -424,11 +426,10 @@ class Master(object):
             self.runTrials()
 
         if args.addTrials or args.runLocal:
-            # don't wait for results; just add trials to running cluster and return
-            self.finished = True
-            return
+            # Add trials to running cluster and exit
+            return EXIT
 
-        while not self.finished:
+        while self.outstandingTasks():
             self.checkRunning()         # Check for newly running tasks
             self.checkCompleted()       # Check for completed tasks
 
@@ -440,16 +441,14 @@ class Master(object):
             _logger.debug('sleep(%d)', args.waitSecs)
             sleep(args.waitSecs)
 
-            # set flag for runsim to quit outer loop
-            self.finished = not self.outstandingTasks()
-
-        self.finished = True
-
         # Shutdown the hub
         if args.shutdownWhenIdle:
             _logger.info("Shutting down hub...")
             sleep(2)   # allow sockets to clear
             self.client.shutdown(hub=True, block=True)
+            return EXIT
+
+        return CONTINUE
 
     def mainloop(self):
         from ipyparallel import NoEnginesRegistered
@@ -458,17 +457,22 @@ class Master(object):
 
         slurm = Slurm()
 
-        while not self.finished:
+        while True:
             try:
-                self.processTrials()
+                if self.processTrials() == EXIT:
+                    return
 
-            except NoEnginesRegistered as e:
-                jobs = slurm.jobsInState('pending', jobName='mcs-engine')
-                if len(jobs):
-                    _logger.debug('Waiting for %d PENDING engine tasks', jobs)
-                    sleep(30)
-                else:
-                    raise PygcamException("processTrials aborted: %s" % e)
+            except NoEnginesRegistered:
+                pending = slurm.jobsInState('pending', jobName='mcs-engine')    # TBD: make jobName a config var
+                count = len(pending)
+                if count == 0:
+                    return
+
+                _logger.debug('Waiting for %d PENDING engine tasks', count)
+                sleep(30)
+
+            except Exception as e:
+                raise PygcamException("processTrials aborted: %s" % e)
 
     def runTrials(self):
         from .util import parseTrialString
@@ -593,10 +597,10 @@ def _saveBatchFiles(numTrials, argDict):
 
     :param numTrials: (int) the number of GCAM trials to run
     :param argDict: (dict) values for "scheduler", "account", "queue",
-       "profile", "cluster_id", "tasks_per_node", "num_engines", and "timelimit"
-       are substituted into the batch templates. For most of these, defaults
-       are taken from ~/.pygcam.cfg and overridden by argDict. Both "ntasks"
-       and "timelimit" are computed on-the-fly.
+       "profile", "cluster_id", "tasks_per_node", "num_engines", "timelimit",
+       and "minimum_seconds" are substituted into the batch templates. For
+       most of these, defaults are taken from ~/.pygcam.cfg and overridden
+       by argDict. Both "ntasks" and "timelimit" are computed on-the-fly.
     :return: (dict) the names of the generated files, keyed by 'engine' or 'controller'
     """
     import pipes
@@ -615,6 +619,7 @@ def _saveBatchFiles(numTrials, argDict):
                 'queue'          : getParam('IPP.Queue'),
                 'cluster_id'     : argDict['clusterId'],
                 'tasks_per_node' : getParamAsInt('IPP.TasksPerNode'),
+                'min_secs_to_run': getParamAsInt('IPP.MinTimeToRun') * 60,
                 'timelimit'      : timelimit,
                 }
 

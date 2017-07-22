@@ -16,7 +16,7 @@ from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
-from .utils import (getTempFile, TempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
+from .utils import (getTempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
                     pathjoin, saveToFile, getExeDir, writeXmldbDriverProperties)
 
 _logger = getLogger(__name__)
@@ -106,7 +106,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0, ca
         _logger.debug("Found %s in CSV cache", filename)
         return _csvCache[filename]
 
-    _logger.debug("Reading %s", filename)
+    # _logger.debug("Reading %s", filename)
     try:
         df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
     except IOError as e:

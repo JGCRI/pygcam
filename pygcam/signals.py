@@ -6,14 +6,16 @@ from .windows import IsWindows
 
 # Windows has only SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, or SIGTERM
 if IsWindows:
-    signal.SIGALRM = signal.SIGTERM
-    signal.SIGQUIT = signal.SIGTERM
+    signal.SIGALRM = signal.NSIG + 1
+    signal.SIGQUIT = signal.NSIG + 2
+    signal.SIGUSR1 = signal.NSIG + 3
 
 _sigmap = {
+    signal.SIGINT:  'SIGINT',
     signal.SIGALRM: 'SIGALRM',
     signal.SIGTERM: 'SIGTERM',
     signal.SIGQUIT: 'SIGQUIT',
-    signal.SIGINT:  'SIGINT',
+    signal.SIGUSR1: 'SIGUSR1',
 }
 
 def _signame(signum):
