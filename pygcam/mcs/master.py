@@ -407,6 +407,7 @@ class Master(object):
 
         if args.redoListOnly and args.statuses:
             listTrialsToRedo(db, args.simId, args.scenarios, args.statuses)
+            self.finished = True
             return
 
         if not args.runLocal:
@@ -417,6 +418,7 @@ class Master(object):
 
         if args.addTrials or args.runLocal:
             # don't wait for results; just add trials to running cluster and return
+            self.finished = True
             return
 
         while not self.finished:
