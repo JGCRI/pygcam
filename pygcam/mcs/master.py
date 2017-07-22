@@ -43,7 +43,7 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
-#SBATCH --signal=USR1@{min_secs_to_run)
+#SBATCH --signal=USR1@{min_secs_to_run}
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 # These attempts accomplished nothing since TBB doesn't use them
