@@ -276,7 +276,7 @@ class Master(object):
         else:
             if debug:
                 _logger.debug('adding context for runId %d to cache', context.runId)
-            context.saveRunInfo()
+            cached = context.saveRunInfo()
 
         _logger.debug('%s -> %s', cached, status)
         cached.setVars(status=status)
@@ -322,7 +322,7 @@ class Master(object):
         client = self.client
         results = []
 
-        _logger.debug('Results available for %d tasks', len(tasks))
+        #_logger.debug('Results available for %d tasks', len(tasks))
 
         for task in tasks:
             try:
@@ -389,7 +389,11 @@ class Master(object):
             for result in results:
                 self.saveResults(result)
 
-            seconds = 5
+            # TBD: return len(results) so caller can decide to shorten wait
+            # if len(results) > 20:
+            #     return
+
+            seconds = 3
             #_logger.debug('sleep(%d) before checking for more completed tasks', seconds)
             sleep(seconds)    # brief sleep before checking for more completed tasks
 
