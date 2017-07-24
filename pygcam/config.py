@@ -179,7 +179,7 @@ def readConfigFiles():
     _ConfigParser.optionxform = lambda option: option
 
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
-    _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER'))
+    _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER', 'unknown'))
 
     # Initialize config parser with default values
     systemDefaults = _readConfigResourceFile('etc/system.cfg')
