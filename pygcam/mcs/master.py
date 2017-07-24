@@ -43,6 +43,7 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
+# Cause SIGUSR1 to be sent 'min_secs_to_run' seconds prior to terminating the job. 
 #SBATCH --signal=USR1@{min_secs_to_run}
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
@@ -97,16 +98,18 @@ class Master(object):
 
         projectName = args.projectName
 
-        # cache run definitions from the database and amend as necessary when creating runs
-        for scenario in args.scenarios:
-            rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
-            _logger.debug('Caching info for %d runs of scenario %s', len(rows), scenario)
-            for row in rows:
-                assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
-                runId, simId, trialNum, status = row
-                context = Context(projectName=projectName, runId=runId, simId=simId,
-                                  trialNum=trialNum, scenario=scenario, status=status)
-                #_logger.debug("Loaded %s", context)
+        # If we're just adding trials, no point in caching runs from database
+        if not args.addTrials:
+            # cache run definitions from the database and amend as necessary when creating runs
+            for scenario in args.scenarios:
+                rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
+                _logger.debug('Caching info for %d runs of scenario %s', len(rows), scenario)
+                for row in rows:
+                    assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
+                    runId, simId, trialNum, status = row
+                    context = Context(projectName=projectName, runId=runId, simId=simId,
+                                      trialNum=trialNum, scenario=scenario, status=status)
+                    #_logger.debug("Loaded %s", context)
 
     def waitForWorkers(self):
         from pygcam.config import getParamAsInt
@@ -382,7 +385,7 @@ class Master(object):
                 self.client.purge_results(jobs=completed)
                 continue    # retries=1 should take care of it
 
-            _logger.debug('Saving %d results', len(results))
+            # _logger.debug('Saving %d results', len(results))
             for result in results:
                 self.saveResults(result)
 
@@ -757,6 +760,7 @@ def startCluster(**kwargs):
 
     # If the pid file exists, stop the cluster first
     if pidFileExists(profile, clusterId):
+        _logger.info('Stopping cluster "%s"', clusterId)
         stopCluster(profile=profile, cluster_id=clusterId, stop_jobs=True)
         sleep(1)
 

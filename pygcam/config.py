@@ -174,8 +174,10 @@ def readConfigFiles():
     # don't force keys to lower-case
     _ConfigParser.optionxform = lambda option: option
 
-    # Initialize config parser with default values
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
+    _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER'))
+
+    # Initialize config parser with default values
     systemDefaults = _readConfigResourceFile('etc/system.cfg')
 
     # Read platform-specific defaults, if defined. No error if file is missing.
