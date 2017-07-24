@@ -4,7 +4,6 @@ from pygcam.version import VERSION
 # Build the full version with MCS on when running on ReadTheDocs.
 # In normal mode, MCS is an optional install.
 import os
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
@@ -33,6 +32,14 @@ mcs_requirements = [
     'scipy',
     'sqlalchemy',
 ]
+
+if os.environ.get('READTHEDOCS') == 'True':
+    requirements.extend(mcs_requirements)
+    extras_requirements = {}
+else:
+    extras_requirements = {
+        'mcs':  mcs_requirements,
+    }
 
 long_description = '''
 pygcam
@@ -106,16 +113,14 @@ setup(
     name='pygcam',
     version=VERSION,
     description='Python 2.7 library and scripts for interfacing with GCAM',
-    platforms=['Windows', 'Mac OS X', 'Linux'],
+    platforms=['Windows', 'MacOS', 'Linux'],
 
     packages=['pygcam'],
     entry_points={'console_scripts': ['gt = pygcam.tool:main']},
     install_requires=requirements,
     include_package_data = True,
 
-    extras_require={
-        'mcs':  mcs_requirements,
-    },
+    extras_require=extras_requirements,
 
     url='https://bitbucket.org/plevin/pygcam',
     download_url='https://plevin@bitbucket.org/plevin/pygcam.git',

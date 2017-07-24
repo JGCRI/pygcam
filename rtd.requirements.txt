@@ -1,13 +1,10 @@
-appdirs
 configparser==3.5.0
-filelock
+filelock==2.0.6
 future==0.16.0
 lxml==3.6.4
 matplotlib==2.0.2
 numpy==1.12.1
-packaging
 pandas==0.20.1
 seaborn==0.7.1
 six==1.10.0
-sphinx-argparse==0.1.17
-sphinx-rtd-theme
+sphinx-rtd-theme==0.2.4
