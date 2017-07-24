@@ -311,9 +311,11 @@ class Master(object):
             except KeyError:
                 _logger.debug('checkRunning: purging result for bad key %s', task)
                 self.client.purge_results(jobs=task)
+                continue
 
             except Exception as e:
                 _logger.warning("checkRunning(1): %s", e)
+                continue
 
             # Attempt to isolate sporadic error...
             try:
@@ -505,7 +507,7 @@ class Master(object):
         runLocal    = args['runLocal']
 
         asyncResults = []
-        view = None if runLocal else self.client.load_balanced_view(retries=1)
+        view = None if runLocal else self.client.load_balanced_view(retries=2)
 
         for scenario in scenarios:
 

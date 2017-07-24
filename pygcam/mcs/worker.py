@@ -3,6 +3,7 @@
 import os
 import signal
 import time
+import ipyparallel as ipp
 
 from pygcam.config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
 from pygcam.error import GcamError, GcamSolverError
@@ -21,13 +22,6 @@ from pygcam.mcs.util import readTrialDataFile
 from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
 
 _logger = getLogger(__name__)
-
-# Deprecated
-# _GotSignalUSR1 = False
-#
-# def _handleSIGUSR1(_signum, _frame):
-#     global _GotSignalUSR1
-#     _GotSignalUSR1 = True
 
 def _secondsToStr(t):
     minutes, seconds = divmod(t, 60)
@@ -295,8 +289,6 @@ def runTrial(context, argDict):
         'noGCAM', 'noBatchQueries', and 'noPostProcessor'
     :return: (WorkerResult) run identification info and completion status
     '''
-    import sys
-
     global _latestStartTime
 
     # On the first run, compute the latest time we should start a new trial.
@@ -316,15 +308,7 @@ def runTrial(context, argDict):
     else:
         # TBD: raise an "InsufficientTimeRemaining" error so master can shutdown the engine cleanly?
         if time.time() > _latestStartTime:
-            sys.exit(0)
-
-    # Deprecated: signal was hitting gcam.exe, too
-    # SIGUSR1 is sent when there's not enough time to run another job. The
-    # signal handler sets GotSignalUSR1 = True. If this has occurred, we
-    # exit on the next remote invocation, raising an error in master and
-    # triggering a retry.
-    # if _GotSignalUSR1:
-    #     sys.exit(0)
+            raise ipp.TaskAborted()
 
     worker = Worker(context, argDict)
     result = worker.runTrial()
