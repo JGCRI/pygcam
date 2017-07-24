@@ -25,7 +25,7 @@ def _getMainParser():
     Used only to generate documentation by sphinx argparse extension, in
     which case we don't generate documentation for project-specific plugins.
     '''
-    getConfig()
     setUsingMCS(True)
+    getConfig()
     tool = DummyTool.getInstance()
     return tool.parser
