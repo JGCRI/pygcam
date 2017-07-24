@@ -682,7 +682,7 @@ def startEngines(numTrials, batchTemplate):
     tasksPerNode = getParamAsInt('IPP.TasksPerNode')
     maxEngines   = getParamAsInt('IPP.MaxEngines')
     numEngines   = min(numTrials, maxEngines)
-    numNodes     = numEngines // tasksPerNode + (1 if numEngines % tasksPerNode else 0)
+    numNodes     = numEngines // tasksPerNode + int(bool(numEngines % tasksPerNode)) # rounds up
 
     # TBD: use "ipcluster engines" if there's a way to avoid leaving procs running after shutdown
     # enginesCmd = "ipcluster engines -n %d" % tasksPerNode
