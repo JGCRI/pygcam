@@ -426,6 +426,7 @@ class Master(object):
         """
         db = self.db
         args = self.args
+        shutdownWhenIdle = not args.noShutdownWhenIdle
 
         if args.redoListOnly and args.statuses:
             listTrialsToRedo(db, args.simId, args.scenarios, args.statuses)
@@ -445,7 +446,7 @@ class Master(object):
             self.checkRunning()         # Check for newly running tasks
             self.checkCompleted()       # Check for completed tasks
 
-            if args.shutdownWhenIdle:
+            if shutdownWhenIdle:
                 self.shutdownIdleEngines()
                 if len(self.client) == 0:   # if we shut the last engine...
                     break
@@ -454,7 +455,7 @@ class Master(object):
             sleep(args.waitSecs)
 
         # Shutdown the hub
-        if args.shutdownWhenIdle:
+        if shutdownWhenIdle:
             _logger.info("Shutting down hub...")
             sleep(2)   # allow sockets to clear
             self.client.shutdown(hub=True, block=True)
