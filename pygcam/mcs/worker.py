@@ -314,7 +314,7 @@ def runTrial(context, argDict):
         _latestStartTime = (startTime + secs + 60 * mins + 3600 * hrs) - (minTimeToRun * 60)
 
     else:
-        # TBD: raise an "InsuffienctTimeRemaining" error so master can shutdown the engine cleanly?
+        # TBD: raise an "InsufficientTimeRemaining" error so master can shutdown the engine cleanly?
         if time.clock() > _latestStartTime:
             sys.exit(0)
 
