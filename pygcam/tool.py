@@ -91,10 +91,12 @@ class GcamTool(object):
 
     @classmethod
     def getInstance(cls, loadPlugins=True):
-        if not cls._instance:
-            cls._instance = cls(loadPlugins=loadPlugins)
+        # Specify GcamTool rather than cls to avoid creating
+        # _instance as a class variable in a subclass.
+        if not GcamTool._instance:
+            GcamTool._instance = cls(loadPlugins=loadPlugins)
 
-        return cls._instance
+        return GcamTool._instance
 
     def __init__(self, loadPlugins=True, loadBuiltins=True):
 

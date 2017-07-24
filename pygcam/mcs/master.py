@@ -43,8 +43,9 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
-# Cause SIGUSR1 to be sent 'min_secs_to_run' seconds prior to terminating the job. 
-#SBATCH --signal=USR1@{min_secs_to_run}
+## Cause SIGUSR1 to be sent 'min_secs_to_run' seconds prior to terminating the job. 
+##SBATCH --signal=USR1@{min_secs_to_run}
+export MCS_WALLTIME={timelimit}
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 # These attempts accomplished nothing since TBB doesn't use them
@@ -307,16 +308,16 @@ class Master(object):
             try:
                 ar = self.client.get_result(task, owner=False, block=False)
 
-            except KeyError:        # TBD: test this. Does it lose results?
+            except KeyError:
                 _logger.debug('checkRunning: purging result for bad key %s', task)
                 self.client.purge_results(jobs=task)
 
             except Exception as e:
                 _logger.warning("checkRunning(1): %s", e)
 
-            # Attempt to isolate key error...
+            # Attempt to isolate sporadic error...
             try:
-                if ar.data:
+                if ar is not None and ar.data:
                     context = ar.data.get('context')
                     if context:
                         self.setRunStatus(context)

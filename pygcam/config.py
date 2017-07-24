@@ -187,8 +187,7 @@ def readConfigFiles():
     # Read platform-specific defaults, if defined. No error if file is missing.
     _readConfigResourceFile('etc/%s.cfg' % PlatformName, raiseError=False)
 
-    # if user is working with pygcam.mcs, we load additional defaults. The
-    # function usingMCS() imports the package as part of the test...
+    # if user is working with pygcam.mcs, we load additional defaults.
     if usingMCS():
         _readConfigResourceFile('mcs/etc/mcs.cfg', raiseError=True)
 

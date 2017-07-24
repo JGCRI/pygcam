@@ -1,6 +1,5 @@
 # Copyright (c) 2012-2016. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
-
 import os
 import signal
 import time
@@ -23,11 +22,12 @@ from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
 
 _logger = getLogger(__name__)
 
-_GotSignalUSR1 = False
-
-def _handleSIGUSR1(_signum, _frame):
-    global _GotSignalUSR1
-    _GotSignalUSR1 = True
+# Deprecated
+# _GotSignalUSR1 = False
+#
+# def _handleSIGUSR1(_signum, _frame):
+#     global _GotSignalUSR1
+#     _GotSignalUSR1 = True
 
 def _secondsToStr(t):
     minutes, seconds = divmod(t, 60)
@@ -154,7 +154,7 @@ class Worker(object):
         configureLogs()
 
         catchSignals()
-        signal.signal(signal.SIGUSR1, _handleSIGUSR1)
+        # signal.signal(signal.SIGUSR1, _handleSIGUSR1)
 
         self.errorMsg = None
         self.taskId   = None
@@ -214,16 +214,16 @@ class Worker(object):
             trialNum = context.trialNum
             errorMsg = None
 
+            # Deprecated
             # Set an internal time limit for each trial
-            minPerTask = getParamAsFloat('GCAM.Minutes')
-            seconds = max(30, int(minPerTask * 60) - 45)
+            # minPerTask = getParamAsFloat('GCAM.Minutes')
+            # seconds = max(30, int(minPerTask * 60) - 45)
+            #
+            # if seconds:
+            #     signal.alarm(seconds) # don't let any job use more than its allotted time
+            #     _logger.debug('Alarm set for %d sec' % seconds)
 
             _logger.info('Running trial %d' % trialNum)
-
-            if seconds:
-                signal.alarm(seconds) # don't let any job use more than its allotted time
-                _logger.debug('Alarm set for %d sec' % seconds)
-
             try:
                 exitCode = _runGcamTool(context, noGCAM=noGCAM,
                                         noBatchQueries=noBatchQueries,
@@ -283,6 +283,8 @@ class Worker(object):
         return result
 
 
+_latestStartTime = None
+
 def runTrial(context, argDict):
     '''
     Remotely-callable function providing an interface to the Worker
@@ -295,12 +297,34 @@ def runTrial(context, argDict):
     '''
     import sys
 
+    global _latestStartTime
+
+    # On the first run, compute the latest time we should start a new trial.
+    # On subsequent runs, check that there's adequate time still left.
+    if _latestStartTime is None:
+        startTime = time.clock()
+
+        wallTime  = os.environ('MCS_WALLTIME')
+        parts = wallTime.split(':')
+        secs = parts.pop()
+        mins = parts.pop() if parts else 0
+        hrs  = parts.pop() if parts else 0
+
+        minTimeToRun = getParamAsFloat('IPP.MinTimeToRun')
+        _latestStartTime = (startTime + secs + 60 * mins + 3600 * hrs) - (minTimeToRun * 60)
+
+    else:
+        # TBD: raise an "InsuffienctTimeRemaining" error so master can shutdown the engine cleanly?
+        if time.clock() > _latestStartTime:
+            sys.exit(0)
+
+    # Deprecated: signal was hitting gcam.exe, too
     # SIGUSR1 is sent when there's not enough time to run another job. The
     # signal handler sets GotSignalUSR1 = True. If this has occurred, we
     # exit on the next remote invocation, raising an error in master and
     # triggering a retry.
-    if _GotSignalUSR1:
-        sys.exit(0)
+    # if _GotSignalUSR1:
+    #     sys.exit(0)
 
     worker = Worker(context, argDict)
     result = worker.runTrial()
