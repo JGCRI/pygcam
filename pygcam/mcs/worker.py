@@ -302,10 +302,10 @@ def runTrial(context, argDict):
     # On the first run, compute the latest time we should start a new trial.
     # On subsequent runs, check that there's adequate time still left.
     if _latestStartTime is None:
-        startTime = time.clock()
+        startTime = time.time()
 
-        wallTime  = os.environ('MCS_WALLTIME')
-        parts = wallTime.split(':')
+        wallTime  = os.environ['MCS_WALLTIME']
+        parts = map(int, wallTime.split(':'))
         secs = parts.pop()
         mins = parts.pop() if parts else 0
         hrs  = parts.pop() if parts else 0
@@ -315,7 +315,7 @@ def runTrial(context, argDict):
 
     else:
         # TBD: raise an "InsufficientTimeRemaining" error so master can shutdown the engine cleanly?
-        if time.clock() > _latestStartTime:
+        if time.time() > _latestStartTime:
             sys.exit(0)
 
     # Deprecated: signal was hitting gcam.exe, too

@@ -318,11 +318,11 @@ class Master(object):
             # Attempt to isolate sporadic error...
             try:
                 if ar is not None and ar.data:
-                    _logger.debug('ar.data=%s', ar.data)
+                    # _logger.debug('ar.data=%s', ar.data)
                     context = ar.data.get('context')
-                    _logger.debug('ar.data.get("context")=%s', context)
+                    # _logger.debug('ar.data.get("context")=%s', context)
                     if context:
-                        _logger.debug('setting run status')
+                        # _logger.debug('setting run status')
                         self.setRunStatus(context)
 
             except Exception as e:
