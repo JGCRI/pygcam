@@ -253,7 +253,6 @@ class Master(object):
                                          baseline=baseline, status=r.status), runs)
         return contexts
 
-    # TBD: test this. Restarting runsim doesn't update status to RUNNING
     def setRunStatus(self, context, status=None):
         """
         Cache the status of this run, and if it has changed, save the new
@@ -308,16 +307,22 @@ class Master(object):
             try:
                 ar = self.client.get_result(task, owner=False, block=False)
 
+            except KeyError:        # TBD: test this. Does it lose results?
+                _logger.debug('checkRunning: purging result for bad key %s', task)
+                self.client.purge_results(jobs=task)
+
+            except Exception as e:
+                _logger.warning("checkRunning(1): %s", e)
+
+            # Attempt to isolate key error...
+            try:
                 if ar.data:
                     context = ar.data.get('context')
                     if context:
                         self.setRunStatus(context)
 
-            except KeyError:        # TBD: test this. Could it lose results?
-                self.client.purge_results(jobs=task)
-
             except Exception as e:
-                _logger.warning("checkRunning: %s", e)
+                _logger.warning("checkRunning(2): %s", e)
 
     def getResults(self, tasks):
         if not tasks:
