@@ -16,7 +16,7 @@ PROGRAM = 'gt'
 
 class DummyTool(GcamTool):
 
-    def __init__(self):
+    def __init__(self, loadPlugins=False):
         super(DummyTool, self).__init__(loadPlugins=False)
 
 
