@@ -26,6 +26,6 @@ def _getMainParser():
     which case we don't generate documentation for project-specific plugins.
     '''
     setUsingMCS(True)
-    getConfig()
+    getConfig(reload=True)
     tool = DummyTool.getInstance()
     return tool.parser

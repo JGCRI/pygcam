@@ -89,7 +89,7 @@ def setSection(section):
 def configLoaded():
     return bool(_ConfigParser)
 
-def getConfig():
+def getConfig(reload=False):
     """
     Return the configuration object. If one has been created already via
     `readConfigFiles`, it is returned; otherwise a new one is created
@@ -99,6 +99,10 @@ def getConfig():
 
     :return: a `ConfigParser` instance.
     """
+    if reload:
+        global _ConfigParser
+        _ConfigParser = None
+
     return _ConfigParser or readConfigFiles()
 
 
