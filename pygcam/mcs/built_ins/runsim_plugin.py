@@ -101,8 +101,8 @@ class RunSimCommand(SubcommandABC):
                             help="Don't run GCAM, just run the batch queries and "
                                  "post-processor (if defined).")
 
-        parser.add_argument('-I', '--noShutdownWhenIdle', action='store_true',
-                            help='''Do not shutdown engines when they are idle and there are 
+        parser.add_argument('-i', '--shutdownWhenIdle', action='store_true',
+                            help='''Shutdown engines when they are idle and there are 
                             no outstanding tasks, and shutdown controller when there are no
                             engines running.''')
 

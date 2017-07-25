@@ -428,7 +428,7 @@ class Master(object):
         """
         db = self.db
         args = self.args
-        shutdownWhenIdle = not args.noShutdownWhenIdle
+        shutdownWhenIdle = args.shutdownWhenIdle
 
         if args.redoListOnly and args.statuses:
             listTrialsToRedo(db, args.simId, args.scenarios, args.statuses)
