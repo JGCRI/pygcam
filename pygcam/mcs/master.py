@@ -308,10 +308,10 @@ class Master(object):
             try:
                 ar = self.client.get_result(task, owner=False, block=False)
 
-            except KeyError:
-                _logger.debug('checkRunning: purging result for bad key %s', task)
-                self.client.purge_results(jobs=task)
-                continue
+                # if tasks are ready, we handle them later.
+                if ar.ready():
+                    _logger.debug('checkRunning: skipping task with result (%s)', task)
+                    continue
 
             except Exception as e:
                 _logger.warning("checkRunning(1): %s", e)
@@ -352,7 +352,7 @@ class Master(object):
                 # filter out results from execute commands (e.g. imports)
                 #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
                 #results.extend(partialResults)
-                workerResult.taskId = task      # might be needed for resubmit
+                #workerResult.taskId = task      # might be needed for resubmit
                 results.append(workerResult)
 
             except Exception as e:
