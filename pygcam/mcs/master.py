@@ -327,6 +327,10 @@ class Master(object):
                         # _logger.debug('setting run status')
                         self.setRunStatus(context)
 
+            except KeyError:
+                _logger.debug('checkRunning: purging result for bad key %s', task)
+                self.client.purge_results(jobs=task)
+
             except Exception as e:
                 _logger.warning("checkRunning(2): %s", e)
 
