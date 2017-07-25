@@ -346,8 +346,13 @@ class Master(object):
         for task in tasks:
             try:
                 ar = client.get_result(task, owner=True, block=False)
+
                 chunk = ar.get()
                 workerResult = chunk[0]
+
+                if workerResult.context.status == 'terminate':
+                    client.shutdown(ar.engine_id)
+                    continue
 
                 # filter out results from execute commands (e.g. imports)
                 #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]

@@ -151,7 +151,6 @@ class Worker(object):
         # signal.signal(signal.SIGUSR1, _handleSIGUSR1)
 
         self.errorMsg = None
-        self.taskId   = None
         self.context  = context
         self.argDict  = argDict
         self.runLocal = argDict.get('runLocal', False)
@@ -308,7 +307,9 @@ def runTrial(context, argDict):
     else:
         # TBD: raise an "InsufficientTimeRemaining" error so master can shutdown the engine cleanly?
         if time.time() > _latestStartTime:
-            raise ipp.TaskAborted()
+            time.sleep(10)   # don't consume the whole task queue. Master will terminate us shortly.
+            context.setVars(status='terminate')
+            return WorkerResult(context, 'insufficient time remaining')
 
     worker = Worker(context, argDict)
     result = worker.runTrial()
