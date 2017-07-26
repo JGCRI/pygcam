@@ -21,7 +21,7 @@ import ipyparallel as ipp
 from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
-from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, getDatabase
+from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError
 from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
@@ -242,7 +242,7 @@ class Master(object):
 
             session.commit()
 
-        except Exception as e:
+        except Exception:
             raise
 
         finally:
@@ -265,6 +265,7 @@ class Master(object):
 
         if debug:
             _logger.debug('setRunStatus: %s', context)
+
         status = status or context.status
 
         cached = Context.getRunInfo(context.runId)
@@ -313,26 +314,22 @@ class Master(object):
                     _logger.debug('checkRunning: skipping task with result (%s)', task)
                     continue
 
-            except Exception as e:
-                _logger.warning("checkRunning(1): %s", e)
-                continue
-
-            # Attempt to isolate sporadic error...
-            try:
-                if ar is not None and ar.data:
-                    # _logger.debug('ar.data=%s', ar.data)
+                if ar.data:
                     context = ar.data.get('context')
-                    # _logger.debug('ar.data.get("context")=%s', context)
                     if context:
-                        # _logger.debug('setting run status')
                         self.setRunStatus(context)
 
-            except KeyError:
-                _logger.debug('checkRunning: purging result for bad key %s', task)
+            except KeyError as e:
+                _logger.debug('checkRunning: purging result: %s', e)
                 self.client.purge_results(jobs=task)
 
             except Exception as e:
-                _logger.warning("checkRunning(2): %s", e)
+                _logger.warning("checkRunning: %s", e)
+
+    def resubmit(self, task, context):
+        _logger.debug('Resubmitting task %s', context)
+        self.client.resubmit(task)
+        self.setRunStatus(context, RUN_QUEUED)
 
     def getResults(self, tasks):
         if not tasks:
@@ -341,34 +338,44 @@ class Master(object):
         client = self.client
         results = []
 
-        #_logger.debug('Results available for %d tasks', len(tasks))
-
         for task in tasks:
             try:
                 ar = client.get_result(task, owner=True, block=False)
 
-                chunk = ar.get()
-                workerResult = chunk[0]
+                try:
+                    if not ar.ready():
+                        continue
 
-                if workerResult.context.status == 'terminate':
-                    client.shutdown(ar.engine_id)
+                except KeyError:        # stale message id can trigger KeyError
+                    client.purge_results(jobs=task)
                     continue
 
-                # filter out results from execute commands (e.g. imports)
-                #partialResults = [r[0] for r in results if r and not isinstance(r, ExecuteReply)]
-                #results.extend(partialResults)
-                #workerResult.taskId = task      # might be needed for resubmit
-                results.append(workerResult)
+                chunk = ar.get()
+                workerResult = chunk[0]
+                context = workerResult.context
+                status = context.status
+
+                if status == ENG_TERMINATE:
+                    if ar.engine_id is not None:
+                        _logger.debug("Terminating engine %s: insufficient time remaining", ar.engine_id)
+                        client.shutdown(ar.engine_id)
+                        sleep(2)
+                        self.resubmit(task, context)
+
+                elif status == RUN_KILLED:
+                    self.resubmit(task, context)
+                    continue
+
+                else:
+                    results.append(workerResult)
 
             except Exception as e:
                 # Raised if an engine dies, e.g., walltime expired.
                 # With retries=1, should be able to recover from this.
                 _logger.warning('getResults: %s', e)
 
-            # TBD: might not be needed with owner=True after ar.get()
             client.purge_results(jobs=task)
 
-        # _logger.debug("%d completed tasks with results", len(results))
         return results
 
     def saveResults(self, result):
@@ -383,9 +390,6 @@ class Master(object):
 
             if context.baseline:  # also save 'diff' results
                 saveResults(context, RESULT_TYPE_DIFF)
-
-        elif status == RUN_KILLED:
-            self.client.resubmit(result.taskId)     # TBD: test this
 
         else:
             _logger.warning('%s failed: %s', context, result.errorMsg)
@@ -403,15 +407,11 @@ class Master(object):
             if not results:
                 _logger.warning('Purging %d completed tasks with no results (engine died?)', len(completed))
                 self.client.purge_results(jobs=completed)
-                continue    # retries=1 should take care of it
+                continue
 
             # _logger.debug('Saving %d results', len(results))
             for result in results:
                 self.saveResults(result)
-
-            # TBD: return len(results) so caller can decide to shorten wait?
-            # if len(results) > 20:
-            #     return
 
             seconds = 3
             sleep(seconds)    # brief sleep before checking for more completed tasks
@@ -422,9 +422,10 @@ class Master(object):
         '''
         tot = self.queueTotals()
         _logger.debug('%d engines: %s' % (len(self.client), tot))
+
         return tot['tasks'] or tot['queue'] or tot['unassigned'] or self.completedTasks()
 
-    def processTrials(self):
+    def mainloop(self):
         """
         Takes parameters from arguments passed from runsim plugin.
         If `args.loopOnly` is False, run the trials identified in self.args.
@@ -433,15 +434,20 @@ class Master(object):
         as a command-line arg, or loop indefinitely, allowing another task to
         add more trials to run.
 
-        :return: (int) CONTINUE or EXIT
+        :return: none
         """
-        db = self.db
+        from ipyparallel import NoEnginesRegistered
+        from pygcam.error import PygcamException
+        from .slurm import Slurm
+
+        slurm = Slurm()
+
         args = self.args
         shutdownWhenIdle = args.shutdownWhenIdle
 
         if args.redoListOnly and args.statuses:
-            listTrialsToRedo(db, args.simId, args.scenarios, args.statuses)
-            return EXIT
+            listTrialsToRedo(self.db, args.simId, args.scenarios, args.statuses)
+            return
 
         if not args.runLocal:
             self.waitForWorkers()    # wait for engines to spin up
@@ -450,53 +456,42 @@ class Master(object):
             self.runTrials()
 
         if args.addTrials or args.runLocal:
-            # Add trials to running cluster and exit
-            return EXIT
-
-        while self.outstandingTasks():
-            self.checkRunning()         # Check for newly running tasks
-            self.checkCompleted()       # Check for completed tasks
-
-            if shutdownWhenIdle:
-                self.shutdownIdleEngines()
-                if len(self.client) == 0:   # if we shut the last engine...
-                    break
-
-            _logger.debug('sleep(%d)', args.waitSecs)
-            sleep(args.waitSecs)
-
-        # Shutdown the hub
-        if shutdownWhenIdle:
-            _logger.info("Shutting down hub...")
-            sleep(2)   # allow sockets to clear
-            self.client.shutdown(hub=True, block=True)
-            return EXIT
-
-        return CONTINUE
-
-    def mainloop(self):
-        from ipyparallel import NoEnginesRegistered
-        from pygcam.error import PygcamException
-        from .slurm import Slurm
-
-        slurm = Slurm()
+            return      # Exit after adding or running trials
 
         while True:
             try:
-                if self.processTrials() == EXIT:
+                outstanding = self.outstandingTasks()
+                if outstanding:
+                    if len(self.client) == 0:
+                        pending = slurm.jobsInState('pending', jobName='mcs-engine')
+                        if pending:
+                            _logger.debug('No engines registered; %d workers PENDING', len(pending))
+                            sleep(30)
+                            continue
+                        else:
+                            _logger.info("No engines running or pending. Shutting down hub.")
+                            self.client.shutdown(hub=True, block=True)
+                            return
+                    else:
+                        self.checkRunning()         # Check for newly running tasks
+                        self.checkCompleted()       # Check for completed tasks
+
+                else:   # no outstanding tasks
+                    _logger.info("No outstanding tasks. Shutting down hub.")
+                    self.client.shutdown(hub=True, block=True)
                     return
+
+                if shutdownWhenIdle:
+                    self.shutdownIdleEngines()
+
+                _logger.debug('sleep(%d)', args.waitSecs)
+                sleep(args.waitSecs)
 
             except NoEnginesRegistered:
-                pending = slurm.jobsInState('pending', jobName='mcs-engine')    # TBD: make jobName a config var
-                count = len(pending)
-                if count == 0:
-                    return
-
-                _logger.debug('Waiting for %d PENDING engine tasks', count)
-                sleep(30)
+                pass    # handled in loop
 
             except Exception as e:
-                raise PygcamException("processTrials aborted: %s" % e)
+                raise PygcamException("mainloop: %s" % e)
 
     def runTrials(self):
         from .util import parseTrialString

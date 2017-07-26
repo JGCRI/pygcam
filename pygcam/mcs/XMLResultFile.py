@@ -79,7 +79,7 @@ class XMLResult(XMLWrapper):
         constraintStrings = filter(None, map(XMLConstraint.asString, self.constraints))
         self.whereClause = ' and '.join(constraintStrings)
 
-        _logger.debug('XMLResult name=%s, queryFile=%s, whereClause="%s"', self.name, self.queryFile, self.whereClause)
+        #_logger.debug('XMLResult name=%s, queryFile=%s, whereClause="%s"', self.name, self.queryFile, self.whereClause)
 
     def isScalar(self):
         return self.column is not None

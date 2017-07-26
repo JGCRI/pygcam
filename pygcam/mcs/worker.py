@@ -3,7 +3,6 @@
 import os
 import signal
 import time
-import ipyparallel as ipp
 
 from pygcam.config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
 from pygcam.error import GcamError, GcamSolverError
@@ -17,7 +16,7 @@ from pygcam.mcs.context import Context
 from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED,
                                  RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
-                                 RUN_GCAMERROR, RUN_RUNNING)
+                                 RUN_GCAMERROR, RUN_RUNNING, ENG_TERMINATE)
 from pygcam.mcs.util import readTrialDataFile
 from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
 
@@ -70,6 +69,11 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
 
     # For running in an ipyparallel engine, forget instances from last run
     decache()
+
+    # TBD: #### debugging only ####
+    if False:
+        time.sleep(30)
+        return RUNNER_SUCCESS
 
     simId = context.simId
     baselineName = context.baseline
@@ -203,64 +207,50 @@ class Worker(object):
         noBatchQueries  = argDict.get('noBatchQueries', False)
         noPostProcessor = argDict.get('noPostProcessor', False)
 
+        trialNum = context.trialNum
+        errorMsg = None
+
+        _logger.info('Running trial %d' % trialNum)
         try:
-            trialNum = context.trialNum
-            errorMsg = None
+            exitCode = _runGcamTool(context, noGCAM=noGCAM,
+                                    noBatchQueries=noBatchQueries,
+                                    noPostProcessor=noPostProcessor)
+            status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
-            # Deprecated
-            # Set an internal time limit for each trial
-            # minPerTask = getParamAsFloat('GCAM.Minutes')
-            # seconds = max(30, int(minPerTask * 60) - 45)
-            #
-            # if seconds:
-            #     signal.alarm(seconds) # don't let any job use more than its allotted time
-            #     _logger.debug('Alarm set for %d sec' % seconds)
+        except TimeoutSignalException:
+            errorMsg = "Trial %d terminated by system" % trialNum
+            status = RUN_KILLED
 
-            _logger.info('Running trial %d' % trialNum)
-            try:
-                exitCode = _runGcamTool(context, noGCAM=noGCAM,
-                                        noBatchQueries=noBatchQueries,
-                                        noPostProcessor=noPostProcessor)
-                status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
+        # except AlarmSignalException:
+        #     errorMsg = "Trial %d terminated by internal alarm" % trialNum
+        #     status = RUN_ALARMED
 
-            except TimeoutSignalException:
-                errorMsg = "Trial %d terminated by system" % trialNum
-                status = RUN_KILLED
+        except UserInterruptException:
+            errorMsg = "Interrupted by user"
+            status = RUN_KILLED
 
-            except AlarmSignalException:
-                errorMsg = "Trial %d terminated by internal alarm" % trialNum
-                status = RUN_ALARMED
+        except GcamToolError as e:
+            errorMsg = "%s" % e
+            status = RUN_FAILED
 
-            except UserInterruptException:
-                errorMsg = "Interrupted by user"
-                status = RUN_KILLED
+        except PygcamMcsUserError as e:
+            errorMsg = "%s" % e
+            status = RUN_FAILED
 
-            except GcamToolError as e:
-                errorMsg = "%s" % e
-                status = RUN_FAILED
+        except GcamSolverError as e:
+            errorMsg = "%s" % e
+            status = RUN_UNSOLVED
 
-            except PygcamMcsUserError as e:
-                errorMsg = "%s" % e
-                status = RUN_FAILED
-
-            except GcamSolverError as e:
-                errorMsg = "%s" % e
-                status = RUN_UNSOLVED
-
-            except GcamError as e:
-                errorMsg = "%s" % e
-                status = RUN_GCAMERROR
-
-            except Exception as e:
-                errorMsg = "%s" % e
-                status = RUN_ABORTED     # run-time error in loaded module
+        except GcamError as e:
+            errorMsg = "%s" % e
+            status = RUN_GCAMERROR
 
         except Exception as e:
             errorMsg = "%s" % e
-            status = RUN_ABORTED
+            status = RUN_ABORTED     # run-time error in loaded module
 
-        finally:
-            signal.alarm(0)  # turn off timer
+        # finally:
+        #     signal.alarm(0)  # turn off timer
 
         if errorMsg:
             _logger.error("Trial status: %s: %s", status, errorMsg)
@@ -276,7 +266,7 @@ class Worker(object):
         return result
 
 
-_latestStartTime = None
+latestStartTime = None
 
 def runTrial(context, argDict):
     '''
@@ -288,27 +278,26 @@ def runTrial(context, argDict):
         'noGCAM', 'noBatchQueries', and 'noPostProcessor'
     :return: (WorkerResult) run identification info and completion status
     '''
-    global _latestStartTime
+    global latestStartTime
 
     # On the first run, compute the latest time we should start a new trial.
     # On subsequent runs, check that there's adequate time still left.
-    if _latestStartTime is None:
+    if latestStartTime is None:
         startTime = time.time()
 
-        wallTime  = os.environ['MCS_WALLTIME']
+        wallTime  = os.getenv('MCS_WALLTIME', '2:00') # should always be set except when debugging
         parts = map(int, wallTime.split(':'))
         secs = parts.pop()
         mins = parts.pop() if parts else 0
         hrs  = parts.pop() if parts else 0
 
         minTimeToRun = getParamAsFloat('IPP.MinTimeToRun')
-        _latestStartTime = (startTime + secs + 60 * mins + 3600 * hrs) - (minTimeToRun * 60)
+        latestStartTime = (startTime + secs + 60 * mins + 3600 * hrs) - (minTimeToRun * 60)
 
     else:
-        # TBD: raise an "InsufficientTimeRemaining" error so master can shutdown the engine cleanly?
-        if time.time() > _latestStartTime:
-            time.sleep(10)   # don't consume the whole task queue. Master will terminate us shortly.
-            context.setVars(status='terminate')
+        if time.time() > latestStartTime:
+            context.setVars(status=ENG_TERMINATE) # tell master to terminate us
+            time.sleep(10) # don't consume queue while waiting for termination
             return WorkerResult(context, 'insufficient time remaining')
 
     worker = Worker(context, argDict)

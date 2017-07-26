@@ -87,6 +87,7 @@ RUN_ABORTED   = 'aborted'
 RUN_ALARMED   = 'alarmed'
 RUN_UNSOLVED  = 'unsolved'
 RUN_GCAMERROR = 'gcamerror'     # any other GCAM runtime error
+ENG_TERMINATE = 'terminate'
 
 RUN_FAILURES  = [RUN_FAILED, RUN_KILLED, RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
                  RUN_GCAMERROR]
@@ -681,16 +682,16 @@ class CoreDatabase(object):
         try:
             run = session.query(Run).filter_by(runId=runId).one()
             if run.status == status:
-                return run # nothing to do here
+                return # nothing to do here
 
             run.status = status    # insert/update listener sets status code and timestamps
 
             self.commitWithRetry(session)
-            return run
+            return
 
         except NoResultFound:
             _logger.warn("db.setRunStatus failed to find record for runId %d", runId)
-            return None
+            return
 
         finally:
             self.endSession(session)

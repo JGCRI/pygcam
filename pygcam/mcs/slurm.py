@@ -69,6 +69,10 @@ class Slurm(object):
         :return: (list of int) the ids of the jobs owned by the user in the given
             state.
         """
+        import platform
+        if platform.system() != 'Linux':
+            return []
+
         df = self.squeue(formatStr='%i|%j', otherArgs='-t ' + state.upper())
         jobs = df.loc[df.NAME == jobName, 'JOBID'] if jobName else df.JOBID
         return jobs
