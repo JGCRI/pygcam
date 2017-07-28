@@ -319,7 +319,7 @@ class Master(object):
                     if context:
                         self.setRunStatus(context)
 
-            except KeyError as e:
+            except (KeyError, ipp.RemoteError) as e:
                 _logger.debug('checkRunning: purging result: %s', e)
                 self.client.purge_results(jobs=task)
 
@@ -462,7 +462,7 @@ class Master(object):
             try:
                 self.checkRunning()         # Check for newly running tasks
                 self.checkCompleted()       # Check for completed tasks
-                
+
                 outstanding = self.outstandingTasks()
                 if outstanding:
                     if len(self.client) == 0:
