@@ -472,9 +472,9 @@ class Master(object):
                             _logger.info("No engines running or pending. Shutting down hub.")
                             self.client.shutdown(hub=True, block=True)
                             return
-                    else:
-                        self.checkRunning()         # Check for newly running tasks
-                        self.checkCompleted()       # Check for completed tasks
+
+                    self.checkRunning()         # Check for newly running tasks
+                    self.checkCompleted()       # Check for completed tasks
 
                 else:   # no outstanding tasks
                     _logger.info("No outstanding tasks. Shutting down hub.")
