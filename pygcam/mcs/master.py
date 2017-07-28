@@ -460,6 +460,9 @@ class Master(object):
 
         while True:
             try:
+                self.checkRunning()         # Check for newly running tasks
+                self.checkCompleted()       # Check for completed tasks
+                
                 outstanding = self.outstandingTasks()
                 if outstanding:
                     if len(self.client) == 0:
@@ -473,8 +476,8 @@ class Master(object):
                             self.client.shutdown(hub=True, block=True)
                             return
 
-                    self.checkRunning()         # Check for newly running tasks
-                    self.checkCompleted()       # Check for completed tasks
+                    # self.checkRunning()         # Check for newly running tasks
+                    # self.checkCompleted()       # Check for completed tasks
 
                 else:   # no outstanding tasks
                     _logger.info("No outstanding tasks. Shutting down hub.")
