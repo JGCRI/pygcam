@@ -97,7 +97,7 @@ def genTrialData(simId, trials, paramFileObj, args):
     Generate the given number of trials for the given simId, using the objects created
     by parsing parameters.xml. Return a DataFrame of values.
     """
-    import pandas as pd
+    from pandas import DataFrame
     from ..distro import linkedDistro
     from ..LHS import lhs, lhsAmend
     from ..XMLParameterFile import XMLRandomVar, XMLCorrelation
@@ -128,7 +128,7 @@ def genTrialData(simId, trials, paramFileObj, args):
     linkedDistro.storeTrialData(trialData)  # so its ppf() can access linked values
     lhsAmend(trialData, linked, trials)
 
-    df = pd.DataFrame(data=trialData)
+    df = DataFrame(data=trialData)
     return df
 
 
