@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<landProtection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../pygcam/pygcam/etc/protection-schema.xsd">
+
+    <group name="Developing">
+        <region>Africa_Eastern</region>
+        <region>Africa_Northern</region>
+        <region>Africa_Southern</region>
+        <region>Africa_Western</region>
+        <region>Central America and Caribbean</region>
+        <region>Central Asia</region>
+        <region>Colombia</region>
+        <region>Middle East</region>
+        <region>Pakistan</region>
+        <region>South America_Northern</region>
+        <region>South America_Southern</region>
+        <region>South Asia</region>
+        <region>Southeast Asia</region>
+    </group>
+
+    <group name="MiddleIncome">
+        <region>Brazil</region>
+        <region>China</region>
+        <region>India</region>
+        <region>Indonesia</region>
+        <region>Mexico</region>
+        <region>South Africa</region>
+    </group>
+
+    <group name="Europe">
+        <region>EU-12</region>
+        <region>EU-15</region>
+        <region>Europe_Eastern</region>
+        <region>Europe_Non_EU</region>
+        <region>European Free Trade Association</region>
+    </group>
+
+    <group name="Developed">
+        <region>Argentina</region>
+        <region>Australia_NZ</region>
+        <region>Canada</region>
+        <region>Europe</region>     <!-- group names (e.g., Europe) are expanded to the underlying regions -->
+        <region>Japan</region>
+        <region>Russia</region>
+        <region>South Korea</region>
+        <region>Taiwan</region>
+        <region>USA</region>
+    </group>
+
+    <scenario name="test">
+        <!--
+        Scenarios define a level of land protection for regions or groups.
+        Regions are processed in the order defined. Any redefinition of the
+        protection in a region overwrites what was given previously. This
+        allows the use of groups followed by differentiation for individual
+        regions within the group.
+        -->
+        <protectedRegion name="Developing">
+            <protection>
+                <fraction>0.5</fraction>
+                <landClass>UnmanagedForest</landClass>
+                <landClass>UnmanagedPasture</landClass>
+            </protection>
+            <protection>
+                <fraction>0.25</fraction>
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </protectedRegion>
+
+        <protectedRegion name="MiddleIncome">
+            <protection>
+                <fraction>0.7</fraction>
+                <landClass>UnmanagedForest</landClass>
+                <landClass>UnmanagedPasture</landClass>
+            </protection>
+            <protection>
+                <fraction>0.4</fraction>
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </protectedRegion>
+
+        <!-- This overrides Brazil's definition in MiddleIncome -->
+        <protectedRegion name="Brazil">
+            <protection>
+                <fraction>0.5</fraction>
+                <landClass>UnmanagedForest</landClass>
+            </protection>
+            <protection>
+                <fraction>0.4</fraction>
+                <landClass>UnmanagedPasture</landClass>
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </protectedRegion>
+
+        <protectedRegion name="Developed">
+            <protection>
+                <fraction>0.9</fraction>
+                <landClass>UnmanagedForest</landClass>
+                <landClass>UnmanagedPasture</landClass>
+            </protection>
+            <protection>
+                <fraction>0.5</fraction>
+                <landClass>Shrubland</landClass>
+                <landClass>Grassland</landClass>
+            </protection>
+        </protectedRegion>
+    </scenario>
+</landProtection>

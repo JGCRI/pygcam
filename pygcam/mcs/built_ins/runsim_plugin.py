@@ -6,7 +6,7 @@ import argparse
 from six import iteritems
 
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -33,7 +33,6 @@ def driver(args, tool):
     master = Master(args)
     master.mainloop()
 
-
 #
 # Custom argparse "action" to parse comma-delimited strings to lists
 # TBD: move this to central location and use it where relevant
@@ -49,9 +48,9 @@ class ParseCommaList(argparse.Action):
         setattr(namespace, self.dest, values.split(','))
 
 
-class RunSimCommand(SubcommandABC):
+class RunSimCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Run the identified trials on compute engines.'''}
+        kwargs = {'help' : '''Run the identified trials on compute engines.'''}
         super(RunSimCommand, self).__init__('runsim', subparsers, kwargs)
 
     def addArgs(self, parser):

@@ -16,19 +16,42 @@ import logging
 from .config import getParam, getParamAsBoolean, configLoaded
 from .error import PygcamException
 
-# TBD: Allow user to configure logLevel at the package or module level
-# TBD: using something like LogLevels = pkg.module:DEBUG pkg:INFO and so on
-# TBD: and similarly for LogConsole and LogFile?
-
-# deprecated
-#_configured = False
-
 _logLevel   = None
 _verbose    = False
 
 def _debug(msg):
     if _verbose:
         print(msg)
+
+def getLevels(levelStr=None):
+    """
+    Get log levels for pygcam as a whole or for indicated modules individually.
+    Modules not prefixed or starting with 'mcs.' are interpreted to be in pygcam.
+    Example: LogLevel = WARNING, tool:DEBUG, utils:INFO, mcs.util:INFO
+
+    :param levelStr: a comma-delimited string of module:logLevel values. If
+        no ':' is present, the value is treated as the default logLevel for pygcam.
+        If levelStr is None, the value of the variable 'GCAM.LogLevel' is used.
+    :return: None
+    """
+    result = {}
+
+    levelStr = levelStr or getParam('GCAM.LogLevel')
+
+    levels = map(str.strip, levelStr.split(','))
+    for level in levels:
+        if ':' in level:
+            module, lvl = map(str.strip, level.split(':'))
+            if '.' not in module or module.startswith('mcs.'):
+                module = 'pygcam.' + module
+        else:
+            module = 'pygcam'
+            lvl = level.strip()
+
+        result[module] = lvl
+
+    return result
+
 
 #
 # Copied here from utils.py to avoid an import loop
@@ -46,16 +69,18 @@ def _mkdirs(newdir, mode=0o770):
             raise
 
 # Loggers for top-level package names, e.g., 'pygcam'.
-# TBD: perhaps have separate setting for pygcam.mcs?
+# TBD: Revise this to set log levels for packages and for indiv modules if user so specifies
 _PkgLoggers = {}
 
+# TBD: set propagate to False only for explicitly set module or package loggers
 def _createPkgLogger(dotspec):
     pkgName = dotspec.split('.')[0]
 
     if pkgName and pkgName not in _PkgLoggers:
         _debug('_createPkgLogger("%s") from %s' % (pkgName, dotspec))
         logger = logging.getLogger(pkgName)
-        logger.propagate = 0    # traitlets library uses root logger...
+        # Note: 'traitlets' library uses root logger, which we don't want to enable here
+        logger.propagate = False
         _PkgLoggers[pkgName] = logger
         _configureLogger(pkgName)
 
@@ -93,6 +118,7 @@ def _configureLogger(name, force=False):
 
     global _logLevel
     if not _logLevel:
+        # TBD: parse LogLevel to a dict via getLevels and cache that instead
         _logLevel = getParam('GCAM.LogLevel').upper() or 'ERROR'
 
     _debug("Configuring %s, level=%s" % (name, _logLevel))
@@ -130,10 +156,12 @@ def configureLogs(force=False):
     if not configLoaded():
         return
 
+    # TBD: use getLevels() instead
     for name in _PkgLoggers.keys():
         _configureLogger(name, force=force)
 
 
+# TBD: obsolete once per-module levels can be set
 def getLogLevel():
     """
     Get the currently set LogLevel.
@@ -142,6 +170,8 @@ def getLogLevel():
     """
     return _logLevel
 
+# TBD: modify to parse level str. (Used only pygcam.tool currently.)
+# TBD: fix doc string to reference format in getLevels()
 def setLogLevel(level):
     '''
     Set the logging level for all defined loggers.
@@ -154,13 +184,13 @@ def setLogLevel(level):
     logger = logging.getLogger()
     logger.setLevel(_logLevel)
 
-
-def resetLogLevel():
-    '''
-    Set the log level to the current value of GCAM.LogLevel, which may be
-    different once the default project name has been set.
-
-    :return: none
-    '''
-    level = getParam('GCAM.LogLevel')
-    setLogLevel(level)
+# Deprecated
+# def resetLogLevel():
+#     '''
+#     Set the log level to the current value of GCAM.LogLevel, which may be
+#     different once the default project name has been set.
+#
+#     :return: none
+#     '''
+#     level = getParam('GCAM.LogLevel')
+#     setLogLevel(level)

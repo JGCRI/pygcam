@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 from ..error import DistributionSpecError
 
@@ -189,10 +189,11 @@ def driver(args, tool):
                     outFile.write('\t' + str(minValue + binNum * binSize) + ':' + str(f))
             outFile.write('\n')
 
-class DiscreteCommand(SubcommandABC):
+class DiscreteCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Convert csv files to the .ddist format.'''}
+        kwargs = {'help' : '''Convert csv files to the .ddist format.'''}
         super(DiscreteCommand, self).__init__('discrete', subparsers, kwargs)
+        self.group = None   # don't display this for now
 
     def addArgs(self, parser):
         from ..constants import DEFAULT_BINS, DEFAULT_TRUNCATE, COUNT_TITLE

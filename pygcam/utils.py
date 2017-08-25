@@ -23,7 +23,7 @@ from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
-
+# Used only in CI plugins
 def digitColumns(df, asInt=False):
     '''
     Get a list of columns with integer names (as strings, e.g., "2007") in df.
@@ -38,6 +38,7 @@ getFuncName = lambda n=0: sys._getframe(n + 1).f_code.co_name
 
 pat = re.compile('(\{[^\}]+\})')
 
+# used only in project.py
 def simpleFormat(s, varDict):
     """
     Simple version of str.format that does not treat '.' as
@@ -113,6 +114,7 @@ def copyResource(relpath, dest, overwrite=True):
     with open(dest, 'w') as f:
         f.write(text)
 
+# used only in gcamtool modules
 def getBooleanXML(value):
     """
     Get a value from an XML file and convert it into a boolean True or False.
@@ -178,6 +180,7 @@ def deleteFile(filename):
     except:
         pass    # ignore errors, like "rm -f"
 
+# used only in gcamtool modules
 def symlinkOrCopyFile(src, dst):
     """
     Symlink a file unless GCAM.CopyAllFiles is True, in which case, copy the file.
@@ -212,6 +215,7 @@ def copyFileOrTree(src, dst):
     else:
         shutil.copy2(src, dst)
 
+# used only in gcamtool modules
 # TBD: rename to removeTree
 def removeTreeSafely(path, ignore_errors=True):
     refWorkspace = os.path.realpath(getParam('GCAM.RefWorkspace'))
@@ -489,27 +493,28 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
 
     return module
 
-def loadObjectFromPath(objName, modulePath, required=True):
-    """
-    Load a module and return a reference to a named object in that module.
-    If 'required' and the object is not found, an error is raised, otherwise,
-    None is returned if the object is not found.
-
-    :param objName: (str) the name of an object to find in the `modulePath`
-    :param modulePath: (str) the path to a python module to load
-    :param required: (bool) if True and the object cannot be loaded, raise
-      an error.
-    :return: a reference to the loaded object, if loaded. If not loaded and
-       `required` is False, return None.
-    :raises: PygcamException
-    """
-    module = loadModuleFromPath(modulePath)
-    obj    = getattr(module, objName, None)
-
-    if obj or not required:
-        return obj
-
-    raise PygcamException("Module '%s' has no object named '%s'" % (modulePath, objName))
+# Deprecated (unused, but might still be useful)
+# def loadObjectFromPath(objName, modulePath, required=True):
+#     """
+#     Load a module and return a reference to a named object in that module.
+#     If 'required' and the object is not found, an error is raised, otherwise,
+#     None is returned if the object is not found.
+#
+#     :param objName: (str) the name of an object to find in the `modulePath`
+#     :param modulePath: (str) the path to a python module to load
+#     :param required: (bool) if True and the object cannot be loaded, raise
+#       an error.
+#     :return: a reference to the loaded object, if loaded. If not loaded and
+#        `required` is False, return None.
+#     :raises: PygcamException
+#     """
+#     module = loadModuleFromPath(modulePath)
+#     obj    = getattr(module, objName, None)
+#
+#     if obj or not required:
+#         return obj
+#
+#     raise PygcamException("Module '%s' has no object named '%s'" % (modulePath, objName))
 
 def importFrom(modname, objname, asTuple=False):
     """
@@ -543,6 +548,7 @@ def importFromDotSpec(spec):
     except ImportError:
         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
 
+# Deprecated?
 def readScenarioName(configFile):
     """
     Read the file `configFile` and extract the scenario name.
@@ -819,6 +825,7 @@ class TempFile(object):
 
 TRIAL_STRING_DELIMITER = ','
 
+# Unused
 def parseTrialString(string):
     """
     Converts a comma-separated list of ranges into a list of numbers.
@@ -840,6 +847,7 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
+# Unused
 def createTrialString(lst):
     '''
     Assemble a list of numbers into a compact list using hyphens to identify ranges.
@@ -858,6 +866,7 @@ def createTrialString(lst):
             ranges.append(group[0] + '-' + group[-1])
     return TRIAL_STRING_DELIMITER.join(ranges)
 
+# Unused
 def chunkify(lst, chunks):
     """
     Iterator to turn a list into the number of lists given by chunks.

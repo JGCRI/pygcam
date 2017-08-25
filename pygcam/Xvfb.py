@@ -7,6 +7,8 @@ import subprocess as subp
 import time
 import re
 
+# Deprecated: not needed as of GCAM 4.3. Maybe drop this?
+
 class XvfbException(Exception):
     pass
 

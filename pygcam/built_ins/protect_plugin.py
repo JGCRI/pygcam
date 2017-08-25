@@ -18,7 +18,7 @@ class ProtectLandCommand(SubcommandABC):
                  'help': '''Generate versions of GCAM's land_input XML files that protect a
                  given fraction of land of the given land types in the given regions.'''}
 
-        super(ProtectLandCommand, self).__init__('protect', subparsers, kwargs)
+        super(ProtectLandCommand, self).__init__('protect', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
         parser.add_argument('-b', '--backup', action='store_true',

@@ -22,9 +22,6 @@ from .utils import systemOpenFile, pathjoin
 
 _logger = getLogger(__name__)
 
-#%matplotlib inline
-
-
 def setupPalette(count, pal=None):
     # See http://xkcd.com/color/rgb/. These were chosen to be different "enough".
     colors = ['grass green', 'canary yellow', 'dirty pink', 'azure', 'tangerine', 'strawberry',

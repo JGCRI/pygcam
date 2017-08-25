@@ -68,7 +68,7 @@ class InitCommand(SubcommandABC):
             configuration file. Values not provided on the command-line are
             requested interactively.'''}
 
-        super(InitCommand, self).__init__('init', subparsers, kwargs)
+        super(InitCommand, self).__init__('init', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
         import os

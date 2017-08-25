@@ -71,7 +71,7 @@ class Input(CoreMCSMixin, ORMBase):
 # TBD: add a variableNumber column to be used in cases like GCAM that aren't matrix oriented?
 class InValue(CoreMCSMixin, ORMBase):
     inputId  = Column(Integer, ForeignKey('input.inputId', ondelete="CASCADE"), primary_key=True)
-    simId    = Column(Integer, ForeignKey('sim.simId', ondelete="CASCADE"))
+    simId    = Column(Integer, ForeignKey('sim.simId', ondelete="CASCADE"), primary_key=True)
     trialNum = Column(Integer, primary_key=True)
     row      = Column(Integer, primary_key=True)    # TBD: drop?
     col      = Column(Integer, primary_key=True)    # TBD: drop?

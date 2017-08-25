@@ -5,14 +5,17 @@
 #
 # Constants shared across modules
 #
+
+# TBD: move to gcamtool package
 LOCAL_XML_NAME = 'local-xml'
 DYN_XML_NAME   = 'dyn-xml'
 XML_SRC_NAME   = 'xmlsrc'
 
-DEFAULT_TIMESTEP = 5    # 5 years
-
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
+
+# TBD: keep in pygcam package
+DEFAULT_TIMESTEP = 5    # 5 years
 
 NUM_AEZS = 18
 

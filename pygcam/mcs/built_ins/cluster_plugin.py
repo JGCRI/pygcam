@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 def driver(args, tool):
     """
@@ -21,9 +21,9 @@ def driver(args, tool):
                     stop_jobs=args.stopJobs, other_args=args.otherArgs)
 
 
-class ClusterCommand(SubcommandABC):
+class ClusterCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Start an ipyparallel cluster after generating batch
+        kwargs = {'help' : '''Start an ipyparallel cluster after generating batch
         file templates based on parameters in .pygcam.cfg and the number of tasks to run.'''}
         super(ClusterCommand, self).__init__('cluster', subparsers, kwargs)
 

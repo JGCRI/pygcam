@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -107,18 +107,13 @@ def driver(args, tool):
     analyzeSimulation(args)
 
 
-class AnalyzeCommand(SubcommandABC):
+class AnalyzeCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Analyze simulation results stored in the database for the given simulation.
+        kwargs = {'help' : '''Analyze simulation results stored in the database for the given simulation.
             At least one of -c, -d, -i, -g, -p, -t (or the longname equivalent) must be specified.'''}
         super(AnalyzeCommand, self).__init__('analyze', subparsers, kwargs)
 
     def addArgs(self, parser):
-        # Required argument
-        parser.add_argument('-s', '--simId', type=int, required=True,
-                            help='The id of the simulation')
-
-        # Optional arguments
         parser.add_argument('-c', '--convergence', action='store_true', default=False,
                             help='Generate convergence plots for mean, std dev, skewness, and 95%% coverage interval.')
 
@@ -171,6 +166,9 @@ class AnalyzeCommand(SubcommandABC):
 
         parser.add_argument('-r', '--resultName', type=str, default=None,
                             help='The name of the result variable to analyze.')
+
+        parser.add_argument('-s', '--simId', type=int, default=1,
+                            help='The id of the simulation')
 
         parser.add_argument('-S', '--stats', action='store_true', default=False,
                             help='Print mean, median, max, min, std dev, skewness, and 95%% coverage interval.')

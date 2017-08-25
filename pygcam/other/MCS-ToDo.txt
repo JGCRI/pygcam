@@ -1,8 +1,71 @@
-BUGS
-* using groupName even when useGroupDir=0 in scenarios file
-  * for some reason adding symlink to correct for this didn't work either
-  * run sim for paper1 on mac to debug
+- When detecting multiple completed runs, gather them all and write them together
+  as a single transaction rather than N separate writes.
 
+Make it so that running in INFO mode is generally the right level of spew, and
+DEBUG is used purposefully only when needed.
+
+Have config var to enable module-level debugging:
+
+    GCAM.LoggedModules = master,tool,config
+
+If module name has no dots it is sought within first pygcam, then pygcam.mcs.
+If arg is '*' or '_', don't set any module-level debugging. If the arg in cmd line
+starts with +, all subsequent modules (up to a module name starting with '-')
+are added to those mentioned in the config file. Similarly, a '-' "subtracts"
+modules from those mentioned in the config file.
+
+To Document
+============
+- new pseudo-status "missing" to run missing trial numbers
+
+- Consider orienting non-MCS pygcam toward using Context instances as well.
+- Also, a BaseWorkspace class and an McsWorkspace subclass to handling
+  the differences in one place.
+- Context could have bool isMcs, which is passed to a factory method
+  which allocates the corresponding Workspace class.
+
+  def workspaceFactory(context, **kwargs):
+    cls = McsWorkspace if context.isMcs else BaseWorkspace
+    return cls(context, **kwargs)
+
+BUGS
+
+* clear start/end time info in run table when task set to queued or running
+
+* interaction of # engines and task duration is not producing desired walltime
+
+* Completed runs and some transitions from queued -> running not processed
+
+* Killing engine resulted in gcam continuing to run as a zombie that was
+  finally cleared when cluster was killed.
+
+* Still unclear where key error is raised in checkRunning.
+  * do more debugging on Mac
+  * maybe add a flag to WorkerResult that indicates insufficient time left?
+    * problem is that hub assigns a new task immediately, emptying the queue
+  * if master can detect which engine provided a result with a flag, it can
+    shutdown the engine, which should waste minimal time (one job might be
+    started and aborted, but much more quickly than otherwise. Less wasteful.)
+
+*** Was working great, but now not saving results to DB?
+ * Doesn't always happen and unclear when/why it does.
+ * Tasks are showing up as "completed" without being processed by master...
+
+* runsim's -i should probably be the default, with --noShutdown as an option
+  * no -- it's too aggressive. Need to wait a few cycles before shutting down. Add a counter.
+
+* gt --logLevel INFO runsim printed debug messages
+* cellulose runs finished but results weren't saved.
+  * Something to do with master/worker communication?
+* Lots of these:
+  2017-07-15 21:08:31,357 WARNING checkRunning: 'NoneType' object has no attribute '__getitem__'
+
+
+* Set exited = 0 when worker begins running, and exited = now() before exiting, and
+  set a timer to ~60 seconds. When the SIGALRM occurs, if (exited and (now() - exited) >= 60)
+  the engine should exit.
+* Also wrap the top-level of master.py with try/except to shutdown properly
+  if a runtime error occurs.
 
 Improvements
 * -n flag should be unnecessary
@@ -15,28 +78,86 @@ Improvements
   * Run any baselines that are not in the run table
   * Run any non-baseline scenarios that haven't run, for which there is
     a successful baseline scenario.
-  * Add a run.status to indicate a scenario with a failed baseline.
+  * Add a run.status to indicate a scenario with a failed baseline? (not a perm. condition)
     * write a file into baseline dir to indicate success, so scenarios
       can check for this before running (without engines hitting the DB.)
       * remove the "success" file at the start of a run, write it at end
   * Loop over all untested trials until no more can be run
     * this allows for baselines completing, allowing other runs to begin
 
-It's all engines have exited another pending in their runs left to do, launch more engines.
+*** When Worker.runTrial starts, if (time_left < some config var), just exit. This
+    should trigger a retry.
+    * First time Worker is called, remember start time for engine. We also need the
+      walltime being passed to each task.
+  * Can pass flag to sbatch to send sig (HUP? USR1?) XXX min before job ends
+    * Set a global InsufficientTime = True in the signal handler
+    * Whenever runTrial starts, if InsufficientTime: exit()
+    * Create config param which defaults to default wall time. User can set differently.
+    * sbatch --signal=USR1@secondsBeforeTimeout
+
+*** When more jobs are left than engines running or PENDING, launch more engines.
 
 Abort a non-baseline if the baseline hasn't succeeded.
 - could determine this in master and not even queue the job
 
-Repurpose the sigalarm: set it to the walltime of the engine
-minus the GCAM.MinimumTimeToRun. When it signals the engine,
-set a flag "quitWhenDone" so the engine exits after returning
-the current result. (How to do this without accepting another
-task?)
 
-* Figure out source of "too many files open" complaint. Might be looping in master.py?
+gt failed: KeyError("No such msg(s): [u'58df4d0d-3a3e-4554-9428-acb8a123eecd']")
+Traceback (most recent call last):
+  File "/people/plev920/github/pygcam/pygcam/tool.py", line 452, in main
+    _main(argv)
+  File "/people/plev920/github/pygcam/pygcam/tool.py", line 447, in _main
+    tool.run(args=args)
+  File "/people/plev920/github/pygcam/pygcam/tool.py", line 281, in run
+    obj.run(args, self)
+  File "/people/plev920/github/pygcam/pygcam/mcs/built_ins/runsim_plugin.py", line 189, in run
+    driver(args, tool)
+  File "/people/plev920/github/pygcam/pygcam/mcs/built_ins/runsim_plugin.py", line 34, in driver
+    master.mainloop()
+  File "/people/plev920/github/pygcam/pygcam/mcs/master.py", line 463, in mainloop
+    self.processTrials()
+  File "/people/plev920/github/pygcam/pygcam/mcs/master.py", line 433, in processTrials
+    self.checkCompleted()       # Check for completed tasks
+  File "/people/plev920/github/pygcam/pygcam/mcs/master.py", line 387, in checkCompleted
+    self.saveResults(result)
+  File "/people/plev920/github/pygcam/pygcam/mcs/master.py", line 365, in saveResults
+    self.client.resubmit(result.taskId)     # TBD: test this
+  File "/people/plev920/anaconda2/lib/python2.7/site-packages/ipyparallel/client/client.py", line 1609, in resubmit
+    raise self._unwrap_exception(content)
+RemoteError: KeyError("No such msg(s): [u'58df4d0d-3a3e-4554-9428-acb8a123eecd']")
+
+
+* Figure out source of "too many files open" complaint:
+
+2017-07-19 13:01:54,957 INFO Waiting for engines (169/10000)
+2017-07-19 13:02:04,987 INFO Waiting for engines (170/10000)
+gt failed: Too many open files
+Traceback (most recent call last):
+  File "/people/plev920/github/pygcam/pygcam/tool.py", line 452, in main
+    _main(argv)
+  File "/people/plev920/github/pygcam/pygcam/tool.py", line 447, in _main
+    tool.run(args=args)
+  File "/people/plev920/github/pygcam/pygcam/tool.py", line 281, in run
+    obj.run(args, self)
+  File "/people/plev920/github/pygcam/pygcam/mcs/built_ins/runsim_plugin.py", line 205, in run
+    driver(args, tool)
+  File "/people/plev920/github/pygcam/pygcam/mcs/built_ins/runsim_plugin.py", line 44, in driver
+    master.processTrials()
+  File "/people/plev920/github/pygcam/pygcam/mcs/master.py", line 398, in processTrials
+    self.waitForWorkers()    # wait for engines to spin up
+  File "/people/plev920/github/pygcam/pygcam/mcs/master.py", line 118, in waitForWorkers
+    self.client = client = ipp.Client(profile=profile, cluster_id=clusterId)
+  File "/people/plev920/anaconda2/lib/python2.7/site-packages/ipyparallel/client/client.py", line 495, in __init__
+    self._connect(sshserver, ssh_kwargs, timeout)
+  File "/people/plev920/anaconda2/lib/python2.7/site-packages/ipyparallel/client/client.py", line 629, in _connect
+    self._notification_socket = self._context.socket(zmq.SUB)
+  File "/people/plev920/anaconda2/lib/python2.7/site-packages/zmq/sugar/context.py", line 138, in socket
+    s = self._socket_class(self, socket_type)
+  File "zmq/backend/cython/socket.pyx", line 279, in zmq.backend.cython.socket.Socket.__cinit__ (zmq/backend/cython/socket.c:3384)
+
 
 Overnight run:
-  * runs succeeded but write to DB failed.  Might have been another runsim -L in the background.
+  * runs succeeded but write to DB failed.
+  * Might have been another runsim -L in the background.
 
 * Test runsim -C/--collectResults
 
@@ -44,10 +165,7 @@ Handle this, which gets repeated once it occurs:
 
   WARNING checkRunning: KeyError(u'6c87e47f-0777-4f66-8071-80093f4b0cf2')
 
-* loop over tasks rather than processing all together in one get_results() call,
-  so individual exceptions can be processed / ignored, without losing good results.
-
-JobNum is now meaningless. Excise it from the code and database.
+JobNum is now of little to no value. Excise it from the code and database.
 
 * See why XMLDBDriver.properties is getting written with empty values
 
@@ -55,7 +173,7 @@ JobNum is now meaningless. Excise it from the code and database.
 
 * Running queries in GCAM should be implied if a filter file is defined.
 
-* Figure out why there's a pool error at start with SqlAlchemy
+* Figure out why there's sometimes a pool error at start with SqlAlchemy
 
 * Running gensim > once doesn't create new sims, it overwrites simId 1.
 
@@ -81,7 +199,8 @@ JobNum is now meaningless. Excise it from the code and database.
   * Try using db_query to get this instead?
 
 * When adding engines and tasks, the new tasks' run.status isn't updated from new
-  as it is with jobs created by master itself.
+  as it is with jobs created by master itself. (Probably result of attempt to avoid
+  constantly rewriting status 'running'.)
 
 Command clean-up
 -----------------

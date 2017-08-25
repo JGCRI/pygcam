@@ -8,7 +8,7 @@ class DiffCommand(SubcommandABC):
             '''
         kwargs = {'help' : helptext,
                   'description' : desc}
-        super(DiffCommand, self).__init__('diff', subparsers, kwargs)
+        super(DiffCommand, self).__init__('diff', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
         parser.add_argument('csvFiles', nargs='+',

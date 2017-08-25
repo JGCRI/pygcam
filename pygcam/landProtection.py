@@ -360,8 +360,8 @@ def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
     paths = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
     return paths
 
-def runProtectionScenario(scenarioName, outputDir, workspace=None, scenarioFile=None,
-                          xmlFiles=None, inPlace=False):
+def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
+                          scenarioFile=None, xmlFiles=None, inPlace=False):
     """
     Run a the protection named by `scenarioName`, found in `scenarioFile` if given,
     or the value of config variable `GCAM.LandProtectionXmlFile` otherwise. The source
@@ -373,7 +373,8 @@ def runProtectionScenario(scenarioName, outputDir, workspace=None, scenarioFile=
     alternatives.
 
     :param scenarioName: (str) the name of a protection scenario defined in the `scenarioFile`
-    :param outputDir: (str) the directory under which to write the modified land files
+    :param outputDir: (str) the directory under which to write the modified land files. Ignored
+       if inPlace=True.
     :param workspace: (str) the location of the workspace holding the input files (ignored
        if xmlFiles are specified explicitly)
     :param scenarioFile: (str) the path to a protection.xml file defining `scenarioName`
@@ -394,7 +395,7 @@ def runProtectionScenario(scenarioName, outputDir, workspace=None, scenarioFile=
 
     for inFile in xmlFiles:
         basename = os.path.basename(inFile)
-        outFile = pathjoin(outputDir, basename)
+        outFile = inFile if inPlace else pathjoin(outputDir, basename)
 
         # check that we're not clobbering the input file
         if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):

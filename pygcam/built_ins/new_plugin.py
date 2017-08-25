@@ -118,7 +118,7 @@ class NewProjectCommand(SubcommandABC):
 
     def __init__(self, subparsers):
         kwargs = {'help' : '''Create the structure and files required for a new pygcam project.'''}
-        super(NewProjectCommand, self).__init__('new', subparsers, kwargs)
+        super(NewProjectCommand, self).__init__('new', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
         # Positional args

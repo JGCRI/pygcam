@@ -1,3 +1,42 @@
+Testing
+-------
+- Create test cases for all XmlEditor / SectorEditor functions (combine those modules?)
+  - Run function on a file and compare result to expected result
+  - Requires eyeballing result carefully for each case to validate saved result.
+  - Create a structure for testing these that uses saved copies of input files?
+  - Or test only for GCAM 4.3?
+  - Use pygcam.cfg to get location of reference GCAM for testing?
+
+- Refactor the API in a new branch (below)
+  - Create unittests for lower-level API
+  - Release to Robert for testing / initial use
+
+- Test rest of app using modified API
+
+
+Refactoring
+-----------
+- Split off lower level pygcam package from higher level gcamtool package
+  - Consider splitting config sources into pygcam.cfg and gcamtool.cfg,
+    (as well as mcs.cfg) with a single .pygcam.cfg user file with values
+    for any or all of these.
+    - For pygcam package, user might set only GCAM.Log* vars and few others.
+
+- pygcam should have programmer-oriented stuff:
+  - log, query, diff: uses configuration. Make two levels??
+  - chart: no use of config
+  - matplotlibFix
+  - some of: utils, error, constants [split these into higher/lower level parts]
+  - maybe: gcam
+- gcamtool should have code oriented to "gt":
+  - carbonTax, constraints, landProtection, map*, project, scenarioSetup,
+    sectorEditors, subcommand, tool, units, version, xmlEditor, xmlSetup
+  - some of: utils, error, constants
+
+- unsure where to put:
+  - config, windows, matplotlibFix, queryFile, signals, Xvfb (drop?)
+
+
 For OTAQ project:
 
 - Add to query.py the ability to run a pre-formed batch script, as one would by
@@ -128,7 +167,7 @@ Features
 
 Testing
 -------
-- test all subcommands
+- Re-test all subcommands
   - config (ok)
   - diff
   - gcam
@@ -177,7 +216,7 @@ Logging
 =======
 - Each module has a unique logger name, so in principle, these can be controlled
   independently. Do this in the config file, allowing values like:
-  LogLevel = WARNING;tool:DEBUG;utils:INFO;pygcammcs.util=INFO; and so on
+  LogLevel = WARNING;tool:DEBUG;utils:INFO;pygcammcs.util:INFO; and so on
 
   Level without module sets default for all, then set by module. If not package
   specified, "pygcam." is prepended. Maybe allow regex to match names?
@@ -201,11 +240,9 @@ Features
 
 Near-term
 ---------
-- ?
 
 Medium-term
 -----------
-
 
 Long-term
 ---------
@@ -231,8 +268,6 @@ Long-term
     single postgresql database?
 
 - Rethink the "template" directory. This is probably deprecated.
-
-- Reimplement mcs as subproject in pygcam.mcs?
 
 - Integrate XML parsing code with pygcam's
 

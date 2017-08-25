@@ -16,7 +16,7 @@ class SetupCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help': '''Setup a scenario by creating modified XML input files.'''}
 
-        super(SetupCommand, self).__init__('setup', subparsers, kwargs)
+        super(SetupCommand, self).__init__('setup', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
         defaultYears = '2015-2100'

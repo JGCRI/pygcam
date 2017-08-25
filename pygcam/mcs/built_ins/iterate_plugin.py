@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -70,15 +70,14 @@ def driver(args, tool):
                 raise PygcamMcsUserError("Failed to run command '%s': %s" % (cmd, e))
 
 
-class IterateCommand(SubcommandABC):
+class IterateCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Run a command in each trialDir, or if scenario is given, 
+        kwargs = {'help' : '''Run a command in each trialDir, or if scenario is given, 
         in each expDir. The following arguments are available for use in the command string,
         specified within curly braces: projectName, simId, trialNum, scenario, expName (a
         legacy alias for scenario), trialDir, scenarioDir, and expDir (a legacy alias for
-        scenarioDir).
-        For example, to run the fictional program "foo" in each trialDir for a given set of
-        parameters, you might write:
+        scenarioDir). For example, to run the fictional program "foo" in each trialDir for 
+        a given set of parameters, you might write:
         gt iterate -s1 -c "foo -s{simId} -t{trialNum} -i{trialDir}/x -o{trialDir}/y/z.txt".'''}
         super(IterateCommand, self).__init__('iterate', subparsers, kwargs)
 

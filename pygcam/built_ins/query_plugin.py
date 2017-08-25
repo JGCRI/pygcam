@@ -16,7 +16,7 @@ class QueryCommand(SubcommandABC):
                   'help' : '''Run one or more GCAM database queries by generating and running the
                   named XML queries.'''}
 
-        super(QueryCommand, self).__init__('query', subparsers, kwargs)
+        super(QueryCommand, self).__init__('query', subparsers, kwargs, group='project')
 
 
     def addArgs(self, parser):

@@ -6,9 +6,9 @@ from six.moves import xrange
 import os
 from pygcam.config import getParam, setParam
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
 from pygcam.utils import mkdirs
 from ..context import getSimDir
+from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -362,10 +362,10 @@ def driver(args, tool):
     saveDict(vars(args), argSaveFile)
 
 
-class GensimCommand(SubcommandABC):
+class GensimCommand(McsSubcommandABC):
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '(MCS) Generate input files for simulations.'}
+        kwargs = {'help' : 'Generate input files for simulations.'}
         super(GensimCommand, self).__init__('gensim', subparsers, kwargs)
 
     def addArgs(self, parser):

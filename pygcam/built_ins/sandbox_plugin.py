@@ -76,7 +76,7 @@ def driver(args, tool):
 class SandboxCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Perform operations on a sandbox.'''}
-        super(SandboxCommand, self).__init__('sandbox', subparsers, kwargs)
+        super(SandboxCommand, self).__init__('sandbox', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
         parser.add_argument('--create', action='store_true',

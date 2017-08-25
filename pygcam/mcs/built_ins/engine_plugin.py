@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 def driver(args, tool):
     """
@@ -15,10 +15,9 @@ def driver(args, tool):
     startEngines(args.numTrials, batchTemplate)
 
 
-class EngineCommand(SubcommandABC):
+class EngineCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Starts additional worker engines on a
-                              running cluster.'''}
+        kwargs = {'help' : '''Starts additional worker engines on a running cluster.'''}
         super(EngineCommand, self).__init__('engine', subparsers, kwargs)
 
     def addArgs(self, parser):

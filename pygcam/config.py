@@ -11,9 +11,11 @@ from .error import ConfigFileError, PygcamException
 
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
-CONFIG_VAR_NAME = 'QUEUE_GCAM_CONFIG_FILE'
-WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
-NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
+
+# Deprecated
+# CONFIG_VAR_NAME = 'QUEUE_GCAM_CONFIG_FILE'
+# WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
+# NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
 
 PlatformName = platform.system()
 
@@ -63,7 +65,6 @@ def _getCommentedDefaults(systemDefaults):
     result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
     result += "# Editor command to invoke by 'gt config -e'\n# GCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
 
-
     if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n'
         result = result.replace(r'\n', '\r\n')
 
@@ -97,6 +98,7 @@ def getConfig(reload=False):
     need to use this object directly since the single instance is stored
     internally and referenced by the other API functions.
 
+    :param: reload (bool) if True, instantiate a new global ConfigParser.
     :return: a `ConfigParser` instance.
     """
     if reload:
@@ -146,18 +148,7 @@ def usingMCS():
 
     return _usingMCS
 
-def readConfigFiles():
-    """
-    Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
-    followed by ``pygcam/etc/{platform}.cfg`` if present. If the environment variable
-    ``PYGCAM_SITE_CONFIG`` is defined, its value should be a config file, which is
-    read next. Finally, the user's config file, ``~/.pygcam.cfg``, is read. Each
-    successive file overrides values for any variable defined in an earlier file.
-
-    :return: a populated ConfigParser instance
-    """
-    global _ConfigParser
-
+def getHomeDir():
     if PlatformName == 'Windows':
         # HOME exists on all Unix-like systems; for Windows it's HOMEPATH or HOMESHARE.
         # If set, we use PYGCAM_HOME to identify the folder with the config file;
@@ -171,11 +162,29 @@ def readConfigFiles():
     else:
         home = os.getenv('HOME')
 
+    return home
+
+
+def readConfigFiles():
+    """
+    Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
+    followed by ``pygcam/etc/{platform}.cfg`` if present. If the environment variable
+    ``PYGCAM_SITE_CONFIG`` is defined, its value should be a config file, which is
+    read next. Finally, the user's config file, ``~/.pygcam.cfg``, is read. Each
+    successive file overrides values for any variable defined in an earlier file.
+
+    :return: a populated ConfigParser instance
+    """
+    global _ConfigParser
+
+    home = getHomeDir()
+
     # Strict mode prevents duplicate sections, which we do not restrict
-    _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'), strict=False,
+    _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'),
+                                              strict=False,
                                               empty_lines_in_values=False)
 
-    # don't force keys to lower-case
+    # don't force keys to lower-case: variable names are case sensitive
     _ConfigParser.optionxform = lambda option: option
 
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
@@ -207,7 +216,7 @@ def readConfigFiles():
         with open(usrConfigPath) as f:
            _ConfigParser.read_file(f)
 
-    except IOError as e:
+    except IOError:
         # TBD: rather than this, write a file .pygcam.defaults for ref
         # TBD: and invoke the "init" sub-command. Then write a basic config
         # TBD: file with user's values in [DEFAULT] and section for default proj.
@@ -219,7 +228,7 @@ def readConfigFiles():
     # Create (if not defined) GCAM.ProjectName in each section, holding the
     # section (i.e., project) name. If user has set this, the value is unchanged.
     projectNameVar = 'GCAM.ProjectName'
-    for section in _ConfigParser.sections():
+    for section in getSections():
         if not (_ConfigParser.has_option(section, projectNameVar) and   # var must exist
                 _ConfigParser.get(section, projectNameVar)):            # and not be blank
             _ConfigParser.set(section, projectNameVar, section)
@@ -229,6 +238,9 @@ def readConfigFiles():
         setSection(projectName)
 
     return _ConfigParser
+
+def getSections():
+    return _ConfigParser.sections()
 
 def getConfigDict(section=DEFAULT_SECTION, raw=False):
     """
@@ -274,7 +286,7 @@ def getParam(name, section=None, raw=False, raiseError=True):
     :raises NoOptionError: if the variable is not found in the given
       section and raiseError is True
     """
-    section = section or _ProjectSection
+    section = section or getSection()
 
     if not section:
         raise PygcamException('getParam was called without setting "section"')

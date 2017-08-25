@@ -13,7 +13,7 @@ class ConfigCommand(SubcommandABC):
         kwargs = {'help' : '''List the values of configuration variables from
                   ~/.pygcam.cfg configuration file.'''}
 
-        super(ConfigCommand, self).__init__('config', subparsers, kwargs)
+        super(ConfigCommand, self).__init__('config', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
         parser.add_argument('-d', '--useDefault', action='store_true',

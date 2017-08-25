@@ -88,8 +88,6 @@ def _gcamWrapper(args):
         if line == '':
             break
 
-        # sys.stdout.write(line)
-        # sys.stdout.flush()
         _logger.info(line.rstrip())          # see if this ends up in worker.log
 
         match = re.search(pattern, line)

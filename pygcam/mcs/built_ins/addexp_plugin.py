@@ -4,7 +4,7 @@
 # TBD: may be obsolete
 
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -20,9 +20,9 @@ def driver(args, tool):
     _logger.debug("Added experiment '%s' with id=%d" % (args.expName, expId))
 
 
-class AddExpCommand(SubcommandABC):
+class AddExpCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Adds the named experiment to the database, with an optional description.'''}
+        kwargs = {'help' : '''Adds the named experiment to the database, with an optional description.'''}
         super(AddExpCommand, self).__init__('addexp', subparsers, kwargs)
 
     def addArgs(self, parser):

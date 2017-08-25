@@ -1,7 +1,7 @@
 import unittest
 import os
 import subprocess
-from pygcam.landProtection import _makeLandClassXpath, _makeRegionXpath, protectLand
+from pygcam.landProtection import _makeLandClassXpath, _makeRegionXpath, protectLand, runProtectionScenario
 from pygcam.windows import IsWindows
 
 class TestLandProtection(unittest.TestCase):
@@ -52,6 +52,24 @@ class TestLandProtection(unittest.TestCase):
             testfile = os.path.join(xmlDir, 'expected_land_input_%d.xml' % num)
 
             protectLand(infile, outfile, protectedFraction, landClasses=classes, regions=regions)
+            self.assertFilesEqual(outfile, testfile)
+
+    def test_protection_scenario(self):
+        scenarioName = 'test'
+        xmlDir = os.path.join('data', 'xml')
+        tmpDir = os.path.join('data', 'tmp')
+
+        scenarioFile = os.path.join(xmlDir, 'protection.xml')
+
+        xmlFiles = map(lambda num: os.path.join(xmlDir, 'partial_land_input_%d.xml' % num), (2, 3))
+
+        runProtectionScenario(scenarioName, outputDir=tmpDir, scenarioFile=scenarioFile,
+                              xmlFiles=xmlFiles, inPlace=False)
+
+        for num in (2, 3):
+            outfile  = os.path.join(tmpDir, 'partial_land_input_%d.xml' % num)
+            testfile = os.path.join(xmlDir, 'test_scenario_land_input_%d.xml' % num)
+
             self.assertFilesEqual(outfile, testfile)
 
 

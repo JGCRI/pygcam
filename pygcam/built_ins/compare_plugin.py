@@ -94,7 +94,7 @@ class CompareCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Compare two GCAM configuration files and the files they load to
         find differences. Files are compared using "diff" based on matching "name" tags.'''}
-        super(CompareCommand, self).__init__('compare', subparsers, kwargs)
+        super(CompareCommand, self).__init__('compare', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
         defaultOutputDir = '/tmp/xmlCompare'

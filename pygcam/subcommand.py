@@ -25,11 +25,26 @@ class SubcommandABC(object):
     def getParser(cls, name):
         return cls.Parsers[name]
 
-    def __init__(self, name, subparsers, kwargs):
+    def __init__(self, name, subparsers, kwargs, group='main'):
         self.name = name
         self.parser = parser = subparsers.add_parser(self.name, **kwargs)
         self.Parsers[self.name] = parser
+
+        # For grouping commands in gcam-gui. Set this in subclass' addArgs().
+        # Set to None if the command should not be presented in the GUI.
+        self.group = group
+
         self.addArgs(parser)
+
+    def __str__(self):
+        clsName = type(self).__name__
+        return "<%s name=%s group=%s>" % (clsName, self.name, self.group)
+
+    def setGuiGroup(self, name):
+        self.group = name
+
+    def guiGroup(self):
+        return self.group
 
     @abstractmethod
     def addArgs(self, parser):

@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -42,9 +42,9 @@ def driver(args, tool):
         XMLResultFile.addOutputs()
 
 
-class DelSimCommand(SubcommandABC):
+class DelSimCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Initialize the database for the given user application. 
+        kwargs = {'help' : '''Initialize the database for the given user application. 
             This is done automatically by the sub-command "new" and should be used only to 
             recreate the database from scratch.'''}
         super(DelSimCommand, self).__init__('delsim', subparsers, kwargs)

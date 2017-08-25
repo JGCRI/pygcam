@@ -2,13 +2,14 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from ..error import PygcamMcsUserError
-from pygcam.subcommand import SubcommandABC
+from .McsSubcommandABC import McsSubcommandABC
 
-class ParallelPlotCommand(SubcommandABC):
+class ParallelPlotCommand(McsSubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''(MCS) Generate a parallel coordinates plot for a set
+        kwargs = {'help' : '''Generate a parallel coordinates plot for a set
         of simulation results. '''}
         super(ParallelPlotCommand, self).__init__('parallelPlot', subparsers, kwargs)
+        self.group = None # don't display this in GUI for now
 
     def addArgs(self, parser):
         # Required arguments

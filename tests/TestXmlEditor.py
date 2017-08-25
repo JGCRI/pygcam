@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pygcam.xmlEditor import xmlSel, xmlEdit, extractStubTechnology
 
 cfg = './data/xml/configuration_ref.xml'

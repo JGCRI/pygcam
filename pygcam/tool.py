@@ -16,7 +16,8 @@ from glob import glob
 
 from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
-                     setParam, getSection, setSection, DEFAULT_SECTION, usingMCS)
+                     setParam, getSection, setSection, getSections,
+                     DEFAULT_SECTION, usingMCS)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevel, configureLogs
 from .project import decacheVariables
@@ -90,13 +91,31 @@ class GcamTool(object):
     _instance = None
 
     @classmethod
-    def getInstance(cls, loadPlugins=True):
-        # Specify GcamTool rather than cls to avoid creating
-        # _instance as a class variable in a subclass.
+    def getInstance(cls, loadPlugins=True, reload=False):
+        """
+        Get the singleton instance of the GcamTool class.
+
+        :param loadPlugins: (bool) If true, plugins are loaded (only
+           when first allocated).
+        :param reload: (bool) If true, a new GcamTool instance is
+           created.
+        :return: (GcamTool instance) the new or cached instance.
+        """
+        if reload:
+            GcamTool._instance = None
+            GcamTool._plugins = {}
+            GcamTool._pluginPaths = {}
+
         if not GcamTool._instance:
             GcamTool._instance = cls(loadPlugins=loadPlugins)
 
         return GcamTool._instance
+
+    @classmethod
+    def pluginGroup(cls, groupName, namesOnly=False):
+        objs = filter(lambda obj: obj.group == groupName, cls._plugins.values())
+        result = sorted(map(lambda obj: obj.name, objs)) if namesOnly else objs
+        return result
 
     def __init__(self, loadPlugins=True, loadBuiltins=True):
 
@@ -121,7 +140,6 @@ class GcamTool(object):
         # Load external plug-ins found in plug-in path
         if loadPlugins:
             self._cachePlugins()
-            # self.loadPlugins()
 
     def addParsers(self):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
@@ -141,8 +159,10 @@ class GcamTool(object):
                             help='''Specify a name for the queued batch job. Default is "gt".
                             (Linux only)''')
 
-        parser.add_argument('+l', '--logLevel', type=str.lower, metavar='level',
-                            choices=['notset', 'debug', 'info', 'warning', 'error', 'critical'],
+        logLevel = str(getParam('GCAM.LogLevel'))   # so not unicode
+        parser.add_argument('+l', '--logLevel', type=str.lower,
+                            default=logLevel.lower() if logLevel else 'notset',
+                            choices=['notset', 'debug', 'info', 'warning', 'error', 'fatal'],
                             help='Sets the log level of the program.')
 
         parser.add_argument('+L', '--logFile',
@@ -151,18 +171,19 @@ class GcamTool(object):
                             argument is not an absolute pathname, it is treated as relative to the
                             value of GCAM.LogDir.''')
 
-        parser.add_argument('+m', '--minutes', type=float,
+        parser.add_argument('+m', '--minutes', type=float, default=getParamAsFloat('GCAM.Minutes'),
                             help='''Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)''')
 
         parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'],
                             help='''Used only when running gcamtool from pygcam-mcs.''')
 
-        parser.add_argument('+P', '--projectName', metavar='name',
+        parser.add_argument('+P', '--projectName', metavar='name', default=getParam('GCAM.DefaultProject'),
+                            choices=sorted(getSections()),
                             help='''The project name (the config file section to read from),
                             which defaults to the value of config variable GCAM.DefaultProject''')
 
-        parser.add_argument('+q', '--queueName',
+        parser.add_argument('+q', '--queueName', default=getParam('GCAM.DefaultQueue'),
                             help='''Specify the name of the queue to which to submit the batch job.
                             Default is given by config variable GCAM.DefaultQueue. (Linux only)''')
 
