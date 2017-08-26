@@ -656,7 +656,7 @@ class McsValues(XMLFile):
         return regionMap.get(paramName, default)
 
 
-def printSeries(series, label, header='', loglevel='DEBUG'):
+def printSeries(series, label, header='', asStr=False):
     """
     Print a `series` of values, with a give `label`.
 
@@ -666,19 +666,23 @@ def printSeries(series, label, header='', loglevel='DEBUG'):
     """
     import pandas as pd
 
-    func = _logger.debug if loglevel == 'DEBUG' else \
-        (_logger.info if loglevel == 'INFO' else None)
+    if type(series) == pd.DataFrame:
+        df = series
+        df = df.T
+    else:
+        df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
 
-    if func:
-        if type(series) == pd.DataFrame:
-            df = series
-            df = df.T
-        else:
-            df = pd.DataFrame(pd.Series(series))  # DF is more convenient for printing
+    df.columns = [label]
 
-        df.columns = [label]
-        pd.set_option('precision', 5)
-        func("%s\n%s", header, df.T)
+    oldPrecision = pd.get_option('precision')
+    pd.set_option('precision', 5)
+    s = "%s\n%s" % (header, df.T)
+    pd.set_option('precision', oldPrecision)
+
+    if asStr:
+        return s
+    else:
+        print(s)
 
 def getTempFile(suffix='', tmpDir=None, text=True, delete=True):
     """

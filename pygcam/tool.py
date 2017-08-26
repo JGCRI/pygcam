@@ -19,7 +19,7 @@ from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections,
                      DEFAULT_SECTION, usingMCS)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
-from .log import getLogger, setLogLevel, configureLogs
+from .log import getLogger, setLogLevels, configureLogs
 from .project import decacheVariables
 from .signals import SignalException, catchSignals
 from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs, pathjoin
@@ -160,10 +160,13 @@ class GcamTool(object):
                             (Linux only)''')
 
         logLevel = str(getParam('GCAM.LogLevel'))   # so not unicode
-        parser.add_argument('+l', '--logLevel', type=str.lower,
-                            default=logLevel.lower() if logLevel else 'notset',
-                            choices=['notset', 'debug', 'info', 'warning', 'error', 'fatal'],
-                            help='Sets the log level of the program.')
+        parser.add_argument('+l', '--logLevel',
+                            default=logLevel or 'notset',
+                            help='''Sets the log level for modules of the program. A default
+                                log level can be set for the entire program, or individual 
+                                modules can have levels set using the syntax 
+                                "module:level, module:level,...", where the level names must be
+                                one of {debug,info,warning,error,fatal} (case insensitive).''')
 
         parser.add_argument('+L', '--logFile',
                             help='''Sets the name of a log file for batch runs. Default is "gt-$j.out"
@@ -294,7 +297,7 @@ class GcamTool(object):
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:
-                setLogLevel(logLevel)
+                setLogLevels(logLevel)
 
             configureLogs(force=True)
 

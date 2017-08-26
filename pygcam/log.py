@@ -11,19 +11,58 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
+
+# New approach:
+# - Create a logger for each module via getLogger()
+# - Set propagate=True unless a module is defined named in (parsed)
+
 import os
 import logging
 from .config import getParam, getParamAsBoolean, configLoaded
 from .error import PygcamException
 
-_logLevel   = None
-_verbose    = False
+PKGNAME = 'pygcam'
+
+_Loggers    = {}      # loggers created herein, keyed by module or package name
+_LogLevels  = None    # log levels keyed by module or package name
+_verbose    = False   # whether debug msgs should print
 
 def _debug(msg):
     if _verbose:
         print(msg)
 
-def getLevels(levelStr=None):
+# deprecated
+# Loggers for top-level package names, e.g., 'pygcam'.
+# _PkgLoggers = {}    # package-level loggers, used for modules not named individually
+
+# Note: 'traitlets' library uses root logger, which we don't want to enable here
+def _createPkgLogger(dotspec):
+    pkgName = dotspec.split('.')[0]
+
+    if pkgName and pkgName not in _Loggers:
+        _debug('_createPkgLogger("%s") from %s' % (pkgName, dotspec))
+        logger = getLogger(pkgName)
+        logger.propagate = False
+
+def getLogger(name):
+    '''
+    Register a logger, which will be set up after the configuration
+    file is read.
+
+    :param name: the name of the logger, conventionally passed as __name__.
+    :return: a logging logger instance
+    '''
+    _debug('getLogger("%s")' % name)
+    logger = logging.getLogger(name)
+    logger.propagate = True             # set to False for explicitly named modules
+    _Loggers[name] = logger
+
+    _configureLogger(name)
+    _createPkgLogger(name)
+
+    return logger
+
+def parseLevels(levelStr=None):
     """
     Get log levels for pygcam as a whole or for indicated modules individually.
     Modules not prefixed or starting with 'mcs.' are interpreted to be in pygcam.
@@ -32,26 +71,29 @@ def getLevels(levelStr=None):
     :param levelStr: a comma-delimited string of module:logLevel values. If
         no ':' is present, the value is treated as the default logLevel for pygcam.
         If levelStr is None, the value of the variable 'GCAM.LogLevel' is used.
-    :return: None
+    :return: (dict) of log levels, keyed by module names
     """
+    def splitAndStrip(s, delim):
+        items = map(str.strip, map(str, s.split(delim)))
+        return items
+
     result = {}
 
     levelStr = levelStr or getParam('GCAM.LogLevel')
 
-    levels = map(str.strip, levelStr.split(','))
+    levels = splitAndStrip(levelStr, ',')
     for level in levels:
         if ':' in level:
-            module, lvl = map(str.strip, level.split(':'))
-            if '.' not in module or module.startswith('mcs.'):
-                module = 'pygcam.' + module
+            module, lvl = splitAndStrip(level, ':')
+            if '.' not in module or module[0] == '.':
+                module = PKGNAME + '.' + (module[1:] if module[0] == '.' else module)
         else:
-            module = 'pygcam'
+            module = PKGNAME
             lvl = level.strip()
 
-        result[module] = lvl
+        result[module] = lvl.upper()
 
     return result
-
 
 #
 # Copied here from utils.py to avoid an import loop
@@ -68,35 +110,6 @@ def _mkdirs(newdir, mode=0o770):
         if e.errno != EEXIST:
             raise
 
-# Loggers for top-level package names, e.g., 'pygcam'.
-# TBD: Revise this to set log levels for packages and for indiv modules if user so specifies
-_PkgLoggers = {}
-
-# TBD: set propagate to False only for explicitly set module or package loggers
-def _createPkgLogger(dotspec):
-    pkgName = dotspec.split('.')[0]
-
-    if pkgName and pkgName not in _PkgLoggers:
-        _debug('_createPkgLogger("%s") from %s' % (pkgName, dotspec))
-        logger = logging.getLogger(pkgName)
-        # Note: 'traitlets' library uses root logger, which we don't want to enable here
-        logger.propagate = False
-        _PkgLoggers[pkgName] = logger
-        _configureLogger(pkgName)
-
-def getLogger(name):
-    '''
-    Register a logger, which will be set up after the configuration
-    file is read.
-
-    :param name: the name of the logger, conventionally passed as __name__.
-    :return: a logging logger instance
-    '''
-    _debug('getLogger("%s")' % name)
-    logger = logging.getLogger(name)
-    _createPkgLogger(name)
-    return logger
-
 def _addHandler(logger, formatStr, logFile=None):
     if logFile:
         _mkdirs(os.path.dirname(logFile))
@@ -104,27 +117,36 @@ def _addHandler(logger, formatStr, logFile=None):
     handler = logging.FileHandler(logFile, mode='a') if logFile else logging.StreamHandler()
     handler.setFormatter(logging.Formatter(formatStr))
     logger.addHandler(handler)
-    _debug("Added %s handler to '%s' logger" % ('file' if logFile else 'console', logger.name))
+    _debug("Added %s log handler for '%s'" % ('file' if logFile else 'console', logger.name))
 
 def _configureLogger(name, force=False):
     try:
-        logger = _PkgLoggers[name]
+        logger = _Loggers[name]
     except KeyError:
-        raise PygcamException("Can't configure unknown logger '%s'" % name)
+        # ignore unknown logger names
+        _debug("Unknown logger name '%s'" % name)
+        return
 
     # If not forcing, skip loggers that already have handlers installed
     if not force and logger.handlers:
         return
 
-    global _logLevel
-    if not _logLevel:
-        # TBD: parse LogLevel to a dict via getLevels and cache that instead
-        _logLevel = getParam('GCAM.LogLevel').upper() or 'ERROR'
+    global _LogLevels
+    if not _LogLevels:
+        setLogLevels(getParam('GCAM.LogLevel') or 'WARN')
 
-    _debug("Configuring %s, level=%s" % (name, _logLevel))
-    logger.setLevel(_logLevel)
+    if name in _LogLevels:
+        level = _LogLevels[name]
+        _debug("Configuring %s, level=%s" % (name, level))
+        logger.setLevel(level)
+    else:
+        logger.setLevel(logger.parent.level)
 
+    logger.propagate = False
+
+    # flush and remove all handlers
     for handler in logger.handlers:
+
         if not isinstance(handler, logging.NullHandler):
             handler.flush()
         logger.removeHandler(handler)
@@ -156,41 +178,25 @@ def configureLogs(force=False):
     if not configLoaded():
         return
 
-    # TBD: use getLevels() instead
-    for name in _PkgLoggers.keys():
+    # First configure explicitly named modules
+    explicit = _LogLevels.keys()
+    for name in explicit:
         _configureLogger(name, force=force)
 
+    # Next do all the implicit ones, setting their log levels
+    # to their parent log levels and setting propagate to False.
+    for name in _Loggers.keys():
+        if name not in explicit:
+            _configureLogger(name, force=force)
 
-# TBD: obsolete once per-module levels can be set
-def getLogLevel():
-    """
-    Get the currently set LogLevel.
-
-    :return: (str) one of ``'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'``
-    """
-    return _logLevel
-
-# TBD: modify to parse level str. (Used only pygcam.tool currently.)
-# TBD: fix doc string to reference format in getLevels()
-def setLogLevel(level):
+def setLogLevels(levelStr):
     '''
-    Set the logging level for all defined loggers.
+    Set the logging level string, which can define levels for packages and/or modules.
+    Must call configureLogs(force=True) afterwards.
 
-    :param level: (str) one of ``'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'`` (case insensitive)
+    :param levelStr: (str) one of ``'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'`` (case insensitive)
     :return: none
     '''
-    global _logLevel
-    _logLevel = level.upper()
-    logger = logging.getLogger()
-    logger.setLevel(_logLevel)
-
-# Deprecated
-# def resetLogLevel():
-#     '''
-#     Set the log level to the current value of GCAM.LogLevel, which may be
-#     different once the default project name has been set.
-#
-#     :return: none
-#     '''
-#     level = getParam('GCAM.LogLevel')
-#     setLogLevel(level)
+    global _LogLevels
+    _LogLevels = parseLevels(levelStr)
+    # configureLogs(force=True)

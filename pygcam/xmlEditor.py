@@ -29,7 +29,7 @@ from lxml import etree as ET
 from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
-from .log import getLogger, getLogLevel
+from .log import getLogger
 from .utils import coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile, removeTreeSafely
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
@@ -1265,7 +1265,7 @@ class XMLEditor(object):
         :return: none
         """
         msg = "Set non-energy-cost of %s for %s to:" % (technology, self.name)
-        printSeries(values, technology, header=msg, loglevel='INFO')
+        _logger.info(printSeries(values, technology, header=msg, asStr=True))
 
         #_logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
 
@@ -1416,12 +1416,10 @@ class XMLEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        if getLogLevel() in ['DEBUG', 'INFO']:
-            from .utils import printSeries
+        from .utils import printSeries
 
-            _logger.info("Set share-weights for (%s, %s, %s) for %s" % \
-                  (region, sector, stubTechnology, self.name))
-            printSeries(values, 'share-weights')
+        _logger.info("Set share-weights for (%s, %s, %s) for %s", region, sector, stubTechnology, self.name)
+        _logger.info(printSeries(values, 'share-weights', asStr=True))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
 
