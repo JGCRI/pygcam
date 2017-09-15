@@ -343,7 +343,7 @@ def spearmanCorrelation(inputs, results):
     results. Returns a Series with the spearman rank correlation values.
 
     :param inputs: (pandas.DataFrame) input values for each parameter and trial
-    :param output: (pandas.Series) output values for one result, per trial
+    :param results: (pandas.Series) values for one model result, per trial
     :return: (pandas.Series) rank correlations of each input to the output vector.
     '''
     corrList = [results.corr(inputs[col], method='spearman') for col in inputs.columns]

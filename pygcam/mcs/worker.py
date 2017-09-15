@@ -280,25 +280,26 @@ def runTrial(context, argDict):
     '''
     global latestStartTime
 
-    # On the first run, compute the latest time we should start a new trial.
-    # On subsequent runs, check that there's adequate time still left.
-    if latestStartTime is None:
-        startTime = time.time()
+    if not argDict.get('runLocal', False):
+        # On the first run, compute the latest time we should start a new trial.
+        # On subsequent runs, check that there's adequate time still left.
+        if latestStartTime is None:
+            startTime = time.time()
 
-        wallTime  = os.getenv('MCS_WALLTIME', '2:00') # should always be set except when debugging
-        parts = map(int, wallTime.split(':'))
-        secs = parts.pop()
-        mins = parts.pop() if parts else 0
-        hrs  = parts.pop() if parts else 0
+            wallTime  = os.getenv('MCS_WALLTIME', '2:00') # should always be set except when debugging
+            parts = map(int, wallTime.split(':'))
+            secs = parts.pop()
+            mins = parts.pop() if parts else 0
+            hrs  = parts.pop() if parts else 0
 
-        minTimeToRun = getParamAsFloat('IPP.MinTimeToRun')
-        latestStartTime = (startTime + secs + 60 * mins + 3600 * hrs) - (minTimeToRun * 60)
+            minTimeToRun = getParamAsFloat('IPP.MinTimeToRun')
+            latestStartTime = (startTime + secs + 60 * mins + 3600 * hrs) - (minTimeToRun * 60)
 
-    else:
-        if time.time() > latestStartTime:
-            context.setVars(status=ENG_TERMINATE) # tell master to terminate us
-            time.sleep(10) # don't consume queue while waiting for termination
-            return WorkerResult(context, 'insufficient time remaining')
+        else:
+            if time.time() > latestStartTime:
+                context.setVars(status=ENG_TERMINATE) # tell master to terminate us
+                time.sleep(10) # don't consume queue while waiting for termination
+                return WorkerResult(context, 'insufficient time remaining')
 
     worker = Worker(context, argDict)
     result = worker.runTrial()

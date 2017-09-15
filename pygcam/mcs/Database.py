@@ -232,7 +232,9 @@ class CoreDatabase(object):
         connect_args = {'connect_timeout': 15} if usingPostgres() else {}
 
         self.engine = engine = create_engine(url, echo=echo, connect_args=connect_args,
-                                             poolclass=QueuePool) #, pool_pre_ping=True)
+                                             # poolclass=QueuePool
+                                             #, pool_pre_ping=True
+                                            )
         self.Session.configure(bind=engine)
 
         self.url = url
@@ -429,6 +431,22 @@ class CoreDatabase(object):
                 except SQLAlchemyError as e:
                     print e
 
+    def getTable(self, tableClass, orderBy=None):
+        '''
+        Get all the contents of a table, optionally ordered by the given column.
+
+        :param tableClass: (SqlAlchemy table class) the table to query
+        :param orderBy: (SqlAlchemy table.col spec) optional column to order by
+        :return: (list of elements of tableClass) the rows of the table
+        '''
+        with self.sessionScope() as session:
+            query = session.query(tableClass)
+            if orderBy:
+                query = query.order_by(orderBy)
+
+            rows = query.all()
+            return rows
+
     def setSqlEcho(self, value=True):
         with self.sessionScope() as session:
             engine = session.get_bind()
@@ -497,6 +515,19 @@ class CoreDatabase(object):
 
         return zip(*ids)[0] if ids else []
 
+    def getOutputs(self):
+        rows = self.getTable(Output)
+        return map(lambda obj: obj.name, rows)
+
+    def getOutputsWithValues(self, simId, scenario):
+        with self.sessionScope() as session:
+            query = session.query(Output.name).\
+                join(OutValue).join(Run).filter_by(simId=simId).\
+                join(Experiment).filter_by(expName=scenario). \
+                distinct(Output.name)
+            rows = query.all()
+            return map(lambda row: row[0], rows)
+
     #
     # Very much like setAttrVal. So much so that perhaps the Result table can be
     # eliminated in favor of using the generic attribute/value system?
@@ -531,10 +562,9 @@ class CoreDatabase(object):
             self.commitWithRetry(sess)
             self.endSession(sess)
 
-    # TBD: return a Series instead?
     def getOutValues(self, simId, expName, outputName, limit=None):
         '''
-        Return a DataFrame with columns trialNum and outputName,
+        Return a pandas DataFrame with columns trialNum and name outputName,
         for the given sim, exp, and output variable.
         '''
         from pandas import DataFrame
@@ -606,6 +636,24 @@ class CoreDatabase(object):
         resultDF = DataFrame.from_records(rslt, columns=cols, index='trialNum')
         return resultDF
 
+    def getParameterValues2(self, simId):
+        from pandas import DataFrame    # lazy import
+        session = self.Session()
+
+        query = session.query(InValue.trialNum, InValue.value, Input.paramName).\
+                 filter(InValue.simId == simId).join(Input).order_by(InValue.trialNum)
+
+        rslt = query.all()
+        self.endSession(session)
+
+        if not rslt:
+            return None
+
+        cols = ['trialNum', 'value', 'paramName']
+        resultDF = DataFrame.from_records(rslt, columns=cols)
+        resultDF = resultDF.pivot(index='trialNum', columns='paramName', values='value')
+        return resultDF
+
     def getParameters(self):
         session = self.Session()
         query = session.query(Input.paramName, InValue.row, InValue.col).\
@@ -615,6 +663,28 @@ class CoreDatabase(object):
         rslt = query.all()
         self.endSession(session)
         return rslt
+
+    def getInputs(self):
+        rows = self.getTable(Input, orderBy=Input.paramName)
+        return map(lambda row: row.paramName, rows)
+
+    def scenariosWithResults(self, simId):
+        # Definition of view 'result':
+        # select o."runId", r."simId", r."expId", r."trialNum", e."expName", op.name, o.value
+        # from outvalue o, output op, run r, experiment e
+        # where e."expId" = r."expId" and o."runId" = r."runId" and o."outputId" = op."outputId"
+        try:
+            with self.sessionScope() as session:
+                query = session.query(Experiment.expName).join(Run).filter_by(simId=simId).\
+                    join(OutValue).distinct(Experiment.expName)
+                rows = query.all()
+                names = map(lambda row: row[0], rows)
+        except Exception as e:
+            _logger.error("scenariosWithResults failed: %s", e)
+            names = []
+
+        _logger.debug("scenariosWithResults returning %s", names)
+        return names
 
     # Deprecated
     # def getAppId(self, appName):
@@ -655,19 +725,27 @@ class CoreDatabase(object):
 
         return run
 
-    def getRun(self, simId, trialNum, expName):
-        session = self.Session()
-        run = session.query(Run).filter_by(simId=simId, trialNum=trialNum).\
-                join(Experiment).filter_by(expName=expName).scalar()
+    def getSim(self, simId):
+        with self.sessionScope() as session:
+            sim = session.query(Sim).filter_by(simId=simId).scalar()
 
-        self.endSession(session)
-        return run    # N.B. scalar() returns None if no rows are found
+            return sim    # N.B. scalar() returns None if no rows are found
+
+    def getSims(self):
+        rows = self.getTable(Sim, orderBy=Sim.simId)
+        return rows
+
+    def getRun(self, simId, trialNum, expName):
+        with self.sessionScope() as session:
+            run = session.query(Run).filter_by(simId=simId, trialNum=trialNum).\
+                    join(Experiment).filter_by(expName=expName).scalar()
+
+            return run
 
     def getRunByRunId(self, runId):
-        session = self.Session()
-        run = session.query(Run).filter_by(runId=runId).scalar()
-        self.endSession(session)
-        return run    # scalar() returns None if no rows are found
+        with self.sessionScope() as session:
+            run = session.query(Run).filter_by(runId=runId).scalar()
+            return run
 
     def getRunFromContext(self, context):
         run = self.getRun(context.simId, context.trialNum, context.scenario)
@@ -906,6 +984,12 @@ class GcamDatabase(CoreDatabase):
 
         return cls.instance
 
+    @classmethod
+    def close(cls):
+        if cls.instance:
+            cls.instance.engine.dispose()
+        cls.instance = None
+
     def initDb(self, args=None):
         'Add GCAM-specific tables to the coremcs database'
         super(GcamDatabase, self).initDb(args=args)
@@ -979,6 +1063,10 @@ class GcamDatabase(CoreDatabase):
                 self.endSession(sess)
 
         return exp
+
+    def getExps(self):
+        rows = self.getTable(Experiment, orderBy=Experiment.expName)
+        return rows
 
     # TBD: generalize and add to CoreDatabase since often modified? Or just add to base schema.
     def addExpCols(self, alterTable=True):

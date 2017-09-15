@@ -83,8 +83,11 @@ class Output(CoreMCSMixin, ORMBase):
     outputId    = Column(Integer, primary_key=True)
     programId   = Column(Integer, ForeignKey('program.programId', ondelete="CASCADE"))
     name        = Column(String)
-    timeseries  = Column(Boolean, default=False)    # deprecated?
+    timeseries  = Column(Boolean, default=False)    # TBD: use this!
     description = Column(String, nullable=True)
+
+    # TBD: add this for display purposes
+    #units       = Column(String, nullable=True)
 
 
 class OutValue(CoreMCSMixin, ORMBase):
