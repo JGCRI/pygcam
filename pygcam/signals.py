@@ -5,17 +5,15 @@ import signal
 from .windows import IsWindows
 
 # Windows has only SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, or SIGTERM
-if IsWindows:
-    signal.SIGALRM = signal.NSIG + 1
-    signal.SIGQUIT = signal.NSIG + 2
-    signal.SIGUSR1 = signal.NSIG + 3
-
 _sigmap = {
+    signal.SIGABRT: 'SIGABRT',
+    signal.SIGINT:  'SIGINT',
+    signal.SIGTERM: 'SIGTERM',
+} if IsWindows else {
     signal.SIGINT:  'SIGINT',
     signal.SIGALRM: 'SIGALRM',
     signal.SIGTERM: 'SIGTERM',
     signal.SIGQUIT: 'SIGQUIT',
-    signal.SIGUSR1: 'SIGUSR1',
 }
 
 def _signame(signum):
@@ -40,7 +38,7 @@ class UserInterruptException(SignalException):
     pass
 
 def raiseSignalException(signum, _frame):
-    if signum == signal.SIGALRM:
+    if not IsWindows and signum == signal.SIGALRM:
         raise AlarmSignalException(signum)
 
     elif signum == signal.SIGTERM:      # TBD: this is sent by SLURM. Same for PBS??
@@ -54,8 +52,5 @@ def raiseSignalException(signum, _frame):
 
 
 def catchSignals(handler=raiseSignalException):
-    signals = [signal.SIGTERM, signal.SIGINT, signal.SIGALRM]
-    signals.append(signal.SIGABRT if IsWindows else signal.SIGQUIT)
-
-    for sig in signals:
+    for sig in _sigmap:
         signal.signal(sig, handler)
