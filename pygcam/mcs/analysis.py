@@ -136,7 +136,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
 
 
 def plotTornado(data, colname='value', labelsize=9, title=None, color=None, height=0.8,
-                limit=20, rlabels=None, xlabel='Contribution to variance', figsize=None,
+                limit=None, rlabels=None, xlabel='Contribution to variance', figsize=None,
                 show=True, filename=None, extra=None, extraColor='grey', extraLoc='right'):
     '''
     :param data: A sorted DataFrame or Series indexed by variable name, with
@@ -156,6 +156,9 @@ def plotTornado(data, colname='value', labelsize=9, title=None, color=None, heig
     :return: nothing
     '''
     count, cols = data.shape
+
+    if limit is None:
+        limit = 20
 
     if 0 < limit < count:
         data = data[:limit]            # Truncate the DF to the top "limit" rows
@@ -352,7 +355,7 @@ def spearmanCorrelation(inputs, results):
     return spearman
 
 
-def plotSensitivityResults(varName, data, filename=None, extra=None, printIt=True):
+def plotSensitivityResults(varName, data, filename=None, extra=None, limit=None, printIt=True):
     '''
     Prints results and generates a tornado plot with normalized squares of Spearman
     rank correlations between an output variable and all input variables.
@@ -366,10 +369,10 @@ def plotSensitivityResults(varName, data, filename=None, extra=None, printIt=Tru
         print(data.to_string(columns=['spearman', 'value'], float_format="{:4.2f}".format))
 
     title = 'Sensitivity of %s' % varName
-    plotTornado(data, title=title, show=False, filename=filename, extra=extra)
+    plotTornado(data, title=title, show=False, filename=filename, extra=extra, limit=limit)
 
 # Deprecated?
-def plotGroupSensitivityResults(varName, data, filename=None, extra=None, printIt=True):
+def plotGroupSensitivityResults(varName, data, filename=None, extra=None, limit=None, printIt=True):
     '''
     Sum the normalized contribution to variance for subscripted parameters,
     along with contribution from unsubscripted ones. For example, we sum
@@ -416,7 +419,7 @@ def plotGroupSensitivityResults(varName, data, filename=None, extra=None, printI
         print(df.to_string(columns=['value', 'description'], float_format="{:4.2f}".format))
 
     title = 'Sensitivity of %s' % varName
-    plotTornado(df, title=title, figsize=None, show=False, filename=filename, extra=extra)
+    plotTornado(df, title=title, figsize=None, show=False, filename=filename, limit=limit, extra=extra)
 
 
 def plotInputDistributions(simId, inputDF):
@@ -1105,11 +1108,11 @@ def analyzeSimulation(args):
             data['value'] = data.normalized * data.sign     # normalized squares with signs restored
 
             if importance:
-                plotSensitivityResults(resultName, data,
+                plotSensitivityResults(resultName, data, limit=15,
                                         filename=makePlotPath('%s-s%02d-%s-ind' % (expName, simId, resultName), simId),
                                         extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))
 
             if groups:
-                plotGroupSensitivityResults(resultName, data,
+                plotGroupSensitivityResults(resultName, data, limit=15,
                                              filename=makePlotPath('%s-s%02d-%s-grp' % (expName, simId, resultName), simId),
                                              extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))

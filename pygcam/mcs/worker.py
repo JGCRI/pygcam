@@ -1,22 +1,20 @@
 # Copyright (c) 2012-2016. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 import os
-import signal
 import time
+import ipyparallel as ipp
 
 from pygcam.config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
 from pygcam.error import GcamError, GcamSolverError
 from pygcam.log import getLogger, configureLogs
-from pygcam.signals import (catchSignals, TimeoutSignalException, AlarmSignalException,
-                            UserInterruptException)
+from pygcam.signals import (catchSignals, TimeoutSignalException, UserInterruptException)
 from pygcam.utils import mkdirs
 
 from pygcam.mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from pygcam.mcs.context import Context
 from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
-from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED,
-                                 RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
-                                 RUN_GCAMERROR, RUN_RUNNING, ENG_TERMINATE)
+from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
+                                 RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
 from pygcam.mcs.util import readTrialDataFile
 from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
 
@@ -70,8 +68,9 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     # For running in an ipyparallel engine, forget instances from last run
     decache()
 
-    # TBD: #### debugging only ####
-    if False:
+    # TBD: #### set to True to help debug ipyparallel issues ####
+    debuggingOnly = False
+    if debuggingOnly:
         time.sleep(30)
         return RUNNER_SUCCESS
 
@@ -128,8 +127,17 @@ class WorkerResult(object):
     Encapsulates the results returned from a worker task.
     '''
     def __init__(self, context, errorMsg):
+        from .XMLResultFile import collectResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
+
         self.context  = context
         self.errorMsg = errorMsg
+
+        self.resultsList = collectResults(context, RESULT_TYPE_SCENARIO)
+
+        if context.baseline:  # also save 'diff' results
+            diffResults = collectResults(context, RESULT_TYPE_DIFF)
+            if diffResults:
+                self.resultsList += diffResults
 
     def __str__(self):
         c = self.context
@@ -297,9 +305,13 @@ def runTrial(context, argDict):
 
         else:
             if time.time() > latestStartTime:
-                context.setVars(status=ENG_TERMINATE) # tell master to terminate us
-                time.sleep(10) # don't consume queue while waiting for termination
-                return WorkerResult(context, 'insufficient time remaining')
+                # TBD: test this!
+                # raising UnmetDependency error causes scheduler to reassign to another engine
+                raise ipp.UnmetDependency()
+
+                # context.setVars(status=ENG_TERMINATE) # tell master to terminate us
+                # time.sleep(10) # don't consume queue while waiting for termination
+                # return WorkerResult(context, 'insufficient time remaining')
 
     worker = Worker(context, argDict)
     result = worker.runTrial()

@@ -1098,9 +1098,7 @@ class GcamDatabase(CoreDatabase):
 
     @staticmethod
     def yearCols():
-        from .util import activeYears
-
-        YEAR_COL_PREFIX = 'y'
+        from .util import activeYears, YEAR_COL_PREFIX
 
         # Create the time series table with years (as columns) specified in the config file.
         years = activeYears()

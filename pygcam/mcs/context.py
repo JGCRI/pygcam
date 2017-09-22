@@ -158,6 +158,16 @@ class Context(object):
 
         return scenarioDir
 
+    def getQueryResultsDir(self):
+        trialDir = self.getTrialDir()
+        result = os.path.join(trialDir, self.scenario, 'queryResults')
+        return result
+
+    def getDiffsDir(self):
+        trialDir = self.getTrialDir()
+        result = os.path.join(trialDir, self.scenario, 'diffs')
+        return result
+
     @property
     def groupDir(self):
         return self.groupName if self.useGroupDir else ''

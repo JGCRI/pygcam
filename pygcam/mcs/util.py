@@ -24,6 +24,8 @@ _logger = getLogger(__name__)
 _activeYearStrs = None
 _activeYearInts = None
 
+YEAR_COL_PREFIX = 'y'
+
 def writeTrialDataFile(simId, df):
     '''
     Save the trial DataFrame in the file 'trialData.csv' in the simDir.

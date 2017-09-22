@@ -23,7 +23,7 @@ from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_C
 from .context import Context
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError
-from .XMLResultFile import saveResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
+from .XMLResultFile import saveResults #, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
 from ..log import getLogger
 
@@ -381,15 +381,19 @@ class Master(object):
     def saveResults(self, result):
         context  = result.context
         status   = context.status
+        resultsList = result.resultsList
 
         self.setRunStatus(context)
 
         if status == RUN_SUCCEEDED:
             _logger.debug("Saving results for %s", context)
-            saveResults(context, RESULT_TYPE_SCENARIO)
+            saveResults(context, resultsList)
 
-            if context.baseline:  # also save 'diff' results
-                saveResults(context, RESULT_TYPE_DIFF)
+            # deprecated
+            # saveResults(context, RESULT_TYPE_SCENARIO)
+            #
+            # if context.baseline:  # also save 'diff' results
+            #     saveResults(context, RESULT_TYPE_DIFF)
 
         else:
             _logger.warning('%s failed: %s', context, result.errorMsg)
