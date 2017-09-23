@@ -139,6 +139,8 @@ class WorkerResult(object):
             if diffResults:
                 self.resultsList += diffResults
 
+        _logger.debug('Worker results saving %s', self.resultsList)
+
     def __str__(self):
         c = self.context
         return "<WorkerResult run=%s sim=%s trial=%s, scenario=%s, status=%s error=%s>" % \

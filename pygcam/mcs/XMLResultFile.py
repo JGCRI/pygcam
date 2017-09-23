@@ -258,7 +258,7 @@ def collectResults(context, type):
     outputDefs = rf.getResultDefs(type=type)
 
     if not outputDefs:
-        _logger.debug('saveResults: No outputs defined for type %s', type)
+        _logger.info('saveResults: No outputs defined for type %s', type)
         return
 
     # TBD: was used to delete prior results; may not be needed

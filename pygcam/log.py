@@ -11,29 +11,20 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-
-# New approach:
-# - Create a logger for each module via getLogger()
-# - Set propagate=True unless a module is defined named in (parsed)
-
 import os
 import logging
 from .config import getParam, getParamAsBoolean, configLoaded
-from .error import PygcamException
 
-PKGNAME = 'pygcam'
+PKGNAME = __name__.split('.')[0]
 
 _Loggers    = {}      # loggers created herein, keyed by module or package name
 _LogLevels  = None    # log levels keyed by module or package name
 _verbose    = False   # whether debug msgs should print
 
+# Can't use this module to debug itself
 def _debug(msg):
     if _verbose:
         print(msg)
-
-# deprecated
-# Loggers for top-level package names, e.g., 'pygcam'.
-# _PkgLoggers = {}    # package-level loggers, used for modules not named individually
 
 # Note: 'traitlets' library uses root logger, which we don't want to enable here
 def _createPkgLogger(dotspec):
@@ -53,9 +44,14 @@ def getLogger(name):
     :return: a logging logger instance
     '''
     _debug('getLogger("%s")' % name)
-    logger = logging.getLogger(name)
-    logger.propagate = True             # set to False for explicitly named modules
-    _Loggers[name] = logger
+
+    try:
+        logger = _Loggers[name]
+
+    except KeyError:
+        logger = logging.getLogger(name)
+        logger.propagate = True             # set to False for explicitly named modules
+        _Loggers[name] = logger
 
     _configureLogger(name)
     _createPkgLogger(name)
@@ -65,8 +61,9 @@ def getLogger(name):
 def parseLevels(levelStr=None):
     """
     Get log levels for pygcam as a whole or for indicated modules individually.
-    Modules not prefixed or starting with 'mcs.' are interpreted to be in pygcam.
-    Example: LogLevel = WARNING, tool:DEBUG, utils:INFO, mcs.util:INFO
+    Modules starting with a '.' are interpreted to be in pygcam, i.e., ".config"
+    is equivalent to "pygcam.config".
+    Example: LogLevel = WARNING, .tool:DEBUG, .utils:INFO, .mcs.util:INFO, my_plugin:DEBUG
 
     :param levelStr: a comma-delimited string of module:logLevel values. If
         no ':' is present, the value is treated as the default logLevel for pygcam.
@@ -85,8 +82,10 @@ def parseLevels(levelStr=None):
     for level in levels:
         if ':' in level:
             module, lvl = splitAndStrip(level, ':')
-            if '.' not in module or module[0] == '.':
-                module = PKGNAME + '.' + (module[1:] if module[0] == '.' else module)
+            # if '.' not in module or module[0] == '.':
+            #     module = PKGNAME + '.' + (module[1:] if module[0] == '.' else module)
+            if module[0] == '.':
+                module = PKGNAME + module
         else:
             module = PKGNAME
             lvl = level.strip()
@@ -123,9 +122,9 @@ def _configureLogger(name, force=False):
     try:
         logger = _Loggers[name]
     except KeyError:
-        # ignore unknown logger names
-        _debug("Unknown logger name '%s'" % name)
-        return
+        # add unknown logger names
+        logger = getLogger(name)
+        _debug("Added unknown logger name '%s'" % name)
 
     # If not forcing, skip loggers that already have handlers installed
     if not force and logger.handlers:
@@ -140,7 +139,13 @@ def _configureLogger(name, force=False):
         _debug("Configuring %s, level=%s" % (name, level))
         logger.setLevel(level)
     else:
-        logger.setLevel(logger.parent.level)
+        parent = logger.parent
+        # Handle case of user plugins, which aren't in pygcam package
+        # but we'd like them to default to the 'pygcam' loglevel
+        if isinstance(parent, logging.RootLogger):
+            parent = getLogger(PKGNAME)
+
+        logger.setLevel(parent.level)
 
     logger.propagate = False
 
@@ -192,11 +197,12 @@ def configureLogs(force=False):
 def setLogLevels(levelStr):
     '''
     Set the logging level string, which can define levels for packages and/or modules.
-    Must call configureLogs(force=True) afterwards.
+    Must call configureLogs(force=True) afterwards. Level string can be a single level,
+    which is used as the default for all modules, or module-specific settings, e.g.,
+    "WARNING, .tool:DEBUG, .utils:INFO, .mcs.util:INFO, my_plugin:DEBUG"
 
-    :param levelStr: (str) one of ``'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'`` (case insensitive)
+    :param levelStr: (str) comma-delimited module:LEVEL pairs, or just a single LEVEL
     :return: none
     '''
     global _LogLevels
     _LogLevels = parseLevels(levelStr)
-    # configureLogs(force=True)

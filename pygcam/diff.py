@@ -182,7 +182,7 @@ def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', crea
     """
     Compute the path to the CSV file containing differences between `policy` and
     `baseline` scenarios for `query`.
-    
+
     :param query: (str) the base file name of the query result
     :param baseline: (str) the baseline scenario
     :param policy: (str) the policy scenario
@@ -202,7 +202,7 @@ def queryCsvPathname(query, scenario, workingDir='.'):
     """
     Compute the path to the CSV file containing results for the given
     `query` and `scenario`.
-    
+
     :param query: (str) the base file name of the query result
     :param scenario: (str) the scenario name
     :param workingDir: (str) the directory immediately above the baseline
@@ -256,7 +256,7 @@ def diffMain(args):
             policyFile   = queryCsvPathname(query, policy,   workingDir=workingDir)
 
             outFile = diffCsvPathname(query, baseline, policy, workingDir=workingDir, createDir=True)
-            _logger.debug("Writing %s", outFile)
+            _logger.info("Writing %s", outFile)
 
             writeDiffsToFile(outFile, baselineFile, [policyFile], ext='.csv', skiprows=skiprows,
                              interpolate=interpolate, years=years, startYear=startYear)

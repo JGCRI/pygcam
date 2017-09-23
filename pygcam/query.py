@@ -149,7 +149,7 @@ def writeCsv(df, filename, header='', float_format="%.4f"):
       for example, 2 decimal places, use float_format="%.2f".
     :return: none
     """
-    _logger.debug("Writing %s", filename)
+    _logger.info("Writing %s", filename)
 
     txt = df.to_csv(None, float_format=float_format)
     with open(filename, 'w') as f:

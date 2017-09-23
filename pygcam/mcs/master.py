@@ -104,7 +104,7 @@ class Master(object):
             # cache run definitions from the database and amend as necessary when creating runs
             for scenario in args.scenarios:
                 rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
-                _logger.debug('Caching info for %d runs of scenario %s', len(rows), scenario)
+                _logger.info('Caching info for %d runs of scenario %s', len(rows), scenario)
                 for row in rows:
                     assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
                     runId, simId, trialNum, status = row
@@ -205,7 +205,7 @@ class Master(object):
                     sleep(seconds)
 
             # TBD: handle timeout waiting for engines to stop
-            _logger.debug("%d engines active", len(self.client))
+            _logger.info("%d engines active", len(self.client))
 
     def createRuns(self, simId, scenario, trialNums):
         '''
@@ -282,7 +282,7 @@ class Master(object):
                 _logger.debug('adding context for runId %d to cache', context.runId)
             cached = context.saveRunInfo()
 
-        _logger.debug('%s -> %s', cached, status)
+        _logger.info('%s -> %s', cached, status)
         cached.setVars(status=status)
         self.db.setRunStatus(context.runId, status)
 
@@ -320,14 +320,14 @@ class Master(object):
                         self.setRunStatus(context)
 
             except (KeyError, ipp.RemoteError) as e:
-                _logger.debug('checkRunning: purging result: %s', e)
+                _logger.warning('checkRunning: purging result: %s', e)
                 self.client.purge_results(jobs=task)
 
             except Exception as e:
                 _logger.warning("checkRunning: %s", e)
 
     def resubmit(self, task, context):
-        _logger.debug('Resubmitting task %s', context)
+        _logger.info('Resubmitting task %s', context)
         self.client.resubmit(task)
         self.setRunStatus(context, RUN_QUEUED)
 
@@ -357,7 +357,7 @@ class Master(object):
 
                 if status == ENG_TERMINATE:
                     if ar.engine_id is not None:
-                        _logger.debug("Terminating engine %s: insufficient time remaining", ar.engine_id)
+                        _logger.info("Terminating engine %s: insufficient time remaining", ar.engine_id)
                         client.shutdown(ar.engine_id)
                         sleep(2)
                         self.resubmit(task, context)
@@ -386,15 +386,8 @@ class Master(object):
         self.setRunStatus(context)
 
         if status == RUN_SUCCEEDED:
-            _logger.debug("Saving results for %s", context)
+            _logger.info("Saving results for %s", context)
             saveResults(context, resultsList)
-
-            # deprecated
-            # saveResults(context, RESULT_TYPE_SCENARIO)
-            #
-            # if context.baseline:  # also save 'diff' results
-            #     saveResults(context, RESULT_TYPE_DIFF)
-
         else:
             _logger.warning('%s failed: %s', context, result.errorMsg)
 
@@ -425,7 +418,7 @@ class Master(object):
         Return True if any tasks remain to be completed.
         '''
         tot = self.queueTotals()
-        _logger.debug('%d engines: %s' % (len(self.client), tot))
+        _logger.info('%d engines: %s' % (len(self.client), tot))
 
         return tot['tasks'] or tot['queue'] or tot['unassigned'] or self.completedTasks()
 
@@ -472,7 +465,7 @@ class Master(object):
                     if len(self.client) == 0:
                         pending = slurm.jobsInState('pending', jobName='mcs-engine')
                         if pending:
-                            _logger.debug('No engines registered; %d workers PENDING', len(pending))
+                            _logger.info('No engines registered; %d workers PENDING', len(pending))
                             sleep(30)
                             continue
                         else:
