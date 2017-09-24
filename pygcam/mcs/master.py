@@ -607,7 +607,10 @@ class Master(object):
                         self.setRunStatus(context, status=RUN_RUNNING)
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
-                        self.saveResults([result])
+                        if result.context.status == RUN_SUCCEEDED:
+                            self.saveResults([result])
+                        else:
+                            self.setRunStatus(result.context)
                     else:
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.

@@ -32,7 +32,7 @@ class FileExistsError(PygcamMcsSystemError):
 
 class FileMissingError(PygcamMcsSystemError):
     def __init__(self, filename):
-        self.message = "File %r already exists" % filename
+        self.message = "File %r is missing" % filename
 
 class ShellCommandError(PygcamMcsSystemError):
     def __init__(self, msg, exitStatus=0):
