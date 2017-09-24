@@ -131,6 +131,7 @@ class WorkerResult(object):
 
         self.context  = context
         self.errorMsg = errorMsg
+        self.resultsList = []
 
         if context.status == RUN_SUCCEEDED:
             try:
@@ -143,7 +144,6 @@ class WorkerResult(object):
 
                 _logger.debug('Worker results saving %s', self.resultsList)
             except FileMissingError as e:
-                self.resultsList = []
                 self.errorMsg = str(e)
                 self.context.status = RUN_FAILED
 
