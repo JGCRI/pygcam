@@ -510,10 +510,16 @@ class CoreDatabase(object):
         return outputId
 
     def getOutputIds(self, nameList):
-        with self.sessionScope() as session:
-            ids = session.query(Output.outputId).filter(Output.name.in_(nameList)).all()
+        # cache on first call
+        if not self.outputIds:
+            with self.sessionScope() as session:
+                rows = session.query(Output.name, Output.outputId).all()
+                self.outputIds = dict(rows)
 
-        return zip(*ids)[0] if ids else []
+        # lookup ids in cache
+        ids = [self.outputIds[name] for name in nameList]
+        return ids
+        # return zip(*ids)[0] if ids else []
 
     def getOutputs(self):
         rows = self.getTable(Output)
@@ -752,19 +758,20 @@ class CoreDatabase(object):
         #_logger.debug("getRunIdFromContext returning runId %s", run.runId if run else None)
         return run
 
-    def setRunStatus(self, runId, status):
+    def setRunStatus(self, runId, status, session=None):
         '''
         Set the runStatus to the value for the given string and
         optionally set the job number.'''
-        session = self.Session()
+        sess = session or self.Session()
         try:
-            run = session.query(Run).filter_by(runId=runId).one()
+            run = sess.query(Run).filter_by(runId=runId).one()
             if run.status == status:
                 return # nothing to do here
 
             run.status = status    # insert/update listener sets status code and timestamps
 
-            self.commitWithRetry(session)
+            if not session:
+                self.commitWithRetry(sess)
             return
 
         except NoResultFound:
@@ -772,7 +779,8 @@ class CoreDatabase(object):
             return
 
         finally:
-            self.endSession(session)
+            if not session:
+                self.endSession(sess)
 
     def getRunsWithStatus(self, simId, expList, statusList):
         from operator import itemgetter         # lazy import
@@ -969,6 +977,7 @@ class GcamDatabase(CoreDatabase):
     def __init__(self):
         super(GcamDatabase, self).__init__()
         self.paramIds = {}                   # parameter IDs by name
+        self.outputIds = None                # output IDs by name
         self.canonicalRegionMap = {}
 
         # Cache these to avoid database access in saveResults loop

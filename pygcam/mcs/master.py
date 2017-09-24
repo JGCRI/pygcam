@@ -22,7 +22,7 @@ from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_C
 
 from .context import Context
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
-from .error import IpyparallelError
+from .error import IpyparallelError, PygcamMcsSystemError
 from .XMLResultFile import saveResults #, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
 from ..log import getLogger
@@ -254,7 +254,7 @@ class Master(object):
                                          baseline=baseline, status=r.status), runs)
         return contexts
 
-    def setRunStatus(self, context, status=None):
+    def setRunStatus(self, context, status=None, session=None):
         """
         Cache the status of this run, and if it has changed, save the new
         status to the database. Some context objects are retrieved from the
@@ -284,7 +284,7 @@ class Master(object):
 
         _logger.info('%s -> %s', cached, status)
         cached.setVars(status=status)
-        self.db.setRunStatus(context.runId, status)
+        self.db.setRunStatus(context.runId, status, session=session)
 
     def runningTasks(self):
         from pygcam.utils import flatten
@@ -378,6 +378,7 @@ class Master(object):
 
         return results
 
+    # Deprecated
     def saveResults(self, result):
         context  = result.context
         status   = context.status
@@ -390,6 +391,59 @@ class Master(object):
             saveResults(context, resultsList)
         else:
             _logger.warning('%s failed: %s', context, result.errorMsg)
+
+    def saveResultsGroup(self, resultsGroup):
+        '''
+        Called on the master to save results to the database that were prepared by the worker.
+        '''
+        from .Database import getDatabase
+
+        db = getDatabase()
+        session = db.Session()
+
+        try:
+            # Delete all old values in first transaction
+            for result in resultsGroup:
+                context = result.context
+                resultsList = result.resultsList
+
+                # Delete any stale results for this runId (i.e., if re-running a given runId)
+                names = [resultDict['paramName'] for resultDict in resultsList]
+                ids = db.getOutputIds(names)
+                db.deleteRunResults(context.runId, outputIds=ids, session=session)
+
+            db.commitWithRetry(session)
+
+            # Add all new values in a second transaction
+            for result in resultsGroup:
+                context = result.context
+                resultsList = result.resultsList
+                runId   = context.runId
+
+                for resultDict in resultsList:
+                    paramName  = resultDict['paramName']
+                    value      = resultDict['value']
+                    regionName = resultDict['regionName']
+                    regionId = db.getRegionId(regionName)   # cached; not a DB query
+
+                    # Save the values to the database
+                    if resultDict['isScalar']:
+                        db.setOutValue(runId, paramName, value, session=session)  # TBD: need regionId?
+                    else:
+                        units = resultDict['units']
+                        db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
+
+                    self.setRunStatus(context, session=session)
+
+            db.commitWithRetry(session)
+
+        except Exception as e:
+            session.rollback()
+            # TBD: distinguish database save errors from data access errors?
+            raise PygcamMcsSystemError("saveResults failed: %s" % e)
+
+        finally:
+            db.endSession(session)
 
     def checkCompleted(self):
 
@@ -407,8 +461,9 @@ class Master(object):
                 continue
 
             # _logger.debug('Saving %d results', len(results))
-            for result in results:
-                self.saveResults(result)
+            self.saveResultsGroup(results)
+            # for result in results:
+            #     self.saveResults(result)
 
             seconds = 3
             sleep(seconds)    # brief sleep before checking for more completed tasks
@@ -552,7 +607,7 @@ class Master(object):
                         self.setRunStatus(context, status=RUN_RUNNING)
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
-                        self.saveResults(result)
+                        self.saveResultsGroup([result])
                     else:
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
