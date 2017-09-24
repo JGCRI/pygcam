@@ -12,7 +12,7 @@ from pygcam.utils import mkdirs
 
 from pygcam.mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from pygcam.mcs.context import Context
-from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
+from pygcam.mcs.error import PygcamMcsUserError, GcamToolError, FileMissingError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
 from pygcam.mcs.util import readTrialDataFile
@@ -132,14 +132,20 @@ class WorkerResult(object):
         self.context  = context
         self.errorMsg = errorMsg
 
-        self.resultsList = collectResults(context, RESULT_TYPE_SCENARIO)
+        if context.status == RUN_SUCCEEDED:
+            try:
+                self.resultsList = collectResults(context, RESULT_TYPE_SCENARIO)
 
-        if context.baseline:  # also save 'diff' results
-            diffResults = collectResults(context, RESULT_TYPE_DIFF)
-            if diffResults:
-                self.resultsList += diffResults
+                if context.baseline:  # also save 'diff' results
+                    diffResults = collectResults(context, RESULT_TYPE_DIFF)
+                    if diffResults:
+                        self.resultsList += diffResults
 
-        _logger.debug('Worker results saving %s', self.resultsList)
+                _logger.debug('Worker results saving %s', self.resultsList)
+            except FileMissingError as e:
+                self.resultsList = []
+                self.errorMsg = str(e)
+                self.context.status = RUN_FAILED
 
     def __str__(self):
         c = self.context

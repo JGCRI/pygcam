@@ -10,7 +10,7 @@ import pandas as pd
 
 from pygcam.config import getParam
 from pygcam.log import getLogger
-from .error import PygcamMcsUserError, PygcamMcsSystemError
+from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
 from .Database import getDatabase
 from .XML import XMLWrapper, XMLFile, findAndSave
 
@@ -290,7 +290,7 @@ def collectResults(context, type):
                 outputCache[csvPath] = QueryResult(csvPath)
             except Exception as e:
                 _logger.warning('saveResults: Failed to read query result: %s', e)
-                continue
+                raise FileMissingError(csvPath)
 
         queryResult = outputCache[csvPath]
         paramName   = output.name
@@ -427,7 +427,7 @@ def saveResults_Deprecated(context, type, delete=True):
                 outputCache[csvPath] = QueryResult(csvPath)
             except Exception as e:
                 _logger.warning('saveResults: Failed to read query result: %s', e)
-                continue
+                raise FileMissingError(csvPath)
 
         queryResult = outputCache[csvPath]
         paramName   = output.name

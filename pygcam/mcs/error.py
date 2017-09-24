@@ -25,14 +25,18 @@ class IpyparallelError(PygcamMcsSystemError):
 
 class FileExistsError(PygcamMcsSystemError):
     def __init__(self, filename):
-        self.msg = "File %r already exists" % filename
+        self.message = "File %r already exists" % filename
 
-    def __str__(self):
-        return repr(self.message)
+    # def __str__(self):
+    #     return repr(self.message)
+
+class FileMissingError(PygcamMcsSystemError):
+    def __init__(self, filename):
+        self.message = "File %r already exists" % filename
 
 class ShellCommandError(PygcamMcsSystemError):
     def __init__(self, msg, exitStatus=0):
-        self.msg = msg
+        self.message = msg
         self.exitStatus = exitStatus
 
     def __str__(self):

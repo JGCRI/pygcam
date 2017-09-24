@@ -379,20 +379,20 @@ class Master(object):
         return results
 
     # Deprecated
-    def saveResults(self, result):
-        context  = result.context
-        status   = context.status
-        resultsList = result.resultsList
+    # def saveResult(self, result):
+    #     context  = result.context
+    #     status   = context.status
+    #     resultsList = result.resultsList
+    #
+    #     self.setRunStatus(context)
+    #
+    #     if status == RUN_SUCCEEDED:
+    #         _logger.info("Saving results for %s", context)
+    #         saveResults(context, resultsList)
+    #     else:
+    #         _logger.warning('%s failed: %s', context, result.errorMsg)
 
-        self.setRunStatus(context)
-
-        if status == RUN_SUCCEEDED:
-            _logger.info("Saving results for %s", context)
-            saveResults(context, resultsList)
-        else:
-            _logger.warning('%s failed: %s', context, result.errorMsg)
-
-    def saveResultsGroup(self, resultsGroup):
+    def saveResults(self, results):
         '''
         Called on the master to save results to the database that were prepared by the worker.
         '''
@@ -403,7 +403,7 @@ class Master(object):
 
         try:
             # Delete all old values in first transaction
-            for result in resultsGroup:
+            for result in results:
                 context = result.context
                 resultsList = result.resultsList
 
@@ -415,7 +415,7 @@ class Master(object):
             db.commitWithRetry(session)
 
             # Add all new values in a second transaction
-            for result in resultsGroup:
+            for result in results:
                 context = result.context
                 resultsList = result.resultsList
                 runId   = context.runId
@@ -461,11 +461,11 @@ class Master(object):
                 continue
 
             # _logger.debug('Saving %d results', len(results))
-            self.saveResultsGroup(results)
+            self.saveResults(results)
             # for result in results:
             #     self.saveResults(result)
 
-            seconds = 3
+            seconds = 2
             sleep(seconds)    # brief sleep before checking for more completed tasks
 
     def outstandingTasks(self):
@@ -607,7 +607,7 @@ class Master(object):
                         self.setRunStatus(context, status=RUN_RUNNING)
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
-                        self.saveResultsGroup([result])
+                        self.saveResults([result])
                     else:
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
