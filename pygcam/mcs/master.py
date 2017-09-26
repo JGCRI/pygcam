@@ -420,6 +420,11 @@ class Master(object):
                 resultsList = result.resultsList
                 runId   = context.runId
 
+                self.setRunStatus(context, session=session)
+
+                if context.status != RUN_SUCCEEDED:
+                    continue
+
                 for resultDict in resultsList:
                     paramName  = resultDict['paramName']
                     value      = resultDict['value']
@@ -432,8 +437,6 @@ class Master(object):
                     else:
                         units = resultDict['units']
                         db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
-
-                    self.setRunStatus(context, session=session)
 
             db.commitWithRetry(session)
 
@@ -607,10 +610,7 @@ class Master(object):
                         self.setRunStatus(context, status=RUN_RUNNING)
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
-                        if result.context.status == RUN_SUCCEEDED:
-                            self.saveResults([result])
-                        else:
-                            self.setRunStatus(result.context)
+                        self.saveResults([result])
                     else:
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
