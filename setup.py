@@ -33,12 +33,28 @@ mcs_requirements = [
     'sqlalchemy',
 ]
 
+gui_requirements = [
+    'flask', # 0.10 didn't work
+    'dash',
+    'dash-core-components',
+    'dash-html-components',
+    'dash-renderer',
+    # 'flask==0.12.2', # 0.10 didn't work
+    # 'dash==0.17.7',
+    # 'dash-core-components==0.7.1',
+    # 'dash-html-components==0.7.0',
+    # 'dash-renderer == 0.7.4',
+]
+
 if os.environ.get('READTHEDOCS') == 'True':
     requirements.extend(mcs_requirements)
+    requirements.extend(gui_requirements)       # needed on RTD?
     extras_requirements = {}
 else:
     extras_requirements = {
-        'mcs':  mcs_requirements,
+        'mcs': mcs_requirements,
+        'gui': gui_requirements,
+        'all': mcs_requirements + gui_requirements,
     }
 
 long_description = '''
@@ -68,6 +84,7 @@ Core functionality
   * Querying the GCAM database to extract results to CSV files
   * Interpolating between time-steps and computing differences between baseline and policy cases
   * Plotting results
+  * Setting up, running, and analyzing Monte Carlo simulations on Linux clusters
 
 * The scripts are based on the pygcam API, documented at https://pygcam.readthedocs.io
 
@@ -140,3 +157,5 @@ setup(
     # test_suite="string identifying test module etc."
 
 )
+
+# conda env export -n root|egrep '(name:|dependencies:|pip:|setuptools|configparser|future|lxml|numpy|pandas|seaborn|six|sphinx|filelock|ipyparallel|numexpr|salib|scipy|sqlalchemy|flask|dash)'
