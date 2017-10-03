@@ -8,42 +8,38 @@ import os
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
     import ez_setup
-    ez_setup.use_setuptools() # version='32.0.0') ... this version not avail on RTD
+    ez_setup.use_setuptools(version='35.6.0') # ... is this version avail on RTD?
 
 from setuptools import setup
 
 requirements = [
-    'configparser',     # backport of python 3.5 version
-    'future',
-    'lxml',
-    'numpy',
-    'pandas',
-    'seaborn',
-    'six',
-    'sphinx-argparse==0.1.17',
-    'filelock',
+    'configparser==3.5.0',     # backport of python 3.5 version
+    'futures==3.1.1',
+    'future==0.16.0',
+    'lxml>=3.8.0',
+    'numpy==1.13.1',
+    'pandas==0.20.3',
+    'seaborn==0.8.0',
+    'six>=1.10.0',
+    'sphinx-argparse==0.2.1', # ==0.1.17', see if update works yet
+    'filelock==2.0.12',
 ]
 
 mcs_requirements = [
-    'ipyparallel',
-    'numexpr',
-    # 'psycopg2',
-    'salib',
-    'scipy',
-    'sqlalchemy',
+    'ipyparallel==6.0.2',
+    'numexpr==2.6.2',
+    'salib==1.0.4',
+    'scipy==0.19.1',
+    'sqlalchemy==1.1.13',
+    # 'psycopg2',   # deprecated
 ]
 
 gui_requirements = [
-    'flask', # 0.10 didn't work
-    'dash',
-    'dash-core-components',
-    'dash-html-components',
-    'dash-renderer',
-    # 'flask==0.12.2', # 0.10 didn't work
-    # 'dash==0.17.7',
-    # 'dash-core-components==0.7.1',
-    # 'dash-html-components==0.7.0',
-    # 'dash-renderer == 0.7.4',
+    'flask==0.12.2',
+    'dash==0.18.3',
+    'dash-core-components==0.12.7',
+    'dash-html-components==0.8.0',
+    'dash-renderer == 0.7.4',
 ]
 
 if os.environ.get('READTHEDOCS') == 'True':
