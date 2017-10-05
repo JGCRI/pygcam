@@ -315,14 +315,25 @@ class GcamTool(object):
         queueName = queueName or getParam('GCAM.DefaultQueue')
         logFile   = logFile   or getParam('GCAM.BatchLogFile', raw=False)
         minutes   = minutes   or getParamAsFloat('GCAM.Minutes')
-        walltime  = "%02d:%02d:00" % (minutes / 60, minutes % 60)
+
+        scheduler = getParam('GCAM.Scheduler')
+        known = ('SLURM', 'LSF')
+        if scheduler not in known:
+            raise ConfigFileError('GCAM.Scheduler value (%s) is not recognized. Must be one of %s.' % (scheduler, known))
+
+        # The LSF scheduler needs HH:MM; SLURM needs HH:MM:SS
+        format = "%02d:%02d" if scheduler == 'LSF' else "%02d:%02d:00"
+        walltime  = format % (minutes / 60, minutes % 60)
 
         if logFile:
             logDir = getParam('GCAM.BatchLogDir')
             logFile = os.path.normpath(pathjoin(logDir, logFile))
             mkdirs(os.path.dirname(logFile))
 
-        otherArgs = "-d afterok:%s" % dependsOn if dependsOn else ''
+        # TBD: make this an expression eval'd with s.format(jobID=dependsOn)
+        # TBD: to support other syntaxes
+        format = "-w 'done(%s)'" if scheduler == 'LSF' else "-d afterok:%s"
+        otherArgs = format % dependsOn if dependsOn else ''
 
         scriptCommand = "gt " + ' '.join(shellArgs)
 
@@ -340,9 +351,10 @@ class GcamTool(object):
 
         try:
             command = batchCmd.format(**batchArgs)
+            # TBD: Specifying with double "%" ("%%j") should solve this problem
             # deal with problem "%" chars used by SLURM variables (config gets confused by '%')
-            if getParam('GCAM.BatchLogFileDollarToPercent'):
-                command = command.replace('$', '%')
+            # if getParam('GCAM.BatchLogFileDollarToPercent'):
+            #     command = command.replace('$', '%')
         except KeyError as e:
             raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 
