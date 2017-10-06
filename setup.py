@@ -28,7 +28,7 @@ requirements = [
 mcs_requirements = [
     'ipyparallel==6.0.2',
     'numexpr==2.6.2',
-    'salib==1.0.4',
+    'salib==1.0.3',
     'scipy==0.19.1',
     'sqlalchemy==1.1.13',
     # 'psycopg2',   # deprecated
