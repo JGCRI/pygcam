@@ -407,17 +407,18 @@ class Master(object):
                 context = result.context
                 resultsList = result.resultsList
 
-                # Delete any stale results for this runId (i.e., if re-running a given runId)
-                names = [resultDict['paramName'] for resultDict in resultsList]
-                ids = db.getOutputIds(names)
-                db.deleteRunResults(context.runId, outputIds=ids, session=session)
+                if resultsList:
+                    # Delete any stale results for this runId (i.e., if re-running a given runId)
+                    names = [resultDict['paramName'] for resultDict in resultsList]
+                    ids = db.getOutputIds(names)
+                    db.deleteRunResults(context.runId, outputIds=ids, session=session)
 
             db.commitWithRetry(session)
 
             # Add all new values in a second transaction
             for result in results:
                 context = result.context
-                resultsList = result.resultsList
+                resultsList = result.resultsList or []
                 runId   = context.runId
 
                 self.setRunStatus(context, session=session)

@@ -127,7 +127,7 @@ class CachedFile(object):
 
     def write(self):
         _logger.info("Writing '%s'", self.filename)
-        self.tree.write(self.filename, xml_declaration=True, pretty_print=True)
+        self.tree.write(self.filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
         self.edited = False
 
     def decache(self):
@@ -634,49 +634,50 @@ class XMLEditor(object):
 
         return self.configPath
 
-    def componentPath(self, tag):
-        pathname = xmlSel(self.cfgPath(), '//Value[@name="%s"]' % tag, asText=True)
+    def componentPath(self, tag, configPath=None):
+        configPath = configPath or self.cfgPath()
+        pathname = xmlSel(configPath, '//Value[@name="%s"]' % tag, asText=True)
 
         if pathname is None:
-            raise PygcamException("Failed to find scenario component with tag '%s'" % tag)
+            raise PygcamException("Failed to find scenario component with tag '%s' in %s" % (tag, configPath))
 
         return pathname
 
-    # TBD: may be obsolete
-    def _splitPath(self, path):
-        """
-        See if the path refers to a file in our scenario space, and if so,
-        return the tail, i.e., the scenario-relative path.
-
-        :param path: (str) a pathname
-        :return: (tuple of (str, str) or (None, None) the relative local
-           version of `path` and the prefix that was parsed.
-        """
-        def _split(path, prefix):
-            '''
-            Split off the tail of path relative to prefix, and return the tail
-            and the corresponding absolute path. If not recognized, return None.
-            '''
-            if path.startswith(prefix):
-                tail = path[len(prefix):]
-                if tail[0] in "/\\":      # skip leading slash, if any
-                    tail = tail[1:]
-
-                return prefix, tail
-
-            return None, None
-
-        splitPrefix, splitPath = _split(path, self.trial_xml_rel) or _split(path, self.scenario_dir_rel)
-
-        if not splitPath:
-            if self.parent:
-                splitPrefix, splitPath = self.parent._splitPath(path)
-            else:
-                # At the top of the parent chain we check 2 standard GCAM locations
-                # TBD: add climate and policy subdirs?
-                splitPrefix, splitPath = (_split(path, self.gcam_prefix_rel) or
-                                          _split(path, self.solution_prefix_rel))
-        return splitPrefix, splitPath
+    # deprecated
+    # def _splitPath_DEPRECATED(self, path):
+    #     """
+    #     See if the path refers to a file in our scenario space, and if so,
+    #     return the tail, i.e., the scenario-relative path.
+    #
+    #     :param path: (str) a pathname
+    #     :return: (tuple of (str, str) or (None, None) the relative local
+    #        version of `path` and the prefix that was parsed.
+    #     """
+    #     def _split(path, prefix):
+    #         '''
+    #         Split off the tail of path relative to prefix, and return the tail
+    #         and the corresponding absolute path. If not recognized, return None.
+    #         '''
+    #         if path.startswith(prefix):
+    #             tail = path[len(prefix):]
+    #             if tail[0] in "/\\":      # skip leading slash, if any
+    #                 tail = tail[1:]
+    #
+    #             return prefix, tail
+    #
+    #         return None, None
+    #
+    #     splitPrefix, splitPath = _split(path, self.trial_xml_rel) or _split(path, self.scenario_dir_rel)
+    #
+    #     if not splitPath:
+    #         if self.parent:
+    #             splitPrefix, splitPath = self.parent._splitPath(path)
+    #         else:
+    #             # At the top of the parent chain we check 2 standard GCAM locations
+    #             # TBD: add climate and policy subdirs?
+    #             splitPrefix, splitPath = (_split(path, self.gcam_prefix_rel) or
+    #                                       _split(path, self.solution_prefix_rel))
+    #     return splitPrefix, splitPath
 
     def getLocalCopy(self, configTag):
         """
@@ -692,8 +693,17 @@ class XMLEditor(object):
             # It's not a tag, but a filename
 
         pathname = self.componentPath(configTag)
-
         srcAbsPath = os.path.abspath(os.path.join(self.sandboxExeDir, pathname))
+
+        # TBD: test this
+        if not os.path.lexists(srcAbsPath):
+            _logger.debug("Didn't find %s; checking reference files" % srcAbsPath)
+            # look to sandbox workspace if not found locally
+            refWorkspace  = getParam('GCAM.SandboxRefWorkspace')
+            refConfigFile = getParam('GCAM.RefConfigFile')
+
+            pathname = self.componentPath(configTag, configPath=refConfigFile)
+            srcAbsPath = os.path.abspath(os.path.join(refWorkspace, 'exe', pathname))
 
         # If path includes /*-xml/* (e.g., '/energy-xml/', '/aglu-xml/'), retain
         # this subdir in destination, else just use the basename of the path.
@@ -1103,7 +1113,7 @@ class XMLEditor(object):
 
     # TBD: test
     @callableMethod
-    def protectionScenario(self, scenarioName):
+    def protectionScenario(self, scenarioName, unprotectFirst=False):
         """
         Implement the protection scenario `scenarioName`, defined in the file given
         by config variable `GCAM.LandProtectionXmlFile`.
@@ -1111,11 +1121,13 @@ class XMLEditor(object):
 
         :param scenarioName: (str) the name of a scenario defined in the land
            protection XML file.
+        :param unprotectFirst: (bool) if True, make all land "unprotected" before
+           protecting.
         :return: none
         """
         from .landProtection import runProtectionScenario
 
-        _logger.info("Protection scenario %s", scenarioName)
+        _logger.info("Using protection scenario %s", scenarioName)
 
         landXmlFiles = []
 
@@ -1134,7 +1146,16 @@ class XMLEditor(object):
         #
         # outputDir = pathjoin(self.scenario_dir_abs, os.path.dirname(tail))
 
-        runProtectionScenario(scenarioName, xmlFiles=landXmlFiles, inPlace=True)
+        # TBD: revisit this; it's a bit of a hack for Oct 16 deliverable
+        scenarioFile = None
+        if self.mcsMode == 'trial':
+            pathname = getParam('GCAM.LandProtectionXmlFile')
+            basename = os.path.basename(pathname)
+            scenario = self.scenario or self.baseline
+            scenarioFile = unixPath(pathjoin(self.trial_xml_abs, 'local-xml', self.groupDir, scenario, basename))
+
+        runProtectionScenario(scenarioName, scenarioFile=scenarioFile, xmlFiles=landXmlFiles,
+                              unprotectFirst=unprotectFirst, inPlace=True)
 
     def getScenarioOrTrialDirs(self, subdir=''):
         dirRel = pathjoin(self.trial_xml_rel, subdir) if self.mcsMode == 'trial' \

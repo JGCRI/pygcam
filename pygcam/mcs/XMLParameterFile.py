@@ -66,10 +66,13 @@ def applySingleTrialData(df, context, paramFile):
     trialNum = context.trialNum
     trialDir = context.getTrialDir(create=True)
 
+    _logger.info('applySingleTrialData for %s, %s', context, paramFile.filename)
     XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
     paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
 
-    symlink('../../../../Workspace/local-xml', os.path.join(trialDir, 'local-xml'))
+    linkDest = os.path.join(trialDir, 'local-xml')
+    _logger.info('creating symlink to %s', linkDest)
+    symlink('../../../../Workspace/local-xml', linkDest)
 
 
 def getBooleanXML(value):
@@ -91,7 +94,6 @@ def getBooleanXML(value):
 
     return (val in true)
 
-# TBD: Need to expose useful interface to WriteFunc and PythonFunc & document it
 
 class XMLCorrelation(XMLWrapper):
     """
@@ -807,22 +809,37 @@ class XMLInputFile(XMLWrapper):
         self.pathMap = defaultdict(set)
         self.xmlFiles = []
         self.writeFuncs = []
+        self.writeFuncDir = None
 
         # User can define functions to call before writing modified XML files.
         # Write function specification is of the form "myPackage.myModule.myFunc".
-        # The function must take 2 arguments: an XMLInputFile instance and an
-        # XMLParameterFile instance. It can make any desired modifications to
-        # the XML tree prior to writing it for each trial.
-        writeFuncSpecs = element.findtext('writeFunc', default=[])
-        self.writeFuncs += map(importFromDotSpec, writeFuncSpecs)
+        # The function must take 1 argument: the XMLInputFile instance. It can make
+        # any desired modifications to the XML tree prior to writing it for each trial.
+        writeFuncSpec = element.findtext(WRITE_FUNC_ELT, default=[])
+        self.loadWriteFunc(writeFuncSpec)
 
         # Parameters are described once here, but may be applied to multiple files
         self.findAndSaveParams(element)
 
+    def loadWriteFunc(self, funcRef):
+        if not funcRef or '.' not in funcRef:
+            return None
+
+        if not self.writeFuncDir:
+            self.writeFuncDir = getParam('MCS.WriteFuncDir')
+
+        modname, objname = funcRef.rsplit('.', 1)
+        modulePath = os.path.join(self.writeFuncDir, modname + '.py')
+        try:
+            fn = loadObjectFromPath(objname, modulePath)
+        except Exception as e:
+            raise PygcamMcsUserError("Failed to load trial function '%s': %s" % (funcRef, e))
+
+        self.writeFuncs.append(fn)
+
     def findAndSaveParams(self, element):
        findAndSave(element, PARAM_ELT_NAME, XMLParameter, self.parameters,
                    testFunc=XMLParameter.isActive, parent=self)
-
 
     def getComponentName(self):
         """
@@ -911,17 +928,18 @@ class XMLInputFile(XMLWrapper):
         #_logger.debug("Saving tuples to db: %s", tuples)
         db.saveParameterNames(tuples)
 
-    # TBD: test this, though might not be so useful after all.
-    def callFileFunctions(self, paramFile):
+    # TBD: test this
+    def callFileFunctions(self, xmlFile, trialDir):
         """
         Call any defined per-input-file functions to allow arbitrary
         manipulation of XML after applying all distributions.
 
-        :param paramFile: an XMLParameterFile instance.
+        :param xmlFile: (XMLFile or subclass) container for file being operated on
+        :param trialDir: (str) this trial's trial-dir
         """
         for fn in self.writeFuncs:
             try:
-                fn(self, paramFile)     # fn can modify self.tree as needed
+                fn(self, xmlFile, trialDir)     # fn can modify self.tree as needed
             except Exception as e:
                 raise PygcamMcsUserError("Call to user WriteFunc '%s' failed: %s" % (fn, e))
 
@@ -988,13 +1006,14 @@ class XMLParameterFile(XMLFile):
 
             # TBD: Might be cleaner to call file func on .xml file rather than on tree
             # Call per-InputFile functions, if defined.
-            xmlFile.inputFile.callFileFunctions(self)
+            inputFile = xmlFile.inputFile
+            inputFile.callFileFunctions(xmlFile, trialDir)
 
             if os.path.exists(absPath):        # remove it since it might be a symlink and
                 _logger.debug("Removing %s", absPath)
                 os.unlink(absPath)             # we don't want to write through to the src
 
-            _logger.debug("XMLParameterFile: writing %s", absPath)
+            _logger.info("XMLParameterFile: writing %s", absPath)
             xmlFile.tree.write(absPath, xml_declaration=True, pretty_print=True)
 
     def dump(self):

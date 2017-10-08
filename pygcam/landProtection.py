@@ -66,7 +66,30 @@ class LandProtection(object):
     def getScenario(self, name):
         return Scenario.getScenario(name)
 
-    # TBD:
+    def protectLandTree(self, tree, scenarioName):
+        """
+        Apply the protection scenario `scenarioName` to the parsed XML file `tree`.
+        This interface is provided so WriteFuncs (which are passed an open XMLInputFile)
+        can apply protection scenarios.
+
+        :param tree: (lxml ElementTree) a tree for a parsed XML input file.
+        :param scenarioName: (str) the name of the scenario to apply
+        :return: none
+        """
+        _logger.info("Applying protection scenario %s", scenarioName)
+
+        scenario = Scenario.getScenario(scenarioName)
+        if not scenario:
+            raise FileFormatError("Scenario '%s' was not found" % scenarioName)
+
+        # Iterate over all definitions for this scenario, applying the protections
+        # incrementally to the tree representing the XML file that was read in.
+        for protReg in scenario.protRegDict.values():
+            regions = [protReg.name]
+            for prot in protReg.protections:
+                createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
+
+    # TBD: test this
     def protectLand(self, infile, outfile, scenarioName, backup=True):
         """
         Generate a copy of `infile` with land protected according to `scenarioName`,
@@ -82,16 +105,7 @@ class LandProtection(object):
         parser = ET.XMLParser(remove_blank_text=True)
         tree = ET.parse(infile, parser)
 
-        scenario = Scenario.getScenario(scenarioName)
-        if not scenario:
-            raise FileFormatError("Scenario '%s' was not found" % scenarioName)
-
-        # Iterate over all definitions for this scenario, applying the protections
-        # incrementally to the tree representing the XML file that was read in.
-        for protReg in scenario.protRegDict.values():
-            regions = [protReg.name]
-            for prot in protReg.protections:
-                createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
+        self.protectLandTree(tree, scenarioName)
 
         if backup:
             try:
@@ -103,6 +117,49 @@ class LandProtection(object):
 
         _logger.info("Writing '%s'...", outfile)
         tree.write(outfile, xml_declaration=True, pretty_print=True)
+
+
+    # deprecated
+    # def protectLand(self, infile, outfile, scenarioName, backup=True, unprotectFirst=False):
+    #     """
+    #     Generate a copy of `infile` with land protected according to `scenarioName`,
+    #     writing the output to `outfile`.
+    #
+    #     :param infile: input file (should be one of the GCAM aglu-xml land files)
+    #     :param outfile: the file to create which represents the desired land protection
+    #     :param scenarioName: a scenario in the landProtection.xml file
+    #     :param backup: if True, create a backup `outfile`, with a '~' appended to the name,
+    #       before writing a new file.
+    #     :return: none
+    #     """
+    #     parser = ET.XMLParser(remove_blank_text=True)
+    #     tree = ET.parse(infile, parser)
+    #
+    #     scenario = Scenario.getScenario(scenarioName)
+    #     if not scenario:
+    #         raise FileFormatError("Scenario '%s' was not found" % scenarioName)
+    #
+    #     # Remove any existing land protection, if so requested
+    #     if unprotectFirst:
+    #         unProtectLand(tree, otherArable=True)
+    #
+    #     # Iterate over all definitions for this scenario, applying the protections
+    #     # incrementally to the tree representing the XML file that was read in.
+    #     for protReg in scenario.protRegDict.values():
+    #         regions = [protReg.name]
+    #         for prot in protReg.protections:
+    #             createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
+    #
+    #     if backup:
+    #         try:
+    #             # Ensure we're not clobbering reference files.
+    #             backupFile = outfile + '~'
+    #             os.rename(outfile, backupFile)
+    #         except Exception as e:
+    #             PygcamException('Failed to create backup file "%s": %s', backupFile, e)
+    #
+    #     _logger.info("Writing '%s'...", outfile)
+    #     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
 
 class Group(object):
@@ -182,7 +239,7 @@ class Scenario(object):
         self.protRegDict = protRegDict = {}       # allows regions to override groups
 
         for protReg in self.protRegs:
-            _logger.debug("Processing protectedRegion '%s'", protReg.name)
+            _logger.debug("Defining protectedRegion '%s'", protReg.name)
             regions = protReg.expandNames()
 
             # print(protReg.name, ' => ', regions)
@@ -282,8 +339,13 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
         included in default land classes.
     :param regions: a string or a list of strings, or None. If None, all
            regions are modified.
+    :param unprotectFirst: (bool) if True, make all land "unprotected" before
+           protecting.
     :return: None
     """
+    _logger.debug('createProtected: fraction=%.2f, landClasses=%s, regions=%s, unprotect=%s',
+                  fraction, landClasses, regions, unprotectFirst)
+
     def multiplyValues(nodes, factor):
         for n in nodes:
             newValue = float(n.text) * factor
@@ -344,6 +406,8 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
         included in default land classes.
     :param regions: a string or a list of strings, or None. If None, all
         regions are modified.
+    :param unprotectFirst: (bool) if True, make all land "unprotected" before
+        protecting.
     :return: None
     """
     parser = ET.XMLParser(remove_blank_text=True)
@@ -360,8 +424,16 @@ def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
     paths = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
     return paths
 
+def parseLandProtectionFile(scenarioFile=None):
+    schemaStream = resourceStream('etc/protection-schema.xsd')
+    scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
+    protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
+    landProtection = protectionXmlFile.getRoot()
+    return landProtection
+
 def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
-                          scenarioFile=None, xmlFiles=None, inPlace=False):
+                          scenarioFile=None, xmlFiles=None,
+                          unprotectFirst=False, inPlace=False):
     """
     Run a the protection named by `scenarioName`, found in `scenarioFile` if given,
     or the value of config variable `GCAM.LandProtectionXmlFile` otherwise. The source
@@ -379,18 +451,20 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
        if xmlFiles are specified explicitly)
     :param scenarioFile: (str) the path to a protection.xml file defining `scenarioName`
     :param xmlFiles: (list of str) the paths of the XML input files to modify
+    :param unprotectFirst: (bool) if True, make all land "unprotected" before protecting.
     :param inPlace: (bool) if True, input and output files may be the same (output overwrites input).
     :return: none
     """
     _logger.debug("Land-protection scenario '%s'", scenarioName)
 
-    schemaStream = resourceStream('etc/protection-schema.xsd')
-    scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
+    landProtection = parseLandProtectionFile(scenarioFile=scenarioFile)
 
-    protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
-    landProtection = protectionXmlFile.getRoot()
+    # TBD: refactored into parseLandProtectionFile. delete after testing
+    # schemaStream = resourceStream('etc/protection-schema.xsd')
+    # scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
+    # protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
 
-    workspace = workspace or getParam('GCAM.RefWorkspace')
+    workspace = workspace or getParam('GCAM.SandboxRefWorkspace')
     xmlFiles = xmlFiles or _landXmlPaths(workspace)
 
     for inFile in xmlFiles:
@@ -401,7 +475,7 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
         if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
             raise CommandlineError("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
 
-        landProtection.protectLand(inFile, outFile, scenarioName)
+        landProtection.protectLand(inFile, outFile, scenarioName, unprotectFirst=unprotectFirst)
 
 def protectLandMain(args):
 
