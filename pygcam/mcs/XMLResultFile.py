@@ -259,7 +259,7 @@ def collectResults(context, type):
 
     if not outputDefs:
         _logger.info('saveResults: No outputs defined for type %s', type)
-        return
+        return []
 
     # TBD: was used to delete prior results; may not be needed
     # names = map(XMLResult.getName, outputDefs)
@@ -298,11 +298,10 @@ def collectResults(context, type):
 
         selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
         count = selected.shape[0]
+        if count == 0:
+            raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
 
         if 'region' in selected.columns:
-            if count == 0:
-                raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
-
             firstRegion = selected.region.iloc[0]
             if count == 1:
                 regionName = firstRegion
@@ -322,7 +321,8 @@ def collectResults(context, type):
             resultDict['isScalar'] = True
         else:
             # When no column name is specified, assume this is a time-series result, so save all years.
-            # Use sum() to collapse values to a single time series; it's a no-op for a single row
+            # Use sum() to collapse values to a single time series; for a single row it helpfully
+            # converts the 1-element series to a simple float.
             value = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, activeYears)}
             resultDict['isScalar'] = False
             resultDict['units'] = queryResult.units

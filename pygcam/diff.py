@@ -12,7 +12,7 @@ from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, 
 _logger = getLogger(__name__)
 
 
-def computeDifference(df1, df2, resetIndex=True):
+def computeDifference(df1, df2, resetIndex=True, dropna=True):
     """
     Compute the difference between two DataFrames.
 
@@ -22,6 +22,7 @@ def computeDifference(df1, df2, resetIndex=True):
       holding the computed difference is reset so that data in non-year columns
       appear in individual columns. Otherwise, the index in the returned
       DataFrame is based on all non-year columns.
+    :param dropna: (bool) if True, drop rows with NaN values after computing difference
     :return: a pandas DataFrame with the difference in all the year columns, computed
       as (df2 - df1).
     """
@@ -49,6 +50,9 @@ def computeDifference(df1, df2, resetIndex=True):
 
     # Compute difference for timeseries values
     diff = df2 - df1
+
+    if dropna:
+        diff.dropna(inplace=True)
 
     if resetIndex:
         diff.reset_index(inplace=True)      # convert multi-index back to regular column values
@@ -87,7 +91,6 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
                                 years=years, startYear=startYear)
 
             diff = computeDifference(refDF, otherDF)
-
             csvText = diff.to_csv(index=None)
             label = "[%s] minus [%s]" % (otherFile, referenceFile)
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
