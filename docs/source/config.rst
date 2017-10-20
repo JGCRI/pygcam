@@ -12,7 +12,7 @@ configuration file and the API to access it are described below.
 
 .. seealso::
    Usage of the ``config`` sub-command is described on the
-   :ref:`gt config <config-label>` page. See :doc:`pygcam.config`
+   :ref:`gt config <config>` page. See :doc:`pygcam.config`
    for documentation of the API to the configuration system.
 
 
@@ -39,7 +39,7 @@ say, "paper1", I would create the section ``[paper1]``. Following this, I would 
 variables particular to this project, e.g., where the to find the files defining scenarios,
 queries, and so on.
 
-Note that the :ref:`new <new-label>` sub-command will set up the structure for a new
+Note that the :ref:`new <new>` sub-command will set up the structure for a new
 project and (optionally) add a section to the user's config file for the named project.
 
 

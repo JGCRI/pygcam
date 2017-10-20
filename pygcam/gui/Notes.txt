@@ -1,0 +1,76 @@
+** Think about how to architect this now that the basics are understood.
+
+* Add options to commands wherever possible, and set defaults from cfg when appropriate
+
+- Add dict to Plugin classes to store GUI info, e.g.,
+  - self.GUIData({'omit' : ('mcs', 'VERSION')})
+
+  - Display in GUI (default True)
+  - Add option method to compute options, if not given, for "_StoreAction" and
+    whether multiple choices are allowed.
+  - Maybe just compute options for default (current) project, even for cmdline.
+
+- Option to display cmd only
+
+- Have these tabs:
+  . Settings, sort of like preferences. Store GUI-specific in ~/.gcamgui.cfg?
+
+  . Config file viewer, with interactive search update text <div> on each keypress
+    - Sections should expand & contract
+    - Edit mode: show names and values as editable fields, and have a checkbox to mark for deletion.
+      - Cancel, Save
+
+- Destructive operations (remake 'run' dir, recreate sandbox) should have a popup "Are you sure?"
+  - Allow Plugin to identify options that require confirmation
+  - Also whether to save state or reset to default after the command is run
+
+
+Add to plugins/subcommands:
+  - info related gui presentation, e.g., which tab to place a command on.
+    - and whether to include the command in the GUI at all.
+    - maybe store gui-only plugins in a different dir, or have different suffix,
+      e.g., cmdname_pluginGUI.py for GUI-only
+  - Add a global flag in GcamTool that => running via GUI to conditionalize
+  - GUI.Tab.Order = Run,Config,MCS,Util
+  - GUI.Tab.Run = run init gcam
+  - GUI.Tab.Config = config
+    - and so on in .pygcam.cfg
+
+Create a state cache, a dict of dicts, where the outer dict keyed by subcommand
+name, the inner keyed by option dest, the value of which is the choice/set of
+choices. When flipping between tabs, reset to previous values.
+
+
+To run gcamtool
+- iterate over all options on page and collect those that differ from defaults
+  (if a default is set)
+- generate a command-line using short options if they exist, or long (or positional)
+  - maybe give user option to display long names?
+- run the command in a terminal-like window that redisplays every 0.5 to 1 sec or so
+  (or make this user configurable?)
+
+Configuration options
+- Maybe have a separate config file for the GUI that can be read/written easily,
+  like json format.
+
+Add 'Plug-ins' page with things like 'CI', 'template'.
+- Show only if there are plugins for current project
+
+Add a project chooser at the top?
+- Will many people will be working on multiple projects?
+- Maybe option to show project chooser for folks like me.
+- Also serves to indicate what you're looking at...
+
+Add defaults for:
+- steps / skipSteps
+- scenarios
+- projects
+
+Maybe have file open panel for args that are filenames or directories?
+- (How to tag these?) Are unrecognized kwargs ignored?
+- Consider adding a dict to SubCommand that has various options for each
+  command, e.g.,
+  guiOptions = {'projectFile': {'showOpenPanel': True, 'somethingElse' : 'some option'},
+                'scenario' : {'options': getScenarios()},
+                'step': {'options': getSteps()}}
+

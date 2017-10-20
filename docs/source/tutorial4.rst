@@ -18,14 +18,14 @@ a query.
 Queries can be extracted on-the-fly from files used with ModelInterface by specifying
 the location of the XML file in the configuration variable ``GCAM.QueryPath`` and
 referencing the desired query by its defined "title". (See the
-:ref:`query sub-command <query-label>` and the :doc:`pygcam.query` API documentation
+:ref:`query sub-command <query>` and the :doc:`pygcam.query` API documentation
 for more information.)
 
 Queries can be run several ways in the latest version of GCAM:
 
   #. If an XML database is written to disk (the default), queries can be
      run on the database using the ModelInterface.jar file, which is used
-     by the :ref:`query sub-command <query-label>`.
+     by the :ref:`query sub-command <query>`.
   #. If the XML database is written to disk, GCAM can run the queries before
      it exits, using the same mechanism as in the option above.
   #. A new feature of GCAM allows it to store the XML database in memory, in

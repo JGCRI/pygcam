@@ -9,7 +9,7 @@ the two XML files.
     .. seealso::
 
        See :doc:`pygcam.query` for more information about run-time behavior.
-       Command-line usage is described on the :ref:`gt query<query-label>` page.
+       Command-line usage is described on the :ref:`gt query<query>` page.
 
 
 queries.xml
@@ -89,7 +89,7 @@ applying to this ``<query>``.
 This element identifies a :doc:`rewrite set <rewrites-xml>` by name.
 The rewrite set must be defined in a file identified as an argument
 to the :py:func:`pygcam.query.runBatchQuery`, on the command-line to
-the :ref:`query sub-command <query-label>`, or by setting a value for
+the :ref:`query sub-command <query>`, or by setting a value for
 the config variable ``GCAM.RewriteSetsFile``.
 
 The query named in the ``<query>`` node is extracted into a

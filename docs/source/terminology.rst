@@ -79,7 +79,7 @@ Rewrite sets
 Sandbox
   A dynamically generated directory containing all the files and directories
   (or links to them) required to run GCAM in isolation from other scenarios.
-  See also: :ref:`sandbox <sandbox-label>` sub-command.
+  See also: :ref:`sandbox <sandbox>` sub-command.
 
 .. _scenario-def:
 
@@ -107,7 +107,7 @@ Step
   A command defined in a :ref:`project file <project-file-def>` to execute
   a single workflow step. Commands that begin with the "@" character refer
   to sub-commands within :ref:`gcamtool <gcamtool-def>`.
-  See also: :ref:`run <run-label>` sub-command.
+  See also: :ref:`run <run>` sub-command.
 
 .. _setup-ext-def:
 

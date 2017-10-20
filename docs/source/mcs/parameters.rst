@@ -34,7 +34,7 @@ configuration file with "name" ``nonco2_aglu``.
     </Parameter>
   </InputFile>
 
-The sub-command :ref:`gensim <gensim-label>` ignores the query, and simply draws
+The sub-command :ref:`gensim <gensim>` ignores the query, and simply draws
 values from the designated distributions for all defined parameters, and saves these
 to a CSV file. Using a CSV file as an intermediate representation allows any plugin
 (or manual process) to generate the data used to generate the actual input XML files.

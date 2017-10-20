@@ -25,13 +25,13 @@ The main components include:
 
   * **A Monte Carlo Simulation framework** using GCAM on high-performance computers, allowing users to explore
     uncertainty in model outputs resulting from uncertainty in model inputs, and to characterize the contribution of
-    individual parameters to variance in output metrics. **[Coming soon!]**
+    individual parameters to variance in output metrics.
 
-  .. * (Eventually) **Graphical User Interfaces** that simplify use of the libraries and tools as well
-     as providing unique capabilities such as graphical exploration and comparison of sets of model
-     results.
+  .. **Graphical User Interfaces** that simplify use of the libraries and tools as well
+     as providing unique capabilities such as graphical exploration and comparison of sets of
+     Monte Carlo simulation results.
 
-  * **User documentation** for all of the above.
+  * **User documentation** for all of the above. (This website!)
 
   ..
 
@@ -49,7 +49,7 @@ showing their default values.
 The main script (:doc:`gcamtool`) implements several "subcommands" that perform various
 steps in a typical GCAM analysis. The script implements a :doc:`plug-in <pygcam.subcommand>`
 architecture allowing users to customize :doc:`gt <gcamtool>` and avoid a proliferation
-of scripts. The available subcommands include:
+of scripts. The available subcommands for general use include:
 
    * ``chart`` generates bar or line graphs, with a large number of command-line
      arguments to customize chart appearance.
@@ -63,6 +63,18 @@ of scripts. The available subcommands include:
    * ``gcam`` runs the GCAM model in any indicated directory. Links to a
      reference GCAM directory are used when possible to avoid needless file copying.
 
+   * ``gui`` runs a local web server that provides a browser-based graphical
+     user interface (GUI) at the address http://127.0.0.1:8050.
+
+   * ``init`` initializes key configuration variables in the ``${HOME}/.pygcam.cfg``
+     file.
+
+   * ``mcs`` Enable or disable Monte Carlo simulation sub-commands.
+
+   * ``mi`` runs the ModelInterface program based on settings in the user's config file.
+
+   * ``new`` creates the structure and files required for a new ``pygcam`` project.
+
    * ``protect`` generates XML input files that define custom land-protection
      scenarios.
 
@@ -70,12 +82,16 @@ of scripts. The available subcommands include:
      described in a region mapping file.
 
    * ``run`` reads an XML input file and runs one or more steps of an analysis,
-     and these steps can (typically will) invoke other subcommands as required.
+     and these steps typically invoke other sub-commands as required.
 
    * ``sandbox`` shows, creates, and deletes run-time workspaces used by ``pygcam``.
 
    * ``setup`` modifies GCAM XML data and configuration files according to user
      instructions in either XML format or as a Python script.
+
+If the user has enabled Monte Carlo Simulation support (currently available only
+on Linux clusters) by running ``gt mcs on``, additional
+:doc:`MCS-related sub-commands <mcs/commands>` become available.
 
 Also see the :doc:`setup` documentation to for information on programmatically modifying
 copies of GCAM XML files. This "setup" step can be one of the commands called by ``run``.
@@ -242,7 +258,7 @@ directory ``xmlsrc`` within your project directory. Included under ``xmlsrc`` ar
     sub-command in ``pygcam``.
 
 
-The gcamtool :ref:`setup <setup-label>` sub-command loads the Python file and calls the
+The gcamtool :ref:`setup <setup>` sub-command loads the Python file and calls the
 setup functions corresponding to the requires baseline and policy scenarios. This
 modifies reference XML files and copies custom XML files to a directory identified by the
 config parameter ``GCAM.LocalXml``, which default to ``%(GCAM.ProjectDir)s/local-xml``.

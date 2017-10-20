@@ -13,7 +13,7 @@ The main features of this module are:
    required by the analysis methods.
 
 Access to these features is provided via the ``-m`` / ``--method`` argument
-to the :ref:`gensim <gensim-label>` sub-command.
+to the :ref:`gensim <gensim>` sub-command.
 
 API
 ---

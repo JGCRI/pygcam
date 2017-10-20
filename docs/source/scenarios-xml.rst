@@ -3,7 +3,7 @@ scenarios.xml
 
 The ``scenarios.xml`` provides instructions for modifying a GCAM
 configuration XML file. The file, which is processed by the
-:ref:`setup <setup-label>` sub-command, cad define one or more
+:ref:`setup <setup>` sub-command, cad define one or more
 groups of related scenarios, and provides an iteration feature
 that allows automated generation of a set of related scenarios.
 
@@ -11,7 +11,7 @@ that allows automated generation of a set of related scenarios.
 
    The :doc:`setup` page provides an overview of setup system. See
    :doc:`pygcam.xmlEditor` for more information about the Python API.
-   Command-line usage is described on the :ref:`gt setup <setup-label>` page.
+   Command-line usage is described on the :ref:`gt setup <setup>` page.
 
 .. note::
 
@@ -49,7 +49,7 @@ elements. The ``<scenarios>`` element takes the following attributes:
 
 The ``defaultGroup`` attribute of ``<scenarios>`` identifies the default
 scenarioGroup to use when no group is explicitly identified in
-the :ref:`gt setup <setup-label>` command.
+the :ref:`gt setup <setup>` command.
 
 
 <scenarioGroup>
@@ -425,7 +425,7 @@ blocks are functionally equivalent:
 Example
 ^^^^^^^^
 The following is the scenarios.xml file that is copied into new projects
-by the :ref:`new <new-label>` sub-command. It serves as a starting point
+by the :ref:`new <new>` sub-command. It serves as a starting point
 and for testing that the overall pygcam environment is configured properly.
 
 .. literalinclude:: ../../pygcam/etc/examples/scenarios.xml

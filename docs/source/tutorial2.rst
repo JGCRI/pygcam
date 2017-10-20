@@ -7,7 +7,7 @@ using the templates files provided by ``pygcam``.
 2.0 Create the project structure and initial configuration file
 ----------------------------------------------------------------------
 The first step in creating a new product is to run gcamtool
-:ref:`new <new-label>` sub-command. To create the project ``ctax``
+:ref:`new <new>` sub-command. To create the project ``ctax``
 with the project directory ``/Users/rjp/projects/ctax``, I would
 run the following command:
 
@@ -91,7 +91,7 @@ scenario does not exclude unmanaged land from consideration, while the second
 scenario excludes 90% of unmanaged land, which is the default in the GCAM
 reference scenario.
 
-The :ref:`run <run-label>` sub-command offers several options that list
+The :ref:`run <run>` sub-command offers several options that list
 project elements and display commands that would be run.
 
 To list the scenario groups in the default project:

@@ -9,6 +9,7 @@ Monte Carlo Simulation support
    parameters
    results
    commands
+   explorer
    architecture
 
 
