@@ -1113,7 +1113,7 @@ class XMLEditor(object):
 
     # TBD: test
     @callableMethod
-    def protectionScenario(self, scenarioName, unprotectFirst=False):
+    def protectionScenario(self, scenarioName, unprotectFirst=True):
         """
         Implement the protection scenario `scenarioName`, defined in the file given
         by config variable `GCAM.LandProtectionXmlFile`.
@@ -1139,23 +1139,17 @@ class XMLEditor(object):
 
             landXmlFiles.append(landFileAbs)
             self.updateScenarioComponent(fileTag, landFileRel)
-        #
-        # tail = self._splitPath(landFileRel)
-        # if not tail:
-        #     raise SetupException('File "%s" was not recognized by any scenario' % landFileRel)
-        #
-        # outputDir = pathjoin(self.scenario_dir_abs, os.path.dirname(tail))
 
         # TBD: revisit this; it's a bit of a hack for Oct 16 deliverable
-        scenarioFile = None
+        scenarioFile = pathname = getParam('GCAM.LandProtectionXmlFile')
         if self.mcsMode == 'trial':
-            pathname = getParam('GCAM.LandProtectionXmlFile')
             basename = os.path.basename(pathname)
             scenario = self.scenario or self.baseline
-            scenarioFile = unixPath(pathjoin(self.trial_xml_abs, 'local-xml', self.groupDir, scenario, basename))
+            scenarioFile = unixPath(pathjoin(self.trial_xml_abs, 'local-xml',
+                                             self.groupDir, scenario, basename))
 
-        runProtectionScenario(scenarioName, scenarioFile=scenarioFile, xmlFiles=landXmlFiles,
-                              unprotectFirst=unprotectFirst, inPlace=True)
+        runProtectionScenario(scenarioName, scenarioFile=scenarioFile, inPlace=True,
+                              xmlFiles=landXmlFiles, unprotectFirst=unprotectFirst)
 
     def getScenarioOrTrialDirs(self, subdir=''):
         dirRel = pathjoin(self.trial_xml_rel, subdir) if self.mcsMode == 'trial' \

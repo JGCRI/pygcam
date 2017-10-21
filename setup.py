@@ -13,33 +13,33 @@ if platform.system() != 'Windows':
 from setuptools import setup
 
 requirements = [
-    'configparser==3.5.0',     # backport of python 3.5 version
-    'futures==3.1.1',
-    'future==0.16.0',
+    'configparser>=3.5.0',     # backport of python 3.5 version
+    'futures>=3.1.1',
+    'future>=0.16.0',
     'lxml>=3.8.0',
-    'numpy==1.13.1',
+    'numpy>=1.13.1',
     'pandas==0.20.3',
     'seaborn==0.8.0',
     'six>=1.10.0',
     'sphinx-argparse==0.2.1', # ==0.1.17', see if update works yet
-    'filelock==2.0.12',
+    'filelock>=2.0.12',
 ]
 
 mcs_requirements = [
-    'ipyparallel==6.0.2',
+    'ipyparallel>=6.0.2',
     'numexpr==2.6.2',
-    'salib==1.0.3',
-    'scipy==0.19.1',
-    'sqlalchemy==1.1.13',
+    'salib>=1.0.3',
+    'scipy>=0.19.1',
+    'sqlalchemy>=1.1.13',
     # 'psycopg2',   # deprecated
 ]
 
 gui_requirements = [
-    'flask==0.12.2',
-    'dash==0.18.3',
-    'dash-core-components==0.12.7',
-    'dash-html-components==0.8.0',
-    'dash-renderer == 0.7.4',
+    'flask>=0.12.2',
+    'dash>=0.18.3',
+    'dash-core-components>=0.12.7',
+    'dash-html-components>=0.8.0',
+    'dash-renderer>=0.7.4',
 ]
 
 if os.environ.get('READTHEDOCS') == 'True':
