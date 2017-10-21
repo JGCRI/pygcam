@@ -333,14 +333,14 @@ class GcamTool(object):
         # TBD: make this an expression eval'd with s.format(jobID=dependsOn)
         # TBD: to support other syntaxes
         format = "-w 'done(%s)'" if batchSystem == 'LSF' else "-d afterok:%s"
-        otherArgs = format % dependsOn if dependsOn else ''
+        dependencies = format % dependsOn if dependsOn else ''
 
         scriptCommand = "gt " + ' '.join(shellArgs)
 
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
         batchArgs = {'scriptFile': scriptCommand,
-                     'otherArgs' : otherArgs,
+                     'dependencies' : dependencies,
                      'logFile'   : logFile,
                      'minutes'   : minutes,
                      'walltime'  : walltime,
