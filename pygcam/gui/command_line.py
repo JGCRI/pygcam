@@ -3,7 +3,9 @@
 import dash
 import dash_html_components as html
 from pygcam.tool import GcamTool
-from pygcam.gui.widgets import Page, RootPage, PageSet, ActionInfo, actionTable, Terminal
+from pygcam.gui.widgets import Page, RootPage, PageSet
+from pygcam.gui.terminal import Terminal
+from pygcam.gui.actions import actionTable, getActionInstance
 
 def subcommandHelp(subcmd):
     tool = GcamTool.getInstance(reload=True)
@@ -11,69 +13,76 @@ def subcommandHelp(subcmd):
     help = next((s.help for s in subcmds if s.dest == subcmd), '')
     return help
 
+# TBD: Have guiInfo element for this to push it back onto the subcommands
 def smartCaps(s):
     return s.upper() if s in ('mi', 'mcs', 'gcam') else s.capitalize()
 
-def subpage(subcmd):
+def actionsFromParser(subcmd, parser):
+    actions = map(lambda action: getActionInstance(subcmd, action), parser._actions)
+    return filter(None, actions)    # remove Nones
+
+
+def _subpage(app, subcmd):
     tool = GcamTool.getInstance()
     parser = tool.subparsers.choices[subcmd]
-    actions = map(ActionInfo, parser._actions)
+    actions = actionsFromParser(subcmd, parser)
+
     helpText = subcommandHelp(subcmd)
     layout = html.Div(actionTable('Options for "%s"' % subcmd, actions, helpText=helpText))
-    return layout
+    return subcmd, layout, actions
 
-def runPage():
+def commandGroupPage(app, group, default, label=None):
+    subcmds = GcamTool.pluginGroup(group, namesOnly=True)
+    tups  = [_subpage(app, s) for s in subcmds]
+    pages = [Page(app, s, layout, label=smartCaps(s), actions=actions) for s, layout, actions in tups]
+    pageSet = PageSet(group, pages, default)
+    page = Page(app, group, None, label=label or smartCaps(group), pageSet=pageSet)
+    return page
+
+def runPage(app):
     tool = GcamTool.getInstance()
     subcmd = 'run'
     parser = tool.subparsers.choices[subcmd]
-    actions = map(ActionInfo, parser._actions)
+    actions = actionsFromParser(subcmd, parser)
+
     helpText = subcommandHelp(subcmd)
     layout = html.Div(actionTable('Options for "%s"' % subcmd, actions, helpText=helpText))
-    page = Page('run', layout, label='Run')
+    page = Page(app, 'run', layout, label='Run', actions=actions)
     return page
 
-def commandGroupPage(group, default, label=None):
-    subcmds = GcamTool.pluginGroup(group, namesOnly=True)
-    pages = [Page(s, subpage(s), label=smartCaps(s)) for s in subcmds]
-    pageSet = PageSet(group, pages, default)
-    page = Page(group, None, label=label or smartCaps(group), pageSet=pageSet)
-    return page
 
-def projectPage():
-    return commandGroupPage('project', 'new')
+def projectPage(app):
+    return commandGroupPage(app, 'project', 'new')
 
-def mcsPage():
-    return commandGroupPage('mcs', 'runsim')
+def mcsPage(app):
+    return commandGroupPage(app, 'mcs', 'runsim')
 
-def utilitiesPage():
-    return commandGroupPage('utils', 'mi', label='Utilities')
+def utilitiesPage(app):
+    return commandGroupPage(app, 'utils', 'mi', label='Utilities')
 
-def settingsPage():
+def settingsPage(app):
     tool = GcamTool.getInstance()
-    actions = map(ActionInfo, tool.parser._actions)
+    subcmd = 'settings'
+    actions = actionsFromParser(subcmd, tool.parser)
+
     layout = html.Div(actionTable('Global arguments', actions))
-    page = Page('settings', layout, label='Global args')
+    page = Page(app, subcmd, layout, label='Global args', actions=actions)
     return page
+
 
 def driver(args):
     app = dash.Dash(csrf_protect=False)
     # app.config.supress_callback_exceptions = True
     app.css.append_css({"external_url": "https://codepen.io/plevin/pen/MvpeNV.css"})
 
-    test = False
+    debug = args.debug
+    term = Terminal()
 
-    if test:
-        import sys
-        term = Terminal()
-        app.layout = term.layout
-        term.registerCallbacks(app)
-        app.run_server(debug=args.debug)
-        sys.exit(0)
+    pages = [runPage(app), projectPage(app), mcsPage(app), utilitiesPage(app), settingsPage(app)]
+    root = RootPage(app, term, pages)
 
-    pages = [runPage(), projectPage(), mcsPage(), utilitiesPage(), settingsPage()]
-    root = RootPage(app, pages)
-
-    app.run_server(debug=True)
+    term.registerCallbacks(app)
+    app.run_server(debug=debug)
 
 if __name__ == '__main__':
     driver()

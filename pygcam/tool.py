@@ -113,7 +113,7 @@ class GcamTool(object):
 
     @classmethod
     def pluginGroup(cls, groupName, namesOnly=False):
-        objs = filter(lambda obj: obj.group == groupName, cls._plugins.values())
+        objs = filter(lambda obj: obj.getGroup() == groupName, cls._plugins.values())
         result = sorted(map(lambda obj: obj.name, objs)) if namesOnly else objs
         return result
 

@@ -561,7 +561,6 @@ def readScenarioName(configFile):
     scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
     return scenarioName.text
 
-
 class XMLFile(object):
     """
     Represents an XML file, which is parsed by lxml.etree and stored internally.
@@ -601,8 +600,7 @@ class XMLFile(object):
 
         self.root = rootClass(self.tree) if rootClass else None
 
-    def getRoot(self):
-        return self.root
+
 
 class McsValues(XMLFile):
     def __init__(self, xmlFile):

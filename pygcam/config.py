@@ -177,8 +177,6 @@ def readConfigFiles():
     """
     global _ConfigParser
 
-    home = getHomeDir()
-
     # Strict mode prevents duplicate sections, which we do not restrict
     _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'),
                                               strict=False,
@@ -187,8 +185,14 @@ def readConfigFiles():
     # don't force keys to lower-case: variable names are case sensitive
     _ConfigParser.optionxform = lambda option: option
 
+    home = getHomeDir()
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
     _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER', 'unknown'))
+
+    # Create vars from environment variables as 'Env.' + variable name
+    for name, value in os.environ.iteritems():
+        value = value.replace(r'%', r'%%')
+        _ConfigParser.set(DEFAULT_SECTION, 'Env.' + name, value)
 
     # Initialize config parser with default values
     systemDefaults = _readConfigResourceFile('etc/system.cfg')
@@ -277,7 +281,11 @@ def getParam(name, section=None, raw=False, raiseError=True):
     :py:func:`getConfig` if needed.
 
     :param name: (str) the name of a configuration parameters. Note
-       that variable names are case-insensitive.
+       that variable names are case-insensitive. If a value starts with
+       ``$`` and refers to an existing environment variable, the value
+       of the variable is returned; otherwise the original value (including
+       the ``$``) is returned.
+
     :param section: (str) the name of the section to read from, which
       defaults to the value used in the first call to ``getConfig``,
       ``readConfigFiles``, or any of the ``getParam`` variants.
@@ -295,7 +303,7 @@ def getParam(name, section=None, raw=False, raiseError=True):
         getConfig()
 
     try:
-        return _ConfigParser.get(section, name, raw=raw)
+        value = _ConfigParser.get(section, name, raw=raw)
 
     except configparser.NoSectionError:
         if raiseError:
@@ -308,6 +316,13 @@ def getParam(name, section=None, raw=False, raiseError=True):
             raise PygcamException('getParam: unknown variable "%s"' % name)
         else:
             return None
+
+    # if "$..." refers to an env var, return its value
+    if len(value) > 1 and value[0] == '$':
+        varname = value[1:]
+        value = os.getenv(varname, '$'+varname)
+
+    return value
 
 def getParamAsBoolean(name, section=None):
     """
