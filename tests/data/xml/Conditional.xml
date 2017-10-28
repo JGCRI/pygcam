@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <CONDITIONAL>
+		<TEST var="foo" op="=" value="bar"/>
+		<THEN>
+			<SomeElement>whatever</SomeElement>
+		</THEN>
+		<ELSE>
+			<CONDITIONAL>
+				<TEST var="baz" op="gt" value="10" type="int"/>
+				<THEN>
+          <SomeElement>something else</SomeElement>
+          <MoreStuff>Whatever</MoreStuff>
+				</THEN>
+			</CONDITIONAL>
+		</ELSE>
+	</CONDITIONAL>
+
+  <CONDITIONAL>
+		<AND>
+			<OR>
+				<TEST var="mcsMode" op="!=" value="1" type="bool"/>
+				<TEST var="mcsMode" op='eq' value="1" type="bool"/>
+			</OR>
+			<TEST var="mcsMode" op="==" value="10" type="int"/>
+		</AND>
+		<THEN>
+			<SomeOtherElement>whatever2</SomeOtherElement>
+		</THEN>
+		<ELSE>
+			<CONDITIONAL>
+				<TEST var="baz" op="&lt;" value="100.7" type="float"/>
+				<THEN>
+          <YetAnotherElement>something else2</YetAnotherElement>
+          <AndSoOn>yeah</AndSoOn>
+          <AndSoOn>yeah</AndSoOn>
+          <AndSoOn>yeah</AndSoOn>
+				</THEN>
+			</CONDITIONAL>
+		</ELSE>
+	</CONDITIONAL>
+</project>

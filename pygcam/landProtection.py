@@ -15,7 +15,8 @@ from .config import getParam
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, pathjoin, flatten, XMLFile, resourceStream
+from .utils import mkdirs, pathjoin, flatten, resourceStream
+from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
@@ -430,17 +431,16 @@ def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
     return paths
 
 def parseLandProtectionFile(scenarioFile=None):
-    schemaStream = resourceStream('etc/protection-schema.xsd')
     scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
-    protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
-    landProtection = protectionXmlFile.getRoot()
-    return landProtection
+    xmlFile = XMLFile(scenarioFile, schemaPath='etc/protection-schema.xsd')
+    obj = LandProtection(xmlFile.getRoot())
+    return obj
 
 def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
                           scenarioFile=None, xmlFiles=None, inPlace=False,
                           unprotectFirst=False):
     """
-    Run a the protection named by `scenarioName`, found in `scenarioFile` if given,
+    Run the protection named by `scenarioName`, found in `scenarioFile` if given,
     or the value of config variable `GCAM.LandProtectionXmlFile` otherwise. The source
     files are take from `workspace`, if given, otherwise from the value of `GCAM.RefWorkspace`.
     Results are written to the given `outputDir`. In the even that the input and output

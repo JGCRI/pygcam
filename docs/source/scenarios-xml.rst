@@ -28,6 +28,10 @@ XML elements
 
 The elements that comprise the ``scenarios.xml`` file are described below.
 
+.. seealso::
+   Some elements of the ``scenarios.xml`` file can contain ``<CONDITIONAL>``
+   elements, as described below. See :doc:`conditional-xml` for further details.
+
 .. note::
 
    All elements can be wrapped in a ``<comment> ... </comment>`` element
@@ -39,7 +43,9 @@ The elements that comprise the ``scenarios.xml`` file are described below.
 
 The top-most element, ``<scenarios>``, encloses one or more ``<scenarioGroup>``
 elements, zero or more ``<iterator>`` elements, and zero or more ``<comment>``
-elements. The ``<scenarios>`` element takes the following attributes:
+elements. The ``<scenarios>`` element may contain ``<CONDITIONAL>`` elements.
+
+The ``<scenarios>`` element takes the following attributes:
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -228,7 +234,8 @@ The ``<scenario>`` element defines a single scenario. It contains a
 sequence of one or more "actions" that manipulate the scenario's
 configuration file and (optionally) modify and create local copies
 of GCAM reference files or files defined in the baseline scenario.
-It may also contain zero or more ``<comment>`` elements.
+It may also contain zero or more ``<comment>`` elements, and
+may contain ``<CONDITIONAL>`` elements.
 
 The ``<scenario>`` element accepts the following attributes:
 
@@ -379,7 +386,13 @@ The ``<if>`` node allows one or more action elements
 to be included if the two values provided match (are the same;
 the default) or do not match, indicated by specifying ``matches="0"``
 or ``matches="false"``. This element may contain zero or more
-``<comment>`` elements.
+``<comment>`` elements, and may contain ``<CONDITIONAL>`` elements.
+
+.. note::
+   The ``<if>`` element evaluates scenario iterators, and is evaluated
+   when a scenario is run. In contrast, the ``<CONDITIONAL>`` element
+   evaluates configuration variables and is evaluated when the
+   scenarios file is loaded, prior to evaluating any file contents.
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |

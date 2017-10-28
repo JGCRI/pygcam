@@ -12,8 +12,9 @@ import sys
 from .config import getParam, getParamAsBoolean
 from .error import PygcamException, SetupException
 from .log import getLogger
-from .utils import XMLFile, getBooleanXML, resourceStream, symlinkOrCopyFile, unixPath, pathjoin
+from .utils import getBooleanXML, resourceStream, symlinkOrCopyFile, pathjoin
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
+from .XMLFile import XMLFile, McsValues
 
 _logger = getLogger(__name__)
 
@@ -91,7 +92,7 @@ class ScenarioSetup(object):
     @classmethod
     def parse(cls, filename):
         """
-        Parse an XML file holding a list of query descriptions.
+        Parse an XML file with query descriptions.
         :param filename: (str) the name of the XML file to read
         :return: a QueryFile instance.
         """
@@ -99,9 +100,8 @@ class ScenarioSetup(object):
             _logger.debug('Found scenario file "%s" in cache', filename)
             return cls.documentCache[filename]
 
-        schemaStream = resourceStream('etc/scenarios-schema.xsd')
-        xmlFile = XMLFile(filename, schemaFile=schemaStream)
-        obj = cls(xmlFile.tree.getroot())
+        xmlFile = XMLFile(filename, schemaPath='etc/scenarios-schema.xsd')
+        obj = cls(xmlFile.getRoot())
 
         cls.documentCache[filename] = obj      # cache it
         return obj
@@ -506,7 +506,6 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             super(XmlEditorSubclass, self).setupDynamic(args)
 
             if self.mcsMode == 'trial':             # TBD: was just "if self.mcsMode" -- test this
-                from pygcam.utils import McsValues
                 paramFile = self.paramFile
                 if paramFile and os.path.lexists(paramFile):
                     self.mcsValues = McsValues(paramFile)

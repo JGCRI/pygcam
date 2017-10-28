@@ -7,7 +7,8 @@ from collections import defaultdict
 
 from .config import getParam
 from .error import PygcamException
-from .utils import XMLFile, getBooleanXML, resourceStream
+from .utils import getBooleanXML, resourceStream
+from .XMLFile import XMLFile
 
 #
 # Classes to parse queryFiles and the <queries> element of project.xml
@@ -57,8 +58,7 @@ class QueryFile(object):
         :param filename: (str) the name of the XML file to read
         :return: a QueryFile instance.
         """
-        schemaStream = resourceStream('etc/queries-schema.xsd')
-        xmlFile = XMLFile(filename, schemaFile=schemaStream)
+        xmlFile = XMLFile(filename, schemaPath='etc/queries-schema.xsd', conditionalXML=True)
         return cls(xmlFile.tree.getroot())
 
 #
@@ -122,8 +122,7 @@ class RewriteSetParser(object):
         if obj:
             return obj
 
-        schemaStream = resourceStream('etc/rewriteSets-schema.xsd')
-        xmlFile = XMLFile(filename, schemaFile=schemaStream)
+        xmlFile = XMLFile(filename, schemaPath='etc/rewriteSets-schema.xsd')
         obj = cls(xmlFile.tree.getroot(), filename)
         cls.cache[filename] = obj
         return obj

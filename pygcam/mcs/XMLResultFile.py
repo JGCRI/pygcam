@@ -8,11 +8,12 @@ from datetime import datetime
 
 import pandas as pd
 
-from pygcam.config import getParam
-from pygcam.log import getLogger
+from ..config import getParam
+from ..log import getLogger
+from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
 from .Database import getDatabase
-from .XML import XMLWrapper, XMLFile, findAndSave
+from .XML import XMLWrapper, findAndSave
 
 _logger = getLogger(__name__)
 
@@ -127,15 +128,11 @@ class XMLResultFile(XMLFile):
             return obj
 
     def __init__(self, filename):
-        super(XMLResultFile, self).__init__(filename, load=True)
+        super(XMLResultFile, self).__init__(filename, load=True, schemaPath='mcs/etc/results-schema.xsd')
         root = self.tree.getroot()
 
         self.results = OrderedDict()    # the parsed fileNodes, keyed by filename
         findAndSave(root, RESULT_ELT_NAME, XMLResult, self.results)
-
-    def getSchemaFile(self):
-        schemaFile = os.path.join(os.path.dirname(__file__), 'etc', 'results-schema.xsd')
-        return schemaFile
 
     def getResultDefs(self, type=None):
         """

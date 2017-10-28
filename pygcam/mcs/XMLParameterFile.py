@@ -11,16 +11,16 @@ import pandas as pd
 import numpy as np
 from lxml import etree as ET
 
-from pygcam.config import getParam
-from pygcam.log import getLogger
-from pygcam.utils import importFromDotSpec
+from ..config import getParam
+from ..log import getLogger
+from ..utils import importFromDotSpec
+from ..XMLFile import XMLFile
 
-from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecError
-from .util import mkdirs, loadObjectFromPath, symlink
 from .Database import getDatabase
 from .distro import DistroGen
-
-from .XML import XMLFile, XMLWrapper, findAndSave
+from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecError
+from .util import mkdirs, loadObjectFromPath, symlink
+from .XML import XMLWrapper, findAndSave
 from .XMLConfigFile import XMLConfigFile
 
 _logger = getLogger(__name__)
@@ -949,7 +949,7 @@ class XMLParameterFile(XMLFile):
     Represents the overall parameters.xml file.
     """
     def __init__(self, filename):
-        super(XMLParameterFile, self).__init__(filename, load=True)
+        super(XMLParameterFile, self).__init__(filename, schemaPath='mcs/etc/parameter-schema.xsd')
 
         # XMLInputFiles keyed by scenario component name
         inputFiles = self.inputFiles = OrderedDict()
@@ -983,10 +983,6 @@ class XMLParameterFile(XMLFile):
 
     def getFilename(self):
         return self.filename
-
-    def getSchemaFile(self):
-        schemaFile = os.path.join(os.path.dirname(__file__), 'etc', 'parameter-schema.xsd')
-        return schemaFile
 
     def runQueries(self):
         for obj in self.inputFiles.values():

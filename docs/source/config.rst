@@ -156,9 +156,9 @@ All known variables are given default values in the pygcam system files. Users
 can create variables in any of the user controlled config files, if desired.
 
 All defined environmental variables are loaded into the config parameter space before
-reading any configuration files, and are accessible with a prefix of 'Env.' followed
-by the environment variable name. For example, the environment variable ``$SCRATCH``
-can be referenced in a config file as ``%(Env.SCRATCH)s``.
+reading any configuration files, and are accessible with a prefix of '$', as in a
+UNIX shell. For example, to reference the environment variable ``SCRATCH`, you can
+use ``%($SCRATCH)s``.
 
 Note that variable names are case-sensitive.
 

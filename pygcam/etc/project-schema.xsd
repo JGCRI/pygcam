@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
 
-	<xs:simpleType name="runForType">
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="baseline"/>
-			<xs:enumeration value="policy"/>
-			<xs:enumeration value="all"/>
-        </xs:restriction>
-	</xs:simpleType>
+    <xs:include schemaLocation="conditional.xsd"/>
+    <xs:include schemaLocation="comment.xsd"/>
 
-    <xs:element name='comment'>
-        <xs:complexType>
-            <xs:sequence>
-                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
+    <xs:simpleType name="runForType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="baseline"/>
+            <xs:enumeration value="policy"/>
+            <xs:enumeration value="all"/>
+        </xs:restriction>
+    </xs:simpleType>
 
     <xs:element name='projects'>
         <xs:complexType>
@@ -49,6 +44,7 @@
                 <xs:element ref='scenariosFile'/>
                 <xs:element ref='queries'/>
                 <xs:element ref='comment'/>
+                <xs:element ref='CONDITIONAL'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='subdir' type='xs:string'/>
@@ -62,70 +58,12 @@
         </xs:complexType>
     </xs:element>
 
-    <!-- Use only external scenarios file -->
-    <!--
-    <xs:element name='scenarios'>
-        <xs:complexType>
-            <xs:choice maxOccurs='unbounded'>
-                <xs:element ref='scenarioGroup'/>
-                <xs:element ref='comment'/>
-            </xs:choice>
-        </xs:complexType>
-    </xs:element>
-
-	<xs:simpleType name="iteratorType">
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="float"/>
-			<xs:enumeration value="int"/>
-            <xs:enumeration value="list"/>
-        </xs:restriction>
-    </xs:simpleType>
-
-    <xs:element name='iterator'>
-        <xs:complexType>
-            <xs:simpleContent>
-                <xs:extension base="xs:string">
-                    <xs:attribute name='name' use='required' type='xs:string'/>
-                    <xs:attribute name='type' type='iteratorType' default="list"/>
-                    <xs:attribute name='min' type='xs:decimal'/>
-                    <xs:attribute name='max' type='xs:decimal'/>
-                    <xs:attribute name='step' type='xs:decimal'/>
-                    <xs:attribute name='format' type='xs:string'/>
-                    <xs:attribute name='values' type='xs:string'/>
-                </xs:extension>
-            </xs:simpleContent>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='scenarioGroup'>
-        <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element ref='scenario'/>
-                <xs:element ref='comment'/>
-            </xs:choice>
-            <xs:attribute name='name' use='required' type='xs:string'/>
-            <xs:attribute name='default' type='xs:boolean' default='false'/>
-            <xs:attribute name="useGroupDir" type='xs:boolean' default='false'/>
-            <xs:attribute name='iterator' type='xs:string'/>
-            <xs:attribute name='baselineSource' type='xs:string'/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='scenario'>
-        <xs:complexType>
-            <xs:attribute name='name' use='required' type='xs:string'/>
-            <xs:attribute name='active' type='xs:boolean' default='true'/>
-            <xs:attribute name='baseline' type='xs:boolean' default='false'/>
-            <xs:attribute name='subdir' type='xs:string'/>
-        </xs:complexType>
-    </xs:element>
-    -->
-
     <xs:element name='steps'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
                 <xs:element ref='step'/>
                 <xs:element ref='comment'/>
+                <xs:element ref='CONDITIONAL'/>
             </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -147,8 +85,9 @@
     <xs:element name='vars'>
         <xs:complexType>
             <xs:choice maxOccurs="unbounded">
-                <xs:element maxOccurs='unbounded' ref='var'/>
-                <xs:element maxOccurs='unbounded' ref='comment'/>
+                <xs:element ref='var'/>
+                <xs:element ref='comment'/>
+                <xs:element ref='CONDITIONAL'/>
             </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -195,6 +134,7 @@
             <xs:choice maxOccurs='unbounded' >
                 <xs:element ref='query'/>
                 <xs:element ref='comment'/>
+                <xs:element ref='CONDITIONAL'/>
             </xs:choice>
             <xs:attribute name='varName' use='required' type='xs:string'/>
             <xs:attribute name='defaultMap' type='xs:string'/>
@@ -207,6 +147,7 @@
             <xs:choice minOccurs="0" maxOccurs='unbounded'>
                 <xs:element ref='rewriter'/>
                 <xs:element ref='comment'/>
+                <xs:element ref='CONDITIONAL'/>
             </xs:choice>
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='saveAs' type='xs:string'/>

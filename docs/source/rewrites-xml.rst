@@ -9,10 +9,15 @@ XML elements
 
 The elements that comprise the ``rewriteSets.xml`` file are described below.
 
+.. seealso::
+   Some elements of the ``rewriteSets.xml`` file can contain ``<CONDITIONAL>``
+   elements, as described below. See :doc:`conditional-xml` for further details.
+
 <rewriteSets>
 ^^^^^^^^^^^^^
 This is the outermost element, which takes no attributes and contains one
-or more ``<rewriteSet>`` elements.
+or more ``<rewriteSet>`` elements. It may also contain ``<CONDITIONAL>``
+elements.
 
 <rewriteSet>
 ^^^^^^^^^^^^^
@@ -59,6 +64,7 @@ is expanded in the generated query file to:
        <rewrite from="biomassAEZ17" to="Biomass"/>
        <rewrite from="biomassAEZ18" to="Biomass"/>
 
+The ``<rewriteSet>`` element may contain ``<CONDITIONAL>`` elements.
 
 <rewrite>
 ^^^^^^^^^^^^^

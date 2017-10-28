@@ -11,6 +11,9 @@ the two XML files.
        See :doc:`pygcam.query` for more information about run-time behavior.
        Command-line usage is described on the :ref:`gt query<query>` page.
 
+       Some elements of the ``query.xml`` file can contain ``<CONDITIONAL>``
+       elements, as described below. See :doc:`conditional-xml` for further details.
+
 
 queries.xml
 ===============
@@ -26,6 +29,7 @@ The elements that comprise the ``queries.xml`` file are described below.
 ^^^^^^^^^^
 
 The top-most element, ``<queries>``, encloses one or more ``<query>``
+elements. The ``<queries>`` element may also contain ``<CONDITIONAL>``
 elements. The ``<query>`` element takes the following attributes:
 
 +-------------+------------+-----------+----------+
@@ -61,7 +65,7 @@ Path, which is specified as an argument to the function
 sub-command, or by the value of the config variable ``GCAM.QueryPath``.
 
 The ``<query>`` element can contain zero or more ``<rewriter>``
-elements.
+elements and may contain ``<CONDITIONAL>`` elements.
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |

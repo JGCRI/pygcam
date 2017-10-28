@@ -21,11 +21,14 @@ Note that the :ref:`run <run>` sub-command provides several options that
 list elements of the ``project.xml`` file. Use the ``-l``, ``-L``, and ``-g`` to
 list steps, scenarios, and groups, respectively.
 
-
 XML elements
 ------------
 
 The elements that comprise the project.xml file are described below.
+
+.. seealso::
+   Some elements of the ``project.xml`` file can contain ``<CONDITIONAL>``
+   elements, as described below. See :doc:`conditional-xml` for further details.
 
 <projects>
 ^^^^^^^^^^
@@ -45,7 +48,7 @@ element takes no attributes.
 
 A ``<project>`` requires a 'name' attribute, and defines a set of
 variables, scenario groups, scenarios, and workflow steps, as described
-below.
+below. The ``<project>`` element may contain ``<CONDITIONAL>`` elements.
 
 <defaults>
 ^^^^^^^^^^
@@ -80,6 +83,7 @@ it is interpreted relative to the directory holding the ``project.xml``.
 
 The element ``<steps>`` contains a one or more ``<step>`` elements, and
 takes no attributes. Multiple ``<steps>`` elements are allowed.
+The ``<steps>`` element may contain ``<CONDITIONAL>`` elements.
 
 <step>
 ^^^^^^
@@ -192,7 +196,7 @@ the set in the order indicated by ``seq``.
 ^^^^^^
 
 The ``<vars>`` element encloses a list of ``<var>`` elements, and takes
-no attributes.
+no attributes. The ``<vars>`` element may contain ``<CONDITIONAL>`` elements.
 
 <var>
 ^^^^^
@@ -395,6 +399,7 @@ The queries listed in the `<queries>` element are used both to execute batch
 XML queries against the GCAM database, and to drive the `diff` step in the
 standard project.xml, which calls the `diff` sub-command.
 
+The ``<queries>`` element may contain ``<CONDITIONAL>`` elements.
 
 Example project.xml file
 ------------------------
