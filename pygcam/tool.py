@@ -113,7 +113,7 @@ class GcamTool(object):
 
     @classmethod
     def pluginGroup(cls, groupName, namesOnly=False):
-        objs = filter(lambda obj: obj.group == groupName, cls._plugins.values())
+        objs = filter(lambda obj: obj.getGroup() == groupName, cls._plugins.values())
         result = sorted(map(lambda obj: obj.name, objs)) if namesOnly else objs
         return result
 
@@ -316,13 +316,13 @@ class GcamTool(object):
         logFile   = logFile   or getParam('GCAM.BatchLogFile', raw=False)
         minutes   = minutes   or getParamAsFloat('GCAM.Minutes')
 
-        scheduler = getParam('GCAM.Scheduler')
-        known = ('SLURM', 'LSF')
-        if scheduler not in known:
-            raise ConfigFileError('GCAM.Scheduler value (%s) is not recognized. Must be one of %s.' % (scheduler, known))
+        batchSystem = getParam('GCAM.BatchSystem')
+        known = ('SLURM', 'LSF', 'PBS')
+        if batchSystem not in known:
+            raise ConfigFileError('GCAM.Scheduler value (%s) is not recognized. Must be one of %s.' % (batchSystem, known))
 
         # The LSF scheduler needs HH:MM; SLURM needs HH:MM:SS
-        format = "%02d:%02d" if scheduler == 'LSF' else "%02d:%02d:00"
+        format = "%02d:%02d" if batchSystem == 'LSF' else "%02d:%02d:00"
         walltime  = format % (minutes / 60, minutes % 60)
 
         if logFile:
@@ -332,29 +332,27 @@ class GcamTool(object):
 
         # TBD: make this an expression eval'd with s.format(jobID=dependsOn)
         # TBD: to support other syntaxes
-        format = "-w 'done(%s)'" if scheduler == 'LSF' else "-d afterok:%s"
-        otherArgs = format % dependsOn if dependsOn else ''
+        format = "-w 'done(%s)'" if batchSystem == 'LSF' else "-d afterok:%s"
+        dependencies = format % dependsOn if dependsOn else ''
 
         scriptCommand = "gt " + ' '.join(shellArgs)
 
         # This dictionary is applied to the string value of GCAM.BatchCommand, via
         # the str.format method, which must specify options using any of the keys.
         batchArgs = {'scriptFile': scriptCommand,
-                     'otherArgs' : otherArgs,
+                     'dependencies' : dependencies,
                      'logFile'   : logFile,
                      'minutes'   : minutes,
                      'walltime'  : walltime,
                      'queueName' : queueName,
+                     'partition' : queueName,   # synonym for queue name
                      'jobName'   : jobName}
 
         batchCmd = getParam('GCAM.BatchCommand')
 
         try:
             command = batchCmd.format(**batchArgs)
-            # TBD: Specifying with double "%" ("%%j") should solve this problem
-            # deal with problem "%" chars used by SLURM variables (config gets confused by '%')
-            # if getParam('GCAM.BatchLogFileDollarToPercent'):
-            #     command = command.replace('$', '%')
+
         except KeyError as e:
             raise ConfigFileError('Badly formatted batch command (%s) in config file: %s', batchCmd, e)
 

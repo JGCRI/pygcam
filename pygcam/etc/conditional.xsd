@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+
+	<xs:simpleType name="comparitor">
+		<xs:restriction base="xs:string">
+             <xs:enumeration value='='/>
+             <xs:enumeration value='=='/>
+             <xs:enumeration value='!='/>
+             <xs:enumeration value='&lt;'/>
+             <xs:enumeration value='&lt;='/>
+             <xs:enumeration value='&gt;'/>
+             <xs:enumeration value='&gt;='/>
+             <xs:enumeration value='eq'/>
+             <xs:enumeration value='ne'/>
+             <xs:enumeration value='lt'/>
+             <xs:enumeration value='le'/>
+             <xs:enumeration value='gt'/>
+             <xs:enumeration value='ge'/>
+        </xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="pythonType">
+		<xs:restriction base="xs:string">
+             <xs:enumeration value='str'/>
+             <xs:enumeration value='int'/>
+             <xs:enumeration value='float'/>
+             <xs:enumeration value='bool'/>
+        </xs:restriction>
+	</xs:simpleType>
+
+	<xs:element name="TEST">
+		<xs:complexType>
+			<xs:attribute name='var'   type='xs:string'  use='required'/>
+      <xs:attribute name='value' type='xs:string'  use='required'/>
+			<xs:attribute name='type'  type='pythonType' default='str'/>
+			<xs:attribute name='op'    type='comparitor' default='=='/>
+		</xs:complexType>
+	</xs:element>
+
+  <xs:element name="AND">
+		<xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+          <xs:element ref='TEST'/>
+          <xs:element ref='AND'/>
+          <xs:element ref='OR'/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="OR">
+		<xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+          <xs:element ref='TEST'/>
+          <xs:element ref='AND'/>
+          <xs:element ref='OR'/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+	<xs:element name="THEN">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+	</xs:element>
+
+	<xs:element name="ELSE">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+	</xs:element>
+
+	<xs:element name="CONDITIONAL">
+        <xs:complexType>
+			<xs:sequence>
+        <xs:choice maxOccurs="1">
+  				<xs:element ref='TEST'/>
+          <xs:element ref='AND'/>
+          <xs:element ref='OR'/>
+        </xs:choice>
+        <xs:element ref='THEN'/>
+        <xs:element ref='ELSE' minOccurs='0'/>
+			</xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

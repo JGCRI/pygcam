@@ -5,7 +5,7 @@ Tutorial, Part 1
 -----------------
 The command-line interface to ``pygcam`` uses the :doc:`gcamtool` script,
 which is installed when you install ``pygcam``. In this tutorial, we focus on the
-:ref:`run <run-label>`
+:ref:`run <run>`
 sub-command, which performs actions defined in the :doc:`project-xml` file, the location
 of which is specified by the config parameter ``GCAM.ProjectXmlFile``, which defaults to
 ``%(GCAM.ProjectDir)s/etc/project.xml``.
@@ -19,7 +19,7 @@ or more policy scenarios, and then comparing the policy cases to the baseline.
   - The :doc:`scenarios-xml` file defines the required modification to reference GCAM input
     XML files required to implement the desired scenarios.
 
-The entire workflow or select steps can be run using the :ref:`run <run-label>` sub-command.
+The entire workflow or select steps can be run using the :ref:`run <run>` sub-command.
 
 .. code-block:: sh
 
@@ -35,7 +35,7 @@ There are several general options available to the :doc:`gcamtool` command that 
 to all sub-commands, including the ability to set the desired level of diagnostic output
 (the "log level"), and to run the command on a compute node on a cluster computing system.
 
-The :ref:`"run" sub-command <run-label>` also provides many options, including the
+The :ref:`"run" sub-command <run>` also provides many options, including the
 ability to select which scenario group to run and limit which scenarios and steps to
 run (or not run). Use the help flag (``-h`` or ``--help``) to see all the options:
 
@@ -63,7 +63,7 @@ We begin Part 1 of the tutorial by examining a minimal project called ``tutorial
 1.1 Minimal example project
 -----------------------------
 The following is an example ``project.xml`` file that doesn't do anything other than
-allow us to explore some of the features of the ref:`"run" sub-command <run-label>`
+allow us to explore some of the features of the ref:`"run" sub-command <run>`
 
 .. code-block:: xml
    :linenos:
@@ -303,7 +303,7 @@ run using the ``-n`` flag:
       tax-15
       tax-20
       tax-25
-    rjp@bebop:~/GCAM/current/input/policy $ gt +P tutorial run -n
+    $ gt +P tutorial run -n
     2016-10-04 12:11:22,926 INFO [base, 1, step1] echo "step 1 (baseline)"
     2016-10-04 12:11:22,927 INFO [base, 2, step2] echo "step 2 (baseline)"
     2016-10-04 12:11:22,927 INFO [base, 5, step5] echo "step 5 (all)"

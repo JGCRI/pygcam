@@ -6,54 +6,56 @@ single script with sub-commands. Generic sub-commands are implemented directly
 by the pygcam library. Project-specific features can be added via
 :ref:`plugins <plugins-label>`.
 
-  .. note::
-     Quick links to sub-commands:
-     :ref:`chart <chart-label>`,
-     :ref:`config <config-label>`,
-     :ref:`diff <diff-label>`,
-     :ref:`gcam <gcam-label>`,
-     :ref:`init <init-label>`,
-     :ref:`mcs <mcs-label>`,
-     :ref:`mi <mi-label>`,
-     :ref:`new <new-label>`,
-     :ref:`protect <protect-label>`,
-     :ref:`query <query-label>`,
-     :ref:`run <run-label>`,
-     :ref:`setup <setup-label>`,
-     :ref:`sandbox <sandbox-label>`
+
+.. note::
+   Quick links to sub-commands:
+   :ref:`chart <chart>`,
+   :ref:`config <config>`,
+   :ref:`diff <diff>`,
+   :ref:`gcam <gcam>`,
+   :ref:`gui <gui>`,
+   :ref:`init <init>`,
+   :ref:`mcs <mcs>`,
+   :ref:`mi <mi>`,
+   :ref:`new <new>`,
+   :ref:`protect <protect>`,
+   :ref:`query <query>`,
+   :ref:`run <run>`,
+   :ref:`setup <setup>`,
+   :ref:`sandbox <sandbox>`
 
 The sub-commands support all the major workflow setups, including
 
   * Modify XML files and configuration.xml to set up a modeling experiment
-    (See the :ref:`setup <setup-label>` sub-command and :doc:`setup` for more
+    (See the :ref:`setup <setup>` sub-command and :doc:`setup` for more
     information.)
 
   * Run GCAM in an automatically-created workspace, allowing multiple
     instances of GCAM to run simultaneously, e.g., on parallel computing systems
-    (See the :ref:`gcam <gcam-label>` sub-command.)
+    (See the :ref:`gcam <gcam>` sub-command.)
 
   * Execute batch queries against the XML database to extract GCAM results,
     with on-the-fly regionalization based on a simple region-mapping file.
-    (See the :ref:`query <query-label>` sub-command.)
+    (See the :ref:`query <query>` sub-command.)
 
   * Compute differences between policy and baseline scenarios, including
     linear annualization of values between time-steps, and
-    (See the :ref:`diff <diff-label>` sub-command.)
+    (See the :ref:`diff <diff>` sub-command.)
 
   * Plot results, with flexible control of figure features including
     title, axis labels, scale, and so on.
-    (See the :ref:`chart <chart-label>` sub-command.)
+    (See the :ref:`chart <chart>` sub-command.)
 
   * Manage (create, delete, rename, run commands in) automatically-created
-    workspaces. (See the :ref:`sandbox <sandbox-label>` sub-command.)
+    workspaces. (See the :ref:`sandbox <sandbox>` sub-command.)
 
-In addition, the :ref:`run <run-label>` sub-command allows workflow steps to be
+In addition, the :ref:`run <run>` sub-command allows workflow steps to be
 defined in an XML file so that individual or groups of steps can be executed for one
 or more scenarios. The ``run`` sub-command supports direct invocation of other
 workflow steps as well as running arbitrary programs of the user's choosing.
 
 Finally, gt allows all project steps to be run on a compute node in a
-High-Performance Computing environment by specifying '-b' or '--batch'' on the
+High-Performance Computing environment by specifying ``+b`` or ``--batch`` on the
 command-line. (Note that this is not available on Mac OS X or Windows.)
 
 For example, the command:
@@ -75,14 +77,14 @@ Command-line usage is described below. Note that some command-line
 (e.g., batch-related) options must precede the sub-command, whereas
 sub-command specific options must follow it.
 
-  .. note::
+.. note::
 
-    Note that arguments that pertain regardless of the sub-command
-    (e.g., ``+P`` to identify the project name) are specified *prior to*
-    the sub-command, and use ``+`` rather than ``-``. This is to avoid
-    conflicts between these "main" arguments and sub-command arguments.
-    (An exception is ``gt -h``, which retains the ``-``.) Long-form
-    argument names use two hyphens, as in ``--projectName``.)
+  Note that arguments that pertain regardless of the sub-command
+  (e.g., ``+P`` to identify the project name) are specified *prior to*
+  the sub-command, and use ``+`` rather than ``-``. This is to avoid
+  conflicts between these "main" arguments and sub-command arguments.
+  (An exception is ``gt -h``, which retains the ``-``.) Long-form
+  argument names use two hyphens, as in ``--projectName``.)
 
 Usage
 -----
@@ -91,8 +93,9 @@ Usage
    :func: _getMainParser
    :prog: gt
 
+
    run : @replace
-      .. _run-label:
+      .. _run:
 
       This sub-command reads instructions from the file :doc:`project-xml`, the
       location of which is taken from the user's :ref:`~/.pygcam.cfg <pygcam-cfg>` file.
@@ -158,14 +161,14 @@ Usage
 
 
    chart : @replace
-      .. _chart-label:
+      .. _chart:
 
       The ``chart`` sub-command generates plots from GCAM-style ".csv" files.
       Two types of plots are currently supported: (i) stacked bar plots based on summing values
       over all years (with optional interpolation of annual values), by the given 'indexCol'
       (default is 'region'), and (ii) stacked bar plots by year for some data column, where the data
       are grouped by and summed across elements with the indicated 'indexCol'. The first option is
-      indicated by using the '-S' ('--sumYears') option. Numerous options allow the appearance to
+      indicated by using the ``-S`` (``--sumYears``) option. Numerous options allow the appearance to
       be customized.
 
       You can perform on-the-fly unit conversions using the ``-m`` / ``--multiplier`` or
@@ -176,7 +179,7 @@ Usage
 
 
    config : @replace
-      .. _config-label:
+      .. _config:
 
       The config command list the values of configuration variables from ~/.pygcam.cfg.
       With no arguments, it displays the values of all variables for the default project.
@@ -213,7 +216,7 @@ Usage
 
 
    diff : @replace
-      .. _diff-label:
+      .. _diff:
 
       The ``diff`` sub-command script computes the differences between results from two or
       more CSV files generated from batch queries run on a GCAM database, saving
@@ -231,7 +234,7 @@ Usage
 
 
    gcam : @replace
-      .. _gcam-label:
+      .. _gcam:
 
       The ``gcam`` sub-command runs the GCAM executable on the designated configuration
       file, scenario, or workspace. Typical use (e.g., from a ``project.xml`` file) would
@@ -248,14 +251,13 @@ Usage
       If the workspace doesn't exist, it is created based on the reference GCAM workspace,
       defined by the configuration variable ``GCAM.RefWorkspace``. By default, read-only
       directories (e.g., input and libs) are symbolically linked from the new workspace to
-      the reference one. (See the :ref:`new <new-label>` sub-command for more information
+      the reference one. (See the :ref:`new <new>` sub-command for more information
       on the creation of workspaces.)
 
       Directories into which GCAM writes results
       (e.g., output and exe) are created in the new workspace, but read-only files within exe
       (e.g., the GCAM executable) are symbolically linked (with the same caveat for Windows
       users.)
-
 
       Usage example:
 
@@ -267,21 +269,27 @@ Usage
       ``~/sandboxes/MyProject/MyScenario`` using the configuration file
       ``~/MyProject/scenarios/MyScenario/config.xml``.
 
+   gui : @replace
+      .. _gui:
+
+       Run the Graphical User Interface (GUI) generated from the command-line interface
+       in a local web server available at http://127.0.0.1:8050.
+
    init : @replace
-      .. _init-label:
+      .. _init:
 
       Initialize key variables in the ~/.pygcam.cfg configuration file. Values not provided on
       the command-line are requested interactively.
 
 
    mcs : @replace
-      .. _mcs-label:
+      .. _mcs:
 
       Enable or disable Monte Carlo Simulation (MCS) mode, or check whether MCS mode
       is currently enabled or disabled.
 
    mi : @replace
-      .. _mi-label:
+      .. _mi:
 
       Invoke ModelInterface from the command-line after changing directory to the value
       of config variable ``GCAM.QueryDir``. If the file ``model_interface.properties`` is found,
@@ -301,7 +309,7 @@ Usage
 
 
    new : @replace
-      .. _new-label:
+      .. _new:
 
       Create the directory structure and basic files required for a new pygcam project.
       If a directory is specified with the ``-r`` flag, the project is created with the
@@ -338,7 +346,7 @@ Usage
       considered available for use.
 
    protect : @replace
-      .. _protect-label:
+      .. _protect:
 
       Generate versions of GCAM's land_input XML files that protect a given fraction of
       land of the given land types in the given regions by subtracting the required land
@@ -372,7 +380,7 @@ Usage
 
 
    query : @replace
-      .. _query-label:
+      .. _query:
 
       Run one or more GCAM database queries by generating and running the
       named XML queries. The results are placed in a file in the specified
@@ -399,13 +407,13 @@ Usage
 
 
    sandbox : @replace
-      .. _sandbox-label:
+      .. _sandbox:
 
       The ``sandbox`` sub-command allows you to create, delete, show the path of, or run a shell
       command in a workspace. If the ``--scenario`` argument is given, the operation is
       performed on a scenario-specific workspace within a project directory. If ``--scenario``
       is not specified, the operation is performed on the project directory that contains
-      individual scenario workspaces. Note that the :ref:`gcam <gcam-label>` sub-command
+      individual scenario workspaces. Note that the :ref:`gcam <gcam>` sub-command
       automatically creates workspaces as needed.
 
       N.B. You can run ``sandbox`` with the ``--path`` option before performing any
@@ -414,7 +422,7 @@ Usage
 
 
    setup : @replace
-      .. _setup-label:
+      .. _setup:
 
       The ``setup`` sub-command automates modification to copies of GCAM's input XML
       files and construction of a corresponding configuration XML file.

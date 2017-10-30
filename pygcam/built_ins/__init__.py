@@ -2,6 +2,7 @@ from .chart_plugin import ChartCommand
 from .config_plugin import ConfigCommand
 from .diff_plugin import DiffCommand
 from .gcam_plugin import GcamCommand
+from .gui_plugin import GUICommand
 from .init_plugin import InitCommand
 from .mcs_plugin import MCSCommand
 from .mi_plugin import ModelInterfaceCommand
@@ -14,6 +15,6 @@ from .setup_plugin import SetupCommand
 from .compare_plugin import CompareCommand
 
 BuiltinSubcommands = [ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
-                      GcamCommand, InitCommand, MCSCommand, ModelInterfaceCommand,
-                      NewProjectCommand, ProtectLandCommand, QueryCommand,
-                      RunCommand, SandboxCommand, SetupCommand]
+                      GcamCommand, GUICommand, InitCommand, MCSCommand,
+                      ModelInterfaceCommand, NewProjectCommand, ProtectLandCommand,
+                      QueryCommand, RunCommand, SandboxCommand, SetupCommand]

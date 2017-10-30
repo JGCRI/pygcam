@@ -13,7 +13,7 @@ Running queries by name
 
 The query module looks for queries by name in any of the directories or files listed in the
 Query Path, which is specified as an argument to the function :py:func:`pygcam.query.runBatchQuery`,
-on the command-line to the :ref:`query sub-command <query-label>`, or by the value of the
+on the command-line to the :ref:`query sub-command <query>`, or by the value of the
 config variable ``GCAM.QueryPath``.
 
 configuration parameter ``GCAM.QueryPath``. Elements are separated by ';' on Windows and by
@@ -38,7 +38,7 @@ query, the ``title`` attribute is compared directly and with the variants below,
 
 Running sets of queries
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-The :ref:`query sub-command <query-label>` allows a set of queries to be identified
+The :ref:`query sub-command <query>` allows a set of queries to be identified
 in a text file, with one query name per line, or in an XML file that offers additional
 features. See :doc:`query-xml` for information on the XML file format.
 
@@ -65,7 +65,7 @@ Generating label rewrites to aggregate and filter results
 The user can define a set of queries in an XML file. The query elements are processed
 in order, adding any designated label rewrites to the query.
 
-The :ref:`query sub-command <query-label>` runs the batch query in ModelInterfaces and saves
+The :ref:`query sub-command <query>` runs the batch query in ModelInterfaces and saves
 the results in the designated .CSV file. The :doc:`gcamtool` page for command-line options.
 
 Label rewrites are currently defined in a separate :doc:`rewrites-xml`, which can be named

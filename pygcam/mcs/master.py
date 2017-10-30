@@ -82,12 +82,26 @@ _pbsControllerBatchTemplate = """#!/bin/sh
 %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 
-# TBD: test PBS (where? everything seems to use SLURM these days)
+#
+# LSF
+#
+_lsfEngineBatchTemplate = """#!/bin/sh
+TBD
+"""
+
+_lsfControllerBatchTemplate = """#!/bin/sh
+TBD
+"""
+
+# TBD: test PBS (where?)
 batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                              'controller' : _slurmControllerBatchTemplate},
 
                   'pbs'   : {'engine'     : _pbsEngineBatchTemplate,
-                             'controller' : _pbsControllerBatchTemplate}
+                             'controller' : _pbsControllerBatchTemplate},
+
+                  'lsf'   : {'engine'     : _lsfEngineBatchTemplate,
+                             'controller' : _lsfControllerBatchTemplate},
                   }
 
 class Master(object):

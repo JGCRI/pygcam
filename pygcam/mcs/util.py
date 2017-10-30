@@ -11,9 +11,9 @@ from __future__ import with_statement, print_function
 import os
 from inspect import stack, getargspec
 
-from pygcam.config import setSection, getSection, getParam, getParamAsInt
+from pygcam.config import getParam, getParamAsInt
 from pygcam.log import getLogger
-from pygcam.utils import mkdirs
+from pygcam.utils import mkdirs, pathjoin
 
 from .constants import COMMENT_CHAR
 from .context import getSimDir
@@ -58,6 +58,34 @@ def readTrialDataFile(simId):
     df = pd.read_table(dataFile, sep=',', index_col='trialNum')
     return df
     # return df.as_matrix()
+
+
+def _jobTmpDir():
+    '''
+    Generate the name of a temporary directory based on the value of GCAM.TempDir
+    and the job ID from the environment.
+    '''
+    tmpDir = getParam('GCAM.TempDir')
+    dirName = "mcs.%s.tmp" % 999999         # TBD: getJobNum()
+    dirPath = pathjoin(tmpDir, dirName)
+    return dirPath
+
+def setupTempOutputDir(outputDir):
+    from ..utils import removeFileOrTree, removeTreeSafely
+    from ..config import getParamAsBoolean
+    removeFileOrTree(outputDir, raiseError=False)
+
+    if getParamAsBoolean('MCS.UseTempOutputDir'):
+        dirPath = _jobTmpDir()
+        removeTreeSafely(dirPath, ignore_errors=True)  # rm any files from prior run in this job
+        mkdirs(dirPath)
+        _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
+
+        # Create a link that the epilogue.py script can find.
+        # if getParam('Core.Epilogue'):
+        #     createEpilogueLink(dirPath)
+    else:
+        mkdirs(outputDir)
 
 def activeYears(asInt=False):
     '''

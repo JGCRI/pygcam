@@ -177,8 +177,6 @@ def readConfigFiles():
     """
     global _ConfigParser
 
-    home = getHomeDir()
-
     # Strict mode prevents duplicate sections, which we do not restrict
     _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'),
                                               strict=False,
@@ -187,8 +185,14 @@ def readConfigFiles():
     # don't force keys to lower-case: variable names are case sensitive
     _ConfigParser.optionxform = lambda option: option
 
+    home = getHomeDir()
     _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
     _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER', 'unknown'))
+
+    # Create vars from environment variables as '$' + variable name, as in the shell
+    for name, value in os.environ.iteritems():
+        value = value.replace(r'%', r'%%')
+        _ConfigParser.set(DEFAULT_SECTION, '$' + name, value)
 
     # Initialize config parser with default values
     systemDefaults = _readConfigResourceFile('etc/system.cfg')
@@ -247,12 +251,10 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
     Return all variables defined in `section` as a dictionary.
 
     :param section: (str) the name of a section in the config file
+    :param raw: (bool) whether to return raw or interpolated values.
     :return: (dict) all variables defined in the section (which includes
        those defined in DEFAULT.)
     """
-    # if not _ConfigParser.has_section(section):
-    #     section = DEFAULT_SECTION
-
     d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
     return d
 
@@ -277,7 +279,10 @@ def getParam(name, section=None, raw=False, raiseError=True):
     :py:func:`getConfig` if needed.
 
     :param name: (str) the name of a configuration parameters. Note
-       that variable names are case-insensitive.
+       that variable names are case-insensitive. Note that environment
+       variables are available using the '$' prefix as in a shell.
+       To access the value of environment variable FOO, use getParam('$FOO').
+
     :param section: (str) the name of the section to read from, which
       defaults to the value used in the first call to ``getConfig``,
       ``readConfigFiles``, or any of the ``getParam`` variants.
@@ -295,7 +300,7 @@ def getParam(name, section=None, raw=False, raiseError=True):
         getConfig()
 
     try:
-        return _ConfigParser.get(section, name, raw=raw)
+        value = _ConfigParser.get(section, name, raw=raw)
 
     except configparser.NoSectionError:
         if raiseError:
@@ -308,6 +313,14 @@ def getParam(name, section=None, raw=False, raiseError=True):
             raise PygcamException('getParam: unknown variable "%s"' % name)
         else:
             return None
+
+    # Deprecated: now all enviro vars are loaded, and can be accessed in config files, too
+    # # if "$..." refers to an env var, return its value
+    # if len(value) > 1 and value[0] == '$':
+    #     varname = value[1:]
+    #     value = os.getenv(varname, '$'+varname)
+
+    return value
 
 def getParamAsBoolean(name, section=None):
     """

@@ -9,7 +9,10 @@ the two XML files.
     .. seealso::
 
        See :doc:`pygcam.query` for more information about run-time behavior.
-       Command-line usage is described on the :ref:`gt query<query-label>` page.
+       Command-line usage is described on the :ref:`gt query<query>` page.
+
+       Some elements of the ``query.xml`` file can contain ``<CONDITIONAL>``
+       elements, as described below. See :doc:`conditional-xml` for further details.
 
 
 queries.xml
@@ -26,6 +29,7 @@ The elements that comprise the ``queries.xml`` file are described below.
 ^^^^^^^^^^
 
 The top-most element, ``<queries>``, encloses one or more ``<query>``
+elements. The ``<queries>`` element may also contain ``<CONDITIONAL>``
 elements. The ``<query>`` element takes the following attributes:
 
 +-------------+------------+-----------+----------+
@@ -61,7 +65,7 @@ Path, which is specified as an argument to the function
 sub-command, or by the value of the config variable ``GCAM.QueryPath``.
 
 The ``<query>`` element can contain zero or more ``<rewriter>``
-elements.
+elements and may contain ``<CONDITIONAL>`` elements.
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -89,7 +93,7 @@ applying to this ``<query>``.
 This element identifies a :doc:`rewrite set <rewrites-xml>` by name.
 The rewrite set must be defined in a file identified as an argument
 to the :py:func:`pygcam.query.runBatchQuery`, on the command-line to
-the :ref:`query sub-command <query-label>`, or by setting a value for
+the :ref:`query sub-command <query>`, or by setting a value for
 the config variable ``GCAM.RewriteSetsFile``.
 
 The query named in the ``<query>`` node is extracted into a

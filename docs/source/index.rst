@@ -27,6 +27,7 @@ XML File Formats
    :maxdepth: 1
 
    xmlFiles
+   conditional-xml
    mcs/pygcam.mcs.XML
 
 Application Programming Interface (API)

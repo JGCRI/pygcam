@@ -12,20 +12,23 @@ in the order defined. The script was developed for use with other :doc:`gcamtool
 sub-commands, however any scripts or programs can be called in workflow
 'steps'.
 
-Command-line usage is describe on the :ref:`gt run<run-label>` page.
-The ``project.xml`` file elements are described below. The :ref:`new <new-label>`
+Command-line usage is describe on the :ref:`gt run<run>` page.
+The ``project.xml`` file elements are described below. The :ref:`new <new>`
 sub-command copies a generic ``project.xml`` file into the newly created
 project directory, which should be modified to suit your needs.
 
-Note that the :ref:`run <run-label>` sub-command provides several options that
+Note that the :ref:`run <run>` sub-command provides several options that
 list elements of the ``project.xml`` file. Use the ``-l``, ``-L``, and ``-g`` to
 list steps, scenarios, and groups, respectively.
-
 
 XML elements
 ------------
 
 The elements that comprise the project.xml file are described below.
+
+.. seealso::
+   Some elements of the ``project.xml`` file can contain ``<CONDITIONAL>``
+   elements, as described below. See :doc:`conditional-xml` for further details.
 
 <projects>
 ^^^^^^^^^^
@@ -45,7 +48,7 @@ element takes no attributes.
 
 A ``<project>`` requires a 'name' attribute, and defines a set of
 variables, scenario groups, scenarios, and workflow steps, as described
-below.
+below. The ``<project>`` element may contain ``<CONDITIONAL>`` elements.
 
 <defaults>
 ^^^^^^^^^^
@@ -80,6 +83,7 @@ it is interpreted relative to the directory holding the ``project.xml``.
 
 The element ``<steps>`` contains a one or more ``<step>`` elements, and
 takes no attributes. Multiple ``<steps>`` elements are allowed.
+The ``<steps>`` element may contain ``<CONDITIONAL>`` elements.
 
 <step>
 ^^^^^^
@@ -192,7 +196,7 @@ the set in the order indicated by ``seq``.
 ^^^^^^
 
 The ``<vars>`` element encloses a list of ``<var>`` elements, and takes
-no attributes.
+no attributes. The ``<vars>`` element may contain ``<CONDITIONAL>`` elements.
 
 <var>
 ^^^^^
@@ -395,6 +399,7 @@ The queries listed in the `<queries>` element are used both to execute batch
 XML queries against the GCAM database, and to drive the `diff` step in the
 standard project.xml, which calls the `diff` sub-command.
 
+The ``<queries>`` element may contain ``<CONDITIONAL>`` elements.
 
 Example project.xml file
 ------------------------

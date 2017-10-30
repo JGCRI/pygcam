@@ -70,35 +70,6 @@ def _getFilesToCopyAndLink(linkParam):
     filesToCopy = list(allFiles - filesToLinkSet)
     return filesToCopy, filesToLink
 
-
-def _jobTmpDir():
-    '''
-    Generate the name of a temporary directory based on the value of GCAM.TempDir
-    and the job ID from the environment.
-    '''
-    tmpDir = getParam('GCAM.TempDir')
-    dirName = "mcs.%s.tmp" % 999999 # TBD: getJobNum()
-    dirPath = pathjoin(tmpDir, dirName)
-    return dirPath
-
-#
-# TBD: fix this and call it from setupWorkspace if mcs == True
-#
-def _setupTempOutputDir(outputDir):
-    removeFileOrTree(outputDir, raiseError=False)
-
-    if getParamAsBoolean('MCS.UseTempOutputDir'):
-        dirPath = _jobTmpDir()
-        removeTreeSafely(dirPath, ignore_errors=True)  # rm any files from prior run in this job
-        mkdirs(dirPath)
-        _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
-
-        # Create a link that the epilogue.py script can find.
-        # if getParam('Core.Epilogue'):
-        #     createEpilogueLink(dirPath)
-    else:
-        mkdirs(outputDir)
-
 def _remakeSymLink(source, linkname):
     removeFileOrTree(linkname)
     symlinkOrCopyFile(source, linkname)
@@ -192,6 +163,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     outputDir = pathjoin(sandbox, 'output')
 
     if mcsMode:
+        from mcs.util import setupTempOutputDir
         # link {sandbox}/dyn-xml to ../dyn-xml
         dynXmlDir = pathjoin('..', DYN_XML_NAME)
 
@@ -199,7 +171,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
         mkdirs(dynXmlAbsPath)
 
         # deal with link and tmp dir...
-        _setupTempOutputDir(outputDir)
+        setupTempOutputDir(outputDir)
     else:
         # link {sandbox}/dyn-xml to {refWorkspace}/dyn-xml
         dynXmlDir = pathjoin(srcWorkspace, DYN_XML_NAME)

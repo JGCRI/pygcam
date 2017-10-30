@@ -15,7 +15,8 @@ from .config import getParam
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, pathjoin, flatten, XMLFile, resourceStream
+from .utils import mkdirs, pathjoin, flatten, resourceStream
+from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
@@ -90,7 +91,7 @@ class LandProtection(object):
                 createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
 
     # TBD: test this
-    def protectLand(self, infile, outfile, scenarioName, backup=True):
+    def protectLand(self, infile, outfile, scenarioName, backup=True, unprotectFirst=False):
         """
         Generate a copy of `infile` with land protected according to `scenarioName`,
         writing the output to `outfile`.
@@ -100,10 +101,15 @@ class LandProtection(object):
         :param scenarioName: a scenario in the landProtection.xml file
         :param backup: if True, create a backup `outfile`, with a '~' appended to the name,
           before writing a new file.
+        :param unprotectFirst: (bool) if True, make all land "unprotected" before protecting.
         :return: none
         """
         parser = ET.XMLParser(remove_blank_text=True)
         tree = ET.parse(infile, parser)
+
+        # Remove any existing land protection, if so requested
+        if unprotectFirst:
+            unProtectLand(tree, otherArable=True)
 
         self.protectLandTree(tree, scenarioName)
 
@@ -425,17 +431,16 @@ def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
     return paths
 
 def parseLandProtectionFile(scenarioFile=None):
-    schemaStream = resourceStream('etc/protection-schema.xsd')
     scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
-    protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
-    landProtection = protectionXmlFile.getRoot()
-    return landProtection
+    xmlFile = XMLFile(scenarioFile, schemaPath='etc/protection-schema.xsd')
+    obj = LandProtection(xmlFile.getRoot())
+    return obj
 
 def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
-                          scenarioFile=None, xmlFiles=None,
-                          unprotectFirst=False, inPlace=False):
+                          scenarioFile=None, xmlFiles=None, inPlace=False,
+                          unprotectFirst=False):
     """
-    Run a the protection named by `scenarioName`, found in `scenarioFile` if given,
+    Run the protection named by `scenarioName`, found in `scenarioFile` if given,
     or the value of config variable `GCAM.LandProtectionXmlFile` otherwise. The source
     files are take from `workspace`, if given, otherwise from the value of `GCAM.RefWorkspace`.
     Results are written to the given `outputDir`. In the even that the input and output
@@ -451,18 +456,14 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
        if xmlFiles are specified explicitly)
     :param scenarioFile: (str) the path to a protection.xml file defining `scenarioName`
     :param xmlFiles: (list of str) the paths of the XML input files to modify
-    :param unprotectFirst: (bool) if True, make all land "unprotected" before protecting.
     :param inPlace: (bool) if True, input and output files may be the same (output overwrites input).
+    :param unprotectFirst: (bool) if True, make all land "unprotected" before
+           protecting.
     :return: none
     """
     _logger.debug("Land-protection scenario '%s'", scenarioName)
 
     landProtection = parseLandProtectionFile(scenarioFile=scenarioFile)
-
-    # TBD: refactored into parseLandProtectionFile. delete after testing
-    # schemaStream = resourceStream('etc/protection-schema.xsd')
-    # scenarioFile = scenarioFile or getParam('GCAM.LandProtectionXmlFile')
-    # protectionXmlFile = XMLFile(scenarioFile, schemaFile=schemaStream, rootClass=LandProtection)
 
     workspace = workspace or getParam('GCAM.SandboxRefWorkspace')
     xmlFiles = xmlFiles or _landXmlPaths(workspace)

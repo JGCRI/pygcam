@@ -4,9 +4,9 @@ from copy import copy
 import os
 from lxml import etree as ET
 
-from pygcam.log import getLogger
+from ..log import getLogger
+from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError
-from .XML import XMLFile
 
 _logger = getLogger(__name__)
 

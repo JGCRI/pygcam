@@ -16,10 +16,9 @@ class MCSCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Enable or disable pygcam Monte Carlo Simulation sub-commands.'''}
 
-        super(MCSCommand, self).__init__('mcs', subparsers, kwargs)
+        super(MCSCommand, self).__init__('mcs', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
-        self.setGuiGroup('utils')
         parser.add_argument('mode', choices=['on', 'off', 'status'],
                             help='''Turn MCS mode on or off, or report current setting''')
         return parser

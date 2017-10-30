@@ -28,6 +28,9 @@ class FileFormatError(PygcamException):
     """
     pass
 
+class XmlFormatError(FileFormatError):
+    pass
+
 class FileExistsError(PygcamException):
     """
     Raised when trying to write a file that already exists (if not allowed)

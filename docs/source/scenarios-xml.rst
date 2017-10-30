@@ -3,7 +3,7 @@ scenarios.xml
 
 The ``scenarios.xml`` provides instructions for modifying a GCAM
 configuration XML file. The file, which is processed by the
-:ref:`setup <setup-label>` sub-command, cad define one or more
+:ref:`setup <setup>` sub-command, cad define one or more
 groups of related scenarios, and provides an iteration feature
 that allows automated generation of a set of related scenarios.
 
@@ -11,7 +11,7 @@ that allows automated generation of a set of related scenarios.
 
    The :doc:`setup` page provides an overview of setup system. See
    :doc:`pygcam.xmlEditor` for more information about the Python API.
-   Command-line usage is described on the :ref:`gt setup <setup-label>` page.
+   Command-line usage is described on the :ref:`gt setup <setup>` page.
 
 .. note::
 
@@ -28,6 +28,10 @@ XML elements
 
 The elements that comprise the ``scenarios.xml`` file are described below.
 
+.. seealso::
+   Some elements of the ``scenarios.xml`` file can contain ``<CONDITIONAL>``
+   elements, as described below. See :doc:`conditional-xml` for further details.
+
 .. note::
 
    All elements can be wrapped in a ``<comment> ... </comment>`` element
@@ -39,7 +43,9 @@ The elements that comprise the ``scenarios.xml`` file are described below.
 
 The top-most element, ``<scenarios>``, encloses one or more ``<scenarioGroup>``
 elements, zero or more ``<iterator>`` elements, and zero or more ``<comment>``
-elements. The ``<scenarios>`` element takes the following attributes:
+elements. The ``<scenarios>`` element may contain ``<CONDITIONAL>`` elements.
+
+The ``<scenarios>`` element takes the following attributes:
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -49,7 +55,7 @@ elements. The ``<scenarios>`` element takes the following attributes:
 
 The ``defaultGroup`` attribute of ``<scenarios>`` identifies the default
 scenarioGroup to use when no group is explicitly identified in
-the :ref:`gt setup <setup-label>` command.
+the :ref:`gt setup <setup>` command.
 
 
 <scenarioGroup>
@@ -228,7 +234,8 @@ The ``<scenario>`` element defines a single scenario. It contains a
 sequence of one or more "actions" that manipulate the scenario's
 configuration file and (optionally) modify and create local copies
 of GCAM reference files or files defined in the baseline scenario.
-It may also contain zero or more ``<comment>`` elements.
+It may also contain zero or more ``<comment>`` elements, and
+may contain ``<CONDITIONAL>`` elements.
 
 The ``<scenario>`` element accepts the following attributes:
 
@@ -379,7 +386,13 @@ The ``<if>`` node allows one or more action elements
 to be included if the two values provided match (are the same;
 the default) or do not match, indicated by specifying ``matches="0"``
 or ``matches="false"``. This element may contain zero or more
-``<comment>`` elements.
+``<comment>`` elements, and may contain ``<CONDITIONAL>`` elements.
+
+.. note::
+   The ``<if>`` element evaluates scenario iterators, and is evaluated
+   when a scenario is run. In contrast, the ``<CONDITIONAL>`` element
+   evaluates configuration variables and is evaluated when the
+   scenarios file is loaded, prior to evaluating any file contents.
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -425,7 +438,7 @@ blocks are functionally equivalent:
 Example
 ^^^^^^^^
 The following is the scenarios.xml file that is copied into new projects
-by the :ref:`new <new-label>` sub-command. It serves as a starting point
+by the :ref:`new <new>` sub-command. It serves as a starting point
 and for testing that the overall pygcam environment is configured properly.
 
 .. literalinclude:: ../../pygcam/etc/examples/scenarios.xml

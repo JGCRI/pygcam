@@ -22,7 +22,8 @@ from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
 from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
-                    pathjoin, simpleFormat, resourceStream, QueryResultsDir, XMLFile)
+                    pathjoin, simpleFormat, resourceStream, QueryResultsDir)
+from .XMLFile import XMLFile
 from .xmlSetup import ScenarioSetup
 
 __version__ = '0.2'
@@ -232,9 +233,9 @@ class SimpleVariable(object):
     Instances = {}
 
     def __init__(self, name, value, evaluate=False):
-        self.name      = name
-        self.value     = value
-        self.eval      = evaluate
+        self.name  = name
+        self.value = value or ''
+        self.eval  = evaluate
         self.Instances[name] = self
 
     def getValue(self):
@@ -291,7 +292,6 @@ class Variable(SimpleVariable):
         # optional arg lets us call it recursively
         value = value or self.getValue()
 
-        # result = value.format(**argDict) if value and self.eval else value
         result = simpleFormat(value, argDict) if value and self.eval else value
 
         # recurse in case there are vars whose values are variable references
@@ -302,11 +302,7 @@ class Project(XMLFile):
     Represents the ``<project>`` element in the projects.xml file.
     """
     def __init__(self, xmlFile, projectName, groupName=None):
-
-        schemaStream = resourceStream('etc/project-schema.xsd')
-
-        super(Project, self).__init__(xmlFile, schemaFile=schemaStream)
-
+        super(Project, self).__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
         self.projectName = projectName
         self.scenarioGroupName = groupName
 
@@ -388,20 +384,21 @@ class Project(XMLFile):
         obj = cls.readProjectFile(projectName)
         return obj.scenarioSetup.defaultGroup
 
-    @staticmethod
-    def validateXML(doc, raiseError=True):
-        '''
-        Validate a parsed project.xml file
-        '''
-        schemaStream = resourceStream('etc/project-schema.xsd')
-
-        schemaDoc = ET.parse(schemaStream)
-        schema = ET.XMLSchema(schemaDoc)
-
-        if raiseError:
-            schema.assertValid(doc)
-        else:
-            return schema.validate(doc)
+    # Deprecated
+    # @staticmethod
+    # def validateXML(doc, raiseError=True):
+    #     '''
+    #     Validate a parsed project.xml file
+    #     '''
+    #     schemaStream = resourceStream('etc/project-schema.xsd')
+    #
+    #     schemaDoc = ET.parse(schemaStream)
+    #     schema = ET.XMLSchema(schemaDoc)
+    #
+    #     if raiseError:
+    #         schema.assertValid(doc)
+    #     else:
+    #         return schema.validate(doc)
 
     def setGroup(self, groupName=None):
         groupDict = self.scenarioGroupDict

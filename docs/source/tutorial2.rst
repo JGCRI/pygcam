@@ -7,7 +7,7 @@ using the templates files provided by ``pygcam``.
 2.0 Create the project structure and initial configuration file
 ----------------------------------------------------------------------
 The first step in creating a new product is to run gcamtool
-:ref:`new <new-label>` sub-command. To create the project ``ctax``
+:ref:`new <new>` sub-command. To create the project ``ctax``
 with the project directory ``/Users/rjp/projects/ctax``, I would
 run the following command:
 
@@ -15,15 +15,18 @@ run the following command:
 
    gt new -c -r /Users/rjp/projects ctax
 
-This both creates the initial file structure in ``/Users/rjp/projects/ctax``,
+(The directory ``/Users/rjp`` is my home directory; choose a location that
+makes sense on your system.)
+
+This command creates the initial file structure in ``/Users/rjp/projects/ctax``,
 and (because I specified the ``-c`` flag) adds a section for ``ctax`` to my
 configuration file, which is found in my home directory. In my case, it is
 in ``/Users/rjp/.pygcam.cfg``.
 
 When ``gt`` runs, it checks whether this file exists. If the file is not found,
 it is created with all available configuration parameters shown in comments (i.e.,
-lines starting with '#') explaining their purpose and showing their default values.
-To uncomment a line, simply remove the leading '#' character.
+lines starting with ``#``) explaining their purpose and showing their default values.
+To uncomment a line, simply remove the leading ``#`` character.
 
 Here is the ``.pygcam.cfg`` file (with the long listing of default settings
 removed):
@@ -54,11 +57,18 @@ Our first task will be to set ``GCAM.DefaultProject`` so we don't have to keep t
     [DEFAULT]
     GCAM.DefaultProject = ctax
 
+Editing .pygcam.cfg
+^^^^^^^^^^^^^^^^^^^^
 You can edit the configuration file with any editor capable of working with plain text.
 (Word-processors such as Word introduce formatting information into the file which
-renders it unusable by ``pygcam``.) You can use the command ``gt config -e`` to
-invoke a system-appropriate editor on the configuration file. See the :doc:`config`
-page for details.
+renders it unusable by ``pygcam``.) On Linux, you might try the simple ``nano`` editor,
+or the more powerful (and complicated) ``vim`` or ``emacs`` editors.
+On Windows, a good option is the free `Notepad++ <https://notepad-plus-plus.org>`_.
+On the Mac, you can use TextEdit.app to edit plain text files. Of course, any
+programmer-oriented editor will do the job.
+
+You can use the command ``gt config -e`` to invoke a system-appropriate editor on
+the configuration file. See the :doc:`config` page for details.
 
 2.2 Check configuration
 ----------------------------
@@ -91,7 +101,7 @@ scenario does not exclude unmanaged land from consideration, while the second
 scenario excludes 90% of unmanaged land, which is the default in the GCAM
 reference scenario.
 
-The :ref:`run <run-label>` sub-command offers several options that list
+The :ref:`run <run>` sub-command offers several options that list
 project elements and display commands that would be run.
 
 To list the scenario groups in the default project:

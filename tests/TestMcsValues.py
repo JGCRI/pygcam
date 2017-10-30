@@ -1,6 +1,6 @@
 import unittest
 
-from pygcam.utils import McsValues
+from pygcam.XMLFile import McsValues
 
 
 class TestSymlinks(unittest.TestCase):

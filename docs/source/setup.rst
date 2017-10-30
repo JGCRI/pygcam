@@ -23,7 +23,7 @@ are written to a directory called ``local-xml`` in the run-time
 
 .. seealso::
 
-     Command-line usage is described on the :ref:`gt setup <setup-label>` page.
+     Command-line usage is described on the :ref:`gt setup <setup>` page.
 
 Usage
 ------
@@ -39,7 +39,7 @@ and provides a complete example.
 Pythonistas should review the API provided by :doc:`pygcam.xmlEditor` and
 the many XML-accessible functions available therein.
 
-The :ref:`setup <setup-label>` sub-command provides options to allow you
+The :ref:`setup <setup>` sub-command provides options to allow you
 to specify either the Python or XML approach. Determination of the file
 to use follows this sequence:
 
@@ -116,11 +116,11 @@ which GCAM is run is referred to as a `sandbox`. The directory whose contents ar
 copied and/or symlinked to create the sandbox is referred to as a `workspace`.
 
 To ensure that sets of related runs use the same reference workspace, the
-:ref:`setup <setup-label>` sub-command copies and/or symlinks files from the reference
+:ref:`setup <setup>` sub-command copies and/or symlinks files from the reference
 workspace (identified by config variable ``GCAM.RefWorkspace``) to a directory
 called ``Workspace`` in the sandbox directory. This directory is created only when
 it doesn't exist already, however you can force the directory to be recreated either
-by deleting it manually or via the :ref:`sandbox <sandbox-label>` sub-command.
+by deleting it manually or via the :ref:`sandbox <sandbox>` sub-command.
 
 Depending on your project workflow (and on Windows, level of administrative privileges)
 you can choose to copy or symlink files and directories back to their source. This applies

@@ -15,10 +15,10 @@ _logger = getLogger(__name__)
 def driver(args, tool):
     import os
     import subprocess
-    from ..utils import XMLFile
     from ..config import getParam
-    from ..utils import mkdirs, pathjoin
     from ..error import FileFormatError
+    from ..utils import mkdirs, pathjoin
+    from ..XMLFile import XMLFile
 
     xmlStarlet = getParam('GCAM.XmlStarlet')
 

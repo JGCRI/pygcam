@@ -142,7 +142,11 @@ class RunSimCommand(McsSubcommandABC):
         parser.add_argument('-r', '--redo', dest='statuses', type=str, action=ParseCommaList,
                             help='''Re-launch all trials for the given simId with the status 
                             specified. Argument can be comma-delimited list of status names. When 
-                            used with -R, trial numbers are listed but trials are not run.''')
+                            used with -R, trial numbers are listed but trials are not run.
+                            Recognized values are {new, queued, running, failed, killed, aborted, 
+                            alarmed, gcamerror, unsolved, missing}.
+                            "Missing" is a pseudo-value interpreted to find all runs that have
+                            not been executed, i.e., runs not appearing in the 'run' table.''')
 
         parser.add_argument('-R', '--redoListOnly', action='store_true', default=False,
                             help='Used with -r to only list the trials to redo, then quit.')

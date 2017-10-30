@@ -7,13 +7,14 @@ The ``pygcam`` scripts and libraries rely on a configuration file to:
   * allow the user to set defaults for many command-line arguments to scripts, and
   * define both global default and project-specific values for all parameters
 
-The :doc:`pygcam.config` module provides access to configuration parameters. The
-configuration file and the API to access it are described below.
+The configuration file and variables are described below.
 
 .. seealso::
-   Usage of the ``config`` sub-command is described on the
-   :ref:`gt config <config-label>` page. See :doc:`pygcam.config`
-   for documentation of the API to the configuration system.
+   Usage of the ``config`` sub-command is described on the :ref:`gt config <config>`
+   page. See :doc:`pygcam.config` for documentation of the API to the configuration system.
+
+   ``pygcam`` uses the Python :py:mod:`ConfigParser` package. See the documentation
+   there for more details.
 
 
 Configuration file sections
@@ -39,7 +40,7 @@ say, "paper1", I would create the section ``[paper1]``. Following this, I would 
 variables particular to this project, e.g., where the to find the files defining scenarios,
 queries, and so on.
 
-Note that the :ref:`new <new-label>` sub-command will set up the structure for a new
+Note that the :ref:`new <new>` sub-command will set up the structure for a new
 project and (optionally) add a section to the user's config file for the named project.
 
 
@@ -89,7 +90,7 @@ the project-specific values override any values set in ``[DEFAULT]`` sections.
 
 For example, consider the following values in ``$HOME/.pygcam.cfg``:
 
-  .. code-block:: cfg
+.. code-block:: cfg
 
      [DEFAULT]
      GCAM.Root = %(Home)s/GCAM
@@ -119,20 +120,20 @@ value shown in the table below. Set this value in the configuration file to invo
 your preferred editor. For example, if you prefer the ``emacs`` editor, you can add
 this line to ``~/.pygcam.cfg``:
 
-  .. code-block:: cfg
+.. code-block:: cfg
 
      GCAM.TextEditor = emacs
 
 If the editor command is not found on your execution ``PATH``, you can specify the
 full pathname, e.g.,
 
-  .. code-block:: cfg
+.. code-block:: cfg
 
      GCAM.TextEditor = C:/Program Files/Notepad++/notepad++.exe
 
 Invoking the command:
 
-  .. code-block:: bash
+.. code-block:: sh
 
      gt config -e
 
@@ -144,19 +145,31 @@ Referencing configuration variables
 A powerful feature of the configuration system is that variables can be defined in
 terms of other variables. The syntax for referencing the value of a variable is to
 precede the variable name with ``%(`` and follow it with ``)s``. This to reference
-variable ``GCAM.QueryDir``, you would write ``%(GCAM.QueryDir)s``. Note that variable
-names are case-sensitive.
+variable ``GCAM.QueryDir``, you would write ``%(GCAM.QueryDir)s``.
 
-Note that variable values are substituted when a variable's value is requested, not
+Variable values are substituted when a variable's value is requested, not
 when the configuration file is read. The difference is that if variable ``A`` is
 defined in terms of variable ``B``, (e.g., ``A = %(B)s/something/else``), you can
 subsequently change ``B`` and the value of ``A`` will reflect this when ``A`` is
 accessed by ``pygcam``.
 
+All known variables are given default values in the pygcam system files. Users
+can create variables in any of the user controlled config files, if desired.
+
+Environment variables
+~~~~~~~~~~~~~~~~~~~~~~~
+All defined environmental variables are loaded into the config parameter space before
+reading any configuration files, and are accessible with a prefix of ``$``, as in a
+UNIX shell. For example, to reference the environment variable ``SCRATCH``, you can
+use ``%($SCRATCH)s``.
+
 .. note::
 
    When de-referencing a variable in the config file, you must include the
    trailing 's' after the closing parenthesis, or a Python exception will be raised.
+
+   Also note that variable names are case-sensitive.
+
 
 Validating configuration settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -197,7 +210,7 @@ that all required and optional variables are set to reasonable values. You can
 do a basic (not foolproof) check that the required files and directories exist
 using the command:
 
-  .. code-block:: bash
+.. code-block:: sh
 
      gt config -t
 
@@ -207,7 +220,7 @@ You can also specify a project to check that project's variables. For example,
 I can test the values set for project ``paper1`` with the following command,
 shown with command output:
 
-  .. code-block:: bash
+.. code-block:: sh
 
      $ gt +P paper1 config -t
 
@@ -243,7 +256,7 @@ The variable ``GCAM.MI.Dir`` should point to a directory holding the ModelInterf
 program. This is used to execute batch queries to extract results from GCAM.
 
 
-Default configuration variable dependencies
+Default configuration variables and values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The system default values are provided in the ``pygcam`` package in the file
 ``pygcam/etc/system.cfg``, which is listed below. In addition to these values,
@@ -273,3 +286,58 @@ The system defaults file
 ~~~~~~~~~~~~~~~~~~~~~~~~
 .. literalinclude:: ../../pygcam/etc/system.cfg
    :language: cfg
+
+
+.. _logging:
+
+Configuring the logging system
+-------------------------------
+
+Setting logging verbosity
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+When the :doc:`gcamtool` runs, or when pygcam functions are called from your
+own code, diagnostic and informational messages are printed. You can control
+the level of output by setting the ``GCAM.LogLevel`` in your ``.pygcam.cfg``
+file. (See :py:mod:`logging` for further details.)
+
+The simplest setting is just one of the following values, in order of
+decreasing verbosity: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``FATAL``.
+This will apply to all pygcam modules.
+
+You can also specify verbosity by module, by specifying a module name and the
+level for that module as a comma-separated list of "module:level" strings,
+e.g.,:
+
+.. code-block:: cfg
+
+     GCAM.LogLevel = WARN, .utils:INFO, .scenarioSetup:DEBUG, CI_plugin:INFO, \
+       .mcs.worker:DEBUG,, myProj.writeFuncs:DEBUG
+
+In this example, the default level is set to ``WARN``, and three pygcam modules
+have their levels set: pygcam.utils is set to INFO, pygcam.scenarioSetup is set
+to DEBUG, and pygcam.mcs.worker is set to DEBUG. A user's plugin can also use
+the logging system. This example sets logging levels for the user's
+``CI_Plugin`` and ``myProj.writeFuncs`` modules.
+
+Console / file logs and message formatting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note that the module name is shown in the console log messages. Setting
+``GCAM.LogLevel`` to DEBUG produces the maximum number of log messages;
+setting it to FATAL minimizes message verbocity.
+
+Other relevant variables are shown here with their default values:
+
+.. code-block:: cfg
+
+    # If set, application logger messages are written here. Note that
+    # this is different than the GCAM.BatchLogFile for batch job output.
+    GCAM.LogFile = %(GCAM.SandboxRoot)s/log/gt.log
+
+    # Show log messages on the console (terminal)
+    GCAM.LogConsole = True
+
+    # Format strings for log files and console messages. Note doubled
+    # '%%' required here around logging parameters to avoid attempted
+    # variable substitution within the config system.
+    GCAM.LogFileFormat    = %%(asctime)s %%(levelname)s %%(name)s:%%(lineno)d %%(message)s
+    GCAM.LogConsoleFormat = %%(levelname)s %%(name)s: %%(message)s

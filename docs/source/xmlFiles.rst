@@ -31,3 +31,5 @@ from those read by the GCAM model itself. These include:
     (i.e., removed from economic consideration in the model), and at what percentages in each
     region.
 
+Most of these files allow a custom meta-language I call :doc:`conditional-xml`, which allows
+portions of the XML file to be selected based on the values of configuration variables.

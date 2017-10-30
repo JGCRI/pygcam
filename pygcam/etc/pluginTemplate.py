@@ -1,13 +1,7 @@
-'''
-.. Copyright (c) 2016 Richard Plevin
-   See the https://opensource.org/licenses/MIT for license details.
-'''
 from pygcam.subcommand import SubcommandABC
 from pygcam.log import getLogger
 
 _logger = getLogger(__name__)
-
-__version__ = "0.0"
 
 class MyNewCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -18,14 +12,14 @@ class MyNewCommand(SubcommandABC):
         super(MyNewCommand, self).__init__('subCmdName', subparsers, kwargs)
 
     def addArgs(self):
-        '''Process command-line arguments for this sub-command'''
-
+        '''
+        Process the command-line arguments for this sub-command
+        '''
         parser = self.parser
 
         parser.add_argument('-n', '--number', type=int, default=0,
-                            help='''A number to demonstrate a command line arg''')
-
-        parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
+                            help='''A number to demonstrate a command line arg.
+                            Replace as needed with your own plugin's args.''')
 
         return parser
 

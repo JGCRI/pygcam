@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!-- Derived using MOSO Xmplify 1.7.6 by Richard Plevin on 2016-02-04 22:54:01 +0000 -->
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
-
+	
+    <xs:include schemaLocation="comment.xsd"/>
+	
 	<xs:simpleType name="landClassType">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="UnmanagedPasture"/>
@@ -15,14 +17,6 @@
     <xs:element name='region' type='xs:string'/>
 
     <xs:element name='landClass' type='landClassType'/>
-
-    <xs:element name='comment'>
-        <xs:complexType>
-            <xs:sequence>
-                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
 
     <xs:element name='landProtection'>
         <xs:complexType>

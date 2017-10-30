@@ -39,46 +39,11 @@ on the ``gt`` command-line, or implicitly when all steps are run. They are
 also loaded when the help (``--help`` or ``-h``) options are specified, so
 that the plugins appear in the generated documentation.
 
-The following template can be used to create new sub-commands. (See also
-``pygcam.pluginTemplate.py``, which contains the code shown here.)
+The following template can be used to create new sub-commands. See also
+``pygcam/etc/pluginTemplate.py``, which contains the code shown here.
 
-  .. code-block:: python
-
-     from pygcam.subcommand import SubcommandABC
-     from pygcam.log import getLogger
-
-     _logger = getLogger(__name__)
-     VERSION = "0.0"
-
-     class MyNewCommand(SubcommandABC):
-         def __init__(self, subparsers):
-             kwargs = {'help' : '''Short help text for main driver'''}
-
-             # The first argument is the name of the new sub-command
-             super(MyNewCommand, self).__init__('subCmdName', subparsers, kwargs)
-
-         def addArgs(self):
-            '''Process command-line arguments for this sub-command'''
-             parser = self.parser
-
-             parser.add_argument('-n', '--number', type=int, default=0,
-                                 help='''A number to demonstrate a command line arg''')
-
-             parser.add_argument('-V', '--version', action='version',
-                                 version='%(prog)s ' + VERSION)
-
-             # return the parser to facilitate automatic documentation generation
-             return parser
-
-         def run(self, args, tool):
-             # Implement the sub-command here. "args" is an argparse.Namespace instance
-             # holding the parsed command-line arguments, and "tool" is a reference to
-             # the running GcamTool instance.
-             pass
-
-      # An alternative to naming the class 'Plugin' is to assign the class to PluginClass
-      PluginClass = MyNewCommand
-
+.. literalinclude:: ../../pygcam/etc/pluginTemplate.py
+   :language: python
 
 API
 ---
