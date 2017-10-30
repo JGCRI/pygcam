@@ -17,7 +17,7 @@ import tarfile
 
 PlatformName = platform.system()
 isWindows = (PlatformName == 'Windows')
-isDarwin  = (PlatformName == 'Darwin')
+isMacOS   = (PlatformName == 'Darwin')
 isLinux   = (PlatformName == 'Linux')
 
 
@@ -26,7 +26,7 @@ DefaultInstallDir  = os.path.join(Home, 'gcam-v4.3-install-dir')
 DefaultDownloadDir = os.path.join(Home, '.gcam-installation-tmp')
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description='''Install GCAM on OS X or Linux''')
+    parser = argparse.ArgumentParser(description='''Install GCAM on Windows, macOS, or Linux''')
 
     parser.add_argument('-d', '--downloadDir', default=DefaultDownloadDir,
                         help='''The directory into which to download the required tar files. Default is %s''' % DefaultDownloadDir)
@@ -163,8 +163,8 @@ def main():
     untar(os.path.join(downloadDir, coreTarFile), installDir, printOnly=printOnly)
     untar(os.path.join(downloadDir, dataTarFile), coreDir,    printOnly=printOnly)
 
-    if isDarwin or isWindows:
-        binTarFile = '%s_binaries.tar.gz' % ('mac' if isDarwin else 'windows')
+    if isMacOS or isWindows:
+        binTarFile = '%s_binaries.tar.gz' % ('mac' if isMacOS else 'windows')
         binURL = downloadPrefix + binTarFile
 
         if not args.reuseTarFiles:
@@ -173,7 +173,7 @@ def main():
         untar(os.path.join(downloadDir, binTarFile), coreDir, printOnly=printOnly)
         tarFiles.append(binTarFile)
 
-        if isDarwin:
+        if isMacOS:
             fixMacJava(coreDir, printOnly=printOnly)
 
     if printOnly:

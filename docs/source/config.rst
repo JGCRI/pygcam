@@ -7,13 +7,14 @@ The ``pygcam`` scripts and libraries rely on a configuration file to:
   * allow the user to set defaults for many command-line arguments to scripts, and
   * define both global default and project-specific values for all parameters
 
-The :doc:`pygcam.config` module provides access to configuration parameters. The
-configuration file and the API to access it are described below.
+The configuration file and variables are described below.
 
 .. seealso::
-   Usage of the ``config`` sub-command is described on the
-   :ref:`gt config <config>` page. See :doc:`pygcam.config`
-   for documentation of the API to the configuration system.
+   Usage of the ``config`` sub-command is described on the :ref:`gt config <config>`
+   page. See :doc:`pygcam.config` for documentation of the API to the configuration system.
+
+   ``pygcam`` uses the Python :py:mod:`ConfigParser` package. See the documentation
+   there for more details.
 
 
 Configuration file sections
@@ -155,18 +156,20 @@ accessed by ``pygcam``.
 All known variables are given default values in the pygcam system files. Users
 can create variables in any of the user controlled config files, if desired.
 
+Environment variables
+~~~~~~~~~~~~~~~~~~~~~~~
 All defined environmental variables are loaded into the config parameter space before
-reading any configuration files, and are accessible with a prefix of '$', as in a
-UNIX shell. For example, to reference the environment variable ``SCRATCH`, you can
+reading any configuration files, and are accessible with a prefix of ``$``, as in a
+UNIX shell. For example, to reference the environment variable ``SCRATCH``, you can
 use ``%($SCRATCH)s``.
-
-Note that variable names are case-sensitive.
-
 
 .. note::
 
    When de-referencing a variable in the config file, you must include the
    trailing 's' after the closing parenthesis, or a Python exception will be raised.
+
+   Also note that variable names are case-sensitive.
+
 
 Validating configuration settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

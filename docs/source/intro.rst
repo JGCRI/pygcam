@@ -18,8 +18,9 @@ The main components include:
 
   ..
 
-  * **Command-line tools** built upon the library described above to package commonly required functionality into a convenient
-    form for direct use and to support development of higher-level, custom scripts. (See :doc:`gcamtool` for details.)
+  * **Command-line tools** built upon the library described above to package commonly required functionality
+    into a convenient form for direct use and to support development of higher-level, custom scripts.
+    (See :doc:`gcamtool` for details.)
 
   ..
 
@@ -27,11 +28,11 @@ The main components include:
     uncertainty in model outputs resulting from uncertainty in model inputs, and to characterize the contribution of
     individual parameters to variance in output metrics.
 
-  .. **Graphical User Interfaces** that simplify use of the libraries and tools as well
-     as providing unique capabilities such as graphical exploration and comparison of sets of
-     Monte Carlo simulation results.
+  ..
 
-  * **User documentation** for all of the above. (This website!)
+  * **Graphical User Interfaces** that simplify use of the libraries and tools as well
+    as providing unique capabilities such as graphical exploration and comparison of sets of
+    Monte Carlo simulation results.
 
   ..
 
@@ -40,6 +41,10 @@ The main components include:
   ..
 
   * **Installer scripts** to simplify installation of tools on users’ computers.
+
+  ..
+
+  * **User documentation** for all of the above. (This website!)
 
 Users can control many aspects of ``pygcam`` through a :doc:`configuration file <config>`
 found in ``${HOME}/.pygcam.cfg``. When :doc:`gcamtool` is run the first time, a

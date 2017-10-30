@@ -16,66 +16,70 @@ regular expression to match a portion of any config variable name. It's
 case-insensitive by default. So you can find out where the sandbox dir is
 by running
 
- .. code-block:: bash
+.. code-block:: bash
 
-    $ gt run config sand
+   $ gt config sand
 
-    [ctax]
-    GCAM.SandboxDir = /Users/rjp/ws/paper1/
-    GCAM.SandboxFilesToLink = input libs exe/gcam.exe
-    GCAM.SandboxProjectDir = /Users/rjp/ws/paper1
-    GCAM.SandboxRefWorkspace = /Users/rjp/ws/paper1/Workspace
-    GCAM.SandboxRoot = /Users/rjp/ws
+   [ctax]
+   GCAM.SandboxDir = /Users/rjp/ws/paper1/
+   GCAM.SandboxFilesToLink = input libs exe/gcam.exe
+   GCAM.SandboxProjectDir = /Users/rjp/ws/paper1
+   GCAM.SandboxRefWorkspace = /Users/rjp/ws/paper1/Workspace
+   GCAM.SandboxRoot = /Users/rjp/ws
 
 We could be more specific and get just the one result:
 
- .. code-block:: bash
+.. code-block:: bash
 
-    $ gt run config sandboxdir
+   $ gt config sandboxdir
 
-    [ctax]
-              GCAM.SandboxDir = /Users/rjp/ws/paper1/
+   [ctax]
+          GCAM.SandboxDir = /Users/rjp/ws/paper1/
 
 Finally, if we want to use the result in a script or in command, we can
 get a "clean" copy of the value by using the ``-x`` flag. In this case,
 the value is used verbatim, and it is case-sensitive. Here we use the
 value directly in an ``cd`` command.
 
- .. code-block:: bash
+::
 
-    $ cd `gt config GCAM.SandboxDir -x`
-    $ ls -l
-    total 0
-    drwxrwx---  5 rjp  staff  272 Sep 25 15:37 Workspace/
-    drwxrwx---  5 rjp  staff  306 Sep 25 15:47 base-0/
+   $ gt config GCAM.SandboxDir -x
+   /Users/rjp/ws/paper1/
 
-    $ cd base-0
-    $ ls -l
-    total 32
-    lrwxrwxr-x  1 rjp  staff   36 Sep 25 15:37 dyn-xml@ -> /Users/rjp/ws/ctax/Workspace/dyn-xml
-    drwxrwx---  3 rjp  staff  272 Sep 25 15:56 exe/
-    lrwxrwxr-x  1 rjp  staff   34 Sep 25 15:37 input@ -> /Users/rjp/ws/ctax/Workspace/input
-    lrwxrwxr-x  1 rjp  staff   33 Sep 25 15:37 libs@ -> /Users/rjp/ws/ctax/Workspace/libs
-    lrwxrwxr-x  1 rjp  staff   38 Sep 25 15:37 local-xml@ -> /Users/rjp/ws/ctax/Workspace/local-xml
-    drwxrwx---  3 rjp  staff  408 Sep 25 15:58 output/
-    drwxrwx---  4 rjp  staff  306 Sep 25 15:58 queryResults/
+   # The backquotes evaluate the command and return its output:
+   $ cd `gt config GCAM.SandboxDir -x`
+   $ ls -l
+   total 0
+   drwxrwx---  5 rjp  staff  272 Sep 25 15:37 Workspace/
+   drwxrwx---  5 rjp  staff  306 Sep 25 15:47 base-0/
+
+   $ cd base-0
+   $ ls -l
+   total 32
+   lrwxrwxr-x  1 rjp  staff   36 Sep 25 15:37 dyn-xml@ -> /Users/rjp/ws/ctax/Workspace/dyn-xml
+   drwxrwx---  3 rjp  staff  272 Sep 25 15:56 exe/
+   lrwxrwxr-x  1 rjp  staff   34 Sep 25 15:37 input@ -> /Users/rjp/ws/ctax/Workspace/input
+   lrwxrwxr-x  1 rjp  staff   33 Sep 25 15:37 libs@ -> /Users/rjp/ws/ctax/Workspace/libs
+   lrwxrwxr-x  1 rjp  staff   38 Sep 25 15:37 local-xml@ -> /Users/rjp/ws/ctax/Workspace/local-xml
+   drwxrwx---  3 rjp  staff  408 Sep 25 15:58 output/
+   drwxrwx---  4 rjp  staff  306 Sep 25 15:58 queryResults/
 
 The CSV files are in the ``queryResults`` directory, and generated plots are in the ``figures``
 directory within. The ``queries`` directory holds the queries that were extracted from the
 ``Main_queries.xml`` file to run them in ModelInterface in batch model.
 
- .. code-block:: bash
+::
 
-    $ cd queryResults/
-    $ ls -lR
-    total 160
-    -rw-rw-r--  1 rjp  staff    447 Sep 25 15:58 Climate_forcing-base-0.csv
-    -rw-rw-r--  1 rjp  staff    468 Sep 25 15:58 Global_mean_temperature-base-0.csv
-    -rw-rw-r--  1 rjp  staff  20849 Sep 25 15:58 Land_Allocation-base-0.csv
-    -rw-rw-r--  1 rjp  staff  38000 Sep 25 15:58 Refined-liquids-production-by-technology-base-0.csv
-    drwxr-xr-x  2 rjp  staff    102 Sep 25 15:58 figures/
-    -rw-rw-r--  1 rjp  staff   7389 Sep 25 15:58 mi.log
-    drwxrwx---  2 rjp  staff    238 Sep 25 15:47 queries/
+   $ cd queryResults/
+   $ ls -lR
+   total 160
+   -rw-rw-r--  1 rjp  staff    447 Sep 25 15:58 Climate_forcing-base-0.csv
+   -rw-rw-r--  1 rjp  staff    468 Sep 25 15:58 Global_mean_temperature-base-0.csv
+   -rw-rw-r--  1 rjp  staff  20849 Sep 25 15:58 Land_Allocation-base-0.csv
+   -rw-rw-r--  1 rjp  staff  38000 Sep 25 15:58 Refined-liquids-production-by-technology-base-0.csv
+   drwxr-xr-x  2 rjp  staff    102 Sep 25 15:58 figures/
+   -rw-rw-r--  1 rjp  staff   7389 Sep 25 15:58 mi.log
+   drwxrwx---  2 rjp  staff    238 Sep 25 15:47 queries/
 
     ./figures:
     total 80
@@ -91,7 +95,7 @@ directory within. The ``queries`` directory holds the queries that were extracte
 
 Here's the generated figure:
 
-  .. image:: images/Refined-liquids-production-by-technology-base-0.png
+.. image:: images/Refined-liquids-production-by-technology-base-0.png
 
 3.2 Run policy cases for default scenario group
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,13 +105,13 @@ we can use the ``-K`` flag to skip scenarios. Since we
 already ran ``base-0``, we'll skip it and run all the
 policy scenarios.
 
- .. code-block:: bash
+::
 
     $ gt run -K base-0
 
 Or, if we prefer, we can run just one policy scenario:
 
- .. code-block:: bash
+::
 
     $ gt run -S tax-10-0
 
@@ -118,7 +122,7 @@ compute and plot differences from the baseline. The ``queryResults``
 directory looks similar to that for the baseline scenario, but there
 is now also a ``diffs`` directory:
 
- .. code-block:: bash
+::
 
     $ cd ../../tax-10-0/
     $ ls
@@ -158,27 +162,27 @@ queries as produced by GCAM.
 Here are the generated figures for the differences from the baseline:
 
 
-  .. image:: images/Refined-liquids-production-by-technology-base-0.png
+.. image:: images/Refined-liquids-production-by-technology-base-0.png
 
 ---------
 
-  .. image:: images/Climate_forcing-tax-10-0-base-0.png
+.. image:: images/Climate_forcing-tax-10-0-base-0.png
 
 ---------
 
-  .. image:: images/Global_mean_temperature-tax-10-0-base-0.png
+.. image:: images/Global_mean_temperature-tax-10-0-base-0.png
 
 ---------
 
-  .. image:: images/Land_Allocation-tax-10-0-base-0-by-region-2050.png
+.. image:: images/Land_Allocation-tax-10-0-base-0-by-region-2050.png
 
 ---------
 
-  .. image:: images/Refined-liquids-production-by-technology-tax-10-0-base-0-USA.png
+.. image:: images/Refined-liquids-production-by-technology-tax-10-0-base-0-USA.png
 
 ---------
 
-  .. image:: images/Refined-liquids-production-by-technology-tax-10-0-base-0.png
+.. image:: images/Refined-liquids-production-by-technology-tax-10-0-base-0.png
 
 ---------
 
@@ -203,11 +207,11 @@ project directory for the ``ctax`` project. Observe the following:
     two areas. Line 58 defines a variable called ``scenPlotArgs``, which holds
     arguments common to all scenario plots, for convenience. The arguments there are:
 
-    .. code-block:: bash
+::
 
-       -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box
+    -D {batchDir} --outputDir figures --years {years} --label --labelColor black --box
 
-
+Where:
     - ``-D {batchDir}`` indicates the directory in which files are found. The value
       ``{batchDir}`` is filled in at run-time, since it differs for each scenario.
     - ``--outputDir figures`` indicates that plots should be written in the directory
@@ -247,9 +251,9 @@ computers, and may work on Linux depending how your window system is configured.
 navigate in a file browser to the directory ``ctax/base-0/queryResults/figures`` in the
 run-time directory for the project, which you can recover by running:
 
- .. code-block:: bash
+::
 
-    gt config sandboxroot
+    $ gt config sandboxroot
 
 We'll also change the number of columns in the legend by changing ``-n 3`` on line 62 to ``-n 4``,
 and remove the interpolated annual values to plot only the 5-year time-steps. Just remove ``-i``
@@ -257,13 +261,13 @@ on line 62.
 
 To see the modified plot, rerun the "plot" step for the ``base-0`` scenario:
 
- .. code-block:: bash
+::
 
-    gt run -s plot -S base-0
+    $ gt run -s plot -S base-0
 
 It should look like this:
 
- .. image:: images/Refined-liquids-production-by-technology-base-0-mod.png
+.. image:: images/Refined-liquids-production-by-technology-base-0-mod.png
 
 
 Finally, let's present the information as an "unstacked" barchart format,
@@ -272,7 +276,7 @@ to the generated filename that distinguishes it from the original figure,
 and also generates PDF rather than PNG format. To do this, add this line
 after line 62 (note that the line is split here for legibility):
 
- .. code-block:: bash
+::
 
     <text>Refined-liquids-production-by-technology-{scenario}.csv -x unstacked.pdf \
     -u technology -U China -Y EJ -T 'Refined liquid fuels production' -n 3</text>
@@ -289,11 +293,11 @@ The new arguments are these:
 
 The result should look like this:
 
- .. image:: images/Refined-liquids-production-by-technology-base-0-unstacked.png
+.. image:: images/Refined-liquids-production-by-technology-base-0-unstacked.png
 
 
- .. note:: Run the command ``gt chart -h`` to list the options available
-    to affect plot generation.
+.. note:: Run the command ``gt chart -h`` to list the options available
+   to affect plot generation.
 
 3.5 Run second scenario group
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -301,7 +305,7 @@ We would like to run the other scenario group, but
 we've forgotten its name. We use the ``-G`` flag to
 list scenario groups:
 
- .. code-block:: bash
+::
 
     $ gt run -G
     Scenario groups:
@@ -311,18 +315,18 @@ list scenario groups:
 Before running the commands, let's examine the steps that would run, using
 the ``-n`` flag:
 
- .. code-block:: bash
+::
 
-    $ gt run -g protect-90 -n
+   $ gt run -g protect-90 -n
 
 This results in a fairly long list of commands which don't display nicely here
 so we won't attempt to show them.
 
 Now we run all steps of all scenarios in group ``protect-90`` with this command:
 
- .. code-block:: bash
+::
 
-    $ gt run -g protect-90
+   $ gt run -g protect-90
 
 
 3.6 Run an entire project
@@ -331,7 +335,7 @@ We have been running scenarios and scenario groups individually
 until now, but we can also run the entire project with a single short
 command:
 
- .. code-block:: bash
+::
 
     $ gt run -a
 
@@ -343,7 +347,7 @@ scenario group would be run.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 We can batch the job on SLURM by adding a single command-line option.
 
- .. code-block:: bash
+::
 
     $ gt +b run
 
@@ -354,7 +358,7 @@ The ``+B`` flag displays what would occur if we ran in batch mode. The command
 (minus the batch-related arguments) is written as a script to a temporary file,
 which is then queued using the ``sbatch`` command. The script deletes itself.
 
- .. code-block:: bash
+::
 
     $ gt +b +m 60 +j job1 +B run
 
@@ -381,30 +385,31 @@ defined by ``pygcam`` begin with ``GCAM.``, so if you create your own variables 
 to define values used in defining other variables) you should avoid confusion by avoiding
 this prefix. You can use any prefix desired, or none at all.
 
- .. code-block:: cfg
+.. code-block:: cfg
 
-    [DEFAULT]
-    GCAM.DefaultProject = ctax
-    GCAM.Version        = 4.3
+   [DEFAULT]
+   GCAM.DefaultProject = ctax
+   GCAM.Version        = 4.3
 
-    GCAM.ProjectRoot    = %(Home)s/GCAM/projects
-    GCAM.SandboxRoot    = %(Home)s/GCAM/sandboxes
+   GCAM.ProjectRoot    = %(Home)s/GCAM/projects
+   GCAM.SandboxRoot    = %(Home)s/GCAM/sandboxes
 
-    GCAM.LogLevel       = INFO
-    GCAM.MI.LogFile     = %(Home)s/tmp/mi.log
-    GCAM.MI.Dir         = /pic/projects/GCAM/ModelInterface
+   GCAM.LogLevel       = INFO
+   GCAM.MI.LogFile     = %(Home)s/tmp/mi.log
+   GCAM.MI.Dir         = /pic/projects/GCAM/ModelInterface
 
-    GCAM.OtherBatchArgs = -A my_account
+   GCAM.OtherBatchArgs = -A my_account
 
-    GCAM.TextEditor     = open -a emacs
+   # 'gt config -e' will run this command on .pygcam.cfg
+   GCAM.TextEditor     = open -a emacs
 
-    # Setup config files to not write extraneous files, so of which are very large
-    GCAM.WriteDebugFile     = False
-    GCAM.WritePrices        = False
-    GCAM.WriteXmlOutputFile = False
-    GCAM.WriteOutputCsv     = False
+   # Generate config files that do not write files we don't need
+   GCAM.WriteDebugFile     = False
+   GCAM.WritePrices        = False
+   GCAM.WriteXmlOutputFile = False
+   GCAM.WriteOutputCsv     = False
 
-    [ctax]
-    GCAM.RewriteSetsFile	= %(GCAM.ProjectDir)s/etc/rewriteSets.xml
-    GCAM.ScenarioSetupFile	= %(GCAM.ProjectDir)s/etc/scenarios.xml
-    GCAM.LogLevel           = DEBUG
+   [ctax]
+   GCAM.RewriteSetsFile	   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
+   GCAM.ScenarioSetupFile  = %(GCAM.ProjectDir)s/etc/scenarios.xml
+   GCAM.LogLevel           = DEBUG

@@ -233,9 +233,9 @@ class SimpleVariable(object):
     Instances = {}
 
     def __init__(self, name, value, evaluate=False):
-        self.name      = name
-        self.value     = value
-        self.eval      = evaluate
+        self.name  = name
+        self.value = value or ''
+        self.eval  = evaluate
         self.Instances[name] = self
 
     def getValue(self):
@@ -292,7 +292,6 @@ class Variable(SimpleVariable):
         # optional arg lets us call it recursively
         value = value or self.getValue()
 
-        # result = value.format(**argDict) if value and self.eval else value
         result = simpleFormat(value, argDict) if value and self.eval else value
 
         # recurse in case there are vars whose values are variable references
@@ -303,8 +302,7 @@ class Project(XMLFile):
     Represents the ``<project>`` element in the projects.xml file.
     """
     def __init__(self, xmlFile, projectName, groupName=None):
-        super(Project, self).__init__(xmlFile, schemaPath='etc/project-schema.xsd',
-                                      conditionalXML=True)
+        super(Project, self).__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
         self.projectName = projectName
         self.scenarioGroupName = groupName
 

@@ -303,7 +303,7 @@ run using the ``-n`` flag:
       tax-15
       tax-20
       tax-25
-    rjp@bebop:~/GCAM/current/input/policy $ gt +P tutorial run -n
+    $ gt +P tutorial run -n
     2016-10-04 12:11:22,926 INFO [base, 1, step1] echo "step 1 (baseline)"
     2016-10-04 12:11:22,927 INFO [base, 2, step2] echo "step 2 (baseline)"
     2016-10-04 12:11:22,927 INFO [base, 5, step5] echo "step 5 (all)"

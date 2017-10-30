@@ -7,22 +7,22 @@ by the pygcam library. Project-specific features can be added via
 :ref:`plugins <plugins-label>`.
 
 
-  .. note::
-     Quick links to sub-commands:
-     :ref:`chart <chart>`,
-     :ref:`config <config>`,
-     :ref:`diff <diff>`,
-     :ref:`gcam <gcam>`,
-     :ref:`gui <gui>`,
-     :ref:`init <init>`,
-     :ref:`mcs <mcs>`,
-     :ref:`mi <mi>`,
-     :ref:`new <new>`,
-     :ref:`protect <protect>`,
-     :ref:`query <query>`,
-     :ref:`run <run>`,
-     :ref:`setup <setup>`,
-     :ref:`sandbox <sandbox>`
+.. note::
+   Quick links to sub-commands:
+   :ref:`chart <chart>`,
+   :ref:`config <config>`,
+   :ref:`diff <diff>`,
+   :ref:`gcam <gcam>`,
+   :ref:`gui <gui>`,
+   :ref:`init <init>`,
+   :ref:`mcs <mcs>`,
+   :ref:`mi <mi>`,
+   :ref:`new <new>`,
+   :ref:`protect <protect>`,
+   :ref:`query <query>`,
+   :ref:`run <run>`,
+   :ref:`setup <setup>`,
+   :ref:`sandbox <sandbox>`
 
 The sub-commands support all the major workflow setups, including
 
@@ -55,7 +55,7 @@ or more scenarios. The ``run`` sub-command supports direct invocation of other
 workflow steps as well as running arbitrary programs of the user's choosing.
 
 Finally, gt allows all project steps to be run on a compute node in a
-High-Performance Computing environment by specifying '-b' or '--batch'' on the
+High-Performance Computing environment by specifying ``+b`` or ``--batch`` on the
 command-line. (Note that this is not available on Mac OS X or Windows.)
 
 For example, the command:
@@ -77,14 +77,14 @@ Command-line usage is described below. Note that some command-line
 (e.g., batch-related) options must precede the sub-command, whereas
 sub-command specific options must follow it.
 
-  .. note::
+.. note::
 
-    Note that arguments that pertain regardless of the sub-command
-    (e.g., ``+P`` to identify the project name) are specified *prior to*
-    the sub-command, and use ``+`` rather than ``-``. This is to avoid
-    conflicts between these "main" arguments and sub-command arguments.
-    (An exception is ``gt -h``, which retains the ``-``.) Long-form
-    argument names use two hyphens, as in ``--projectName``.)
+  Note that arguments that pertain regardless of the sub-command
+  (e.g., ``+P`` to identify the project name) are specified *prior to*
+  the sub-command, and use ``+`` rather than ``-``. This is to avoid
+  conflicts between these "main" arguments and sub-command arguments.
+  (An exception is ``gt -h``, which retains the ``-``.) Long-form
+  argument names use two hyphens, as in ``--projectName``.)
 
 Usage
 -----
@@ -168,7 +168,7 @@ Usage
       over all years (with optional interpolation of annual values), by the given 'indexCol'
       (default is 'region'), and (ii) stacked bar plots by year for some data column, where the data
       are grouped by and summed across elements with the indicated 'indexCol'. The first option is
-      indicated by using the '-S' ('--sumYears') option. Numerous options allow the appearance to
+      indicated by using the ``-S`` (``--sumYears``) option. Numerous options allow the appearance to
       be customized.
 
       You can perform on-the-fly unit conversions using the ``-m`` / ``--multiplier`` or

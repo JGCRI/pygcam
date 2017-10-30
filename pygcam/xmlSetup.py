@@ -100,7 +100,7 @@ class ScenarioSetup(object):
             _logger.debug('Found scenario file "%s" in cache', filename)
             return cls.documentCache[filename]
 
-        xmlFile = XMLFile(filename, schemaPath='etc/scenarios-schema.xsd')
+        xmlFile = XMLFile(filename, schemaPath='etc/scenarios-schema.xsd', conditionalXML=True)
         obj = cls(xmlFile.getRoot())
 
         cls.documentCache[filename] = obj      # cache it

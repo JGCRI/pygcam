@@ -8,7 +8,7 @@ There are three modes of installing and using pygcam and :doc:`gcamtool`.
     `pyinstaller <https://pythonhosted.org/PyInstaller>`_ that provides a
     stand-alone version of gcamtool and all supporting files.
     This is the simplest approach to gaining access to the :doc:`gcamtool` command:
-    it requires only downloading the zip file, unzipping it, and setting your PATH
+    it requires only downloading the zip file, unzipping it, and setting your ``PATH``
     environment variable to the location of the unzipped directory.
 
   - :ref:`Option 2 <option2>` creates a new virtual environment for pygcam based on an
@@ -19,7 +19,8 @@ There are three modes of installing and using pygcam and :doc:`gcamtool`.
   - :ref:`Option 3 <option3>` installs ``pygcam`` as a standard Python package, making
     it available for use in your own Python programming efforts, while also providing
     access to gcamtool. This sometimes creates conflicts between pygcam's requirements
-    and those of other packages you may have installed.
+    and those of other packages you may have installed, and may require familiarity
+    with Python to create a working environment.
 
 .. note::
    All three options require that you install java and (of course) GCAM, as described below.
@@ -49,7 +50,33 @@ website, but some users have found these instructions confusing.
 Alternatively, you can use my
 `install-gcam.py <https://raw.githubusercontent.com/JGCRI/pygcam/master/install-gcam.py>`_ script
 which handles downloading, unpacking, and setting up GCAM (which, on the Mac, this requires setting
-a symbolic link to the java libraries, which the script handles for you.)
+a symbolic link to the java libraries, which the script handles for you.) Right click on the link
+above and save the file to your system. To see the available command-line options, run the command:
+
+.. code-block:: sh
+
+   $ python install-gcam.py -h
+
+::
+
+ usage: install-gcam.py [-h] [-d DOWNLOADDIR] [-i INSTALLDIR] [-k] [-n] [-r]
+
+ Install GCAM on Windows, macOS, or Linux
+
+ optional arguments:
+   -h, --help            show this help message and exit
+   -d DOWNLOADDIR, --downloadDir DOWNLOADDIR
+                         The directory into which to download the required tar
+                         files. Default is $HOME/.gcam-installation-tmp
+   -i INSTALLDIR, --installDir INSTALLDIR
+                         The directory into which to install GCAM 4.3. Default
+                         is $HOME/gcam-v4.3-install-dir
+   -k, --keepTarFiles    Keep the downloaded tar files rather than deleting
+                         them.
+   -n, --noRun           Print commands that would be executed, but don't run
+                         them.
+   -r, --reuseTarFiles   Use the already-downloaded tar files rather then
+                         retrieving them again. Implies -k/--keepTarFiles.
 
 The script requires Python 2.x (as does pygcam). Follow the instructions for
 :ref:`installing Anaconda <install-anaconda>` , then you can download and run the
@@ -167,15 +194,15 @@ Option 2: Install pygcam in a virtual environment
 
    * On MacOS, Linux, and when using Cygwin under Windows:
 
-      .. code-block:: sh
+     .. code-block:: sh
 
-         $ source activate pygcam
+        $ source activate pygcam
 
    * When using a standard Windows command prompt:
 
-      .. code-block:: sh
+     .. code-block:: sh
 
-         $ activate pygcam
+        $ activate pygcam
 
 See the `conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
 documentation for further details.
@@ -237,9 +264,9 @@ package) depending on how you want to use the software.
 As described above, you can simply install pygcam as a standard Python package,
 using the command:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-       $ pip install pygcam
+   $ pip install pygcam
 
 If you are interested in working with the source code (e.g., writing plugins or
 adding functionality), you should clone the code repository to create a local
@@ -248,22 +275,22 @@ script found in the top-level ``pygcam`` directory. This creates links from the
 installed package to the source code repository so changes to the source code are
 "seen" immediately without requiring reinstallation of ``pygcam``.
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     # First, change directory to where you want the pygcam folder to be "cloned"
+   # First, change directory to where you want the pygcam folder to be "cloned"
 
-     $ git clone https://github.com/JGCRI/pygcam.git
-     $ cd pygcam
-     $ python setup.py develop
+   $ git clone https://github.com/JGCRI/pygcam.git
+   $ cd pygcam
+   $ python setup.py develop
 
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
 Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, automating
 this failed on Windows, so if the commands above fail, you will have to install
 ``setuptools``. To install ``setuptools`` manually, run this command in a terminal:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     $ conda install setuptools
+   $ conda install setuptools
 
 -----------------------------------
 

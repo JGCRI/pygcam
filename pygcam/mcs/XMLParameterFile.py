@@ -1,15 +1,14 @@
 # Created on July 5, 2013
 #
-# Copyright (c) 2014. The Regents of the University of California (Regents).
+# Copyright (c) 2013-2017. The Regents of the University of California (Regents).
 # See the file COPYRIGHT.txt for details.
 
-import os
-from math import ceil
 from collections import OrderedDict, defaultdict
-
-import pandas as pd
-import numpy as np
 from lxml import etree as ET
+from math import ceil
+import numpy as np
+import os
+import pandas as pd
 
 from ..config import getParam
 from ..log import getLogger
@@ -25,7 +24,6 @@ from .XMLConfigFile import XMLConfigFile
 
 _logger = getLogger(__name__)
 
-
 # XML parameter file element tags
 INFILE_ELT_NAME      = 'InputFile'
 PARAMLIST_ELT_NAME   = 'ParameterList'
@@ -38,6 +36,7 @@ DATAFILE_ELT         = 'DataFile'
 PYTHON_FUNC_ELT      = 'PythonFunc'
 WRITE_FUNC_ELT       = 'WriteFunc'
 
+# TBD: test these
 # These attributes of a <Distribution> element are not parameters to the
 # random variable distribution itself, so we exclude these from the
 # list we pass when creating the RV.
