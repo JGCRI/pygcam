@@ -6,6 +6,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from pygcam.log import getLogger
+from pygcam.subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -26,16 +27,26 @@ class Page(object):
         self.app = app
         self.id = id
         self.layout = layout
-        self.label = label or id    # use object's ID if no label is provided
         self.pageSet = pageSet
         self.actions = actions
+
+        if not label:
+            subcmd = SubcommandABC.getInstance(self.id)
+            label = subcmd.label
+
+        self.label = label
+        self.generateCallbacks() # callbacks for generated widgets
 
     def __str__(self):
         return "<Page id='%s' label='%s'>" % (self.id, self.label)
 
+    #
+    # TBD: regenerate layout from actions (which have state) each time, rather than using initial layout
+    #
     def render(self):
         pageSet = self.pageSet
-        layout = html.Div([pageSet.render(), self.layout]) if pageSet else self.layout
+        layout = self.getLayout()
+        layout = html.Div([pageSet.render(), layout]) if pageSet else layout
         return layout
 
     def pageId(self):
@@ -44,16 +55,25 @@ class Page(object):
     def select(self, id):
         return self.pageSet.select(id) if self.pageSet else None
 
+    def getLayout(self):
+        return self.layout  # for now
+
+    def getArgs(self):
+        args = [action.cmdlineArg() for action in self.actions]
+        args = filter(None, args)   # remove Nones
+        return ' '.join(args)
+
     def getCommand(self):
         """
         Return the command implied by the values in the GUI
         """
-        args = [action.cmdlineArg() for action in self.actions]
-        #args = filter(None, args)   # remove Nones
-        cmd  = "gt %s %s" % (self.id, ' '.join(args))
+        globalArgs = RootPage.globalArgs()
+        args = self.getArgs()
+        cmd  = "gt %s %s %s" % (self.id, globalArgs, args)
         return cmd
 
-    def generateCallbacks(self, app):
+    def generateCallbacks(self):
+        app = self.app
         if self.actions:
             for action in self.actions:
                 action.generateCallback(app)
@@ -102,28 +122,25 @@ class PageSet(object):
         layout = html.Div([self.navbar(), contents])
         return layout
 
-    def generateCallbacks(self, app):
-        for page in self.pages.values():
-            page.generateCallbacks(app)
-
 
 class RootPage(PageSet):
+    instance = None
+
     def __init__(self, app, term, pages, default=None):
+        RootPage.instance = self
+
         url = dcc.Location(id='url', refresh=False)
         app.layout = html.Div([url,
                                html.Div(id='root-content'),
                                html.Div([html.H3('Command terminal'),
-                                         term.layout]
-                                        )
+                                         term.layout],
+                                        id='terminal-div')
                                ])
 
         self.navPrefix = 'nav-'  # Root (top-level) menu items (must set after super.__init__)
         default = default or pages[0].id
 
         super(RootPage, self).__init__('', pages, default)
-
-        app.config['suppress_callback_exceptions']=True
-        self.generateCallbacks(app) # callbacks for generated widgets
 
         @app.callback(Output('root-content', 'children'),
                       [Input('url', 'pathname')])
@@ -133,13 +150,27 @@ class RootPage(PageSet):
             elts = id.split('/')
             pageId = elts[0]
             page = self.select(pageId)
-            subpage = None
 
             if page and len(elts) > 1:
                 subpage = elts[1]
                 page.select(subpage)
 
             layout = self.render()
-            selected = subpage or (page.pageSet.selected if page.pageSet else page)
+            selected = page.pageSet.selected if page.pageSet else page
+
             term.setPage(selected)
             return [layout]
+
+        @app.callback(Output('terminal-div', 'style'),
+                      [Input('url', 'pathname')])
+        def showTerminal(pathname):
+            # we don't show terminal for globalArgs since it's not a sub-command
+            value = 'none' if pathname == '/globalArgs' else 'inline'
+            style = {'display': value}
+            return style
+
+    @classmethod
+    def globalArgs(cls):
+        self = RootPage.instance
+        globalArgsPage = self.pages['globalArgs']
+        return globalArgsPage.getArgs()

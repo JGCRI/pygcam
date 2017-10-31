@@ -12,10 +12,11 @@ class Terminal(object):
 
     counter = 0     # to create unique ids
 
-    def __init__(self, updateSeconds=1):
+    def __init__(self, updateSeconds=2, toConsole=False):
         self.status = None
         self.proc   = None
         self.page   = None
+        self.toConsole = toConsole
 
         self.counter += 1
         self.intervalId = intervalId = 'interval-%d' % self.counter
@@ -46,7 +47,7 @@ class Terminal(object):
         buttonId   = self.buttonId
 
         # Add support for staying scrolled to bottom of 'terminal' div
-        app.scripts.append_script({'external_url': 'https://codepen.io/plevin/pen/MvpeNV.js'})
+        # app.scripts.append_script({'external_url': 'https://codepen.io/plevin/pen/MvpeNV.js'})
 
         # Since events aren't handled as well as inputs, we convert the
         # timer event into an input by setting the value in a hidden <div>.
@@ -97,6 +98,7 @@ class Terminal(object):
                 self.stopCommand()
             else:
                 command = self.page.getCommand()
+                print("Command:", command)
                 self.runCommand(command)
 
             return str(time.time())
@@ -123,7 +125,7 @@ class Terminal(object):
             return ms
 
     def setPage(self, page):
-        print("Setting page to %s" % page)
+        # print("Setting page to %s" % page)
         self.page = page
 
     def stopCommand(self):
@@ -153,8 +155,13 @@ class Terminal(object):
 
         self.status = None
         self.text = '$ ' + command + '\n'
-        self.proc = subp.Popen(command, stdout=subp.PIPE, stderr=subp.STDOUT, shell=True,   # for now...
-                               bufsize=1,    # line buffered
-                               universal_newlines=True, cwd=None, env=None)
-        self.running = True
+
         print('Running "%s"' % command)
+        if self.toConsole:
+            subp.call(command, shell=True)
+        else:
+            self.proc = subp.Popen(command, stdout=subp.PIPE, stderr=subp.STDOUT, shell=True,   # for now...
+                                   bufsize=1,    # line buffered
+                                   universal_newlines=True, cwd=None, env=None)
+            self.running = True
+

@@ -13,10 +13,11 @@ _logger = getLogger(__name__)
 
 class MCSCommand(SubcommandABC):
 
-    def __init__(self, subparsers):
+    def __init__(self, subparsers, showTerminal=True):
         kwargs = {'help' : '''Enable or disable pygcam Monte Carlo Simulation sub-commands.'''}
 
-        super(MCSCommand, self).__init__('mcs', subparsers, kwargs, group='utils')
+        super(MCSCommand, self).__init__('mcs', subparsers, kwargs, group='utils', label='MCS',
+                                         showTerminal=showTerminal)
 
     def addArgs(self, parser):
         parser.add_argument('mode', choices=['on', 'off', 'status'],

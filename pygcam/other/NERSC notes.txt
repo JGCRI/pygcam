@@ -1,0 +1,30 @@
+Note NERSC queue limits:
+
+Haswell nodes 1 & 2
+queue: regular
+QOS: normal
+Max running: 50 [* 5/node = 250 nodes, but max is 100, => 20 jobs]
+Max nodes in use: 100
+Max queued jobs: 200
+
+Haswell nodes 3-512
+queue: regular
+QOS: normal
+Max running: 10
+Max nodes in use: 512
+Max queued jobs: 50
+
+Example of declaring memory use on the shared queue
+#!/bin/bash -l
+#SBATCH -p shared
+#SBATCH --mem=13GB
+#SBATCH -t 02:00:00
+#SBATCH -J my_job
+#SBATCH -L SCRATCH
+./something.exe
+
+Can also specify -n 1 to use just one CPU slot
+
+-N or --nodes
+-n or --ntasks
+--mem-per-cpu=8000      # default units are MB

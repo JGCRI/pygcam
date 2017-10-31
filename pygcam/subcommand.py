@@ -4,6 +4,25 @@
 '''
 from abc import ABCMeta, abstractmethod
 
+class OptionInfo(object):
+    """
+    Stores information about a single sub-command option that is used to
+    construct the web-based GUI for the sub-command.
+    """
+    def __init__(self, display=True, choiceFunc=None, multiple=False):
+        """
+        Initialize an OptionInfo instance.
+
+        :param display: (bool) whether this option should be displayed in the GUI
+        :param choiceFunc: (callable) function to return a list of options to display
+        :param multiple: (bool) whether multiple values can be returned
+        :param commaList: (bool) whether values should be returned as a comma-delimited string
+        """
+        self.display = display
+        self.choiceFunc = choiceFunc
+        self.multiple = multiple
+
+
 class SubcommandABC(object):
     """
     Abstract base class for sub-commands. Defines the protocol expected by ``gt``
@@ -19,30 +38,46 @@ class SubcommandABC(object):
     """
     __metaclass__ = ABCMeta
 
-    Parsers = {}
+    Instances = {}  # SubCommand instances keyed by name
+    Parsers = {}    # SubCommand parsers keyed by name
 
     @classmethod
+    def getInstance(cls, name):
+        return SubcommandABC.Instances.get(name)
+
+    # Deprecated?
+    @classmethod
     def getParser(cls, name):
-        return cls.Parsers[name]
+        obj = cls.getInstance(name)
+        return obj.parser
 
-    def __init__(self, name, subparsers, kwargs, group=None, guiInfo=None):
+    def __init__(self, name, subparsers, kwargs, group=None, label=None,
+                 guiSuppress=False, showTerminal=True):
         self.name = name
+        self.label = label or name.capitalize()  # label to display in GUI
         self.parser = parser = subparsers.add_parser(self.name, **kwargs)
-        self.Parsers[self.name] = parser
+        self.Instances[self.name] = self
 
-        # Store here a text label to display in GUI, default being self.name
-        self.guiInfo = guiInfo
+        self.optionInfo = {}    # OptionInfo instances keyed by option name
+        self.guiSuppress = guiSuppress
 
-        # For grouping commands in gcam-gui. Set this in subclass' addArgs().
+        # For grouping commands in the GUI. Set this in subclass' addArgs().
         # Set to None if the command should not be presented in the GUI.
         # Note: 'group' can be set as standalone var or in guiInfo['group'].
-        self.group = group or (guiInfo.get('group') if guiInfo else 'main')
+        self.group = group or 'main'
+        #self.group = group or (guiInfo.get('group') if guiInfo else 'main')
 
         self.addArgs(parser)
 
     def __str__(self):
         clsName = type(self).__name__
         return "<%s name=%s group=%s>" % (clsName, self.name, self.group)
+
+    def getOptionInfo(self, name):
+        return self.optionInfo.get(name)
+
+    def setOptionInfo(self, name, optionInfo):
+        self.optionInfo[name] = optionInfo
 
     def getGroup(self):
         return self.group

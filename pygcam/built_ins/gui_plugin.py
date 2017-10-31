@@ -15,7 +15,7 @@ class GUICommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run the Graphical User Interface generated from the command-line interface.'''}
 
-        super(GUICommand, self).__init__('gui', subparsers, kwargs, group='utils')
+        super(GUICommand, self).__init__('gui', subparsers, kwargs, group='utils', guiSuppress=True)
 
     def addArgs(self, parser):
         parser.add_argument('-d', '--debug', action='store_true',

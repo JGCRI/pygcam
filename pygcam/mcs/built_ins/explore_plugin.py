@@ -6,7 +6,8 @@ from .McsSubcommandABC import McsSubcommandABC
 class ExploreCommand(McsSubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run the MCS "explorer" app in dash.'''}
-        super(ExploreCommand, self).__init__('explore', subparsers, kwargs)
+        super(ExploreCommand, self).__init__('explore', subparsers, kwargs,
+                                             guiSuppress=True)  # explore runs its own dash server, separate from "gui"
 
     def addArgs(self, parser):
         parser.add_argument('-d', '--debug', action='store_true',

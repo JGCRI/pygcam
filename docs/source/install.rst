@@ -179,15 +179,16 @@ Option 2: Install pygcam in a virtual environment
    (the **Python 2.7** version!) for your platform.
 
 2. Download the environment file for your platform from
-   https://anaconda.org/plevin/pygcam/files by clicking on
-   pygcam_windows.yml, pygcam_macos.yml, or pygcam_linux.yml.
+   https://anaconda.org/plevin/pygcam/files by selecting
+   ``pygcam_windows.yml``, ``pygcam_macos.yml``, or ``pygcam_linux.yml``.
 
-3. Run this commands, replacing the ``path/to/pygcam_*.yml`` with the path
-   to the file you downloaded in step 2.
+3. Run this commands, replacing the ``path/to/pygcam_macos.yml`` with the path
+   to the file you downloaded in step 2 if you're using Windows or Linux:
 
   .. code-block:: bash
 
-     $ conda env create -f /path/to/pygcam_*.yml
+     # Replace the final argument with path to the file you downloaded
+     $ conda env create -f /path/to/pygcam_macos.yml
 
 4. To activate the new environment (which is necessary before you use ``pygcam``),
    run the following command:

@@ -33,19 +33,6 @@ PROGRAM = 'gt'
 # For now, these are not offered as command-line options. Needs more testing.
 # BioConstraintsCommand, DeltaConstraintsCommand,
 
-# Deprecated
-# def _randomSleep(minSleep, maxSleep):
-#     '''
-#     Sleep for a random number of seconds between minSleep and maxSleep.
-#     '''
-#     import random
-#     import time
-#
-#     delay = minSleep + random.random() * (maxSleep - minSleep)
-#     _logger.debug('randomSleep: sleeping %.1f seconds', delay)
-#     time.sleep(delay)
-
-
 class GcamTool(object):
 
     # plugin instances by command name

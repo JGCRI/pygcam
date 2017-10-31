@@ -11,7 +11,7 @@ from ..subcommand import SubcommandABC
 class GcamCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run GCAM for the indicated configFile, scenario, or workspace.'''}
-        super(GcamCommand, self).__init__('gcam', subparsers, kwargs, group='project')
+        super(GcamCommand, self).__init__('gcam', subparsers, kwargs, group='project', label='GCAM')
 
     def addArgs(self, parser):
         # parser.add_argument('-c', '--copyWorkspace', action='store_true',
