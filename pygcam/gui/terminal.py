@@ -63,13 +63,13 @@ class Terminal(object):
             if not self.proc:
                 return '[No process is running]\n\n' + self.text
 
-            fd = self.proc.stdout.fileno()
+            # TBD: make this a method of terminal so Windows can do the socket thing
             newText = ''
 
             # Loop while there is data to read
-            while len(select.select([fd], [], [], 0)[0]) == 1:
+            while len(select.select([self.fd], [], [], 0)[0]) == 1:
                 print("reading...")
-                buf = os.read(fd, 2048)     # Read up to a 2 KB chunk of data
+                buf = os.read(self.fd, 2048)     # Read up to a 2 KB chunk of data
                 if buf == '':
                     break
 
@@ -81,7 +81,7 @@ class Terminal(object):
             self.running = self.status is None
             if not self.running:
                 self.text += "\n[Process exited]\n"
-                self.proc = None
+                self.proc = self.fd = None
 
             return self.text
 
@@ -142,12 +142,14 @@ class Terminal(object):
                 proc.kill()
 
             proc.wait()
-            self.proc = None
+            self.proc = self.fd = None
             self.text += "[Terminated process %d]\n" % pid
 
         self.running = False
 
     def runCommand(self, command):
+        from ..utils import getSocketForFile
+
         if self.running:
             print('Already running a command')
             return
@@ -162,5 +164,7 @@ class Terminal(object):
             self.proc = subp.Popen(command, stdout=subp.PIPE, stderr=subp.STDOUT, shell=True,   # for now...
                                    bufsize=1,    # line buffered
                                    universal_newlines=True, cwd=None, env=None)
+
+            self.fd = getSocketForFile(self.proc.stdout)
             self.running = True
 

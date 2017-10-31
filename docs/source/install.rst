@@ -193,11 +193,20 @@ Option 2: Install pygcam in a virtual environment
 4. To activate the new environment (which is necessary before you use ``pygcam``),
    run the following command:
 
-   * On MacOS, Linux, and when using Cygwin under Windows:
+   * On MacOS and Linux:
 
      .. code-block:: sh
 
         $ source activate pygcam
+
+   * On Windows using cygwin, there are bugs in the ``activate`` and ``deactivate`` scripts.
+     You can download corrected versions of these from https://bitbucket.org/snippets/plevin/.
+     Download both the ``activate.cygwin`` and ``deactivate.cygwin`` scripts and save them
+     to your ``Anaconda2/Scripts`` directory. The you can run:
+
+     .. code-block:: sh
+
+        $ source activate.cygwin pygcam
 
    * When using a standard Windows command prompt:
 

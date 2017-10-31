@@ -23,6 +23,57 @@ from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
+def getSocketForFile(pipe):
+    """
+    Create a thread to read from a non-socket file descriptor and
+    its contents to a socket so non-blocking read via select() works
+    on Windows. (Since Windows doesn't support select on pipes.)
+
+    :param pipe: (file object) file object to read from, presumably
+       a pipe from a subprocess
+    :return: (int) file descriptor for the socket to read from.
+    """
+    if not IsWindows:
+        return pipe.fileno()
+
+    import socket
+    from threading import Thread
+
+    host = socket.gethostbyname('localhost')
+    port = 54321  # Arbitrary non-privileged port
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+
+    def fd2socket(input):
+        """
+        Thread target function to copy input to socket.
+        """
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # print('Connecting...')
+        client.connect((host, port))
+
+        while True:
+            data = input.readline()
+            if data == '':
+                client.close()
+                return
+
+            client.sendall(data)
+
+    t = Thread(target=fd2socket, args=(pipe,))
+    t.start()
+
+    # print("Listening...")
+    server.listen(1)
+
+    # print("Accepting...")
+    conn, addr = server.accept()
+    # print("Connected by", addr)
+
+    conn.setblocking(0)
+    return conn.fileno()
+
 # Used only in CI plugins
 def digitColumns(df, asInt=False):
     '''
