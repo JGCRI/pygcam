@@ -12,13 +12,6 @@ from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
-def _methodMap():
-    from ..sensitivity import Sobol, FAST, Morris #, MonteCarlo
-
-    methods = (Sobol, FAST, Morris) #, MonteCarlo)
-    methodMap = {cls.__name__.lower(): cls for cls in methods}
-    return methodMap
-
 
 def genSALibData(trials, method, paramFileObj, args):
     from ..error import PygcamMcsUserError
@@ -378,7 +371,7 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-g', '--groupName', default='',
                             help='''The name of a scenario group to process.''')
 
-        parser.add_argument('-m', '--method', choices=['montecarlo'] + _methodMap().keys(), default='montecarlo',
+        parser.add_argument('-m', '--method', choices=['montecarlo', 'sobol', 'fast', 'morris'],
                             help='''Use the specified method to generate trial data. Default is "montecarlo".''')
 
         parser.add_argument('-o', '--outFile',
