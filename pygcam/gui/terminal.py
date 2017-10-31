@@ -98,7 +98,6 @@ class Terminal(object):
                 self.stopCommand()
             else:
                 command = self.page.getCommand()
-                print("Command:", command)
                 self.runCommand(command)
 
             return str(time.time())

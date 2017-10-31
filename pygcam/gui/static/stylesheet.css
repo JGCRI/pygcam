@@ -61,7 +61,7 @@ h1.title {
   text-align: center;
 }
 
-h2.band {
+.band {
   width: 100%;
   color: white;
   font-weight: normal;
@@ -76,7 +76,7 @@ div.page {
 
 div.terminal {
   font-family: monospace;
-  /* 
+  /*
   overflow-y: scroll;
   overflow-x: hidden;
   */
@@ -151,7 +151,7 @@ th.lined {
   background: #999900;
   color: white;
   font-weight: normal;
-  font-size; 12;    
+  font-size; 12;
   text-align: center;
   padding: 4px;
 }
@@ -192,7 +192,7 @@ div.sub-nav-bar {
 }
 
 .nav-bar .nav-button {
-    background-color: darkgreen; 
+    background-color: darkgreen;
     border: none;
     color: white;
     padding: 6px 30px;
@@ -204,7 +204,7 @@ div.sub-nav-bar {
 }
 
 .sub-nav-bar .sub-nav-button {
-    background-color: green; 
+    background-color: green;
     border: none;
     color: white;
     padding: 6px 30px;

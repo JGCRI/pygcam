@@ -65,7 +65,7 @@ class ActionInfo(object):
         outputId = self.getWidgetSinkId()
 
         def saveChange(value):
-            print("Setting value of %s in %s to %r" % (inputId, id(self), value))
+            _logger.debug("Setting value of %s in %s to %r" % (inputId, id(self), value))
             self.value = value
             return value
 
@@ -83,11 +83,12 @@ class ActionInfo(object):
         return dcc.RadioItems(
             id=id,
             options=[{'label': str(opt), 'value': opt} for opt in options],
-            value=default,
+            value=default if self.value is None else self.value,
             labelStyle={'display': 'block' if vertical else 'inline-block'})
 
-    def input(self, placeholder='Enter a value...', value=''):
-        self.default = value
+    def input(self, default=None, placeholder='Enter a value...'):
+        self.default = self.action.default if default is None else default
+        value = self.default if self.value is None else self.value
 
         if not value and self.action.metavar:
             placeholder = self.action.metavar
@@ -100,26 +101,24 @@ class ActionInfo(object):
         """
         Render an argparse option as HTML
         """
-        # if self.layout:
-        #     return self.layout
-
         Y = 'Yes'
         N = 'No'
 
         if self.actionClass == '_StoreTrueAction':
-            widget = self.radio([Y, N], self.value or N)
+            widget = self.radio([Y, N], default=N)
 
         elif self.actionClass == '_StoreFalseAction':
-            widget = self.radio([Y, N], self.value or Y)
+            widget = self.radio([Y, N], default=Y)
 
         elif self.actionClass == '_StoreAction':
-            default = self.action.default
             choices = self.action.choices
-            widget = self.radio(choices, default, vertical=True) if choices else self.input(value=default)
+            if choices:
+                widget = self.radio(choices, default=self.action.default, vertical=True)
+            else:
+                widget = self.input(default=self.action.default)
 
         elif self.actionClass == '_AppendAction':
-            default = self.action.default
-            widget = self.input(value=default)
+            widget = self.input(default=self.action.default)
 
         else:
             widget = html.P("%s: unknown action type %s" % (self.name, self.actionClass))
@@ -141,7 +140,7 @@ class ActionInfo(object):
             html.Td(help,   className='lined'),
 
             # invisible sink to store value just so callback is legit
-            html.Div(id=widgetSinkId)#, style={'display': 'none'})
+            html.Div(id=widgetSinkId, style={'display': 'none'})
         ], className='cmd')
 
         self.layout = layout
@@ -179,9 +178,6 @@ class StoreConst(ActionInfo):
     def __init__(self, pageId, action, const, default):
         super(StoreConst, self).__init__(pageId, action, default)
         self.const = const
-
-    # def _cmdlineArg(self):
-    #     return self.option
 
 class AppendAction(ActionInfo):
     def __init__(self, pageId, action, default):

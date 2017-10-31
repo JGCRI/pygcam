@@ -5,8 +5,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
+from pygcam.tool import GcamTool
 from pygcam.log import getLogger
 from pygcam.subcommand import SubcommandABC
+from pygcam.gui.actions import actionTable, getActionInstance
 
 _logger = getLogger(__name__)
 
@@ -16,6 +18,16 @@ def dataStore(id):
     """
     return html.Div(id=id, style={'display': 'none'})
 
+def subcommandHelp(cmd):
+    tool = GcamTool.getInstance(reload=True)
+    cmds = tool.subparsers._choices_actions
+    help = next((s.help for s in cmds if s.dest == cmd), '')
+    return help
+
+def actionsFromParser(cmd, parser):
+    actions = map(lambda action: getActionInstance(cmd, action), parser._actions)
+    return filter(None, actions)    # remove Nones
+
 #
 # Class to support multi-page applications with dash
 #
@@ -23,40 +35,46 @@ class Page(object):
     """
     Defines one app page, which may support a set of subpages
     """
-    def __init__(self, app, id, layout, label=None, pageSet=None, actions=None):
+    def __init__(self, app, id, label=None, heading=None, pageSet=None):
         self.app = app
         self.id = id
-        self.layout = layout
         self.pageSet = pageSet
-        self.actions = actions
+        self.actions = None
+        self.helpText = None
+        self.heading = heading or 'Options for "%s"' % id
+        self.label = label or id.capitalize()
 
-        if not label:
-            subcmd = SubcommandABC.getInstance(self.id)
-            label = subcmd.label
+        if pageSet:
+            return
 
-        self.label = label
+        subcmd = SubcommandABC.getInstance(id)
+        if subcmd:
+            parser = subcmd.parser
+            self.actions = actionsFromParser(id, parser)
+            self.helpText = subcommandHelp(id)
+            if not label:
+                self.label = subcmd.label
+
         self.generateCallbacks() # callbacks for generated widgets
 
     def __str__(self):
         return "<Page id='%s' label='%s'>" % (self.id, self.label)
 
-    #
-    # TBD: regenerate layout from actions (which have state) each time, rather than using initial layout
-    #
     def render(self):
         pageSet = self.pageSet
         layout = self.getLayout()
         layout = html.Div([pageSet.render(), layout]) if pageSet else layout
         return layout
 
-    def pageId(self):
-        return self.id
-
     def select(self, id):
         return self.pageSet.select(id) if self.pageSet else None
 
     def getLayout(self):
-        return self.layout  # for now
+        if not self.actions:
+            return ''
+
+        # Generate rather than saving this since we want to maintain state across virtual pages
+        return html.Div(actionTable(self.heading, self.actions, helpText=self.helpText))
 
     def getArgs(self):
         args = [action.cmdlineArg() for action in self.actions]
@@ -69,7 +87,7 @@ class Page(object):
         """
         globalArgs = RootPage.globalArgs()
         args = self.getArgs()
-        cmd  = "gt %s %s %s" % (self.id, globalArgs, args)
+        cmd  = "gt %s %s %s" % (globalArgs, self.id, args)
         return cmd
 
     def generateCallbacks(self):
@@ -78,6 +96,14 @@ class Page(object):
             for action in self.actions:
                 action.generateCallback(app)
 
+
+class GlobalArgsPage(Page):
+    def __init__(self, app, id='globalArgs'):
+        super(GlobalArgsPage, self).__init__(app, id=id, label='Global args', heading='Global arguments')
+        self.helpText = 'The options on this page apply to all gt commands'
+        tool = GcamTool.getInstance()
+        self.actions = actionsFromParser(id, tool.parser)
+        self.generateCallbacks() # callbacks for generated widgets
 
 class PageSet(object):
     def __init__(self, id, pages, default):
@@ -145,7 +171,7 @@ class RootPage(PageSet):
         @app.callback(Output('root-content', 'children'),
                       [Input('url', 'pathname')])
         def displayPage(pathname):
-            print("Pathname is", pathname)
+            _logger.debug("Pathname is", pathname)
             id = pathname[1:] if pathname else self.default
             elts = id.split('/')
             pageId = elts[0]
