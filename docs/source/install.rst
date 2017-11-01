@@ -1,22 +1,14 @@
 Installation
 ==================
 
-There are three modes of installing and using pygcam and :doc:`gcamtool`.
+There are two options for installing and using pygcam and :doc:`gcamtool`.
 
-  - :ref:`Option 1 <option1>` (**available only to Mac and Windows users**) installs an
-    all-in-one :doc:`gcamtool` directory created by
-    `pyinstaller <https://pythonhosted.org/PyInstaller>`_ that provides a
-    stand-alone version of gcamtool and all supporting files.
-    This is the simplest approach to gaining access to the :doc:`gcamtool` command:
-    it requires only downloading the zip file, unzipping it, and setting your ``PATH``
-    environment variable to the location of the unzipped directory.
-
-  - :ref:`Option 2 <option2>` creates a new virtual environment for pygcam based on an
+  - :ref:`Option 1 <option1>` creates a new virtual environment for pygcam based on an
     "environment" file that identifies specific versions of all python modules required
     by ``pygcam``. This approach is fairly fool-proof, but it does require that you
     "activate" the pygcam environment before using it.
 
-  - :ref:`Option 3 <option3>` installs ``pygcam`` as a standard Python package, making
+  - :ref:`Option 2 <option2>` installs ``pygcam`` as a standard Python package, making
     it available for use in your own Python programming efforts, while also providing
     access to gcamtool. This sometimes creates conflicts between pygcam's requirements
     and those of other packages you may have installed, and may require familiarity
@@ -117,62 +109,7 @@ file is ``.pygcam.cfg`` found in your home directory.
 
 .. _option1:
 
-Option 1: Download the all-in-one zip file
-------------------------------------------
-Starting with ``pygcam`` version 1.0b2, Mac and Windows users have the option of
-downloading a zip file with an all-in-one :doc:`gcamtool` directory created by
-`pyinstaller <https://pythonhosted.org/PyInstaller>`_ that provides a
-stand-alone version of gcamtool and all supporting files. To use this:
-
-  - Download the latest version of the gt zip file from the
-    `pygcam downloads <https://bitbucket.org/plevin/pygcam/downloads>`_ page.
-  - Unzip the downloaded zip file anywhere on your system.
-  - Set the PATH environment variable to top-level folder created from the zip file.
-
-See the specific instructions for Macintosh and Windows users, below.
-
-
-Macintosh users
-^^^^^^^^^^^^^^^^
-1. Download the latest version of `gt-*-mac.zip <https://bitbucket.org/plevin/pygcam/downloads>`_.
-
-2. Double-click on the downloaded zip file to unzip it, creating the directory ``gt-1.0b8-mac`` (or similar,
-   depending on the version). Move that directory anywhere you like. You might move it to your home directory,
-   or to where you store GCAM-related files.
-
-3. To set the PATH variable to the correct location, edit your shell startup file (e.g., .bashrc
-   for bash users) to add the full pathname of the unzipped directory to the PATH. For example, if
-   you move the unzipped folder to your home directory (which can be referenced as ``$HOME``) you would
-   add this line to ``$HOME/.bashrc``:
-
-   .. code-block:: sh
-
-      export PATH="$HOME/gt-1.0b2-mac:$PATH"
-
-   For additional help setting the PATH variable for other shells, see this
-   `Apple webpage <https://developer.apple.com/library/content/documentation/OpenSource/Conceptual/ShellScripting/shell_scripts/shell_scripts.html>`_.
-
-
-Windows users
-^^^^^^^^^^^^^^
-1. Download the latest version of `gt-*-win.zip <https://bitbucket.org/plevin/pygcam/downloads>`_.
-
-2. Right click on the zip file and select "Extract all...". If you accept the default path presented
-   in the dialog box, Windows will create a redundant directory level, i.e., ``gt-1.0b8/gt-1.0b8``.
-   If you do this, move the inner directory to where you would like to keep the gcamtool files and
-   then delete the outer directory. Alternatively, you can edit the path presented in the dialog box
-   to remove the final ``gt-1.0b8``, so that the unzipped folder will have only one level called ``gt-1.0b8``.
-
-3. To add the location of the gcamtool folder to your PATH, see this
-   `page <http://www.computerhope.com/issues/ch000549.htm>`_.
-
-Additional information is available below :ref:`for Windows users <windows-label>`.
-
--------------------------
-
-.. _option2:
-
-Option 2: Install pygcam in a virtual environment
+Option 1: Install pygcam in a virtual environment
 -------------------------------------------------
 
 1. Download and install `Anaconda 5 <https://www.anaconda.com/download>`_
@@ -217,9 +154,9 @@ Option 2: Install pygcam in a virtual environment
 See the `conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
 documentation for further details.
 
-.. _option3:
+.. _option2:
 
-Option 3: Install pygcam into your current python environment
+Option 2: Install pygcam into your current python environment
 --------------------------------------------------------------
 
 1. Run the command:

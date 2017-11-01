@@ -6,8 +6,8 @@ Notes on what to do to issue a new release
     - check API for missing doc files or func descriptions
  3. Test the build of 'develop' on readthedocs
  4. Update Release Notes section in README.rst
- 5. Make in pyinst for Win & Mac
- 6. Test pyinst version on both platforms
+ x 5. Make in pyinst for Win & Mac
+ x 6. Test pyinst version on both platforms
  7. Test setup.py installer on all three platforms
  8. Merge to master
  9. Increment version in version.py

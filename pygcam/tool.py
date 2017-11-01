@@ -154,8 +154,8 @@ class GcamTool(object):
                                 one of {debug,info,warning,error,fatal} (case insensitive).''')
 
         parser.add_argument('+L', '--logFile',
-                            help='''Sets the name of a log file for batch runs. Default is "gt-%j.out"
-                            where "%j" (in SLURM) is the jobid. If the argument is not an absolute 
+                            help='''Sets the name of a log file for batch runs. Default is "gt-%%j.out"
+                            where "%%j" (in SLURM) is the jobid. If the argument is not an absolute 
                             pathname, it is treated as relative to the value of GCAM.LogDir.''')
 
         parser.add_argument('+m', '--minutes', type=float, default=getParamAsFloat('GCAM.Minutes'),

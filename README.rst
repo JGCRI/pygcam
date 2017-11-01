@@ -34,15 +34,44 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b13 (pending)
+Version 1.0b13 (1 Nov 2017)
 -----------------------------
+* Revised installation procedure now uses Anaconda environments to
+  ensure Python package compatibility. Dropped "pyinstaller" versions.
+
+* Created "conditional XML" to allow portions of XML input files to
+  be selected based on the value of configuration and/or environment
+  variables.
+
+* All environment variables are now available in the configuration
+  system as "$" prefixed names as in Unix shells. That is, you can access,
+  say, the "USER" environment variable as "%($USER)s" in the config file.
+
+* Created browser-based "MCS Explorer" to help analyze Monte Carlo results.
+  Features include distributions of results, tornado plots of uncertainty
+  importance, scatterplots of inputs vs outputs, and an interactive
+  parallel-coordinate plot for exploring parameter interactions.
+
+* Created browser-based GUI that provides interactive access to all features
+  of the "gt" (gcamtool) command.
+
+* Merged pygcam-mcs into pygcam. Use command "gt mcs on" to enable the
+  Monte Carlo features. Note that these run only on Linux currently.
+
+* Re-architected the MCS framework to use ipython-parallel. Workers now
+  receive instructions from the ipyparallel controller and return results
+  to the controller, which updates the database.
+
 * Added "optional" attribute to the "<step>" element to allow some steps
   to be defined for occasional use. Elements marked optional="true" are
   run only if explicitly mentioned on the command-line (via the -s flag).
 
-* The "query" sub-command now accepts arguments (-b and -B) to control
+* The "query" sub-command now accepts arguments (+b and +B) to control
   processing of pre-formed batch query files.
 
+* Modified all "global" single-letter arguments to use "+" prefix rather
+  than "-" prefix, e.g., "gt +P my-project run" to specify the project
+  to run. Long names retain the "--" prefix, e.g., "gt --projectName my-proj".
 
 Version 1.0b12 (22 May 2017)
 -----------------------------

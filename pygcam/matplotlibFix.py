@@ -6,13 +6,14 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import matplotlib as mpl
-import platform
 
 _backend = 'Agg'
-if False and platform.system() == 'Darwin':
-    major, minor, rev = map(int, mpl.__version__.split('.'))
-    if major >= 2:
-        _backend = 'TkAgg'
+
+import platform
+# if platform.system() == 'Darwin':
+#     major, minor, rev = map(int, mpl.__version__.split('.'))
+#     if major >= 2:
+#         _backend = 'TkAgg'
 
 mpl.use(_backend)
 
