@@ -125,7 +125,8 @@ def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
 _usingMCS = None
 
 def mcsSentinelFile():
-    path = os.path.join(os.getenv('HOME'), '.use_pygcam_mcs')
+    home = getHomeDir()
+    path = os.path.join(home, '.use_pygcam_mcs')
     return path
 
 def setUsingMCS(value):

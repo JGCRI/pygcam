@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-
 import dash
 import flask
 import requests
 
+from pygcam.config import usingMCS
 from pygcam.log import getLogger
 from pygcam.subcommand import SubcommandABC
 from pygcam.tool import GcamTool
@@ -82,11 +81,11 @@ def driver(args):
 
     pages = [Page(app, 'run'),
              commandGroupPage(app, 'project', 'new'),
-             commandGroupPage(app, 'mcs', 'runsim', label='MCS'),
+             commandGroupPage(app, 'mcs', 'runsim', label='MCS') if usingMCS() else None,
              commandGroupPage(app, 'utils', 'mi', label='Utilities'),
              GlobalArgsPage(app)]
 
-    RootPage(app, term, pages)
+    RootPage(app, term, filter(None, pages))
 
     term.registerCallbacks(app)
     app.run_server(debug=debug)

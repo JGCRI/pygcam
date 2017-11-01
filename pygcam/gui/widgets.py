@@ -86,8 +86,9 @@ class Page(object):
         Return the command implied by the values in the GUI
         """
         globalArgs = RootPage.globalArgs()
-        args = self.getArgs()
-        cmd  = "gt %s %s %s" % (globalArgs, self.id, args)
+        localArgs = self.getArgs()
+        args = ('gt', globalArgs, self.id, localArgs)
+        cmd  = ' '.join(args)
         return cmd
 
     def generateCallbacks(self):

@@ -23,56 +23,33 @@ from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
-def getSocketForFile(pipe):
+def queueForStream(stream):
     """
     Create a thread to read from a non-socket file descriptor and
     its contents to a socket so non-blocking read via select() works
     on Windows. (Since Windows doesn't support select on pipes.)
 
-    :param pipe: (file object) file object to read from, presumably
-       a pipe from a subprocess
-    :return: (int) file descriptor for the socket to read from.
+    :param stream: (file object) the input to read from,
+       presumably a pipe from a subprocess
+    :return: (int) a file descriptor for the socket to read from.
     """
-    if not IsWindows:
-        return pipe.fileno()
-
-    import socket
+    from six.moves.queue import Queue
     from threading import Thread
 
-    host = socket.gethostbyname('localhost')
-    port = 54321  # Arbitrary non-privileged port
+    def enqueue(stream, queue):
+        fd = stream.fileno()
+        data = None
+        while data != b'':
+            data = os.read(fd, 1024)
+            queue.put(data)
+        stream.close()
 
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-
-    def fd2socket(input):
-        """
-        Thread target function to copy input to socket.
-        """
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # print('Connecting...')
-        client.connect((host, port))
-
-        while True:
-            data = input.readline()
-            if data == '':
-                client.close()
-                return
-
-            client.sendall(data)
-
-    t = Thread(target=fd2socket, args=(pipe,))
+    q = Queue()
+    t = Thread(target=enqueue, args=(stream, q))
+    t.daemon = True # thread dies with the program
     t.start()
 
-    # print("Listening...")
-    server.listen(1)
-
-    # print("Accepting...")
-    conn, addr = server.accept()
-    # print("Connected by", addr)
-
-    conn.setblocking(0)
-    return conn.fileno()
+    return q
 
 # Used only in CI plugins
 def digitColumns(df, asInt=False):

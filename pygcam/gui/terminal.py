@@ -1,7 +1,9 @@
+from __future__ import print_function
 import os
 import select
 import subprocess as subp
 import time
+from six.moves.queue import Empty
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -16,6 +18,7 @@ class Terminal(object):
         self.status = None
         self.proc   = None
         self.page   = None
+        self.queue  = None
         self.toConsole = toConsole
 
         self.counter += 1
@@ -63,13 +66,14 @@ class Terminal(object):
             if not self.proc:
                 return '[No process is running]\n\n' + self.text
 
-            # TBD: make this a method of terminal so Windows can do the socket thing
             newText = ''
 
             # Loop while there is data to read
-            while len(select.select([self.fd], [], [], 0)[0]) == 1:
-                print("reading...")
-                buf = os.read(self.fd, 2048)     # Read up to a 2 KB chunk of data
+            q = self.queue
+            while q.qsize() > 0:
+                buf = q.get_nowait()
+                print(": %s" % buf, end='')
+
                 if buf == '':
                     break
 
@@ -148,7 +152,7 @@ class Terminal(object):
         self.running = False
 
     def runCommand(self, command):
-        from ..utils import getSocketForFile
+        from ..utils import queueForStream
 
         if self.running:
             print('Already running a command')
@@ -165,6 +169,6 @@ class Terminal(object):
                                    bufsize=1,    # line buffered
                                    universal_newlines=True, cwd=None, env=None)
 
-            self.fd = getSocketForFile(self.proc.stdout)
+            self.queue = queueForStream(self.proc.stdout)
             self.running = True
 

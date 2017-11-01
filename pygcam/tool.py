@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 '''
 .. The "gt" (gcamtool) commandline program
 
