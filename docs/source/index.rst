@@ -19,6 +19,7 @@ The ``gt`` workflow management script
 
    gcamtool
    setup
+   gui
 
 XML File Formats
 ------------------

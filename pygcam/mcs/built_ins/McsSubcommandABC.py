@@ -4,10 +4,11 @@
 from pygcam.subcommand import SubcommandABC
 
 class McsSubcommandABC(SubcommandABC):
-    def __init__(self, name, subparsers, kwargs):
+    def __init__(self, name, subparsers, kwargs, label=None, guiSuppress=False):
         help = kwargs.get('help')
-        prefix = '(MCS) '       # add prefix to all MCS subcommands
+        prefix = '(MCS) '       # add prefix to all MCS subcommands if not already there
         if help and not help.startswith(prefix):
             kwargs['help'] = prefix + help
 
-        super(McsSubcommandABC, self).__init__(name, subparsers, kwargs, group='mcs')
+        super(McsSubcommandABC, self).__init__(name, subparsers, kwargs, group='mcs',
+                                               label=None, guiSuppress=guiSuppress)

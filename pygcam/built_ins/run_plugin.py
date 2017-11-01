@@ -64,9 +64,6 @@ class RunCommand(SubcommandABC):
         parser.add_argument('-n', '--noRun', action='store_true',
                             help='''Display the commands that would be run, but don't run them.''')
 
-        parser.add_argument('-p', '--project',
-                            help='''The name of the project to run.''')
-
         parser.add_argument('-q', '--noQuit', action='store_true',
                             help='''Don't quit if an error occurs when processing a scenario, just
                             move on to processing the next scenario, if any.''')

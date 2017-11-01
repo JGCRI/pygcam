@@ -1,0 +1,57 @@
+Release 1.0
+===========
+
+Must Do
+-------
+
+* Testing
+  - Test major functionality on Mac and Linux
+  - Install on PIC and test there as well
+  - Test correlations still work
+  - Matplotlib fix: hopefully this can go away
+
+* Installation
+  - Test environment downloads from anaconda.org on all 3 platforms into Anaconda 5
+  - Add pygcam=1.0 to these once it's working and uploaded!
+
+  - Test pyinstaller version, too. Or maybe drop this?
+
+* Features
+  - Get GUI working for basic commands? Would be nice for the tutorial...
+
+##############
+  - Modify render() to use action.value if not None to maintain state (shouldn't be necessary, should it?)
+##############
+
+   - Speed up analysis.py using method in gui tornado plot
+
+* Documentation
+  - Document setup of ipyparallel for testing on Mac (and Windows?) and running on Linux
+  - MCS: writeFunc, trialFunc other undocumented features?
+
+* Cleanup
+   - Use -l flag to specify log for ModelInterface. Also use --version to see what's running.
+
+
+Nice to do
+-----------
+
+* Installation
+  - 'newuser' plugin that takes args on cmd line and sets up basic .pygcam.cfg
+    - Interactively request paths if not specified on command line?
+
+* MCS improvements
+  - database cleanup
+  - test ipp to see if fixing -a flag and spurious key error are do able in time
+
+* Cleanup
+  - Review ToDos and TBDs and resolve the easiest ones.
+  - Consolidate generic code from sectorEditors and xmlEditor
+  - Refactor API as per discussion with Robert
+  - landProtection.py has become redundant in places and should be refactored.
+
+* Features
+  - pygcam 3.0 version
+    - requires separate YAML files
+  - web-based config file editor?
+  - In GUI, add  methods to generate choices (e.g., groups, scenarios) to choose from

@@ -21,7 +21,7 @@ requirements = [
     'pandas==0.20.3',
     'seaborn==0.8.0',
     'six>=1.10.0',
-    'sphinx-argparse==0.2.1', # ==0.1.17', see if update works yet
+    'sphinx-argparse>=0.2.0', # ==0.1.17', see if update works yet
     'filelock>=2.0.12',
 ]
 
@@ -36,7 +36,7 @@ mcs_requirements = [
 
 gui_requirements = [
     'flask>=0.12.2',
-    'dash>=0.18.3',
+    'dash>=0.19.0',
     'dash-core-components>=0.12.7',
     'dash-html-components>=0.8.0',
     'dash-renderer>=0.7.4',

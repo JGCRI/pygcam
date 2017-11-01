@@ -1,6 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from six.moves import shlex_quote
 
 from pygcam.log import getLogger
 
@@ -26,6 +27,7 @@ class ActionInfo(object):
         self.pageId = pageId
         self.widget = None
         self.value  = None   # set in generated callback
+        self.checkDefaultFunc = None # function to decide whether to render option (i.e., not default value)
 
         t = action.type
         if t == str:
@@ -35,7 +37,9 @@ class ActionInfo(object):
         else:
             self.dataType = 'text'
 
-        self.display = self.actionClass not in self.ignoredActions and self.name != 'VERSION'
+        self.display = self.actionClass not in self.ignoredActions and self.name != '--VERSION'
+
+        self.layout = None
 
     def __str__(self):
         return "<ActionInfo %s %s>" % (self.actionClass, self.name)
@@ -57,15 +61,16 @@ class ActionInfo(object):
         :param app: a Dash app instance
         :return: none
         """
+        inputId  = self.getWidgetId()
+        outputId = self.getWidgetSinkId()
+
         def saveChange(value):
-            # TBD: might not need to save widget given this callback
+            _logger.debug("Setting value of %s in %s to %r" % (inputId, id(self), value))
             self.value = value
             return value
 
-        _logger.debug("Generating default-setting callback for %s" % id)
+        _logger.debug("Generating default-setting callback for %s" % inputId)
 
-        inputId  = self.getWidgetId()
-        outputId = self.getWidgetSinkId()
 
         # install a callback to the function created above
         app.callback(Output(outputId, 'children'),
@@ -78,11 +83,12 @@ class ActionInfo(object):
         return dcc.RadioItems(
             id=id,
             options=[{'label': str(opt), 'value': opt} for opt in options],
-            value=default,
+            value=default if self.value is None else self.value,
             labelStyle={'display': 'block' if vertical else 'inline-block'})
 
-    def input(self, placeholder='Enter a value...', value=''):
-        self.default = value
+    def input(self, default=None, placeholder='Enter a value...'):
+        self.default = self.action.default if default is None else default
+        value = self.default if self.value is None else self.value
 
         if not value and self.action.metavar:
             placeholder = self.action.metavar
@@ -99,19 +105,20 @@ class ActionInfo(object):
         N = 'No'
 
         if self.actionClass == '_StoreTrueAction':
-            widget = self.radio([Y, N], N)
+            widget = self.radio([Y, N], default=N)
 
         elif self.actionClass == '_StoreFalseAction':
-            widget = self.radio([Y, N], Y)
+            widget = self.radio([Y, N], default=Y)
 
         elif self.actionClass == '_StoreAction':
-            default = self.action.default
             choices = self.action.choices
-            widget = self.radio(choices, default, vertical=True) if choices else self.input(value=default)
+            if choices:
+                widget = self.radio(choices, default=self.action.default, vertical=True)
+            else:
+                widget = self.input(default=self.action.default)
 
         elif self.actionClass == '_AppendAction':
-            default = self.action.default
-            widget = self.input(value=default)
+            widget = self.input(default=self.action.default)
 
         else:
             widget = html.P("%s: unknown action type %s" % (self.name, self.actionClass))
@@ -127,26 +134,40 @@ class ActionInfo(object):
 
         widgetSinkId = self.getWidgetSinkId()
 
-        return html.Tr(children=[
+        layout = html.Tr(children=[
             html.Td(name,   className='lined', style={'width': 150}),
             html.Td(widget, className='lined', style={'width': 200}),
             html.Td(help,   className='lined'),
-            html.Div(id=widgetSinkId, style={'display': 'none'})        # invisible sink to store value just so callback is legit
+
+            # invisible sink to store value just so callback is legit
+            html.Div(id=widgetSinkId, style={'display': 'none'})
         ], className='cmd')
+
+        self.layout = layout
+        return layout
 
     def cmdlineArg(self):
         """
         Generate the command-line argument corresponding to the user's data entry, or None if
         the default value is set.
         """
-        widget = self.widget
-        if not widget or widget.value == self.default:
+        if self.value is None or self.value == self.default:
             return None
 
         return self._cmdlineArg()
 
     def _cmdlineArg(self):
-        arg = "%s '%s'" % (self.option, self.widget.value)
+        arg = None
+
+        if self.actionClass in ('_StoreTrueAction', '_StoreFalseAction'):
+            arg = self.option   # just the flag itself
+
+        elif self.option[0] not in ('-', '+'):
+            arg = shlex_quote(self.value)   # positional; just the value
+
+        elif self.value:
+            arg = "%s %s" % (self.option, shlex_quote(self.value))
+
         return arg
 
 class StoreAction(ActionInfo):
@@ -157,9 +178,6 @@ class StoreConst(ActionInfo):
     def __init__(self, pageId, action, const, default):
         super(StoreConst, self).__init__(pageId, action, default)
         self.const = const
-
-    def _cmdlineArg(self):
-        return self.option
 
 class AppendAction(ActionInfo):
     def __init__(self, pageId, action, default):

@@ -1,0 +1,262 @@
+/* Grid layout styles */
+.table {
+  width: 100%;
+  height: 100%;
+}
+.row {
+  width: 100%;
+  min-height: 1px;
+  height: auto;
+  margin: 0;
+}
+.cell {
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+.onecol {
+  width: 99%;
+  padding: 0.5%;
+}
+.twocol {
+  width: 49%;
+  padding: 0.5%;
+}
+
+h1 {
+  color: #444444;
+  font-family: 'Dosis', arial, san-serif;
+  font-size: 22px;
+}
+
+h2 {
+  color: #444444;
+  font-family: 'Dosis', arial, san-serif;
+  font-size: 18px;
+}
+
+h3 {
+  color: #444444;
+  font-family: 'Dosis', arial, san-serif;
+  font-size: 16px;
+}
+
+h4 {
+  color: #444444;
+  font-family: 'Dosis', arial, san-serif;
+  font-size: 14px;
+}
+
+body {
+  color: #444444;
+  font-family: 'Lato', arial, sans-serif;
+  font-size: 12px;
+}
+
+.centered {
+  text-align: center;
+}
+
+h1.title {
+  text-align: center;
+}
+
+.band {
+  width: 100%;
+  color: white;
+  font-weight: normal;
+  text-align: center;
+  padding: 4px;
+  background: green;
+}
+
+div.page {
+  text-align: center;
+}
+
+div.terminal {
+  font-family: monospace;
+  /*
+  overflow-y: scroll;
+  overflow-x: hidden;
+  */
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  width: 90%;
+  height: 600px;
+  resize: both;
+  text-align: left;
+  border: 1px solid gray;
+  padding: 2px;
+  margin: 2px;
+  display: inline-block;
+  background-color: black;
+  color: #ffe6b3;
+}
+
+.helptext {
+  width: 500px;
+  text-align: center;
+  font-style: italic;
+  margin: auto;
+  padding: 0px 0px 12px 0px;
+}
+
+div.choosers {
+  text-align: center;
+  border: none;
+  display: block;
+}
+
+div.commandChooser {
+  width: 350px;
+  display: inline-block;
+}
+
+div.projectChooser {
+  width: 150px;
+}
+
+span.required {
+  font-weight: bold;
+}
+
+input.option {
+  width: 95%;
+}
+
+table.cmd {
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+
+tr.cmd {
+  text-align: left;
+}
+
+th {
+  font-family: dosis,arial,san-serif;
+  font-size: 14px;
+}
+
+th.lined, td.lined {
+  padding: 4px;
+  border-bottom: 1px solid #ddd;
+}
+
+th.lined {
+  background: #999900;
+  color: white;
+  font-weight: normal;
+  font-size: 12pt;
+  text-align: center;
+  padding: 4px;
+}
+
+button.shadow {
+  background-color: darkgreen;
+  border: none;
+  color: white;
+  padding: 8px 18px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.24),
+    0 17px 50px 0 rgba(0, 0, 0, 0.19);
+}
+
+div.nav-bg {
+  background-color: darkgreen;
+  text-align: center;
+}
+
+div.sub-nav-bg {
+  background-color: green;
+  text-align: center;
+}
+
+div.nav-bar {
+    background-color: darkgreen;
+    display: inline-block;
+    height: 30px;
+}
+
+div.sub-nav-bar {
+    background-color: green;
+    display: inline-block;
+    height: 30px;
+}
+
+.nav-bar .nav-button {
+    background-color: darkgreen;
+    border: none;
+    color: white;
+    padding: 6px 30px;
+    text-align: center;
+    text-decoration: none;
+    font-family: dosis,arial,san-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.sub-nav-bar .sub-nav-button {
+    background-color: green;
+    border: none;
+    color: white;
+    padding: 6px 30px;
+    text-align: center;
+    text-decoration: none;
+    font-family: dosis,arial,san-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.nav-button, .nav-selected {
+    vertical-align: -8px;
+    font-family: dosis,arial,san-serif;
+}
+
+.sub-nav-button, .sub-nav-selected {
+    vertical-align: -8px;
+    font-family: dosis,arial,san-serif;
+}
+
+.nav-bar .nav-selected {
+  border: none;
+  color: yellow;
+  background-color: green;
+  padding: 6px 30px 7px 30px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sub-nav-bar .sub-nav-selected {
+  border: none;
+  color: yellow;
+  padding: 6px 30px 7px 30px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+
+/*
+.nav-bar .nav-button:not(:last-child) {
+    border-right: none;
+}
+*/
+
+.nav-button:hover {
+    background-color: olivedrab
+}
+
+.sub-nav-button:hover {
+    background-color: olivedrab;
+}

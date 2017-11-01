@@ -302,8 +302,16 @@ class Project(XMLFile):
     Represents the ``<project>`` element in the projects.xml file.
     """
     def __init__(self, xmlFile, projectName, groupName=None):
+
+        xmlFile = xmlFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
+
+        self.projectName = projectName or getParam('GCAM.DefaultProject')
+
+        if not self.projectName:
+            raise CommandlineError("No project name specified and no default project set")
+
         super(Project, self).__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
-        self.projectName = projectName
+
         self.scenarioGroupName = groupName
 
         tree = self.tree
@@ -657,11 +665,6 @@ _project = None
 
 
 def projectMain(args, tool):
-    if not args.project:
-        args.project = args.projectName or getParam('GCAM.DefaultProject')
-
-    if not args.project:
-        raise CommandlineError("run: must specify project name")
 
     def listify(items):
         '''Convert a list of comma-delimited strings to a single list of strings'''
@@ -672,13 +675,9 @@ def projectMain(args, tool):
     scenarios = listify(args.scenarios)
     skipScens = listify(args.skipScenarios)
 
-    projectFile = args.projectFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
+    project = Project(args.projectFile, args.projectName, args.group)
 
-    project = Project(projectFile, args.project, args.group)
-
-    # TBD: probably don't need this:
-    # defaultGroup = project.scenarioSetup.defaultGroup
-    groups = project.getKnownGroups() if args.allGroups else [args.group] # or defaultGroup]
+    groups = project.getKnownGroups() if args.allGroups else [args.group]
 
     for group in groups:
         project.setGroup(group)

@@ -23,7 +23,7 @@ class ModelInterfaceCommand(SubcommandABC):
     def __init__(self, subparsers):
         kwargs = {'help' : '''Run ModelInterface for the current project.'''}
 
-        super(ModelInterfaceCommand, self).__init__('mi', subparsers, kwargs, group='utils')
+        super(ModelInterfaceCommand, self).__init__('mi', subparsers, kwargs, group='utils', label='MI')
 
     def addArgs(self, parser):
         parser.add_argument('-d', '--useDefault', action='store_true',

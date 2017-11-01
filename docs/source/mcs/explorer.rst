@@ -87,7 +87,7 @@ Once logged into the remote system, run the MCS Explorer there, with the command
      $ gt explore
 
 This will start the web application server on the remote system. Point a browser
-on your desktop computer at the URL http://127.0.0.1:8050 to load the MCS Explorer
+on your desktop computer at the URL http://localhost:8050 to load the MCS Explorer
 application.
 
 

@@ -1,7 +1,9 @@
+from __future__ import print_function
 import os
 import select
 import subprocess as subp
 import time
+from six.moves.queue import Empty
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -12,10 +14,12 @@ class Terminal(object):
 
     counter = 0     # to create unique ids
 
-    def __init__(self, updateSeconds=1):
+    def __init__(self, updateSeconds=2, toConsole=False):
         self.status = None
         self.proc   = None
         self.page   = None
+        self.queue  = None
+        self.toConsole = toConsole
 
         self.counter += 1
         self.intervalId = intervalId = 'interval-%d' % self.counter
@@ -46,7 +50,7 @@ class Terminal(object):
         buttonId   = self.buttonId
 
         # Add support for staying scrolled to bottom of 'terminal' div
-        app.scripts.append_script({'external_url': 'https://codepen.io/plevin/pen/MvpeNV.js'})
+        # app.scripts.append_script({'external_url': 'https://codepen.io/plevin/pen/MvpeNV.js'})
 
         # Since events aren't handled as well as inputs, we convert the
         # timer event into an input by setting the value in a hidden <div>.
@@ -62,13 +66,14 @@ class Terminal(object):
             if not self.proc:
                 return '[No process is running]\n\n' + self.text
 
-            fd = self.proc.stdout.fileno()
             newText = ''
 
             # Loop while there is data to read
-            while len(select.select([fd], [], [], 0)[0]) == 1:
-                print("reading...")
-                buf = os.read(fd, 2048)     # Read up to a 2 KB chunk of data
+            q = self.queue
+            while q.qsize() > 0:
+                buf = q.get_nowait()
+                print(": %s" % buf, end='')
+
                 if buf == '':
                     break
 
@@ -80,7 +85,7 @@ class Terminal(object):
             self.running = self.status is None
             if not self.running:
                 self.text += "\n[Process exited]\n"
-                self.proc = None
+                self.proc = self.fd = None
 
             return self.text
 
@@ -123,7 +128,7 @@ class Terminal(object):
             return ms
 
     def setPage(self, page):
-        print("Setting page to %s" % page)
+        # print("Setting page to %s" % page)
         self.page = page
 
     def stopCommand(self):
@@ -141,20 +146,29 @@ class Terminal(object):
                 proc.kill()
 
             proc.wait()
-            self.proc = None
+            self.proc = self.fd = None
             self.text += "[Terminated process %d]\n" % pid
 
         self.running = False
 
     def runCommand(self, command):
+        from ..utils import queueForStream
+
         if self.running:
             print('Already running a command')
             return
 
         self.status = None
         self.text = '$ ' + command + '\n'
-        self.proc = subp.Popen(command, stdout=subp.PIPE, stderr=subp.STDOUT, shell=True,   # for now...
-                               bufsize=1,    # line buffered
-                               universal_newlines=True, cwd=None, env=None)
-        self.running = True
+
         print('Running "%s"' % command)
+        if self.toConsole:
+            subp.call(command, shell=True)
+        else:
+            self.proc = subp.Popen(command, stdout=subp.PIPE, stderr=subp.STDOUT, shell=True,   # for now...
+                                   bufsize=1,    # line buffered
+                                   universal_newlines=True, cwd=None, env=None)
+
+            self.queue = queueForStream(self.proc.stdout)
+            self.running = True
+

@@ -32,7 +32,7 @@ The main components include:
 
   * **Graphical User Interfaces** that simplify use of the libraries and tools as well
     as providing unique capabilities such as graphical exploration and comparison of sets of
-    Monte Carlo simulation results.
+    Monte Carlo simulation results. (See :doc:`gui` and :doc:`mcs/explorer` for more info.)
 
   ..
 

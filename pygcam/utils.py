@@ -23,6 +23,34 @@ from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
+def queueForStream(stream):
+    """
+    Create a thread to read from a non-socket file descriptor and
+    its contents to a socket so non-blocking read via select() works
+    on Windows. (Since Windows doesn't support select on pipes.)
+
+    :param stream: (file object) the input to read from,
+       presumably a pipe from a subprocess
+    :return: (int) a file descriptor for the socket to read from.
+    """
+    from six.moves.queue import Queue
+    from threading import Thread
+
+    def enqueue(stream, queue):
+        fd = stream.fileno()
+        data = None
+        while data != b'':
+            data = os.read(fd, 1024)
+            queue.put(data)
+        stream.close()
+
+    q = Queue()
+    t = Thread(target=enqueue, args=(stream, q))
+    t.daemon = True # thread dies with the program
+    t.start()
+
+    return q
+
 # Used only in CI plugins
 def digitColumns(df, asInt=False):
     '''
