@@ -20,6 +20,7 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
    :ref:`analyze <analyze>`,
    :ref:`cluster <cluster>`,
    :ref:`delsim <delsim>`,
+   :ref:`explore <explore>`,
    :ref:`discrete <discrete>`,
    :ref:`gensim <gensim>`,
    :ref:`iterate <iterate>`,
@@ -54,6 +55,13 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
       .. _discrete:
 
       Convert csv files to the .ddist format.
+
+   explore : @replace
+      .. _explore:
+
+      Run the MCS "explorer", a browser-based interactive tool for exploring Monte
+      Carlo simulation results. After running ``gt explore``, point your browser to
+      http://localhost:8050 to load the :doc:`explorer`.
 
    gensim : @replace
       .. _gensim:

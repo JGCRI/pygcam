@@ -58,7 +58,11 @@ Version 1.0b13 (1 Nov 2017)
 * Merged pygcam-mcs into pygcam. Use command "gt mcs on" to enable the
   Monte Carlo features. Note that these run only on Linux currently.
 
-* Re-architected the MCS framework to use ipython-parallel. Workers now
+* Created sub-command ippsetup to configure ipython-parallel for the
+  Slurm resource manager. Support for PBS and LSF is possible is users
+  request it.
+
+* Re-designed the MCS framework to use ipython-parallel. Workers now
   receive instructions from the ipyparallel controller and return results
   to the controller, which updates the database.
 

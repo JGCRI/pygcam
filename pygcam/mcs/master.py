@@ -23,7 +23,6 @@ from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_C
 from .context import Context
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError
-from .XMLResultFile import saveResults #, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
 from ..log import getLogger
 
