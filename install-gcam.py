@@ -26,7 +26,7 @@ DefaultInstallDir  = os.path.join(Home, 'gcam-v4.3-install-dir')
 DefaultDownloadDir = os.path.join(Home, '.gcam-installation-tmp')
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description='''Install GCAM on Windows, macOS, or Linux''')
+    parser = argparse.ArgumentParser(description='''Install GCAM v4.3 on Windows, macOS, or Linux''')
 
     parser.add_argument('-d', '--downloadDir', default=DefaultDownloadDir,
                         help='''The directory into which to download the required tar files. Default is %s''' % DefaultDownloadDir)

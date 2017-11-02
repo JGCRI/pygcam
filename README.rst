@@ -34,7 +34,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0b13 (1 Nov 2017)
+Version 1.0rc1 (2 Nov 2017)
 -----------------------------
 * Revised installation procedure now uses Anaconda environments to
   ensure Python package compatibility. Dropped "pyinstaller" versions.
@@ -44,8 +44,11 @@ Version 1.0b13 (1 Nov 2017)
   variables.
 
 * All environment variables are now available in the configuration
-  system as "$" prefixed names as in Unix shells. That is, you can access,
-  say, the "USER" environment variable as "%($USER)s" in the config file.
+  system as ``$`` prefixed names as in Unix shells. That is, you can access,
+  say, the ``USER`` environment variable as ``%($USER)s`` in the config file.
+
+* Modified configuration of the logging system to allow Log Level to be set
+  globally and/or by individual modules.
 
 * Created browser-based "MCS Explorer" to help analyze Monte Carlo results.
   Features include distributions of results, tornado plots of uncertainty
@@ -55,10 +58,10 @@ Version 1.0b13 (1 Nov 2017)
 * Created browser-based GUI that provides interactive access to all features
   of the "gt" (gcamtool) command.
 
-* Merged pygcam-mcs into pygcam. Use command "gt mcs on" to enable the
-  Monte Carlo features. Note that these run only on Linux currently.
+* Merged pygcam-mcs into pygcam. Use command ``gt mcs on`` to enable the
+  Monte Carlo features. Note that MCS support is available only on Linux currently.
 
-* Created sub-command ippsetup to configure ipython-parallel for the
+* Created sub-command ``ippsetup`` to configure ipython-parallel for the
   Slurm resource manager. Support for PBS and LSF is possible is users
   request it.
 
@@ -66,11 +69,11 @@ Version 1.0b13 (1 Nov 2017)
   receive instructions from the ipyparallel controller and return results
   to the controller, which updates the database.
 
-* Added "optional" attribute to the "<step>" element to allow some steps
+* Added "optional" attribute to the ``<step>`` element to allow some steps
   to be defined for occasional use. Elements marked optional="true" are
   run only if explicitly mentioned on the command-line (via the -s flag).
 
-* The "query" sub-command now accepts arguments (+b and +B) to control
+* The "query" sub-command now accepts arguments (``+b`` and ``+B``) to control
   processing of pre-formed batch query files.
 
 * Modified all "global" single-letter arguments to use "+" prefix rather

@@ -10,12 +10,17 @@ Introduction
    job scheduling systems. See the :doc:`configuration` page for
    more information.
 
-Sub-commands
--------------
 Running a Monte Carlo simulation with ``pygcam`` involves the following steps:
+
+#. Configure ipyparallel for ``pygcam``. The :ref:`ippsetup <ippsetup>`
+   sub-command handles this for the Slurm task scheduler. Support for PBS
+   and LSF can be provided if users need this.
 
 #. :doc:`Define parameters and distributions <parameters>` in the
    file ``parameters.xml``.
+
+#. :doc:`Define model results <results>` to save in the SQL
+   database. These are defined in ``results.xml``.
 
 #. Run the :ref:`gensim <gensim>` sub-command to create the file
    structure and database required for the MCS and a CSV file

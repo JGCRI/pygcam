@@ -14,6 +14,7 @@ from setuptools import setup
 
 requirements = [
     'configparser>=3.5.0',     # backport of python 3.5 version
+    'filelock>=2.0.12',
     'futures>=3.1.1',
     'future>=0.16.0',
     'lxml>=3.8.0',
@@ -22,7 +23,6 @@ requirements = [
     'seaborn==0.8.0',
     'six>=1.10.0',
     'sphinx-argparse==0.1.17', # later versions lose markup in commands
-    'filelock>=2.0.12',
 ]
 
 mcs_requirements = [

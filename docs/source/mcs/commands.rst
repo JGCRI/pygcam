@@ -23,6 +23,7 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
    :ref:`explore <explore>`,
    :ref:`discrete <discrete>`,
    :ref:`gensim <gensim>`,
+   :ref:`ippsetup <ippsetup>`,
    :ref:`iterate <iterate>`,
    :ref:`runsim <runsim>`,
 
@@ -48,7 +49,7 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
 
       Start an :doc:`ipyparallel <ipyparallel:intro>` cluster after generating batch
       file templates based on parameters in ``.pygcam.cfg`` and the number of tasks
-      to run. Note that the :ref:`runsim` <runsim>` sub-command will start a cluster
+      to run. Note that the :ref:`runsim <runsim>` sub-command will start a cluster
       if one is not already running. More often, this command is used to stop a cluster.
 
    discrete : @replace
@@ -69,13 +70,19 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
       Generates input files for simulations by reading ``{ProjectDir}/mcs/parameters.xml``
       in the project directory.
 
-
    delsim : @replace
       .. _delsim:
 
       Delete simulation results and re-initialize the database for the given user
       application. This is done automatically by the sub-command ``gensim`` when
       the ``--delete`` flag is specified.
+
+   ippsetup : @replace
+      .. _ippsetup:
+
+      Create a new ipyparallel profile to use with ``pygcam.mcs``. This command
+      generates the profile and edits the default configuration files as per
+      command-line arguments to this sub-command.
 
    iterate : @replace
       .. _iterate:

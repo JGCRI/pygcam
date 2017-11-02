@@ -25,7 +25,7 @@ def commandGroupPage(app, group, default, label=None):
     return page
 
 def driver(args):
-    from pkg_resources import resource_string, resource_filename
+    from pkg_resources import resource_string
 
     app = dash.Dash(csrf_protect=False)
     app.config['suppress_callback_exceptions'] = True

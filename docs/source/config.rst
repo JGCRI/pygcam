@@ -13,7 +13,7 @@ The configuration file and variables are described below.
    Usage of the ``config`` sub-command is described on the :ref:`gt config <config>`
    page. See :doc:`pygcam.config` for documentation of the API to the configuration system.
 
-   ``pygcam`` uses the Python :py:mod:`ConfigParser` package. See the documentation
+   ``pygcam`` uses the Python :mod:`ConfigParser` package. See the documentation
    there for more details.
 
 
@@ -36,7 +36,7 @@ allowing them to be overridden on a project-by-project basis.
 Project sections
 ^^^^^^^^^^^^^^^^^^^^^^
 Each project must have its own section. For example, to setup a project called,
-say, "paper1", I would create the section ``[paper1]``. Following this, I would define
+say, "myproj", I would create the section ``[myproj]``. Following this, I would define
 variables particular to this project, e.g., where the to find the files defining scenarios,
 queries, and so on.
 
@@ -144,8 +144,15 @@ Referencing configuration variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A powerful feature of the configuration system is that variables can be defined in
 terms of other variables. The syntax for referencing the value of a variable is to
-precede the variable name with ``%(`` and follow it with ``)s``. This to reference
+precede the variable name with ``%(`` and follow it with ``)s``. Thus to reference
 variable ``GCAM.QueryDir``, you would write ``%(GCAM.QueryDir)s``.
+
+.. note::
+
+   When referencing a variable in the config file, you must include the
+   trailing ``s`` after the closing parenthesis, or a Python exception will be raised.
+
+   Also note that variable names are case-sensitive.
 
 Variable values are substituted when a variable's value is requested, not
 when the configuration file is read. The difference is that if variable ``A`` is
@@ -162,13 +169,6 @@ All defined environmental variables are loaded into the config parameter space b
 reading any configuration files, and are accessible with a prefix of ``$``, as in a
 UNIX shell. For example, to reference the environment variable ``SCRATCH``, you can
 use ``%($SCRATCH)s``.
-
-.. note::
-
-   When de-referencing a variable in the config file, you must include the
-   trailing 's' after the closing parenthesis, or a Python exception will be raised.
-
-   Also note that variable names are case-sensitive.
 
 
 Validating configuration settings
@@ -217,26 +217,26 @@ using the command:
 which will print out a listing of files and their status.
 
 You can also specify a project to check that project's variables. For example,
-I can test the values set for project ``paper1`` with the following command,
+I can test the values set for project ``myproj`` with the following command,
 shown with command output:
 
 .. code-block:: sh
 
-     $ gt +P paper1 config -t
+     $ gt +P myproj config -t
 
     OK: GCAM.SandboxRoot = /people/plev920/ws
-    OK: GCAM.SandboxDir = /people/plev920/ws/paper1/
+    OK: GCAM.SandboxDir = /people/plev920/ws/myproj/
     OK: GCAM.ProjectRoot = /people/plev920/bitbucket
-    OK: GCAM.ProjectDir = /people/plev920/bitbucket/paper1
-    OK: GCAM.QueryDir = /people/plev920/bitbucket/paper1/queries
+    OK: GCAM.ProjectDir = /people/plev920/bitbucket/myproj
+    OK: GCAM.QueryDir = /people/plev920/bitbucket/myproj/queries
     OK: GCAM.MI.Dir = /people/plev920/GCAM/current/input/gcam-data-system/_common/ModelInterface/src
     OK: GCAM.RefWorkspace = /people/plev920/GCAM/current
     OK: GCAM.TempDir = /pic/scratch/plev920/tmp
     OK: GCAM.UserTempDir = /people/plev920/tmp
-    OK: GCAM.ProjectXmlFile = /people/plev920/bitbucket/paper1/etc/project.xml
+    OK: GCAM.ProjectXmlFile = /people/plev920/bitbucket/myproj/etc/project.xml
     OK: GCAM.RefConfigFile = /people/plev920/GCAM/current/exe/configuration_ref.xml
     OK: GCAM.MI.JarFile = /people/plev920/GCAM/current/input/gcam-data-system/_common/ModelInterface/src/ModelInterface.jar
-    OK: GCAM.RewriteSetsFile = /people/plev920/bitbucket/paper1/etc/rewriteSets.xml
+    OK: GCAM.RewriteSetsFile = /people/plev920/bitbucket/myproj/etc/rewriteSets.xml
 
 
 Location of GCAM program and data files
