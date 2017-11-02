@@ -29,7 +29,6 @@ XML File Formats
 
    xmlFiles
    conditional-xml
-   mcs/pygcam.mcs.XML
 
 Application Programming Interface (API)
 ----------------------------------------

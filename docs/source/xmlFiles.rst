@@ -2,15 +2,16 @@ XML File Formats
 ==================
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
 
    project-xml
    scenarios-xml
    query-xml
    rewrites-xml
    landProtection-xml
+   parameters.xml <mcs/parameters>
+   results.xml <mcs/results>
 
--------------------
 
 Various :doc:`gcamtool` sub-commands take input from XML files that are distinct
 from those read by the GCAM model itself. These include:
@@ -30,6 +31,10 @@ from those read by the GCAM model itself. These include:
   - :doc:`landProtection-xml` file describes which types of unmanaged land should "protected",
     (i.e., removed from economic consideration in the model), and at what percentages in each
     region.
+
+  - :doc:`parameters.xml <mcs/parameters>` defines Monte Carlo parameters and distributions.
+
+  - :doc:`results.xml <mcs/results>` defines Monte Carlo results to be saved in the SQL database.
 
 Most of these files allow a custom meta-language I call :doc:`conditional-xml`, which allows
 portions of the XML file to be selected based on the values of configuration variables.
