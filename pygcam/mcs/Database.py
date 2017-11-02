@@ -30,7 +30,7 @@ from . import util as U
 from .constants import RegionMap
 from .error import PygcamMcsUserError, PygcamMcsSystemError
 from .schema import (ORMBase, Run, Sim, Input, Output, InValue, OutValue, Experiment,
-                     Program, Application, Attribute, Code, Region, TimeSeries)
+                     Program, Code, Region, TimeSeries)
 
 _logger = getLogger(__name__)
 
@@ -285,10 +285,6 @@ class CoreDatabase(object):
         initialData = [
             ['Program',    [{'name': GCAM_PROGRAM,
                              'description' : 'The GCAM executable program'}]],
-            # Deprecated?
-            ['Attribute',  [{'attrName'    : 'gcamStatus',
-                             'attrType'    : 'number',
-                             'description' : 'exit status of GCAM program'}]]
         ]
 
         _logger.debug('Adding initial data')
@@ -473,18 +469,6 @@ class CoreDatabase(object):
                 columnName = column.name                        # column.compile(dialect=engine.dialect)
                 columnType = column.type.compile(engine.dialect)
                 engine.execute('ALTER TABLE %s ADD COLUMN "%s" %s' % (tableName, columnName, columnType))
-
-    # deprecated
-    # def createAttribute(self, attrName, attrType, description):
-    #     '''
-    #     Create a new attribute. Unclear if this is needed, or if this will be
-    #     handled using the database customization module. Useful for testing.
-    #     '''
-    #     with self.sessionScope() as session:
-    #         attr = Attribute(attrName=attrName, attrType=attrType, description=description)
-    #         session.add(attr)
-    #
-    #     return attr.attrId
 
     def createOutput(self, name, description=None, program=DFLT_PROGRAM, session=None):
         '''
@@ -692,20 +676,6 @@ class CoreDatabase(object):
         _logger.debug("scenariosWithResults returning %s", names)
         return names
 
-    # Deprecated
-    # def getAppId(self, appName):
-    #     session = self.Session()
-    #     appId = session.query(Application).filter_by(appName=appName).scalar()
-    #     self.endSession(session)
-    #     return appId # N.B. scalar() returns None if no rows are found
-    #
-    # def currentAppId(self):
-    #     if self.appId is not None:
-    #         return self.appId
-    #
-    #     appName = getSection()
-    #     self.appId = self.getAppId(appName)
-    #     return self.appId
 
     def createRun(self, simId, trialNum, expName=None, expId=None, status=RUN_NEW, session=None):
         """
@@ -1303,16 +1273,6 @@ def getDatabase(checkInit=True):
     The optional dbClass argument is provided to facilitate subclassing.
     '''
     return GcamDatabase.getDatabase(checkInit=checkInit)
-
-# Deprecated
-# def getSession():
-#     '''
-#     Convenience method for functions that need only a session, not the db object.
-#     If a subclass of CoreDatabase is required, getDatabase should be called the
-#     first time with that dbClass.
-#     '''
-#     db = getDatabase()
-#     return db.Session()
 
 def dropTable(tableName, meta):
     if tableName in meta.tables:

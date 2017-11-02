@@ -4,24 +4,23 @@
 '''
 from abc import ABCMeta, abstractmethod
 
-class OptionInfo(object):
-    """
-    Stores information about a single sub-command option that is used to
-    construct the web-based GUI for the sub-command.
-    """
-    def __init__(self, display=True, choiceFunc=None, multiple=False):
-        """
-        Initialize an OptionInfo instance.
-
-        :param display: (bool) whether this option should be displayed in the GUI
-        :param choiceFunc: (callable) function to return a list of options to display
-        :param multiple: (bool) whether multiple values can be returned
-        :param commaList: (bool) whether values should be returned as a comma-delimited string
-        """
-        self.display = display
-        self.choiceFunc = choiceFunc
-        self.multiple = multiple
-
+# class OptionInfo(object):
+#     """
+#     Stores information about a single sub-command option that is used to
+#     construct the web-based GUI for the sub-command.
+#     """
+#     def __init__(self, display=True, choiceFunc=None, multiple=False):
+#         """
+#         Initialize an OptionInfo instance.
+#
+#         :param display: (bool) whether this option should be displayed in the GUI
+#         :param choiceFunc: (callable) function to return a list of options to display
+#         :param multiple: (bool) whether multiple values can be returned
+#         :param commaList: (bool) whether values should be returned as a comma-delimited string
+#         """
+#         self.display = display
+#         self.choiceFunc = choiceFunc
+#         self.multiple = multiple
 
 class SubcommandABC(object):
     """
@@ -31,10 +30,14 @@ class SubcommandABC(object):
     named ``Plugin`` or the global variable ``PluginClass`` can identify the class.
 
     :param name: (str) the name of the sub-command
+    :param subparsers: an object returned by argparse's ``parser.add_subparsers()``
     :param kwargs: (dict) keywords to pass to the the call to argparse's
        ``subparsers.add_parser(name, **kwargs)``, e.g., to pass `help` or
        `documentation` strings.
-    :param subparsers: an object returned by argparse's ``parser.add_subparsers()``
+    :param group: (str) the name of the GUI group to assign this plug-in to.
+    :param label: (str) the label to use on the GUI to reference this plug-in.
+       Defaults to the sub-command name, capitalized.
+    :param guiSuppress: (bool) if True, do not display this sub-command in the GUI.
     """
     __metaclass__ = ABCMeta
 
@@ -52,7 +55,7 @@ class SubcommandABC(object):
         return obj.parser
 
     def __init__(self, name, subparsers, kwargs, group=None, label=None,
-                 guiSuppress=False, showTerminal=True):
+                 guiSuppress=False):
         self.name = name
         self.label = label or name.capitalize()  # label to display in GUI
         self.parser = parser = subparsers.add_parser(self.name, **kwargs)

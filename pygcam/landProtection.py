@@ -125,49 +125,6 @@ class LandProtection(object):
         tree.write(outfile, xml_declaration=True, pretty_print=True)
 
 
-    # deprecated
-    # def protectLand(self, infile, outfile, scenarioName, backup=True, unprotectFirst=False):
-    #     """
-    #     Generate a copy of `infile` with land protected according to `scenarioName`,
-    #     writing the output to `outfile`.
-    #
-    #     :param infile: input file (should be one of the GCAM aglu-xml land files)
-    #     :param outfile: the file to create which represents the desired land protection
-    #     :param scenarioName: a scenario in the landProtection.xml file
-    #     :param backup: if True, create a backup `outfile`, with a '~' appended to the name,
-    #       before writing a new file.
-    #     :return: none
-    #     """
-    #     parser = ET.XMLParser(remove_blank_text=True)
-    #     tree = ET.parse(infile, parser)
-    #
-    #     scenario = Scenario.getScenario(scenarioName)
-    #     if not scenario:
-    #         raise FileFormatError("Scenario '%s' was not found" % scenarioName)
-    #
-    #     # Remove any existing land protection, if so requested
-    #     if unprotectFirst:
-    #         unProtectLand(tree, otherArable=True)
-    #
-    #     # Iterate over all definitions for this scenario, applying the protections
-    #     # incrementally to the tree representing the XML file that was read in.
-    #     for protReg in scenario.protRegDict.values():
-    #         regions = [protReg.name]
-    #         for prot in protReg.protections:
-    #             createProtected(tree, prot.fraction, landClasses=prot.landClasses, regions=regions)
-    #
-    #     if backup:
-    #         try:
-    #             # Ensure we're not clobbering reference files.
-    #             backupFile = outfile + '~'
-    #             os.rename(outfile, backupFile)
-    #         except Exception as e:
-    #             PygcamException('Failed to create backup file "%s": %s', backupFile, e)
-    #
-    #     _logger.info("Writing '%s'...", outfile)
-    #     tree.write(outfile, xml_declaration=True, pretty_print=True)
-
-
 class Group(object):
     Instances = {}
 

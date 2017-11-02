@@ -47,10 +47,6 @@ DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 def readParameterInfo(context, paramPath):
     from pygcam.xmlSetup import ScenarioSetup
 
-    # deprecated
-    # groupName = context.groupName
-    # setParam('MCS.ScenarioSubdir', groupName)
-
     scenarioFile  = getParam('GCAM.ScenarioSetupFile')
     scenarioSetup = ScenarioSetup.parse(scenarioFile)
     scenarioNames = scenarioSetup.scenariosInGroup(context.groupName)

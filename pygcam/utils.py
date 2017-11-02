@@ -5,6 +5,7 @@
 .. Copyright (c) 2015-2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import argparse
 import io
 import os
 from lxml import etree as ET
@@ -22,6 +23,21 @@ from .log import getLogger
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
+
+#
+# Custom argparse "action" to parse comma-delimited strings to lists
+# TBD: Use this where relevant
+#
+class ParseCommaList(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed with " % option_strings)
+
+        super(ParseCommaList, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values.split(','))
+
 
 def queueForStream(stream):
     """
@@ -521,28 +537,6 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
 
     return module
 
-# Deprecated (unused, but might still be useful)
-# def loadObjectFromPath(objName, modulePath, required=True):
-#     """
-#     Load a module and return a reference to a named object in that module.
-#     If 'required' and the object is not found, an error is raised, otherwise,
-#     None is returned if the object is not found.
-#
-#     :param objName: (str) the name of an object to find in the `modulePath`
-#     :param modulePath: (str) the path to a python module to load
-#     :param required: (bool) if True and the object cannot be loaded, raise
-#       an error.
-#     :return: a reference to the loaded object, if loaded. If not loaded and
-#        `required` is False, return None.
-#     :raises: PygcamException
-#     """
-#     module = loadModuleFromPath(modulePath)
-#     obj    = getattr(module, objName, None)
-#
-#     if obj or not required:
-#         return obj
-#
-#     raise PygcamException("Module '%s' has no object named '%s'" % (modulePath, objName))
 
 def importFrom(modname, objname, asTuple=False):
     """

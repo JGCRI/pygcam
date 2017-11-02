@@ -12,11 +12,6 @@ from .error import ConfigFileError, PygcamException
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
 
-# Deprecated
-# CONFIG_VAR_NAME = 'QUEUE_GCAM_CONFIG_FILE'
-# WORKSPACE_VAR_NAME   = 'QUEUE_GCAM_WORKSPACE'
-# NO_RUN_GCAM_VAR_NAME = 'QUEUE_GCAM_NO_RUN_GCAM'
-
 PlatformName = platform.system()
 
 _instructions = '''#
@@ -314,12 +309,6 @@ def getParam(name, section=None, raw=False, raiseError=True):
             raise PygcamException('getParam: unknown variable "%s"' % name)
         else:
             return None
-
-    # Deprecated: now all enviro vars are loaded, and can be accessed in config files, too
-    # # if "$..." refers to an env var, return its value
-    # if len(value) > 1 and value[0] == '$':
-    #     varname = value[1:]
-    #     value = os.getenv(varname, '$'+varname)
 
     return value
 

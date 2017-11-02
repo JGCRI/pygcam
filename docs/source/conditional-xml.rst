@@ -29,6 +29,29 @@ takes no attributes. It must contain:
 * An optional ``<ELSE>`` element, which can contain XML to insert if the
   test evaluates to False.
 
+Example
+^^^^^^^^
+In this brief example, the project file variable ``mcsFlag`` is set
+to either ``--mcs`` or the empty string, depending on the value of
+the configuration variable ``RunMCS``.
+
+.. code-block:: xml
+
+   <project name="paper1">
+      <vars>
+         <CONDITIONAL>
+            <TEST var="RunMCS" value="1" type="bool"/>
+            <THEN>
+               <var name="mcsFlag">--mcs</var>
+            </THEN>
+            <ELSE>
+               <var name="mcsFlag"></var>
+            </ELSE>
+         </CONDITIONAL>
+       </vars>
+   ...
+   </project>
+
 <TEST>
 ^^^^^^^^^^^^^
 This element provides the basic comparison functionality.
@@ -72,39 +95,48 @@ which can be a nuisance, thus FORTRAN text style operators are also provided.
 
 * ``>=`` or ``ge``: A is greater than or equal to B
 
+Example
+~~~~~~~~
+
+.. code-block:: xml
+
+   <TEST var="RunMCS" value="1" type="bool"/>
+
+
 <AND>
-~~~~~~~
+^^^^^^
 The ``<AND>`` element takes no attributes. It can contain any number of
 ``<TEST>``, ``<AND>``, or ``<OR>`` elements. It evaluates to True if
 all of its direct children elements evaluate to True. The evaluation of
 elements stops as soon as one evaluates to False.
 
+Example
+~~~~~~~~
+The following example requires both that variable ``RunMCS`` has
+a "True" value, and that ``OtherVar`` equals "foo".
+
+.. code-block:: xml
+
+   <AND>
+     <TEST var="RunMCS" value="1" type="bool"/>
+     <TEST var="OtherVar" value="foo"/>
+   </AND>
+
 <OR>
-~~~~~~~
+^^^^^^
 The ``<OR>`` element takes no attributes. It can contain any number of
 ``<TEST>``, ``<AND>``, or ``<OR>`` elements. It evaluates to True if
 any of its direct children elements evaluate to True. The evaluation of
 elements stops as soon as one evaluates to True.
 
 Example
-^^^^^^^^
-In this brief example, the project file variable ``mcsFlag`` is set
-to either ``--mcs`` or the empty string, depending on the value of
-the configuration variable ``RunMCS``.
+~~~~~~~~
+The following example requires that variable ``RunMCS`` has
+a "True" value, or, that ``OtherVar`` equals "foo" (or both).
 
 .. code-block:: xml
 
-   <project name="paper1">
-      <vars>
-         <CONDITIONAL>
-            <TEST var="RunMCS" value="1" type="bool"/>
-            <THEN>
-               <var name="mcsFlag">--mcs</var>
-            </THEN>
-            <ELSE>
-               <var name="mcsFlag"></var>
-            </ELSE>
-         </CONDITIONAL>
-       </vars>
-   ...
-   </project>
+   <OR>
+     <TEST var="RunMCS" value="1" type="bool"/>
+     <TEST var="OtherVar" value="foo"/>
+   </OR>

@@ -13,11 +13,10 @@ _logger = getLogger(__name__)
 
 class MCSCommand(SubcommandABC):
 
-    def __init__(self, subparsers, showTerminal=True):
+    def __init__(self, subparsers):
         kwargs = {'help' : '''Enable or disable pygcam Monte Carlo Simulation sub-commands.'''}
 
-        super(MCSCommand, self).__init__('mcs', subparsers, kwargs, group='utils', label='MCS',
-                                         showTerminal=showTerminal)
+        super(MCSCommand, self).__init__('mcs', subparsers, kwargs, group='utils', label='MCS')
 
     def addArgs(self, parser):
         parser.add_argument('mode', choices=['on', 'off', 'status'],
@@ -31,13 +30,11 @@ class MCSCommand(SubcommandABC):
         sentinelFile = mcsSentinelFile()
 
         if args.mode == 'on':
-            # Touch the file
-            open(sentinelFile, 'w').close()
+            open(sentinelFile, 'w').close()     # create empty file
 
         elif args.mode == 'off':
-            # remove it if it exists
             try:
-                os.remove(sentinelFile)
+                os.remove(sentinelFile)         # remove it if it exists
             except:
                 pass
         else:

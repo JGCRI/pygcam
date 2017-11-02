@@ -654,29 +654,6 @@ def runMultiQueryBatch(scenario, queries, xmldb='', queryPath=None, outputDir=No
     runModelInterface(scenario, outputDir, xmldb=xmldb, batchFile=batchFile,
                       miLogFile=miLogFile, noDelete=noDelete, noRun=noRun)
 
-    # Deprecated: replaced with call to runModelInterface. Delete after testing.
-    #
-    # if miLogFile:
-    #     mkdirs(os.path.dirname(miLogFile))
-    #     _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
-    #
-    # command = _createJavaCommand(batchFile, miLogFile)
-    #
-    # if noRun:
-    #     print(command)
-    #     return
-    #
-    # _logger.debug(command)
-    #
-    # try:
-    #     if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):
-    #         with Xvfb():
-    #             subprocess.call(command, shell=True)
-    #     else:
-    #         subprocess.call(command, shell=True)
-    #
-    # except:
-    #     raise
 
 # TBD: Test queryText and asDataFrame.
 def runModelInterface(scenario, outputDir, csvFile=None, batchFile=None,
@@ -863,66 +840,6 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb='',
     csvPath = runModelInterface(scenario, filename, outputDir, csvFile, xmldb=xmldb,
                                 miLogFile=miLogFile, noDelete=noDelete, noRun=noRun)
     return csvPath
-
-    # Deprecated: Refactored into call to runModelInterface. Delete this once debugged.
-    #
-    # csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
-    #
-    # # Create a batch file for ModelInterface to invoke the query on the named
-    # # scenario, and save the output where specified
-    # batchFile = getTempFile(suffix='.batch.xml', delete=delete)
-    # batchFileText = BatchQueryTemplate.format(scenario=scenario, queryFile=filename,
-    #                                           csvFile=csvPath, xmldb=xmldb)
-    #
-    # _logger.debug("Creating temporary batch file '%s'", batchFile)
-    # saveToFile(batchFileText, filename=batchFile)
-    #
-    # _logger.debug("Writing results to: %s", csvPath)
-    #
-    # if miLogFile:
-    #     mkdirs(os.path.dirname(miLogFile))
-    #     _copyToLogFile(miLogFile, filename,  "Query file: '%s'\n\n" % filename)
-    #     _copyToLogFile(miLogFile, batchFile, "Batch file: '%s'\n\n" % batchFile)
-    #
-    # command = _createJavaCommand(batchFile, miLogFile)
-    #
-    # if noRun:
-    #     print(command)
-    # else:
-    #     _logger.debug(command)
-    #
-    #     try:
-    #         if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):
-    #             with Xvfb():
-    #                 subprocess.call(command, shell=True)
-    #         else:
-    #             subprocess.call(command, shell=True)
-    #
-    #         # The java program always exits with 0 status, but when the query fails,
-    #         # it writes an error message to the CSV file. If this occurs, we delete
-    #         # the file.
-    #         failed = False
-    #         try:
-    #             with open(csvPath, 'r') as f:
-    #                 line = f.readline()
-    #
-    #             if re.search('java.*Exception', line, flags=re.IGNORECASE):
-    #                 failed = True
-    #
-    #         except Exception:
-    #             failed = True
-    #
-    #         finally:
-    #             if failed:
-    #                 _logger.error("Query '%s' failed. Deleting '%s'", queryName, csvPath)
-    #                 deleteFile(csvPath)
-    #     except:
-    #         raise
-    #
-    #     finally:
-    #         if delete:
-    #             TempFile.remove(filename,  raiseError=False)
-    #             TempFile.remove(batchFile, raiseError=False)
 
 # Deprecated: there no need for this once multiple queries is working
 def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], queryPath=None,

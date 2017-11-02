@@ -80,8 +80,6 @@ class XMLResult(XMLWrapper):
         constraintStrings = filter(None, map(XMLConstraint.asString, self.constraints))
         self.whereClause = ' and '.join(constraintStrings)
 
-        #_logger.debug('XMLResult name=%s, queryFile=%s, whereClause="%s"', self.name, self.queryFile, self.whereClause)
-
     def isScalar(self):
         return self.column is not None
 
@@ -205,7 +203,7 @@ class QueryResult(object):
         are comma-delimited, and strings with spaces are double-quoted. Assume units are
         the same as in the first row of data.
         '''
-        #_logger.debug("readCSV: reading %s", self.filename)
+        _logger.debug("readCSV: reading %s", self.filename)
         with open(self.filename) as f:
             self.title  = f.readline().strip()
             self.df = pd.read_table(f, sep=',', header=0, index_col=False, quoting=0)
@@ -360,105 +358,6 @@ def saveResults(context, resultList):
             else:
                 units = resultDict['units']
                 db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
-
-        except Exception as e:
-            session.rollback()
-            db.endSession(session)
-            # TBD: distinguish database save errors from data access errors?
-            raise PygcamMcsSystemError("saveResults failed: %s" % e)
-
-    db.commitWithRetry(session)
-    db.endSession(session)
-
-# Deprecated
-def saveResults_Deprecated(context, type, delete=True):
-    from collections import defaultdict
-    from .Database import getDatabase
-    from .util import getSimResultFile, activeYears
-
-    runId    = context.runId
-    baseline = context.baseline
-    scenario = context.scenario
-
-    if type == RESULT_TYPE_DIFF:
-        assert baseline, "saveResults: must specify baseline for DIFF results"
-
-    resultsFile = getSimResultFile(context.simId)
-    rf = XMLResultFile.getInstance(resultsFile)
-    outputDefs = rf.getResultDefs(type=type)
-
-    if not outputDefs:
-        _logger.debug('saveResults: No outputs defined for type %s', type)
-        return
-
-    db = getDatabase()
-    session = db.Session()
-
-    if delete:
-        # Delete any stale results for this runId (i.e., if re-running a given runId)
-        names = map(XMLResult.getName, outputDefs)
-        ids = db.getOutputIds(names)
-        db.deleteRunResults(runId, outputIds=ids, session=session)
-        db.commitWithRetry(session)
-
-    yearCols = db.yearCols()    # constructed from activeYears, so order is identical
-    activeYears = activeYears()
-
-    outputCache = defaultdict(lambda: None)
-
-    scenarioOutputDir = context.getQueryResultsDir()
-    diffsOutputDir    = context.getDiffsDir()
-
-    # Don't autoflush since that wouldn't use commitWithRetry and could result in lock failure
-    # Deprecated? (no_autoflush wrapper)
-    #with session.no_autoflush:
-
-    outputDir = scenarioOutputDir if type == RESULT_TYPE_SCENARIO else diffsOutputDir
-
-    # A single result DF can have data for multiple outputs, so we cache the files
-    for output in outputDefs:
-        csvPath = output.csvPathname(scenario, baseline=baseline, outputDir=outputDir, type=type)
-
-        if not outputCache[csvPath]:
-            try:
-                outputCache[csvPath] = QueryResult(csvPath)
-            except Exception as e:
-                _logger.warning('saveResults: Failed to read query result: %s', e)
-                raise FileMissingError(csvPath)
-
-        queryResult = outputCache[csvPath]
-        paramName   = output.name
-        whereClause = output.whereClause
-
-        selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
-        count = selected.shape[0]
-
-        if 'region' in selected.columns:
-            if count == 0:
-                raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
-
-            firstRegion = selected.region.iloc[0]
-            if count == 1:
-                regionName = firstRegion
-            else:
-                _logger.debug("Query where clause (%r) yielded %d rows; year columns will be summed" % (whereClause, count))
-                regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
-        else:
-            regionName = 'global'
-
-        regionId = db.getRegionId(regionName)
-
-        # Save the values to the database
-        try:
-            if output.isScalar():
-                colName = output.columnName()
-                value = selected[colName].iloc[0]
-                db.setOutValue(runId, paramName, value, session=session)  # TBD: need regionId?
-            else:
-                # When no column name is specified, assume this is a time-series result, so save all years.
-                # Use sum() to collapse values to a single time series; it's a no-op for a single row
-                values = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, activeYears)}
-                db.saveTimeSeries(runId, regionId, paramName, values, units=queryResult.units, session=session)
 
         except Exception as e:
             session.rollback()

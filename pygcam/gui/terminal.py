@@ -64,7 +64,7 @@ class Terminal(object):
         def updateTerminal(timer):
             # print("updateTerminal(%s)" % timer)
             if not self.proc:
-                return '[No process is running]\n\n' + self.text
+                return self.text
 
             newText = ''
 

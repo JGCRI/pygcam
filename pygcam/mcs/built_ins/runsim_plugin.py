@@ -33,20 +33,6 @@ def driver(args, tool):
     master = Master(args)
     master.mainloop()
 
-#
-# Custom argparse "action" to parse comma-delimited strings to lists
-# TBD: move this to central location and use it where relevant
-#
-class ParseCommaList(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, **kwargs):
-        if nargs is not None:
-            raise ValueError("nargs not allowed with " % option_strings)
-
-        super(ParseCommaList, self).__init__(option_strings, dest, **kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, values.split(','))
-
 
 class RunSimCommand(McsSubcommandABC):
     def __init__(self, subparsers):
@@ -55,6 +41,7 @@ class RunSimCommand(McsSubcommandABC):
 
     def addArgs(self, parser):
         from pygcam.config import getParam, getParamAsInt, getParamAsFloat
+        from pygcam.utils import ParseCommaList
 
         defaultProfile    = getParam('IPP.Profile')
         defaultClusterId  = getParam('IPP.ClusterId')

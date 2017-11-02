@@ -17,33 +17,31 @@ class CoreMCSMixin(object):
     def __tablename__(cls):
         return cls.__name__.lower()
 
-# Deprecated? or change to Project?
-class Application(CoreMCSMixin, ORMBase):
-    '''
-    Application table defining the "application" name
-    '''
-    appId   = Column(Integer, primary_key=True)
-    appName = Column(String)
-
-
-class Attribute(CoreMCSMixin, ORMBase):
-    '''
-    Attribute table for generic attribute-value storage.
-    '''
-    attrId      = Column(Integer, primary_key=True)
-    attrName    = Column(String)
-    attrType    = Column(String)    # should be "number" or "text" (not used currently)
-    description = Column(String, nullable=True)
-
-
-class AttrVal(CoreMCSMixin, ORMBase):
-    '''
-    AttrVal table for storing the values of attributes.
-    '''
-    attrId   = Column(Integer, primary_key=True)
-    runId    = Column(Integer, ForeignKey('run.runId', ondelete="CASCADE"), primary_key=True)
-    numValue = Column(Float)
-    strValue = Column(String)
+# Deprecated
+# class Application(CoreMCSMixin, ORMBase):
+#     '''
+#     Application table defining the "application" name
+#     '''
+#     appId   = Column(Integer, primary_key=True)
+#     appName = Column(String)
+#
+# class Attribute(CoreMCSMixin, ORMBase):
+#     '''
+#     Attribute table for generic attribute-value storage.
+#     '''
+#     attrId      = Column(Integer, primary_key=True)
+#     attrName    = Column(String)
+#     attrType    = Column(String)    # should be "number" or "text" (not used currently)
+#     description = Column(String, nullable=True)
+#
+# class AttrVal(CoreMCSMixin, ORMBase):
+#     '''
+#     AttrVal table for storing the values of attributes.
+#     '''
+#     attrId   = Column(Integer, primary_key=True)
+#     runId    = Column(Integer, ForeignKey('run.runId', ondelete="CASCADE"), primary_key=True)
+#     numValue = Column(Float)
+#     strValue = Column(String)
 
 
 class Code(CoreMCSMixin, ORMBase):

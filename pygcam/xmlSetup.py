@@ -329,7 +329,6 @@ class ConfigAction(ConfigActionBase):
         super(ConfigAction, self).__init__(node)
         self.name = node.get('name')
         self.dynamic = getBooleanXML(node.get('dynamic', '0'))
-        # self.dir  = node.get('dir', '')     # deprecated
 
     def __str__(self):
         tag = self.tag

@@ -12,10 +12,9 @@ from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)
 
-
 def genSALibData(trials, method, paramFileObj, args):
     from ..error import PygcamMcsUserError
-    from ..sensitivity import DFLT_PROBLEM_FILE
+    from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
     from pygcam.utils import ensureExtension, removeTreeSafely, mkdirs, pathjoin
 
     SupportedDistros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
@@ -77,9 +76,12 @@ def genSALibData(trials, method, paramFileObj, args):
 
             f.write("%s,%f,%f\n" % (name, minValue, maxValue))
 
-    methodMap = _methodMap()
+    methods = (Sobol, FAST, Morris) # , MonteCarlo)
+    methodMap = {cls.__name__.lower(): cls for cls in methods}
+
     cls = methodMap[method]
     sa = cls(outFile)
+
     # saves to input.csv in file package
     sa.sample(trials=trials, calc_second_order=args.calcSecondOrder)
     return sa.inputsDF
@@ -372,6 +374,7 @@ class GensimCommand(McsSubcommandABC):
                             help='''The name of a scenario group to process.''')
 
         parser.add_argument('-m', '--method', choices=['montecarlo', 'sobol', 'fast', 'morris'],
+                            default='montecarlo',
                             help='''Use the specified method to generate trial data. Default is "montecarlo".''')
 
         parser.add_argument('-o', '--outFile',

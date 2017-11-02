@@ -38,10 +38,21 @@ _types = {'str': str, 'int': int, 'float': float, 'bool': bool}
 # TBD: Modified from version from mcs.XML
 
 class XMLFile(object):
-    '''
+    """
     Stores information about an XML file; provides wrapper to parse and access
     the file tree, and handle "conditional XML".
-    '''
+
+    :param filename: (str) The pathname to the XML file
+    :param load: (bool) If True, the file is loaded, otherwise, the instance is
+       set up, but the file is not read.
+    :param schemaPath: (str) If not None, the path relative to the root of the
+       package to the .xsd (schema definition) file to use to validate the XML file.
+    :param removeComments: (bool) If True, comments are discarded upon reading the file.
+    :param conditionalXML: (bool) If True, the XML is processed using Conditional XML
+       prior to validation.
+    :param varDict: (dict) A dictionary to use in place of the configuration dictionary
+       when processing Conditional XML.
+    """
     def __init__(self, filename, load=True, schemaPath=None,
                  removeComments=True, conditionalXML=False, varDict=None):
         self.filename = filename
@@ -57,39 +68,36 @@ class XMLFile(object):
             self.read()
 
     def getRoot(self):
+        'Return the root node of the parse tree'
         return self.tree.getroot()
 
     def getTree(self):
-        'Returns XML parse tree.'
+        'Return XML parse tree.'
         return self.tree
 
     def getFilename(self):
+        'Return the filename for this ``XMLFile``'
         return self.filename
 
-    def getSchemaFile(self): # subclass can define this to allow validation via XMLSchema file
-        return None
-
-    def read(self, filename=None, removeComments=True):
+    def read(self):
         """
-        Read the XML file, and if validate is not False and getDTD()
-        returns a non-False value, validate the XML against the returned DTD.
+        Read the XML file, and if validate if ``self.schemaFile`` is not None.
         """
-        filename = filename or self.filename
-        removeComments = removeComments or self.removeComments
+        filename = self.filename
 
-        _logger.info("Reading '%s'", self.filename)
-        parser = ET.XMLParser(remove_blank_text=True, remove_comments=removeComments)
+        _logger.info("Reading '%s'", filename)
+        parser = ET.XMLParser(remove_blank_text=True, remove_comments=self.removeComments)
 
         try:
             tree = self.tree = ET.parse(filename, parser)
 
         except Exception as e:
-            raise XmlFormatError("Can't read XML file '%s': %s" % (self.filename, e))
+            raise XmlFormatError("Can't read XML file '%s': %s" % (filename, e))
 
         if self.conditionalXML:
             self.evaluateConditionals(tree.getroot())
 
-        if removeComments:
+        if self.removeComments:
             for elt in tree.iterfind('//comment'):
                 parent = elt.getparent()
                 if parent is not None:
@@ -101,8 +109,9 @@ class XMLFile(object):
 
     def validate(self, raiseOnError=True):
         """
-        Validate a ParameterList against `schemaFile`. Optionally raises an
-        error on failure, else return boolean validity status.
+        Validate a ParameterList against ``self.schemaFile``. Optionally raises an
+        error on failure, else return boolean validity status. If no schema file
+        is defined, return ``True``.
         """
         if not self.schemaPath:
             return True

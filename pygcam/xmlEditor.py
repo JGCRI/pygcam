@@ -643,42 +643,6 @@ class XMLEditor(object):
 
         return pathname
 
-    # deprecated
-    # def _splitPath_DEPRECATED(self, path):
-    #     """
-    #     See if the path refers to a file in our scenario space, and if so,
-    #     return the tail, i.e., the scenario-relative path.
-    #
-    #     :param path: (str) a pathname
-    #     :return: (tuple of (str, str) or (None, None) the relative local
-    #        version of `path` and the prefix that was parsed.
-    #     """
-    #     def _split(path, prefix):
-    #         '''
-    #         Split off the tail of path relative to prefix, and return the tail
-    #         and the corresponding absolute path. If not recognized, return None.
-    #         '''
-    #         if path.startswith(prefix):
-    #             tail = path[len(prefix):]
-    #             if tail[0] in "/\\":      # skip leading slash, if any
-    #                 tail = tail[1:]
-    #
-    #             return prefix, tail
-    #
-    #         return None, None
-    #
-    #     splitPrefix, splitPath = _split(path, self.trial_xml_rel) or _split(path, self.scenario_dir_rel)
-    #
-    #     if not splitPath:
-    #         if self.parent:
-    #             splitPrefix, splitPath = self.parent._splitPath(path)
-    #         else:
-    #             # At the top of the parent chain we check 2 standard GCAM locations
-    #             # TBD: add climate and policy subdirs?
-    #             splitPrefix, splitPath = (_split(path, self.gcam_prefix_rel) or
-    #                                       _split(path, self.solution_prefix_rel))
-    #     return splitPrefix, splitPath
-
     def getLocalCopy(self, configTag):
         """
         Get the filename for the most local version (in terms of scenario hierarchy)

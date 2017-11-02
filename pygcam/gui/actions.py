@@ -104,24 +104,29 @@ class ActionInfo(object):
         Y = 'Yes'
         N = 'No'
 
-        if self.actionClass == '_StoreTrueAction':
+        actionClass = self.actionClass
+
+        if actionClass == '_StoreTrueAction':
             widget = self.radio([Y, N], default=N)
 
-        elif self.actionClass == '_StoreFalseAction':
+        elif actionClass == '_StoreFalseAction':
             widget = self.radio([Y, N], default=Y)
 
-        elif self.actionClass == '_StoreAction':
+        elif actionClass == '_StoreAction':
             choices = self.action.choices
             if choices:
                 widget = self.radio(choices, default=self.action.default, vertical=True)
             else:
                 widget = self.input(default=self.action.default)
 
-        elif self.actionClass == '_AppendAction':
+        elif actionClass == '_AppendAction':
+            widget = self.input(default=self.action.default)
+
+        elif actionClass == 'ParseCommaList':
             widget = self.input(default=self.action.default)
 
         else:
-            widget = html.P("%s: unknown action type %s" % (self.name, self.actionClass))
+            widget = html.P("%s: unknown action type %s" % (self.name, actionClass))
 
         self.widget = widget
 

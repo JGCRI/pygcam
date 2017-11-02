@@ -391,20 +391,6 @@ class Master(object):
 
         return results
 
-    # Deprecated
-    # def saveResult(self, result):
-    #     context  = result.context
-    #     status   = context.status
-    #     resultsList = result.resultsList
-    #
-    #     self.setRunStatus(context)
-    #
-    #     if status == RUN_SUCCEEDED:
-    #         _logger.info("Saving results for %s", context)
-    #         saveResults(context, resultsList)
-    #     else:
-    #         _logger.warning('%s failed: %s', context, result.errorMsg)
-
     def saveResults(self, results):
         '''
         Called on the master to save results to the database that were prepared by the worker.
