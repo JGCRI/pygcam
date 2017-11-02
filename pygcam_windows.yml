@@ -247,7 +247,7 @@ dependencies:
   - prompt-toolkit==1.0.15
   - redis==2.10.6
   - ruamel-yaml==0.11.14
-  - sphinx-argparse>=0.2.0
+  - sphinx-argparse==0.1.17
   - sqlparse==0.1.14
   - tables==3.4.2
   - tempita==0.5.2

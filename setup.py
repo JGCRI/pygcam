@@ -21,7 +21,7 @@ requirements = [
     'pandas==0.20.3',
     'seaborn==0.8.0',
     'six>=1.10.0',
-    'sphinx-argparse>=0.2.0', # ==0.1.17', see if update works yet
+    'sphinx-argparse==0.1.17', # later versions lose markup in commands
     'filelock>=2.0.12',
 ]
 
