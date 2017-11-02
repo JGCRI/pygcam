@@ -98,7 +98,7 @@ div.terminal {
 .helptext {
   width: 500px;
   text-align: center;
-  font-style: italic;
+  /* font-style: italic; */
   margin: auto;
   padding: 0px 0px 12px 0px;
 }

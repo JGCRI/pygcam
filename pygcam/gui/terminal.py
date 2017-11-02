@@ -1,14 +1,13 @@
 from __future__ import print_function
-import os
-import select
 import subprocess as subp
 import time
-from six.moves.queue import Empty
 
+from pygcam.log import getLogger
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, Event
 
+_logger = getLogger(__name__)
 
 class Terminal(object):
 
@@ -72,8 +71,6 @@ class Terminal(object):
             q = self.queue
             while q.qsize() > 0:
                 buf = q.get_nowait()
-                print(": %s" % buf, end='')
-
                 if buf == '':
                     break
 
@@ -94,10 +91,8 @@ class Terminal(object):
                       [Input(buttonId, 'n_clicks')])
         def processClick(clicks):
             if clicks is None:
-                # print("Ignoring click=None")
                 return ''
 
-            # print("Real button click")
             if self.running:
                 self.stopCommand()
             else:
@@ -124,7 +119,6 @@ class Terminal(object):
             # print("setTimer: button:%s, timer:%s" % (buttonInfo, timerInfo))
             oneHour = 60 * 60 * 1000
             ms = self.ms if self.running else oneHour
-            # print('Setting ms=%s' % ms)
             return ms
 
     def setPage(self, page):
@@ -155,13 +149,13 @@ class Terminal(object):
         from ..utils import queueForStream
 
         if self.running:
-            print('Already running a command')
+            _logger.warning('Already running a command')
             return
 
         self.status = None
         self.text = '$ ' + command + '\n'
 
-        print('Running "%s"' % command)
+        _logger.info('Running "%s"' % command)
         if self.toConsole:
             subp.call(command, shell=True)
         else:
