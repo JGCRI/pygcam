@@ -273,4 +273,4 @@ dependencies:
   - sqlparse==0.1.14
   - tables==3.4.2
   - tempita==0.5.2
-  - pygcam>=1.0rc1
+  - pygcam>=1.0rc2
