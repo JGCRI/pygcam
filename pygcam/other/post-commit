@@ -1,0 +1,17 @@
+#!/bin/bash
+
+topdir="$(git rev-parse --show-toplevel)"
+filename="$topdir/pygcam/version.py"
+
+# e.g., VERSION="1.0a4"
+version=`git diff HEAD^..HEAD -- "$filename" | perl -ne 'print $1 if /^\+VERSION="(.+)"$/'`
+
+if [ "$version" != "" ]; then
+    # this version uses the commit text as the tag message
+    # git tag -a "v$version" -m "`git log -1 --format=%s`"
+
+    # this version uses a constant tag message
+    git tag -a "v$version" -m "Updated version"
+
+    echo "Created tag 'v$version'"
+fi

@@ -9,13 +9,15 @@
 
 all: clean html sdist wheel
 
-pypitest-upload:
-	python setup.py sdist upload -r pypitest
+version = `./version.sh`
+
+test-upload: # sdist
+	twine upload dist/pygcam-$(version).tar.gz -r testpypi
 
 upload: pypi-upload
 
-pypi-upload:
-	python setup.py sdist upload -r pypi
+pypi-upload: sdist
+	twine upload dist/pygcam-$(version).tar.gz
 
 clean-html:
 	make -C docs clean
