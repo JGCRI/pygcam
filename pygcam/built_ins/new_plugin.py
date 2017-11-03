@@ -117,7 +117,7 @@ class NewProjectCommand(SubcommandABC):
     def addArgs(self, parser):
         # Positional args
         parser.add_argument('name',
-                            help='''YAAAAA Create the structure for the named project, and copy example
+                            help='''Create the structure for the named project, and copy example
                             XML files into the "etc" directory.''')
 
         parser.add_argument('-c', '--addToConfig', action='store_true',
