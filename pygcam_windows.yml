@@ -159,7 +159,7 @@ dependencies:
 - pytest=3.2.1
 - python=2.7.13
 - python-dateutil=2.6.1
-- pytz=2017.3
+- pytz=2017.2
 - pywavelets=0.5.2
 - pyyaml=3.12
 - pyzmq=16.0.2
