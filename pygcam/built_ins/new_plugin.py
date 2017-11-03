@@ -12,6 +12,7 @@ import re
 
 from ..subcommand import SubcommandABC
 from ..log import getLogger
+from ..utils import mkdirs
 
 _logger = getLogger(__name__)
 
@@ -24,7 +25,7 @@ def driver(args, tool):
     from ..error import CommandlineError
 
     projectName = args.name
-    projectRoot = args.root or getParam('GCAM.ProjectRoot')
+    projectRoot = os.path.abspath(args.root) or getParam('GCAM.ProjectRoot')
     projectDir  = pathjoin(projectRoot, projectName)
     overwrite   = args.overwrite
 
@@ -34,7 +35,7 @@ def driver(args, tool):
         raise CommandlineError("Can't change dir to '%s': %s" % (projectRoot, e))
 
     try:
-        os.mkdir(projectDir)
+        mkdirs(projectDir)
     except OSError as e:
         if e.errno == 17:   # already exists; ignore
             pass
@@ -61,15 +62,8 @@ def driver(args, tool):
     exampleDir = pathjoin(etcDir, 'examples')
     projectEtc = pathjoin(projectDir, 'etc')
 
-    # # Copy scenarios.py template to serve as a starting point
-    # name = 'scenarios.py'
-    # src = pathjoin(exampleDir, name)
-    # dst = pathjoin('xmlsrc', name)
-    # _logger.debug('Creating %s/%s', projectDir, dst)
-    # copyResource(src, dst, overwrite=overwrite)
-
-    # Provide example XML files and instructions. We can't use the glob
-    # module since these might need to be extracted from a tar/egg file.
+    # Provide example XML files and instructions by extracting these
+    # as resources from the pygcam package.
     filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml',
                    'scenarios.xml', 'Instructions.txt', 'project-schema.xsd',
                    'protection-schema.xsd', 'queries-schema.xsd',
@@ -123,7 +117,7 @@ class NewProjectCommand(SubcommandABC):
     def addArgs(self, parser):
         # Positional args
         parser.add_argument('name',
-                            help='''Create the structure for the named project, and copy example
+                            help='''YAAAAA Create the structure for the named project, and copy example
                             XML files into the "etc" directory.''')
 
         parser.add_argument('-c', '--addToConfig', action='store_true',

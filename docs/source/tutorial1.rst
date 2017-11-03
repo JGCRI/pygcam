@@ -35,7 +35,7 @@ There are several general options available to the :doc:`gcamtool` command that 
 to all sub-commands, including the ability to set the desired level of diagnostic output
 (the "log level"), and to run the command on a compute node on a cluster computing system.
 
-The :ref:`"run" sub-command <run>` also provides many options, including the
+The :ref:`run <run>` sub-command also provides many options, including the
 ability to select which scenario group to run and limit which scenarios and steps to
 run (or not run). Use the help flag (``-h`` or ``--help``) to see all the options:
 
@@ -63,7 +63,7 @@ We begin Part 1 of the tutorial by examining a minimal project called ``tutorial
 1.1 Minimal example project
 -----------------------------
 The following is an example ``project.xml`` file that doesn't do anything other than
-allow us to explore some of the features of the ref:`"run" sub-command <run>`
+allow us to explore some of the features of the :ref:`run <run>` sub-command.
 
 .. code-block:: xml
    :linenos:
@@ -170,7 +170,7 @@ To run them, we use the same command without the ``-n``:
 
 1.3 Introspection commands
 -----------------------------------
-You can use ``-G``, ``-L`` and ``-l`` arguments to the "run" subcommand to list
+You can use ``-G``, ``-L`` and ``-l`` arguments to the :ref:`run <run>` subcommand to list
 defined scenario groups, scenarios, and steps, respectively. These can be specified
 together or separately:
 

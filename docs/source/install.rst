@@ -131,7 +131,7 @@ Once you have a valid Python 2.7 environment installed, you can install
 ``pygcam``. There are two primary ways to install pygcam (or any open source
 package) depending on how you want to use the software.
 
-As described above, you can simply install pygcam as a standard Python package,
+As described above, you can install pygcam as a standard Python package,
 using the command:
 
 .. code-block:: bash
@@ -147,10 +147,15 @@ installed package to the source code repository so changes to the source code ar
 
 .. code-block:: bash
 
-   # First, change directory to where you want the pygcam folder to be "cloned"
+   # First, uninstall pygcam if you installed it previously. This ensures that
+   # the "develop" version isn't shadowed by previously installed files.
+   pip uninstall pygcam
 
+   # Change directory to where you want the pygcam folder to be "cloned"
    git clone https://github.com/JGCRI/pygcam.git
    cd pygcam
+
+   # Install pygcam in developer mode
    python setup.py develop
 
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and

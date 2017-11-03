@@ -4,9 +4,9 @@ channels:
 dependencies:
 - _ipyw_jlab_nb_ext_conf=0.1.0=py27h172cb35_0
 - alabaster=0.7.10=py27h9dd7d6e_0
-- anaconda=5.0.0=py27h58f0b96_0
+- anaconda=5.0.1=py27he797f56_1
 - anaconda-client=1.6.5=py27hc13fba8_0
-- anaconda-navigator=1.6.8=py27h308d521_1
+- anaconda-navigator=1.6.9=py27h103b016_0
 - anaconda-project=0.8.0=py27h9e3d455_0
 - appnope=0.1.0=py27hb466136_0
 - appscript=1.0.1=py27h451298e_1
@@ -23,9 +23,10 @@ dependencies:
 - bkcharts=0.2=py27haafc882_0
 - blaze=0.11.3=py27hb49378a_0
 - bleach=2.0.0=py27ha7d1710_0
-- bokeh=0.12.7=py27h22b55c5_1
+- bokeh=0.12.10=py27hf91827b_0
 - boto=2.48.0=py27hacdd0fd_1
 - bottleneck=1.2.1=py27h71f98a3_0
+- bzip2=1.0.6=h92991f9_1
 - ca-certificates=2017.08.26=ha1e5d58_0
 - cdecimal=2.3=py27hf5d9fd9_1
 - certifi=2017.7.27.1=py27h482ffc0_0
@@ -43,12 +44,12 @@ dependencies:
 - cycler=0.10.0=py27hfc73c78_0
 - cython=0.26.1=py27h6a053f9_0
 - cytoolz=0.8.2=py27ha56cda1_0
-- dask=0.15.2=py27h32f4218_0
-- dask-core=0.15.2=py27h5003087_0
+- dask=0.15.3=py27h8a1b457_0
+- dask-core=0.15.3=py27h6a32bf4_0
 - datashape=0.5.4=py27hd6a1745_0
 - dbus=1.10.22=h50d9ad6_0
 - decorator=4.1.2=py27h9f877ea_0
-- distributed=1.18.3=py27h81d79ea_0
+- distributed=1.19.1=py27h67dd2ec_0
 - docutils=0.14=py27h0befae3_0
 - entrypoints=0.2.3=py27hd680fb1_2
 - enum34=1.1.6=py27hf475452_1
@@ -79,7 +80,7 @@ dependencies:
 - idna=2.6=py27hedea723_1
 - imageio=2.2.0=py27h37746d9_0
 - imagesize=0.7.1=py27h4f7bcc8_0
-- intel-openmp=2018.0.0=hdd0ccc9_7
+- intel-openmp=2018.0.0=h68bdfb3_7
 - ipaddress=1.0.18=py27h5b9a5b9_0
 - ipykernel=4.6.1=py27h1e70a78_0
 - ipyparallel=6.0.2=py27_0
@@ -97,7 +98,7 @@ dependencies:
 - jupyter=1.0.0=py27hec63c99_0
 - jupyter_client=5.1.0=py27hfaf569a_0
 - jupyter_console=5.2.0=py27h9702a86_1
-- jupyter_core=4.3.0
+- jupyter_core=4.3.0=py27hd5161ba_0
 - jupyterlab=0.27.0=py27h25d4955_2
 - jupyterlab_launcher=0.4.0=py27he518b91_0
 - lazy-object-proxy=1.3.1=py27h712ce3f_0
@@ -115,12 +116,13 @@ dependencies:
 - libxslt=1.1.29=h95a2935_5
 - llvmlite=0.20.0=py27_0
 - locket=0.2.0=py27ha10513d_1
-- lxml=3.8.0=py27h037e1f5_0
+- lxml=4.1.0=py27hcb5f3a6_0
+- lzo=2.10=hb6b8854_1
 - markupsafe=1.0=py27hd3c86fa_1
-- matplotlib=2.0.2=py27h2e09848_1
+- matplotlib=2.1.0=py27h3078195_0
 - mccabe=0.6.1=py27h1f69e8d_0
 - mistune=0.7.4=py27h1658d75_0
-- mkl=2018.0.0=hc285769_4
+- mkl=2018.0.0=h5ef208c_6
 - mkl-service=1.1.2=py27hcba3029_4
 - mpc=1.0.3=hc455b36_4
 - mpfr=3.1.5=h7fa3772_1
@@ -131,13 +133,13 @@ dependencies:
 - nbconvert=5.3.1=py27h6455e4c_0
 - nbformat=4.4.0=py27hddc86d0_0
 - ncurses=6.0=ha932d30_1
-- networkx=1.11=py27h0a72f81_0
+- networkx=2.0=py27h2503496_0
 - nltk=3.2.4=py27h1626047_0
 - nose=1.3.7=py27h2ee3cb8_2
 - notebook=5.0.0=py27h5f5981d_2
 - numba=0.35.0=np113py27_6
 - numexpr=2.6.2=py27h99e4b4f_1
-- numpy=1.13.1=py27hd567e90_2
+- numpy=1.13.3=py27h62f9060_0
 - numpydoc=0.7.0=py27h022f19e_0
 - odo=0.5.1=py27h992a9f7_0
 - olefile=0.44=py27h73ba740_0
@@ -156,11 +158,11 @@ dependencies:
 - pexpect=4.2.1=py27hc4e4961_0
 - pickleshare=0.7.4=py27h37e3d41_0
 - pillow=4.2.1=py27h2cf1d5f_0
-- pip=9.0.1=py27h5494384_2
+- pip=9.0.1=py27h61def0c_3
 - pkginfo=1.4.1=py27ha9221e7_0
 - ply=3.10=py27h6279b8a_0
 - prompt_toolkit=1.0.15=py27h4a7b9c2_0
-- psutil=5.2.2=py27h59435ec_0
+- psutil=5.4.0=py27h7076ac6_0
 - ptyprocess=0.5.2=py27h70f6364_0
 - py=1.4.34=py27h917aa57_1
 - pyaudio=0.2.7=py27h3777516_1
@@ -169,20 +171,20 @@ dependencies:
 - pycparser=2.18=py27h0d28d88_1
 - pycrypto=2.6.1=py27h4efa152_1
 - pycurl=7.43.0=py27h398a7fe_3
-- pyflakes=1.5.0=py27h7dfcaa9_1
+- pyflakes=1.6.0=py27h4446e76_0
 - pygments=2.2.0=py27h1a556bb_0
-- pylint=1.7.2=py27h718c7e7_0
+- pylint=1.7.4=py27hc678664_0
 - pyodbc=4.0.17=py27hc9de18c_0
 - pyopenssl=17.2.0=py27h732fe57_0
 - pyparsing=2.2.0=py27h5bb6aaf_0
 - pyqt=5.6.0=py27hf21fe59_6
 - pysocks=1.6.7=py27h1cff6a6_1
-- pytables=3.4.2=py27h6dea595_1
+- pytables=3.4.2=py27ha4551b8_2
 - pytest=3.2.1=py27h173df03_1
-- python=2.7.13=h32f5f24_13
+- python=2.7.14=he768d2d_19
 - python-dateutil=2.6.1=py27hd56c96b_1
-- python.app=2=py27h48d88ae_5
-- pytz=2017.2
+- python.app=2=py27h84f57d0_6
+- pytz=2017.2=py27hb891d23_1
 - pywavelets=0.5.2=py27hd99e88a_0
 - pyyaml=3.12=py27ha7932d0_1
 - pyzmq=16.0.2=py27he61c07e_2
@@ -194,23 +196,23 @@ dependencies:
 - requests=2.18.4=py27h9b2b37c_1
 - rope=0.10.5=py27he855d02_0
 - ruamel_yaml=0.11.14=py27h31666c4_2
-- scandir=1.5=py27h77d1c80_1
+- scandir=1.6=py27h97aa1ee_0
 - scikit-image=0.13.0=py27h03e84e1_1
-- scikit-learn=0.19.0=py27h54286d7_2
+- scikit-learn=0.19.1=py27h9788993_0
 - scipy=0.19.1=py27hf01dd8f_3
 - seaborn=0.8.0=py27h92884e4_0
 - setuptools=36.5.0=py27h2a45cec_0
 - simplegeneric=0.8.1=py27h6db5e31_0
 - singledispatch=3.4.0.3=py27he22c18d_0
 - sip=4.18.1=py27h6300f65_2
-- six=1.10.0=py27h47fc262_1
+- six=1.11.0=py27h7252ba3_1
 - snowballstemmer=1.2.1=py27h68ac032_0
 - sortedcollections=0.5.3=py27h8094be4_0
 - sortedcontainers=1.5.7=py27h322dbbf_0
 - sphinx=1.6.3=py27h11269f0_0
 - sphinxcontrib=1.0=py27hd2ed746_1
 - sphinxcontrib-websupport=1.0.1=py27h857890b_1
-- spyder=3.2.3=py27h7402f24_0
+- spyder=3.2.4=py27h93d9c3e_0
 - sqlalchemy=1.1.13=py27hcbc9ed3_0
 - sqlite=3.20.1=h900c3b0_1
 - ssl_match_hostname=3.5.0.1=py27h8780752_2
@@ -235,13 +237,13 @@ dependencies:
 - widgetsnbextension=3.0.2=py27h56f70de_1
 - wrapt=1.10.11=py27hd341262_0
 - xlrd=1.1.0=py27hbd41ed1_1
-- xlsxwriter=0.9.8=py27h1633c25_0
+- xlsxwriter=1.0.2=py27h7f1064a_0
 - xlwings=0.11.4=py27h4d78f01_0
 - xlwt=1.2.0=py27hbeec4ae_0
 - xz=5.2.3=ha24016e_1
 - yaml=0.1.7=hff548bb_1
 - zeromq=4.2.2=h131e0f7_1
-- zict=0.1.2=py27h1c86053_0
+- zict=0.1.3=py27h5fff8b1_0
 - zlib=1.2.11=h60db283_1
 - pip:
   - aniso8601==1.3.0
@@ -249,41 +251,45 @@ dependencies:
   - backports.functools-lru-cache==1.4
   - backports.shutil-get-terminal-size==1.0.0
   - backports.ssl-match-hostname==3.5.0.1
-  - bcrypt==3.1.3
+  - bcrypt==3.1.4
   - click-plugins==1.0.3
   - cligj==0.4.0
   - commonmark==0.7.4
-  - dash==0.18.3
+  - dash==0.19.0
   - dash-core-components==0.14.0
   - dash-html-components==0.8.0
-  - dash-renderer==0.7.4
+  - dash-renderer==0.11.1
   - descartes==1.1.0
   - et-xmlfile==1.0.1
-  - fiona==1.7.9.post1
+  - fiona==1.7.10.post1
   - flask-bcrypt==0.7.1
   - flask-compress==1.4.0
-  - flask-httpauth==3.2.1
-  - flask-restful==0.3.5
+  - flask-httpauth==3.2.3
+  - flask-restful==0.3.6
   - flask-seasurf==0.2.2
-  - flask-sqlalchemy==2.1
+  - flask-sqlalchemy==2.3.2
   - future==0.16.0
   - geopandas==0.3.0
   - geopy==1.11.0
   - ipython-genutils==0.2.0
-  - jug==1.2.1+git
+  - jupyter-client==5.1.0
+  - jupyter-console==5.2.0
+  - jupyter-core==4.3.0
+  - jupyterlab-launcher==0.4.0
   - munch==2.2.0
-  - pbr==0.11.1
+  - pbr==3.1.1
   - plotly==2.2.1
   - prompt-toolkit==1.0.15
   - pyproj==1.9.5.1
+  - pyscaffold==2.5.8
   - redis==2.10.6
   - ruamel-yaml==0.11.14
-  - salib==1.0.3
-  - shapely==1.6.1
+  - salib==1.1.2
+  - shapely==1.6.2.post1
   - sphinx-argparse==0.1.17
   - sphinx-rtd-theme==0.2.4
   - sqlalchemy-migrate==0.9.2
   - sqlparse==0.1.14
   - tables==3.4.2
   - tempita==0.5.2
-  - pygcam>=1.0rc2
+  - pygcam==1.0rc2
