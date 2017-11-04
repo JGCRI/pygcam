@@ -19,7 +19,8 @@ DefaultGcamDir    = '~/GCAM/gcam-v4.3'
 DefaultProjectDir = '~/GCAM/projects'
 
 def defaultSandboxDir(projectRoot):
-    path = os.path.join(os.path.dirname(projectRoot), 'sandboxes')
+    from ..utils import pathjoin
+    path = pathjoin(os.path.dirname(projectRoot), 'sandboxes')
     return path
 
 Template = '''[DEFAULT]
@@ -59,16 +60,26 @@ def askYesNo(msg, default=None):
 
     return value in ('y', 'yes')
 
+
+def askString(msg, default):
+    value = None
+    while value is None:
+        value = input(msg + ' (default=%s): ' % default)
+        if value == '':
+            value = default
+
+    return value
+
 def askDir(msg, default=''):
-    from ..utils import mkdirs
+    from ..utils import mkdirs, unixPath
 
     path = None
     while not path:
-        path = input(msg + ' (default=%s)? ' % default)
+        path = input(msg + ' (default=%s): ' % default)
         if path == '':
             path = default
 
-        path = os.path.expanduser(path)
+        path = unixPath(os.path.expanduser(path))
 
         if path and not os.path.isdir(path):
             if os.path.lexists(path):
@@ -86,14 +97,49 @@ def askDir(msg, default=''):
 
     return path
 
-def askString(msg, default):
-    value = None
-    while value is None:
-        value = input(msg + ' (default=%s)? ' % default)
-        if value == '':
-            value = default
+def isCygwin():
+    import sys, platform
 
-    return value
+    return (platform.system() == 'Windows'
+            and os.environ.get('SHELL') == '/bin/bash'
+            and not sys.stdin.isatty())
+
+def rerunForCygwin(args):
+    """
+    CygWin buffers stdin unless PYTHONUNBUFFERED is set, so we
+    set it and re-run the 'gt init' command with the given args.
+    A bit of a ridiculous work-around, but it works!
+    """
+    import subprocess as subp
+
+    os.environ['PYTHONUNBUFFERED'] = '1'
+
+    argList = ['gt', 'init']
+
+    if args.createProject == True:
+        argList.append('-c')
+    elif args.createProject == False:
+        argList.append('-C')
+
+    if args.overwrite:
+        argList.append('--overwrite')
+
+    if args.gcamDir:
+        argList += ['-g', args.gcamDir]
+
+    if args.defaultProject:
+        argList += ['-P', args.defaultProject]
+
+    if args.projectDir:
+        argList += ['-p', args.projectDir]
+
+    if args.sandboxDir:
+        argList += ['-s', args.sandboxDir]
+
+    command = ' '.join(argList)
+    # print('Re-running for cygwin: %s' % command)
+    subp.call(argList, shell=False)
+
 
 class InitCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -143,16 +189,22 @@ class InitCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..config import USR_CONFIG_FILE
+        from ..utils import pathjoin, unixPath, deleteFile, mkdirs
+
+        # Detect cygwin terminals, which quite lamely cannot handle interactive input
+        if (isCygwin() and not os.environ.get('PYTHONUNBUFFERED')):
+            rerunForCygwin(args)
+            return
 
         home = os.path.expanduser('~')
-        configPath = os.path.join(home, USR_CONFIG_FILE)
+        configPath = pathjoin(home, USR_CONFIG_FILE)
 
         try:
-            dfltProject = args.defaultProject or askString('Enter default project name?', 'ctax')
+            dfltProject = args.defaultProject or askString('Default project name?', 'ctax')
             gcamDir     = args.gcamDir or askDir('Where is GCAM installed?',
-                                                 default=(findGCAM() or os.path.expanduser(DefaultGcamDir)))
+                                                 default=unixPath(findGCAM() or os.path.expanduser(DefaultGcamDir)))
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
-                                                    default=os.path.expanduser(DefaultProjectDir))
+                                                    default=unixPath(os.path.expanduser(DefaultProjectDir)))
             sandboxDir  = args.sandboxDir or askDir('Directory in which to create pygcam run-time sandboxes?',
                                                     default=defaultSandboxDir(projectDir))
 
@@ -163,6 +215,7 @@ class InitCommand(SubcommandABC):
                     raise AbortInput()
 
                 backup = configPath + '~'
+                deleteFile(backup)
                 os.rename(configPath, backup)
                 print('Moved %s to %s' % (configPath, backup))
 
@@ -179,12 +232,16 @@ class InitCommand(SubcommandABC):
 
         print("Created %s with contents:\n\n%s" % (configPath, text))
 
+        for path in (projectDir, sandboxDir):
+            if not os.path.isdir(path):
+                mkdirs(path)
+
         createProj = args.createProject
         if createProj is None:
             createProj = askYesNo('Create the project structure for "%s"' % dfltProject, default='y')
 
         if createProj:
-            newProjectDir = os.path.join(projectDir, dfltProject)
+            newProjectDir = pathjoin(projectDir, dfltProject)
             overwrite = askYesNo('Overwrite existing project dir %s' % newProjectDir, 'n') if os.path.lexists(newProjectDir) else False
 
             argList = ['new', dfltProject, '-r', projectDir] + (['--overwrite'] if overwrite else [])

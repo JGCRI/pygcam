@@ -17,9 +17,6 @@ if IsWindows:
     import ctypes
     import win32file
     from pygcam.error import PygcamException
-    from pygcam.log import getLogger
-
-    _logger = getLogger(__name__)
 
     # From http://stackoverflow.com/questions/8231719/how-to-check-whether-a-file-is-open-and-the-open-status-in-python
     _sopen = ctypes.cdll.msvcrt._sopen
@@ -138,6 +135,9 @@ if IsWindows:
             if csl(dst, src, flags) == 0:
                 raise ctypes.WinError()
         except Exception as e:
+            from pygcam.log import getLogger
+            _logger = getLogger(__name__)
+
             if getParamAsBoolean('GCAM.SymlinkWarning'):
                 _logger.error('''
   ============================================================================================================
@@ -275,6 +275,8 @@ if IsWindows:
                                            FILE_FLAG_BACKUP_SEMANTICS,
                                            None)
         if reparse_point_handle == INVALID_HANDLE_VALUE:
+            from pygcam.log import getLogger
+            _logger = getLogger(__name__)
             _logger.info("Can't readlink: %s", path)
             raise ctypes.WinError()
 
