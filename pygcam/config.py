@@ -7,7 +7,7 @@ import os
 import platform
 from pkg_resources import resource_string
 from backports import configparser
-from .error import ConfigFileError, PygcamException, CommandlineError
+from .error import ConfigFileError, PygcamException
 
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
@@ -18,6 +18,7 @@ PlatformName = platform.system()
 _ConfigParser = None
 
 _ProjectSection = DEFAULT_SECTION
+
 
 def getSection():
     return _ProjectSection
@@ -35,7 +36,7 @@ def setSection(section):
 def configLoaded():
     return bool(_ConfigParser)
 
-def getConfig(reload=False):
+def getConfig(reload=False, allowMissing=False):
     """
     Return the configuration object. If one has been created already via
     `readConfigFiles`, it is returned; otherwise a new one is created
@@ -44,13 +45,16 @@ def getConfig(reload=False):
     internally and referenced by the other API functions.
 
     :param: reload (bool) if True, instantiate a new global ConfigParser.
+    :param: allowMissing (bool) if True, a missing config file is not
+       treated as an error. This is used only when generating documentation,
+       e.g., on readthedocs.org.
     :return: a `ConfigParser` instance.
     """
     if reload:
         global _ConfigParser
         _ConfigParser = None
 
-    return _ConfigParser or readConfigFiles()
+    return _ConfigParser or readConfigFiles(allowMissing=allowMissing)
 
 
 def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
@@ -179,7 +183,7 @@ def writeSystemDefaultsFile(systemDefaults):
     with open(path, 'w') as f:
         f.write(content)
 
-def readConfigFiles():
+def readConfigFiles(allowMissing=False):
     """
     Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
     followed by ``pygcam/etc/{platform}.cfg`` if present. If the environment variable
@@ -235,10 +239,11 @@ def readConfigFiles():
            _ConfigParser.read_file(f)
 
     except IOError:
-        if not os.path.lexists(usrConfigPath):
-            raise ConfigFileError("Missing configuration file %s" % usrConfigPath)
-        else:
-            raise ConfigFileError("Can't read configuration file %s" % usrConfigPath)
+        if not allowMissing:
+            if not os.path.lexists(usrConfigPath):
+                raise ConfigFileError("Missing configuration file %s" % usrConfigPath)
+            else:
+                raise ConfigFileError("Can't read configuration file %s" % usrConfigPath)
 
     try:
         # Write the system defaults to ~/.pygcam.defaults if necessary
@@ -246,7 +251,8 @@ def readConfigFiles():
         if not os.path.exists(defaultsPath):
             writeSystemDefaultsFile(systemDefaults)
     except Exception as e:
-        raise ConfigFileError("Failed to write %s: %s" % (defaultsPath, e))
+        if not allowMissing:
+            raise ConfigFileError("Failed to write %s: %s" % (defaultsPath, e))
 
     # Dynamically set (if not defined) GCAM.ProjectName in each section, holding the
     # section (i.e., project) name. If user has set this, the value is unchanged.

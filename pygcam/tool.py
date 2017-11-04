@@ -380,7 +380,7 @@ def _getMainParser():
     Used only to generate documentation by sphinx' argparse, in which case
     we don't generate documentation for project-specific plugins.
     '''
-    getConfig()
+    getConfig(allowMissing=True)
     tool = GcamTool.getInstance(loadPlugins=False)
     return tool.parser
 
