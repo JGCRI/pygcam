@@ -8,11 +8,8 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from __future__ import print_function
-from ..log import getLogger
 from ..subcommand import SubcommandABC
-from ..utils import removeTreeSafely, pathjoin
 
-_logger = getLogger(__name__)
 
 def driver(args, tool):
     # lazy imports to avoid loading anything that's not used by gcamtool
@@ -22,6 +19,10 @@ def driver(args, tool):
     from ..config import getParam
     from ..error import CommandlineError
     from ..scenarioSetup import createSandbox
+    from ..log import getLogger
+    from ..utils import removeTreeSafely, pathjoin
+
+    _logger = getLogger(__name__)
 
     project = args.projectName or getParam('GCAM.DefaultProject')
 

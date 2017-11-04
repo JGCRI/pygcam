@@ -180,7 +180,7 @@ def configureLogs(force=False):
     :param force: (bool) if True, reconfigure the logs even if already configured.
     :return: none
     '''
-    if not configLoaded():
+    if not configLoaded() or not _Loggers:
         return
 
     # First configure explicitly named modules

@@ -8,6 +8,7 @@ Introduction
 
    intro
    install
+   initialize
    config
    tutorial
 

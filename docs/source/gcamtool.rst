@@ -269,18 +269,20 @@ Usage
       ``~/sandboxes/MyProject/MyScenario`` using the configuration file
       ``~/MyProject/scenarios/MyScenario/config.xml``.
 
+
    gui : @replace
       .. _gui:
 
        Run the Graphical User Interface (GUI) generated from the command-line interface
        in a local web server available at http://127.0.0.1:8050.
 
+
    init : @replace
       .. _init:
 
-      Initialize key variables in the ~/.pygcam.cfg configuration file. Values not provided on
-      the command-line are requested interactively.
-
+      Create the configuration file ~/.pygcam.cfg and initialize key variables, based
+      on command-line arguments, or interactive prompts. See :doc:`initialize` for
+      details.
 
    mcs : @replace
       .. _mcs:

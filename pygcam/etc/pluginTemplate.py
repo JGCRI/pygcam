@@ -1,7 +1,9 @@
+#
+# N.B. Avoid loading anything but SubcommandABC at the top level so that
+# '-h / --help' runs as quickly as possible. Import needed files in the
+# run() method instead.
+#
 from pygcam.subcommand import SubcommandABC
-from pygcam.log import getLogger
-
-_logger = getLogger(__name__)
 
 class MyNewCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -29,6 +31,9 @@ class MyNewCommand(SubcommandABC):
         holding the parsed command-line arguments, and "tool" is a reference to
         the running GcamTool instance.
         '''
+        # from pygcam.log import getLogger
+        # _logger = getLogger(__name__)
+
         pass
 
 # An alternative to naming the class 'Plugin' is to assign the class to PluginClass

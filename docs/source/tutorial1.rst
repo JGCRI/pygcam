@@ -3,12 +3,19 @@ Tutorial, Part 1
 
 1.0 Introduction
 -----------------
+
+.. note::
+  The first step after :doc:`installing <install>` ``pygcam`` is to run
+  the :ref:`gt init <init>` command to initialize your ``pygcam`` configuration
+  file. You will need to know where you have GCAM installed, and where you would like
+  to put "project" files, which describe your project, and "sandboxes", which are
+  where GCAM workspaces are dynamically created.
+
 The command-line interface to ``pygcam`` uses the :doc:`gcamtool` script,
 which is installed when you install ``pygcam``. In this tutorial, we focus on the
-:ref:`run <run>`
-sub-command, which performs actions defined in the :doc:`project-xml` file, the location
-of which is specified by the config parameter ``GCAM.ProjectXmlFile``, which defaults to
-``%(GCAM.ProjectDir)s/etc/project.xml``.
+:ref:`run <run>` sub-command, which performs actions defined in the :doc:`project-xml` file,
+the location of which is specified by the config parameter ``GCAM.ProjectXmlFile``, which
+defaults to ``%(GCAM.ProjectDir)s/etc/project.xml``.
 
 The basic GCAM workflow consists of a defining and running a baseline scenario and one
 or more policy scenarios, and then comparing the policy cases to the baseline.

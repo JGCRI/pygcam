@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Example of XML setup for "simple" tutorial project -->
+
+<scenarios name="uniqueName" defaultGroup="group"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
+
+    <scenarioGroup name="group" useGroupDir="0">
+        <scenario name="base" baseline="1">
+            <!-- unmodified GCAM reference scenario -->
+        </scenario>
+
+        <scenario name="tax-10">
+            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+        </scenario>
+
+        <scenario name="tax-25">
+            <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
+        </scenario>
+
+        <scenario name="tax-bio-10">
+            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+            <function name="taxBioCarbon"/>
+        </scenario>
+
+        <scenario name="tax-bio-25">
+            <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
+            <function name="taxBioCarbon"/>
+        </scenario>
+    </scenarioGroup>
+</scenarios>

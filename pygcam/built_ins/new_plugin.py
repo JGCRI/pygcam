@@ -8,21 +8,19 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from datetime import datetime
-import re
 
 from ..subcommand import SubcommandABC
-from ..log import getLogger
-from ..utils import mkdirs
-
-_logger = getLogger(__name__)
 
 def driver(args, tool):
-    # lazy imports
     import os
+    import re
     import shutil
     from ..config import getParam, USR_CONFIG_FILE
     from ..utils import mkdirs, pathjoin, copyResource, getResource
     from ..error import CommandlineError
+    from ..log import getLogger
+
+    _logger = getLogger(__name__)
 
     projectName = args.name
     projectRoot = os.path.abspath(args.root) or getParam('GCAM.ProjectRoot')
@@ -64,9 +62,9 @@ def driver(args, tool):
 
     # Provide example XML files and instructions by extracting these
     # as resources from the pygcam package.
-    filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml',
-                   'scenarios.xml', 'Instructions.txt', 'project-schema.xsd',
-                   'protection-schema.xsd', 'queries-schema.xsd',
+    filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml', 'scenarios.xml',
+                   'tutorial-scenarios.xml', 'tutorial-project.xml', 'Instructions.txt',
+                   'project-schema.xsd', 'protection-schema.xsd', 'queries-schema.xsd',
                    'rewriteSets-schema.xsd', 'scenarios-schema.xsd']
 
     for filename in filesToCopy:

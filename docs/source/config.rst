@@ -10,6 +10,8 @@ The ``pygcam`` scripts and libraries rely on a configuration file to:
 The configuration file and variables are described below.
 
 .. seealso::
+   Use the :ref:`gt init <init>` command to initialize your configuration file.
+
    Usage of the ``config`` sub-command is described on the :ref:`gt config <config>`
    page. See :doc:`pygcam.config` for documentation of the API to the configuration system.
 

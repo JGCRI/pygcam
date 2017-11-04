@@ -34,6 +34,15 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0rc3 (4 Nov 2017)
+-----------------------------
+* Much improved ``init`` sub-command and detection of missing
+  configuration file, guiding user to run the ``init`` command.
+
+* Configuration defaults are now saved to ~/.pygcam.defaults
+  rather than cluttering the ~/.pygcam.cfg configuration file
+  with this information.
+
 Version 1.0rc1 (2 Nov 2017)
 -----------------------------
 * Revised installation procedure now uses Anaconda environments to

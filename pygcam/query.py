@@ -16,8 +16,9 @@ from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
-from .utils import (TempFile, getTempFile, mkdirs, deleteFile, ensureExtension, ensureCSV,
+from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV,
                     pathjoin, saveToFile, getExeDir, writeXmldbDriverProperties)
+from .temp_file import TempFile, getTempFile
 
 _logger = getLogger(__name__)
 

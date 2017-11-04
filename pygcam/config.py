@@ -7,63 +7,13 @@ import os
 import platform
 from pkg_resources import resource_string
 from backports import configparser
-from .error import ConfigFileError, PygcamException
+from .error import ConfigFileError, PygcamException, CommandlineError
 
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
+USR_DEFAULTS_FILE = '.pygcam.defaults'
 
 PlatformName = platform.system()
-
-_instructions = '''#
-# This file defines variables read by the pygcam package. It allows
-# you to customize many aspects of pygcam, such as file locations,
-# and arguments to various commands. See the documentation for the
-# config module for detailed explanations.
-#
-# The default configuration values are provided below. To modify a
-# value, remove the '#' comment character at the start of the line
-# and set the value as desired.
-#
-# To set a project-specific value to override the defaults for one
-# project, create a new section by indicating the project name in
-# square brackets. For example for the project PROJECT0, you would
-# add [PROJECT0]. All settings after this until the next section
-# declaration (or end of file) taken as values for "PROJECT0". The
-# "gt" script allows you to identify the project you are operating
-# on so that the corresponding values are read from the config file.
-#
-'''
-
-def _getCommentedDefaults(systemDefaults):
-    '''
-    Returns a copy of the _SystemDefault string with all variable
-    assignments commented out. This allows the user to see what's
-    possible, but also demonstrates that these are the defaults.
-    '''
-    import re
-
-    def comment(match):
-        '''Comment out any line starting with GCAM.* ='''
-        return '# ' + match.group()
-
-    result = _instructions
-
-    p = re.compile('^(GCAM\.\S+\s*=)', re.MULTILINE)
-    result += p.sub(comment, systemDefaults)
-
-    # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
-    result += "\n# For up-to-date documentation of configuration variables, see the\n"
-    result += "# listing at the end of https://pygcam.readthedocs.io/en/latest/config.html\n\n"
-    result += "# User's home directory\n# Home = %s\n\n" % getParam('Home', raw=True)
-    result += "# Name of gcam executable relative to 'exe' dir\n# GCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
-    result += "# Location of ModelInterface jar file\n# GCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
-    result += "# Whether to use a virtual display when running ModelInterface\n# GCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
-    result += "# Editor command to invoke by 'gt config -e'\n# GCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
-
-    if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n'
-        result = result.replace(r'\n', '\r\n')
-
-    return result
 
 _ConfigParser = None
 
@@ -161,6 +111,74 @@ def getHomeDir():
     return home
 
 
+def userConfigPath():
+    path = os.path.join(getHomeDir(), USR_CONFIG_FILE)
+    return path
+
+def configDefaultsPath():
+    path = os.path.join(getHomeDir(), USR_DEFAULTS_FILE)
+    return path
+
+# def removeDefaultsFile():
+#     """
+#     If the defaults file exists, delete it. This is done by the
+#     'init' sub-command to avoid stale defaults files.
+#     """
+#     path = configDefaultsPath()
+#     if os.path.exists(path):
+#         os.remove(path)
+
+
+_instructions = '''#
+# This file describes variables defined by the pygcam code. These
+# variables allow you to customize many aspects of pygcam, such as
+# file locations, and arguments to various commands. See the
+# documentation for the config module for detailed explanations.
+#
+# Use this file to understand the role of each variable and to copy
+# and paste variables into your .pygcam.cfg file, as desired.
+#
+# The default configuration values are provided herein. There is no
+# need to specify these variables in your .pygcam.cfg unless you want
+# to override the defaults.
+#
+# To set a project-specific value to override the defaults for one
+# project, create a new section by indicating the project name in
+# square brackets. For example for the project PROJECT0, you would
+# add [PROJECT0]. All settings after this until the next section
+# declaration (or end of file) taken as values for "PROJECT0". The
+# "gt" script allows you to identify the project you are operating
+# on so that the corresponding values are read from the config file.
+#
+'''
+
+def writeSystemDefaultsFile(systemDefaults):
+    '''
+    If the system defaults file (~/pygcam.defaults) doesn't exist,
+    write the system defaults to the file. Otherwise, just return.
+    '''
+    path = configDefaultsPath()
+    if os.path.exists(path):
+        return
+
+    content = _instructions + systemDefaults
+
+    # Add dynamically generated vars (as "raw" values so the obey user's settings of referenced variables)
+    content += "\n# For up-to-date documentation of configuration variables, see the\n"
+    content += "# listing at the end of https://pygcam.readthedocs.io/en/latest/config.html\n\n"
+    content += "# User's home directory\nHome = %s\n\n" % getParam('Home', raw=True)
+    content += "# Name of gcam executable relative to 'exe' dir\nGCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
+    content += "# Location of ModelInterface jar file\nGCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
+    content += "# Whether to use a virtual display when running ModelInterface\nGCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
+    content += "# Editor command to invoke by 'gt config -e'\nGCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
+
+    if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n' for Windows
+        content = content.replace(r'\n', '\r\n')
+
+    # create a file with the system defaults
+    with open(path, 'w') as f:
+        f.write(content)
+
 def readConfigFiles():
     """
     Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
@@ -209,7 +227,7 @@ def readConfigFiles():
             print("WARNING: Failed to read site config file: %s" % e)
 
     # Customizations are stored in ~/.pygcam.cfg
-    usrConfigPath = os.path.join(home, USR_CONFIG_FILE)
+    usrConfigPath = userConfigPath()
 
     # os.path.exists doesn't always work on Windows, so just try opening it.
     try:
@@ -217,15 +235,20 @@ def readConfigFiles():
            _ConfigParser.read_file(f)
 
     except IOError:
-        # TBD: rather than this, write a file .pygcam.defaults for ref
-        # TBD: and invoke the "init" sub-command. Then write a basic config
-        # TBD: file with user's values in [DEFAULT] and section for default proj.
-        # create a file with the system defaults if no file exists
-        with open(usrConfigPath, 'w') as f:
-            commented = _getCommentedDefaults(systemDefaults)
-            f.write(commented)
+        if not os.path.lexists(usrConfigPath):
+            raise ConfigFileError("Missing configuration file %s" % usrConfigPath)
+        else:
+            raise ConfigFileError("Can't read configuration file %s" % usrConfigPath)
 
-    # Create (if not defined) GCAM.ProjectName in each section, holding the
+    try:
+        # Write the system defaults to ~/.pygcam.defaults if necessary
+        defaultsPath = configDefaultsPath()
+        if not os.path.exists(defaultsPath):
+            writeSystemDefaultsFile(systemDefaults)
+    except Exception as e:
+        raise ConfigFileError("Failed to write %s: %s" % (defaultsPath, e))
+
+    # Dynamically set (if not defined) GCAM.ProjectName in each section, holding the
     # section (i.e., project) name. If user has set this, the value is unchanged.
     projectNameVar = 'GCAM.ProjectName'
     for section in getSections():
