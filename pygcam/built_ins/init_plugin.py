@@ -198,8 +198,7 @@ class InitCommand(SubcommandABC):
 
         parser.add_argument('--overwrite', action='store_true',
                             help='''Overwrite an existing config file. (Makes
-                            a backup first in ~/.pygcam.cfg~, but user is required to
-                            confirm overwriting the file.)''')
+                            a backup first in ~/.pygcam.cfg~.)''')
 
         parser.add_argument('-P', '--defaultProject',
                             help='''Set the value of config var GCAM.DefaultProject to
@@ -266,7 +265,7 @@ class InitCommand(SubcommandABC):
                 mkdirs(path)
 
         # These args default to None so we can test for explicit settings
-        createProj = True if args.createProject == True else (False if args.noCreateProj == True else None)
+        createProj = True if args.createProject == True else (False if args.noCreateProject == True else None)
         if createProj is None:
             createProj = askYesNo('Create the project structure for "%s"' % dfltProject, default='y')
 
