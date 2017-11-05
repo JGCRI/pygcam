@@ -177,15 +177,18 @@ class InitCommand(SubcommandABC):
         super(InitCommand, self).__init__('init', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
-        parser.add_argument('-c', '--create-project',    dest='createProject', action='store_true',
+        group = parser.add_mutually_exclusive_group()
+
+        group.add_argument('-c', '--create-project',    dest='createProject', action='store_true',
+                            default=None,
                             help='''Create the project structure for the given default project. If 
                             neither -c/--create-project nor -C/--no-create-project is specified, the
                             user is queried interactively.''')
 
-        parser.add_argument('-C', '--no-create-project', dest='createProject', action='store_false')
-
-        parser.set_defaults(createProject=None) # so that if no value is provide, we ask interactively
-
+        group.add_argument('-C', '--no-create-project', dest='noCreateProject', action='store_true',
+                            default=None,
+                           help='''Do not create the project structure for the given default project.
+                           Mutually exclusive with -c / --create-project option.''')
 
         parser.add_argument('-g', '--gcamDir',
                             help='''The directory that is a GCAM v4.3 or v4.4
@@ -262,7 +265,8 @@ class InitCommand(SubcommandABC):
             if not os.path.isdir(path):
                 mkdirs(path)
 
-        createProj = args.createProject
+        # These args default to None so we can test for explicit settings
+        createProj = True if args.createProject == True else (False if args.noCreateProj == True else None)
         if createProj is None:
             createProj = askYesNo('Create the project structure for "%s"' % dfltProject, default='y')
 
