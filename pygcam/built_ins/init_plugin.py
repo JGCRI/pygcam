@@ -9,6 +9,7 @@ import itertools
 import os
 from six.moves import input
 
+from ..config import getHomeDir
 from ..subcommand import SubcommandABC
 
 class AbortInput(Exception):
@@ -43,11 +44,27 @@ GCAM.WriteXmlOutputFile = False
 
 '''
 
+def expandTilde(path):
+    """
+    Similar to os.path.expanduser() but uses our getHomeDir() function,
+    which produces consistent results regards of whether user is running
+    a standard Windows command window or a Cygwin bash shell. Also, we
+    have no need to expand '~user', just '~'.
+    """
+    from ..utils import unixPath
+
+    if path.startswith('~/'):
+        path = getHomeDir() + path[1:]
+    return unixPath(path)
+
 def findGCAM():
+    home = getHomeDir()
+
     versions = ('v4.4', 'v4.3')
-    dirs = ('~', '~/GCAM', '~/gcam')
+    dirs = (home, home + '/GCAM', home + '/gcam')
+
     for v, d in itertools.product(versions, dirs):
-        path = os.path.expanduser('%s/gcam-%s' % (d, v))
+        path = '%s/gcam-%s' % (d, v)
         if os.path.isdir(path):
             return path
 
@@ -89,7 +106,7 @@ def askDir(msg, default=''):
         if path == '':
             path = default
 
-        path = unixPath(os.path.expanduser(path))
+        path = expandTilde(path)
 
         if path and not os.path.isdir(path):
             if os.path.lexists(path):
@@ -206,15 +223,14 @@ class InitCommand(SubcommandABC):
             rerunForCygwin(args)
             return
 
-        home = os.path.expanduser('~')
-        configPath = pathjoin(home, USR_CONFIG_FILE)
+        configPath = pathjoin(getHomeDir(), USR_CONFIG_FILE)
 
         try:
             dfltProject = args.defaultProject or askString('Default project name?', 'tutorial')
             gcamDir     = args.gcamDir or askDir('Where is GCAM installed?',
-                                                 default=unixPath(findGCAM() or os.path.expanduser(DefaultGcamDir)))
+                                                 default=unixPath(findGCAM() or expandTilde(DefaultGcamDir)))
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
-                                                    default=unixPath(os.path.expanduser(DefaultProjectDir)))
+                                                    default=expandTilde(DefaultProjectDir))
             sandboxDir  = args.sandboxDir or askDir('Directory in which to create pygcam run-time sandboxes?',
                                                     default=defaultSandboxDir(projectDir))
 

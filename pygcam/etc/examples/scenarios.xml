@@ -14,19 +14,24 @@ Also see scenarios2.xml, which offers a slightly more complex example.
             <!-- unmodified GCAM reference scenario -->
         </scenario>
 
+        <!-- $10/tonne tax on fossil/industrial CO2, increasing by 5% per year -->
         <scenario name="tax-10">
+            <!-- Add a line to the XML config file to load this file -->
             <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
         </scenario>
 
+        <!-- $25/tonne tax on fossil/industrial CO2, increasing by 5% per year -->
         <scenario name="tax-25">
             <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
         </scenario>
 
+        <!-- $10/tonne as above, but also tax biogenic CO2 -->
         <scenario name="tax-bio-10">
             <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
             <function name="taxBioCarbon"/>
         </scenario>
 
+        <!-- $10/tonne as above, but also tax biogenic CO2 -->
         <scenario name="tax-bio-25">
             <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
             <function name="taxBioCarbon"/>

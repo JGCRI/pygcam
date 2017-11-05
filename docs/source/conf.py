@@ -154,6 +154,9 @@ html_static_path = ['_static']
 def setup(app):
    app.add_stylesheet("theme_overrides.css")
 
+   # fix row height for literal includes so line nums line up properly
+   app.add_stylesheet("lineno_fix.css")
+
 # This does not work on RTD
 # html_context = {
 #     'css_files': [

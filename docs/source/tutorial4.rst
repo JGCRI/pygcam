@@ -1,39 +1,51 @@
 Tutorial, Part 4
 ==================
 
-.. note:: This section is under development.
-
 In this part of the tutorial, we look at the queries that are defined
 in ``project.xml`` and the use of "rewrites" to aggregate the
 results in different ways.
 
-4.1 Queries
+4.0 Queries
 -------------
 The queries identified in the project file (or in an external file) determine which
 results are extracted from the GCAM database for each run of the model, and thus
 determine which subsequent steps (computing differences, creating charts) can be
-performed. To plot results, you must first extract them from the database using
-a query.
+performed.
 
-Queries can be extracted on-the-fly from files used with ModelInterface by specifying
+GCAM uses an XML-based database for which queries are likewise composed in XML.
+The database is managed by the java-based ModelInterface program provided in
+the GCAM distribution. There is also a standard file called "Main_Queries.xml"
+that is used by ModelInterface to provide interactive access to these queries.
+
+``Pygcam`` executes queries by creating XML query files and invoking the ModelInterface
+program in "batch" (non-interactive) mode to generate CSV files. You can craft query
+files by hand, or you can use pre-existing ones in Main_Queries.xml or some other
+file with custom queries.
+
+The queries themselves can be extracted on-the-fly from these files by specifying
 the location of the XML file in the configuration variable ``GCAM.QueryPath`` and
 referencing the desired query by its defined "title". (See the
 :ref:`query sub-command <query>` and the :doc:`pygcam.query` API documentation
-for more information.)
+for more information.) In general, there is little need to create individual query
+files; anything you can run in ModelInterface can be run by ``pygcam`` as well.
 
-Queries can be run several ways in the latest version of GCAM:
+Queries can be run several ways in GCAM:
 
   #. If an XML database is written to disk (the default), queries can be
      run on the database using the ModelInterface.jar file, which is used
      by the :ref:`query sub-command <query>`.
+
   #. If the XML database is written to disk, GCAM can run the queries before
      it exits, using the same mechanism as in the option above.
+
   #. A new feature of GCAM allows it to store the XML database in memory, in
      which case it *must* be queried from within GCAM since the database will
-     no longer exist after GCAM exits.
+     no longer exist after GCAM exits. This is particularly useful in large
+     ensemble runs where you want to extract some data but don't need to keep
+     the large databases around.
 
 Two configuration file parameters control this behavior. The variables and
-their default values are shown below. Add these to your ``~/.pygcam.cfg`` file
+their default values are shown below. Add these to your ``.pygcam.cfg`` file
 with appropriate ``True`` or ``False`` values to configure GCAM as you wish.
 
 .. code-block:: cfg
@@ -46,57 +58,7 @@ Note that setting ``GCAM.InMemoryDatabase`` to ``True`` forces
 feasible.
 
 
-4.2 Rewrite sets
-------------------
-Standard GCAM XML queries can define "rewrites" which modify the values of chosen
-data elements to allow them to be aggregated. For example, you can aggregate all
-values of CornAEZ01, CornAEZ02, ..., CornAEZ18 to be returned simply as "Corn".
-
-In ``pygcam`` this idea is taken a step further by allowing you to define reusable,
-named "rewrite sets" that can be applied on-the-fly to
-queries named in the project file. For example, if you are working with a particular
-regional aggregation, you can define this aggregation once in a ``rewrites.xml`` file
-and reference the name of the rewrite set when specifying queries in :doc:`project-xml`.
-See :doc:`rewrite sets <rewrites-xml>` for more information.
-
-4.3 Defining queries with rewrites
-------------------------------------
-
-The following is an example of defining a set of queries for a project:
-
-.. code-block:: xml
-   :linenos:
-
-   <queries varName="queryXmlFile" defaultMap="eightRegions">
-       <query name="Land_Allocation">
-            <rewriter name="eightRegions"/>
-            <rewriter name="landAllocation"/>
-        </query>
-        <query name="Ag_Production_by_Crop_Type">
-            <rewriter name="eightRegions"/>
-            <rewriter name="crops"/>
-        </query>
-        <query name="land_cover"/>
-        <query name="luc_emissions"/>
-        <query name="nonco2"/>
-        <query name="Refined_liquids_for_vehicles_production_by_technology"/>
-        <query name="Climate_forcing"/>
-        <query name="Global_mean_temperature"/>
-   </queries>
-
-
-This ``<queries>`` element at line 1 defines a variable named ``queryXmlFile`` and
-establishes a default rewrite by setting ``defaultMap="eightRegions"``. This will
-be applied to all queries that do not override this by specifying ``useDefault="False"``,
-or specify other ``<rewriter>`` elements.
-
-Query definitions, using the ``<query>`` element, begin at line 2. The first query,
-``Land_Allocation`` applies the rewriter named ``landAllocation``. Since it specifies
-an explicit rewriter, the default ("eightRegions") would not be applied, so it is
-also specified explicitly. Similarly, for the second query, ``Ag_Production_by_Crop_Type``,
-at line 6. The remaining queries are run using the default rewriter.
-
-4.4 Processing of query definitions
+4.1 Processing of query definitions
 ------------------------------------
 When the ``project.xml`` file is read, the ``<queries>`` element is saved to
 a temporary file, the pathname of which is stored in the variable given by the
@@ -117,3 +79,66 @@ using the temporary query file are as follows:
 Note that the double-quotes around ``{queryXmlFile}`` are necessary only if the pathname
 contains blanks; using them is good "defensive programming" practice.
 
+4.2 Rewrite sets
+------------------
+Standard GCAM XML queries can define "rewrites" which modify the values of chosen
+data elements to allow them to be aggregated. For example, you can aggregate all
+values of CornAEZ01, CornAEZ02, ..., CornAEZ18 to be returned simply as "Corn".
+
+In ``pygcam`` this idea is taken a step further by allowing you to define reusable,
+named "rewrite sets" that can be applied to queries named in the project file.
+For example, if you are working with a particular
+regional aggregation, you can define this aggregation once in a ``rewrites.xml`` file
+and reference the name of the rewrite set when specifying queries in :doc:`project-xml`.
+See :doc:`rewrite sets <rewrites-xml>` for more information.
+
+Defining queries with rewrites
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following example ``rewriteSets.xml`` file is copied into new projects:
+
+.. literalinclude:: ../../pygcam/etc/examples/rewriteSets.xml
+   :language: xml
+   :linenos:
+
+We can reference any of these sets in the ``<queries>`` section of the ``project.xml``
+file. We can define a list of rewrite sets to apply by default to all queries, and
+we can define rewrites to apply to individual queries (as well as opt out of the
+default rewrites in any individual query.)
+
+Let's now use the pre-defined "eightRegions" set to aggregate the 32 regions to
+simplify the plot of Land Use Change Emissions we've been working on. To do this,
+we change the line for this query in ``project.xml`` from
+
+.. code-block:: xml
+
+   <query name="Land_Use_Change_Emission"/>
+
+to:
+
+.. code-block:: xml
+
+   <query name="Land_Use_Change_Emission">
+      <rewriter name="eightRegions"/>
+   </query>
+
+We then need to rerun the queries for both the baseline and policy scenarios, recompute
+the differences, and re-generate the plots. We can do that with this command::
+
+    $ gt run -s query,diff,plotDiff -S base,tax-10
+
+This results in the following figure:
+
+---------
+
+  .. image:: images/tutorial/Land_Use_Change_Emission-tax-10-base-by-region-mod3.*
+
+---------
+
+or, if we restore the original aesthetic choices, we have this:
+
+---------
+
+  .. image:: images/tutorial/Land_Use_Change_Emission-tax-10-base-by-region-mod4.*
+
+---------
