@@ -34,11 +34,14 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0rc3 (4 Nov 2017)
+Version 1.0rc3 (5 Nov 2017)
 -----------------------------
 * Much improved ``init`` sub-command and detection of missing
   configuration file, guiding user to run the ``init`` command.
   The ``init`` command now sets up the tutorial files by default.
+
+* Improved tutorial to work with files provided by ``init``,
+  and improved documentation in general.
 
 * Configuration defaults are now saved to ~/.pygcam.defaults
   rather than cluttering the ~/.pygcam.cfg configuration file
