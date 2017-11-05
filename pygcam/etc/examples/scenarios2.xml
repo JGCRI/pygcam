@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Example of XML setup for "simple" tutorial project -->
+
+<scenarios name="uniqueName" defaultGroup="protect-0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
+
+    <!--
+    Run 2 levels of land protection in the baseline, zero and 90%. Note that the
+    GCAM reference scenario includes 'protected_land_input' files that protect
+    90% of all unmanaged land, so protecting 0% requires only dropping these files.
+    -->
+    <iterator name="protection" type="list" values="0, 90"/>
+
+    <!-- Our policy scenarios will use these levels of carbon taxes -->
+    <iterator name="tax"   type="list" values="10,15,20,25"/>
+
+    <scenarioGroup name="protect-{protection}" useGroupDir="0" iterator="protection">
+        <scenario name="base-{protection}" baseline="1">
+            <if value1="{protection}" value2="0" matches="true">
+                <delete name="protected_land2"/>
+                <delete name="protected_land3"/>
+            </if>
+        </scenario>
+
+        <!-- e.g., tax-10-0 for $10/tonne tax, 0% protection -->
+        <scenario name="tax-{tax}-{protection}" iterator="tax">
+            <!-- C tax filenames differ only in the amount of tax -->
+            <add name="carbon_tax">../input/policy/carbon_tax_{tax}_5.xml</add>
+        </scenario>
+
+    </scenarioGroup>
+</scenarios>

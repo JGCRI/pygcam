@@ -95,17 +95,17 @@ For example, consider the following values in ``$HOME/.pygcam.cfg``:
 .. code-block:: cfg
 
      [DEFAULT]
-     GCAM.Root = %(Home)s/GCAM
+     GCAM.RefWorkspace = %(Home)s/GCAM/gcam-v4.3
 
      [Project1]
-     GCAM.Root = /other/location/GCAM
+     GCAM.RefWorkspace = /other/location/GCAM/gcam-v4.4
 
      [OtherProject]
-     # no value set here for GCAM.ROOT
+     # no value set here for GCAM.RefWorkspace
 
-The default value for ``GCAM.Root`` is ``%(Home)s/GCAM``. This value is used for the
-project ``OtherProject`` since no project-specific value is defined, but the project
-``Project1`` overrides this with the value ``/other/location/GCAM``.
+The default value for ``GCAM.RefWorkspace`` is ``%(Home)s/GCAM/gcam-v4.3``. This value is
+used for the project ``OtherProject`` since no project-specific value is defined, but the project
+``Project1`` overrides this with the value ``/other/location/GCAM/gcam-v4.4``.
 
 The available parameters and their default values are described below.
 

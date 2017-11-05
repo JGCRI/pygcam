@@ -24,13 +24,23 @@ def defaultSandboxDir(projectRoot):
     return path
 
 Template = '''[DEFAULT]
-GCAM.DefaultProject = {dfltProject}
-GCAM.Root           = {gcamRoot}
-GCAM.ProjectRoot    = {projectRoot}
-GCAM.SandboxRoot    = {sandboxRoot}
+GCAM.DefaultProject  = {dfltProject}
+GCAM.RefWorkspace    = {gcamDir}
+GCAM.ProjectRoot     = {projectRoot}
+GCAM.SandboxRoot     = {sandboxRoot}
+GCAM.RewriteSetsFile = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
 
 [{dfltProject}]
+# Set GCAM.LogLevel to DEBUG for more diagnostic messages 
+# or to WARN, ERROR, or FATAL for progressively less info. 
 GCAM.LogLevel = INFO
+
+# Setup generated config files to not write large extraneous 
+# output files. Move these statements to the [DEFAULT] section 
+# if you want this to be the default for all projects.
+GCAM.WriteDebugFile     = False
+GCAM.WriteXmlOutputFile = False
+
 '''
 
 def findGCAM():
@@ -161,7 +171,7 @@ class InitCommand(SubcommandABC):
 
 
         parser.add_argument('-g', '--gcamDir',
-                            help='''The directory holding a GCAM v4.3 or v4.4
+                            help='''The directory that is a GCAM v4.3 or v4.4
                             workspace. Sets config var GCAM.RefWorkspace. By default,
                             looks for gcam-v4.4 (then v4.3) in ~, ~/GCAM, and ~/gcam, 
                             where "~" indicates your home directory.''')
@@ -200,7 +210,7 @@ class InitCommand(SubcommandABC):
         configPath = pathjoin(home, USR_CONFIG_FILE)
 
         try:
-            dfltProject = args.defaultProject or askString('Default project name?', 'ctax')
+            dfltProject = args.defaultProject or askString('Default project name?', 'tutorial')
             gcamDir     = args.gcamDir or askDir('Where is GCAM installed?',
                                                  default=unixPath(findGCAM() or os.path.expanduser(DefaultGcamDir)))
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
@@ -224,7 +234,7 @@ class InitCommand(SubcommandABC):
             return
 
         # initialize configuration file
-        text = Template.format(dfltProject=dfltProject, gcamRoot=gcamDir,
+        text = Template.format(dfltProject=dfltProject, gcamDir=gcamDir,
                                projectRoot=projectDir, sandboxRoot=sandboxDir)
 
         with open(configPath, 'w') as f:

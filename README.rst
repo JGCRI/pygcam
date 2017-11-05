@@ -38,10 +38,15 @@ Version 1.0rc3 (4 Nov 2017)
 -----------------------------
 * Much improved ``init`` sub-command and detection of missing
   configuration file, guiding user to run the ``init`` command.
+  The ``init`` command now sets up the tutorial files by default.
 
 * Configuration defaults are now saved to ~/.pygcam.defaults
   rather than cluttering the ~/.pygcam.cfg configuration file
   with this information.
+
+* Eliminated config vars GCAM.Root and GCAM.Current in favor
+  of GCAM.RefWorkspace. Some users may have to adjust their config
+  files.
 
 Version 1.0rc1 (2 Nov 2017)
 -----------------------------

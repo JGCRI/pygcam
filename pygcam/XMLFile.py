@@ -85,7 +85,7 @@ class XMLFile(object):
         """
         filename = self.filename
 
-        _logger.info("Reading '%s'", filename)
+        _logger.debug("Reading '%s'", filename)
         parser = ET.XMLParser(remove_blank_text=True, remove_comments=self.removeComments)
 
         try:

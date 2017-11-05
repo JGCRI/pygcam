@@ -63,7 +63,7 @@ def driver(args, tool):
     # Provide example XML files and instructions by extracting these
     # as resources from the pygcam package.
     filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml', 'scenarios.xml',
-                   'tutorial-scenarios.xml', 'tutorial-project.xml', 'Instructions.txt',
+                   'scenarios2.xml', 'project2.xml', 'Instructions.txt',
                    'project-schema.xsd', 'protection-schema.xsd', 'queries-schema.xsd',
                    'rewriteSets-schema.xsd', 'scenarios-schema.xsd']
 

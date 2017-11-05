@@ -48,9 +48,12 @@ the project will not be created. If you specify neither, you will be asked wheth
 to create the project. If the project directory already exists, you will be asked whether
 to overwrite it.
 
-Note that the :ref:`init <init>`  sub-command creates the project by invoking the
-:ref:`new <new>` sub-command internally. If you choose not to have ``init`` create the
-project structure, you can run ``new`` manually.
+Note that the :ref:`init <init>`  sub-command creates the project structure by invoking the
+:ref:`new <new>` sub-command internally. This creates several directories and copies example
+XML files from the ``pygcam`` distribution. The example files define the "ctax" project, which
+includes a baseline and 4 carbon tax policies. This is intended as a working starting point.
+
+If you choose not to have ``init`` create the project structure, you can run ``new`` manually.
 
 Example
 ---------
@@ -68,13 +71,23 @@ and for the sandboxes were accepted (by hitting return).
  Created /Users/rjp/.pygcam.cfg with contents:
 
  [DEFAULT]
- GCAM.DefaultProject = myproj
- GCAM.Root           = /Users/rjp/GCAM/gcam-v4.3
- GCAM.ProjectRoot    = /Users/rjp/tmp/test/projects
- GCAM.SandboxRoot    = /Users/rjp/tmp/test/sandboxes
+ GCAM.DefaultProject  = myproj
+ GCAM.RefWorkspace    = /Users/rjp/GCAM/gcam-v4.3
+ GCAM.ProjectRoot     = /Users/rjp/tmp/test/projects
+ GCAM.SandboxRoot     = /Users/rjp/tmp/test/sandboxes
+ GCAM.RewriteSetsFile = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
 
  [myproj]
  GCAM.LogLevel = INFO
 
  Create the project structure for "myproj" (Y/n)? y
  Created project "myproj" in /Users/rjp/tmp/test/projects/myproj
+
+Alternatively, you can provide values on the command-line, which can be useful for writing
+your own scripts.
+
+Immediately after running ``gt init`` you can run the baseline and all policy scenarios
+in the example project with the command::
+
+    gt run
+
