@@ -34,7 +34,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0rc3 (5 Nov 2017)
+Version 1.0rc4 (5 Nov 2017)
 -----------------------------
 * Much improved ``init`` sub-command and detection of missing
   configuration file, guiding user to run the ``init`` command.
