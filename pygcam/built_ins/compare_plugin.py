@@ -8,9 +8,6 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC
-from ..log import getLogger
-
-_logger = getLogger(__name__)
 
 def driver(args, tool):
     import os

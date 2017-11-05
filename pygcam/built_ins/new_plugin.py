@@ -8,23 +8,22 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from datetime import datetime
-import re
 
 from ..subcommand import SubcommandABC
-from ..log import getLogger
-
-_logger = getLogger(__name__)
 
 def driver(args, tool):
-    # lazy imports
     import os
+    import re
     import shutil
     from ..config import getParam, USR_CONFIG_FILE
     from ..utils import mkdirs, pathjoin, copyResource, getResource
     from ..error import CommandlineError
+    from ..log import getLogger
+
+    _logger = getLogger(__name__)
 
     projectName = args.name
-    projectRoot = args.root or getParam('GCAM.ProjectRoot')
+    projectRoot = os.path.abspath(args.root) or getParam('GCAM.ProjectRoot')
     projectDir  = pathjoin(projectRoot, projectName)
     overwrite   = args.overwrite
 
@@ -34,7 +33,7 @@ def driver(args, tool):
         raise CommandlineError("Can't change dir to '%s': %s" % (projectRoot, e))
 
     try:
-        os.mkdir(projectDir)
+        mkdirs(projectDir)
     except OSError as e:
         if e.errno == 17:   # already exists; ignore
             pass
@@ -61,18 +60,11 @@ def driver(args, tool):
     exampleDir = pathjoin(etcDir, 'examples')
     projectEtc = pathjoin(projectDir, 'etc')
 
-    # # Copy scenarios.py template to serve as a starting point
-    # name = 'scenarios.py'
-    # src = pathjoin(exampleDir, name)
-    # dst = pathjoin('xmlsrc', name)
-    # _logger.debug('Creating %s/%s', projectDir, dst)
-    # copyResource(src, dst, overwrite=overwrite)
-
-    # Provide example XML files and instructions. We can't use the glob
-    # module since these might need to be extracted from a tar/egg file.
-    filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml',
-                   'scenarios.xml', 'Instructions.txt', 'project-schema.xsd',
-                   'protection-schema.xsd', 'queries-schema.xsd',
+    # Provide example XML files and instructions by extracting these
+    # as resources from the pygcam package.
+    filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml', 'scenarios.xml',
+                   'scenarios-iterator.xml', 'project2.xml', 'Instructions.txt',
+                   'project-schema.xsd', 'protection-schema.xsd', 'queries-schema.xsd',
                    'rewriteSets-schema.xsd', 'scenarios-schema.xsd']
 
     for filename in filesToCopy:

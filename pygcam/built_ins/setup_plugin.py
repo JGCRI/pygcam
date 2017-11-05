@@ -6,11 +6,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from ..log import getLogger
 from ..subcommand import SubcommandABC
-from ..utils import pathjoin
-
-_logger = getLogger(__name__)
 
 class SetupCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -108,8 +104,11 @@ class SetupCommand(SubcommandABC):
 
         from ..config import getParam
         from ..error import SetupException
+        from ..log import getLogger
         from ..scenarioSetup import createSandbox
-        from ..utils import loadModuleFromPath
+        from ..utils import loadModuleFromPath, pathjoin
+
+        _logger = getLogger(__name__)
 
         scenario = args.scenario or args.baseline
         if not scenario:

@@ -6,9 +6,6 @@
 '''
 from __future__ import print_function
 from ..subcommand import SubcommandABC
-from ..log import getLogger
-
-_logger = getLogger(__name__)
 
 class GUICommand(SubcommandABC):
 

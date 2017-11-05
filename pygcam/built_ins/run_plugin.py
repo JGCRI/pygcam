@@ -8,10 +8,7 @@
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-from ..log import getLogger
 from ..subcommand import SubcommandABC
-
-_logger = getLogger(__name__)
 
 
 class RunCommand(SubcommandABC):

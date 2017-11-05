@@ -786,14 +786,15 @@ class McsData(object):
                     ], className='cell onecol')
                 ], className='row'),
 
+                # TBD: for now, we leave this out.
                 # Correlation convergence section
-                html.Div([
-                    html.Div([
-                        html.Span('Correlation convergence', style=getStyle('Label')),
-                        html.Div(dcc.Graph(id='corr-convergence')),
-                        # style=updateStyle('AutoMargins'))
-                    ], className='cell onecol'),
-                ], className='row'),
+                # html.Div([
+                #     html.Div([
+                #         html.Span('Correlation convergence', style=getStyle('Label')),
+                #         html.Div(dcc.Graph(id='corr-convergence')),
+                #         # style=updateStyle('AutoMargins'))
+                #     ], className='cell onecol'),
+                # ], className='row')
 
                 # Scatterplot section
                 html.Div([
@@ -1095,18 +1096,20 @@ def main(args):
         figure = data.scatterPlots(simId, scenario, inputs, outputs)
         return figure
 
-    # correlation convergence plot
-    @app.callback(Output('corr-convergence', 'figure'),
-                  [Input('project-chooser', 'value'),
-                   Input('sim-chooser', 'value'),
-                   Input('scenario-chooser', 'value'),
-                   Input('output-chooser', 'value')])
-    def showCorrConvergence(project, simId, scenario, resultName):
-        if not (project and scenario and resultName) or simId is None:
-            return ''
+    if False:
+        # TBD: not needed in all cases; restore this as option later
+        # correlation convergence plot
+        @app.callback(Output('corr-convergence', 'figure'),
+                      [Input('project-chooser', 'value'),
+                       Input('sim-chooser', 'value'),
+                       Input('scenario-chooser', 'value'),
+                       Input('output-chooser', 'value')])
+        def showCorrConvergence(project, simId, scenario, resultName):
+            if not (project and scenario and resultName) or simId is None:
+                return ''
 
-        figure = data.corrConvergencePlot(simId, scenario, resultName)
-        return figure
+            figure = data.corrConvergencePlot(simId, scenario, resultName)
+            return figure
 
     app.run_server(debug=args.debug, threaded=False)
 

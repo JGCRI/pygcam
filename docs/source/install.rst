@@ -16,8 +16,14 @@ There are two options for installing and using pygcam and :doc:`gcamtool`.
     with Python to create a working environment.
 
 .. note::
-   Both options require that you install java and (of course) GCAM, as described below.
 
+   You must run the ``init`` sub-command to initialize your configuration file
+   (``~/.pygcam.cfg``) prior to using :doc:`gcamtool`. See the :doc:`initialize`
+   for further details. (You can, however, run ``gt``
+   or any sub-command with the ``-h`` or ``--help`` option to get help, even before
+   initializing.)
+
+-----------------------------------
 
 .. _option1:
 
@@ -131,7 +137,7 @@ Once you have a valid Python 2.7 environment installed, you can install
 ``pygcam``. There are two primary ways to install pygcam (or any open source
 package) depending on how you want to use the software.
 
-As described above, you can simply install pygcam as a standard Python package,
+As described above, you can install pygcam as a standard Python package,
 using the command:
 
 .. code-block:: bash
@@ -147,10 +153,15 @@ installed package to the source code repository so changes to the source code ar
 
 .. code-block:: bash
 
-   # First, change directory to where you want the pygcam folder to be "cloned"
+   # First, uninstall pygcam if you installed it previously. This ensures that
+   # the "develop" version isn't shadowed by previously installed files.
+   pip uninstall pygcam
 
+   # Change directory to where you want the pygcam folder to be "cloned"
    git clone https://github.com/JGCRI/pygcam.git
    cd pygcam
+
+   # Install pygcam in developer mode
    python setup.py develop
 
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
@@ -163,6 +174,7 @@ this failed on Windows, so if the commands above fail, you will have to install
    conda install setuptools
 
 -----------------------------------
+
 
 .. _windows-label:
 
@@ -273,8 +285,15 @@ to stop using it. (Necessary only if you need to switch to another Anaconda envi
 
 ----------------------------------------
 
-Installing GCAM
--------------------
+Installing GCAM and Java
+---------------------------
+
+Regardless of how you've installed ``pygcam``, you will also need to install GCAM itself,
+which in turn requires java.
+
+This is a short guide to these topics since they are outside the scope of ``pygcam``.
+See the `GCAM <https://github.com/JGCRI/gcam-core/releases>`_ website for the most
+up-to-date information.
 
 Quick Links
 ^^^^^^^^^^^^^
@@ -284,8 +303,8 @@ Quick Links
   - `Download Java <http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html>`_
 
 
-GCAM
-^^^^^^^^
+Install GCAM
+^^^^^^^^^^^^^^
 
 .. note::
    The instructions below refer to installing GCAM v4.3, released in 2016. A new version of GCAM
@@ -332,40 +351,8 @@ install Python, follow the instructions for :ref:`installing Anaconda <install-a
 then you can download and run the install script. The installation script runs on all three
 GCAM platforms (MacOS, Windows, and Linux.)
 
-
-Create a file structure for GCAM and pygcam
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A convenient way to manage GCAM is to create a folder called GCAM in your home
-directory (or anywhere you prefer). Copy the latest GCAM distribution into this
-directory, and unpack the files. (Follow the instructions at the link above.)
-
-Within this folder you might create a symbolic link called ``current`` which
-points to the current version of GCAM. This allows you to switch versions simply
-by changing the symbolic link. All ``pygcam`` configuration and project information
-will remain valid unless the internal file structure of the GCAM distribution
-changes, which may require an update to ``pygcam``.
-
-Note that ``pygcam`` sets the following default values for the following
-:doc:`config` variables; these may need to be updated for your installation.
-
-    .. code-block:: cfg
-
-       GCAM.Root         = %(Home)s/GCAM
-       GCAM.SandboxRoot  = %(GCAM.Root)s/ws
-       GCAM.Current      = %(GCAM.Root)s/current
-       GCAM.RefWorkspace = %(GCAM.Current)s
-
-
-The first time ``gt`` is run, it will create a default
-configuration file with all options present but commented out.
-Running ``gt -h``, will print a usage message and create
-the initial configuration file (unless one is already present). The
-file is ``.pygcam.cfg`` found in your home directory.
-
-
-
-Java
-~~~~~~~~~
+Install Java
+^^^^^^^^^^^^^^^^^^
 You need a Java installation to run GCAM. If the link below doesn't work, find
 the latest version of Java available from `Oracle <http://www.oracle.com>`_.
 

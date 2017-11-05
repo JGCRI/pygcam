@@ -6,9 +6,6 @@
 '''
 from __future__ import print_function
 from ..subcommand import SubcommandABC
-from ..log import getLogger
-
-_logger = getLogger(__name__)
 
 DefaultProperties = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
@@ -41,6 +38,9 @@ class ModelInterfaceCommand(SubcommandABC):
         from ..utils import shellCommand, pushd
         from ..xmlEditor import xmlEdit
         from ..config import getParam
+        from ..log import getLogger
+
+        _logger = getLogger(__name__)
 
         queryFile = getParam('GCAM.MI.QueryFile')
         if args.useDefault or not os.path.lexists(queryFile):

@@ -280,16 +280,16 @@ workspace. On Unix-like systems (and on Windows if
 the user has adequate administrative privileges), the read-only files are symbolically
 linked to the scenario workspace, avoiding copying of many megabytes of data.
 
-To avoid ambiguity between the reference GCAM workspace (i.e., ``Main_User_Workspace``)
+To avoid ambiguity between the reference GCAM workspace (what was previously known
+as ``Main_User_Workspace``)
 and the per-scenario, generated workspaces, we refer to the latter as `sandboxes`, which
 is a computing term that refers to isolation areas in which programs are run to avoid
 interactions with other programs.
 
 The default ``pygcam`` structure assumes there is a directory under which you want all
 sandboxes to be created. This is defined by the config parameter ``GCAM.SandboxRoot``,
-which defaults to ``%(GCAM.Root)s/ws``. ``GCAM.Root`` in turn defaults to
-``%(Home)s/GCAM``, thus the default sandbox root is ``%(Home)s/GCAM/ws``. You can change
-``GCAM.Root`` or ``GCAM.SandboxRoot`` to any desired directory. The sandbox for an
+which defaults to ``%(Home)s/sandbox``. You can change ``GCAM.SandboxRoot`` to any
+desired directory. The sandbox for an
 individual project is defined by ``GCAM.SandboxDir``, which defaults
 to ``%(GCAM.SandboxRoot)s/%(GCAM.ProjectName)s``. Note that ``GCAM.ProjectName`` is
 set at run-time to the name of the project being operated on.

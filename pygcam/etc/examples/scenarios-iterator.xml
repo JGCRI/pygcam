@@ -1,0 +1,24 @@
+<scenarios name="uniqueName" defaultGroup="group"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
+
+      <!-- Our policy scenarios will use these levels of carbon taxes -->
+    <iterator name="tax"   type="list" values="10,15,20,25"/>
+
+    <scenarioGroup name="group" useGroupDir="0">
+        <scenario name="base" baseline="1">
+            <!-- unmodified GCAM reference scenario -->
+        </scenario>
+
+        <scenario name="tax-{tax}" iterator="tax">
+            <!-- Add a line to the XML config file to load this file -->
+            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+        </scenario>
+
+        <!-- As above, but also tax biogenic CO2 -->
+        <scenario name="tax-bio-{tax}" iterator="tax">
+            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+            <function name="taxBioCarbon"/>
+        </scenario>
+    </scenarioGroup>
+</scenarios>

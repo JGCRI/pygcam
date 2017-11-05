@@ -18,13 +18,9 @@ from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      DEFAULT_SECTION, usingMCS)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
-from .project import decacheVariables
 from .signals import SignalException, catchSignals
-from .utils import loadModuleFromPath, getTempFile, TempFile, mkdirs, pathjoin
 from .version import VERSION
 from .windows import IsWindows
-
-_logger = getLogger(__name__)
 
 PROGRAM = 'gt'
 
@@ -61,6 +57,8 @@ class GcamTool(object):
         can be loaded on-demand.
         :return: none
         '''
+        from .utils import pathjoin
+
         pluginDirs = cls._getPluginDirs()
 
         suffix = '_plugin.py'
@@ -103,6 +101,7 @@ class GcamTool(object):
         return result
 
     def __init__(self, loadPlugins=True, loadBuiltins=True):
+        from .project import decacheVariables
 
         # address re-entry issue
         decacheVariables()
@@ -223,6 +222,8 @@ class GcamTool(object):
         :param path: (str) the pathname of a plugin file.
         :return: an instance of the ``SubcommandABC`` subclass defined in `path`
         """
+        from .utils import loadModuleFromPath
+
         def getModObj(mod, name):
             return getattr(mod, name) if name in mod.__dict__ else None
 
@@ -295,6 +296,9 @@ class GcamTool(object):
     @staticmethod
     def runBatch2(shellArgs, jobName='gt', queueName=None, logFile=None, minutes=None,
                   dependsOn=None, run=True):
+        from .utils import mkdirs, pathjoin
+
+        _logger = getLogger(__name__)
 
         queueName = queueName or getParam('GCAM.DefaultQueue')
         logFile   = logFile   or getParam('GCAM.BatchLogFile', raw=False)
@@ -376,7 +380,7 @@ def _getMainParser():
     Used only to generate documentation by sphinx' argparse, in which case
     we don't generate documentation for project-specific plugins.
     '''
-    getConfig()
+    getConfig(allowMissing=True)
     tool = GcamTool.getInstance(loadPlugins=False)
     return tool.parser
 
@@ -386,6 +390,8 @@ def checkWindowsSymlinks():
     If running on Windows and GCAM.CopyAllFiles is not set, and
     we fail to create a test symlink, set GCAM.CopyAllFiles to True.
     '''
+    from .temp_file import getTempFile
+
     if IsWindows and not getParamAsBoolean('GCAM.CopyAllFiles'):
         src = getTempFile()
         dst = getTempFile()
@@ -393,6 +399,7 @@ def checkWindowsSymlinks():
         try:
             os.symlink(src, dst)
         except:
+            _logger = getLogger(__name__)
             _logger.info('No symlink permission; setting GCAM.CopyAllFiles = True')
             setParam('GCAM.CopyAllFiles', 'True')
 
@@ -408,6 +415,18 @@ def _setDefaultProject(argv):
         setSection(section)
 
 def _main(argv=None):
+    import sys
+    from .config import userConfigPath
+
+    configPath = userConfigPath()
+    if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
+        argList = argv or sys.argv
+        if 'init' in argList or '-h' in argList or '--help' in argList:
+            # create empty config file just so we can run the "init" sub-command
+            open(configPath, 'w').close()
+        else:
+            raise CommandlineError('\n***\n*** Missing pygcam configuration file %s. Run "gt init" to create it.\n***\n' % configPath)
+
     getConfig()
     configureLogs()
 
@@ -421,7 +440,6 @@ def _main(argv=None):
     parser.add_argument('--VERSION', action='store_true')
     ns, otherArgs = parser.parse_known_args(args=argv)
     if ns.VERSION:
-        import sys
         print(PROGRAM + '-' + VERSION)
         sys.exit(0)
 
@@ -479,6 +497,7 @@ def main(argv=None, raiseError=False):
         if raiseError:
             raise
 
+        _logger = getLogger(__name__)
         _logger.error("%s: %s" % (PROGRAM, e))
         return e.signum
 
@@ -493,6 +512,8 @@ def main(argv=None, raiseError=False):
             traceback.print_exc()
 
     finally:
+        from .temp_file import TempFile
+
         # Delete any temporary files that were created
         TempFile.deleteAll()
 

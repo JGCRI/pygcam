@@ -19,16 +19,17 @@ requirements = [
     'future>=0.16.0',
     'lxml>=3.8.0',
     'numpy>=1.13.1',
-    'pandas==0.20.3',
-    'seaborn==0.8.0',
+    'pandas>=0.20.3',
+    'seaborn>=0.8.0',
     'six>=1.10.0',
     'sphinx-argparse==0.1.17', # later versions lose markup in commands
 ]
 
 mcs_requirements = [
     'ipyparallel>=6.0.2',
-    'numexpr==2.6.2',
-    'salib>=1.0.3',
+    'numexpr>=2.6.2',
+    'pyscaffold==2.5.8',    # required to make SALib install correctly
+    'salib==1.1.2',
     'scipy>=0.19.1',
     'sqlalchemy>=1.1.13',
     # 'psycopg2',   # deprecated
@@ -135,8 +136,8 @@ setup(
 
     extras_require=extras_requirements,
 
-    url='https://bitbucket.org/plevin/pygcam',
-    download_url='https://plevin@bitbucket.org/plevin/pygcam.git',
+    url='https://github.com/JGCRI/pygcam',
+    download_url='https://github.com/JGCRI/pygcam.git',
     license='MIT License',
     author='Richard Plevin',
     author_email='rich@plevin.com',

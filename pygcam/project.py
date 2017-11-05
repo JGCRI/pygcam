@@ -21,12 +21,11 @@ from .config import getParam, setParam, getConfigDict
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
-from .utils import (getTempFile, flatten, shellCommand, getBooleanXML, unixPath,
-                    pathjoin, simpleFormat, resourceStream, QueryResultsDir)
+from .utils import (flatten, shellCommand, getBooleanXML, unixPath,
+                    pathjoin, simpleFormat, QueryResultsDir)
+from .temp_file import getTempFile
 from .XMLFile import XMLFile
 from .xmlSetup import ScenarioSetup
-
-__version__ = '0.2'
 
 _logger = getLogger(__name__)
 
@@ -391,22 +390,6 @@ class Project(XMLFile):
         projectName = getParam('GCAM.ProjectName')
         obj = cls.readProjectFile(projectName)
         return obj.scenarioSetup.defaultGroup
-
-    # Deprecated
-    # @staticmethod
-    # def validateXML(doc, raiseError=True):
-    #     '''
-    #     Validate a parsed project.xml file
-    #     '''
-    #     schemaStream = resourceStream('etc/project-schema.xsd')
-    #
-    #     schemaDoc = ET.parse(schemaStream)
-    #     schema = ET.XMLSchema(schemaDoc)
-    #
-    #     if raiseError:
-    #         schema.assertValid(doc)
-    #     else:
-    #         return schema.validate(doc)
 
     def setGroup(self, groupName=None):
         groupDict = self.scenarioGroupDict

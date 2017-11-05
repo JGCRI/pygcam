@@ -1,34 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Example of XML setup for "simple" tutorial project -->
+<!--
+This file defines the "tutorial" scenarios. Feel free to edit it to your liking.
+Also see scenarios2.xml, which offers a slightly more complex example.
+-->
 
-<scenarios name="uniqueName" defaultGroup="protect-0"
+<scenarios name="uniqueName" defaultGroup="group"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
 
-    <!--
-    Run 2 levels of land protection in the baseline, zero and 90%. Note that the
-    GCAM reference scenario includes 'protected_land_input' files that protect
-    90% of all unmanaged land, so protecting 0% requires only dropping these files.
-    -->
-    <iterator name="protection" type="list" values="0, 90"/>
-
-    <!-- Our policy scenarios will use these levels of carbon taxes -->
-    <iterator name="tax"   type="list" values="10,15,20,25"/>
-
-    <scenarioGroup name="protect-{protection}" useGroupDir="0" iterator="protection">
-        <scenario name="base-{protection}" baseline="1">
-            <if value1="{protection}" value2="0" matches="true">
-                <delete name="protected_land2"/>
-                <delete name="protected_land3"/>
-            </if>
+    <scenarioGroup name="group" useGroupDir="0">
+        <scenario name="base" baseline="1">
+            <!-- unmodified GCAM reference scenario -->
         </scenario>
 
-        <!-- e.g., tax-10-0 for $10/tonne tax, 0% protection -->
-        <scenario name="tax-{tax}-{protection}" iterator="tax">
-            <!-- C tax filenames differ only in the amount of tax -->
-            <add name="carbon_tax">../input/policy/carbon_tax_{tax}_5.xml</add>
+        <!-- $10/tonne tax on fossil/industrial CO2, increasing by 5% per year -->
+        <scenario name="tax-10">
+            <!-- Add a line to the XML config file to load this file -->
+            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
         </scenario>
 
+        <!-- $25/tonne tax on fossil/industrial CO2, increasing by 5% per year -->
+        <scenario name="tax-25">
+            <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
+        </scenario>
+
+        <!-- $10/tonne as above, but also tax biogenic CO2 -->
+        <scenario name="tax-bio-10">
+            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+            <function name="taxBioCarbon"/>
+        </scenario>
+
+        <!-- $10/tonne as above, but also tax biogenic CO2 -->
+        <scenario name="tax-bio-25">
+            <add name="carbon_tax">../input/policy/carbon_tax_25_5.xml</add>
+            <function name="taxBioCarbon"/>
+        </scenario>
     </scenarioGroup>
 </scenarios>
