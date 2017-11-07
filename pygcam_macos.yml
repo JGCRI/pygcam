@@ -284,7 +284,6 @@ dependencies:
   - pyscaffold==2.5.8
   - redis==2.10.6
   - ruamel-yaml==0.11.14
-  - salib==1.1.2
   - shapely==1.6.2.post1
   - sphinx-argparse==0.1.17
   - sphinx-rtd-theme==0.2.4
@@ -292,4 +291,3 @@ dependencies:
   - sqlparse==0.1.14
   - tables==3.4.2
   - tempita==0.5.2
-  - pygcam==1.0rc3

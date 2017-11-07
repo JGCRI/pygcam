@@ -61,8 +61,7 @@ packages and you are more familiar with managing package dependencies.
      # Replace "/path/to/file.yml" with path to the file you downloaded
      conda env create -f /path/to/file.yml
 
-4. To activate the new environment (which is necessary before you use ``pygcam``),
-   run the following command:
+4. Activate the new environment:
 
    * On MacOS and Linux::
 
@@ -80,9 +79,21 @@ packages and you are more familiar with managing package dependencies.
 
        activate pygcam
 
-See the `conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
-documentation for further details.
+   .. note::
 
+      You will need to activate the pygcam environment whenever you open a new
+      terminal to work with :doc:`gcamtool`.
+
+5. Finally, install the pygcam package into the newly created environment::
+
+     pip install pygcam
+
+.. seealso::
+   
+   See the `conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
+   documentation for further details on managing environments.
+
+   
 .. _option2:
 
 Option 2: Install pygcam into your current python environment
@@ -94,7 +105,7 @@ Option 2: Install pygcam into your current python environment
 
      pip install pygcam
 
-Note that you may run into package conflicts this way. Options 1 or 2 are more reliable.
+Note that you may run into package conflicts this way. Option 1 is more reliable.
 
 
 Quick Links
@@ -133,31 +144,23 @@ downloading the correct Python 2.7 version of Anaconda.
 Working with pygcam source code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once you have a valid Python 2.7 environment installed, you can install
-``pygcam``. There are two primary ways to install pygcam (or any open source
-package) depending on how you want to use the software.
-
-As described above, you can install pygcam as a standard Python package,
-using the command:
-
-.. code-block:: bash
-
-   pip install pygcam
-
 If you are interested in working with the source code (e.g., writing plugins or
-adding functionality), you should clone the code repository to create a local
-copy. You can then install ``pygcam`` in "developer" mode using the ``setup.py``
+adding functionality), you should clone the code repository (https://github.com/JGCRI/pygcam)
+to create a local copy. You can then install ``pygcam`` in "developer" mode using the ``setup.py``
 script found in the top-level ``pygcam`` directory. This creates links from the
 installed package to the source code repository so changes to the source code are
-"seen" immediately without requiring reinstallation of ``pygcam``.
+available immediately without requiring reinstallation of ``pygcam``.
 
 .. code-block:: bash
 
-   # First, uninstall pygcam if you installed it previously. This ensures that
-   # the "develop" version isn't shadowed by previously installed files.
+   # Uninstall pygcam if you installed it previously: this avoids
+   # potential conflicts with previously installed files.
    pip uninstall pygcam
 
    # Change directory to where you want the pygcam folder to be "cloned"
+   cd (wherever you want)
+
+   # Clone the git repository
    git clone https://github.com/JGCRI/pygcam.git
    cd pygcam
 
@@ -165,8 +168,8 @@ installed package to the source code repository so changes to the source code ar
    python setup.py develop
 
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
-Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, automating
-this failed on Windows, so if the commands above fail, you will have to install
+Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, this has
+been less reliable on Windows, so if the commands above fail, you will have to install
 ``setuptools``. To install ``setuptools`` manually, run this command in a terminal:
 
 .. code-block:: bash

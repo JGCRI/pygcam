@@ -23,36 +23,31 @@ requirements = [
     'seaborn>=0.8.0',
     'six>=1.10.0',
     'sphinx-argparse==0.1.17', # later versions lose markup in commands
-]
 
-mcs_requirements = [
+    # GUI requirements
+    'flask>=0.12.2',
+    'dash>=0.19.0',
+    'dash-core-components>=0.12.7',
+    'dash-html-components>=0.8.0',
+    'dash-renderer>=0.7.4',
+
+    # MCS requirements
     'ipyparallel>=6.0.2',
     'numexpr>=2.6.2',
     'pyscaffold==2.5.8',    # required to make SALib install correctly
     'salib==1.1.2',
     'scipy>=0.19.1',
     'sqlalchemy>=1.1.13',
-    # 'psycopg2',   # deprecated
 ]
 
-gui_requirements = [
-    'flask>=0.12.2',
-    'dash>=0.19.0',
-    'dash-core-components>=0.12.7',
-    'dash-html-components>=0.8.0',
-    'dash-renderer>=0.7.4',
-]
 
-if os.environ.get('READTHEDOCS') == 'True':
-    requirements.extend(mcs_requirements)
-    requirements.extend(gui_requirements)       # needed on RTD?
-    extras_requirements = {}
-else:
-    extras_requirements = {
-        'mcs': mcs_requirements,
-        'gui': gui_requirements,
-        'all': mcs_requirements + gui_requirements,
-    }
+#if os.environ.get('READTHEDOCS') == 'True':
+#    requirements.extend(mcs_requirements)
+#    extras_requirements = {}
+#else:
+#    extras_requirements = {
+#        'mcs': mcs_requirements,
+#    }
 
 long_description = '''
 pygcam
@@ -134,7 +129,7 @@ setup(
     install_requires=requirements,
     include_package_data = True,
 
-    extras_require=extras_requirements,
+    # extras_require=extras_requirements,
 
     url='https://github.com/JGCRI/pygcam',
     download_url='https://github.com/JGCRI/pygcam.git',
@@ -155,4 +150,3 @@ setup(
 
 )
 
-# conda env export -n root|egrep '(name:|dependencies:|pip:|setuptools|configparser|future|lxml|numpy|pandas|seaborn|six|sphinx|filelock|ipyparallel|numexpr|salib|scipy|sqlalchemy|flask|dash)'

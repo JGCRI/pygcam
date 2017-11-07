@@ -270,7 +270,6 @@ dependencies:
   - pyscaffold==2.5.8
   - redis==2.10.6
   - ruamel-yaml==0.11.14
-  - salib==1.1.2
   - sphinx-argparse==0.1.17
   - sqlparse==0.2.4
   - tables==3.4.2
