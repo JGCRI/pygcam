@@ -34,7 +34,6 @@ requirements = [
     # MCS requirements
     'ipyparallel>=6.0.2',
     'numexpr>=2.6.2',
-    'pyscaffold==2.5.8',    # required to make SALib install correctly
     'salib==1.1.2',
     'scipy>=0.19.1',
     'sqlalchemy>=1.1.13',

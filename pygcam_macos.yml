@@ -281,7 +281,6 @@ dependencies:
   - plotly==2.2.1
   - prompt-toolkit==1.0.15
   - pyproj==1.9.5.1
-  - pyscaffold==2.5.8
   - redis==2.10.6
   - ruamel-yaml==0.11.14
   - shapely==1.6.2.post1

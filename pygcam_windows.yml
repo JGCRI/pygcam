@@ -267,7 +267,6 @@ dependencies:
   - plotly==2.2.1
   - prompt-toolkit==1.0.15
   - pygcam==1.0rc3
-  - pyscaffold==2.5.8
   - redis==2.10.6
   - ruamel-yaml==0.11.14
   - sphinx-argparse==0.1.17

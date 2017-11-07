@@ -167,6 +167,15 @@ available immediately without requiring reinstallation of ``pygcam``.
    # Install pygcam in developer mode
    python setup.py develop
 
+The package "SALib" (sensitivity analysis library) sometimes fails to install
+properly within the ``pygcam`` installation. If this happens, install salib
+first, then rerun the ``pygcam`` installation::
+
+  pip install salib
+  python setup.py develop
+
+This seems to solve the problem. (I'm working on a better solution...)
+
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
 Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, this has
 been less reliable on Windows, so if the commands above fail, you will have to install
