@@ -92,6 +92,7 @@ def askString(msg, default):
     value = None
     while value is None:
         value = input(msg + ' (default=%s): ' % default)
+        value = value.strip()
         if value == '':
             value = default
 
@@ -103,6 +104,7 @@ def askDir(msg, default=''):
     path = None
     while not path:
         path = input(msg + ' (default=%s): ' % default)
+        path = path.strip()
         if path == '':
             path = default
 

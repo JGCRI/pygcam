@@ -1,6 +1,22 @@
 Installation
 ==================
 
+.. note::
+   If you are having trouble installing or running pygcam on Windows or Linux,
+   run the command ``gt --version``. If it reports that you are running
+   version 1.0rc3,
+   you should be able to resolve problems related to SALib and pyscaffold
+   by running the commands::
+
+     pip uninstall pygcam
+     pip install pyscaffold==2.5.8
+     pip install salib==1.1.2
+     pip install pygcam
+
+   If you have not yet created the Anaconda environment, download the current
+   environment file for your system (i.e., pygcam_windows.yml or pygcam_linux.yml),
+   which correct the problem. This does not affect macOS users.
+
 There are two options for installing and using pygcam and :doc:`gcamtool`.
 
   - :ref:`Option 1 <option1>` -- **This option is recommended for most users.** It creates
@@ -89,11 +105,11 @@ packages and you are more familiar with managing package dependencies.
      pip install pygcam
 
 .. seealso::
-   
+
    See the `conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
    documentation for further details on managing environments.
 
-   
+
 .. _option2:
 
 Option 2: Install pygcam into your current python environment

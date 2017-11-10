@@ -183,6 +183,17 @@ def writeSystemDefaultsFile(systemDefaults):
     with open(path, 'w') as f:
         f.write(content)
 
+def setMacJavaVars():
+    """
+    Set the environment vars java uses to locate libraries. If var is
+    already set, don't override it.
+    """
+    if not os.environ.get('JAVA_LIB'):
+        refWorkspace = getParam('GCAM.RefWorkspace')
+        javaLib = os.path.join(refWorkspace, 'libs/java/lib')
+        os.environ['JAVA_LIB'] = javaLib
+        setParam('$JAVA_LIB', javaLib)
+
 def readConfigFiles(allowMissing=False):
     """
     Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
@@ -265,6 +276,10 @@ def readConfigFiles(allowMissing=False):
     projectName = getParam('GCAM.DefaultProject', section=DEFAULT_SECTION)
     if projectName:
         setSection(projectName)
+
+    # Set up JAVA environment if needed
+    if PlatformName == 'Darwin':
+        setMacJavaVars()
 
     return _ConfigParser
 

@@ -282,7 +282,6 @@ dependencies:
   - pbr==3.1.1
   - plotly==2.2.1
   - prompt-toolkit==1.0.15
-  - pygcam==1.0rc3
   - pyproj==1.9.5.1
   - redis==2.10.6
   - ruamel-yaml==0.11.14

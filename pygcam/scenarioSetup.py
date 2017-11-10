@@ -20,6 +20,7 @@ _logger = getLogger(__name__)
 _VersionSpecificParameterName = {
     '4.2' : 'GCAM.RequiredFiles.4.2',
     '4.3' : 'GCAM.RequiredFiles.4.3',
+    '4.4' : 'GCAM.RequiredFiles.4.4',
 }
 
 _FilesToCopy = None
