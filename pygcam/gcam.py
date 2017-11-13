@@ -13,7 +13,7 @@ from .config import getParam, getParamAsBoolean, getParamAsFloat
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
-from .utils import writeXmldbDriverProperties, getExeDir, pushd
+from .utils import writeXmldbDriverProperties, getExeDir, pushd, parse_version_info
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -31,11 +31,12 @@ def setJavaPath(exeDir):
     javaHome = os.environ.get('JAVA_HOME', None)
 
     if not javaHome:
-        # Use WriteLocalBaseXDB (v4.2) or XMLDBDriver (v4.3) to print the java.home property
+        # Use WriteLocalBaseXDB (4.2) or XMLDBDriver (>= 4.3) to print the java.home property
         # of the Java Runtime used to run it. Note if the runtime is not 64-bit it will only
         # print an error.
         with pushd(exeDir):
-            if getParamAsFloat('GCAM.VersionNumber') > 4.2:
+            versionInfo = parse_version_info()
+            if versionInfo > (4, 2):
                 classpath = getParam('GCAM.MI.ClassPath')
                 command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
             else:
@@ -104,6 +105,47 @@ def _gcamWrapper(args):
     _logger.debug('gcamWrapper: GCAM exited with status %s', status)
     return status
 
+#
+# Comment taken from exe/run-gcam.command:
+#
+# We need to find where the Java development kit is installed.
+# This could be the Apple supplied version which was provided up
+# to 1.6 however was dropped subsequently and instead users may
+# have an Oracle provided JDK.  The each take slightly different
+# approaches to where libraries live and how to reference them so
+# we will have to try to detect the appropriate location.
+#
+def linkToMacJava():
+    import subprocess as subp
+    from .error import PygcamException
+
+    cmd = '/usr/libexec/java_home'
+    javaHome = ''
+    try:
+        javaHome = subp.check_output(cmd).strip()
+    except Exception:
+        pass
+
+    if not javaHome:
+        raise PygcamException('Could not find Java install location using "%s"' % cmd)
+
+    # If javaHome contains "1.6", use the Apple supplied version of java 1.6
+    libPath = 'lib-stub' if '1.6' in javaHome else javaHome + '/jre/lib/server'
+
+    owd = os.getcwd()
+    refWorkspace = getParam('GCAM.RefWorkspace')
+    os.chdir(refWorkspace)
+
+    try:
+        # Create a symlink to satisfy @rpath searches
+        linkName = 'libs/java/lib'
+        if not os.path.islink(linkName):
+            cmd = "ln -s %s %s" % (libPath, linkName)
+            status = subp.call(cmd, shell=True)
+            if status != 0:
+                raise PygcamException('Failed to create link using "%s"' % cmd)
+    finally:
+        os.chdir(owd)
 
 def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, groupDir='',
             configFile=None, forceCreate=False, noRun=False, noWrapper=False):
@@ -130,6 +172,12 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     :return: none
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
+    import platform
+    from .utils import parse_version_info
+
+    if platform.system() == 'Darwin':
+        linkToMacJava()
+
     workspace = workspace or (os.path.join(getParam('GCAM.SandboxDir'), scenario)
                                        if scenario else getParam('GCAM.RefWorkspace'))
 
@@ -138,11 +186,12 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
 
     exeDir = getExeDir(workspace, chdir=True)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
-    version = getParamAsFloat('GCAM.VersionNumber')
+
+    version = parse_version_info()
 
     # These features didn't exist in version 4.2
-    if version > 4.2 and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
-                              getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
+    if version > (4, 2) and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
+                                 getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 

@@ -188,6 +188,7 @@ dependencies:
 - scikit-learn=0.19.1=py27he00e316_0
 - scipy=0.19.1=py27h069396b_3
 - seaborn=0.8.0=py27h5729117_0
+- semver=2.7.7
 - setuptools=36.5.0=py27ha483b79_0
 - simplegeneric=0.8.1=py27h2c3a90d_0
 - singledispatch=3.4.0.3=py27h3f9d112_0

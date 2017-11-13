@@ -30,7 +30,8 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
-from .utils import coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile, removeTreeSafely
+from .utils import (coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile,
+                    removeTreeSafely, parse_version_info)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
@@ -596,10 +597,10 @@ class XMLEditor(object):
 
         :return: none
         """
-        version = getParam('GCAM.VersionNumber')
+        version = parse_version_info()
 
         # no longer necessary in 4.3. For 4.2, we reset names to those used in 4.3
-        if version == '4.2':
+        if version < (4, 3):
             self.renameScenarioComponent("interest_rate", pathjoin(self.socioeconomics_dir_rel, "interest_rate.xml"))
             self.renameScenarioComponent("socioeconomics", pathjoin(self.socioeconomics_dir_rel, "socioeconomics_GCAM3.xml"))
 

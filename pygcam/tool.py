@@ -254,6 +254,53 @@ class GcamTool(object):
                 if command in otherArgs:
                     self.getPlugin(command)
 
+    def validateGcamVersion(self):
+        from .utils import pathjoin, pushd, parse_version_info
+
+        exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
+        exeName = getParam('GCAM.Executable')
+        exePath = pathjoin(exeDir, exeName)
+
+        if not os.path.lexists(exePath):
+            raise ConfigFileError('GCAM executable "%s" was not found.' % exePath)
+
+        # Starting with v4.3, gcam reports its version number
+        versionCfg = parse_version_info()
+        if versionCfg >= (4, 3):
+            versionFile = pathjoin(exeDir, '.version')
+
+            # Check for cached version info
+            if os.path.lexists(versionFile):
+                with open(versionFile, 'r') as f:
+                    versionNum = f.readline().strip()
+            else:
+                with pushd(exeDir):
+                    try:
+                        cmd = [exePath, '--versionID']
+                        versionStr = subprocess.check_output(cmd, shell=False).strip()
+
+                    except subprocess.CalledProcessError:
+                        raise ConfigFileError(
+                            "Attempt to run '%s --versionID' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber accordingly" % exePath)
+
+                prefix = 'gcam-v'
+                if not versionStr.startswith(prefix):
+                    raise ConfigFileError('GCAM --versionID "%s" is not the correct format. Should start with "gcam-v"',
+                                          versionStr)
+
+                versionNum = versionStr[len(prefix):]
+
+                # cache version number so we don't have to run 'gcam.exe --versionID' every time
+                with open(versionFile, 'w') as f:
+                    f.write(versionNum + '\n')
+
+            versionExe = parse_version_info(versionNum)
+            if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
+                log = getLogger(__name__)
+                log.warning("Config variable GCAM.VersionNumber (%s) doesn't match GCAM.RefWorkspace's version (%s); using executable's version",
+                            getParam('GCAM.VersionNumber'), versionNum)
+                setParam('GCAM.VersionNumber', versionNum)
+
     def run(self, args=None, argList=None):
         """
         Parse the script's arguments and invoke the run() method of the
@@ -279,6 +326,10 @@ class GcamTool(object):
             args.projectName = section = args.projectName or getParam('GCAM.DefaultProject')
             if section:
                  setSection(section)
+
+            if args.subcommand != 'init':
+                # After GCAM.DefaultProject is set, we can check gcam executable
+                self.validateGcamVersion()
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:

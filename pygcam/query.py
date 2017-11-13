@@ -16,7 +16,7 @@ from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
-from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV,
+from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, parse_version_info,
                     pathjoin, saveToFile, getExeDir, writeXmldbDriverProperties)
 from .temp_file import TempFile, getTempFile
 
@@ -1024,9 +1024,10 @@ def queryMain(args):
     queryNames  = args.queryName
     noDelete    = args.noDelete
     prequery    = args.prequery
-    version     = getParamAsFloat('GCAM.VersionNumber')
-    inMemory    = version > 4.2 and getParamAsBoolean('GCAM.InMemoryDatabase')
-    internalQueries = version > 4.2 and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
+    versionNum  = getParam('GCAM.VersionNumber')
+    versionInfo = parse_version_info()
+    inMemory        = versionInfo > (4, 2) and getParamAsBoolean('GCAM.InMemoryDatabase')
+    internalQueries = versionInfo > (4, 2) and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
     batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
     batchFileIn  = args.batchFile
@@ -1035,8 +1036,8 @@ def queryMain(args):
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
     # by GCAM to query the in-memory database before exiting.
-    if prequery and version <= 4.2:
-        _logger.info('Skipping pre-query step for GCAM %s', version)
+    if prequery and versionInfo <= (4, 2):
+        _logger.info('Skipping pre-query step for gcam-v%s', versionNum)
         return
 
     if internalQueries and not prequery:

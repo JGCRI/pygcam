@@ -11,6 +11,7 @@ import os
 from lxml import etree as ET
 import pkgutil
 import re
+import semver
 import shutil
 import subprocess
 import sys
@@ -22,6 +23,16 @@ from .log import getLogger
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
+
+
+def parse_version_info(vers=None):
+    vers = vers or getParam('GCAM.VersionNumber')
+
+    # if only major.minor is given (e.g., "4.4"), add .patch of zero (e.g., "4.4.0")
+    if re.match('^\d\.\d$', vers):
+        vers += '.0'
+
+    return semver.parse_version_info(vers)
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists

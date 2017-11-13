@@ -41,7 +41,6 @@ GCAM.LogLevel = INFO
 # if you want this to be the default for all projects.
 GCAM.WriteDebugFile     = False
 GCAM.WriteXmlOutputFile = False
-
 '''
 
 def expandTilde(path):
@@ -58,17 +57,31 @@ def expandTilde(path):
     return unixPath(path)
 
 def findGCAM():
+    import platform
+    from ..utils import unixPath
+
     home = getHomeDir()
 
-    versions = ('v4.4', 'v4.3')
-    dirs = (home, home + '/GCAM', home + '/gcam')
+    versions = ['gcam-v4.4', 'gcam-v4.3']
+    dirs = [home, home + '/GCAM', home + '/gcam']
+
+    system = platform.system()
+    if system == 'Darwin':
+        release = 'gcam-v4.4-Mac-Release-Package'
+    elif system == 'Windows':
+        release = 'gcam-v4.4-Windows-Release-Package'
+    else:
+        release = None
+
+    if release:
+        versions.insert(0, release)
 
     for v, d in itertools.product(versions, dirs):
-        path = '%s/gcam-%s' % (d, v)
+        path = '%s/%s' % (d, v)
         if os.path.isdir(path):
-            return path
+            return unixPath(path)
 
-    return None
+    return ''
 
 def askYesNo(msg, default=None):
     default = default and default.lower()
@@ -99,15 +112,18 @@ def askString(msg, default):
     return value
 
 def askDir(msg, default=''):
-    from ..utils import mkdirs, unixPath
+    from prompt_toolkit import prompt
+    from prompt_toolkit.contrib.completers import PathCompleter
+    from ..utils import mkdirs
+
+    completer = PathCompleter(only_directories=True, expanduser=True)
+    msg     = unicode(msg) + u' '
+    default = unicode(default)
 
     path = None
     while not path:
-        path = input(msg + ' (default=%s): ' % default)
-        path = path.strip()
-        if path == '':
-            path = default
-
+        path = prompt(msg, default=default, completer=completer)
+        #path = askString(msg, default)
         path = expandTilde(path)
 
         if path and not os.path.isdir(path):
@@ -137,7 +153,7 @@ def rerunForCygwin(args):
     """
     CygWin buffers stdin unless PYTHONUNBUFFERED is set, so we
     set it and re-run the 'gt init' command with the given args.
-    A bit of a ridiculous work-around, but it works!
+    A bit of an unfortunate work-around, but it works.
     """
     import subprocess as subp
 
@@ -220,7 +236,7 @@ class InitCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..config import USR_CONFIG_FILE
-        from ..utils import pathjoin, unixPath, deleteFile, mkdirs
+        from ..utils import pathjoin, deleteFile, mkdirs
 
         # Detect cygwin terminals, which quite lamely cannot handle interactive input
         if (isCygwin() and not os.environ.get('PYTHONUNBUFFERED')):
@@ -231,8 +247,7 @@ class InitCommand(SubcommandABC):
 
         try:
             dfltProject = args.defaultProject or askString('Default project name?', 'tutorial')
-            gcamDir     = args.gcamDir or askDir('Where is GCAM installed?',
-                                                 default=unixPath(findGCAM() or expandTilde(DefaultGcamDir)))
+            gcamDir     = args.gcamDir or askDir('Where is GCAM installed?', default=findGCAM())
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
                                                     default=expandTilde(DefaultProjectDir))
             sandboxDir  = args.sandboxDir or askDir('Directory in which to create pygcam run-time sandboxes?',
@@ -242,7 +257,7 @@ class InitCommand(SubcommandABC):
             if os.path.lexists(configPath) and os.stat(configPath).st_size > 0:
                 overwrite = args.overwrite or askYesNo('Overwrite %s' % configPath, default='n')
                 if not overwrite:
-                    raise AbortInput()
+                    raise AbortInput("Quitting to avoid overwriting %s" % configPath)
 
                 backup = configPath + '~'
                 deleteFile(backup)

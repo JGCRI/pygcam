@@ -186,7 +186,8 @@ def writeSystemDefaultsFile(systemDefaults):
 def setMacJavaVars():
     """
     Set the environment vars java uses to locate libraries. If var is
-    already set, don't override it.
+    already set, don't override it. Must be called after config info
+    has been read since it references GCAM.RefWorkspace.
     """
     if not os.environ.get('JAVA_LIB'):
         refWorkspace = getParam('GCAM.RefWorkspace')
