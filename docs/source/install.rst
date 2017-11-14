@@ -14,8 +14,16 @@ Installation
      pip install pygcam
 
    If you have not yet created the Anaconda environment, download the current
-   environment file for your system (i.e., pygcam_windows.yml or pygcam_linux.yml),
-   which correct the problem. This does not affect macOS users.
+   environment file for your system (i.e., pygcam_windows.yml or pygcam_linux.yml)
+   from https://anaconda.org/plevin/pygcam/files, which corrects the problem.
+   This does not affect macOS users.
+
+.. note::
+   A bug in the ModelInterface code in gcam-v4.4 prevented the ``pygcam``
+   query sub-command from working. Please install gcam-v4.4.1 (when available)
+   or update your the gcam-v4.4 installation, replacing the file
+   ``.../input/gcam-data-system/_common/ModelInterface/src/ModelInterface.jar``
+   with the updated file, available `here <https://github.com/JGCRI/pygcam/releases/download/v1.0rc5/ModelInterface.jar>`_.
 
 There are two options for installing and using pygcam and :doc:`gcamtool`.
 

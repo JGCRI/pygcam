@@ -116,14 +116,16 @@ def askDir(msg, default=''):
     from prompt_toolkit.contrib.completers import PathCompleter
     from ..utils import mkdirs
 
+    is_cygwin = isCygwin()
+
     completer = PathCompleter(only_directories=True, expanduser=True)
     msg     = unicode(msg) + u' '
     default = unicode(default)
-
     path = None
+
     while not path:
-        path = prompt(msg, default=default, completer=completer)
-        #path = askString(msg, default)
+        # prompt_toolkit doesn't work in cygwin terminal
+        path = askString(msg, default) if is_cygwin else prompt(msg, default=default, completer=completer)
         path = expandTilde(path)
 
         if path and not os.path.isdir(path):
@@ -264,8 +266,8 @@ class InitCommand(SubcommandABC):
                 os.rename(configPath, backup)
                 print('Moved %s to %s' % (configPath, backup))
 
-        except AbortInput:
-            print('Aborting "init" command')
+        except AbortInput as e:
+            print(e)
             return
 
         # initialize configuration file

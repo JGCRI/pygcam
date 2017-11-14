@@ -34,6 +34,27 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0rc6 (14 Nov 2017)
+-----------------------------
+* Added code to gcam sub-command to create link to java libs on macOS,
+  as is done in the run-gcam.command script in the Mac distribution.
+
+* A bug in the ModelInterface code in gcam-v4.4 prevented the ``pygcam``
+  query sub-command from working. Please install gcam-v4.4.1 (when available)
+  or update your the gcam-v4.4 installation, replacing the file
+  ``.../input/gcam-data-system/_common/ModelInterface/src/ModelInterface.jar``
+  with the updated file, available
+  `here <https://github.com/JGCRI/pygcam/releases/download/v1.0rc5/ModelInterface.jar>`_
+
+* Modified ``init`` sub-command to use prompt_toolkit to provide
+  filename completion via the tab key. This works on Windows only
+  from a standard command prompt, not from a Cygwin terminal. (The
+  ``init`` sub-command works, but without filename completion.)
+
+* Added check that config variable GCAM.VersionNumber matches what the
+  GCAM executable reports. If different, the config var is set as per
+  the GCAM executable.
+
 Version 1.0rc5 (6 Nov 2017)
 -----------------------------
 * Modified .yml installation files to deal with problem
