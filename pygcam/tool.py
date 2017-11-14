@@ -256,6 +256,7 @@ class GcamTool(object):
 
     def validateGcamVersion(self):
         from .utils import pathjoin, pushd, parse_version_info
+        from .gcam import setJavaPath
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
         exeName = getParam('GCAM.Executable')
@@ -274,6 +275,7 @@ class GcamTool(object):
                 with open(versionFile, 'r') as f:
                     versionNum = f.readline().strip()
             else:
+                setJavaPath(exeDir)
                 with pushd(exeDir):
                     try:
                         cmd = [exePath, '--versionID']
@@ -329,7 +331,11 @@ class GcamTool(object):
 
             if args.subcommand != 'init':
                 # After GCAM.DefaultProject is set, we can check gcam executable
-                self.validateGcamVersion()
+                try:
+                    self.validateGcamVersion()
+                except ConfigFileError as e:
+                    _logger = getLogger(__name__)
+                    _logger.warning("%s", e)
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:

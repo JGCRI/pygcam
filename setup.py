@@ -21,6 +21,7 @@ requirements = [
     'numpy>=1.13.1',
     'pandas>=0.20.3',
     'seaborn>=0.8.0',
+    'semver>=2.7.7',
     'six>=1.10.0',
     'sphinx-argparse==0.1.17', # later versions lose markup in commands
 

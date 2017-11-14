@@ -77,21 +77,27 @@ settings.
     # file.
     #
     [DEFAULT]
-    PIC.GCAMDir      = /pic/projects/GCAM
-    PIC.Lib          = %(PIC.GCAMDir)s/GCAM-libraries/lib
+    PIC.GCAMDir             = /pic/projects/GCAM
+    PIC.Lib                 = %(PIC.GCAMDir)s/GCAM-libraries/lib
 
-    # set this if there's such thing as a default MI to use
-    #GCAM.MI.Dir =
+    # Set GCAM.VersionNumber to 4.3 to use that version.
+    GCAM.VersionNumber      = 4.4
+    GCAM.RefWorkspace       = %(PIC.GCAMDir)s/pygcam-support/gcam-core-gcam-v%(GCAM.VersionNumber)s
 
-    GCAM.MI.ClassPath = %(PIC.Lib)s/jars/*:%(GCAM.MI.JarFile)s:%(GCAM.MI.Dir)s/jars:XMLDBDriver.jar
+    GCAM.MI.Dir             = %(GCAM.RefWorkspace)s/input/gcam-data-system/_common/ModelInterface/src
+    GCAM.MI.ClassPath       = %(PIC.Lib)s/%(GCAM.VersionNumber)s/*:%(PIC.Lib)s/jars/*:%(GCAM.MI.JarFile)s:XMLDBDriver.jar
 
-    GCAM.DefaultQueue = short,slurm
-    GCAM.OtherBatchArgs = -A GCAM
+    GCAM.DefaultQueue       = short,slurm
+    PIC.AccountFlag         = -A GCAM
+    GCAM.OtherBatchArgs     = %(PIC.AccountFlag)s
 
-    # This command to run when the -l flag ("run locally") is passed to the
-    # gt "run" sub-command. The same options are available for substitution as
-    # for the GCAM.BatchCommand.
-    GCAM.LocalCommand = srun -A GCAM -p short,slurm --time={walltime} --pty -N 1 -u
+    # If you run GCAM with the in-memory database, you might want to reserve
+    # more memory. Setting "-n 3" reserves 3/24 cores, which allocates 1/8th of
+    # the 64 GB (i.e., 8 GB) of memory. In this mode you might also want to use
+    # the "shared" queue, which you can do by adding the following two lines to
+    # your ~/.pygcam.cfg file:
+    # GCAM.DefaultQueue = shared
+    # GCAM.OtherBatchArgs = %(PIC.AccountFlag) -n 3
 
 
 Running scenario groups

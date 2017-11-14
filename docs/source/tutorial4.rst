@@ -141,4 +141,3 @@ or, if we restore the original aesthetic choices, we have this:
 
   .. image:: images/tutorial/Land_Use_Change_Emission-tax-10-base-by-region-mod4.*
 
----------
