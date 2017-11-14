@@ -34,7 +34,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.0rc6 (14 Nov 2017)
+Version 1.0.0 (14 Nov 2017)
 -----------------------------
 * Added code to gcam sub-command to create link to java libs on macOS,
   as is done in the run-gcam.command script in the Mac distribution.

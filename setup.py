@@ -138,7 +138,7 @@ setup(
     author_email='rich@plevin.com',
 
     classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable',
           'License :: OSI Approved :: MIT License',
           'Intended Audience :: Science/Research',
           ],
