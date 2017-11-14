@@ -8,7 +8,7 @@ import os
 if platform.system() != 'Windows':
     # Unfortunately, this stalled on Windows when I tested it...
     import ez_setup
-    ez_setup.use_setuptools(version='35.6.0') # ... is this version avail on RTD?
+    ez_setup.use_setuptools(version='36.7.2') # ... is this version avail on RTD?
 
 from setuptools import setup
 
