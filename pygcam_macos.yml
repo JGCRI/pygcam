@@ -201,7 +201,6 @@ dependencies:
 - scikit-learn=0.19.1=py27h9788993_0
 - scipy=0.19.1=py27hf01dd8f_3
 - seaborn=0.8.0=py27h92884e4_0
-- semver=2.7.7
 - setuptools=36.5.0=py27h2a45cec_0
 - simplegeneric=0.8.1=py27h6db5e31_0
 - singledispatch=3.4.0.3=py27he22c18d_0
@@ -284,6 +283,7 @@ dependencies:
   - pyproj==1.9.5.1
   - redis==2.10.6
   - ruamel-yaml==0.11.14
+  - semver==2.7.7
   - shapely==1.6.2.post1
   - sphinx-argparse==0.1.17
   - sphinx-rtd-theme==0.2.4

@@ -188,7 +188,6 @@ dependencies:
 - scikit-learn=0.19.1=py27he00e316_0
 - scipy=0.19.1=py27h069396b_3
 - seaborn=0.8.0=py27h5729117_0
-- semver=2.7.7
 - setuptools=36.5.0=py27ha483b79_0
 - simplegeneric=0.8.1=py27h2c3a90d_0
 - singledispatch=3.4.0.3=py27h3f9d112_0
@@ -269,6 +268,7 @@ dependencies:
   - prompt-toolkit==1.0.15
   - redis==2.10.6
   - ruamel-yaml==0.11.14
+  - semver==2.7.7
   - sphinx-argparse==0.1.17
   - sqlparse==0.2.4
   - tables==3.4.2
