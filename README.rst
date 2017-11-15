@@ -34,6 +34,17 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.0.1 (15 Nov 2017)
+-----------------------------
+* Corrected .yml files to put ``semver`` specification in correct section.
+
+* Allow ``gt --version`` to run without having an .pygcam.cfg file in place.
+
+* Updated instructions for running on Windows to include using the Anaconda prompt.
+
+* Configuration variable ``GCAM.VersionNumber`` is set based on the GCAM
+  executable's reported version.
+
 Version 1.0.0 (14 Nov 2017)
 -----------------------------
 * Added code to gcam sub-command to create link to java libs on macOS,

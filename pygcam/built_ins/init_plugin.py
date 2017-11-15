@@ -15,8 +15,6 @@ from ..subcommand import SubcommandABC
 class AbortInput(Exception):
     pass
 
-
-DefaultGcamDir    = '~/GCAM/gcam-v4.3'
 DefaultProjectDir = '~/GCAM/projects'
 
 def defaultSandboxDir(projectRoot):

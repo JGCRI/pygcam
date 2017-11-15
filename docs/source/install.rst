@@ -2,21 +2,22 @@ Installation
 ==================
 
 .. note::
-   If you are having trouble installing or running pygcam on Windows or Linux,
-   run the command ``gt --version``. If it reports that you are running
-   version 1.0rc3,
-   you should be able to resolve problems related to SALib and pyscaffold
-   by running the commands::
+   If you are having trouble running ``pygcam`` and are running a version older than
+   ``v1.0.1`` (i.e., ``v1.0.0``, or a beta version (``v1.0b...``) or release candidate
+   (``v1.0rc...``), or are having difficulties installing ``pygcam``, you can resolve many problems
+   by running these commands after activating your ``pygcam`` environment::
 
-     pip uninstall pygcam
+     pip uninstall pygcam              # not necessary if not yet installed
      pip install pyscaffold==2.5.8
      pip install salib==1.1.2
      pip install pygcam
 
-   If you have not yet created the Anaconda environment, download the current
+   You can check the version you have installed by running the command ``gt --version``.
+
+   If you have not yet created an Anaconda environment for ``pygcam``, download the
    environment file for your system (i.e., pygcam_windows.yml or pygcam_linux.yml)
-   from https://anaconda.org/plevin/pygcam/files, which corrects the problem.
-   This does not affect macOS users.
+   from https://anaconda.org/plevin/pygcam/files as described in :ref:`Option 1 <option1>`,
+   below.
 
 .. note::
    A bug in the ModelInterface code in gcam-v4.4 prevented the ``pygcam``
@@ -42,10 +43,10 @@ There are two options for installing and using pygcam and :doc:`gcamtool`.
 .. note::
 
    You must run the ``init`` sub-command to initialize your configuration file
-   (``~/.pygcam.cfg``) prior to using :doc:`gcamtool`. See the :doc:`initialize`
-   for further details. (You can, however, run ``gt``
-   or any sub-command with the ``-h`` or ``--help`` option to get help, even before
-   initializing.)
+   (``~/.pygcam.cfg``) prior to using most :doc:`gcamtool` commands. See the
+   :doc:`initialize` for further details. (You can, however, run ``gt --version``
+   or any command with the ``-h`` or ``--help`` option to get
+   help before initializing.)
 
 -----------------------------------
 
@@ -61,17 +62,21 @@ packages and you are more familiar with managing package dependencies.
 1. Download and install `Anaconda 5 <https://www.anaconda.com/download>`_
    (the **Python 2.7** version!) for your platform.
 
-   * Note that you must either allow the Anaconda installer to set the required
-     ``PATH`` elements, or you must set them yourself.
-
-   * On macOS and Linux (assuming you installed Anaconda in your home directory) these
-     are ``$HOME/anaconda2`` and ``$HOME/anaconda2/bin``. You can add these to your
-     ``PATH`` using this command:
-     ``PATH="$HOME/anaconda2:$HOME/anaconda2/bin"``
-
-   * On Windows, it's easiest to let Anaconda set the ``PATH`` for you. If you do it
+   * On Windows, you can use the Anaconda Prompt from the Start menu to open a
+     command prompt that refers to the Anaconda installation. Alternatively, you can
+     allow the Anaconda installer to set the required ``PATH`` elements (or set them yourself)
+     to use Anaconda from a standard Windows command prompt. If you do this
      manually, add both the ``Anaconda2`` directory (typically in C:/Users/*your name*/Anaconda2)
-     and the ``Anaconda2\Scripts`` directory below that, to your ``PATH``.
+     and the ``Anaconda2/Scripts`` directory below that, to your ``PATH``.
+
+   * On macOS and Linux (assuming you installed Anaconda in your home directory) make sure
+     ``$HOME/anaconda2`` and ``$HOME/anaconda2/bin`` are in your ``PATH``. You can add these to your
+     ``PATH`` using by adding this command to your shell's startup file:
+
+     .. code-block:: bash
+
+        # Adjust as needed if Anaconda is installed somewhere other than $HOME
+        PATH="$HOME/anaconda2:$HOME/anaconda2/bin"
 
 2. Download the environment file for your platform from
    https://anaconda.org/plevin/pygcam/files by selecting
@@ -99,7 +104,8 @@ packages and you are more familiar with managing package dependencies.
 
        source activate.cygwin pygcam
 
-   * If you are using a standard Windows command prompt, type this command::
+   * If you are using a standard Windows command prompt or an Anaconda prompt,
+     type this command::
 
        activate pygcam
 
@@ -342,13 +348,19 @@ Quick Links
 Install GCAM
 ^^^^^^^^^^^^^^
 
-.. note::
-   The instructions below refer to installing GCAM v4.3, released in 2016. A new version of GCAM
-   will be released sometime in early November, 2017, at which point these instructions may become obsolete.
+gcam-v4.4
+~~~~~~~~~~~
+GCAM v4.4, which was release in November 2017, has single-file packages for macOS and Windows.
+Download these from the `GCAM <https://github.com/JGCRI/gcam-core/releases>`_ release page.
 
-You probably already have GCAM or you wouldn't be reading this. You can follow the
-installation instructions on the official `GCAM <https://github.com/JGCRI/gcam-core/releases>`_
-website, but some users have found these instructions confusing.
+For users building GCAM from source, you will need the both the source code (either the ``.zip``
+or ``.tar.gz`` version) as well as ``data-system.tar.gz``: after unpacking the source files, change
+directory to the ``input/gcam-data-system`` directory before untarring the data system files.
+
+gcam-v4.3
+~~~~~~~~~~~
+You can follow the installation instructions on the `GCAM <https://github.com/JGCRI/gcam-core/releases>`_
+web page, but some users have found these instructions confusing.
 
 Alternatively, you can use my
 `install-gcam.py <https://raw.githubusercontent.com/JGCRI/pygcam/master/install-gcam.py>`_ script

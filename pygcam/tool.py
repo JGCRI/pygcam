@@ -299,8 +299,7 @@ class GcamTool(object):
             versionExe = parse_version_info(versionNum)
             if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
                 log = getLogger(__name__)
-                log.warning("Config variable GCAM.VersionNumber (%s) doesn't match GCAM.RefWorkspace's version (%s); using executable's version",
-                            getParam('GCAM.VersionNumber'), versionNum)
+                log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
                 setParam('GCAM.VersionNumber', versionNum)
 
     def run(self, args=None, argList=None):
@@ -477,12 +476,13 @@ def _main(argv=None):
 
     configPath = userConfigPath()
     if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
-        argList = argv or sys.argv
-        if 'init' in argList or '-h' in argList or '--help' in argList:
-            # create empty config file just so we can run the "init" sub-command
+        argSet = set(argv or sys.argv)
+        options = {'init', '-h', '--help', '--version'}
+        if argSet.intersection(options):
+            # create empty config file just so we can run the "init" sub-command, or help/version options
             open(configPath, 'w').close()
         else:
-            raise CommandlineError('\n***\n*** Missing pygcam configuration file %s. Run "gt init" to create it.\n***\n' % configPath)
+            raise CommandlineError('\n***\n*** Missing or empty pygcam configuration file %s. Run "gt init" to create it.\n***\n' % configPath)
 
     getConfig()
     configureLogs()
