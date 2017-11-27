@@ -42,8 +42,9 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
+{engine_args}
 export MCS_WALLTIME={timelimit}
-srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}" {other_batch_args}
+srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 # These attempts accomplished nothing since TBB doesn't use them
 # export OMP_NUM_THREADS=5
@@ -68,7 +69,8 @@ _pbsEngineBatchTemplate = """#!/bin/sh
 #PBS -N {cluster_id}-engine
 #PBS -q {queue}
 #PBS -l walltime={timelimit}
-%s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}" {other_batch_args}
+{engine_args}
+%s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
 
 _pbsControllerBatchTemplate = """#!/bin/sh
@@ -689,14 +691,14 @@ def _saveBatchFiles(numTrials, argDict):
     minutesPerEngine = minutesPerRun * maxRunsPerEngine
     timelimit = "%02d:%02d:00" % (minutesPerEngine // 60, minutesPerEngine % 60)
 
-    defaults = {'scheduler'        : getParam('IPP.Scheduler'),
-                'account'          : getParam('IPP.Account'),
-                'queue'            : getParam('IPP.Queue'),
-                'other_batch_args' : getParam('IPP.OtherBatchArgs'),
-                'cluster_id'       : argDict['clusterId'],
-                'tasks_per_node'   : getParamAsInt('IPP.TasksPerNode'),
-                'min_secs_to_run'  : getParamAsInt('IPP.MinTimeToRun') * 60,
-                'timelimit'        : timelimit,
+    defaults = {'scheduler'       : getParam('IPP.Scheduler'),
+                'account'         : getParam('IPP.Account'),
+                'queue'           : getParam('IPP.Queue'),
+                'engine_args'     : getParam('IPP.OtherEngineArgs'),
+                'cluster_id'      : argDict['clusterId'],
+                'tasks_per_node'  : getParamAsInt('IPP.TasksPerNode'),
+                'min_secs_to_run' : getParamAsInt('IPP.MinTimeToRun') * 60,
+                'timelimit'       : timelimit,
                 }
 
     defaults.update(argDict)
