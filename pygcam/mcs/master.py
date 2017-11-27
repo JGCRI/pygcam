@@ -42,10 +42,8 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
-## Cause SIGUSR1 to be sent 'min_secs_to_run' seconds prior to terminating the job. 
-##SBATCH --signal=USR1@{min_secs_to_run}
 export MCS_WALLTIME={timelimit}
-srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
+srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id} {other_batch_args}"
 """
 # These attempts accomplished nothing since TBB doesn't use them
 # export OMP_NUM_THREADS=5
@@ -70,7 +68,7 @@ _pbsEngineBatchTemplate = """#!/bin/sh
 #PBS -N {cluster_id}-engine
 #PBS -q {queue}
 #PBS -l walltime={timelimit}
-%s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
+%s --profile-dir="{profile_dir}" --cluster-id="{cluster_id} {other_batch_args}"
 """
 
 _pbsControllerBatchTemplate = """#!/bin/sh
@@ -691,13 +689,14 @@ def _saveBatchFiles(numTrials, argDict):
     minutesPerEngine = minutesPerRun * maxRunsPerEngine
     timelimit = "%02d:%02d:00" % (minutesPerEngine // 60, minutesPerEngine % 60)
 
-    defaults = {'scheduler'      : getParam('IPP.Scheduler'),
-                'account'        : getParam('IPP.Account'),
-                'queue'          : getParam('IPP.Queue'),
-                'cluster_id'     : argDict['clusterId'],
-                'tasks_per_node' : getParamAsInt('IPP.TasksPerNode'),
-                'min_secs_to_run': getParamAsInt('IPP.MinTimeToRun') * 60,
-                'timelimit'      : timelimit,
+    defaults = {'scheduler'        : getParam('IPP.Scheduler'),
+                'account'          : getParam('IPP.Account'),
+                'queue'            : getParam('IPP.Queue'),
+                'other_batch_args' : getParam('IPP.OtherBatchArgs'),
+                'cluster_id'       : argDict['clusterId'],
+                'tasks_per_node'   : getParamAsInt('IPP.TasksPerNode'),
+                'min_secs_to_run'  : getParamAsInt('IPP.MinTimeToRun') * 60,
+                'timelimit'        : timelimit,
                 }
 
     defaults.update(argDict)
@@ -825,7 +824,7 @@ def startCluster(**kwargs):
     clusterId = _defaultFromConfig(kwargs, 'clusterId', 'IPP.ClusterId')
     profile   = _defaultFromConfig(kwargs, 'profile',   'IPP.Profile')
     _defaultFromConfig(kwargs, 'minutesPerRun', 'IPP.MinutesPerRun')
-    _defaultFromConfig(kwargs, 'otherArgs', 'IPP.OtherArgs')
+    _defaultFromConfig(kwargs, 'otherArgs', 'IPP.OtherClusterArgs')
     _defaultFromConfig(kwargs, 'workDir', 'IPP.WorkDir')
 
     numTrials = kwargs['numTrials']
@@ -856,7 +855,7 @@ def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None)
     # This allows user to pass empty string (e.g., -c='') to override default
     cluster_id = getParam('IPP.ClusterId') if cluster_id is None else cluster_id
     profile    = getParam('IPP.Profile')   if profile    is None else profile
-    other_args = getParam('IPP.OtherArgs') if other_args is None else other_args
+    other_args = getParam('IPP.OtherClusterArgs') if other_args is None else other_args
 
     template = "ipcluster stop --profile={profile} --cluster-id={cluster_id} {other_args}"
     cmd = template.format(profile=profile, cluster_id=cluster_id, other_args=other_args)
