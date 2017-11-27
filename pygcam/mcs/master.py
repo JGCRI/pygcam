@@ -43,7 +43,7 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
 export MCS_WALLTIME={timelimit}
-srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id} {other_batch_args}"
+srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}" {other_batch_args}
 """
 # These attempts accomplished nothing since TBB doesn't use them
 # export OMP_NUM_THREADS=5
@@ -68,7 +68,7 @@ _pbsEngineBatchTemplate = """#!/bin/sh
 #PBS -N {cluster_id}-engine
 #PBS -q {queue}
 #PBS -l walltime={timelimit}
-%s --profile-dir="{profile_dir}" --cluster-id="{cluster_id} {other_batch_args}"
+%s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}" {other_batch_args}
 """
 
 _pbsControllerBatchTemplate = """#!/bin/sh
