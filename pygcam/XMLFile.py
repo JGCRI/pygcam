@@ -3,7 +3,7 @@ from lxml import etree as ET
 import os
 import pkg_resources as pkg
 
-from pygcam.config import getConfigDict
+from pygcam.config import getConfigDict, getParam
 from pygcam.log import getLogger
 from pygcam.error import XmlFormatError, PygcamException
 
@@ -58,7 +58,7 @@ class XMLFile(object):
         self.filename = filename
         self.tree = None
         self.conditionalXML = conditionalXML
-        self.varDict = varDict or getConfigDict()
+        self.varDict = varDict or getConfigDict(section=getParam('GCAM.DefaultProject'))
         self.removeComments = removeComments
 
         self.schemaPath   = schemaPath
