@@ -42,7 +42,7 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node={tasks_per_node}
 #SBATCH --time={timelimit}
-{engine_args}
+#{engine_args}
 export MCS_WALLTIME={timelimit}
 srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
 """
