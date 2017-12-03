@@ -300,7 +300,6 @@ class XMLDistribution(XMLTrialData):
 
         self.argDict  = {}
         self.modDict = defaultdict(lambda: None)
-
         self.modDict['apply'] = 'direct'    # set default value
 
         # Distribution attributes are {apply, highBound, lowBound, updateZero}
@@ -310,6 +309,17 @@ class XMLDistribution(XMLTrialData):
 
         # Load trial function, if defined (i.e., if there's a '.' in the value of the "apply" attribute.)
         self.trialFunc = self.loadTrialFunc()
+
+        self.otherArgs = None
+        if self.trialFunc:
+            elt = self.element.find('OtherArgs')
+            if elt is not None and elt.text:
+                codeStr = "dict({})".format(elt.text)
+                try:
+                    self.otherArgs = eval(codeStr)
+
+                except SyntaxError as e:
+                    raise DistributionSpecError("Failed to evaluate expression {}: {}".format(codeStr, e))
 
         self.child = element[0]
 
@@ -366,10 +376,9 @@ class XMLDistribution(XMLTrialData):
         try:
             trialFunc = loadObjectFromPath(objname, modulePath)
         except Exception as e:
-            raise PygcamMcsUserError("Failed to load trial function '%s': %s" % (funcRef, e))
+            raise PygcamMcsUserError("Failed to load trial function '{}': {}".format(funcRef, e))
 
         return trialFunc
-
 
 class XMLPythonFunc(XMLTrialData):
     """
@@ -704,7 +713,8 @@ class XMLParameter(XMLWrapper):
         """
         dataSrc = self.dataSrc
         if dataSrc.isTrialFunc():
-            dataSrc.trialFunc(self, simId, trialNum, df)
+            otherArgs = dataSrc.otherArgs or {}
+            dataSrc.trialFunc(self, simId, trialNum, df, **otherArgs)
             return
 
         if not self.vars:
@@ -803,7 +813,7 @@ class XMLInputFile(XMLWrapper):
         self.element = element
         self.pathMap = defaultdict(set)
         self.xmlFiles = []
-        self.writeFuncs = []
+        self.writeFuncs = {}    # keyed by funcRef; values are loaded fn objects
         self.writeFuncDir = None
 
         # User can define functions to call before writing modified XML files.
@@ -817,7 +827,7 @@ class XMLInputFile(XMLWrapper):
         self.findAndSaveParams(element)
 
     def loadWriteFunc(self, funcRef):
-        if not funcRef or '.' not in funcRef:
+        if not funcRef or '.' not in funcRef or funcRef in self.writeFuncs:
             return None
 
         if not self.writeFuncDir:
@@ -830,7 +840,7 @@ class XMLInputFile(XMLWrapper):
         except Exception as e:
             raise PygcamMcsUserError("Failed to load trial function '%s': %s" % (funcRef, e))
 
-        self.writeFuncs.append(fn)
+        self.writeFuncs[funcRef] = fn
 
     def findAndSaveParams(self, element):
        findAndSave(element, PARAM_ELT_NAME, XMLParameter, self.parameters,
@@ -932,7 +942,7 @@ class XMLInputFile(XMLWrapper):
         :param xmlFile: (XMLFile or subclass) container for file being operated on
         :param trialDir: (str) this trial's trial-dir
         """
-        for fn in self.writeFuncs:
+        for fn in self.writeFuncs.values():
             try:
                 fn(self, xmlFile, trialDir)     # fn can modify self.tree as needed
             except Exception as e:
