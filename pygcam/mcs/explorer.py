@@ -788,13 +788,13 @@ class McsData(object):
 
                 # TBD: for now, we leave this out.
                 # Correlation convergence section
-                # html.Div([
-                #     html.Div([
-                #         html.Span('Correlation convergence', style=getStyle('Label')),
-                #         html.Div(dcc.Graph(id='corr-convergence')),
-                #         # style=updateStyle('AutoMargins'))
-                #     ], className='cell onecol'),
-                # ], className='row')
+                html.Div([
+                    html.Div([
+                        html.Span('Correlation convergence', style=getStyle('Label')),
+                        html.Div(dcc.Graph(id='corr-convergence')),
+                        # style=updateStyle('AutoMargins'))
+                    ], className='cell onecol'),
+                ], className='row'),
 
                 # Scatterplot section
                 html.Div([
@@ -1096,7 +1096,7 @@ def main(args):
         figure = data.scatterPlots(simId, scenario, inputs, outputs)
         return figure
 
-    if False:
+    if True:
         # TBD: not needed in all cases; restore this as option later
         # correlation convergence plot
         @app.callback(Output('corr-convergence', 'figure'),
