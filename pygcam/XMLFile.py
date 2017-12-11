@@ -3,7 +3,7 @@ from lxml import etree as ET
 import os
 import pkg_resources as pkg
 
-from pygcam.config import getConfigDict, getParam
+from pygcam.config import getConfigDict, getParam, stringTrue
 from pygcam.log import getLogger
 from pygcam.error import XmlFormatError, PygcamException
 
@@ -144,7 +144,7 @@ class XMLFile(object):
             value    = node.get('value')
             typeName = node.get('type', 'str')   # defaults to str comparison
             varValue = self.varDict.get(varName)
-            typeFunc = _types[typeName]
+            typeFunc = stringTrue if typeName == 'bool' else _types[typeName]
 
             def coerce(value, func):
                 try:

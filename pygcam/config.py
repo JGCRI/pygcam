@@ -357,6 +357,25 @@ def getParam(name, section=None, raw=False, raiseError=True):
 
     return value
 
+_True  = ['t', 'y', 'true',  'yes', 'on',  '1']
+_False = ['f', 'n', 'false', 'no',  'off', '0']
+
+def stringTrue(value, raiseError=True):
+    value = str(value).lower()
+
+    if value in _True:
+        return True
+
+    if value in _False:
+        return False
+
+    if raiseError:
+        msg = 'Unrecognized boolean value: "{}". Must one of {}'.format(value, _True + _False)
+        raise ConfigFileError(msg)
+    else:
+        return None
+
+
 def getParamAsBoolean(name, section=None):
     """
     Get the value of the configuration parameter `name`, coerced
@@ -373,19 +392,14 @@ def getParamAsBoolean(name, section=None):
     :return: (bool) the value of the variable
     :raises: :py:exc:`pygcam.error.ConfigFileError`
     """
-    true = ('true', 'yes', 'on', '1')
-    false = ('false', 'no', 'off', '0')
-
     value = getParam(name, section=section)
-    value = str(value).lower()
+    result = stringTrue(value, raiseError=False)
 
-    if value in true:
-        return True
+    if result is None:
+        msg = 'The value of variable "{}", {}, could not converted to boolean.'.format(name, value)
+        raise ConfigFileError(msg)
 
-    if value in false:
-        return False
-
-    raise ConfigFileError("The value of variable '%s' could not converted to boolean." % name)
+    return result
 
 
 def getParamAsInt(name, section=None):
