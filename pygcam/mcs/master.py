@@ -429,12 +429,12 @@ class Master(object):
                     paramName  = resultDict['paramName']
                     value      = resultDict['value']
                     regionName = resultDict['regionName']
-                    regionId = db.getRegionId(regionName)   # cached; not a DB query
 
                     # Save the values to the database
                     if resultDict['isScalar']:
-                        db.setOutValue(runId, paramName, value, session=session)  # TBD: need regionId?
+                        db.setOutValue(runId, paramName, value, session=session)
                     else:
+                        regionId = db.getRegionId(regionName)   # cached; not a DB query
                         units = resultDict['units']
                         db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
 
