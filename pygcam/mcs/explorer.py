@@ -21,9 +21,11 @@ from pygcam.gui.styles import getColor, getStyle, updateStyle, getFont
 
 _logger = getLogger(__name__)
 
+ShowCorrelationConvergence = True
+
 CORR_STEP = 100
 
-Oct16 = False       # special mode for specific presentation
+Oct16 = False       # TBD: special mode for specific presentation
 
 _Cache = {}
 
@@ -728,6 +730,19 @@ class McsData(object):
         return layout
 
     def layout(self):
+
+        if ShowCorrelationConvergence:
+            corrConvergence = \
+                html.Div([
+                    html.Div([
+                        html.Span('Correlation convergence', style=getStyle('Label')),
+                        html.Div(dcc.Graph(id='corr-convergence')),
+                        # style=updateStyle('AutoMargins'))
+                    ], className='cell onecol'),
+                ], className='row'),
+        else:
+            corrConvergence = ''
+
         layout = html.Div([
             dataStore(id='paraCoords-vars'),
             dataStore(id='dist-selected'),
@@ -786,15 +801,7 @@ class McsData(object):
                     ], className='cell onecol')
                 ], className='row'),
 
-                # TBD: for now, we leave this out.
-                # Correlation convergence section
-                html.Div([
-                    html.Div([
-                        html.Span('Correlation convergence', style=getStyle('Label')),
-                        html.Div(dcc.Graph(id='corr-convergence')),
-                        # style=updateStyle('AutoMargins'))
-                    ], className='cell onecol'),
-                ], className='row'),
+                corrConvergence,
 
                 # Scatterplot section
                 html.Div([
@@ -832,8 +839,6 @@ class McsData(object):
         ], style=getStyle('Page'))
 
         return layout
-
-# getTimeSeries(self, simId, paramName, expList)
 
 
 def generateDropdownDefaults(app, ids):
@@ -1096,7 +1101,7 @@ def main(args):
         figure = data.scatterPlots(simId, scenario, inputs, outputs)
         return figure
 
-    if True:
+    if ShowCorrelationConvergence:
         # TBD: not needed in all cases; restore this as option later
         # correlation convergence plot
         @app.callback(Output('corr-convergence', 'figure'),

@@ -16,7 +16,7 @@ from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
 from pygcam.mcs.util import readTrialDataFile
-from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
+from pygcam.mcs.XMLParameterFile import applySingleTrialData, XMLParameterFile
 
 _logger = getLogger(__name__)
 
@@ -75,12 +75,15 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
         return RUNNER_SUCCESS
 
     simId = context.simId
-    baselineName = context.baseline
-    isBaseline = not baselineName
+    # baselineName = context.baseline
+    # isBaseline = not baselineName
 
-    if isBaseline and not noGCAM:
-        paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
-        paramFile = readParameterInfo(context, paramPath)
+    # if isBaseline and not noGCAM:
+    if not noGCAM:
+        # TBD: gensim has optional override of param file. Keep it?
+        paramPath = getParam('MCS.ParametersFile')
+        paramFile = XMLParameterFile(paramPath, context, writeConfigFiles=True)
+        paramFile.runQueries()
 
         df = readTrialDataFile(simId)
         columns = df.columns

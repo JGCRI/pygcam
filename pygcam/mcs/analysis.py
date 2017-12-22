@@ -426,7 +426,7 @@ def plotInputDistributions(simId, inputDF):
     '''Plot the input values individually to test that the distributions are as expected'''
 
     showHist  = True
-    showKDE   = False
+    showKDE   = True # False
     showShade = getParamAsBoolean('MCS.PlotShowShading')
 
     for heading, series in inputDF.iteritems():

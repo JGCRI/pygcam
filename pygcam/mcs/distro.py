@@ -248,7 +248,14 @@ class DistroGen(object):
         cls('normal', lambda mean, std: norm(loc=mean, scale=std))
         cls('normal', lambda mean, stdev: norm(loc=mean, scale=stdev))          # alternate spelling
 
-        cls('lognormal', lambda mean, std: lognormalRv(mean, std))
+        # Specify the mean/stdev for the lognormal distribution
+        cls('lognormal', lambda log_mean, log_std:   lognormalRv(log_mean, log_std))
+        cls('lognormal', lambda log_mean, log_stdev: lognormalRv(log_mean, log_stdev))
+
+        # Specify the mean/stdev for the underlying normal distribution
+        cls('lognormal', lambda norm_mean, norm_std:   lognormalRvForNormal(norm_mean, norm_std))
+        cls('lognormal', lambda norm_mean, norm_stdev: lognormalRvForNormal(norm_mean, norm_stdev))
+
         cls('lognormal', lambda low95, high95: lognormalRvFor95th(low95, high95))
         cls('lognormal', logfactor)
 

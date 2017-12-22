@@ -41,28 +41,13 @@ WRITE_FUNC_ELT       = 'WriteFunc'
 # random variable distribution itself, so we exclude these from the
 # list we pass when creating the RV.
 DISTRO_META_ATTRS     = ['name', 'type', 'apply']
-DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
-
-# TBD: Move this? Called only from worker.py:_runGcamTool()
-def readParameterInfo(context, paramPath):
-    from pygcam.xmlSetup import ScenarioSetup
-
-    scenarioFile  = getParam('GCAM.ScenarioSetupFile')
-    scenarioSetup = ScenarioSetup.parse(scenarioFile)
-    scenarioNames = scenarioSetup.scenariosInGroup(context.groupName)
-
-    paramFile = XMLParameterFile(paramPath)
-    paramFile.loadInputFiles(context, scenarioNames, writeConfigFiles=False)
-    paramFile.runQueries()
-    return paramFile
+# DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 
 def applySingleTrialData(df, context, paramFile):
-    simId    = context.simId
-    trialNum = context.trialNum
     trialDir = context.getTrialDir(create=True)
 
     _logger.info('applySingleTrialData for %s, %s', context, paramFile.filename)
-    XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
+    XMLParameter.applyTrial(context, df)   # Update all parameters as required
     paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
 
     linkDest = os.path.join(trialDir, 'local-xml')
@@ -302,16 +287,18 @@ class XMLDistribution(XMLTrialData):
         self.modDict = defaultdict(lambda: None)
         self.modDict['apply'] = 'direct'    # set default value
 
+        # TBD: implement these? (currently commented out of parameter-schema.xsd)
         # Distribution attributes are {apply, highBound, lowBound, updateZero}
         for key, val in element.items():
             key = key.lower()
-            self.modDict[key] = val         # TBD: implement these! (currently commented out of parameter-schema.xsd)
+            self.modDict[key] = val
 
         # Load trial function, if defined (i.e., if there's a '.' in the value of the "apply" attribute.)
         self.trialFunc = self.loadTrialFunc()
 
         self.otherArgs = None
         if self.trialFunc:
+            # TBD: implement this in parameter-schema.xml
             elt = self.element.find('OtherArgs')
             if elt is not None and elt.text:
                 codeStr = "dict({})".format(elt.text)
@@ -639,14 +626,26 @@ class XMLParameter(XMLWrapper):
         return cls.instances.get(name, None)
 
     @classmethod
-    def applyTrial(cls, simId, trialNum, df):
+    def applyTrial(cls, context, df):
         """
         Copy random values for the given trial from the DataFrame df
         into this parameter's elements.
         """
+        simId    = context.simId
+        trialNum = context.trialNum
+
+        # Policy scenarios have non-empty baselines. Baseline scenarios have
+        # nothing in baseline, i.e., they have no (other) baseline. For baseline
+        # scenarios, the baseline name is in context.scenario. A little confusing perhaps.
+        scenario = context.scenario
+        baseline = context.baseline or scenario
+
         instances = cls.getInstances()
         for param in instances:
-            param.updateElements(simId, trialNum, df)
+            # If no scenarios specified, params apply to the baseline
+            scenarios = param.parent.scenarios or [baseline]
+            if scenario in scenarios:
+                param.updateElements(simId, trialNum, df)
 
     def getMode(self):
         s = self.element.get('mode', 'shared')
@@ -708,8 +707,8 @@ class XMLParameter(XMLWrapper):
     def updateElements(self, simId, trialNum, df):
         """
         Update an element's text (assuming it's a number) by multiplying
-        it by a factor, adding a delta, or substituting a given value.
-        Save the values of all RVs to the database.
+        it by a factor, adding a delta, substituting a given value, or by
+        calling a user's "trial function" on the data source.
         """
         dataSrc = self.dataSrc
         if dataSrc.isTrialFunc():
@@ -740,6 +739,10 @@ class XMLParameter(XMLWrapper):
             # Set the value in the cached tree so it can be written to trial's local-xml dir
             var.setValue(newValue)
 
+    def getTrialValue(self, trialNum, df):
+        name = self.getName()
+        value = df.ix[trialNum, name]
+        return value
 
 def trialRelativePath(relPath, prefix):
     """
@@ -815,6 +818,10 @@ class XMLInputFile(XMLWrapper):
         self.xmlFiles = []
         self.writeFuncs = {}    # keyed by funcRef; values are loaded fn objects
         self.writeFuncDir = None
+
+        # User can specify which scenarios this input file element applies to; default is the baseline only
+        scenarios = element.get('scenarios', '').split(',')
+        self.scenarios = filter(str.strip, scenarios)
 
         # User can define functions to call before writing modified XML files.
         # Write function specification is of the form "myPackage.myModule.myFunc".
@@ -895,14 +902,12 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                # if '/trial-xml/' in relPath:
-                #     print('Should skip this one')
                 xmlFile = XMLRelFile(self, relPath, simId)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
 
             # TBD: In either case, we need to update the config files' XML trees because
-            # TBD: some parameter(s) modify the file for this component, in all cases.
+            # TBD: some parameters modify the file for this component, in all cases.
             # TBD: This new path has to be coordinated between config file and actual file.
             if writeConfigFiles and not isXML:
                 trialRelPath = trialRelativePath(relPath, '../..')
@@ -913,24 +918,22 @@ class XMLInputFile(XMLWrapper):
         Run the queries for all the parameters in this <InputFile> on each of
         the physical XMLRelFiles associated with this XMLInputFile.
         """
+        for param in self.parameters.values():
+            if param.isActive():
+                # Run the query on all the files associated with this abstract InputFile
+                for xmlFile in self.xmlFiles:
+                    tree = xmlFile.getTree()
+                    param.runQuery(tree)        # accumulates elements from multiple files
+
+    def saveParameterNames(self):
         tuples = []
+        desc = 'Auto-generated parameter'
 
         for param in self.parameters.values():
-            if not param.isActive():
-                continue
-
-            # Run the query on all the files associated with this abstract InputFile
-            for xmlFile in self.xmlFiles:
-                tree = xmlFile.getTree()
-                param.runQuery(tree)        # accumulates elements from multiple files
-
-            # Save variable names in the DB
-            pname = param.getName()
-            desc  = 'Auto-generated parameter'
-            tuples.append((pname, desc))
+            name = param.getName()
+            tuples.append((name, desc))
 
         db = getDatabase()
-        #_logger.debug("Saving tuples to db: %s", tuples)
         db.saveParameterNames(tuples)
 
     # TBD: test this
@@ -953,14 +956,27 @@ class XMLParameterFile(XMLFile):
     """
     Represents the overall parameters.xml file.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, context, scenarioNames=None, writeConfigFiles=True):
         super(XMLParameterFile, self).__init__(filename, schemaPath='mcs/etc/parameter-schema.xsd')
 
         # XMLInputFiles keyed by scenario component name
         inputFiles = self.inputFiles = OrderedDict()
 
+        def parseScenarios(elt):
+            scenarios = elt.get('scenarios', '').split(',')
+            return filter(str.strip, scenarios)
+
+        scenario = context.scenario
+        baseline = context.baseline or scenario
+
         # Can't use "findAndSave" here since we need to append if a filename is repeated
         for elt in self.tree.iterfind(INFILE_ELT_NAME):
+            # If no scenarios are specified, default to baseline
+            scenarios = scenarioNames or parseScenarios(elt) or [baseline]
+            if scenario and not scenario in scenarios:
+                _logger.debug("Not loading XMLInputFile {}; not in current scenario")
+                continue
+
             compName = elt.get('name')
             if compName in inputFiles:
                 inputFileObj = inputFiles[compName]
@@ -973,13 +989,12 @@ class XMLParameterFile(XMLFile):
 
         _logger.debug("Loaded parameter file: %s", filename)
 
-    def loadInputFiles(self, context, scenNames, writeConfigFiles=True):
-        """
-        Load the input files, for each scenario in scenNames. Scenarios are
-        found in {simDir}/{scenName}.
-        """
-        for inputFile in self.inputFiles.values():
-            inputFile.loadFiles(context, scenNames, writeConfigFiles=writeConfigFiles)
+        # Load the input files, for each scenario in scenNames. Scenarios are
+        # found in {simDir}/{scenName}. If scenNames are not given, just load
+        # the files for the current scenario.
+        for inputFile in inputFiles.values():
+            scenarios = scenarioNames or inputFile.scenarios
+            inputFile.loadFiles(context, scenarios, writeConfigFiles=writeConfigFiles)
 
         if writeConfigFiles:
             # Writes all modified configs. Config files' XML trees are updated
@@ -992,6 +1007,10 @@ class XMLParameterFile(XMLFile):
     def runQueries(self):
         for obj in self.inputFiles.values():
             obj.runQueries()
+
+    def saveParameterNames(self):
+        for obj in self.inputFiles.values():
+            obj.saveParameterNames()
 
     def writeLocalXmlFiles(self, trialDir):
         """

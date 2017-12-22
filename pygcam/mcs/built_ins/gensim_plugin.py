@@ -92,7 +92,7 @@ def genTrialData(simId, trials, paramFileObj, args):
     Generate the given number of trials for the given simId, using the objects created
     by parsing parameters.xml. Return a DataFrame of values.
     """
-    from pandas import DataFrame
+    import pandas as pd
     from ..distro import linkedDistro
     from ..LHS import lhs, lhsAmend
     from ..XMLParameterFile import XMLRandomVar, XMLCorrelation
@@ -123,7 +123,7 @@ def genTrialData(simId, trials, paramFileObj, args):
     linkedDistro.storeTrialData(trialData)  # so its ppf() can access linked values
     lhsAmend(trialData, linked, trials)
 
-    df = DataFrame(data=trialData)
+    df = pd.DataFrame(data=trialData)
     return df
 
 
@@ -267,11 +267,11 @@ def genSimulation(simId, trials, paramPath, args):
     db = getDatabase()
     db.addExperiments(scenarioNames, baseline, scenarioFile)
 
-    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
+    context = Context(projectName=args.projectName, simId=simId, groupName=groupName, baseline=baseline)
 
-    paramFileObj = XMLParameterFile(paramPath)
-    paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
+    paramFileObj = XMLParameterFile(paramPath, context, scenarioNames=scenarioNames, writeConfigFiles=False)
     paramFileObj.runQueries()
+    paramFileObj.saveParameterNames()
 
     _logger.info("Generating %d trials to %r", trials, simDir)
     df = genTrialData(simId, trials, paramFileObj, args)
@@ -326,12 +326,9 @@ def driver(args, tool):
     projectName = args.projectName
     runRoot = args.runRoot
     if runRoot:
-        # TBD: write this to config file under [project] section
         setParam('MCS.Root', runRoot, section=projectName)
-        _logger.info('Please add "MCS.Root = %s" to your .pygcam.cfg file in the [%s] section.',
-                     runRoot, projectName)
 
-    runDir = getParam('MCS.RunDir', section=projectName)
+    runDir = getParam('MCS.RunDir', section=projectName)    # defined in terms of MCS.RunRoot
 
     if args.delete:
         removeTreeSafely(runDir, ignore_errors=False)
