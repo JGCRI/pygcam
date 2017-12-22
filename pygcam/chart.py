@@ -176,8 +176,10 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
     #_logger.debug('plotStackedBarsScalar %s', sideLabel)
     setupPlot()
 
+    colList = filter(None, [indexCol, columns, valuesCol])  # if indexCol is None, this drops it
+
     # TBD: handle year values as columns to plot
-    df2 = df[[indexCol, columns, valuesCol]].pivot(index=indexCol, columns=columns, values=valuesCol)
+    df2 = df[colList].pivot(index=indexCol, columns=columns, values=valuesCol)
 
     setupPalette(len(df2.columns), pal=palette)
 

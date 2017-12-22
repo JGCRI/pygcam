@@ -272,6 +272,9 @@ def copyFileOrTree(src, dst):
 # used only in gcamtool modules
 # TBD: rename to removeTree
 def removeTreeSafely(path, ignore_errors=True):
+    if not os.path.lexists(path):
+        return
+
     refWorkspace = os.path.realpath(getParam('GCAM.RefWorkspace'))
     thisPath = os.path.realpath(path)
     if os.path.commonprefix((refWorkspace, thisPath)) == refWorkspace:

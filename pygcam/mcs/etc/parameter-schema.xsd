@@ -128,8 +128,12 @@
 
     <xs:element name="Lognormal">
         <xs:complexType>
-            <xs:attribute name="mean"/>
-            <xs:attribute name="stdev"/>
+            <xs:attribute name="log_mean"/>
+            <xs:attribute name="log_std"/>
+            <xs:attribute name="log_stdev"/>    <!-- alt spelling -->
+            <xs:attribute name="norm_mean"/>
+            <xs:attribute name="norm_std"/>
+            <xs:attribute name="norm_stdev"/>    <!-- alt spelling -->
             <xs:attribute name="low95"/>
             <xs:attribute name="high95"/>
         </xs:complexType>
@@ -191,19 +195,10 @@
                 <xs:element ref="comment"/>
             </xs:choice>
             <xs:attribute name="name" use="required"/>
+            <xs:attribute name="scenarios" type="xs:string" default=""/>
             <xs:attribute name="external" type="xs:boolean" default="0"/> <!-- deprecated? -->
         </xs:complexType>
     </xs:element>
-
-    <!--
-    <xs:element name="TrialFuncs">
-        <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element ref="Parameter"/>
-            </xs:choice>
-        </xs:complexType>
-    </xs:element>
-    -->
 
     <xs:element name="ParameterList">
         <xs:complexType>
@@ -212,7 +207,6 @@
                 <xs:element ref="comment"/>
                 <!-- deprecated?
                 <xs:element ref="FileChooser"/>
-                <xs:element ref="TrialFuncs"/>
                 -->
             </xs:choice>
         </xs:complexType>
