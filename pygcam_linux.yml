@@ -45,7 +45,7 @@ dependencies:
 - dask-core=0.15.3=py27h53a7ee6_0
 - datashape=0.5.4=py27hf507385_0
 - dbus=1.10.22=h3b5a359_0
-- decorator=4.2.1
+- decorator=4.1.2=py27h1544723_0
 - distributed=1.19.1=py27h38c4a05_0
 - docutils=0.14=py27hae222c1_0
 - entrypoints=0.2.3=py27h502b47d_2
@@ -92,13 +92,13 @@ dependencies:
 - jbig=2.1=hdba287a_0
 - jdcal=1.3=py27h2cc5433_0
 - jedi=0.10.2=py27h8af4e35_0
-- jinja2=2.10
+- jinja2=2.9.6=py27h82327ae_1
 - jpeg=9b=habf39ab_1
 - jsonschema=2.6.0=py27h7ed5aa4_0
 - jupyter=1.0.0=py27h505fd4b_0
 - jupyter_client=5.1.0=py27hbee1118_0
 - jupyter_console=5.2.0=py27hc6bee7e_1
-- jupyter_core=4.4.0
+- jupyter_core=4.3.0=py27hcd9ae3a_0
 - jupyterlab=0.27.0=py27h42ebfef_2
 - jupyterlab_launcher=0.4.0=py27h0e16d15_0
 - lazy-object-proxy=1.3.1=py27h682c727_0
@@ -187,7 +187,7 @@ dependencies:
 - pytest=3.2.1=py27h98000ae_1
 - python=2.7.14=hc2b0042_21
 - python-dateutil=2.6.1=py27h4ca5741_1
-- pytz=2017.3
+- pytz=pytz=2017.2=py27hcac29fa_1
 - pywavelets=0.5.2=py27hecda097_0
 - pyyaml=3.12=py27h2d70dd7_1
 - pyzmq=16.0.2=py27h297844f_2
@@ -235,7 +235,7 @@ dependencies:
 - urllib3=1.22=py27ha55213b_0
 - wcwidth=0.1.7=py27h9e3e1ab_0
 - webencodings=0.5.1=py27hff10b21_1
-- werkzeug=0.14.1
+- werkzeug=0.12.2=py27hbf75dff_0
 - wheel=0.29.0=py27h411dd7b_1
 - widgetsnbextension=3.0.2=py27hcb77dec_1
 - wrapt=1.10.11=py27h04f6869_0
