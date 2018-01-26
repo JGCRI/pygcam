@@ -187,7 +187,7 @@ dependencies:
 - pytest=3.2.1=py27h98000ae_1
 - python=2.7.14=hc2b0042_21
 - python-dateutil=2.6.1=py27h4ca5741_1
-- pytz=pytz=2017.2=py27hcac29fa_1
+- pytz=2017.2=py27hcac29fa_1
 - pywavelets=0.5.2=py27hecda097_0
 - pyyaml=3.12=py27h2d70dd7_1
 - pyzmq=16.0.2=py27h297844f_2
