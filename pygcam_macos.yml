@@ -29,7 +29,7 @@ dependencies:
 - bzip2=1.0.6=h92991f9_1
 - ca-certificates=2017.08.26=ha1e5d58_0
 - cdecimal=2.3=py27hf5d9fd9_1
-- certifi=2018.1.18
+- certifi=2017.7.27.1=py27h482ffc0_0
 - cffi=1.10.0=py27haac214c_1
 - chardet=3.0.4=py27h2842e91_1
 - click=6.7=py27h2b86a94_0
@@ -48,7 +48,7 @@ dependencies:
 - dask-core=0.15.3=py27h6a32bf4_0
 - datashape=0.5.4=py27hd6a1745_0
 - dbus=1.10.22=h50d9ad6_0
-- decorator=4.2.1
+- decorator=4.1.2=py27h9f877ea_0
 - distributed=1.19.1=py27h67dd2ec_0
 - docutils=0.14=py27h0befae3_0
 - entrypoints=0.2.3=py27hd680fb1_2
@@ -92,13 +92,13 @@ dependencies:
 - jbig=2.1=h4d881f8_0
 - jdcal=1.3=py27hfeaf94f_0
 - jedi=0.10.2=py27hbb5dc62_0
-- jinja2=2.10
+- jinja2=2.9.6=py27h92590e2_1
 - jpeg=9b=haccd157_1
 - jsonschema=2.6.0=py27hd9b497e_0
 - jupyter=1.0.0=py27hec63c99_0
 - jupyter_client=5.1.0=py27hfaf569a_0
 - jupyter_console=5.2.0=py27h9702a86_1
-- jupyter_core=4.4.0
+- jupyter_core=4.3.0=py27hd5161ba_0
 - jupyterlab=0.27.0=py27h25d4955_2
 - jupyterlab_launcher=0.4.0=py27he518b91_0
 - lazy-object-proxy=1.3.1=py27h712ce3f_0
@@ -184,7 +184,7 @@ dependencies:
 - python=2.7.14=he768d2d_19
 - python-dateutil=2.6.1=py27hd56c96b_1
 - python.app=2=py27h84f57d0_6
-- pytz=2017.3
+- pytz=2017.2=py27hb891d23_1
 - pywavelets=0.5.2=py27hd99e88a_0
 - pyyaml=3.12=py27ha7932d0_1
 - pyzmq=16.0.2=py27he61c07e_2
@@ -232,7 +232,7 @@ dependencies:
 - urllib3=1.22=py27hc3787e9_0
 - wcwidth=0.1.7=py27h817c265_0
 - webencodings=0.5.1=py27h19a9f58_1
-- werkzeug=0.14.1
+- werkzeug=0.12.2=py27hcac71f8_0
 - wheel=0.29.0=py27h84bd1c0_1
 - widgetsnbextension=3.0.2=py27h56f70de_1
 - wrapt=1.10.11=py27hd341262_0
@@ -255,10 +255,10 @@ dependencies:
   - click-plugins==1.0.3
   - cligj==0.4.0
   - commonmark==0.7.4
-  - dash==0.20.0
-  - dash-core-components==0.18.1
+  - dash==0.19.0
+  - dash-core-components==0.14.0
   - dash-html-components==0.8.0
-  - dash-renderer==0.11.2
+  - dash-renderer==0.11.1
   - descartes==1.1.0
   - et-xmlfile==1.0.1
   - fiona==1.7.10.post1
@@ -278,7 +278,7 @@ dependencies:
   - jupyterlab-launcher==0.4.0
   - munch==2.2.0
   - pbr==3.1.1
-  - plotly==2.2.3
+  - plotly==2.2.1
   - prompt-toolkit==1.0.15
   - pyproj==1.9.5.1
   - redis==2.10.6

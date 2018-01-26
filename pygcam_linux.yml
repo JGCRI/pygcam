@@ -27,7 +27,7 @@ dependencies:
 - ca-certificates=2017.08.26=h1d4fec5_0
 - cairo=1.14.10=haa5651f_5
 - cdecimal=2.3=py27h4e63abe_1
-- certifi=2018.1.18
+- certifi=2017.7.27.1=py27h9ceb091_0
 - cffi=1.10.0=py27hf1aaaf4_1
 - chardet=3.0.4=py27hfa10054_1
 - click=6.7=py27h4225b90_0
@@ -257,10 +257,10 @@ dependencies:
   - click-plugins==1.0.3
   - cligj==0.4.0
   - commonmark==0.7.4
-  - dash==0.20.0
-  - dash-core-components==0.18.1
+  - dash==0.19.0
+  - dash-core-components==0.14.0
   - dash-html-components==0.8.0
-  - dash-renderer==0.11.2
+  - dash-renderer==0.11.1
   - descartes==1.1.0
   - et-xmlfile==1.0.1
   - fiona==1.7.10.post1
@@ -280,7 +280,7 @@ dependencies:
   - jupyterlab-launcher==0.4.0
   - munch==2.2.0
   - pbr==3.1.1
-  - plotly==2.2.3
+  - plotly==2.2.1
   - prompt-toolkit==1.0.15
   - pyproj==1.9.5.1
   - redis==2.10.6

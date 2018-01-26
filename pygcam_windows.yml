@@ -28,7 +28,7 @@ dependencies:
 - ca-certificates=2017.08.26=h94faf87_0
 - cachecontrol=0.12.3=py27h15eca11_0
 - cdecimal=2.3=py27h5b739fe_1
-- certifi=2018.1.18
+- certifi=2017.7.27.1=py27hf761292_0
 - cffi=1.10.0=py27hb6f203f_1
 - chardet=3.0.4=py27h56c3b73_1
 - click=6.7=py27hb6defca_0
@@ -48,7 +48,7 @@ dependencies:
 - dask=0.15.3=py27h206fe23_0
 - dask-core=0.15.3=py27h436ea3d_0
 - datashape=0.5.4=py27h3d6e61b_0
-- decorator=4.2.1
+- decorator=4.1.2=py27h383e199_0
 - distlib=0.2.5=py27hbc39c7c_0
 - distributed=1.19.1=py27heeda6fb_0
 - docutils=0.14=py27h8652d09_0
@@ -87,13 +87,13 @@ dependencies:
 - itsdangerous=0.24=py27hcf63135_1
 - jdcal=1.3=py27h8c72977_0
 - jedi=0.10.2=py27h4f12af3_0
-- jinja2=2.10
+- jinja2=2.9.6=py27hb525989_1
 - jpeg=9b=vc9hb90d6ad_1
 - jsonschema=2.6.0=py27haaf3834_0
 - jupyter=1.0.0=py27h9d2e098_2
 - jupyter_client=5.1.0=py27hced1786_0
 - jupyter_console=5.2.0=py27h6ed736b_1
-- jupyter_core=4.4.0
+- jupyter_core=4.3.0=py27h7bec3d2_0
 - jupyterlab=0.27.0=py27h573f66c_2
 - jupyterlab_launcher=0.4.0=py27ha72e593_0
 - lazy-object-proxy=1.3.1=py27ha5c8080_0
@@ -171,7 +171,7 @@ dependencies:
 - pytest=3.2.1=py27h7cb0baa_1
 - python=2.7.14=h59f5a59_20
 - python-dateutil=2.6.1=py27hbdcc174_1
-- pytz=2017.3
+- pytz=2017.2=py27haecbe8f_1
 - pywavelets=0.5.2=py27h0dc3f48_0
 - pywin32=221=py27h5035e5b_0
 - pyyaml=3.12=py27ha287073_1
@@ -220,7 +220,7 @@ dependencies:
 - vs2015_runtime=14.0.25123=hd4c4e62_2
 - wcwidth=0.1.7=py27hb1a0d82_0
 - webencodings=0.5.1=py27h4e224a2_1
-- werkzeug=0.14.1
+- werkzeug=0.12.2=py27h822ccf9_0
 - wheel=0.29.0=py27hffb40b6_1
 - widgetsnbextension=3.0.2=py27h599da02_1
 - win_inet_pton=1.0.1=py27hf41312a_1
@@ -245,10 +245,10 @@ dependencies:
   - click-plugins==1.0.3
   - cligj==0.4.0
   - commonmark==0.7.4
-  - dash==0.20.0
-  - dash-core-components==0.18.1
+  - dash==0.19.0
+  - dash-core-components==0.14.0
   - dash-html-components==0.8.0
-  - dash-renderer==0.11.2
+  - dash-renderer==0.11.1
   - et-xmlfile==1.0.1
   - flask-bcrypt==0.7.1
   - flask-compress==1.4.0
@@ -264,7 +264,7 @@ dependencies:
   - jupyterlab-launcher==0.4.0
   - munch==2.2.0
   - pbr==3.1.1
-  - plotly==2.2.3
+  - plotly==2.2.1
   - prompt-toolkit==1.0.15
   - redis==2.10.6
   - ruamel-yaml==0.11.14
