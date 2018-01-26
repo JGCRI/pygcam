@@ -843,9 +843,12 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb='',
     return csvPath
 
 # Deprecated: there no need for this once multiple queries is working
-def _runSingleQueryBatch(scenario, xmldb='', queryNames=[], queryNodes=[], queryPath=None,
+def _runSingleQueryBatch(scenario, xmldb='', queryNames=None, queryNodes=None, queryPath=None,
                         outputDir=None, rewriteParser=None, miLogFile=None, regions=None,
                         regionMap=None, noRun=False, noDelete=False):
+    queryNames = queryNames or []
+    queryNodes = queryNodes or []
+
     for queryName in queryNames:
         queryName = queryName.strip()
 
