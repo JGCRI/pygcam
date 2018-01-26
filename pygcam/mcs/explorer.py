@@ -566,10 +566,12 @@ class McsData(object):
         # Round up to nearest integral value of CORR_STEP
         endX = count + (CORR_STEP - count % CORR_STEP)
 
+        # I cannot center a narrower plot for reasons I don't understand
         layout = updateStyle('Plot',
+                             width=None,
                              title='Correlation Convergence for %s' % resultName,
-                             xaxis=dict(range=[CORR_STEP, endX]),
-                             margin=updateStyle('PlotMargin', l=40))
+                             xaxis=dict(range=[CORR_STEP, endX]))
+                             # margin=updateStyle('PlotMargin', l=40)
 
         figure = dict(data=traces, layout=layout)
         return figure
@@ -786,21 +788,22 @@ class McsData(object):
                     ], className='cell onecol')
                 ], className='row'),
 
-                # TBD: for now, we leave this out.
                 # Correlation convergence section
                 html.Div([
                     html.Div([
                         html.Span('Correlation convergence', style=getStyle('Label')),
+                        html.Div('', style={'height': 15}),
                         html.Div(dcc.Graph(id='corr-convergence')),
-                        # style=updateStyle('AutoMargins'))
-                    ], className='cell onecol'),
+                    ], className='cell onecol')
                 ], className='row'),
 
                 # Scatterplot section
                 html.Div([
                     html.Div([
                         html.Div([
+                            html.Div(style={'height': 15}),
                             html.Span('Model Inputs (random variables)', style=getStyle('Label')),
+                            html.Div(style={'height': 15}),
                             self.inputChooser(multi=True)
                         ], style=updateStyle('Chooser', width=900)),
 
@@ -859,7 +862,7 @@ def generateDropdownDefaults(app, ids):
                      [Input(id, 'options')],
                      state=[State(id, 'value')])(dropdownDefault)
 
-def _setup_werkzeug_log(level):
+def _setup_werkzeug_log(level, host, port):
     import logging
 
     consoleFormat = getParam('GCAM.LogConsoleFormat')
@@ -872,16 +875,16 @@ def _setup_werkzeug_log(level):
 
     # Setting Flask.LogLevel > INFO quashes this useful message, so we restore it
     if log.level > logging.INFO:
-        print('* Running on http://127.0.0.1:8050/ (Press CTRL+C to quit)')
+        print('* Running on http://{}:{}/ (Press CTRL+C to quit)'.format(host, port))
 
 
 def main(args):
-    app = dash.Dash(name='pygcam.mcs.explorer', csrf_protect=False)
+    app = dash.Dash(name='mcs-explorer', csrf_protect=False)
 
     level = getParam('Flask.LogLevel')
     flaskLog = app.server.logger
     flaskLog.setLevel(level)
-    _setup_werkzeug_log(level)
+    _setup_werkzeug_log(level, args.host, args.port)
 
     # app.config.supress_callback_exceptions = True
     app.css.append_css({"external_url": "https://fonts.googleapis.com/css?family=Dosis:regular,bold|Lato"})
@@ -1111,7 +1114,7 @@ def main(args):
             figure = data.corrConvergencePlot(simId, scenario, resultName)
             return figure
 
-    app.run_server(debug=args.debug, threaded=False)
+    app.run_server(debug=args.debug, threaded=False, host=args.host, port=args.port)
 
 
 if __name__ == '__main__':

@@ -93,7 +93,7 @@ def getPercentiles(trials=100):
     return points
 
 
-def lhs(paramList, trials, corrMat=None, columns=None, skip=[]):
+def lhs(paramList, trials, corrMat=None, columns=None, skip=None):
     """
     Produce an ndarray or DataFrame of 'trials' rows of values for the given parameter
     list, respecting the correlation matrix 'corrMat' if one is specified, using Latin
@@ -117,6 +117,8 @@ def lhs(paramList, trials, corrMat=None, columns=None, skip=[]):
     ranks = genRankValues(len(paramList), trials, corrMat) if corrMat is not None else None
 
     samples = np.zeros((trials, len(paramList)))  # @UndefinedVariable
+
+    skip = skip or []
 
     for i, param in enumerate(paramList):
         if param in skip:
@@ -152,4 +154,4 @@ def lhsAmend(df, rvList, trials):
         param = rv.getParameter()
         paramName = param.getName()
         df[paramName] = values
-        continue
+        #continue

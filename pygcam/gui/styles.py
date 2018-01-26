@@ -145,8 +145,8 @@ StyleDict = {
         plot_bgcolor=getColor('PlotBg'),
         paper_bgcolor=getColor('PaperBg'),
         legend=dict(font=dict(size=10), orientation='h', bgcolor=getColor('PlotBg')),
-        title='Default title',
-    )
+        title='',
+    ),
 }
 
 def getStyle(name):
