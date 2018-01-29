@@ -25,18 +25,6 @@ CORR_STEP = 100
 
 Oct16 = False       # special mode for specific presentation
 
-_Cache = {}
-
-def getFromCache(key):
-    obj = _Cache.get(key)
-    return obj
-
-def storeInCache(key, obj):
-    if key is not None:
-        _Cache[key] = obj
-
-    return obj
-
 def projectsWithDatabases():
     withDatabases = []
 
@@ -52,6 +40,23 @@ def sliderLabel(value):
     return {'label': str(value),
             'style': {'font-size': 10, 'font-family': 'Lato'}}
 
+def cached(func):
+    """
+    Simple decorator to cache results keyed on method args plus project name.
+    Note that this is not general purpose, but specialized for the McsData class.
+    """
+    cache = {}
+
+    def wrapper(*args):
+        key = (args[0].project, args)       # add project name to key
+
+        try:
+            return cache[key]
+        except KeyError:
+            cache[key] = result = func(*args)
+            return result
+
+    return wrapper
 
 class McsData(object):
     def __init__(self, app):
@@ -94,12 +99,8 @@ class McsData(object):
         db = self.db = getDatabase()
         self.inputs = db.getInputs()
 
+    @cached
     def getParameterValues(self, simId):
-        key = ('getParameterValues', simId)
-        cached = getFromCache(key)
-        if cached is not None:
-            return cached
-
         db = self.db
         _logger.debug('Reading inputDF...',)
         inputsDF = db.getParameterValues2(simId)
@@ -116,27 +117,19 @@ class McsData(object):
 
         numParams = inputsDF.shape[0] * inputsDF.shape[1]
         _logger.info('%d parameter values read' % numParams)
-        return storeInCache(key, inputsDF)
+        return inputsDF
 
+    @cached
     def getOutputsWithValues(self, simId, scenario):
-        key = ('getOutputsWithValues', simId, scenario)
-        cached = getFromCache(key)
-        if cached is not None:
-            return cached
-
         outputs = self.db.getOutputsWithValues(simId, scenario)
-        return storeInCache(key, outputs)
+        return outputs
 
+    @cached
     def getOutValues(self, simId, scenario, resultName, limit=None):
         """
         Just a layer over db.getOutValues to provide caching of results, and
         to convert result from a DataFrame to a Series
         """
-        key = ('getOutValues', simId, scenario, resultName, limit)
-        cached = getFromCache(key)
-        if cached is not None:
-            return cached
-
         df = self.db.getOutValues(simId, scenario, resultName, limit=limit)
         series = df[resultName]
 
@@ -145,47 +138,48 @@ class McsData(object):
         if resultName == 'percent-change':
             series *= 100
 
-        return storeInCache(key, series)
+        return series
 
-    def getResults(self, simId, scenarioList, resultList=None, limit=None):
-        '''
-        Get the results for the given result names, or, if none are
-        specified, for the results identified when at instantiation.
-        Results are cached and thus read only once from the database.
-
-        :param scenarioList: (iterable of str) the scenarios for which
-           to get results
-        :param resultList: (iterable of str) the (scalar) results to read
-        :return: (DataFrame) rows contain result name, scenario name, and value
-        '''
-
-        db = self.db
-        resultDict = {}
-        key = None
-
-        if resultList is None and limit is None:
-            key = ('getResults', simId, frozenset(scenarioList))
-            cached = getFromCache(key)
-            if cached is not None:
-                return cached
-
-        resultList = resultList or db.getOutputs()
-        scenarioList = scenarioList or db.scenariosWithResults(simId)
-
-        for scenario in scenarioList:
-            resultDF = resultDict.get(scenario)
-
-            for resultName in resultList:
-                # returns DF with 'trialNum' as index, 'value' holds float value
-                if resultDF is None or resultName not in resultDF.columns:
-                    values = self.getOutValues(simId, scenario, resultName, limit=limit)
-                    if values is not None:
-                        resultDF[resultName] = values
-
-            resultDict[scenario] = resultDF
-
-        self.resultDict = resultDict
-        return storeInCache(key, resultDict)
+    # Deprecated?
+    # def getResults(self, simId, scenarioList, resultList=None, limit=None):
+    #     '''
+    #     Get the results for the given result names, or, if none are
+    #     specified, for the results identified when at instantiation.
+    #     Results are cached and thus read only once from the database.
+    #
+    #     :param scenarioList: (iterable of str) the scenarios for which
+    #        to get results
+    #     :param resultList: (iterable of str) the (scalar) results to read
+    #     :return: (DataFrame) rows contain result name, scenario name, and value
+    #     '''
+    #
+    #     db = self.db
+    #     resultDict = {}
+    #     key = None
+    #
+    #     if resultList is None and limit is None:
+    #         key = ('getResults', simId, frozenset(scenarioList))
+    #         cached = getFromCache(key)
+    #         if cached is not None:
+    #             return cached
+    #
+    #     resultList = resultList or db.getOutputs()
+    #     scenarioList = scenarioList or db.scenariosWithResults(simId)
+    #
+    #     for scenario in scenarioList:
+    #         resultDF = resultDict.get(scenario)
+    #
+    #         for resultName in resultList:
+    #             # returns DF with 'trialNum' as index, 'value' holds float value
+    #             if resultDF is None or resultName not in resultDF.columns:
+    #                 values = self.getOutValues(simId, scenario, resultName, limit=limit)
+    #                 if values is not None:
+    #                     resultDF[resultName] = values
+    #
+    #         resultDict[scenario] = resultDF
+    #
+    #     self.resultDict = resultDict
+    #     return storeInCache(key, resultDict)
 
     def projectChooser(self):
         layout = dcc.Dropdown(id='project-chooser',
@@ -398,25 +392,17 @@ class McsData(object):
 
         return plotData, title, annotations
 
+    @cached
     def getCorrDF(self, simId, scenario, resultName):
-        key = ('corrDF', self.project, simId, scenario, resultName)
-        cached = getFromCache(key)
-        if cached is not None:
-            return cached
-
         results = self.getOutValues(simId, scenario, resultName)
         inputsDF = self.getParameterValues(simId)
         inputsDF = inputsDF.iloc[results.index]      # select only trials for which we have results
 
         corrDF = getCorrDF(inputsDF, results)
-        return storeInCache(key, corrDF)
+        return corrDF
 
+    @cached
     def getCorrByTrials(self, simId, scenario, resultName):
-        key = ('corrByTrials', self.project, simId, scenario, resultName)
-        cached = getFromCache(key)
-        if cached is not None:
-            return cached
-
         results  = self.getOutValues(simId, scenario, resultName)
         inputsDF = self.getParameterValues(simId)
 
@@ -445,7 +431,7 @@ class McsData(object):
             corrByTrials = corrByTrials.append(corrDF)
 
         corrByTrials.reset_index(inplace=True)
-        return storeInCache(key, corrByTrials)
+        return corrByTrials
 
 
     def parcoordsPlot(self, simId, scenario, resultName, numVars):
