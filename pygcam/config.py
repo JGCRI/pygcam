@@ -5,6 +5,7 @@
 from __future__ import print_function
 import os
 import platform
+import re
 from pkg_resources import resource_string
 from backports import configparser
 from .error import ConfigFileError, PygcamException
@@ -19,6 +20,53 @@ _ConfigParser = None
 
 _ProjectSection = DEFAULT_SECTION
 
+# Support for path translations to access docker-mounted host dirs
+_PathMap = None
+_PathPattern = None     # compiled regex matching any mapped paths
+
+def savePathMap(mapString):
+    """
+    Save a list of pathname translations (sorted, descending by length)
+    for use with docker, mapping host directories to container-mounted
+    directories. The function getParam() performs the translations.
+
+    :param mapString: (str) sequence of newline-limited lines, each
+       containing a pair of the form "host-path:container-path".
+
+    :return: nothing
+    """
+    global _PathMap, _PathPattern
+
+    pairStrings = mapString.split()
+    pairs = [s.split(':') for s in pairStrings]
+
+    # strip whitespace
+    pairs = [map(str.strip, pair) for pair in pairs]
+
+    # process the longest strings first to avoid overlooking long prefixes
+    pairs = sorted(pairs, key = lambda pair: len(pair[0]), reverse=True)
+    pattern = '|'.join([pair[0] for pair in pairs])
+
+    _PathPattern = re.compile(pattern)
+    _PathMap = dict(pairs)
+
+
+def _translatePath(value):
+    """
+    Translate a value if it matches _PathPattern.
+
+    :param value: (str) the config value to translate
+    :return: (str) the translated value or original if no key was matched
+    """
+    matches = re.findall(_PathPattern, value)
+    if matches:
+        for m in sorted(matches, key=len, reverse=True):
+            hostPath = m
+            contPath = _PathMap[hostPath]
+            # print("re.sub({}, {}, {})".format(hostPath, contPath, value))
+            value = re.sub(hostPath, contPath, value)
+
+    return value
 
 def getSection():
     return _ProjectSection
@@ -296,7 +344,11 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
     :return: (dict) all variables defined in the section (which includes
        those defined in DEFAULT.)
     """
-    d = {key : value for key, value in _ConfigParser.items(section, raw=raw)}
+
+    # Translation function of identity
+    func = _translatePath if _PathMap else lambda x: x
+
+    d = {key : func(value) for key, value in _ConfigParser.items(section, raw=raw)}
     return d
 
 def setParam(name, value, section=None):
@@ -354,6 +406,10 @@ def getParam(name, section=None, raw=False, raiseError=True):
             raise PygcamException('getParam: unknown variable "%s"' % name)
         else:
             return None
+
+    # perform pathname translation for use of .pygcam.cfg in Docker images
+    if _PathMap:
+        value = _translatePath(value)
 
     return value
 

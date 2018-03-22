@@ -6,16 +6,17 @@
 '''
 from __future__ import print_function
 import argparse
+from glob import glob
 import os
 import pipes
 import re
 import subprocess
-from glob import glob
+import sys
 
 from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections,
-                     DEFAULT_SECTION, usingMCS)
+                     DEFAULT_SECTION, usingMCS, savePathMap)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -134,6 +135,11 @@ class GcamTool(object):
 
         parser.add_argument('+B', '--showBatch', action="store_true",
                             help="Show the batch command to be run, but don't run it. (Linux only)")
+
+        parser.add_argument('+D', '--dirmap',
+                            help="""A comma-delimited sequence of colon-delimited directory names 
+                            of the form "/some/host/path:/a/container/path, /host:cont, ...", 
+                            mapping host dirs to their mount point in a docker container.""")
 
         parser.add_argument('+e', '--enviroVars',
                             help='''Comma-delimited list of environment variable assignments to pass
@@ -470,8 +476,28 @@ def _setDefaultProject(argv):
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
 
+def _saveDirMap():
+    dirMapFile = os.getenv('DIRMAP_PATH')
+    if not dirMapFile:
+        return
+
+    with open(dirMapFile) as f:
+        dirMap = f.read()
+
+    savePathMap(dirMap)
+
+# This parser handles only --VERSION flag.
+def _showVersion(argv):
+    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
+    parser.add_argument('--VERSION', action='store_true')
+
+    ns, otherArgs = parser.parse_known_args(args=argv)
+
+    if ns.VERSION:
+        print(PROGRAM + '-' + VERSION)
+        sys.exit(0)
+
 def _main(argv=None):
-    import sys
     from .config import userConfigPath
 
     configPath = userConfigPath()
@@ -485,6 +511,10 @@ def _main(argv=None):
             raise CommandlineError('\n***\n*** Missing or empty pygcam configuration file %s. Run "gt init" to create it.\n***\n' % configPath)
 
     getConfig()
+
+    _showVersion(argv)
+    _saveDirMap()
+
     configureLogs()
 
     _setDefaultProject(argv)
@@ -492,17 +522,9 @@ def _main(argv=None):
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
 
-    # This parser handles only --VERSION flag.
-    parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
-    parser.add_argument('--VERSION', action='store_true')
-    ns, otherArgs = parser.parse_known_args(args=argv)
-    if ns.VERSION:
-        print(PROGRAM + '-' + VERSION)
-        sys.exit(0)
-
-    # This parser handles only --batch, --showBatch, and --projectName args.
-    # If --batch is given, we need to create a script and call the GCAM.BatchCommand
-    # on it. We grab --projectName so we can set PluginPath by project
+    # This parser handles only --batch, --showBatch, --projectName, --set, and --mcs
+    # args. If --batch is given, we need to create a script and call the
+    # GCAM.BatchCommand on it. We grab --projectName so we can set PluginPath by project.
     parser = argparse.ArgumentParser(prog=PROGRAM, add_help=False, prefix_chars='-+')
 
     parser.add_argument('+b', '--batch', action='store_true')

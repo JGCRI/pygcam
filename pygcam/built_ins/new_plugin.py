@@ -23,7 +23,7 @@ def driver(args, tool):
     _logger = getLogger(__name__)
 
     projectName = args.name
-    projectRoot = os.path.abspath(args.root) or getParam('GCAM.ProjectRoot')
+    projectRoot = os.path.abspath(args.root) if args.root else getParam('GCAM.ProjectRoot')
     projectDir  = pathjoin(projectRoot, projectName)
     overwrite   = args.overwrite
 

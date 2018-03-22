@@ -77,8 +77,8 @@ def _gcamWrapper(args):
                                     stderr=subprocess.STDOUT, close_fds=True)
 
     except Exception as e:
-        cmd = ' '.join(args)
-        raise ProgramExecutionError('gcamWrapper failed to run command: %s (%s)' % (cmd, e))
+        msg = 'gcamWrapper failed to run command: {} ({})'.format(' '.join(args), e)
+        raise PygcamException(msg)
 
     modelDidNotSolve = 'Model did not solve'
     pattern = re.compile('(.*(BaseXException|%s).*)' % modelDidNotSolve)

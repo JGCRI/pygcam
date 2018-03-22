@@ -120,6 +120,8 @@ class ConfigCommand(SubcommandABC):
         print("[%s]" % section)
         for name, value in sorted(_ConfigParser.items(section)):
             if pattern.match(name):
+                # getParam does path translation for docker, if required
+                value = getParam(name, section=section, raiseError=False)
                 print("%25s = %s" % (name, value))
 
 

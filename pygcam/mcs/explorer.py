@@ -3,6 +3,7 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
+from functools import wraps
 import json
 import numpy as np
 import pandas as pd
@@ -47,6 +48,7 @@ def cached(func):
     """
     cache = {}
 
+    @wraps  # keeps the name and doc string of wrapped function intact
     def wrapper(*args):
         key = (args[0].project, args)       # add project name to key
 
