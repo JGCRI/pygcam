@@ -48,6 +48,25 @@ class ParseCommaList(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, values.split(','))
 
+# For gcam 5, read the map of river basins to countries (and other info)
+def readBasinMap():
+    from .query import readCsv
+    from .utils import resourceStream
+
+    stream = resourceStream('etc/gcam-v5/basin_to_country_mapping.csv')
+    df = readCsv(stream, skiprows=2)
+    return df
+
+# For gcam 5, produce a map of basins for each (ISO) country name
+def basinsByISO():
+    df = readBasinMap()
+    ISOs = df['ISO'].unique()
+    result = {}
+    for iso in ISOs:
+        rows = df.query("ISO == '{}'".format(iso))
+        result[iso] = list(rows['GLU_name'])
+
+    return result
 
 def queueForStream(stream):
     """

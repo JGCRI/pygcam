@@ -69,8 +69,10 @@ class Rewrite(object):
         self.From = node.get('from')    # 'from' is a keyword...
         self.to   = node.get('to')
         self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
+        self.byBasin = getBooleanXML(node.get('byBasin', '0'))    # TBD: GCAM5
 
     def __str__(self):
+        # TBD: Add byBasin for GCAM5
         return "<Rewrite from='%s' to='%s' byAEZ='%s'>" % (self.From, self.to, self.byAEZ)
 
 
@@ -79,10 +81,12 @@ class RewriteSet(object):
         self.name  = node.get('name')
         self.level = node.get('level')
         self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
+        self.byBasin = getBooleanXML(node.get('byBasin', '0'))   # TBD: GCAM5
         self.appendValues = getBooleanXML(node.get('append-values', '0'))
         self.rewrites = map(Rewrite, node.findall('rewrite'))
 
     def __str__(self):
+        # TBD: Add byBasin for GCAM5
         return "<RewriteSet name='%s' level='%s' byAEZ='%s' append-values='%s'>" % \
                (self.name, self.level, self.byAEZ, self.appendValues)
 

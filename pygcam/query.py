@@ -290,6 +290,8 @@ def _addRewrites(levelElt, rewriteSet):
         levelElt.append(node)
 
     byAEZ = rewriteSet.byAEZ
+    byBasin = rewriteSet.byBasin
+
     for rewrite in rewriteSet.rewrites:
         From = rewrite.From             # "from" is a keyword, thus "From"
         to = rewrite.to
@@ -299,6 +301,15 @@ def _addRewrites(levelElt, rewriteSet):
             for aez in range(1, NUM_AEZS + 1):
                 fromAEZ = From + 'AEZ%02d' % aez
                 _appendRewrite(fromAEZ, to)
+
+        # TBD: not sure this makes sense here, actually...
+        if byBasin:
+            # Generate a rewrite for each basin-region combo? # TBD: GCAM5
+            # for basin in ?
+            #     fromBasin = 'From +
+            #     _appendRewrite(fromAEZ, to)
+            pass
+
         else:
             _appendRewrite(From, to)
 
