@@ -48,10 +48,9 @@ class XMLConfigFile(XMLFile):
         self.context = context = copy(context)
 
         if useCopy:
-            path = self.getBackupPath()
+            path = self.copyOriginal() # make a copy of the config file for use by runsim
         else:
             path = getSimConfigFile(context)
-            self.copyOriginal() # make a copy of the config file for use by runsim
 
         # Default writePath is where we were read from.
         self.writePath = path
@@ -102,6 +101,8 @@ class XMLConfigFile(XMLFile):
                os.path.getctime(backupPath) < os.path.getctime(configPath):
             _logger.debug('Copying to %s', backupPath)
             shutil.copy2(configPath, backupPath)
+
+        return backupPath
 
     def getBackupPath(self):
         pathname = getSimConfigFile(self.context)
