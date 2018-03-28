@@ -765,14 +765,16 @@ class XMLRelFile(XMLFile):
     A minor extension to XMLFile to store the original relative pathname
     that was indicated in the config file identifying this file.
     """
-    def __init__(self, inputFile, relPath, simId):
-        from .util import getSimLocalXmlDir
+    def __init__(self, ctx, inputFile, relPath): #, simId):
+        # from .util import getSimLocalXmlDir
 
         self.inputFile = inputFile
         self.relPath = relPath
 
-        scenarioDir = getSimLocalXmlDir(simId)
-        absPath = os.path.abspath(os.path.join(scenarioDir, relPath))
+        # scenarioDir = getSimLocalXmlDir(simId)
+        scenarioDir = ctx.getScenarioDir()
+
+        absPath = os.path.abspath(os.path.join(scenarioDir, 'exe', relPath))
 
         super(XMLRelFile, self).__init__(absPath)
 
@@ -902,7 +904,7 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                xmlFile = XMLRelFile(self, relPath, simId)
+                xmlFile = XMLRelFile(self, ctx, relPath) #, simId)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
 
