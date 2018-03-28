@@ -993,7 +993,7 @@ class XMLParameterFile(XMLFile):
         # found in {simDir}/{scenName}. If scenNames are not given, just load
         # the files for the current scenario.
         for inputFile in inputFiles.values():
-            scenarios = scenarioNames or inputFile.scenarios
+            scenarios = scenarioNames or inputFile.scenarios or [context.scenario]
             inputFile.loadFiles(context, scenarios, writeConfigFiles=writeConfigFiles)
 
         if writeConfigFiles:
