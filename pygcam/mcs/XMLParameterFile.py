@@ -904,7 +904,7 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                xmlFile = XMLRelFile(self, ctx, relPath) #, simId)
+                xmlFile = XMLRelFile(ctx, self, relPath) #, simId)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
 
