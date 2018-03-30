@@ -48,14 +48,15 @@ def cached(func):
     """
     cache = {}
 
-    @wraps  # keeps the name and doc string of wrapped function intact
-    def wrapper(*args):
-        key = (args[0].project, args)       # add project name to key
+    #@wraps  # keeps the name and doc string of wrapped function intact
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        key = (func.__name__, self.project, args[1:])
 
         try:
             return cache[key]
         except KeyError:
-            cache[key] = result = func(*args)
+            cache[key] = result = func(*args, **kwargs)
             return result
 
     return wrapper
@@ -241,8 +242,9 @@ class McsData(object):
         return layout
 
     def outputChooser(self, simId=None, scenario=None, optionsOnly=False):
+        _logger.debug("outputChooser: simId={}, scenario={}".format(simId, scenario))
         outputs = self.getOutputsWithValues(simId, scenario) \
-            if scenario and simId is not None else []
+            if scenario and (simId is not None) else []
 
         options = [{'label': name, 'value': name} for name in outputs]
 
@@ -258,7 +260,7 @@ class McsData(object):
 
     def multiOutputChooser(self, simId=None, scenario=None, optionsOnly=False):
         outputs = self.getOutputsWithValues(simId, scenario) \
-            if scenario and simId is not None else []
+            if scenario and (simId is not None) else []
 
         options = [{'label': name, 'value': name} for name in outputs]
 
