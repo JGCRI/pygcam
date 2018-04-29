@@ -455,7 +455,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
         try:
             from .utils import importFromDotSpec
             sys.path.insert(0, modPath)
-            _module, superclass = importFromDotSpec(dotSpec)
+            superclass = importFromDotSpec(dotSpec)
 
         except PygcamException as e:
             raise SetupException("Can't load setup class '%s' from '%s': %s" % (dotSpec, modPath, e))

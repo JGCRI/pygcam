@@ -20,6 +20,7 @@ TECH_FT_BIOFUELS        = 'FT biofuels'
 TECH_BIODIESEL          = 'biodiesel'
 TECH_GTL                = 'gas to liquids'
 TECH_CTL                = 'coal to liquids'
+TECH_OIL_REFINING       = 'oil refining'
 
 ENERGY_SUPPLY_TAG = "energy_supply"
 RESBIO_INPUT_TAG  = "residue_bio"

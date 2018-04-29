@@ -339,7 +339,7 @@ def _findQueryByName(tree, title):
     Try the title and variations thereof to locate the query by name
     """
     # This Xpath supports both Main_Queries-type files and batch query files
-    xpathPattern = '/queries/queryGroup/*[@title="{title}"]|/queries/aQuery/*[@title="{title}"]'
+    xpathPattern = '/queries//queryGroup/*[@title="{title}"]|/queries/aQuery/*[@title="{title}"]'
 
     patterns = (None, '_', '-', '[-_]')
 
@@ -381,6 +381,8 @@ def _findOrCreateQueryFile(title, queryPath, regions, outputDir=None, tmpFiles=T
 
         if elts is None or len(elts) == 0:
             continue # to next item in QueryPath
+
+        _logger.debug("Found query '{}' in {}".format(title, item))
 
         root = ET.Element("queries")
         aQuery = ET.Element("aQuery")

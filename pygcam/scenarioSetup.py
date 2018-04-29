@@ -21,6 +21,7 @@ _VersionSpecificParameterName = {
     '4.2' : 'GCAM.RequiredFiles.4.2',
     '4.3' : 'GCAM.RequiredFiles.4.3',
     '4.4' : 'GCAM.RequiredFiles.4.4',
+    '5.0' : 'GCAM.RequiredFiles.5.0',
 }
 
 _FilesToCopy = None
@@ -40,7 +41,7 @@ def _getVersionSpecificFiles():
     try:
         paramName = _VersionSpecificParameterName[version]
     except KeyError:
-        raise ConfigFileError('GCAM.VersionNumber "%s" is unknown. Fix config file or update pygcam.scenarioSetup.py', version)
+        raise ConfigFileError('GCAM.VersionNumber "{}" is unknown. Fix config file or update pygcam.scenarioSetup.py'.format(version))
 
     versionFiles = getParam(paramName)
     universalFiles = getParam('GCAM.RequiredFiles.All')

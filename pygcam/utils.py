@@ -583,7 +583,8 @@ def importFrom(modname, objname, asTuple=False):
 
     module = import_module(modname, package=None)
     obj    = getattr(module, objname)
-    return module, obj if asTuple else obj
+    return ((module, obj) if asTuple else obj)
+
 
 def importFromDotSpec(spec):
     """
