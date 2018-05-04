@@ -426,6 +426,9 @@ def chartGCAM(args, num=None, negate=False):
 
     yearCols = filter(str.isdigit, df.columns)
 
+    if args.multiplier or args.divisor or negate:
+        df = df.copy(deep=True)
+
     multiplier = args.multiplier or _getFloatFromFile(args.multiplierFile)
     if multiplier:
         df[yearCols] *= multiplier
