@@ -43,32 +43,6 @@ WRITE_FUNC_ELT       = 'WriteFunc'
 DISTRO_META_ATTRS     = ['name', 'type', 'apply']
 DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
 
-# TBD: Move this? Called only from worker.py:_runGcamTool()
-def readParameterInfo(context, paramPath):
-    from pygcam.xmlSetup import ScenarioSetup
-
-    scenarioFile  = getParam('GCAM.ScenarioSetupFile')
-    scenarioSetup = ScenarioSetup.parse(scenarioFile)
-    scenarioNames = scenarioSetup.scenariosInGroup(context.groupName)
-
-    paramFile = XMLParameterFile(paramPath)
-    paramFile.loadInputFiles(context, scenarioNames, writeConfigFiles=False)
-    paramFile.runQueries()
-    return paramFile
-
-def applySingleTrialData(df, context, paramFile):
-    simId    = context.simId
-    trialNum = context.trialNum
-    trialDir = context.getTrialDir(create=True)
-
-    _logger.info('applySingleTrialData for %s, %s', context, paramFile.filename)
-    XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
-    paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
-
-    linkDest = os.path.join(trialDir, 'local-xml')
-    _logger.info('creating symlink to %s', linkDest)
-    symlink('../../../../Workspace/local-xml', linkDest)
-
 
 def getBooleanXML(value):
     """
@@ -562,8 +536,8 @@ class XMLParameter(XMLWrapper):
 
     def __init__(self, element, tree=None):
         super(XMLParameter, self).__init__(element)
-        self.tree    = tree
-        self.active  = getBooleanXML(element.get('active', '1'))
+        self.tree = tree
+        self.active = getBooleanXML(element.get('active', '1'))
 
         if not self.active:
             return              # nothing else to do
@@ -581,7 +555,6 @@ class XMLParameter(XMLWrapper):
         assert len(children) <= maxChildren, \
             "<Parameter> cannot have more than %d children. (The XMLSchema is broken.)" % maxChildren
 
-        # TBD: test for DISTRIBUTION_ELT_NAME explicitly
         for elt in children:
             tag = elt.tag
 
@@ -592,6 +565,7 @@ class XMLParameter(XMLWrapper):
                 XMLCorrelation.createCorrelations(elt, self)
 
             # XMLSchema ensures that the only other tag is Distribution
+            # TBD: test for DISTRIBUTION_ELT_NAME explicitly
             else:
                 self.child = elt[0]
                 childName = self.child.tag
@@ -679,26 +653,34 @@ class XMLParameter(XMLWrapper):
     def runQuery(self, tree):
         """
         Run the XPath query defined for a parameter, save the set of elements found.
+        If `tree` is None, the XMLRandomVars are created, but the query isn't run.
+        This is used by "gensim" to create the CSV file holding the trial data.
         """
         if not self.query:
             if not self.dataSrc.isTrialFunc():
                 raise PygcamMcsUserError("XMLParameter %s has no <Query> and no trial function" % self.getName())
+
             # trial functions are handled in updateElements()
             self.rv = XMLRandomVar(None, self)
             return
 
-        # Query returns a list of Element instances or None
-        elements = self.query.runQuery(tree)
-        if elements is None or len(elements) == 0:
-            raise PygcamMcsUserError("XPath query '%s' returned nothing for parameter %s" % (self.query.getXPath(), self.getName()))
+        if tree is None:
+            elements = []
+        else:
+            # Query returns a list of Element instances or None
+            elements = self.query.runQuery(tree)
+            if elements is None or len(elements) == 0:
+                raise PygcamMcsUserError("XPath query '%s' returned nothing for parameter %s" % (self.query.getXPath(), self.getName()))
 
-        _logger.debug("Param %s: %d elements found", self.getName(), len(elements))
+            _logger.debug("Param %s: %d elements found", self.getName(), len(elements))
 
         if self.dataSrc.isShared():
             self.rv = XMLRandomVar(None, self)   # Allocate an RV and have all variables share its varNum
             varNum = self.rv.getVarNum()
             vars = map(lambda elt: XMLVariable(elt, self, varNum=varNum), elements)
         else:
+            # TBD: this won't work without running the query, but it's not used for now...
+            _logger.warn("Called XMLParameter.runQuery without 'tree' for independent element RVs")
             # XMLRandomVar assigns varNum directly
             vars = map(lambda elt: XMLRandomVar(elt, self), elements)
 
@@ -709,7 +691,6 @@ class XMLParameter(XMLWrapper):
         """
         Update an element's text (assuming it's a number) by multiplying
         it by a factor, adding a delta, or substituting a given value.
-        Save the values of all RVs to the database.
         """
         dataSrc = self.dataSrc
         if dataSrc.isTrialFunc():
@@ -895,8 +876,6 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                # if '/trial-xml/' in relPath:
-                #     print('Should skip this one')
                 xmlFile = XMLRelFile(self, relPath, simId)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
@@ -913,8 +892,6 @@ class XMLInputFile(XMLWrapper):
         Run the queries for all the parameters in this <InputFile> on each of
         the physical XMLRelFiles associated with this XMLInputFile.
         """
-        tuples = []
-
         for param in self.parameters.values():
             if not param.isActive():
                 continue
@@ -924,16 +901,27 @@ class XMLInputFile(XMLWrapper):
                 tree = xmlFile.getTree()
                 param.runQuery(tree)        # accumulates elements from multiple files
 
-            # Save variable names in the DB
-            pname = param.getName()
-            desc  = 'Auto-generated parameter'
-            tuples.append((pname, desc))
+    def generateRandomVars(self):
+        """
+        Called during 'gensim' to generate XMLRandomVars, save variable names to
+        the DB, and save the CSV file with all trial data. No need to actually
+        run the queries at this point.
+        """
+        tuples = []
 
-        db = getDatabase()
-        #_logger.debug("Saving tuples to db: %s", tuples)
-        db.saveParameterNames(tuples)
+        for param in self.parameters.values():
+            if param.isActive():
+                pname = param.getName()
+                desc  = 'Auto-generated parameter'
+                tuples.append((pname, desc))
+                param.runQuery(None)    # side-effect is to generate XML RVs
 
-    # TBD: test this
+        # If a file (e.g., protected land) has only a writeFunc defined, there will be no parameters
+        if tuples:
+            #_logger.debug("Saving tuples to db: %s", tuples)
+            db = getDatabase()
+            db.saveParameterNames(tuples)
+
     def callFileFunctions(self, xmlFile, trialDir):
         """
         Call any defined per-input-file functions to allow arbitrary
@@ -993,6 +981,10 @@ class XMLParameterFile(XMLFile):
         for obj in self.inputFiles.values():
             obj.runQueries()
 
+    def generateRandomVars(self):
+        for obj in self.inputFiles.values():
+            obj.generateRandomVars()
+
     def writeLocalXmlFiles(self, trialDir):
         """
         Write copies of all modified XML files
@@ -1010,16 +1002,17 @@ class XMLParameterFile(XMLFile):
             inputFile = xmlFile.inputFile
             inputFile.callFileFunctions(xmlFile, trialDir)
 
-            if os.path.exists(absPath):        # remove it since it might be a symlink and
+            if os.path.exists(absPath):
+                # remove it to avoid writing through a symlink to the original file
                 _logger.debug("Removing %s", absPath)
-                os.unlink(absPath)             # we don't want to write through to the src
+                os.unlink(absPath)
 
             _logger.info("XMLParameterFile: writing %s", absPath)
             xmlFile.tree.write(absPath, xml_declaration=True, pretty_print=True)
 
     def dump(self):
-        print "Parameter file: %s" % self.getFilename()
-        for obj in self.inputFiles.itervalues():
+        print("Parameter file: %s" % self.getFilename())
+        for obj in self.inputFiles.values():
             obj.dump()
 
 def decache():

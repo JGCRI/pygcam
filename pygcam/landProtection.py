@@ -15,14 +15,15 @@ from .config import getParam
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, pathjoin, flatten, resourceStream
+from .utils import mkdirs, pathjoin, flatten, parse_version_info
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
-__version__ = '0.1'
-
 Verbose = False
+
+def pp(elt):
+    print(ET.tostring(elt, pretty_print=True))
 
 def _findChildren(node, tag, cls=None):
     """
@@ -107,6 +108,7 @@ class LandProtection(object):
         parser = ET.XMLParser(remove_blank_text=True)
         tree = ET.parse(infile, parser)
 
+        # TBD: eliminate this for v5.0
         # Remove any existing land protection, if so requested
         if unprotectFirst:
             unProtectLand(tree, otherArable=True)
@@ -306,6 +308,10 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
            protecting.
     :return: None
     """
+    version = parse_version_info()
+    if version >= (5, 0):
+        raise PygcamException("Called landProtection.createProtected on GCAM version >= 5.0. Use landProtectionUpdate.protectLand instead.")
+
     _logger.debug('createProtected: fraction=%.2f, landClasses=%s, regions=%s, unprotect=%s',
                   fraction, landClasses, regions, unprotectFirst)
 
@@ -342,6 +348,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
 
         for node in nodes:
             landnode = ET.SubElement(landRoot, 'LandNode')
+
             new = copy.deepcopy(node)
             newName = 'Protected' + node.get('name')
             new.set('name', newName)
@@ -445,7 +452,6 @@ def protectLandMain(args):
     outDir    = args.outDir
     workspace = args.workspace or getParam('GCAM.RefWorkspace')
     template  = args.template
-    backup    = args.backup
 
     if not workspace:
         raise CommandlineError('Workspace must be identified in command-line or config variable GCAM.RefWorkspace')

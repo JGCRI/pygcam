@@ -15,8 +15,8 @@ from pygcam.mcs.context import Context
 from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
-from pygcam.mcs.util import readTrialDataFile
-from pygcam.mcs.XMLParameterFile import readParameterInfo, applySingleTrialData
+from pygcam.mcs.util import readTrialDataFile, symlink
+from pygcam.mcs.XMLParameterFile import XMLParameter, XMLParameterFile
 
 _logger = getLogger(__name__)
 
@@ -38,7 +38,7 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     trialDir = context.getTrialDir()
     groupArg = ['-g', context.groupName] if context.groupName else []
 
-    # N.B. gcammcs' RunWorkspace is the gcamtool's RefWorkspace
+    # N.B. MCS.RunWorkspace is the RefWorkspace for trial sandboxes
     toolArgs = ['+P', context.projectName, '--mcs=trial',
                 '--set=GCAM.SandboxRefWorkspace=' + runWorkspace,
                 'run', '-s', steps, '-S', context.scenario,
@@ -54,6 +54,31 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
 
     _logger.info("_runSteps: " + msg)
     return status
+
+def _readParameterInfo(context, paramPath):
+    from pygcam.xmlSetup import ScenarioSetup
+
+    scenarioFile  = getParam('GCAM.ScenarioSetupFile')
+    scenarioSetup = ScenarioSetup.parse(scenarioFile)
+    scenarioNames = scenarioSetup.scenariosInGroup(context.groupName)
+
+    paramFile = XMLParameterFile(paramPath)
+    paramFile.loadInputFiles(context, scenarioNames, writeConfigFiles=False)
+    paramFile.runQueries()
+    return paramFile
+
+def _applySingleTrialData(df, context, paramFile):
+    simId    = context.simId
+    trialNum = context.trialNum
+    trialDir = context.getTrialDir(create=True)
+
+    _logger.info('_applySingleTrialData for %s, %s', context, paramFile.filename)
+    XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
+    paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
+
+    linkDest = os.path.join(trialDir, 'local-xml')
+    _logger.info('creating symlink to %s', linkDest)
+    symlink('../../../../Workspace/local-xml', linkDest)
 
 
 def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
@@ -80,7 +105,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
 
     if isBaseline and not noGCAM:
         paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
-        paramFile = readParameterInfo(context, paramPath)
+        paramFile = _readParameterInfo(context, paramPath)
 
         df = readTrialDataFile(simId)
         columns = df.columns
@@ -91,7 +116,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
             if linkName not in columns:
                 df[linkName] = df[dataCol]
 
-        applySingleTrialData(df, context, paramFile)
+        _applySingleTrialData(df, context, paramFile)
 
     if noGCAM:
         _logger.info('_runGcamTool: skipping GCAM')
@@ -211,7 +236,8 @@ class Worker(object):
         """
         Run a single Monte Carlo trial.
 
-        :return: (str) execution status, one of {'succeeded', 'failed', 'alarmed', 'aborted', 'killed'}
+        :return: (WorkerResult) Contains execution status, one of {'succeeded', 'failed', 'alarmed', 'aborted', 'killed'},
+           as well as Context, any error message, and a list of results to post to the database.
         """
         context = self.context
         argDict = self.argDict

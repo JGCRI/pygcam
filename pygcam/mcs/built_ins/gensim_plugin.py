@@ -267,11 +267,11 @@ def genSimulation(simId, trials, paramPath, args):
     db = getDatabase()
     db.addExperiments(scenarioNames, baseline, scenarioFile)
 
-    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
-
     paramFileObj = XMLParameterFile(paramPath)
+    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
     paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
-    paramFileObj.runQueries()
+    # paramFileObj.runQueries() # we now do this in runsim only
+    paramFileObj.generateRandomVars()
 
     _logger.info("Generating %d trials to %r", trials, simDir)
     df = genTrialData(simId, trials, paramFileObj, args)
@@ -284,7 +284,7 @@ def genSimulation(simId, trials, paramPath, args):
     filecopy(paramPath, simParamFile)
 
 
-def _newsim(runDir):
+def _newsim(runWorkspace):
     '''
     Setup the app and run directories for a given user app.
     '''
@@ -296,14 +296,14 @@ def _newsim(runDir):
     from ..error import PygcamMcsUserError
     from ..XMLResultFile import XMLResultFile
 
-    if not runDir:
-        raise PygcamMcsUserError("RunRoot was not set on command line or in configuration file")
+    if not runWorkspace:
+        raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
 
     # Create the run dir, if needed
-    mkdirs(runDir)
+    mkdirs(runWorkspace)
 
     srcDir = getParam('GCAM.RefWorkspace')
-    dstDir = getParam('MCS.RunWorkspace')
+    dstDir = runWorkspace
 
     copyWorkspace(dstDir, refWorkspace=srcDir, forceCreate=True, mcsMode=True)
 
@@ -336,8 +336,10 @@ def driver(args, tool):
     if args.delete:
         removeTreeSafely(runDir, ignore_errors=False)
 
-    if not os.path.exists(runDir):
-        _newsim(runDir)
+    runWorkspace = getParam('MCS.RunWorkspace')
+
+    if not os.path.exists(runWorkspace):
+        _newsim(runWorkspace)
 
     simId  = args.simId
     trials = args.trials

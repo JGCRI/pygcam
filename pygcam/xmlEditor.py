@@ -1041,9 +1041,15 @@ class XMLEditor(object):
         self.updateScenarioComponent("solver", solverFileRel)
 
     @callableMethod
-    def dropLandProtection(self):
+    def dropLandProtection(self, dropEmissions=True):
         self.deleteScenarioComponent("protected_land2")
         self.deleteScenarioComponent("protected_land3")
+
+        if dropEmissions:
+            version = parse_version_info()
+            if version > (5, 0):
+                # drop emissions for protected land
+                self.deleteScenarioComponent("nonco2_aglu_prot")
 
     @callableMethod
     def protectLand(self, fraction, landClasses=None, otherArable=False,
@@ -1398,7 +1404,8 @@ class XMLEditor(object):
         """
         from .utils import printSeries
 
-        _logger.info("Set share-weights for (%s, %s, %s) for %s", region, sector, stubTechnology, self.name)
+        _logger.info("Set share-weights for (%r, %r, %r, %r) for %r",
+                     region, sector, subsector, stubTechnology, self.name)
         _logger.info(printSeries(values, 'share-weights', asStr=True))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)

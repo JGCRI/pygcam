@@ -9,7 +9,7 @@ def driver(args, tool):
     engines launched is determined from the number of tasks to run (`ntasks`) and
     the maximum number of engines indicated in config file param IPP.MaxEngines.
     Wall time allowed per engine is computed from these values and config file
-    variable MCS.MinPerTask.
+    variable IPP.MinutesPerRun.
     """
     from ..master import startCluster, stopCluster
 

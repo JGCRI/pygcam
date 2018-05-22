@@ -1096,7 +1096,7 @@ def queryMain(args):
 
         filterFile = getParam('GCAM.FilterFile')
         writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, filterFile=filterFile,
-                                   batchFile=batchFile, batchLog='batchQuery.log')
+                                   batchFile=batchFile, batchLog='logs/batch-query.log')
         return
 
     xmldb = os.path.abspath(xmldb)
