@@ -267,6 +267,18 @@ class Master(object):
                                          baseline=baseline, status=r.status), runs)
         return contexts
 
+    def setRunStatuses(self, pairs):
+        """
+        Process a list of status changes in a single transaction, e.g., when setting
+        the status for a long list of runs to "queued".
+        """
+        from .Database import getDatabase
+
+        db = getDatabase()
+        with db.sessionScope() as session:
+            for context, status in pairs:
+                self.setRunStatus(context, status=status, session=session)
+
     def setRunStatus(self, context, status=None, session=None):
         """
         Cache the status of this run, and if it has changed, save the new
@@ -604,10 +616,13 @@ class Master(object):
 
                 contexts = self.createRuns(simId, scenario, trialNums)
 
+            statusPairs = []
+
             for context in contexts:
                 try:
                     if runLocal:
-                        self.setRunStatus(context, status=RUN_RUNNING)
+                        #self.setRunStatus(context, status=RUN_RUNNING)
+                        statusPairs.append((context, RUN_RUNNING))
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
                         self.saveResults([result])
@@ -615,12 +630,15 @@ class Master(object):
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
                         result = view.map_async(worker.runTrial, [context], [argDict])
-                        self.setRunStatus(context, status=RUN_QUEUED)
+                        #self.setRunStatus(context, status=RUN_QUEUED)
+                        statusPairs.append((context, RUN_QUEUED))
 
                     asyncResults.append(result)
 
                 except Exception as e:
                     _logger.error("Exception running 'runTrial': %s", e)
+
+            self.setRunStatuses(statusPairs)
 
         return asyncResults
 
