@@ -44,7 +44,7 @@ _slurmEngineBatchTemplate = """#!/bin/sh
 #SBATCH --time={timelimit}
 #{engine_args}
 export MCS_WALLTIME={timelimit}
-srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}"
+srun %s --profile-dir="{profile_dir}" --cluster-id="{cluster_id}" --prolog="{prolog_script}" --epilog="{epilog_script}"
 """
 # These attempts accomplished nothing since TBB doesn't use them
 # export OMP_NUM_THREADS=5
@@ -717,6 +717,8 @@ def _saveBatchFiles(numTrials, argDict):
                 'tasks_per_node'  : getParamAsInt('IPP.TasksPerNode'),
                 'min_secs_to_run' : getParamAsInt('IPP.MinTimeToRun') * 60,
                 'timelimit'       : timelimit,
+                'prolog_script'   : getParam('IPP.PrologScript'),
+                'epilog_script'   : getParam('IPP.EpilogScript'),
                 }
 
     defaults.update(argDict)

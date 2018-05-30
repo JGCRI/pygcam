@@ -291,7 +291,6 @@ def _newsim(runWorkspace):
     import pkgutil
 
     from pygcam.scenarioSetup import copyWorkspace
-    from pygcam.utils import mkdirs
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
     from ..XMLResultFile import XMLResultFile
@@ -300,7 +299,7 @@ def _newsim(runWorkspace):
         raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
 
     # Create the run dir, if needed
-    mkdirs(runWorkspace)
+    # mkdirs(runWorkspace)              # handled in copyWorkspace
 
     srcDir = getParam('GCAM.RefWorkspace')
     dstDir = runWorkspace

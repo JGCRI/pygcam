@@ -92,7 +92,7 @@ class SandboxCommand(SubcommandABC):
                             help='''Recreate the identified sandbox. Equivalent to using the
                             --delete and --create options together.''')
 
-        parser.add_argument('-g', '--groupDir', default='',
+        parser.add_argument('-g', '--groupDir', default='', metavar='NAME',
                             help='''The name of the scenario group subdir''')
 
         parser.add_argument('-n', '--noExecute', action='store_true',
@@ -102,7 +102,7 @@ class SandboxCommand(SubcommandABC):
         parser.add_argument('-p', '--path', action='store_true',
                             help='''Print the absolute path to the identified sandbox.''')
 
-        parser.add_argument('-r', '--run',
+        parser.add_argument('-r', '--run', metavar='CMD',
                             help='''Run the given command in the identified sandbox.''')
 
         parser.add_argument('-s', '--scenario', default='',

@@ -198,14 +198,12 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     for a Monte Carlo simulation or a non-MCS project.
 
     :param newWorkspace: (str) the directory to create
-    :param refWorkspace: (str) the workspace to link to or copy from
+    :param refWorkspace: (str) the workspace to link to or copy from (defaults
+       to the value of config parameter GCAM.RefWorkspace)
     :param forceCreate: (bool) if True, delete and recreate the sandbox
     :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
     :return: none
     '''
-    #import filelock
-    #getLogger('filelock') # seems to be necessary
-
     version = getParam('GCAM.VersionNumber')
     _logger.info("Setting up GCAM workspace '%s' for GCAM %s", newWorkspace, version)
 
@@ -221,9 +219,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     # Updated 7/10/17: filelocking failed on Cray (NERSC) so was disabled for now.
     mkdirs(newWorkspace)
     semaphoreFile = pathjoin(newWorkspace, '.creation_semaphore')
-    #lockfile = semaphoreFile + '.lock'
 
-    #with filelock.FileLock(lockfile):
     try:
         os.remove(semaphoreFile)
         forceCreate = True          # if we can remove it, last attempt failed
