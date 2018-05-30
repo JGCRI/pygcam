@@ -270,7 +270,6 @@ def genSimulation(simId, trials, paramPath, args):
     paramFileObj = XMLParameterFile(paramPath)
     context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
     paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
-    # paramFileObj.runQueries() # we now do this in runsim only
     paramFileObj.generateRandomVars()
 
     _logger.info("Generating %d trials to %r", trials, simDir)
@@ -297,9 +296,6 @@ def _newsim(runWorkspace):
 
     if not runWorkspace:
         raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
-
-    # Create the run dir, if needed
-    # mkdirs(runWorkspace)              # handled in copyWorkspace
 
     srcDir = getParam('GCAM.RefWorkspace')
     dstDir = runWorkspace
@@ -344,18 +340,21 @@ def driver(args, tool):
     trials = args.trials
     desc   = args.desc
 
-    # The simId can be provided on command line, in which case we need
-    # to delete existing parameter entries for this app and simId.
-    db = getDatabase()
-    simId = db.createSim(trials, desc, simId=simId)
+    # Called with trials == 0 when setting up a local run directory on /scratch
+    if trials:
+        # The simId can be provided on command line, in which case we need
+        # to delete existing parameter entries for this app and simId.
+        db = getDatabase()
+        simId = db.createSim(trials, desc, simId=simId)
 
     paramFile = args.paramFile or getParam('MCS.ParametersFile')
     genSimulation(simId, trials, paramFile, args=args)
 
-    # Save a copy of the arguments used to create this simulation
-    simDir = getSimDir(simId)
-    argSaveFile = '%s/gcamGenSimArgs.txt' % simDir
-    saveDict(vars(args), argSaveFile)
+    if trials:
+        # Save a copy of the arguments used to create this simulation
+        simDir = getSimDir(simId)
+        argSaveFile = '%s/gcamGenSimArgs.txt' % simDir
+        saveDict(vars(args), argSaveFile)
 
 
 class GensimCommand(McsSubcommandABC):
