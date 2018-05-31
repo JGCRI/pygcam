@@ -259,6 +259,10 @@ def genSimulation(simId, trials, paramPath, args):
     mkdirs(os.path.dirname(simResultFile))
     filecopy(userResultFile, simResultFile)
 
+    paramFileObj = XMLParameterFile(paramPath)
+    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
+    paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
+
     if not trials:
         _logger.warn("Simulation meta-data has been copied.")
         return
@@ -267,9 +271,6 @@ def genSimulation(simId, trials, paramPath, args):
     db = getDatabase()
     db.addExperiments(scenarioNames, baseline, scenarioFile)
 
-    paramFileObj = XMLParameterFile(paramPath)
-    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
-    paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
     paramFileObj.generateRandomVars()
 
     _logger.info("Generating %d trials to %r", trials, simDir)
@@ -283,7 +284,7 @@ def genSimulation(simId, trials, paramPath, args):
     filecopy(paramPath, simParamFile)
 
 
-def _newsim(runWorkspace):
+def _newsim(runWorkspace, trials):
     '''
     Setup the app and run directories for a given user app.
     '''
@@ -302,12 +303,13 @@ def _newsim(runWorkspace):
 
     copyWorkspace(dstDir, refWorkspace=srcDir, forceCreate=True, mcsMode=True)
 
-    db = getDatabase()   # ensures database initialization
-    XMLResultFile.addOutputs()
+    if trials:
+        db = getDatabase()   # ensures database initialization
+        XMLResultFile.addOutputs()
 
-    # Load SQL script to create convenient views
-    text = pkgutil.get_data('pygcam', 'mcs/etc/views.sql')
-    db.executeScript(text=text)
+        # Load SQL script to create convenient views
+        text = pkgutil.get_data('pygcam', 'mcs/etc/views.sql')
+        db.executeScript(text=text)
 
 
 def driver(args, tool):
@@ -333,12 +335,12 @@ def driver(args, tool):
 
     runWorkspace = getParam('MCS.RunWorkspace')
 
-    if not os.path.exists(runWorkspace):
-        _newsim(runWorkspace)
-
     simId  = args.simId
     trials = args.trials
     desc   = args.desc
+
+    if not os.path.exists(runWorkspace):
+        _newsim(runWorkspace, trials)
 
     # Called with trials == 0 when setting up a local run directory on /scratch
     if trials:
