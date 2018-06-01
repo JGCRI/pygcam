@@ -13,7 +13,6 @@ import os
 import re
 import shlex
 import sys
-from os.path import join
 
 from lxml import etree as ET
 
@@ -536,8 +535,8 @@ class Project(XMLFile):
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = scenarioGroupName
         argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir
-        argDict['projectSrcDir'] = unixPath(join('..', XML_SRC_NAME,   srcGroupDir, subdir), rmFinalSlash=True)
-        argDict['projectXmlDir'] = unixPath(join('..', LOCAL_XML_NAME, groupDir,    subdir), rmFinalSlash=True)
+        argDict['projectSrcDir'] = pathjoin('..', XML_SRC_NAME,   srcGroupDir, subdir)
+        argDict['projectXmlDir'] = pathjoin('..', LOCAL_XML_NAME, groupDir,    subdir)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows
@@ -565,7 +564,7 @@ class Project(XMLFile):
         scenarios = self.sortScenarios(scenarios)
         sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
 
-        argDict['baselineDir'] = unixPath(join(sandboxDir, baseline))
+        argDict['baselineDir'] = pathjoin(sandboxDir, baseline)
 
         # Delete all variants of scenario specification from shellArgs
         # so we can queue these one at a time.
@@ -598,10 +597,9 @@ class Project(XMLFile):
             argDict['scenario']       = scenarioName
             argDict['scenarioSubdir'] = scenario.subdir or scenarioName
             argDict['sandboxDir']     = sandboxDir
-            argDict['scenarioDir']    = scenarioDir = unixPath(join(sandboxDir, scenarioName))
-            argDict['diffsDir']       = unixPath(join(scenarioDir, 'diffs'))
-            argDict['batchDir']       = unixPath(join(scenarioDir, QueryResultsDir))     # used to be batch-{scenario}
-
+            argDict['scenarioDir']    = scenarioDir = pathjoin(sandboxDir, scenarioName)
+            argDict['diffsDir']       = pathjoin(scenarioDir, 'diffs')
+            argDict['batchDir']       = pathjoin(scenarioDir, QueryResultsDir)
             # set in case it wasn't already
             setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 

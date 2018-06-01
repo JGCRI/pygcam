@@ -59,31 +59,31 @@ def readTrialDataFile(simId):
     return df
     # return df.as_matrix()
 
+# Deprecated
+# def _jobTmpDir():
+#     '''
+#     Generate the name of a temporary directory based on the value of GCAM.TempDir
+#     and the job ID from the environment.
+#     '''
+#     tmpDir = getParam('GCAM.TempDir')
+#     dirName = "mcs.%s.tmp" % 999999         # TBD: getJobNum()
+#     dirPath = pathjoin(tmpDir, dirName)
+#     return dirPath
 
-def _jobTmpDir():
-    '''
-    Generate the name of a temporary directory based on the value of GCAM.TempDir
-    and the job ID from the environment.
-    '''
-    tmpDir = getParam('GCAM.TempDir')
-    dirName = "mcs.%s.tmp" % 999999         # TBD: getJobNum()
-    dirPath = pathjoin(tmpDir, dirName)
-    return dirPath
+def createOutputDir(outputDir):
+    from ..utils import removeFileOrTree
+    from ..temp_file import getTempDir
 
-def setupTempOutputDir(outputDir):
-    from ..utils import removeFileOrTree, removeTreeSafely
-    from ..config import getParamAsBoolean
     removeFileOrTree(outputDir, raiseError=False)
+    tempOutputDir = getParam('MCS.TempOutputDir')
 
-    if getParamAsBoolean('MCS.UseTempOutputDir'):
-        dirPath = _jobTmpDir()
-        removeTreeSafely(dirPath, ignore_errors=True)  # rm any files from prior run in this job
+    if tempOutputDir:
+        dirPath = getTempDir(suffix='', tmpDir=tempOutputDir, delete=True)
+        # dirPath = _jobTmpDir()
+        # removeTreeSafely(dirPath, ignore_errors=True)  # rm any files from prior run in this job
         mkdirs(dirPath)
         _logger.debug("Creating '%s' link to %s" % (outputDir, dirPath))
 
-        # Create a link that the epilogue.py script can find.
-        # if getParam('Core.Epilogue'):
-        #     createEpilogueLink(dirPath)
     else:
         mkdirs(outputDir)
 

@@ -1019,7 +1019,6 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
             worksheet.write_url(1, 0, "internal:index!A1", linkFmt, "Back to index")
 
 
-# TBD: Move to query_plugin.py?
 def queryMain(args):
     # """
     # Main driver for query sub-command

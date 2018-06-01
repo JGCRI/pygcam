@@ -241,8 +241,8 @@ def diffMain(args):
 
         baseline, policy = args.csvFiles
 
-        def makePath(query, scenario):
-            return pathjoin(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
+        # def makePath(query, scenario):
+        #     return pathjoin(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
 
         mainPart, extension = os.path.splitext(queryFile)
 

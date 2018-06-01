@@ -165,15 +165,13 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     outputDir = pathjoin(sandbox, 'output')
 
     if mcsMode:
-        from mcs.util import setupTempOutputDir
+        from mcs.util import createOutputDir
         # link {sandbox}/dyn-xml to ../dyn-xml
         dynXmlDir = pathjoin('..', DYN_XML_NAME)
 
         dynXmlAbsPath = pathjoin(os.path.dirname(sandbox), DYN_XML_NAME)
         mkdirs(dynXmlAbsPath)
-
-        # deal with link and tmp dir...
-        setupTempOutputDir(outputDir)
+        createOutputDir(outputDir) # deals with link and tmp dir...
     else:
         # link {sandbox}/dyn-xml to {refWorkspace}/dyn-xml
         dynXmlDir = pathjoin(srcWorkspace, DYN_XML_NAME)
