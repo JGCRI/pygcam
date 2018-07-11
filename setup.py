@@ -17,13 +17,14 @@ requirements = [
     'filelock>=2.0.12',
     'futures>=3.1.1',
     'future>=0.16.0',
+    'ipython<6.0',              # 6.x requires Python 3
     'lxml>=3.8.0',
     'numpy>=1.13.1',
     'pandas>=0.20.3',
     'seaborn>=0.8.0',
     'semver>=2.7.7',
     'six>=1.10.0',
-    'sphinx-argparse==0.1.17', # later versions lose markup in commands
+    'sphinx-argparse==0.2.2', # later versions lose markup in commands
 
     # GUI requirements
     'flask>=0.12.2',
@@ -39,7 +40,6 @@ requirements = [
     'scipy>=0.19.1',
     'sqlalchemy>=1.1.13',
 ]
-
 
 #if os.environ.get('READTHEDOCS') == 'True':
 #    requirements.extend(mcs_requirements)
