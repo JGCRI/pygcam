@@ -136,7 +136,7 @@ def protectLandTree(tree, scenarioName):
 #     """
 #     import pandas as pd
 #
-#     data_sys_dir = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcam-data-system')
+#     data_sys_dir = pathjoin(getParam('GCAM.RefWorkspace'), 'input', getParam('GCAM.DataDir'))
 #
 #     def _readcsv(path, skiprows=0):
 #         filename = data_sys_dir + path

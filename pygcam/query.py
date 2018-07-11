@@ -11,13 +11,13 @@ import subprocess
 from lxml import etree as ET
 
 from .Xvfb import Xvfb
-from .config import getParam, getParamAsBoolean, getParamAsFloat
+from .config import getParam, getParamAsBoolean, parse_version_info
 from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
-from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, parse_version_info,
-                    pathjoin, saveToFile, getExeDir, writeXmldbDriverProperties)
+from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, pathjoin, saveToFile,
+                    getExeDir, writeXmldbDriverProperties)
 from .temp_file import TempFile, getTempFile
 
 _logger = getLogger(__name__)
@@ -209,7 +209,8 @@ def getRegionList(workspace=None):
       empty (the default value), the built-in default 32-region list is returned.
     :return: a list of strings with the names of the defined regions
     """
-    relpath = 'input/gcam-data-system/_common/mappings/GCAM_region_names.csv'
+    dataDir = getParam('GCAM.DataDir')
+    relpath = pathjoin('input', dataDir, '_common/mappings/GCAM_region_names.csv')
 
     workspace = workspace or getParam('GCAM.SourceWorkspace')
     if not workspace:

@@ -16,7 +16,7 @@ import sys
 from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections,
-                     DEFAULT_SECTION, usingMCS, savePathMap)
+                     DEFAULT_SECTION, usingMCS, savePathMap, parse_version_info)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -261,7 +261,7 @@ class GcamTool(object):
                     self.getPlugin(command)
 
     def validateGcamVersion(self):
-        from .utils import pathjoin, pushd, parse_version_info
+        from .utils import pathjoin, pushd
         from .gcam import setJavaPath
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')

@@ -26,12 +26,12 @@ import shutil
 import six
 from lxml import etree as ET
 
-from .config import getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean, parse_version_info
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
-from .utils import (coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile,
-                    removeTreeSafely, parse_version_info)
+from .utils import (coercible, mkdirs, unixPath, pathjoin, printSeries,
+                    symlinkOrCopyFile, removeTreeSafely)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
@@ -434,22 +434,37 @@ class XMLEditor(object):
         self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, groupDir, name)
 
         # Store commonly-used paths
-        gcam_xml = "input/gcam-data-system/xml"
+        gcam_xml = pathjoin('input', getParam('GCAM.DataDir'), 'xml')
         self.gcam_prefix_abs = prefix_abs = pathjoin(refWorkspace, gcam_xml)
         self.gcam_prefix_rel = prefix_rel = pathjoin('../', gcam_xml)
 
-        # TBD: maybe no need to store these since computable from rel paths
-        self.aglu_dir_abs           = pathjoin(prefix_abs, 'aglu-xml')
-        self.emissions_dir_abs      = pathjoin(prefix_abs, 'emissions-xml')
-        self.energy_dir_abs         = pathjoin(prefix_abs, 'energy-xml')
-        self.modeltime_dir_abs      = pathjoin(prefix_abs, 'modeltime-xml')
-        self.socioeconomics_dir_abs = pathjoin(prefix_abs, 'socioeconomics-xml')
+        version = parse_version_info()
+        if version > (5, 1):
+            # subdirs have been removed in v5.1
+            self.aglu_dir_abs = ''
+            self.emissions_dir_abs = ''
+            self.energy_dir_abs = ''
+            self.modeltime_dir_abs = ''
+            self.socioeconomics_dir_abs = ''
 
-        self.aglu_dir_rel           = pathjoin(prefix_rel, 'aglu-xml')
-        self.emissions_dir_rel      = pathjoin(prefix_rel, 'emissions-xml')
-        self.energy_dir_rel         = pathjoin(prefix_rel, 'energy-xml')
-        self.modeltime_dir_rel      = pathjoin(prefix_rel, 'modeltime-xml')
-        self.socioeconomics_dir_rel = pathjoin(prefix_rel, 'socioeconomics-xml')
+            self.aglu_dir_rel = ''
+            self.emissions_dir_rel = ''
+            self.energy_dir_rel = ''
+            self.modeltime_dir_rel = ''
+            self.socioeconomics_dir_rel = ''
+        else:
+            # TBD: maybe no need to store these since computable from rel paths
+            self.aglu_dir_abs           = pathjoin(prefix_abs, 'aglu-xml')
+            self.emissions_dir_abs      = pathjoin(prefix_abs, 'emissions-xml')
+            self.energy_dir_abs         = pathjoin(prefix_abs, 'energy-xml')
+            self.modeltime_dir_abs      = pathjoin(prefix_abs, 'modeltime-xml')
+            self.socioeconomics_dir_abs = pathjoin(prefix_abs, 'socioeconomics-xml')
+
+            self.aglu_dir_rel           = pathjoin(prefix_rel, 'aglu-xml')
+            self.emissions_dir_rel      = pathjoin(prefix_rel, 'emissions-xml')
+            self.energy_dir_rel         = pathjoin(prefix_rel, 'energy-xml')
+            self.modeltime_dir_rel      = pathjoin(prefix_rel, 'modeltime-xml')
+            self.socioeconomics_dir_rel = pathjoin(prefix_rel, 'socioeconomics-xml')
 
         # TBD: add climate and policy subdirs?
         self.solution_prefix_abs = pathjoin(refWorkspace, "input", "solution")
@@ -593,7 +608,7 @@ class XMLEditor(object):
     def makeScenarioComponentsUnique(self):
         """
         Give all reference ScenarioComponents a unique "name" tag to facilitate
-        manipulation via xmlstarlet. This is a no-op in GCAM v4.3.
+        manipulation via XPath queries. This is a no-op in GCAM version >= 4.3.
 
         :return: none
         """
@@ -670,6 +685,7 @@ class XMLEditor(object):
             pathname = self.componentPath(configTag, configPath=refConfigFile)
             srcAbsPath = os.path.abspath(os.path.join(refWorkspace, 'exe', pathname))
 
+        # TBD: verify that this works in 5.1
         # If path includes /*-xml/* (e.g., '/energy-xml/', '/aglu-xml/'), retain
         # this subdir in destination, else just use the basename of the path.
         matches = list(re.finditer(XmlDirPattern, srcAbsPath))

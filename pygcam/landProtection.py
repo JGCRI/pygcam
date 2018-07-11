@@ -11,11 +11,11 @@ import sys
 
 from lxml import etree as ET
 
-from .config import getParam
+from .config import getParam, parse_version_info
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, pathjoin, flatten, parse_version_info
+from .utils import mkdirs, pathjoin, flatten
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
@@ -390,7 +390,7 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
 _LandXmlFiles = ['land2.xml', 'land3.xml']
 
 def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
-    xmlDir = pathjoin(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
+    xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml', 'aglu-xml')
     paths = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
     return paths
 

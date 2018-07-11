@@ -68,6 +68,17 @@ def _translatePath(value):
 
     return value
 
+def parse_version_info(vers=None):
+    import semver
+
+    vers = vers or getParam('GCAM.VersionNumber')
+
+    # if only major.minor is given (e.g., "4.4"), add .patch of zero (e.g., "4.4.0")
+    if re.match('^\d\.\d$', vers):
+        vers += '.0'
+
+    return semver.parse_version_info(vers)
+
 def getSection():
     return _ProjectSection
 

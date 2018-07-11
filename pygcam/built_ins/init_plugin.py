@@ -60,7 +60,7 @@ def findGCAM():
 
     home = getHomeDir()
 
-    versions = ['gcam-v4.4', 'gcam-v4.3']
+    versions = ['gcam-v4.4', 'gcam-v4.3']                   # TBD: update for 5.1
     dirs = [home, home + '/GCAM', home + '/gcam']
 
     system = platform.system()
@@ -208,10 +208,11 @@ class InitCommand(SubcommandABC):
                            help='''Do not create the project structure for the given default project.
                            Mutually exclusive with -c / --create-project option.''')
 
+        # TBD: implement what this says!
         parser.add_argument('-g', '--gcamDir',
-                            help='''The directory that is a GCAM v4.3 or v4.4
+                            help='''The directory that is a GCAM v4.x or v5.x
                             workspace. Sets config var GCAM.RefWorkspace. By default,
-                            looks for gcam-v4.4 (then v4.3) in ~, ~/GCAM, and ~/gcam, 
+                            looks for gcam-v5.1 (then v4.4) in ~, ~/GCAM, and ~/gcam, 
                             where "~" indicates your home directory.''')
 
         parser.add_argument('--overwrite', action='store_true',

@@ -726,8 +726,8 @@ def trialRelativePath(relPath, prefix):
     """
     Convert a pathname that was relative to "exe" to be relative to
     "exe/../../trial-xml" instead.
-    For example, "../input/gcam-data-system/aglu-xml/foo.xml"
-    becomes "../../trial-xml/input/gcam-data-system/aglu-xml/foo.xml"
+    For example, "../input/gcamdata/aglu-xml/foo.xml"
+    becomes "../../trial-xml/input/gcamdata/aglu-xml/foo.xml"
     """
     parentDir = '../'
     if not relPath.startswith(parentDir):
