@@ -25,7 +25,8 @@ requirements = [
     'semver>=2.7.7',
     'six>=1.10.0',
     'sphinx-argparse==0.2.2', # later versions lose markup in commands
-
+    'tornado<5.0',
+    
     # GUI requirements
     'flask>=0.12.2',
     'dash>=0.19.0',
