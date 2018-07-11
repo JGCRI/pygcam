@@ -119,19 +119,39 @@ working with plain text, i.e., not a word-processor such as Word. Use the comman
 The command invoked by ``gt config -e`` to edit the config file is the value of the
 configuration parameter ``GCAM.TextEditor``, which defaults to a system-appropriate
 value shown in the table below. Set this value in the configuration file to invoke
-your preferred editor. For example, if you prefer the ``emacs`` editor, you can add
-this line to ``~/.pygcam.cfg``:
+your preferred editor.
+
+For example, if you prefer the ``emacs`` editor on a Mac, you can add this line to
+``~/.pygcam.cfg`` to cause the Finder to open the file using the emacs application:
 
 .. code-block:: cfg
 
-     GCAM.TextEditor = emacs
+   GCAM.TextEditor = open -a emacs
+
+Or, to edit the config file using the PyCharm app, use this:
+
+.. code-block:: cfg
+
+   GCAM.TextEditor = open -a PyCharm
 
 If the editor command is not found on your execution ``PATH``, you can specify the
-full pathname, e.g.,
+full pathname. Use quotes around the path if it includes spaces, as in the examples
+below.
+
+To use Notepad++ on Windows, use the following (adjusted as necessary for your
+installation location):
 
 .. code-block:: cfg
 
-     GCAM.TextEditor = C:/Program Files/Notepad++/notepad++.exe
+     GCAM.TextEditor = "C:/Program Files/Notepad++/notepad++.exe"
+
+To use PyCharm, use the following -- again, adjusted to match your installation
+location:
+
+.. code-block:: cfg
+
+     GCAM.TextEditor  = "C:/Program Files/JetBrains/PyCharm 2018.1.4/bin/pycharm64.exe"
+
 
 Invoking the command:
 
@@ -255,7 +275,9 @@ without contention for the XML database which is created at the end of the model
 run. This is essential when running on a computing cluster.
 
 The variable ``GCAM.MI.Dir`` should point to a directory holding the ModelInterface
-program. This is used to execute batch queries to extract results from GCAM.
+program. This is used to execute batch queries to extract results from GCAM. By
+default, this location is computed from the ``GCAM.RefWorkspace``, but you can
+change it if necessary, e.g., if you're using a customized version of ModelInterface.
 
 
 Default configuration variables and values

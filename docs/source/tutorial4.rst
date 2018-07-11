@@ -38,11 +38,11 @@ Queries can be run several ways in GCAM:
   #. If the XML database is written to disk, GCAM can run the queries before
      it exits, using the same mechanism as in the option above.
 
-  #. A new feature of GCAM allows it to store the XML database in memory, in
+  #. Since v4.3, GCAM can write its XML database to memory only, in
      which case it *must* be queried from within GCAM since the database will
      no longer exist after GCAM exits. This is particularly useful in large
-     ensemble runs where you want to extract some data but don't need to keep
-     the large databases around.
+     ensemble (e.g., Monte Carlo simulation) runs where you want to extract some
+     data but don't need to keep the large databases around.
 
 Two configuration file parameters control this behavior. The variables and
 their default values are shown below. Add these to your ``.pygcam.cfg`` file
@@ -50,12 +50,14 @@ with appropriate ``True`` or ``False`` values to configure GCAM as you wish.
 
 .. code-block:: cfg
 
+    # Setting ``GCAM.InMemoryDatabase`` to ``True`` forces ``GCAM.RunQueriesInGCAM``
+    # to be ``True`` since there is no other way to run queries in this case.
     GCAM.InMemoryDatabase = False
     GCAM.RunQueriesInGCAM = False
 
-Note that setting ``GCAM.InMemoryDatabase`` to ``True`` forces
-``GCAM.RunQueriesInGCAM`` to be ``True`` as well, since no other option is
-feasible.
+.. note::
+   Using the in-memory database substantially increases GCAM's memory footprint, particularly
+   since version 5.0, so it may be impractical to use this feature in some cases.
 
 
 4.1 Processing of query definitions
