@@ -34,6 +34,32 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.1.3 (11 Jul 2018)
+----------------------------
+* Numerous tweaks to Monte Carlo simulation subsystem to allow placement
+  of output and temporary files in chosen directories. The model's memory
+  footprint has grown substantially in v5.0, creating challenges for earlier
+  approaches to running many GCAM instances on a cluster. These changes
+  allow the XML database to be placed on a local tmp or SSD drive on a
+  compute node while query output can be written to persistent storage.
+
+* Preliminary support for GCAM v5.1 -- note that pygcam v1.1.3 does not
+  yet work completely with GCAM 5.1, which has moved the XML input files
+  to a new location. Stay tuned!
+
+* Performance improvements in writing to the sqlite3 database holding MCS
+  status and results.
+
+* Updated support for Monte Carlo simulations on NERSC.gov.
+
+* Added preliminary support for dockerizing GCAM and pygcam. See, for example,
+  https://hub.docker.com/r/plevin/pygcam-v1.0.1. The idea is that a Docker
+  container is pre-loaded with some version of GCAM and pygcam, and it can
+  be run using a script that mounts host directories inside the container and
+  maps host locations in .pygcam.cfg to locations in the Linux container.
+  Let me know if you want to use this and I can share the work
+  in progress.
+
 Version 1.0.1 (15 Nov 2017)
 -----------------------------
 * Corrected .yml files to put ``semver`` specification in correct section.
