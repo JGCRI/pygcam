@@ -332,11 +332,11 @@ class Master(object):
 
         for task in tasks:
             try:
-                ar = self.client.get_result(task, owner=False, block=False)
+                ar = self.client.get_result(task, block=False, owner=False)
 
                 # if tasks are ready, we handle them later.
                 if ar.ready():
-                    _logger.debug('checkRunning: skipping task with result (%s)', task)
+                    #_logger.debug('checkRunning: skipping task with result (%s)', task)
                     continue
 
                 if ar.data:
@@ -345,7 +345,7 @@ class Master(object):
                         self.setRunStatus(context)
 
             except (KeyError, ipp.RemoteError) as e:
-                _logger.warning('checkRunning: purging result: %s', e)
+                #_logger.warning('checkRunning: purging result: %s', e)
                 self.client.purge_results(jobs=task)
 
             except Exception as e:
@@ -365,7 +365,7 @@ class Master(object):
 
         for task in tasks:
             try:
-                ar = client.get_result(task, owner=True, block=False)
+                ar = client.get_result(task, block=False, owner=True)
 
                 try:
                     if not ar.ready():
@@ -777,7 +777,7 @@ def startEngines(numTrials, batchTemplate):
     tasksPerNode = getParamAsInt('IPP.TasksPerNode')
     maxEngines   = getParamAsInt('IPP.MaxEngines')
     numEngines   = min(numTrials, maxEngines)
-    numNodes     = numEngines // tasksPerNode + int(bool(numEngines % tasksPerNode)) # rounds up
+    numNodes     = (numEngines // tasksPerNode) + (1 if numEngines % tasksPerNode else 0)
 
     # TBD: use "ipcluster engines" if there's a way to avoid leaving procs running after shutdown
     # enginesCmd = "ipcluster engines -n %d" % tasksPerNode
