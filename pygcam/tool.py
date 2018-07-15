@@ -15,8 +15,8 @@ import sys
 
 from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
-                     setParam, getSection, setSection, getSections,
-                     DEFAULT_SECTION, usingMCS, savePathMap, parse_version_info)
+                     setParam, getSection, setSection, getSections, DEFAULT_SECTION,
+                     usingMCS, savePathMap, parse_version_info)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -475,6 +475,11 @@ def _setDefaultProject(argv):
     if section:
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
+
+    # Also set the data dir based on the version of the model used in this project
+    version = parse_version_info()
+    dataDir = "gcamdata" if version >= (5, 1) else "gcam-data-system"
+    setParam('GCAM.DataDir', dataDir, section=section)
 
 def _saveDirMap():
     dirMapFile = os.getenv('DIRMAP_PATH')

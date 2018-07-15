@@ -209,8 +209,7 @@ def getRegionList(workspace=None):
       empty (the default value), the built-in default 32-region list is returned.
     :return: a list of strings with the names of the defined regions
     """
-    dataDir = getParam('GCAM.DataDir')
-    relpath = pathjoin('input', dataDir, '_common/mappings/GCAM_region_names.csv')
+    relpath = pathjoin('input', getParam('GCAM.DataDir'), '_common/mappings/GCAM_region_names.csv')
 
     workspace = workspace or getParam('GCAM.SourceWorkspace')
     if not workspace:

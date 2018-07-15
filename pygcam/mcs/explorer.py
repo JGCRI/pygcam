@@ -136,11 +136,6 @@ class McsData(object):
         df = self.db.getOutValues(simId, scenario, resultName, limit=limit)
         series = df[resultName]
 
-        # TBD: generalize this
-        # Convert these so we can display 0.5 as 50%
-        if resultName == 'percent-change':
-            series *= 100
-
         return series
 
     # Deprecated?

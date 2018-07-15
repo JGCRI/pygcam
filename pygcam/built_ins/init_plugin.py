@@ -54,25 +54,29 @@ def expandTilde(path):
         path = getHomeDir() + path[1:]
     return unixPath(path)
 
+# TODO: TEST THESE CHANGES
 def findGCAM():
     import platform
     from ..utils import unixPath
 
     home = getHomeDir()
 
-    versions = ['gcam-v4.4', 'gcam-v4.3']                   # TBD: update for 5.1
-    dirs = [home, home + '/GCAM', home + '/gcam']
+    withReleasePackages = ['gcam-v5.1', 'gcam-v4.4']
+    versions = withReleasePackages + ['gcam-v4.3']
+    dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
     system = platform.system()
     if system == 'Darwin':
-        release = 'gcam-v4.4-Mac-Release-Package'
+        pkgName = '-Mac-Release-Package'
     elif system == 'Windows':
-        release = 'gcam-v4.4-Windows-Release-Package'
+        pkgName = '-Windows-Release-Package'
     else:
-        release = None
+        pkgName = None
 
-    if release:
-        versions.insert(0, release)
+    if pkgName:
+        for version in reversed(withReleasePackages):   # so newest is first in versions
+            release = version + pkgName
+            versions.insert(0, release)
 
     for v, d in itertools.product(versions, dirs):
         path = '%s/%s' % (d, v)
