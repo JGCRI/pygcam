@@ -12,12 +12,12 @@
 
         <scenario name="tax-{tax}" iterator="tax">
             <!-- Add a line to the XML config file to load this file -->
-            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+            <add name="carbon_tax">../input/policy/carbon_tax_{tax}_5.xml</add>
         </scenario>
 
         <!-- As above, but also tax biogenic CO2 -->
         <scenario name="tax-bio-{tax}" iterator="tax">
-            <add name="carbon_tax">../input/policy/carbon_tax_10_5.xml</add>
+            <add name="carbon_tax">../input/policy/carbon_tax_{tax}_5.xml</add>
             <function name="taxBioCarbon"/>
         </scenario>
     </scenarioGroup>

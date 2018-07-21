@@ -1390,7 +1390,7 @@ class XMLEditor(object):
         :param region: if not None, changes are made in a specific region, otherwise they're
             made in the global-technology-database.
         :param sector: (str) the name of a GCAM sector
-        :param technology: (str) the name of a GCAM technology in `sector`
+        :param subsector: (str) the name of a GCAM subsector
         :param values: (dict-like or iterable of tuples of (year, shareWeight)) `year` can
             be a single year (as string or int), or a string specifying a range of
             years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
@@ -1398,6 +1398,7 @@ class XMLEditor(object):
             pandas Series) a list of tuples is created by calling values.iteritems() after
             which the rest of the explanation above applies. The `shareWeight` can be
             anything coercible to float.
+        :param stubTechnology: (str) the name of a GCAM technology in the global technology database
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This must match `xmlBasename`.
         :return: none
