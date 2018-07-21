@@ -476,10 +476,16 @@ def _setDefaultProject(argv):
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
 
-    # Also set the data dir based on the version of the model used in this project
+    # Set the data dir based on the version of the model used in this project
     version = parse_version_info()
+
     dataDir = "gcamdata" if version >= (5, 1) else "gcam-data-system"
     setParam('GCAM.DataDir', dataDir, section=section)
+
+    # ModelInterface was also relocated in v5.1, so we compute the path when setting the project
+    subdir = 'output/modelinterface' if version >= (5, 1) else 'input/gcam-data-system/_common/ModelInterface/src'
+    setParam('GCAM.MI.Subdir', subdir )
+
 
 def _saveDirMap():
     dirMapFile = os.getenv('DIRMAP_PATH')
