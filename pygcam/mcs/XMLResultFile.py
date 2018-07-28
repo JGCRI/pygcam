@@ -70,6 +70,7 @@ class XMLResult(XMLWrapper):
         self.name = element.get('name')
         self.type = element.get('type', DEFAULT_RESULT_TYPE)
         self.desc = element.get('desc')
+        self.unit = element.get('unit', '') # default is no unit
         self.queryFile = self._getPath(FILE_ELT_NAME)
 
         col = self.element.find(COLUMN_ELT_NAME)
@@ -150,7 +151,7 @@ class XMLResultFile(XMLFile):
         db = getDatabase()
         session = db.Session()
         for result in self.getResultDefs():
-            db.createOutput(result.name, description=result.desc, session=session)
+            db.createOutput(result.name, description=result.desc, unit=result.unit, session=session)
 
         session.commit()
         db.endSession(session)

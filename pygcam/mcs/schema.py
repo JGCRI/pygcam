@@ -17,33 +17,6 @@ class CoreMCSMixin(object):
     def __tablename__(cls):
         return cls.__name__.lower()
 
-# Deprecated
-# class Application(CoreMCSMixin, ORMBase):
-#     '''
-#     Application table defining the "application" name
-#     '''
-#     appId   = Column(Integer, primary_key=True)
-#     appName = Column(String)
-#
-# class Attribute(CoreMCSMixin, ORMBase):
-#     '''
-#     Attribute table for generic attribute-value storage.
-#     '''
-#     attrId      = Column(Integer, primary_key=True)
-#     attrName    = Column(String)
-#     attrType    = Column(String)    # should be "number" or "text" (not used currently)
-#     description = Column(String, nullable=True)
-#
-# class AttrVal(CoreMCSMixin, ORMBase):
-#     '''
-#     AttrVal table for storing the values of attributes.
-#     '''
-#     attrId   = Column(Integer, primary_key=True)
-#     runId    = Column(Integer, ForeignKey('run.runId', ondelete="CASCADE"), primary_key=True)
-#     numValue = Column(Float)
-#     strValue = Column(String)
-
-
 class Code(CoreMCSMixin, ORMBase):
     #codeId      = Column(Integer, primary_key=True, autoincrement=False)
     codeName    = Column(String(15), primary_key=True)
@@ -83,9 +56,7 @@ class Output(CoreMCSMixin, ORMBase):
     name        = Column(String)
     timeseries  = Column(Boolean, default=False)    # TBD: use this!
     description = Column(String, nullable=True)
-
-    # TBD: add this for display purposes
-    #units       = Column(String, nullable=True)
+    units       = Column(String, nullable=True)
 
 
 class OutValue(CoreMCSMixin, ORMBase):

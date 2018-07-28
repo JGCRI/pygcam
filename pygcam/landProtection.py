@@ -192,7 +192,10 @@ class ProtectedRegion(object):
 class Protection(object):
     def __init__(self, node):
         self.fraction = float(node.find('fraction').text)
-        self.landClasses = _findChildren(node, 'landClass', cls=str)
+        self.basin = node.get('basin', None)
+        # If not land classes are specified, assume this protection applies to all unmanaged types
+        landClasses = _findChildren(node, 'landClass', cls=str)
+        self.landClasses = landClasses if len(landClasses) else UnmanagedLandClasses
 
 class Scenario(object):
     Instances = {}

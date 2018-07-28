@@ -470,7 +470,7 @@ class CoreDatabase(object):
                 columnType = column.type.compile(engine.dialect)
                 engine.execute('ALTER TABLE %s ADD COLUMN "%s" %s' % (tableName, columnName, columnType))
 
-    def createOutput(self, name, description=None, program=DFLT_PROGRAM, session=None):
+    def createOutput(self, name, description=None, program=DFLT_PROGRAM, unit=None, session=None):
         '''
         Create an Output record with the given arguments unless the record
         exists for this name and program. Uses caller's session if provided. If no
@@ -483,7 +483,7 @@ class CoreDatabase(object):
         outputId  = sess.query(Output.outputId).filter_by(programId=programId, name=name).scalar()
 
         if outputId is None:
-            output = Output(name=name, programId=programId, description=description)
+            output = Output(name=name, programId=programId, description=description, units=unit)
             sess.add(output)
 
             if not session:
@@ -1138,9 +1138,10 @@ class GcamDatabase(CoreDatabase):
     def getParamId(self, pname):
         return self.paramIds[pname]
 
-    def createOutput(self, name, program=GCAM_PROGRAM, description=None, session=None):
+    def createOutput(self, name, program=GCAM_PROGRAM, description=None, unit=None, session=None):
         _logger.debug("createOutput(%s)", name)
-        return super(GcamDatabase, self).createOutput(name, program=program, description=description, session=session)
+        return super(GcamDatabase, self).createOutput(name, program=program, description=description,
+                                                      unit=unit, session=session)
 
     def saveParameterNames(self, tuples):
         '''

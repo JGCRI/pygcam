@@ -163,11 +163,11 @@
                 <xs:element ref="comment"/>
             </xs:choice>
             <xs:attribute name="apply" type="ApplyType" default="direct"/>
-
-            <!-- These are not yet implemented in the code... -->
-            <!--
             <xs:attribute name="highbound" type="xs:decimal"/>
-            <xs:attribute name="lowbound" type="xs:decimal"/>
+            <xs:attribute name="lowbound"  type="xs:decimal"/>
+
+            <!-- Not yet implemented in the code... -->
+            <!--
             <xs:attribute name="updatezero" type="xs:boolean" default="0"/>
             -->
         </xs:complexType>

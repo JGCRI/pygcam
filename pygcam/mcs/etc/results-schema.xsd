@@ -53,6 +53,7 @@
 				<xs:element ref="Constraint" minOccurs="0"/>
 			</xs:choice>
 			<xs:attribute name="desc" type="xs:string"/>
+			<xs:attribute name="unit" type="xs:string"/>
 			<xs:attribute name="name" use="required" type="xs:string"/>
 			<xs:attribute name="type" use="required" type="ResultType"/>
 		</xs:complexType>

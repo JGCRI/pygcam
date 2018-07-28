@@ -5,17 +5,12 @@
    See the https://opensource.org/licenses/MIT for license details.
 
 '''
-import os
-
-from .config import getParamAsBoolean
 from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
-from .utils import mkdirs, pathjoin, getBatchDir, getYearCols, printSeries, symlinkOrCopyFile
+from .utils import mkdirs, pathjoin, getBatchDir, getYearCols, printSeries
 
 _logger = getLogger(__name__)
-
-__version__ = "0.1"
 
 PolicyChoices = ['tax', 'subsidy']
 DefaultYears = '2020-2050'
@@ -96,21 +91,21 @@ def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, grou
     # TBD: isn't this already handled by addMarketConstraint with baselinePolicy?
     return
 
-    if policySrcDir:
-        scenario = policySrcDir
-        # parentName = os.path.basename(dirname)
-        # grandparentDir = os.path.dirname(os.path.dirname(dirname))
-        # fullDirname = pathjoin(grandparentDir, policySrcDir, parentName)
-        localxml = pathjoin('../..', policySrcDir, LOCAL_XML_NAME)
-
-    source   = pathjoin(localxml, groupName, scenario, policyFile)
-    linkname = pathjoin(fullDirname, policyFile)
-
-    mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
-    _logger.debug("%sing %s to %s", mode, source, linkname)
-    if os.path.lexists(linkname):
-        os.remove(linkname)
-    symlinkOrCopyFile(source, linkname)
+    # if policySrcDir:
+    #     scenario = policySrcDir
+    #     # parentName = os.path.basename(dirname)
+    #     # grandparentDir = os.path.dirname(os.path.dirname(dirname))
+    #     # fullDirname = pathjoin(grandparentDir, policySrcDir, parentName)
+    #     localxml = pathjoin('../..', policySrcDir, LOCAL_XML_NAME)
+    #
+    # source   = pathjoin(localxml, groupName, scenario, policyFile)
+    # linkname = pathjoin(fullDirname, policyFile)
+    #
+    # mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+    # _logger.debug("%sing %s to %s", mode, source, linkname)
+    # if os.path.lexists(linkname):
+    #     os.remove(linkname)
+    # symlinkOrCopyFile(source, linkname)
 
 def parseStringPairs(argString, datatype=float):
     """

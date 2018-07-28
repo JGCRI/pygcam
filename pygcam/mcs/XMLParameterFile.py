@@ -40,8 +40,8 @@ WRITE_FUNC_ELT       = 'WriteFunc'
 # These attributes of a <Distribution> element are not parameters to the
 # random variable distribution itself, so we exclude these from the
 # list we pass when creating the RV.
-DISTRO_META_ATTRS     = ['name', 'type', 'apply']
-DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound', 'updatezero']
+#DISTRO_META_ATTRS     = ['name', 'type', 'apply']
+DISTRO_MODIF_ATTRS    = ['lowbound', 'highbound'] # , 'updatezero']
 
 
 def getBooleanXML(value):
@@ -276,10 +276,9 @@ class XMLDistribution(XMLTrialData):
         self.modDict = defaultdict(lambda: None)
         self.modDict['apply'] = 'direct'    # set default value
 
-        # Distribution attributes are {apply, highBound, lowBound, updateZero}
+        # Distribution attributes are {apply, highbound, lowbound}, enforced by XSD file
         for key, val in element.items():
-            key = key.lower()
-            self.modDict[key] = val         # TBD: implement these! (currently commented out of parameter-schema.xsd)
+            self.modDict[key] = float(val) if key in DISTRO_MODIF_ATTRS else val
 
         # Load trial function, if defined (i.e., if there's a '.' in the value of the "apply" attribute.)
         self.trialFunc = self.loadTrialFunc()
@@ -717,6 +716,14 @@ class XMLParameter(XMLWrapper):
 
             newValue = randomValue * originalValue if isFactor else \
                 ((randomValue + originalValue) if isDelta else randomValue)
+
+            if hasattr(dataSrc, 'modDict'):
+                modDict = dataSrc.modDict
+                if modDict['lowbound'] is not None:
+                    newValue = max(newValue, modDict['lowbound'])
+
+                if modDict['highbound'] is not None:
+                    newValue = min(newValue, modDict['highbound'])
 
             # Set the value in the cached tree so it can be written to trial's local-xml dir
             var.setValue(newValue)

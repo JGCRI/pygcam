@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!-- Derived using MOSO Xmplify 1.7.6 by Richard Plevin on 2016-02-04 22:54:01 +0000 -->
+
 <xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
-	
-    <xs:include schemaLocation="comment.xsd"/>
-	
+
+  <xs:include schemaLocation="comment.xsd"/>
+
 	<xs:simpleType name="landClassType">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="UnmanagedPasture"/>
@@ -11,72 +11,73 @@
 			<xs:enumeration value="Shrubland"/>
 			<xs:enumeration value="Grassland"/>
 			<xs:enumeration value="OtherArableLand"/>
-        </xs:restriction>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name='region' type='xs:string'/>
+
+  <xs:element name='landClass' type='landClassType'/>
+
+  <xs:element name='landProtection'>
+    <xs:complexType>
+      <xs:choice maxOccurs='unbounded'>
+        <xs:element ref='group'/>
+        <xs:element ref='scenario'/>
+        <xs:element ref='comment'/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='group'>
+    <xs:complexType>
+      <xs:choice maxOccurs='unbounded'>
+        <xs:element ref='region'/>
+        <xs:element ref='comment'/>
+      </xs:choice>
+      <xs:attribute name='name' use='required' type='xs:string'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='scenario'>
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref='protectedRegion'/>
+        <xs:element ref='comment'/>
+      </xs:choice>
+      <xs:attribute name='name' use='required' type='xs:string'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='protectedRegion'>
+    <xs:complexType>
+      <xs:choice maxOccurs='unbounded' >
+        <xs:element ref='protection'/>
+        <xs:element ref='comment'/>
+      </xs:choice>
+      <xs:attribute name='name' use='required' type='xs:string'/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='protection'>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref='fraction'/>
+        <xs:choice minOccurs='0' maxOccurs='unbounded'>
+          <xs:element ref='landClass'/>
+          <xs:element ref='comment'/>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name='basin' type='xs:string' default=''/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name='fraction'>
+    <xs:simpleType>
+      <xs:restriction base="xs:decimal">
+        <xs:minInclusive value="0.0"/>
+        <xs:maxInclusive value="1.0"/>
+      </xs:restriction>
     </xs:simpleType>
-
-    <xs:element name='region' type='xs:string'/>
-
-    <xs:element name='landClass' type='landClassType'/>
-
-    <xs:element name='landProtection'>
-        <xs:complexType>
-            <xs:choice maxOccurs='unbounded'>
-                <xs:element ref='group'/>
-                <xs:element ref='scenario'/>
-                <xs:element ref='comment'/>
-            </xs:choice>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='group'>
-        <xs:complexType>
-            <xs:choice maxOccurs='unbounded'>
-                <xs:element ref='region'/>
-                <xs:element ref='comment'/>
-            </xs:choice>
-            <xs:attribute name='name' use='required' type='xs:string'/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='scenario'>
-        <xs:complexType>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element ref='protectedRegion'/>
-                <xs:element ref='comment'/>
-            </xs:choice>
-            <xs:attribute name='name' use='required' type='xs:string'/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='protectedRegion'>
-        <xs:complexType>
-            <xs:choice maxOccurs='unbounded' >
-                <xs:element ref='protection'/>
-                <xs:element ref='comment'/>
-            </xs:choice>
-            <xs:attribute name='name' use='required' type='xs:string'/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='protection'>
-        <xs:complexType>
-            <xs:sequence>
-				<xs:element ref='fraction'/>
-				<xs:choice maxOccurs='unbounded'>
-					<xs:element ref='landClass'/>
-					<xs:element ref='comment'/>
-				</xs:choice>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name='fraction'>
-         <xs:simpleType>
-            <xs:restriction base="xs:decimal">
-                <xs:minInclusive value="0.0"/>
-                <xs:maxInclusive value="1.0"/>
-            </xs:restriction>
-        </xs:simpleType>
-    </xs:element>
+  </xs:element>
 
 </xs:schema>

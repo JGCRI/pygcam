@@ -30,6 +30,8 @@ from .config import getParam, getParamAsBoolean
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
+from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
+                     DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
 from .utils import (coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile,
                     removeTreeSafely, parse_version_info)
 
@@ -1497,3 +1499,18 @@ class XMLEditor(object):
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
+
+    @callableMethod
+    def writePolicyMarketFile(self, filename, policyName, region, sector, subsector, technology, years,
+                              marketType=DEFAULT_MARKET_TYPE):
+        pathname = pathjoin(self.scenario_dir_abs, filename)
+        policyMarketXml(policyName, region, sector, subsector, technology, years,
+                        marketType=marketType, pathname=pathname)
+
+    @callableMethod
+    def writePolicyConstraintFile(self, filename, policyName, region, targets, market=None, minPrice=None,
+                                  policyElement=DEFAULT_POLICY_ELT, policyType=DEFAULT_POLICY_TYPE):
+        pathname = pathjoin(self.scenario_dir_abs, filename)
+        policyConstraintsXml(policyName, region, expandYearRanges(targets), market=market, minPrice=minPrice,
+                             policyElement=policyElement, policyType=policyType, pathname=pathname)
+
