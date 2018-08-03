@@ -26,7 +26,7 @@ requirements = [
     'six>=1.10.0',
     'sphinx-argparse==0.2.2', # later versions lose markup in commands
     'tornado<5.0',
-    
+
     # GUI requirements
     'flask>=0.12.2',
     'dash>=0.19.0',
@@ -37,18 +37,11 @@ requirements = [
     # MCS requirements
     'ipyparallel>=6.0.2',
     'numexpr>=2.6.2',
-    'salib==1.1.2',
+    'salib>=1.1.2',
     'scipy>=0.19.1',
     'sqlalchemy>=1.1.13',
 ]
 
-#if os.environ.get('READTHEDOCS') == 'True':
-#    requirements.extend(mcs_requirements)
-#    extras_requirements = {}
-#else:
-#    extras_requirements = {
-#        'mcs': mcs_requirements,
-#    }
 
 long_description = '''
 pygcam

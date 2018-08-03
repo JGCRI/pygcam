@@ -22,3 +22,4 @@ six
 sphinx-rtd-theme
 sphinx-argparse
 sqlalchemy
+tornado
