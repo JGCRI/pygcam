@@ -16,7 +16,7 @@ import sys
 from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
-                     usingMCS, savePathMap, parse_version_info)
+                     usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -307,6 +307,9 @@ class GcamTool(object):
                 log = getLogger(__name__)
                 log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
                 setParam('GCAM.VersionNumber', versionNum)
+
+        setInputFilesByVersion()
+
 
     def run(self, args=None, argList=None):
         """
