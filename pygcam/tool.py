@@ -15,8 +15,8 @@ import sys
 
 from .built_ins import BuiltinSubcommands
 from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
-                     setParam, getSection, setSection, getSections,
-                     DEFAULT_SECTION, usingMCS, savePathMap)
+                     setParam, getSection, setSection, getSections, DEFAULT_SECTION,
+                     usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -261,7 +261,7 @@ class GcamTool(object):
                     self.getPlugin(command)
 
     def validateGcamVersion(self):
-        from .utils import pathjoin, pushd, parse_version_info
+        from .utils import pathjoin, pushd
         from .gcam import setJavaPath
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
@@ -307,6 +307,9 @@ class GcamTool(object):
                 log = getLogger(__name__)
                 log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
                 setParam('GCAM.VersionNumber', versionNum)
+
+        setInputFilesByVersion()
+
 
     def run(self, args=None, argList=None):
         """
@@ -475,6 +478,17 @@ def _setDefaultProject(argv):
     if section:
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
+
+    # Set the data dir based on the version of the model used in this project
+    version = parse_version_info()
+
+    dataDir = "gcamdata" if version >= (5, 1) else "gcam-data-system"
+    setParam('GCAM.DataDir', dataDir, section=section)
+
+    # ModelInterface was also relocated in v5.1, so we compute the path when setting the project
+    subdir = 'output/modelinterface' if version >= (5, 1) else 'input/gcam-data-system/_common/ModelInterface/src'
+    setParam('GCAM.MI.Subdir', subdir )
+
 
 def _saveDirMap():
     dirMapFile = os.getenv('DIRMAP_PATH')

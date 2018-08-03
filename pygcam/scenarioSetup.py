@@ -6,7 +6,7 @@
 '''
 import os
 
-from .config import getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean, setParam
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, ConfigFileError
 from .log import getLogger
@@ -14,49 +14,9 @@ from .utils import copyFileOrTree, removeFileOrTree, mkdirs, pathjoin, symlinkOr
 
 _logger = getLogger(__name__)
 
-# Files specific to different versions of GCAM. This is explicit rather
-# than computed so we can easily detect an unknown version number, and
-# so that searches for config parameter names find these occurrences.
-_VersionSpecificParameterName = {
-    '4.2' : 'GCAM.RequiredFiles.4.2',
-    '4.3' : 'GCAM.RequiredFiles.4.3',
-    '4.4' : 'GCAM.RequiredFiles.4.4',
-    '5.0' : 'GCAM.RequiredFiles.5.0',
-}
-
-_FilesToCopy = None
-
-def _getVersionSpecificFiles():
-    '''
-    Compute the list of version-specific files (including universal files)
-    that need to be copied or linked into sandboxes, and cache this since
-    it doesn't change in a single run.
-    '''
-    global _FilesToCopy
-
-    if _FilesToCopy:
-        return _FilesToCopy
-
-    version = getParam('GCAM.VersionNumber')
-    try:
-        paramName = _VersionSpecificParameterName[version]
-    except KeyError:
-        raise ConfigFileError('GCAM.VersionNumber "{}" is unknown. Fix config file or update pygcam.scenarioSetup.py'.format(version))
-
-    versionFiles = getParam(paramName)
-    universalFiles = getParam('GCAM.RequiredFiles.All')
-    allFiles = universalFiles + ' ' + versionFiles
-
-    fileList = allFiles.split()
-
-    _logger.debug("Version-specific files for GCAM %s: %s", version, fileList)
-    _FilesToCopy = fileList
-    return fileList
-
 def _getFilesToCopyAndLink(linkParam):
-    files = _getVersionSpecificFiles()
-
-    allFiles = set(files)
+    reqFiles = getParam('GCAM.RequiredFiles')
+    allFiles = set(reqFiles.split())
 
     # Subtract from the set of all files the ones to link
     toLink = getParam(linkParam)

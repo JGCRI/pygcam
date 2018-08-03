@@ -11,11 +11,11 @@ import sys
 
 from lxml import etree as ET
 
-from .config import getParam
+from .config import getParam, parse_version_info
 from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, pathjoin, flatten, parse_version_info
+from .utils import mkdirs, pathjoin, flatten
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
@@ -390,10 +390,15 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
                     regions=regions, unprotectFirst=unprotectFirst)
     tree.write(outfile, xml_declaration=True, pretty_print=True)
 
-_LandXmlFiles = ['land2.xml', 'land3.xml']
 
-def _landXmlPaths(workspace, landXmlFiles=_LandXmlFiles):
-    xmlDir = pathjoin(workspace, 'input', 'gcam-data-system', 'xml', 'aglu-xml')
+# TBD: NEEDS TESTING
+def _landXmlPaths(workspace):
+    version = parse_version_info()
+    landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml'] \
+        if version >= (5, 1) else ['land2.xml', 'land3.xml']
+
+    subdir = 'aglu-xml' if version < (5, 1) else ''
+    xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml', subdir)
     paths = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
     return paths
 

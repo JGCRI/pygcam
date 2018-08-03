@@ -731,10 +731,8 @@ class XMLParameter(XMLWrapper):
 
 def trialRelativePath(relPath, prefix):
     """
-    Convert a pathname that was relative to "exe" to be relative to
-    "exe/../../trial-xml" instead.
-    For example, "../input/gcam-data-system/aglu-xml/foo.xml"
-    becomes "../../trial-xml/input/gcam-data-system/aglu-xml/foo.xml"
+    Convert a pathname that was relative to "exe" to be relative to "exe/../../trial-xml" instead.
+    For example, "../input/gcamdata/foo.xml" becomes "../../trial-xml/input/gcamdata/foo.xml".
     """
     parentDir = '../'
     if not relPath.startswith(parentDir):
