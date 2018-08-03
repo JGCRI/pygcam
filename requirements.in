@@ -12,6 +12,7 @@ matplotlib
 numexpr
 numpy
 pandas
+python-dateutil
 salib
 scipy
 seaborn
