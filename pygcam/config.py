@@ -68,6 +68,33 @@ def _translatePath(value):
 
     return value
 
+def parse_version_info(vers=None):
+    import semver
+
+    vers = vers or getParam('GCAM.VersionNumber')
+
+    # if only major.minor is given (e.g., "4.4"), add .patch of zero (e.g., "4.4.0")
+    if re.match('^\d\.\d$', vers):
+        vers += '.0'
+
+    return semver.parse_version_info(vers)
+
+def setInputFilesByVersion():
+    '''
+    Set "GCAM.InputFiles" to the correct version-specific config parameter. For example,
+    if "GCAM.VersionNumber" is "5.1", "GCAM.InputFiles" is set to the value of parameter
+    "GCAM.InputFiles.5.1".
+    '''
+    version = getParam('GCAM.VersionNumber')
+    try:
+        paramName = 'GCAM.InputFiles.' + version
+        inputFiles = getParam(paramName)
+    except KeyError:
+        raise ConfigFileError('Config parameter {} is undefined. Fix system.cfg or .pygcam.cfg'.format(paramName))
+
+    setParam('GCAM.InputFiles', inputFiles)
+
+
 def getSection():
     return _ProjectSection
 

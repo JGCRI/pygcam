@@ -80,7 +80,8 @@ class ProtectLandCommand(SubcommandABC):
 
         parser.add_argument('-w', '--workspace', type=str, default=None,
                             help='''Specify the path to the GCAM workspace to use. The files in
-                            {workspace}/input/gcam-data-system/xml/aglu-xml/land_input_{2,3}.xml
+                            {workspace}/input/gcam-data-system/xml/aglu-xml/land_input_{2,3}.xml (before GCAM v5.1), or
+                            {workspace}/input/gcamdata/xml/land_input_{2,3,4,5}*.xml (starting in GCAM v5.1)
                             are used as inputs. Default is value of configuration parameter
                             GCAM.RefWorkspace.''')
 

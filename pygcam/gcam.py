@@ -9,11 +9,11 @@ import os
 import re
 import subprocess
 
-from .config import getParam, getParamAsBoolean, getParamAsFloat
+from .config import getParam, getParamAsBoolean, parse_version_info
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
-from .utils import writeXmldbDriverProperties, getExeDir, pushd, parse_version_info
+from .utils import writeXmldbDriverProperties, getExeDir, pushd
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -173,7 +173,6 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
     import platform
-    from .utils import parse_version_info
 
     if platform.system() == 'Darwin':
         linkToMacJava()
