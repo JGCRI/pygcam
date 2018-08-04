@@ -34,6 +34,26 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.2.1 (4 Aug 2018)
+----------------------------
+
+* Support for GCAM v5.1
+
+* Corrected bug in Windows defaults that had set ``GCAM.Temp = C:/tmp``, which is not writable
+  by non-admin users. The default is now ``%(Home)s/tmp``.
+
+* Updated approach to land protection to support new geographical land units
+
+* Support for change in the location of model interface in 5.1
+
+* Monte Carlo Simulation improvements:
+
+  * Added units to database and results.xml schema
+  * Added support for setting land protection based on reg and basin
+  * Added support for ``lowbound`` and ``highbound`` attributes in ``<Distribution>`` element. Bounds
+    are applied to values produced by add/multiply/replace. This can be used to ensure that the
+    resulting values are, say, between 0 and 1.
+
 Version 1.1.3 (11 Jul 2018)
 ----------------------------
 * Numerous tweaks to Monte Carlo simulation subsystem to allow placement
