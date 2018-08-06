@@ -12,7 +12,7 @@ from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, 
 _logger = getLogger(__name__)
 
 
-def computeDifference(df1, df2, resetIndex=True, dropna=True):
+def computeDifference(df1, df2, resetIndex=True, dropna=True, asPercentChange=False):
     """
     Compute the difference between two DataFrames.
 
@@ -23,8 +23,9 @@ def computeDifference(df1, df2, resetIndex=True, dropna=True):
       appear in individual columns. Otherwise, the index in the returned
       DataFrame is based on all non-year columns.
     :param dropna: (bool) if True, drop rows with NaN values after computing difference
+    :param asPercentChange: (bool) if True, compute percent change rather than difference.
     :return: a pandas DataFrame with the difference in all the year columns, computed
-      as (df2 - df1).
+      as (df2 - df1) if asPercentChange is False, otherwise as (df2 - df1)/df1.
     """
     df1 = dropExtraCols(df1, inplace=False)
     df2 = dropExtraCols(df2, inplace=False)
@@ -51,6 +52,9 @@ def computeDifference(df1, df2, resetIndex=True, dropna=True):
     # Compute difference for timeseries values
     diff = df2 - df1
 
+    if asPercentChange:
+        diff /= df1
+
     if dropna:
         diff.dropna(inplace=True)
 
@@ -59,9 +63,13 @@ def computeDifference(df1, df2, resetIndex=True, dropna=True):
 
     return diff
 
+def _label(referenceFile, otherFile, asPercentChange=False):
+    label = "([{other}] minus [{ref}]) / [{ref}]" if asPercentChange else "[{other}] minus [{ref}]"
+
+    return label.format(other=otherFile, ref=referenceFile)
 
 def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False,
-                    years=None, startYear=0):
+                    years=None, startYear=0, asPercentChange=False):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -79,6 +87,7 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
        results.
     :param startYear: (int) the year at which to begin interpolation, if interpolate is True.
        Defaults to the first year in `years`.
+    :param asPercentChange: (bool) if True, compute percent change rather than difference.
     :return: none
     """
     refDF = readCsv(referenceFile, skiprows=skiprows, interpolate=interpolate,
@@ -90,14 +99,14 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
             otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate,
                                 years=years, startYear=startYear)
 
-            diff = computeDifference(refDF, otherDF)
+            diff = computeDifference(refDF, otherDF, asPercentChange=asPercentChange)
             csvText = diff.to_csv(index=None)
-            label = "[%s] minus [%s]" % (otherFile, referenceFile)
+            label = _label(referenceFile, otherFile, asPercentChange=asPercentChange)
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
 
 
 def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False,
-                     years=None, startYear=0):
+                     years=None, startYear=0, asPercentChange=False):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -116,6 +125,7 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
        results.
     :param startYear: (int) the year at which to begin interpolation, if interpolate is True.
        Defaults to the first year in `years`.
+    :param asPercentChange: (bool) if True, compute percent change rather than difference.
     :return: none
     """
     import pandas as pd
@@ -135,11 +145,11 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
             sheetName = 'Diff%d' % sheetNum
             sheetNum += 1
 
-            diff = computeDifference(refDF, otherDF)
+            diff = computeDifference(refDF, otherDF, asPercentChange=asPercentChange)
             diff.to_excel(writer, index=None, sheet_name=sheetName, startrow=2, startcol=0)
 
             worksheet = writer.sheets[sheetName]
-            label     = "[%s] minus [%s]" % (otherFile, referenceFile)
+            label = _label(referenceFile, otherFile, asPercentChange=asPercentChange)
             worksheet.write_string(0, 0, label)
 
             startRow = diff.shape[0] + 4
@@ -154,7 +164,7 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
 
 
 def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, interpolate=False,
-                     years=None, startYear=0):
+                     years=None, startYear=0, asPercentChange=False):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -178,10 +188,11 @@ def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, 
     """
     writer = writeDiffsToCSV if ext == '.csv' else writeDiffsToXLSX
     writer(outFile, referenceFile, otherFiles, skiprows=skiprows, interpolate=interpolate,
-           years=years, startYear=startYear)
+           years=years, startYear=startYear, asPercentChange=asPercentChange)
 
 
-def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', createDir=False):
+def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', createDir=False,
+                    asPercentChange=False):
     """
     Compute the path to the CSV file containing differences between `policy` and
     `baseline` scenarios for `query`.
@@ -198,7 +209,8 @@ def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', crea
     if createDir:
         mkdirs(diffsDir)
 
-    pathname = pathjoin(diffsDir, '%s-%s-%s.csv' % (query, policy, baseline))
+    chg = '-pctChg' if asPercentChange else ''
+    pathname = pathjoin(diffsDir, '%s-%s-%s%s.csv' % (query, policy, baseline, chg))
     return pathname
 
 def queryCsvPathname(query, scenario, workingDir='.'):
@@ -229,10 +241,13 @@ def diffMain(args):
     sum         = args.sum
     queryFile   = args.queryFile
     yearStrs    = args.years.split('-')
+    asPercentChange = args.asPercentChange
 
     if len(yearStrs) == 2:
         years = yearStrs
         startYear = args.startYear
+    else:
+        years = startYear = None
 
     # If a query file is given, we loop over the query names, computing required arguments to performDiff().
     if queryFile:
@@ -258,11 +273,13 @@ def diffMain(args):
             baselineFile = queryCsvPathname(query, baseline, workingDir=workingDir)
             policyFile   = queryCsvPathname(query, policy,   workingDir=workingDir)
 
-            outFile = diffCsvPathname(query, baseline, policy, workingDir=workingDir, createDir=True)
+            outFile = diffCsvPathname(query, baseline, policy, workingDir=workingDir,
+                                      createDir=True, asPercentChange=asPercentChange)
             _logger.info("Writing %s", outFile)
 
             writeDiffsToFile(outFile, baselineFile, [policyFile], ext='.csv', skiprows=skiprows,
-                             interpolate=interpolate, years=years, startYear=startYear)
+                             interpolate=interpolate, years=years, startYear=startYear,
+                             asPercentChange=asPercentChange)
     else:
         csvFiles = map(ensureCSV, args.csvFiles)
         referenceFile = csvFiles[0]
@@ -288,5 +305,6 @@ def diffMain(args):
             return
 
         writeDiffsToFile(outFile, referenceFile, otherFiles, ext=ext, skiprows=skiprows,
-                         interpolate=interpolate, years=years, startYear=startYear)
+                         interpolate=interpolate, years=years, startYear=startYear,
+                         asPercentChange=asPercentChange)
 

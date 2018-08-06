@@ -34,6 +34,9 @@ class DiffCommand(SubcommandABC):
         parser.add_argument('-c', '--convertOnly', default=False, action="store_true",
                             help='''Convert the given CSV files into an Excel workbook, one sheet per CSV file.''')
 
+        parser.add_argument('-p', '--asPercentChange', default=False, action="store_true",
+                            help='''Compute percent change rather than simple difference.''')
+
         parser.add_argument('-q', '--queryFile', default='',
                             help='''If the extension is ".xml" (case insensitive), the argument must be an XML file
                             holding a list of queries to run, with optional mappings specified to rewrite output.
