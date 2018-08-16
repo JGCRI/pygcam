@@ -34,6 +34,11 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.2.2 (16 Aug 2018)
+----------------------------
+* Corrected reading of GCAM's reported version number to use only the first 2 digits.
+  That is, version "5.1.1" is now correctly recognized as "5.1".
+
 Version 1.2.1 (4 Aug 2018)
 ----------------------------
 

@@ -304,9 +304,12 @@ class GcamTool(object):
 
             versionExe = parse_version_info(versionNum)
             if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
+                # use only major.minor to identify GCAM version
+                versionNum = "{}.{}".format(versionExe.major, versionExe.minor)
+                setParam('GCAM.VersionNumber', versionNum)
+
                 log = getLogger(__name__)
                 log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
-                setParam('GCAM.VersionNumber', versionNum)
 
         setInputFilesByVersion()
 
