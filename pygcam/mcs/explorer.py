@@ -286,7 +286,7 @@ class McsData(object):
                              name=outputName, showlegend=False,)]
             return plotData, title, annotations
 
-        title = '%s for scenario %s' % (outputName, scenario)
+        title = 'Distribution of %s for scenario %s' % (outputName, scenario)
 
         bins = min(100, len(values)) or 1 # 1 for corner case of no data; bins must be > 0
 
@@ -503,6 +503,8 @@ class McsData(object):
             plotColumn = 'spearman'
             title = 'Rank correlation'
 
+        title += ' of {} for scenario {}'.format(resultName, scenario)
+
         varCount = min(20, len(corrDF)) # if sliderValue is None else len(corrDF[corrDF['abs'] >= sliderValue]))
         varNames = list(reversed(corrDF.index[:varCount]))
         values   = list(reversed(corrDF[plotColumn][:varCount]))
@@ -526,7 +528,7 @@ class McsData(object):
 
         layout = updateStyle('Plot',
                              title=title,
-                             margin=updateStyle('PlotMargin', l=200),
+                             margin=updateStyle('PlotMargin', l=300),
                              xaxis=dict(range=[-1, 1]),
                              dragmode='select')
 
