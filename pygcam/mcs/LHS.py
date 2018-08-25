@@ -149,8 +149,9 @@ def lhsAmend(df, rvList, trials):
     for rv in rvList:
         values = rv.ppf(getPercentiles(trials))  # extract values from the RV for these percentiles
         if not isinstance(values, np.ndarray):
-            values = values.as_matrix()         # convert pandas Series if needed
-        np.random.shuffle(values)                   # randomize the stratified samples
+            values = values.values               # convert pandas Series if needed
+
+        np.random.shuffle(values)                # randomize the stratified samples
         param = rv.getParameter()
         paramName = param.getName()
         df[paramName] = values

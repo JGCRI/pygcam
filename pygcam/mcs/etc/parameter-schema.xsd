@@ -115,6 +115,7 @@
             <xs:attribute name="max" type="xs:decimal"/>
             <xs:attribute name="mode" type="xs:decimal"/>
             <xs:attribute name="factor" type="xs:decimal"/>
+            <xs:attribute name="logfactor" type="xs:decimal"/>
             <xs:attribute name="range" type="xs:decimal"/>
         </xs:complexType>
     </xs:element>

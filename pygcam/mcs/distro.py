@@ -119,6 +119,12 @@ def triangleFactor(factor):
 
     return triangle(1 - factor, 1, 1 + factor)
 
+def triangleLogfactor(logfactor):
+    if logfactor < 1.0:
+        raise PygcamMcsUserError("Triangle logfactor must be > 1.0; %f was given" % logfactor)
+
+    return triangle(1.0/logfactor, 1, logfactor)
+
 def binary():
     return rv_discrete(name="binary", values=[(0, 1), (0.5, 0.5)])
 
@@ -257,6 +263,9 @@ class DistroGen(object):
 
         # factor=0.2 means triangle with min, mode, max = (0.8, 1, 1.2); for apply="multiply"
         cls('triangle', triangleFactor)    # args: factor: must be > 0 and < 1
+
+        # logfactor=3 means triangle with min, mode, max = (1/3, 1, 3); for apply="multiply"
+        cls('triangle', triangleLogfactor)    # args: logfactor: must be > 1
 
         cls('triangle', triangle)         # args: min, mode, max
 
