@@ -875,6 +875,8 @@ def startCluster(**kwargs):
             trialList = parseTrialString(kwargs['trials'])
             numTrials = len(trialList)
 
+        _logger.info('Createing cluster to run {} trials'.format(numTrials))
+
     templates = _saveBatchFiles(numTrials, kwargs)
     sleep(1)    # allow files to flush and close
 
