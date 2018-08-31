@@ -67,7 +67,8 @@ def createOutputDir(outputDir):
     tempOutputDir = getParam('MCS.TempOutputDir')
 
     if tempOutputDir:
-        newDir = getTempDir(suffix='', tmpDir=tempOutputDir, delete=True)
+        # We create this on /scratch which is purged automatically.
+        newDir = getTempDir(suffix='', tmpDir=tempOutputDir, delete=False)
         mkdirs(newDir)
         _logger.debug("Creating '%s' link to %s" % (outputDir, newDir))
         symlink(newDir, outputDir)
