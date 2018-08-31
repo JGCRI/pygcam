@@ -23,6 +23,8 @@ from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_C
 from .context import Context
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError
+from .util import parseTrialString, createTrialString
+
 
 from ..log import getLogger
 
@@ -564,7 +566,6 @@ class Master(object):
                 raise PygcamException("mainloop: %s" % e)
 
     def runTrials(self):
-        from .util import parseTrialString
         import worker
 
         args = vars(self.args)
@@ -642,26 +643,33 @@ class Master(object):
 
         return asyncResults
 
-
-def listTrialsToRedo(db, simId, scenarios, statuses):
-    from .util import createTrialString
+def _getTrialsToRedo(db, simId, scenario, statuses):
 
     # 'missing' is not a real status found in the database
     missing = 'missing' in statuses
     if missing:
         statuses.remove('missing')
 
+    trialNums = []
+
+    # If any of the "redo" options find trials, use these instead of args.trials
+    tuples = db.getRunsByStatus(simId, scenario, statuses)
+    if tuples:
+        trialNums += map(lambda tuple: tuple[2], tuples)  # unpack the (runId, simId, trialNum, ...) tuple
+
+    if missing:
+        trialNums += db.getMissingTrials(simId, scenario)
+
+    return trialNums
+
+def listTrialsToRedo(db, simId, scenarios, statuses):
+    # 'missing' is not a real status found in the database
+    missing = 'missing' in statuses
+    if missing:
+        statuses.remove('missing')
+
     for scenario in scenarios:
-        trialNums = []
-
-        # If any of the "redo" options find trials, use these instead of args.trials
-        tuples = db.getRunsByStatus(simId, scenario, statuses)
-        if tuples:
-            # Just print the corresponding trial string
-            trialNums += map(lambda tuple: tuple[2], tuples)  # unpack(runId, simId, trialNum, ...) tuple
-
-        if missing:
-            trialNums += db.getMissingTrials(simId, scenario)
+        trialNums = _getTrialsToRedo(db, simId, scenario, statuses)
 
         if trialNums:
             trialStr = createTrialString(trialNums)
@@ -850,6 +858,23 @@ def startCluster(**kwargs):
     _defaultFromConfig(kwargs, 'workDir', 'IPP.WorkDir')
 
     numTrials = kwargs['numTrials']
+
+    # if not provided, compute numTrials from redo statuses or specified trials
+    if numTrials == 0:
+        if kwargs['statuses']:
+            db = getDatabase(checkInit=False)
+            simId     = kwargs['simId']
+            scenarios = kwargs['scenarios']
+            statuses  = kwargs['statuses']
+
+            for scenario in scenarios:
+                trialNums = _getTrialsToRedo(db, simId, scenario, statuses)
+                numTrials += len(trialNums)
+
+        elif kwargs['trials']:
+            trialList = parseTrialString(kwargs['trials'])
+            numTrials = len(trialList)
+
     templates = _saveBatchFiles(numTrials, kwargs)
     sleep(1)    # allow files to flush and close
 
