@@ -13,19 +13,20 @@ def driver(args, tool):
     from pygcam.project import Project
     from ..master import Master, pidFileExists, startCluster
 
-    if args.numTrials:
-        # If the pid file doesn't exist, we assume the cluster is
-        # not running and we run it with the given profile and
-        # cluster ID, relying on the config file for other parameters.
-        # To specify other params, use "gt cluster start" instead.
-        if pidFileExists(args.profile, args.clusterId):
-            _logger.warning('ipyparallel cluster is (probably) already running')
-        else:
-            _logger.info('Starting ipyparallel cluster')
-            kwargs = {key : getattr(args, key, None) \
-                      for key in ('profile', 'clusterId', 'numTrials',
-                                  'maxEngines', 'minutesPerRun', 'queue')}
-            startCluster(**kwargs)
+    # if args.numTrials:
+
+    # If the pid file doesn't exist, we assume the cluster is
+    # not running and we run it with the given profile and
+    # cluster ID, relying on the config file for other parameters.
+    # To specify other params, use "gt cluster start" instead.
+    if pidFileExists(args.profile, args.clusterId):
+        _logger.warning('ipyparallel cluster is (probably) already running')
+    else:
+        _logger.info('Starting ipyparallel cluster')
+        kwargs = {key : getattr(args, key, None) \
+                  for key in ('profile', 'clusterId', 'numTrials',
+                              'maxEngines', 'minutesPerRun', 'queue')}
+        startCluster(**kwargs)
 
     args.groupName = args.groupName or Project.defaultGroupName()
 
