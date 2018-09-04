@@ -861,11 +861,11 @@ def startCluster(**kwargs):
 
     # if not provided, compute numTrials from redo statuses or specified trials
     if numTrials == 0:
-        if kwargs['statuses']:
+        statuses = kwargs['statuses']
+        if statuses:
             db = getDatabase(checkInit=False)
             simId     = kwargs['simId']
             scenarios = kwargs['scenarios']
-            statuses  = kwargs['statuses']
 
             for scenario in scenarios:
                 trialNums = _getTrialsToRedo(db, simId, scenario, statuses)
@@ -875,7 +875,10 @@ def startCluster(**kwargs):
             trialList = parseTrialString(kwargs['trials'])
             numTrials = len(trialList)
 
-        _logger.info('Createing cluster to run {} trials'.format(numTrials))
+        _logger.info('Creating cluster to run {} trials'.format(numTrials))
+
+    if numTrials == 0:
+        return 0
 
     templates = _saveBatchFiles(numTrials, kwargs)
     sleep(1)    # allow files to flush and close
