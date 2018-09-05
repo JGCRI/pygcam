@@ -24,8 +24,8 @@ def driver(args, tool):
     else:
         _logger.info('Starting ipyparallel cluster')
         kwargs = {key : getattr(args, key, None) \
-                  for key in ('profile', 'clusterId', 'numTrials', 'statuses', 'simId',
-                              'trials', 'maxEngines', 'minutesPerRun', 'queue')}
+                  for key in ('profile', 'clusterId', 'numTrials', 'statuses', 'scenarios',
+                              'simId', 'trials', 'maxEngines', 'minutesPerRun', 'queue')}
         startCluster(**kwargs)
 
     args.groupName = args.groupName or Project.defaultGroupName()
