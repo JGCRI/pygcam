@@ -13,7 +13,7 @@ def driver(args, tool):
     from pygcam.project import Project
     from ..master import Master, pidFileExists, startCluster
 
-    # if args.numTrials:
+    # if args.numTrials
 
     # If the pid file doesn't exist, we assume the cluster is
     # not running and we run it with the given profile and
@@ -24,7 +24,7 @@ def driver(args, tool):
     else:
         _logger.info('Starting ipyparallel cluster')
         kwargs = {key : getattr(args, key, None) \
-                  for key in ('profile', 'clusterId', 'numTrials', 'statuses',
+                  for key in ('profile', 'clusterId', 'numTrials', 'statuses', 'simId',
                               'trials', 'maxEngines', 'minutesPerRun', 'queue')}
         startCluster(**kwargs)
 

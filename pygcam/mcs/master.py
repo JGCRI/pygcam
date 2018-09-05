@@ -164,17 +164,14 @@ class Master(object):
         """
         Return totals for queue status across all engines
         """
-        dv = self.client[:]
-        qstatus = dv.queue_status()
+        qstatus = self.client.queue_status()
 
-        totals = dict(queue=0, completed=0, tasks=0)
+        unassigned = qstatus.pop(u'unassigned')
+        totals = dict(queue=0, completed=0, tasks=0, unassigned=unassigned)
 
-        for id, stats in iteritems(qstatus):
-            if id == u'unassigned':
-                totals[id] = stats
-            else:
-                for key, count in iteritems(stats):
-                    totals[key] += count
+        for eid, qs in iteritems(qstatus):
+            for key, count in iteritems(qs):
+                totals[key] += count
 
         return totals
 
@@ -317,10 +314,13 @@ class Master(object):
         from pygcam.utils import flatten
 
         qstatus = self.client.queue_status(verbose=True)
+        # all keys are engine ids except for one, which is 'unassigned'.
         ids = [rec['tasks'] for key, rec in iteritems(qstatus) if isinstance(key, (int, long))]
         return flatten(ids)
 
     def completedTasks(self):
+        # TBD: test code uses '' rather than None, and tests msg_id, e.g.
+        #  found = self.client.db_query({'msg_id': {'$ne' : ''}}, keys=['submitted', 'completed'])
         recs = self.client.db_query({'completed': {'$ne': None}}, keys=['msg_id'])
         ids = [rec['msg_id'] for rec in recs] if recs else None
         return ids
