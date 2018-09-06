@@ -622,8 +622,7 @@ class Master(object):
             for context in contexts:
                 try:
                     if runLocal:
-                        #self.setRunStatus(context, status=RUN_RUNNING)
-                        statusPairs.append((context, RUN_RUNNING))
+                        # statusPairs.append((context, RUN_RUNNING))
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
                         self.saveResults([result])
@@ -643,7 +642,7 @@ class Master(object):
 
         return asyncResults
 
-def _getTrialsToRedo(db, simId, scenario, statuses):
+def getTrialsToRedo(db, simId, scenario, statuses):
 
     # 'missing' is not a real status found in the database
     missing = 'missing' in statuses
@@ -669,7 +668,7 @@ def listTrialsToRedo(db, simId, scenarios, statuses):
         statuses.remove('missing')
 
     for scenario in scenarios:
-        trialNums = _getTrialsToRedo(db, simId, scenario, statuses)
+        trialNums = getTrialsToRedo(db, simId, scenario, statuses)
 
         if trialNums:
             trialStr = createTrialString(trialNums)
@@ -858,24 +857,6 @@ def startCluster(**kwargs):
     _defaultFromConfig(kwargs, 'workDir', 'IPP.WorkDir')
 
     numTrials = kwargs['numTrials']
-
-    # if not provided, compute numTrials from redo statuses or specified trials
-    if numTrials == 0:
-        statuses = kwargs['statuses']
-        if statuses:
-            db = getDatabase(checkInit=False)
-            simId     = kwargs['simId']
-            scenarios = kwargs['scenarios']
-
-            for scenario in scenarios:
-                trialNums = _getTrialsToRedo(db, simId, scenario, statuses)
-                numTrials += len(trialNums)
-
-        elif kwargs['trials']:
-            trialList = parseTrialString(kwargs['trials'])
-            numTrials = len(trialList)
-
-        _logger.info('Creating cluster to run {} trials'.format(numTrials))
 
     if numTrials == 0:
         return 0

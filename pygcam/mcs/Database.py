@@ -970,7 +970,7 @@ class GcamDatabase(CoreDatabase):
         cls.instance = None
 
     def initDb(self, args=None):
-        'Add GCAM-specific tables to the coremcs database'
+        'Add GCAM-specific tables to the database'
         super(GcamDatabase, self).initDb(args=args)
 
         self.addYearCols()

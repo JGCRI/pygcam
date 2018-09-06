@@ -11,20 +11,41 @@ _logger = getLogger(__name__)
 
 def driver(args, tool):
     from pygcam.project import Project
-    from ..master import Master, pidFileExists, startCluster
+    from ..master import Master, pidFileExists, startCluster, getTrialsToRedo
+    from ..Database import getDatabase
+    from ..util import parseTrialString
 
-    if not args.redoListOnly:
+    if not (args.runLocal or args.redoListOnly):
         # If the pid file doesn't exist, we assume the cluster is
         # not running and we run it with the given profile and
         # cluster ID, relying on the config file for other parameters.
         # To specify other params, use "gt cluster start" instead.
         if pidFileExists(args.profile, args.clusterId):
             _logger.warning('ipyparallel cluster is (probably) already running')
+
         else:
+            numTrials = args.numTrials
+
+            if numTrials == 0:
+                statuses = args.statuses
+                trials   = args.trials
+
+                if statuses:
+                    db = getDatabase(checkInit=False)
+
+                    for scenario in args.scenarios:
+                        trialNums = getTrialsToRedo(db, args.simId, scenario, statuses)
+                        numTrials += len(trialNums)
+
+                elif trials:
+                    trialList = parseTrialString(trials)
+                    numTrials = len(trialList)
+
+            _logger.info('Creating cluster to run {} trials'.format(numTrials))
+
             _logger.info('Starting ipyparallel cluster')
-            kwargs = {key : getattr(args, key, None) \
-                      for key in ('profile', 'clusterId', 'numTrials', 'statuses', 'scenarios',
-                                  'simId', 'trials', 'maxEngines', 'minutesPerRun', 'queue')}
+            argsToPass = ('profile', 'clusterId', 'numTrials', 'maxEngines', 'minutesPerRun', 'queue')
+            kwargs = {key : getattr(args, key, None) for key in argsToPass}
             startCluster(**kwargs)
 
     args.groupName = args.groupName or Project.defaultGroupName()
