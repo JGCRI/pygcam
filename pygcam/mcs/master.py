@@ -536,7 +536,7 @@ class Master(object):
                 if outstanding:
                     if len(self.client) == 0:
                         pending = slurm.jobsInState('pending', jobName='mcs-engine')
-                        if pending:
+                        if len(pending):
                             _logger.info('No engines registered; %d workers PENDING', len(pending))
                             sleep(30)
                             continue
