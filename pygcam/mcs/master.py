@@ -630,7 +630,6 @@ class Master(object):
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
                         result = view.map_async(worker.runTrial, [context], [argDict])
-                        #self.setRunStatus(context, status=RUN_QUEUED)
                         statusPairs.append((context, RUN_QUEUED))
 
                     asyncResults.append(result)

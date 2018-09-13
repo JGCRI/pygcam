@@ -386,7 +386,7 @@ class XMLDataFile(XMLTrialData):
     way the file is loaded only once. This can be used to load pre-generated
     trial data, e.g. exported from other software.
     """
-    cache = {}
+    cache = OrderedDict()
 
     @classmethod
     def getData(cls, pathname):
@@ -406,7 +406,7 @@ class XMLDataFile(XMLTrialData):
 
     @classmethod
     def decache(cls):
-        cls.cache = {}
+        cls.cache = OrderedDict()
 
     def __init__(self, element, param):
         super(XMLDataFile, self).__init__(element, param)
@@ -531,7 +531,7 @@ class XMLParameter(XMLWrapper):
     """
 
     # Store a list of all parameter instances for use in generating distributions
-    instances = {}
+    instances = OrderedDict()
 
     def __init__(self, element, tree=None):
         super(XMLParameter, self).__init__(element)
@@ -596,7 +596,7 @@ class XMLParameter(XMLWrapper):
 
     @classmethod
     def decache(cls):
-        cls.instances = {}
+        cls.instances = OrderedDict()
 
     @classmethod
     def getParameterLinks(cls):
@@ -783,7 +783,7 @@ class XMLInputFile(XMLWrapper):
     # Exists to ensure that each file is read only once. This is a class variable
     # because the same XML file may be referenced by multiple scenarios and we want
     # to edit each only once.
-    xmlFileMap = {}
+    xmlFileMap = OrderedDict()
 
     @classmethod
     def getModifiedXMLFiles(cls):
@@ -791,7 +791,7 @@ class XMLInputFile(XMLWrapper):
 
     @classmethod
     def decache(cls):
-        cls.xmlFileMap = {}
+        cls.xmlFileMap = OrderedDict()
 
     def __init__(self, element):
         super(XMLInputFile, self).__init__(element)
@@ -799,7 +799,7 @@ class XMLInputFile(XMLWrapper):
         self.element = element
         self.pathMap = defaultdict(set)
         self.xmlFiles = []
-        self.writeFuncs = {}    # keyed by funcRef; values are loaded fn objects
+        self.writeFuncs = OrderedDict()    # keyed by funcRef; values are loaded fn objects
         self.writeFuncDir = None
 
         # User can define functions to call before writing modified XML files.
@@ -994,7 +994,9 @@ class XMLParameterFile(XMLFile):
         """
         Write copies of all modified XML files
         """
-        for xmlFile in XMLInputFile.getModifiedXMLFiles():
+        xmlFiles = XMLInputFile.getModifiedXMLFiles()
+
+        for xmlFile in xmlFiles:
             exeRelPath = xmlFile.getRelPath()
             absPath = trialRelativePath(exeRelPath, trialDir)
 

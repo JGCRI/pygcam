@@ -94,7 +94,6 @@ def setInputFilesByVersion():
 
     setParam('GCAM.InputFiles', inputFiles)
 
-
 def getSection():
     return _ProjectSection
 
