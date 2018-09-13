@@ -145,7 +145,10 @@ class Master(object):
                     # default timeout is 10 seconds
                     self.client = client = ipp.Client(profile=profile, cluster_id=clusterId)
 
-                except IOError:
+                # except IOError:
+                except Exception as e:
+                    _logger.debug("Error waiting for workers: %s", e)
+                    
                     if i == maxTries - 1:
                         raise
 
