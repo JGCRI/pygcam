@@ -148,7 +148,7 @@ class Master(object):
                 # except IOError:
                 except Exception as e:
                     _logger.debug("Error waiting for workers: %s", e)
-                    
+
                     if i == maxTries - 1:
                         raise
 
@@ -861,6 +861,7 @@ def startCluster(**kwargs):
     numTrials = kwargs['numTrials']
 
     if numTrials == 0:
+        _logger.warn("numTrials == 0; not starting cluster")
         return 0
 
     templates = _saveBatchFiles(numTrials, kwargs)
