@@ -99,9 +99,9 @@ def driver(args, tool):
         return
 
     if not (args.exportInputs or args.resultFile or args.plot or args.importance or
-                args.groups or args.plotInputs or args.stats or args.convergence or
-                args.exportEMA):
-        msg = 'Must specify at least one of: --export, --resultFile, --plot, --importance, --groups, --distros, --stats, --convergence, --exportEMA'
+            args.groups or args.plotInputs or args.stats or args.convergence or
+            args.exportEMA, args.exportAll):
+        msg = 'Must specify at least one of: --export, --resultFile, --plot, --importance, --groups, --distros, --stats, --convergence, --exportEMA, --exportAll'
         raise PygcamMcsUserError(msg)
 
     analyzeSimulation(args)
@@ -122,6 +122,10 @@ class AnalyzeCommand(McsSubcommandABC):
 
         parser.add_argument('-e', '--expName', type=str,
                             help='The name of the experiment or scenario to run.')
+
+        parser.add_argument('-E', '--exportAll', type=str, default=None,
+                            help='''Export all inputs for which there are results, and all results for the
+                            given expName (-e flag) to the indicated file name.''')
 
         parser.add_argument('--exportEMA', type=str, default=None,
                             help='''Export results to the given .tar.gz file in a format suitable for analysis

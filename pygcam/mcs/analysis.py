@@ -488,7 +488,31 @@ def exportInputs(exportFile, inputs):
     _logger.debug("Exporting data to '%s'", exportFile)
     df.to_csv(exportFile)
 
-# TBD: export in format useful with SALib, at least as an option
+# export all available results and their matching inputs for a single scenario,
+# in wide format, with 'trialNum' as index, each input/result in a column.
+def exportAllInputsOutputs(simId, expName, inputDF, exportFile, sep=','):
+    df = None
+    db = getDatabase()
+    resultList = db.getOutputsWithValues(simId, expName)
+
+    inputDF.index.rename('trialNum', inplace=True)
+
+    for resultName in resultList:
+        resultDf = db.getOutValues(simId, expName, resultName)
+        if resultDf is None:
+            raise PygcamMcsUserError('No results were found for sim %d, experiment %s, result %s' % (simId, expName, resultName))
+
+        # Copy inputs for which there are outputs
+        if df is None:
+            df = inputDF.iloc[resultDf.index].copy()
+
+        # Add each output
+        df[resultName] = resultDf[resultName]
+
+    _logger.debug("Exporting inputs and results to '%s'", exportFile)
+    df.to_csv(exportFile, sep=sep)
+    return df
+
 def exportResults(simId, resultList, expList, exportFile, sep=','):
     db = getDatabase()
     df = None
@@ -879,7 +903,7 @@ class Analysis(object):
 
         plt.close(fig)
 
-
+# TBD:
 def analyzeSimulationNew(args):
     '''
     Analyze a simulation by reading parameters and results from the database.
@@ -1012,10 +1036,24 @@ def analyzeSimulation(args):
     inputsFile  = args.exportInputs
     resultFile  = args.resultFile
     exportEMA   = args.exportEMA
+    exportAll   = args.exportAll
     minimum     = args.min
     maximum     = args.max
 
-    inputDF = None
+    # Determine which inputs are required for each option
+    requireInputs   = (exportAll or exportEMA or groups or importance or plotInputs or inputsFile)
+    requireScenario = (exportAll or exportEMA or groups or importance or resultFile or plotHist or convergence or stats)
+    requireResult   = (groups or importance or resultFile or plotHist or convergence or stats)
+
+    if requireResult and not resultName:
+        raise PygcamMcsUserError("result name must be specified")
+
+    if requireScenario:
+        expList = expNames and expNames.split(',')
+        if (not (expList and expList[0])):
+            raise PygcamMcsUserError("scenario name must be specified")
+    else:
+        expList = None
 
     db = getDatabase()
     trials = db.getTrialCount(simId) if limit <= 0 else limit
@@ -1024,32 +1062,31 @@ def analyzeSimulation(args):
 
     # TBD: instead, have commands requiring inputs call
     # inputs are shared across experiments, so gather these before looping over experiments
-    if plotInputs or inputsFile or importance or groups or exportEMA:
+    if requireInputs:
         inputDF = readParameterValues(simId, trials)
         inputRows, inputCols = inputDF.shape
         _logger.info("Each trial has %d parameters", inputCols)
+    else:
+        inputDF = None
 
     if inputsFile:
         exportInputs(inputsFile, inputDF)
 
-    expList = expNames and expNames.split(',')
-    if (not (expList and expList[0] and resultName)):
-        raise PygcamMcsUserError("expName and resultName must be specified")
+    if plotInputs:
+        plotInputDistributions(simId, inputDF)
+
+    if exportAll:
+        exportAllInputsOutputs(simId, expList[0], inputDF, exportAll)
 
     if resultFile:
         resultList = resultName.split(',')
         exportResults(simId, resultList, expList, resultFile)
-        return
 
     if exportEMA:
         resultList = resultName.split(',')
         saveForEMA(simId, expList, resultList, inputDF, exportEMA)
-        return
 
-    if plotInputs:
-        plotInputDistributions(simId, inputDF)
-
-    if not (importance or groups or plotHist or convergence or stats):
+    if not (requireScenario and requireResult):
         return
 
     for expName in expList:
@@ -1109,10 +1146,10 @@ def analyzeSimulation(args):
 
             if importance:
                 plotSensitivityResults(resultName, data, limit=15,
-                                        filename=makePlotPath('%s-s%02d-%s-ind' % (expName, simId, resultName), simId),
-                                        extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))
+                                       filename=makePlotPath('%s-s%02d-%s-ind' % (expName, simId, resultName), simId),
+                                       extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))
 
             if groups:
                 plotGroupSensitivityResults(resultName, data, limit=15,
-                                             filename=makePlotPath('%s-s%02d-%s-grp' % (expName, simId, resultName), simId),
-                                             extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))
+                                            filename=makePlotPath('%s-s%02d-%s-grp' % (expName, simId, resultName), simId),
+                                            extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))
