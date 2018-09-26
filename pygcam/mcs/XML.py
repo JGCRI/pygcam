@@ -16,6 +16,25 @@ _logger = getLogger(__name__)
 def pprint(elt):
     ET.tostring(elt, pretty_print=True)
 
+def getBooleanXML(value):
+    """
+    Get a value from an XML file and convert it into a boolean True or False.
+
+    :param value: any value (it's first converted to a string)
+    :return: True of the value is in ['true', '1'], False if the value
+             is in ['false', '0']. An exception is raised if any other
+             value is passed.
+    :raises: PygcamException
+    """
+    false = ["false", "0"]
+    true  = ["true", "1"]
+
+    val = str(value).strip()
+    if val not in true + false:
+        raise PygcamMcsUserError("Can't convert '%s' to boolean; must be in {false,no,0,true,yes,1} (case sensitive)." % value)
+
+    return (val in true)
+
 def findAndSave(elt, eltName, cls, myDict, tree=None, testFunc=None, parent=None):
     '''
     Simple helper function to find elements with a given name, create

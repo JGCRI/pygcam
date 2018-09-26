@@ -3,7 +3,7 @@
 # Copyright (c) 2015-2017. The Regents of the University of California (Regents).
 # See the file COPYRIGHT.txt for details.
 import os
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 
 import pandas as pd
@@ -13,7 +13,7 @@ from ..log import getLogger
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
 from .Database import getDatabase
-from .XML import XMLWrapper, findAndSave
+from .XML import XMLWrapper, findAndSave, getBooleanXML
 
 _logger = getLogger(__name__)
 
@@ -23,10 +23,11 @@ DEFAULT_RESULT_TYPE = RESULT_TYPE_SCENARIO
 
 QUERY_OUTPUT_DIR = 'queryResults'
 
-RESULT_ELT_NAME = 'Result'
-FILE_ELT_NAME = 'File'
+RESULT_ELT_NAME     = 'Result'
+FILE_ELT_NAME       = 'File'
 CONSTRAINT_ELT_NAME = 'Constraint'
-COLUMN_ELT_NAME = 'Column'
+COLUMN_ELT_NAME     = 'Column'
+VALUE_ELT_NAME      = 'Value'
 
 class XMLConstraint(XMLWrapper):
     equal = ['==', '=', 'equal', 'eq']
@@ -71,7 +72,12 @@ class XMLResult(XMLWrapper):
         self.type = element.get('type', DEFAULT_RESULT_TYPE)
         self.desc = element.get('desc')
         self.unit = element.get('unit', '') # default is no unit
-        self.queryFile = self._getPath(FILE_ELT_NAME)
+        self.cumulative = getBooleanXML(element.get('cumulative', 0))
+        self.percentage = getBooleanXML(element.get('percentage', 0))
+        self.queryFile  = self._getPath(FILE_ELT_NAME)
+
+        if self.percentage:
+            self.type = RESULT_TYPE_DIFF    # makes no sense otherwise
 
         col = self.element.find(COLUMN_ELT_NAME)
         self.column = XMLColumn(col) if col is not None else None
@@ -82,7 +88,7 @@ class XMLResult(XMLWrapper):
         self.whereClause = ' and '.join(constraintStrings)
 
     def isScalar(self):
-        return self.column is not None
+        return self.column is not None or self.cumulative
 
     def _getPath(self, eltName):
         'Get a single filename from the named element'
@@ -232,22 +238,104 @@ class QueryResult(object):
     def getData(self):
         return self.df
 
+# A single result DF can have data for multiple outputs, so we cache the files
+outputCache = defaultdict(lambda: None)
+
+def getCachedFile(csvPath, loader=QueryResult, desc="query result"):
+    result = outputCache[csvPath]
+    if not result:
+        try:
+            outputCache[csvPath] = result = loader(csvPath)
+        except Exception as e:
+            _logger.warning('saveResults: Failed to read {}: {}'.format(desc, e))
+            raise FileMissingError(csvPath)
+
+    return result
+
+def getOutputDir(trialDir, scenario, type):
+    subDir = 'queryResults' if type == RESULT_TYPE_SCENARIO else 'diffs'
+    return os.path.join(trialDir, scenario, subDir)
+
+
+def extractResult(context, scenario, outputDef, type):
+    from .util import activeYears, YEAR_COL_PREFIX
+
+    _logger.debug("Extracting result for %s", context)
+
+    trialDir = context.getTrialDir()
+
+    outputDir = getOutputDir(trialDir, scenario, type)
+    baseline = None if type == RESULT_TYPE_SCENARIO else context.baseline
+    csvPath = outputDef.csvPathname(scenario, outputDir=outputDir, baseline=baseline, type=type)
+
+    queryResult = getCachedFile(csvPath)
+    paramName   = outputDef.name
+    whereClause = outputDef.whereClause
+
+    selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
+    count = selected.shape[0]
+
+    if count == 0:
+        raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
+
+    if 'region' in selected.columns:
+        firstRegion = selected.region.iloc[0]
+        if count == 1:
+            regionName = firstRegion
+        else:
+            _logger.debug(
+                "Query where clause (%r) yielded %d rows; year columns will be summed" % (whereClause, count))
+            regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
+    else:
+        regionName = 'global'
+
+    isScalar = outputDef.isScalar()
+
+    # Create a dict to return. (context already has runId and scenario)
+    resultDict = dict(regionName=regionName, paramName=paramName, units=queryResult.units, isScalar=isScalar)
+
+    active = activeYears()
+    if isScalar:
+        if outputDef.cumulative:
+            total = selected[active].sum(axis=1)
+            value = float(total.sum() if isinstance(total, pd.Series) else total)
+        else:
+            colName = outputDef.columnName()
+            value = selected[colName].iloc[0]
+    else:
+        # When no column name is specified, assume this is a time-series result, so save all years.
+        # Use sum() to collapse values to a single time series; for a single row it helpfully
+        # converts the 1-element series to a simple float.
+        yearCols = map(lambda y: YEAR_COL_PREFIX + y, active)
+        value = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, active)}
+
+    if outputDef.percentage:
+        # Recursively read the baseline scenario result so we can compute % change
+        newDef = XMLResult(outputDef.element)
+        newDef.percentage = False
+        baseResult = extractResult(context, context.baseline, newDef, RESULT_TYPE_SCENARIO)
+        bv = baseResult['value']
+        value = 100 * (dict(pd.Series(value) / pd.Series(bv)) if isinstance(bv, dict) else value / bv)
+
+    resultDict['value'] = value
+
+    return resultDict
 
 def collectResults(context, type):
     '''
     Called by worker to process results, return a list of dicts
     with data the master process can quickly write to the database.
+    Returns a list of dicts with results for this trial.
     '''
-    from collections import defaultdict
-    from .util import getSimResultFile, activeYears, YEAR_COL_PREFIX
+    from .util import getSimResultFile
 
     _logger.debug("Collecting results for %s", context)
 
     baseline = context.baseline
     scenario = context.scenario
 
-    if type == RESULT_TYPE_DIFF:
-        assert baseline, "saveResults: must specify baseline for DIFF results"
+    if type == RESULT_TYPE_DIFF and not baseline:
+        raise PygcamMcsUserError("saveResults: must specify baseline for DIFF results")
 
     resultsFile = getSimResultFile(context.simId)
     rf = XMLResultFile.getInstance(resultsFile)
@@ -257,76 +345,7 @@ def collectResults(context, type):
         _logger.info('saveResults: No outputs defined for type %s', type)
         return []
 
-    # TBD: was used to delete prior results; may not be needed
-    # names = map(XMLResult.getName, outputDefs)
-
-    activeYears = activeYears()
-    yearCols = map(lambda y: YEAR_COL_PREFIX + y, activeYears)
-
-    # A single result DF can have data for multiple outputs, so we cache the files
-    outputCache = defaultdict(lambda: None)
-
-    trialDir = context.getTrialDir()
-
-    # TBD: create context.getQueryResultsDir() ?
-    scenarioOutputDir = os.path.join(trialDir, scenario, 'queryResults')
-
-    # TBD: create context.getDiffsDir() ?
-    diffsOutputDir = os.path.join(trialDir, scenario, 'diffs')
-
-    outputDir = scenarioOutputDir if type == RESULT_TYPE_SCENARIO else diffsOutputDir
-
-    resultList = []
-
-    for output in outputDefs:
-        csvPath = output.csvPathname(scenario, baseline=baseline, outputDir=outputDir, type=type)
-
-        if not outputCache[csvPath]:
-            try:
-                outputCache[csvPath] = QueryResult(csvPath)
-            except Exception as e:
-                _logger.warning('saveResults: Failed to read query result: %s', e)
-                raise FileMissingError(csvPath)
-
-        queryResult = outputCache[csvPath]
-        paramName   = output.name
-        whereClause = output.whereClause
-
-        selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
-        count = selected.shape[0]
-        if count == 0:
-            raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
-
-        if 'region' in selected.columns:
-            firstRegion = selected.region.iloc[0]
-            if count == 1:
-                regionName = firstRegion
-            else:
-                _logger.debug(
-                    "Query where clause (%r) yielded %d rows; year columns will be summed" % (whereClause, count))
-                regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
-        else:
-            regionName = 'global'
-
-        # Create a dict to return. No need to store runId or scenario; context has these already
-        resultDict = dict(regionName=regionName, paramName=paramName)
-
-        if output.isScalar():
-            colName = output.columnName()
-            value = selected[colName].iloc[0]
-            resultDict['isScalar'] = True
-        else:
-            # When no column name is specified, assume this is a time-series result, so save all years.
-            # Use sum() to collapse values to a single time series; for a single row it helpfully
-            # converts the 1-element series to a simple float.
-            value = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, activeYears)}
-            resultDict['isScalar'] = False
-            resultDict['units'] = queryResult.units
-
-        resultDict['value'] = value
-        resultList.append(resultDict)
-
-    # a list of dicts with results for this trial
+    resultList = [extractResult(context, scenario, outputDef, type) for outputDef in outputDefs]
     return resultList
 
 def saveResults(context, resultList):

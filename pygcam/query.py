@@ -151,7 +151,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0, ca
 
     return df
 
-def writeCsv(df, filename, header='', float_format="%.4f"):
+def writeCsv(df, filename, header='', float_format="%.4f", index=None):
     """
     Save a DataFrame a file in "standard" GCAM csv format', which
     means without a numerical index, and with column headers on
@@ -169,7 +169,7 @@ def writeCsv(df, filename, header='', float_format="%.4f"):
     """
     _logger.info("Writing %s", filename)
 
-    txt = df.to_csv(None, float_format=float_format)
+    txt = df.to_csv(None, float_format=float_format, index=index)
     with open(filename, 'w') as f:
         f.write("%s\n" % header)  # add a header line to match batch-query output format
         f.write(txt)

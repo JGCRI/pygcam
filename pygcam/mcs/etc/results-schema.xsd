@@ -32,7 +32,6 @@
 	<xs:element name="Constraint">
 		<xs:complexType>
 			<xs:attribute name="column" use="required" type="xs:string"/>
-			<xs:attribute name="groupby" type="xs:string"/>
 			<xs:attribute name="op" use="required" type="OperatorType"/>
 			<xs:attribute name="value" use="required" type="xs:string"/>
 		</xs:complexType>
@@ -44,18 +43,27 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="Value">
+		<xs:complexType>
+
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="Result">
 		<xs:complexType>
 			<xs:choice maxOccurs="unbounded">
 				<xs:element ref="comment" minOccurs="0"/>
 				<xs:element ref="File" minOccurs="0" maxOccurs="1"/>
 				<xs:element ref="Column" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="Value" minOccurs="0" maxOccurs="1"/>
 				<xs:element ref="Constraint" minOccurs="0"/>
 			</xs:choice>
 			<xs:attribute name="desc" type="xs:string"/>
 			<xs:attribute name="unit" type="xs:string"/>
 			<xs:attribute name="name" use="required" type="xs:string"/>
 			<xs:attribute name="type" use="required" type="ResultType"/>
+			<xs:attribute name="percentage" default="0" type="xs:boolean"/>
+			<xs:attribute name="cumulative" default="0" type="xs:boolean"/>
 		</xs:complexType>
 	</xs:element>
 
