@@ -186,26 +186,13 @@ class Master(object):
             _logger.info("No engines are running")
             return
 
-        dview = self.client[:]
-        status = dview.queue_status()
+        qstatus = self.client.queue_status()
 
-        # for key, value in iteritems(status):
-        #     _logger.debug('  %s: %s', key, value)
-
-        idleEngines = []
-
-        unassigned = u'unassigned'
+        if qstatus.pop(u'unassigned'):
+            return
 
         # Shutdown idle engines if there are no unassigned tasks
-        if status[unassigned] == 0:
-            # collect ids of idle engines
-            for id, stats in iteritems(status):
-                if id == unassigned:    # ignore
-                    continue
-
-                # _logger.debug('%d: %s', id, stats)
-                if stats[u'tasks'] == 0 and stats[u'queue'] == 0:
-                    idleEngines.append(id)
+        idleEngines = [id for id, stats in iteritems(qstatus) if stats[u'tasks'] + stats[u'queue'] == 0]
 
         if idleEngines:
             _logger.info('Shutting down %d idle engines', len(idleEngines))
@@ -313,44 +300,21 @@ class Master(object):
         cached.setVars(status=status)
         self.db.setRunStatus(context.runId, status, session=session)
 
-    def runningTasks(self):
-        # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
-        recs = self.client.db_query({'completed': {'$eq': None}}, keys=['msg_id'])
-        ids = [rec['msg_id'] for rec in recs]
-        return ids
+    # def _query_completion_status(self, completed=True):
+    #     # 'completed' flag '$ne' None => running, '$eq' None => completed
+    #     op = ('$ne' if completed else '$eq')
+    #
+    #     # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
+    #     recs = self.client.db_query({'completed': {op: None}}, keys=['msg_id'])
+    #
+    #     ids = [rec['msg_id'] for rec in recs]
+    #     return ids
 
-    def completedTasks(self):
-        recs = self.client.db_query({'completed': {'$ne': None}}, keys=['msg_id'])
-        ids = [rec['msg_id'] for rec in recs]
-        return ids
+    # def runningTasks(self):
+    #     return self._query_completion_status(completed=False)
 
-    def checkRunning(self):
-        """
-        Check for newly running tasks
-        """
-        tasks = self.runningTasks()
-        # _logger.debug("Found %d running tasks", len(running))
-
-        for task in tasks:
-            try:
-                ar = self.client.get_result(task, block=False, owner=False)
-
-                # if tasks are ready, we handle them later.
-                if ar.ready():
-                    #_logger.debug('checkRunning: skipping task with result (%s)', task)
-                    continue
-
-                if ar.data:
-                    context = ar.data.get('context')
-                    if context:
-                        self.setRunStatus(context)
-
-            except (KeyError, ipp.RemoteError) as e:
-                #_logger.warning('checkRunning: purging result: %s', e)
-                self.client.purge_results(jobs=task)
-
-            except Exception as e:
-                _logger.warning("checkRunning: %s", e)
+    # def completedTasks(self):
+    #     return self._query_completion_status(completed=True)
 
     def resubmit(self, task, context):
         _logger.info('Resubmitting task %s', context)
@@ -366,8 +330,8 @@ class Master(object):
 
         for task in tasks:
             try:
-                # owner (bool [default: True]) – Whether this AsyncResult should own the result.
-                # If so, calling ar.get() will remove data from the client’s result and metadata
+                # owner (bool [default: True]) - Whether this AsyncResult should own the result.
+                # If so, calling ar.get() will remove data from the client's result and metadata
                 # cache. There should only be one owner of any given msg_id.
                 ar = client.get_result(task, block=False, owner=False)
 
@@ -464,37 +428,82 @@ class Master(object):
         finally:
             db.endSession(session)
 
-    def checkCompleted(self):
+    # def checkCompleted(self):
+    #
+    #     while True:
+    #         completed = self.completedTasks()
+    #         if not completed:
+    #             return
+    #
+    #         _logger.debug('%d completed tasks', len(completed))
+    #
+    #         results = self.getResults(completed)
+    #         if not results:
+    #             _logger.warning('Purging %d completed tasks with no results (engine died?)', len(completed))
+    #             self.client.purge_results(jobs=completed)
+    #             continue
+    #
+    #         self.saveResults(results)
+    #
+    #         seconds = 2
+    #         sleep(seconds)    # brief sleep before checking for more completed tasks
+
+    # def outstandingTasks(self):
+    #     '''
+    #     Return True if any tasks remain to be completed.
+    #     '''
+    #     tot = self.queueTotals()
+    #     _logger.info('%d engines: %s' % (len(self.client), tot))
+    #
+    #     return tot['tasks'] or tot['queue'] or tot['unassigned'] or self.completedTasks()
+
+    def checkEngines(self):
+        from ipyparallel import NoEnginesRegistered
+        from .slurm import Slurm
+
+        engineSleep = 10
+        client = self.client
 
         while True:
-            completed = self.completedTasks()
-            if not completed:
-                return
+            try:
+                if len(client) > 0:
+                    return True
 
-            _logger.debug('%d completed tasks', len(completed))
+                slurm = Slurm()
+                pending = slurm.jobsInState('pending', jobName='mcs-engine')    # pending engines, not tasks...
 
-            results = self.getResults(completed)
-            if not results:
-                _logger.warning('Purging %d completed tasks with no results (engine died?)', len(completed))
-                self.client.purge_results(jobs=completed)
-                continue
+                if len(pending):
+                    _logger.info('No engines registered; %d workers PENDING', len(pending))
+                    sleep(engineSleep)
+                    continue
 
-            self.saveResults(results)
+                else:
+                    _logger.info("No engines running or pending. Shutting down hub.")
+                    client.shutdown(hub=True, block=True)
+                    return False
 
-            seconds = 2
-            sleep(seconds)    # brief sleep before checking for more completed tasks
+            except NoEnginesRegistered:
+                sleep(engineSleep)  # handled in loop
 
-    def outstandingTasks(self):
-        '''
-        Return True if any tasks remain to be completed.
-        '''
-        tot = self.queueTotals()
-        _logger.info('%d engines: %s' % (len(self.client), tot))
+    def run(self):
+        args = self.args
 
-        return tot['tasks'] or tot['queue'] or tot['unassigned'] or self.completedTasks()
+        if args.runLocal:
+            self.runTrials()
+            return
 
-    def mainloop(self):
+        if args.redoListOnly and args.statuses:
+            listTrialsToRedo(self.db, args.simId, args.scenarios, args.statuses)
+            return
+
+        self.waitForWorkers()    # wait for engines to spin up (or reconnect if loopOnly)
+
+        ars = self.runTrials()
+        self.mainloop(ars)
+
+    def mainloop(self, ars):
         """
+        Run the main wait-and-process loop on `ars`, a list of async result instances.
         Takes parameters from arguments passed from runsim plugin.
         If `args.loopOnly` is False, run the trials identified in self.args.
         If `args.addTrials` is True, exit after running the trials, otherwise,
@@ -504,60 +513,65 @@ class Master(object):
 
         :return: none
         """
-        from ipyparallel import NoEnginesRegistered
         from pygcam.error import PygcamException
-        from .slurm import Slurm
-
-        slurm = Slurm()
 
         args = self.args
         shutdownWhenIdle = args.shutdownWhenIdle
 
-        if args.redoListOnly and args.statuses:
-            listTrialsToRedo(self.db, args.simId, args.scenarios, args.statuses)
-            return
+        client = self.client
 
-        if not args.runLocal:
-            self.waitForWorkers()    # wait for engines to spin up
+        # we manage the process using a set of message ids
+        pending = {ar.msg_id for ar in ars}
 
-        if not args.loopOnly:
-            self.runTrials()
+        # dict mapping msg_id to async result object
+        id_map = {ar.msg_id : ar for ar in ars}
 
-        if args.runLocal:
-            return
+        while pending:
 
-        if args.addTrials:
-            sleep(3)
-            return     # exit after adding trials
+            if not self.checkEngines():
+                return
+
+            # check for status updates
+            for ar in id_map.values():
+                if ar.data:
+                    context = ar.data.get('context')
+                    if context:
+                        self.setRunStatus(context)
+
+            # finished is the set of msg_ids that are complete
+            finished = pending.difference(client.outstanding)
+
+            # update pending to exclude those that just finished
+            pending = pending.difference(finished)
+
+            if finished:
+                _logger.debug('%d completed tasks', len(finished))
+
+                results = self.getResults(finished)
+                if results:
+                    self.saveResults(results)
+                else:
+                    _logger.warning('Purging %d completed tasks with no results (engine died?)', len(finished))
+                    self.client.purge_results(jobs=finished)
+
+                # drop these from id_map so we don't keep checking status needlessly
+                for id in finished:
+                    del id_map[id]
+
+            if shutdownWhenIdle:
+                self.shutdownIdleEngines()
+
+            _logger.debug('sleep(%d)', args.waitSecs)
+            sleep(args.waitSecs)
+
+        client.shutdown(hub=True, block=True)
 
 
-        # pending = set(msg_ids)
-        # while pending:
-        #     try:
-        #         rc.wait(pending, 0.1)
-        #     except ipp.TimeoutError:  # TimeoutError => at least one task isn't done
-        #         pass
-        #
-        #     # finished is the set of msg_ids that are complete
-        #     finished = pending.difference(rc.outstanding)
-        #
-        #     # update pending to exclude those that just finished
-        #     pending = pending.difference(finished)
-        #
-        #     for msg_id in finished:
 
         while True:
             try:
-
-                # TBD: checkRunning and checkCompleted are called only here,
-                # TBD: and checkCompleted is the only caller of getResults.
-                # TBD: Some simplification should be possible.
-
-                self.checkRunning()         # Check for newly running tasks
-                self.checkCompleted()       # Check for completed tasks
-
-                outstanding = self.outstandingTasks()
-                if outstanding:
+                # outstanding = self.outstandingTasks()
+                if client.outstanding:
                     if len(self.client) == 0:
                         pending = slurm.jobsInState('pending', jobName='mcs-engine')
                         if len(pending):
@@ -590,6 +604,8 @@ class Master(object):
         import worker
 
         args = vars(self.args)
+
+        # Construct dict of args to pass to worker tasks
         argDict = {}
         for key in ('runLocal', 'noGCAM', 'noBatchQueries', 'noPostProcessor'):
             argDict[key] = args.get(key, False)
@@ -602,7 +618,9 @@ class Master(object):
         trialStr    = args['trials']
         runLocal    = args['runLocal']
 
-        # asyncResults = []
+        asyncResults = []
+
+        # TBD: use direct view to concentrate runs on nodes rather than distributing them
         view = None if runLocal else self.client.load_balanced_view(retries=2)
 
         for scenario in scenarios:
@@ -643,7 +661,7 @@ class Master(object):
             for context in contexts:
                 try:
                     if runLocal:
-                        # statusPairs.append((context, RUN_RUNNING))
+                        self.setRunStatus(context, status=RUN_RUNNING)
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
                         self.saveResults([result])
@@ -653,14 +671,14 @@ class Master(object):
                         result = view.map_async(worker.runTrial, [context], [argDict])
                         statusPairs.append((context, RUN_QUEUED))
 
-                    # asyncResults.append(result)
+                    asyncResults.append(result)
 
                 except Exception as e:
                     _logger.error("Exception running 'runTrial': %s", e)
 
             self.setRunStatuses(statusPairs)
 
-        return # asyncResults
+        return asyncResults
 
 def getTrialsToRedo(db, simId, scenario, statuses):
 

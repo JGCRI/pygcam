@@ -50,8 +50,7 @@ def driver(args, tool):
 
     args.groupName = args.groupName or Project.defaultGroupName()
 
-    master = Master(args)
-    master.mainloop()
+    Master(args).run()
 
 
 class RunSimCommand(McsSubcommandABC):
