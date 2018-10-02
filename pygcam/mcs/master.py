@@ -314,18 +314,14 @@ class Master(object):
         self.db.setRunStatus(context.runId, status, session=session)
 
     def runningTasks(self):
-        from pygcam.utils import flatten
-
-        qstatus = self.client.queue_status(verbose=True)
-        # all keys are engine ids except for one, which is 'unassigned'.
-        ids = [rec['tasks'] for key, rec in iteritems(qstatus) if isinstance(key, (int, long))]
-        return flatten(ids)
+        # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
+        recs = self.client.db_query({'completed': {'$eq': None}}, keys=['msg_id'])
+        ids = [rec['msg_id'] for rec in recs]
+        return ids
 
     def completedTasks(self):
-        # TBD: test code uses '' rather than None, and tests msg_id, e.g.
-        #  found = self.client.db_query({'msg_id': {'$ne' : ''}}, keys=['submitted', 'completed'])
         recs = self.client.db_query({'completed': {'$ne': None}}, keys=['msg_id'])
-        ids = [rec['msg_id'] for rec in recs] if recs else None
+        ids = [rec['msg_id'] for rec in recs]
         return ids
 
     def checkRunning(self):
@@ -370,7 +366,10 @@ class Master(object):
 
         for task in tasks:
             try:
-                ar = client.get_result(task, block=False, owner=True)
+                # owner (bool [default: True]) – Whether this AsyncResult should own the result.
+                # If so, calling ar.get() will remove data from the client’s result and metadata
+                # cache. There should only be one owner of any given msg_id.
+                ar = client.get_result(task, block=False, owner=False)
 
                 try:
                     if not ar.ready():
@@ -480,10 +479,7 @@ class Master(object):
                 self.client.purge_results(jobs=completed)
                 continue
 
-            # _logger.debug('Saving %d results', len(results))
             self.saveResults(results)
-            # for result in results:
-            #     self.saveResults(result)
 
             seconds = 2
             sleep(seconds)    # brief sleep before checking for more completed tasks
@@ -527,11 +523,36 @@ class Master(object):
         if not args.loopOnly:
             self.runTrials()
 
-        if args.addTrials or args.runLocal:
-            return      # Exit after adding or running trials
+        if args.runLocal:
+            return
+
+        if args.addTrials:
+            sleep(3)
+            return     # exit after adding trials
+
+
+        # pending = set(msg_ids)
+        # while pending:
+        #     try:
+        #         rc.wait(pending, 0.1)
+        #     except ipp.TimeoutError:  # TimeoutError => at least one task isn't done
+        #         pass
+        #
+        #     # finished is the set of msg_ids that are complete
+        #     finished = pending.difference(rc.outstanding)
+        #
+        #     # update pending to exclude those that just finished
+        #     pending = pending.difference(finished)
+        #
+        #     for msg_id in finished:
 
         while True:
             try:
+
+                # TBD: checkRunning and checkCompleted are called only here,
+                # TBD: and checkCompleted is the only caller of getResults.
+                # TBD: Some simplification should be possible.
+
                 self.checkRunning()         # Check for newly running tasks
                 self.checkCompleted()       # Check for completed tasks
 
@@ -547,9 +568,6 @@ class Master(object):
                             _logger.info("No engines running or pending. Shutting down hub.")
                             self.client.shutdown(hub=True, block=True)
                             return
-
-                    # self.checkRunning()         # Check for newly running tasks
-                    # self.checkCompleted()       # Check for completed tasks
 
                 else:   # no outstanding tasks
                     _logger.info("No outstanding tasks. Shutting down hub.")
@@ -584,7 +602,7 @@ class Master(object):
         trialStr    = args['trials']
         runLocal    = args['runLocal']
 
-        asyncResults = []
+        # asyncResults = []
         view = None if runLocal else self.client.load_balanced_view(retries=2)
 
         for scenario in scenarios:
@@ -635,14 +653,14 @@ class Master(object):
                         result = view.map_async(worker.runTrial, [context], [argDict])
                         statusPairs.append((context, RUN_QUEUED))
 
-                    asyncResults.append(result)
+                    # asyncResults.append(result)
 
                 except Exception as e:
                     _logger.error("Exception running 'runTrial': %s", e)
 
             self.setRunStatuses(statusPairs)
 
-        return asyncResults
+        return # asyncResults
 
 def getTrialsToRedo(db, simId, scenario, statuses):
 
