@@ -487,9 +487,10 @@ class Master(object):
                 return
 
             # check for status updates
-            for ar in ars: # id_map.values():
-                if ar.data:
-                    context = ar.data.get('context')
+            for ar in ars:
+                data = ar.data[0]
+                if data:
+                    context = data.get('context')
                     if context:
                         self.setRunStatus(context)
 
@@ -597,7 +598,6 @@ class Master(object):
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
                         result = view.map_async(worker.runTrial, [context], [argDict])
-                        print("result:", result)
                         statusPairs.append((context, RUN_QUEUED))
                         asyncResults.append(result)
 
