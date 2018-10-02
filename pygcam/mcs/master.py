@@ -22,10 +22,9 @@ from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_C
 
 from .context import Context
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
-from .error import IpyparallelError, PygcamMcsSystemError
+from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
-
-
+from ..config import getParam, getParamAsInt
 from ..log import getLogger
 
 # Exit values for Master.processTrials()
@@ -128,8 +127,6 @@ class Master(object):
                     #_logger.debug("Loaded %s", context)
 
     def waitForWorkers(self):
-        from pygcam.config import getParamAsInt
-
         maxTries  = getParamAsInt('IPP.StartupWaitTries')
         seconds   = getParamAsInt('IPP.StartupWaitSecs')
         profile   = self.args.profile
@@ -218,8 +215,6 @@ class Master(object):
         :param trialNums: (list of int) trial numbers
         :return: list of Context instances
         '''
-        from .error import PygcamMcsUserError
-
         db = self.db
         session = db.Session()
 
@@ -261,8 +256,6 @@ class Master(object):
         Process a list of status changes in a single transaction, e.g., when setting
         the status for a long list of runs to "queued".
         """
-        from .Database import getDatabase
-
         db = getDatabase()
         with db.sessionScope() as session:
             for context, status in pairs:
@@ -303,10 +296,10 @@ class Master(object):
     def _query_completion_status(self, completed=True):
         # 'completed' flag '$ne' None => running, '$eq' None => completed
         op = ('$ne' if completed else '$eq')
-    
+
         # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
         recs = self.client.db_query({'completed': {op: None}}, keys=['msg_id'])
-    
+
         ids = [rec['msg_id'] for rec in recs]
         return ids
 
@@ -375,8 +368,6 @@ class Master(object):
         '''
         Called on the master to save results to the database that were prepared by the worker.
         '''
-        from .Database import getDatabase
-
         db = getDatabase()
         session = db.Session()
 
@@ -429,7 +420,6 @@ class Master(object):
             db.endSession(session)
 
     def checkEngines(self):
-        from ipyparallel import NoEnginesRegistered
         from .slurm import Slurm
 
         engineSleep = 10
@@ -453,7 +443,7 @@ class Master(object):
                     client.shutdown(hub=True, block=True)
                     return False
 
-            except NoEnginesRegistered:
+            except ipp.NoEnginesRegistered:
                 sleep(engineSleep)  # handled in loop
 
     def run(self):
@@ -468,8 +458,6 @@ class Master(object):
 
         :return: none
         """
-        from pygcam.error import PygcamException
-
         args = self.args
 
         if args.runLocal:
@@ -486,22 +474,12 @@ class Master(object):
 
         ars = self.runTrials()
 
-        print("ars:", ars)
-        for i in range(10):
-            print("ar.metadata:", ars[0].msg_id)
-            sleep(2)
-
-        id_map = {}
-        tasks = self.runningTasks()
-        for t in tasks:
-            ar = self.client.get_result(t, block=False, owner=False)
-            print("{}: {}".format(t, ar.metadata))
-            id_map[t] = ar
-
+        # id_map = {}
         # dict mapping msg_id to async result object
         # id_map = {ar.msg_id : ar for ar in ars}
+        # pending = set(id_map.keys())
 
-        pending = set(id_map.keys())
+        pending = self.client.outstanding
 
         while pending:
 
@@ -509,7 +487,7 @@ class Master(object):
                 return
 
             # check for status updates
-            for ar in id_map.values():
+            for ar in ars: # id_map.values():
                 if ar.data:
                     context = ar.data.get('context')
                     if context:
@@ -518,7 +496,7 @@ class Master(object):
             # finished is the set of msg_ids that are complete
             finished = pending.difference(self.client.outstanding)
 
-            # update pending to exclude those that just finished
+            # update pending to exclude those that finished
             pending = pending.difference(finished)
 
             if finished:
@@ -531,9 +509,16 @@ class Master(object):
                     _logger.warning('Purging %d completed tasks with no results (engine died?)', len(finished))
                     self.client.purge_results(jobs=finished)
 
-                # drop these from id_map so we don't keep checking status needlessly
-                for id in finished:
-                    del id_map[id]
+                # drop finished tasks from list to avoid checking status needlessly
+                toDelete = []
+                for ar in ars:
+                    id = ar.msg_id
+                    if id and id != [None] and id in finished:
+                        toDelete.append(ar)
+                        finished.remove(id)
+
+                for ar in toDelete:
+                    ars.remove(ar)
 
             if shutdownWhenIdle:
                 self.shutdownIdleEngines()
@@ -688,7 +673,6 @@ def _saveBatchFiles(numTrials, argDict):
     :return: (dict) the names of the generated files, keyed by 'engine' or 'controller'
     """
     import pipes
-    from pygcam.config import getParam, getParamAsInt
 
     minutesPerRun = argDict['minutesPerRun']
     maxEngines    = argDict['maxEngines']
@@ -760,7 +744,6 @@ def startEngines(numTrials, batchTemplate):
     Uses the batch file created when the cluster was started, so it has
     the profile, cluster-id, and ntasks-per-node already set.
     """
-    from pygcam.config import getParamAsInt
     from pygcam.utils import shellCommand
 
     tasksPerNode = getParamAsInt('IPP.TasksPerNode')
@@ -786,8 +769,6 @@ def _defaultFromConfig(argDict, name, param):
     the config file param, and set the kwargs dict so this value will
     be used in formatting the template.
     '''
-    from pygcam.config import getParam
-
     if argDict.get(name, None) is None:
         argDict[name] = getParam(param)
 
@@ -865,7 +846,6 @@ def startCluster(**kwargs):
 
 
 def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None):
-    from pygcam.config import getParam
     from pygcam.utils import shellCommand
 
     # This allows user to pass empty string (e.g., -c='') to override default
