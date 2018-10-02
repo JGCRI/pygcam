@@ -260,7 +260,7 @@ def getOutputDir(trialDir, scenario, type):
 def extractResult(context, scenario, outputDef, type):
     from .util import activeYears, YEAR_COL_PREFIX
 
-    _logger.debug("Extracting result for %s", context)
+    _logger.debug("Extracting result for {}, name={}".format(context, outputDef.name))
 
     trialDir = context.getTrialDir()
 
@@ -301,7 +301,7 @@ def extractResult(context, scenario, outputDef, type):
             value = float(total.sum() if isinstance(total, pd.Series) else total)
         else:
             colName = outputDef.columnName()
-            value = selected[colName].iloc[0]
+            value = selected[colName].sum()     # works for single or multiple rows
     else:
         # When no column name is specified, assume this is a time-series result, so save all years.
         # Use sum() to collapse values to a single time series; for a single row it helpfully
