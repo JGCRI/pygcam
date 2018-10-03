@@ -460,7 +460,7 @@ class Project(XMLFile):
 
     def getKnownScenarios(self):
         '''
-        Return a list of known scenarios for the current project and scenarioGroup, alpha sorted
+        Return a list of known scenarios for the current project and scenarioGroup, baseline first
         '''
         # sorting by not(node.isBaseline) results in baseline preceding scenarios
         sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)

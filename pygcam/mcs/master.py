@@ -113,7 +113,7 @@ class Master(object):
 
         projectName = args.projectName
 
-        # If we're just adding trials, no point in caching runs from database
+        # If we're just adding trials, no point in caching runs from database (deprecated?)
         if not args.addTrials:
             # cache run definitions from the database and amend as necessary when creating runs
             for scenario in args.scenarios:
@@ -476,6 +476,9 @@ class Master(object):
 
         shutdownWhenIdle = args.shutdownWhenIdle
 
+        if shutdownWhenIdle:
+            self.shutdownIdleEngines()      # handles case of initial over-allocation
+
         ars = self.runTrials()
 
         # id_map = {}
@@ -485,10 +488,14 @@ class Master(object):
 
         pending = self.client.outstanding
 
+        counter = 0         # for occasionally displaying queue status
+
         while pending:
 
             if not self.checkEngines():
                 return
+
+            state = 'nominal'   # set to 'completed' when some are completed, to set shorter sleep
 
             # check for status updates
             for ar in ars:
@@ -505,6 +512,7 @@ class Master(object):
             pending = pending.difference(finished)
 
             if finished:
+                state = 'completed'
                 _logger.debug('%d completed tasks', len(finished))
 
                 results = self.getResults(finished)
@@ -517,8 +525,8 @@ class Master(object):
                 # drop finished tasks from list to avoid checking status needlessly
                 toDelete = []
                 for ar in ars:
-                    id = ar.msg_id
-                    if id and id != [None] and id in finished:
+                    id = ar.msg_id[0]
+                    if id in finished:
                         toDelete.append(ar)
                         finished.remove(id)
 
@@ -528,8 +536,13 @@ class Master(object):
                 if shutdownWhenIdle:
                     self.shutdownIdleEngines()
 
-            _logger.debug('sleep(%d)', args.waitSecs)
-            sleep(args.waitSecs)
+            if counter % 5 == 0:
+                totals = self.queueTotals()
+                _logger.info(totals)
+
+            secs = args.waitSecs if state == 'nominal' else 2
+            _logger.debug('sleep(%d)', secs)
+            sleep(secs)
 
         self.client.shutdown(hub=True, block=True)
 
@@ -555,6 +568,14 @@ class Master(object):
 
         # TBD: use direct view to concentrate runs on nodes rather than distributing them
         view = None if runLocal else self.client.load_balanced_view(retries=2)
+
+        db = getDatabase()
+        exps = {e.expName: e.parent for e in db.getExps()}
+
+        baselines = filter(lambda s: not exps.get(s), scenarios)
+        policies  = filter(lambda s: exps.get(s), scenarios)
+
+        baselineARs = {}      # baseline async_result objects keyed by trialnum
 
         for scenario in scenarios:
 
@@ -591,6 +612,10 @@ class Master(object):
 
             statusPairs = []
 
+            # TBD: if multiple scenarios and one is a baseline, create a dict of baseline
+            # TBD: Contexts by trialnum. Then when calling map_async, if the baseline for
+            # TBD: the given non-baseline is in the dict, se6t the 'after' flag.
+
             for context in contexts:
                 try:
                     if runLocal:
@@ -601,6 +626,7 @@ class Master(object):
                     else:
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
+                        # with view.temp_flags(after=[ lookup ar for baseline scenario ])
                         result = view.map_async(worker.runTrial, [context], [argDict])
                         statusPairs.append((context, RUN_QUEUED))
                         asyncResults.append(result)

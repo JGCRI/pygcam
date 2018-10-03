@@ -41,6 +41,11 @@ def driver(args, tool):
                     trialList = parseTrialString(trials)
                     numTrials = len(trialList)
 
+                else:
+                    # Assume user is running all trials
+                    db = getDatabase(checkInit=False)
+                    numTrials = db.getTrialCount(args.simId)
+
             _logger.info('Creating cluster to run {} trials'.format(numTrials))
 
             _logger.info('Starting ipyparallel cluster')
@@ -74,6 +79,7 @@ class RunSimCommand(McsSubcommandABC):
         scenarioHelp = 'Default value is "%s".' % defaultScenario \
                             if defaultScenario else "No default has been set."
 
+        # deprecated
         parser.add_argument('-a', '--addTrials', action='store_true',
                             help='''Add trials to a running cluster; don't wait for results.''')
 
@@ -106,14 +112,16 @@ class RunSimCommand(McsSubcommandABC):
                             help="Don't run GCAM, just run the batch queries and "
                                  "post-processor (if defined).")
 
+        # deprecated -- make this the standard behavior
         parser.add_argument('-i', '--shutdownWhenIdle', action='store_true',
-                            help='''Shutdown engines when they are idle and there are 
+                            help='''Shutdown engines when they are idle and there are
                             no outstanding tasks, and shutdown controller when there are no
                             engines running.''')
 
         parser.add_argument('-l', '--runLocal', action='store_true',
                             help='''Runs the program locally instead of submitting a batch job.''')
 
+        # deprecated
         parser.add_argument('-L', '--loopOnly', action='store_true',
                             help='''Don't run any new trials; just enter the wait loop to 
                             process results.''')
@@ -196,53 +204,3 @@ class RunSimCommand(McsSubcommandABC):
                 raise CommandlineError("Unknown status code(s): %s" % ', '.join(map(repr, unknown)))
 
         driver(args, tool)
-
-#
-# Test stuff
-#
-if __name__ == '__main__':
-    import ipyparallel as ipp
-
-    clusterId = 'mcs'
-    profile = 'pygcam'
-
-    client = ipp.Client(profile=profile, cluster_id=clusterId)
-    dview = client[:]
-    dview.execute('import time')
-
-    def f(id, secs):
-        from ipyparallel.engine.datapub import publish_data
-        import time
-
-        publish_data({id : 'running'})
-        time.sleep(secs)
-        publish_data({id : 'finished'})
-        return secs
-
-    def runStatus(res, statuses=None):
-        statuses = statuses or {}
-
-        for r in res:
-            dataDict = r.data[0]
-            if dataDict:
-                for id, status in iteritems(dataDict):
-                    statuses[id] = status
-        return statuses
-
-    def running(res, statuses=None):
-        statuses = statuses or {}
-        statuses = runStatus(res, statuses)
-        return [id for id, status in iteritems(statuses) if status == 'running']
-
-    dview['f'] = f
-
-    lbview = client.load_balanced_view()
-    res = [lbview.map_async(f, [i], [20]) for i in range(10)]
-    m = res[0].metadata
-    # md = res.metadata
-    # m  = md[0]
-    # kids = res._children
-    # kid  = kids[0]
-    status = dview.queue_status()
-    print(status)
-
