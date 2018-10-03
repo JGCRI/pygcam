@@ -113,18 +113,16 @@ class Master(object):
 
         projectName = args.projectName
 
-        # If we're just adding trials, no point in caching runs from database (deprecated?)
-        if not args.addTrials:
-            # cache run definitions from the database and amend as necessary when creating runs
-            for scenario in args.scenarios:
-                rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
-                _logger.info('Caching info for %d runs of scenario %s', len(rows), scenario)
-                for row in rows:
-                    assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
-                    runId, simId, trialNum, status = row
-                    context = Context(projectName=projectName, runId=runId, simId=simId,
-                                      trialNum=trialNum, scenario=scenario, status=status)
-                    #_logger.debug("Loaded %s", context)
+        # cache run definitions from the database and amend as necessary when creating runs
+        for scenario in args.scenarios:
+            rows = self.db.getRunInfo(args.simId, scenario, includeSucceededRuns=False)
+            _logger.info('Caching info for %d runs of scenario %s', len(rows), scenario)
+
+            for row in rows:
+                assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
+                runId, simId, trialNum, status = row
+                Context(projectName=projectName, runId=runId, simId=simId,
+                        trialNum=trialNum, scenario=scenario, status=status)
 
     def waitForWorkers(self):
         maxTries  = getParamAsInt('IPP.StartupWaitTries')
@@ -454,11 +452,6 @@ class Master(object):
         """
         Run the main wait-and-process loop on `ars`, a list of async result instances.
         Takes parameters from arguments passed from runsim plugin.
-        If `args.loopOnly` is False, run the trials identified in self.args.
-        If `args.addTrials` is True, exit after running the trials, otherwise,
-        loop until all tasks are completed, if "shutdown when idle" was given
-        as a command-line arg, or loop indefinitely, allowing another task to
-        add more trials to run.
 
         :return: none
         """
@@ -472,9 +465,9 @@ class Master(object):
             listTrialsToRedo(self.db, args.simId, args.scenarios, args.statuses)
             return
 
-        self.waitForWorkers()    # wait for engines to spin up (or reconnect if loopOnly)
+        self.waitForWorkers()    # wait for engines to spin up
 
-        shutdownWhenIdle = args.shutdownWhenIdle
+        shutdownWhenIdle = not args.dontShutdownWhenIdle
 
         ars = self.runTrials()
 
@@ -529,10 +522,7 @@ class Master(object):
                     self.shutdownIdleEngines()
 
             if counter % 5 == 0:
-                totals = self.queueTotals()
-                _logger.info(totals)
-
-            counter += 1
+                _logger.info("%d engines: %s", len(self.client.ids), self.queueTotals())
 
             secs = args.waitSecs if state == 'nominal' else 2
             _logger.debug('sleep(%d)', secs)
@@ -541,6 +531,8 @@ class Master(object):
             # handle the case of initial over-allocation
             if counter == 0 and shutdownWhenIdle:
                 self.shutdownIdleEngines()
+
+            counter += 1
 
         self.client.shutdown(hub=True, block=True)
 
@@ -564,7 +556,6 @@ class Master(object):
 
         asyncResults = []
 
-        # TBD: use direct view to concentrate runs on nodes rather than distributing them
         view = None if runLocal else self.client.load_balanced_view(retries=2)
 
         db = getDatabase()

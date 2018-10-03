@@ -80,10 +80,6 @@ class RunSimCommand(McsSubcommandABC):
         scenarioHelp = 'Default value is "%s".' % defaultScenario \
                             if defaultScenario else "No default has been set."
 
-        # deprecated
-        parser.add_argument('-a', '--addTrials', action='store_true',
-                            help='''Add trials to a running cluster; don't wait for results.''')
-
         parser.add_argument('-B', '--noBatchQueries', action='store_true',
                             help='Skip running batch queries.')
 
@@ -113,19 +109,12 @@ class RunSimCommand(McsSubcommandABC):
                             help="Don't run GCAM, just run the batch queries and "
                                  "post-processor (if defined).")
 
-        # deprecated -- make this the standard behavior
-        parser.add_argument('-i', '--shutdownWhenIdle', action='store_true',
-                            help='''Shutdown engines when they are idle and there are
-                            no outstanding tasks, and shutdown controller when there are no
-                            engines running.''')
+        parser.add_argument('-I', '--dontShutdownWhenIdle', action='store_true',
+                            help='''Do not shutdown engines when they are idle and there are
+                            no outstanding tasks.''')
 
         parser.add_argument('-l', '--runLocal', action='store_true',
                             help='''Runs the program locally instead of submitting a batch job.''')
-
-        # deprecated
-        parser.add_argument('-L', '--loopOnly', action='store_true',
-                            help='''Don't run any new trials; just enter the wait loop to 
-                            process results.''')
 
         parser.add_argument('-m', '--minutesPerRun', type=int, default=defaultMinutes,
                             help='''Set the number of minutes of walltime to allocate
