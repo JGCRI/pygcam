@@ -532,6 +532,8 @@ class Master(object):
                 totals = self.queueTotals()
                 _logger.info(totals)
 
+            counter += 1
+
             secs = args.waitSecs if state == 'nominal' else 2
             _logger.debug('sleep(%d)', secs)
             sleep(secs)
@@ -568,8 +570,16 @@ class Master(object):
         db = getDatabase()
         exps = {e.expName: e.parent for e in db.getExps()}
 
-        baselines = filter(lambda s: not exps.get(s), scenarios)
-        policies  = filter(lambda s: exps.get(s), scenarios)
+        def isBaseline(scenario):
+            return (not exps.get(scenario))
+
+        def notBaseline(scenario):
+            return exps.get(scenario)
+
+        # sort so baselines come first
+        baselines = filter(isBaseline,  scenarios)
+        policies  = filter(notBaseline, scenarios)
+        scenarios = baselines + policies
 
         baselineARs = {}      # baseline async_result objects keyed by trialnum
 
@@ -608,10 +618,6 @@ class Master(object):
 
             statusPairs = []
 
-            # TBD: if multiple scenarios and one is a baseline, create a dict of baseline
-            # TBD: Contexts by trialnum. Then when calling map_async, if the baseline for
-            # TBD: the given non-baseline is in the dict, se6t the 'after' flag.
-
             for context in contexts:
                 try:
                     if runLocal:
@@ -623,7 +629,16 @@ class Master(object):
                         # Easier to deal with a list of AsyncResults instances than a
                         # single instance that contains info about all "future" results.
                         # with view.temp_flags(after=[ lookup ar for baseline scenario ])
-                        result = view.map_async(worker.runTrial, [context], [argDict])
+
+                        if isBaseline(scenario):
+                            result = view.map_async(worker.runTrial, [context], [argDict])
+                            baselineARs[context.trialNum] = result
+
+                        else:
+                            # If we're also running the baseline for this trial, create a dependency
+                            with view.temp_flags(after=baselineARs.get(context.trialNum, None)):
+                                result = view.map_async(worker.runTrial, [context], [argDict])
+
                         statusPairs.append((context, RUN_QUEUED))
                         asyncResults.append(result)
 
