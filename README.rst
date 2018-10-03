@@ -33,6 +33,38 @@ Who do I talk to?
 
 Release Notes
 ==============
+Version 1.2.3 (3 Oct 2018)
+----------------------------
+* Bug fixes in support of 5.1.1 on Windows
+
+* Added option (``-P/--asPercentChange``) to ``diff`` sub-command to compute percent-change.
+
+* Several revisiions to Monte Carlo Simulation processing:
+
+  * Made policy scenarios dependent on completion of baseline scenarios so that for
+    any trial number, the baseline runs first, after which any policies can run. This
+    affects only uses of ``gt runsim`` for which both a baseline and at least one
+    policy scenario are specified.
+  * Updated ipyparallel requirement to version 6.2.2 on MacOS and Linux (not used on Windows).
+  * Added new option (``-E`` *filename*) to ``analyze`` sub-command to write all
+    inputs and outputs to a single CSV file.
+  * The default is now to shutdown idle engines when there are no unallocated tasks.
+    This can be disabled with the new ``-I/--dontShutdownIdle`` flag
+  * Added new distribution for logfactor Triangle: ``logfactor=3`` means a triangle
+    with min, mode, max = (1/3, 1, 3)
+  * Added symlink from "output" to temporary directory if ``MCS.TempOutputDir`` is defined,
+    allowing output to be placed, e.g., on an SSD drive local to a node.
+  * The number of engines to run is now computed from the indicated trials, though
+    you can still force a value using ``gt runsim -n XXX``. The limit set by
+    ``IPP.MaxEngines`` is respected in either case.
+  * Converted various dicts to OrderedDicts, allowing user to place write funcs in
+    parameters.xml in an order that ensures needed files are saved before read by
+    other writeFuncs.
+  * Added two keywords to the ``<Result>`` element in ``results.xml``:
+
+    * ``percentage`` divides the difference between (scenario - baseline) by baseline
+      to convert result into a percent change. (Use only with "diff" type results.)
+    * ``cumulative`` sums values over the full time horizon.
 
 Version 1.2.2 (16 Aug 2018)
 ----------------------------

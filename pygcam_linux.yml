@@ -84,6 +84,7 @@ dependencies:
 - intel-openmp=2018.0.0=h15fc484_7
 - ipaddress=1.0.18=py27h337fd85_0
 - ipykernel=4.6.1=py27hc93e584_0
+- ipyparallel=6.2.2
 - ipython=5.4.1=py27h36c99b6_1
 - ipython_genutils=0.2.0=py27h89fb69b_0
 - ipywidgets=7.0.0=py27h4fda95d_0
