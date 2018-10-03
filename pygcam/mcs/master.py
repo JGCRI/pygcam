@@ -534,6 +534,7 @@ class Master(object):
 
             counter += 1
 
+        _logger.info("Shutting down hub")
         self.client.shutdown(hub=True, block=True)
 
     def runTrials(self):
