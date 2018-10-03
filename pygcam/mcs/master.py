@@ -153,7 +153,7 @@ class Master(object):
                     sleep(seconds)
                     continue
 
-            if len(client) == 0:
+            if len(client.ids) == 0:
                 _logger.info("Waiting for engines (%d/%d)", i, maxTries)
                 sleep(seconds)
 
@@ -476,15 +476,7 @@ class Master(object):
 
         shutdownWhenIdle = args.shutdownWhenIdle
 
-        if shutdownWhenIdle:
-            self.shutdownIdleEngines()      # handles case of initial over-allocation
-
         ars = self.runTrials()
-
-        # id_map = {}
-        # dict mapping msg_id to async result object
-        # id_map = {ar.msg_id : ar for ar in ars}
-        # pending = set(id_map.keys())
 
         pending = self.client.outstanding
 
@@ -543,6 +535,10 @@ class Master(object):
             secs = args.waitSecs if state == 'nominal' else 2
             _logger.debug('sleep(%d)', secs)
             sleep(secs)
+
+            # handle the case of initial over-allocation
+            if counter == 0 and shutdownWhenIdle:
+                self.shutdownIdleEngines()
 
         self.client.shutdown(hub=True, block=True)
 
