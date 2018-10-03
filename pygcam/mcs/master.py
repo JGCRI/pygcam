@@ -625,16 +625,14 @@ class Master(object):
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
                         self.saveResults([result])
-                    else:
-                        # Easier to deal with a list of AsyncResults instances than a
-                        # single instance that contains info about all "future" results.
-                        # with view.temp_flags(after=[ lookup ar for baseline scenario ])
 
+                    else:
                         if isBaseline(scenario):
                             result = view.map_async(worker.runTrial, [context], [argDict])
                             baselineARs[context.trialNum] = result
 
                         else:
+                            # TBD: check this works when baseline is not also run (is None the right default, or use []?
                             # If we're also running the baseline for this trial, create a dependency
                             with view.temp_flags(after=baselineARs.get(context.trialNum, None)):
                                 result = view.map_async(worker.runTrial, [context], [argDict])
