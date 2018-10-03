@@ -16,10 +16,9 @@ import subprocess
 import sys
 from contextlib import contextmanager
 
-from .config import getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .error import PygcamException, FileFormatError
 from .log import getLogger
-from .windows import IsWindows
 
 _logger = getLogger(__name__)
 
@@ -266,7 +265,7 @@ def copyFileOrTree(src, dst):
     :return: none
     """
     if getParamAsBoolean('GCAM.CopyAllFiles') and src[0] == '.':   # convert relative paths
-        src = unixPath(os.path.normpath(os.path.join(os.path.dirname(dst), src)))
+        src = pathjoin(os.path.dirname(dst), src, normpath=True)
 
     if os.path.islink(src):
         src = os.readlink(src)
@@ -356,34 +355,7 @@ def coercible(value, type, raiseError=True):
 
     return value
 
-def unixPath(path, rmFinalSlash=False):
-    """
-    Convert a path to use Unix-style slashes, optionally
-    removing the final slash, if present.
 
-    :param path: (str) a pathname
-    :param rmFinalSlash: (bool) True if a final slash should
-           be removed, if present.
-    :return: (str) the modified pathname
-    """
-    if IsWindows:
-        path = path.replace('\\', '/')
-
-    if rmFinalSlash and path[-1] == '/':
-        path = path[0:-1]
-
-    return path
-
-def pathjoin(*elements, **kwargs):
-    path = os.path.join(*elements)
-
-    if kwargs.get('normpath'):
-        path = os.path.normpath(path)
-
-    if kwargs.get('realpath'):
-        path = os.path.realpath(path)
-
-    return unixPath(path, rmFinalSlash=True)
 
 def shellCommand(command, shell=True, raiseError=True):
     """
@@ -516,8 +488,8 @@ def mkdirs(newdir, mode=0o770):
             raise
 
 def getExeDir(workspace, chdir=False):
-    workspace = os.path.abspath(os.path.expanduser(workspace))     # handle ~ in pathname
-    exeDir    = pathjoin(workspace, 'exe')
+    # handle ~ in pathname
+    exeDir = pathjoin(workspace, 'exe', expanduser=True, abspath=True)
 
     if chdir:
         _logger.info("cd %s", exeDir)

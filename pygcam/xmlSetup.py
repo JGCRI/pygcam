@@ -9,10 +9,10 @@ import glob
 import os
 import sys
 
-from .config import getParam, getParamAsBoolean
+from .config import getParam, getParamAsBoolean, pathjoin
 from .error import PygcamException, SetupException
 from .log import getLogger
-from .utils import getBooleanXML, resourceStream, symlinkOrCopyFile, pathjoin
+from .utils import getBooleanXML, symlinkOrCopyFile
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 from .XMLFile import XMLFile, McsValues
 

@@ -9,7 +9,7 @@ import itertools
 import os
 from six.moves import input
 
-from ..config import getHomeDir
+from ..config import getHomeDir, pathjoin, unixPath
 from ..subcommand import SubcommandABC
 
 class AbortInput(Exception):
@@ -18,7 +18,6 @@ class AbortInput(Exception):
 DefaultProjectDir = '~/GCAM/projects'
 
 def defaultSandboxDir(projectRoot):
-    from ..utils import pathjoin
     path = pathjoin(os.path.dirname(projectRoot), 'sandboxes')
     return path
 
@@ -48,8 +47,6 @@ def expandTilde(path):
     a standard Windows command window or a Cygwin bash shell. Also, we
     have no need to expand '~user', just '~'.
     """
-    from ..utils import unixPath
-
     if path.startswith('~/'):
         path = getHomeDir() + path[1:]
     return unixPath(path)
@@ -57,7 +54,6 @@ def expandTilde(path):
 # TODO: TEST THESE CHANGES
 def findGCAM():
     import platform
-    from ..utils import unixPath
 
     home = getHomeDir()
 
@@ -241,7 +237,7 @@ class InitCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..config import USR_CONFIG_FILE
-        from ..utils import pathjoin, deleteFile, mkdirs
+        from ..utils import deleteFile, mkdirs
 
         # Detect cygwin terminals, which quite lamely cannot handle interactive input
         if (isCygwin() and not os.environ.get('PYTHONUNBUFFERED')):

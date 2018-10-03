@@ -2,7 +2,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from os import path
+from .config import pathjoin
 from .log import getLogger
 from .xmlEditor import XMLEditor, xmlEdit, extractStubTechnology, callableMethod, ENERGY_TRANSFORMATION_TAG
 
@@ -40,29 +40,29 @@ class BioenergyEditor(XMLEditor):
 
         # TBD: unclear whether this is useful or general
         cornEthanolUsaFile = 'cornEthanolUSA.xml'
-        self.cornEthanolUsaAbs = path.join(self.scenario_dir_abs, cornEthanolUsaFile)
-        self.cornEthanolUsaRel = path.join(self.scenario_dir_rel, cornEthanolUsaFile)
+        self.cornEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile)
+        self.cornEthanolUsaRel = pathjoin(self.scenario_dir_rel, cornEthanolUsaFile)
 
         cornEthanolUsaFile2 = 'cornEthanolUSA2.xml'
-        self.cornEthanolUsaAbs2 = path.join(self.scenario_dir_abs, cornEthanolUsaFile2)
-        self.cornEthanolUsaRel2 = path.join(self.scenario_dir_rel, cornEthanolUsaFile2)
+        self.cornEthanolUsaAbs2 = pathjoin(self.scenario_dir_abs, cornEthanolUsaFile2)
+        self.cornEthanolUsaRel2 = pathjoin(self.scenario_dir_rel, cornEthanolUsaFile2)
 
         cellEthanolUsaFile = 'cellEthanolUSA.xml'
-        self.cellEthanolUsaAbs = path.join(self.scenario_dir_abs, cellEthanolUsaFile)
-        self.cellEthanolUsaRel = path.join(self.scenario_dir_rel, cellEthanolUsaFile)
+        self.cellEthanolUsaAbs = pathjoin(self.scenario_dir_abs, cellEthanolUsaFile)
+        self.cellEthanolUsaRel = pathjoin(self.scenario_dir_rel, cellEthanolUsaFile)
 
         ftBiofuelsUsaFile = 'ftBiofuelsUSA.xml'
-        self.ftBiofuelsUsaAbs = path.join(self.scenario_dir_abs, ftBiofuelsUsaFile)
-        self.ftBiofuelsUsaRel = path.join(self.scenario_dir_rel, ftBiofuelsUsaFile)
+        self.ftBiofuelsUsaAbs = pathjoin(self.scenario_dir_abs, ftBiofuelsUsaFile)
+        self.ftBiofuelsUsaRel = pathjoin(self.scenario_dir_rel, ftBiofuelsUsaFile)
 
         # A US subsidy works without having to change prices, so no need to extract this
         biodieselUsaFile = 'biodieselUSA.xml'
-        self.biodieselUsaAbs = path.join(self.scenario_dir_abs, biodieselUsaFile)
-        self.biodieselUsaRel = path.join(self.scenario_dir_rel, biodieselUsaFile)
+        self.biodieselUsaAbs = pathjoin(self.scenario_dir_abs, biodieselUsaFile)
+        self.biodieselUsaRel = pathjoin(self.scenario_dir_rel, biodieselUsaFile)
 
         biodieselUsaFile2 = 'biodieselUSA2.xml'
-        self.biodieselUsaAbs2 = path.join(self.scenario_dir_abs, biodieselUsaFile2)
-        self.biodieselUsaRel2 = path.join(self.scenario_dir_rel, biodieselUsaFile2)
+        self.biodieselUsaAbs2 = pathjoin(self.scenario_dir_abs, biodieselUsaFile2)
+        self.biodieselUsaRel2 = pathjoin(self.scenario_dir_rel, biodieselUsaFile2)
 
     @callableMethod
     def adjustResidueSupply(self, loTarget, loPrice, loFract, hiTarget, hiPrice, hiFract, target):

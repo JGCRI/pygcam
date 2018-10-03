@@ -6,11 +6,11 @@
 '''
 import os
 
-from .config import getParam, getParamAsBoolean, setParam
+from .config import getParam, getParamAsBoolean, pathjoin
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
-from .error import SetupException, ConfigFileError
+from .error import SetupException
 from .log import getLogger
-from .utils import copyFileOrTree, removeFileOrTree, mkdirs, pathjoin, symlinkOrCopyFile, removeTreeSafely, pushd
+from .utils import copyFileOrTree, removeFileOrTree, mkdirs, symlinkOrCopyFile, removeTreeSafely, pushd
 
 _logger = getLogger(__name__)
 

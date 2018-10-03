@@ -99,14 +99,13 @@ class SetupCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        import os
         from importlib import import_module
 
-        from ..config import getParam
+        from ..config import getParam, pathjoin
         from ..error import SetupException
         from ..log import getLogger
         from ..scenarioSetup import createSandbox
-        from ..utils import loadModuleFromPath, pathjoin
+        from ..utils import loadModuleFromPath
 
         _logger = getLogger(__name__)
 
@@ -121,8 +120,7 @@ class SetupCommand(SubcommandABC):
         if args.workspace:
             workspace = args.workspace
         else:
-            groupDir  = os.path.normpath(pathjoin(projectDir, groupName))
-            workspace = pathjoin(groupDir, scenario)
+            workspace = pathjoin(projectDir, groupName, scenario, normpath=True)
 
         mcsMode = tool.getMcsMode()
         forceCreate = args.forceCreate or bool(mcsMode)

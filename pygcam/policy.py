@@ -1,5 +1,4 @@
 from .log import getLogger
-from .utils import mkdirs, pathjoin
 
 _logger = getLogger(__name__)
 

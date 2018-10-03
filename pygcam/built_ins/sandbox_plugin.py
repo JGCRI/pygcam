@@ -16,11 +16,11 @@ def driver(args, tool):
     import os
     import subprocess
 
-    from ..config import getParam
+    from ..config import getParam, pathjoin
     from ..error import CommandlineError
     from ..scenarioSetup import createSandbox
     from ..log import getLogger
-    from ..utils import removeTreeSafely, pathjoin
+    from ..utils import removeTreeSafely
 
     _logger = getLogger(__name__)
 
@@ -35,7 +35,8 @@ def driver(args, tool):
     sandboxProjectDir = getParam('GCAM.SandboxProjectDir')
     sandbox = pathjoin(sandboxProjectDir, args.groupDir, args.scenario)
 
-    sandbox = os.path.normpath(os.path.abspath(os.path.expanduser(sandbox)))     # handle ~ in pathname
+    # handle ~ in pathname
+    sandbox = pathjoin(sandbox, expanduser=True, abspath=True, normpath=True)
 
     if args.path:
         print(sandbox)

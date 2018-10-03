@@ -15,10 +15,11 @@ import numpy as np
 import seaborn as sns
 import shlex
 
+from .config import pathjoin, unixPath
 from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
-from .utils import systemOpenFile, pathjoin
+from .utils import systemOpenFile
 
 _logger = getLogger(__name__)
 
@@ -398,7 +399,7 @@ def chartGCAM(args, num=None, negate=False):
 
     outFile = pathjoin(outputDir, imgFile)
 
-    _logger.debug("Generating %s", os.path.abspath(outFile))
+    _logger.debug("Generating %s", unixPath(outFile, abspath=True))
 
     if args.years:
         yearStrs = args.years.split('-')

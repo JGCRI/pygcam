@@ -5,10 +5,11 @@
    See the https://opensource.org/licenses/MIT for license details.
 
 '''
+from .config import pathjoin
 from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
-from .utils import mkdirs, pathjoin, getBatchDir, getYearCols, printSeries
+from .utils import mkdirs, getBatchDir, getYearCols, printSeries
 
 _logger = getLogger(__name__)
 

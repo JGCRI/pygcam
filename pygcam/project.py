@@ -16,12 +16,11 @@ import sys
 
 from lxml import etree as ET
 
-from .config import getParam, setParam, getConfigDict
+from .config import getParam, setParam, getConfigDict, unixPath, pathjoin
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
-from .utils import (flatten, shellCommand, getBooleanXML, unixPath,
-                    pathjoin, simpleFormat, QueryResultsDir)
+from .utils import flatten, shellCommand, getBooleanXML, simpleFormat, QueryResultsDir
 from .temp_file import getTempFile
 from .XMLFile import XMLFile
 from .xmlSetup import ScenarioSetup

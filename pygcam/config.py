@@ -24,6 +24,46 @@ _ProjectSection = DEFAULT_SECTION
 _PathMap = None
 _PathPattern = None     # compiled regex matching any mapped paths
 
+# The unixPath and pathjoin funcs are here rather than in utils.py
+# since this functionality is needed here and this avoids import loops.
+def unixPath(path, rmFinalSlash=False, abspath=False):
+    """
+    Convert a path to use Unix-style slashes, optionally
+    removing the final slash, if present.
+
+    :param path: (str) a pathname
+    :param rmFinalSlash: (bool) True if a final slash should
+           be removed, if present.
+    :return: (str) the modified pathname
+    """
+    if abspath:
+        path = os.path.abspath(path)
+
+    if PlatformName == 'Windows':
+        path = path.replace('\\', '/')
+
+    if rmFinalSlash and path[-1] == '/':
+        path = path[0:-1]
+
+    return path
+
+def pathjoin(*elements, **kwargs):
+    path = os.path.join(*elements)
+
+    if kwargs.get('expanduser'):
+        path = os.path.expanduser(path)
+
+    if kwargs.get('abspath'):
+        path = os.path.abspath(path)
+
+    if kwargs.get('normpath'):
+        path = os.path.normpath(path)
+
+    if kwargs.get('realpath'):
+        path = os.path.realpath(path)
+
+    return unixPath(path, rmFinalSlash=True)
+
 def savePathMap(mapString):
     """
     Save a list of pathname translations (sorted, descending by length)
@@ -149,7 +189,7 @@ _usingMCS = None
 
 def mcsSentinelFile():
     home = getHomeDir()
-    path = os.path.join(home, '.use_pygcam_mcs')
+    path = pathjoin(home, '.use_pygcam_mcs')
     return path
 
 def setUsingMCS(value):
@@ -190,11 +230,11 @@ def getHomeDir():
 
 
 def userConfigPath():
-    path = os.path.join(getHomeDir(), USR_CONFIG_FILE)
+    path = pathjoin(getHomeDir(), USR_CONFIG_FILE)
     return path
 
 def configDefaultsPath():
-    path = os.path.join(getHomeDir(), USR_DEFAULTS_FILE)
+    path = pathjoin(getHomeDir(), USR_DEFAULTS_FILE)
     return path
 
 # def removeDefaultsFile():
@@ -265,7 +305,7 @@ def setMacJavaVars():
     """
     if not os.environ.get('JAVA_LIB'):
         refWorkspace = getParam('GCAM.RefWorkspace')
-        javaLib = os.path.join(refWorkspace, 'libs/java/lib')
+        javaLib = pathjoin(refWorkspace, 'libs/java/lib')
         os.environ['JAVA_LIB'] = javaLib
         setParam('$JAVA_LIB', javaLib)
 

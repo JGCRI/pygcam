@@ -4,7 +4,7 @@
 # python 3 compatibility version
 from six.moves import xrange
 import os
-from pygcam.config import getParam, setParam
+from pygcam.config import getParam, setParam, pathjoin
 from pygcam.log import getLogger
 from pygcam.utils import mkdirs
 from ..context import getSimDir
@@ -15,7 +15,7 @@ _logger = getLogger(__name__)
 def genSALibData(trials, method, paramFileObj, args):
     from ..error import PygcamMcsUserError
     from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
-    from pygcam.utils import ensureExtension, removeTreeSafely, mkdirs, pathjoin
+    from pygcam.utils import ensureExtension, removeTreeSafely, mkdirs
 
     SupportedDistros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
 

@@ -15,15 +15,15 @@ def driver(args, tool):
     import os
     import re
     import shutil
-    from ..config import getParam, USR_CONFIG_FILE
-    from ..utils import mkdirs, pathjoin, copyResource, getResource
+    from ..config import getParam, USR_CONFIG_FILE, pathjoin, unixPath
+    from ..utils import mkdirs, copyResource, getResource
     from ..error import CommandlineError
     from ..log import getLogger
 
     _logger = getLogger(__name__)
 
     projectName = args.name
-    projectRoot = os.path.abspath(args.root) if args.root else getParam('GCAM.ProjectRoot')
+    projectRoot = unixPath(args.root, abspath=True) if args.root else getParam('GCAM.ProjectRoot')
     projectDir  = pathjoin(projectRoot, projectName)
     overwrite   = args.overwrite
 
@@ -76,7 +76,7 @@ def driver(args, tool):
         if filename == 'project.xml':
             # For project.xml, we change the project name to the name given by user
             if not overwrite and os.path.lexists(dst):
-                raise CommandlineError("Refusing to overwrite '%s'" % os.path.abspath(dst))
+                raise CommandlineError("Refusing to overwrite '%s'" % unixPath(dst, abspath=True))
 
             oldText = getResource(src)
             newText = re.sub('<project name="(\w*)">', '<project name="%s">' % projectName, oldText)
