@@ -179,11 +179,14 @@ class Master(object):
         '''
         Shutdown the engines.
         '''
-        if len(self.client) == 0:
+        engines = self.client.ids
+        engineCount = len(engines)
+
+        if engineCount == 0:
             _logger.info("No engines are running")
             return
 
-        qstatus = self.client.queue_status()
+        qstatus = self.client.queue_status(targets=engines)
 
         if qstatus.pop(u'unassigned'):
             return
@@ -193,18 +196,19 @@ class Master(object):
 
         if idleEngines:
             _logger.info('Shutting down %d idle engines', len(idleEngines))
+            _logger.debug('Idle: %s', idleEngines)
             self.client.shutdown(targets=idleEngines, block=True)
 
-            maxTries = 4
-            seconds  = 1
+            maxTries = 5
+            seconds  = 1.5
 
-            expectedEngines = len(self.client) - len(idleEngines)
+            expectedEngines = engineCount - len(idleEngines)
             for i in range(maxTries):
-                if len(self.client) != expectedEngines:
+                if len(self.client.ids) != expectedEngines:
                     sleep(seconds)
 
             # TBD: handle timeout waiting for engines to stop
-            _logger.info("%d engines active", len(self.client))
+            _logger.info("%d engines active", len(self.client.ids))
 
     def createRuns(self, simId, scenario, trialNums):
         '''
@@ -521,8 +525,8 @@ class Master(object):
                 for ar in toDelete:
                     ars.remove(ar)
 
-            if shutdownWhenIdle:
-                self.shutdownIdleEngines()
+                if shutdownWhenIdle:
+                    self.shutdownIdleEngines()
 
             _logger.debug('sleep(%d)', args.waitSecs)
             sleep(args.waitSecs)
