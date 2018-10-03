@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 
-from .config import getParam, getParamAsBoolean, parse_version_info
+from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
 from .log import getLogger
 from .scenarioSetup import createSandbox
@@ -57,8 +57,8 @@ def setJavaPath(exeDir):
 
     # Update the PATH to be able to find the Java dlls
     # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
-    javaBin = os.path.join(javaHome, 'bin')
-    javaBinServer = os.path.join(javaBin, 'server')
+    javaBin = pathjoin(javaHome, 'bin')
+    javaBinServer = pathjoin(javaBin, 'server')
     envPath = os.environ.get('PATH', '')
     os.environ['PATH'] = path = envPath + ';' + javaBin + ';' + javaBinServer
     _logger.debug('PATH=%s', path)
@@ -177,8 +177,8 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    workspace = workspace or (os.path.join(getParam('GCAM.SandboxDir'), scenario)
-                                       if scenario else getParam('GCAM.RefWorkspace'))
+    workspace = workspace or (pathjoin(getParam('GCAM.SandboxDir'), scenario)
+                                  if scenario else getParam('GCAM.RefWorkspace'))
 
     if not os.path.lexists(workspace) or forceCreate:
         createSandbox(workspace, srcWorkspace=refWorkspace, forceCreate=forceCreate)
@@ -197,12 +197,12 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     if scenario:
         # Translate scenario name into config file path, assuming that for scenario
         # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
-        scenariosDir = os.path.abspath(scenariosDir or getParam('GCAM.ScenariosDir') or '.')
-        configFile   = os.path.join(scenariosDir, groupDir, scenario, "config.xml")
+        scenariosDir = unixPath(scenariosDir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
+        configFile   = pathjoin(scenariosDir, groupDir, scenario, "config.xml")
     else:
-        configFile = os.path.abspath(configFile or os.path.join(exeDir, 'configuration.xml'))
+        configFile = unixPath(configFile or pathjoin(exeDir, 'configuration.xml'), abspath=True)
 
-    gcamPath = os.path.abspath(getParam('GCAM.Executable'))
+    gcamPath = unixPath(getParam('GCAM.Executable'), abspath=True)
     gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM (< 4.2) doesn't allow space between -C and filename
 
     command = ' '.join(gcamArgs)

@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 from .built_ins import BuiltinSubcommands
-from .config import (getParam, getConfig, getParamAsBoolean, getParamAsFloat,
+from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
                      usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
@@ -58,8 +58,6 @@ class GcamTool(object):
         can be loaded on-demand.
         :return: none
         '''
-        from .utils import pathjoin
-
         pluginDirs = cls._getPluginDirs()
 
         suffix = '_plugin.py'
@@ -261,7 +259,7 @@ class GcamTool(object):
                     self.getPlugin(command)
 
     def validateGcamVersion(self):
-        from .utils import pathjoin, pushd
+        from .utils import pushd
         from .gcam import setJavaPath
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
@@ -364,7 +362,7 @@ class GcamTool(object):
     @staticmethod
     def runBatch2(shellArgs, jobName='gt', queueName=None, logFile=None, minutes=None,
                   dependsOn=None, run=True):
-        from .utils import mkdirs, pathjoin
+        from .utils import mkdirs
 
         _logger = getLogger(__name__)
 

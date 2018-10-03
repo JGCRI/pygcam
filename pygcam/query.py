@@ -11,12 +11,12 @@ import subprocess
 from lxml import etree as ET
 
 from .Xvfb import Xvfb
-from .config import getParam, getParamAsBoolean, parse_version_info
+from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
 from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser
-from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, pathjoin, saveToFile,
+from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, saveToFile,
                     getExeDir, writeXmldbDriverProperties)
 from .temp_file import TempFile, getTempFile
 
@@ -557,7 +557,7 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
 
     outputDir = outputDir or getParam('GCAM.OutputDir')
     mkdirs(outputDir)
-    csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
+    csvPath = pathjoin(outputDir, csvFile, abspath=True)
 
     batchCommand = BatchCommandElement.format(scenario=scenario, queryFile=queryFile,
                                               csvFile=csvPath, xmldb=xmldb)
@@ -748,7 +748,7 @@ def runModelInterface(scenario, outputDir, csvFile=None, batchFile=None,
             _logger.debug("Creating temporary query file '%s'", queryFile)
 
         if csvFile and not batchFile:
-            csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
+            csvPath = pathjoin(outputDir, csvFile, abspath=True)
             _logger.debug("Writing results to: %s", csvPath)
         else:
             csvPath = None
@@ -1063,7 +1063,7 @@ def queryMain(args):
     batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
     batchFileIn  = args.batchFile
-    batchFileOut = os.path.abspath(pathjoin(outputDir, args.batchOutput))
+    batchFileOut = pathjoin(outputDir, args.batchOutput, abspath=True)
 
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
@@ -1115,10 +1115,10 @@ def queryMain(args):
                                    batchFile=batchFile, batchLog='logs/batch-query.log')
         return
 
-    xmldb = os.path.abspath(xmldb)
+    xmldb = unixPath(xmldb, abspath=True)
 
     if miLogFile:
-        miLogFile = os.path.abspath(pathjoin(outputDir, miLogFile))
+        miLogFile = pathjoin(outputDir, miLogFile, abspath=True)
         deleteFile(miLogFile)       # remove it, if any, to start fresh
 
     # If not a prequery step, we're running queries post-GCAM, which means a database on disk

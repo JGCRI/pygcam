@@ -26,14 +26,13 @@ import shutil
 import six
 from lxml import etree as ET
 
-from .config import getParam, getParamAsBoolean, parse_version_info
+from .config import getParam, getParamAsBoolean, parse_version_info, unixPath, pathjoin
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
 from .error import SetupException, PygcamException
 from .log import getLogger
 from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
-from .utils import (coercible, mkdirs, unixPath, pathjoin, printSeries, symlinkOrCopyFile,
-                    removeTreeSafely)
+from .utils import (coercible, mkdirs, printSeries, symlinkOrCopyFile, removeTreeSafely)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
@@ -517,7 +516,7 @@ class XMLEditor(object):
                 src = pathjoin(scenDir, base)
                 symlinkOrCopyFile(src, dst)
         else:
-            _logger.info("No XML files to link in %s", unixPath(os.path.abspath(scenDir)))
+            _logger.info("No XML files to link in %s", unixPath(scenDir, abspath=True))
 
         CachedFile.decacheAll()
 
@@ -546,7 +545,7 @@ class XMLEditor(object):
                 # dst = pathjoin(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
         else:
-            _logger.info("No XML files to copy in %s", unixPath(os.path.abspath(xmlSubdir)))
+            _logger.info("No XML files to copy in %s", unixPath(xmlSubdir, abspath=True))
 
         configPath = self.cfgPath()
 
@@ -675,7 +674,7 @@ class XMLEditor(object):
             # It's not a tag, but a filename
 
         pathname = self.componentPath(configTag)
-        srcAbsPath = os.path.abspath(os.path.join(self.sandboxExeDir, pathname))
+        srcAbsPath = pathjoin(self.sandboxExeDir, pathname, abspath=True)
 
         # TBD: test this
         if not os.path.lexists(srcAbsPath):
@@ -685,7 +684,7 @@ class XMLEditor(object):
             refConfigFile = getParam('GCAM.RefConfigFile')
 
             pathname = self.componentPath(configTag, configPath=refConfigFile)
-            srcAbsPath = os.path.abspath(os.path.join(refWorkspace, 'exe', pathname))
+            srcAbsPath = pathjoin(refWorkspace, 'exe', pathname, abspath=True)
 
         # TBD: verify that this works in 5.1
         # If path includes /*-xml/* (e.g., '/energy-xml/', '/aglu-xml/'), retain

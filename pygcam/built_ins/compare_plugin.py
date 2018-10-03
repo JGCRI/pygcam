@@ -12,9 +12,9 @@ from ..subcommand import SubcommandABC
 def driver(args, tool):
     import os
     import subprocess
-    from ..config import getParam
+    from ..config import getParam, pathjoin
     from ..error import FileFormatError
-    from ..utils import mkdirs, pathjoin
+    from ..utils import mkdirs
     from ..XMLFile import XMLFile
 
     xmlStarlet = getParam('GCAM.XmlStarlet')

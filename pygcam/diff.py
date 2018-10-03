@@ -4,9 +4,10 @@
   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
+from .config import pathjoin
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs, pathjoin, ensureCSV, QueryResultsDir
+from .utils import mkdirs, ensureCSV, QueryResultsDir
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)

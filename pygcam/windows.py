@@ -7,7 +7,7 @@ from __future__ import print_function
 import os
 import platform
 from errno import EEXIST
-from .config import getParamAsBoolean
+from .config import getParamAsBoolean, unixPath
 
 IsWindows = platform.system() == 'Windows'
 
@@ -72,7 +72,7 @@ if IsWindows:
         return volume, index_hi, index_lo
 
     def makeParents(path):
-        path = os.path.abspath(path)
+        path = unixPath(path, abspath=True)
         try:
             os.makedirs(os.path.dirname(path), 0o770)
         except OSError as e:
