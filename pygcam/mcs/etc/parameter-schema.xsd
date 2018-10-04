@@ -36,6 +36,15 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="NumericSequence">
+        <!-- Allow fully specified vars as in pkg.mod1.mod2.var -->
+        <xs:restriction base="xs:string">
+            <!-- handle four variants, plus commas: .12, 12., 1.2, 12 -->
+            <xs:pattern value="(\d*\.\d+|\d+\.\d*|\d+)( *, *((\d*\.\d+)|(\d+\.\d*)|(\d+)))*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+
     <!-- Complex elements -->
     <xs:element name='comment'>
         <xs:complexType>
@@ -101,6 +110,12 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="Sequence">
+        <xs:complexType>
+            <xs:attribute name="values" type="NumericSequence"/>
+        </xs:complexType>
+    </xs:element>
+
     <xs:element name="Grid">
         <xs:complexType>
             <xs:attribute name="min" type="xs:decimal"/>
@@ -150,6 +165,7 @@
         <xs:complexType>
             <xs:choice>
                 <xs:element ref="Constant"/>
+                <xs:element ref="Sequence"/>
                 <xs:element ref="Binary"/>
                 <xs:element ref="Integers"/>
                 <xs:element ref="Grid"/>

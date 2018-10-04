@@ -127,7 +127,9 @@ def lhs(paramList, trials, corrMat=None, columns=None, skip=None):
         values = param.ppf(getPercentiles(trials))  # extract values from the RV for these percentiles
 
         if corrMat is None:
-            np.random.shuffle(values)  # randomize the stratified samples
+            # Sequence is a special case for which we don't shuffle (and we ignore stratified sampling)
+            if param.param.dataSrc.distroName != 'sequence':
+                np.random.shuffle(values)  # randomize the stratified samples
         else:
             indices = ranks[:, i] - 1  # make them 0-relative
             values = values[indices]   # reorder to respect correlations

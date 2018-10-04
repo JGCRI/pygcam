@@ -275,6 +275,7 @@ class XMLDistribution(XMLTrialData):
                     raise DistributionSpecError("Failed to evaluate expression {}: {}".format(codeStr, e))
 
         self.child = element[0]
+        self.distroName = self.child.tag.lower()
 
         # TBD: hack alert to deal with non-float attribute. Fix this in the rewrite.
         # TBD: Might be cleaner to have something that isn't confused with a distribution?
@@ -282,11 +283,15 @@ class XMLDistribution(XMLTrialData):
         if self._isLinked:
             attr = 'parameter'
             self.argDict[attr] = self.child.get(attr)
+
+        elif self.distroName == 'sequence':
+            for key, val in self.child.items():
+                self.argDict[key] = val           # don't convert to float
+
         else:
             for key, val in self.child.items():
                 self.argDict[key] = float(val)    # these form the signature that identifies the distroElt function
 
-        self.distroName = self.child.tag.lower()
         sig = DistroGen.signature(self.distroName, self.argDict.keys())
         _logger.debug("<Distribution %s, %s>", ' '.join(map(lambda pair: '%s="%s"' % pair, element.items())), sig)
 

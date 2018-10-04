@@ -860,7 +860,7 @@ class XMLEditor(object):
         _logger.debug("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
         cfg = self.cfgPath()
 
-        xmlEdit(cfg, ("//ScenarioComponents/Value[text()='%s']/@name" % xmlfile, name))
+        xmlEdit(cfg, [("//ScenarioComponents/Value[text()='%s']/@name" % xmlfile, name)])
 
     # TBD dynamic keyword might still be useful if subdir e.g. local-xml/dynamic but policy file would be in local-xml anyway
     @callableMethod

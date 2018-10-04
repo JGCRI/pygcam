@@ -149,6 +149,24 @@ class constant():
         n[:] = self.value
         return n
 
+class sequence():
+    """
+    Return an object that produces an array holding the given sequence
+    of constant values. Useful for forcing parameters to given values.
+    """
+    def __init__(self, values):
+        self.values = map(float, values.split(','))
+
+    def ppf(self, q):
+        n = len(q)  # length of array to return
+        count = len(self.values)    # items in the sequence
+
+        seq = ((int(n / count) + (1 if n % count else 0)) * self.values)
+
+        # truncate in case n wasn't a multiple of count
+        arr = np.array(seq[:n])
+        return arr
+
 class GridRV(object):
     '''
     Return an object that behaves like an RV in that it returns N values when
@@ -278,7 +296,8 @@ class DistroGen(object):
         # at 'max'.
         cls('grid', lambda min, max, count: GridRV(min, max, count))
 
-        # TBD: Test this
         cls('constant', lambda value: constant(value))
+
+        cls('sequence', lambda values: sequence(values))
 
         cls('linked', lambda parameter: linkedDistro(parameter))       # TBD: could be generalized
