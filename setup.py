@@ -23,7 +23,7 @@ requirements = [
     'seaborn>=0.9.0',
     'semver>=2.8.1',
     'six>=1.11.0',
-    'sphinx-argparse==0.2.1',
+    'sphinx-argparse>=0.2.1',
     'tornado<5.0',
 
     # GUI requirements
