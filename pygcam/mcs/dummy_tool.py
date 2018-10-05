@@ -20,7 +20,7 @@ class DummyTool(GcamTool):
         super(DummyTool, self).__init__(loadPlugins=loadPlugins, loadBuiltins=loadBuiltins)
 
 
-def _getMainParser():
+def getMainParser():
     '''
     Used only to generate documentation by sphinx argparse extension, in
     which case we don't generate documentation for project-specific plugins.

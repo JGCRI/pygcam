@@ -1,47 +1,44 @@
-import platform
 from pygcam.version import VERSION
 
 # Build the full version with MCS on when running on ReadTheDocs.
 # In normal mode, MCS is an optional install.
-import os
-
-if platform.system() != 'Windows':
-    # Unfortunately, this stalled on Windows when I tested it...
-    import ez_setup
-    ez_setup.use_setuptools(version='36.7.2') # ... is this version avail on RTD?
+# import os
+# import platform
+#
+# if platform.system() != 'Windows':
+#     # Unfortunately, this stalled on Windows when I tested it...
+#     import ez_setup
+#     ez_setup.use_setuptools(version='36.7.2')
 
 from setuptools import setup
 
 requirements = [
     'configparser>=3.5.0',     # backport of python 3.5 version
-    'filelock>=2.0.12',
-    'futures>=3.1.1',
+    'futures>=3.2.0',
     'future>=0.16.0',
     'ipython<6.0',              # 6.x requires Python 3
-    'lxml>=3.8.0',
-    'numpy>=1.13.1',
-    'pandas>=0.20.3',
-    'seaborn>=0.8.0',
-    'semver>=2.7.7',
-    'six>=1.10.0',
-    'sphinx-argparse==0.2.2', # later versions lose markup in commands
+    'lxml>=4.2.5',
+    'numpy>=1.15.2',
+    'pandas>=0.23.3',
+    'seaborn>=0.9.0',
+    'semver>=2.8.1',
+    'six>=1.11.0',
+    'sphinx-argparse==0.2.1',
     'tornado<5.0',
 
     # GUI requirements
-    'flask>=0.12.2',
-    'dash>=0.19.0',
-    'dash-core-components>=0.12.7',
-    'dash-html-components>=0.8.0',
-    'dash-renderer>=0.7.4',
+    'flask>=1.0.2',
+    'dash>=0.28.1',
+    'dash-core-components>=0.32.0',
+    'dash-html-components>=0.13.2',
+    'dash-renderer>=0.14.1',
 
     # MCS requirements
-    'ipyparallel>=6.0.2',
-    'numexpr>=2.6.2',
-    'salib>=1.1.2',
-    'scipy>=0.19.1',
-    'sqlalchemy>=1.1.13',
+    'ipyparallel>=6.2.2',
+    'salib>=1.1.3',
+    'scipy>=1.1.0',
+    'sqlalchemy>=1.2.12',
 ]
-
 
 long_description = '''
 pygcam
@@ -79,33 +76,6 @@ Core functionality
 
 * Customization through an extensive configuration system
 
-How do I get set up?
-----------------------
-
-* Users on OS X and Windows platforms can download a zip file with an all-in-one
-  directory that has everything you need to run the "gt" (gcamtool) command.
-
-* Linux users and anyone wishing to use ``pygcam`` for Python development should
-  install it as a normal Python package. The easiest way to to install directly from
-  PyPi:
-
-    ``pip install pygcam``
-
-  Alternatively, clone the repository or download the tarball and run this command
-  on the included setup.py file:
-
-    ``python setup.py install``
-
-  or, if you want to edit the code or stay abreast of code changes, you might install
-  it in "developer" mode:
-
-    ``python setup.py develop``
-
-Contribution guidelines
-------------------------
-
-* TBD
-
 Who do I talk to?
 ------------------
 
@@ -141,6 +111,5 @@ setup(
 
     # TBD
     # test_suite="string identifying test module etc."
-
 )
 

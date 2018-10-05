@@ -28,8 +28,7 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
    :ref:`runsim <runsim>`,
 
 .. argparse::
-   :module: pygcam.mcs.dummy_tool
-   :func: _getMainParser
+   :ref: pygcam.mcs.dummy_tool.getMainParser
    :prog: gt
 
    addexp : @replace

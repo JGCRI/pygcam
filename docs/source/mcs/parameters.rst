@@ -208,8 +208,8 @@ rank correlation between parameters.
 
 <Constant>
 ^^^^^^^^^^^^^^^^^
-The "distribution" produces the designated value on every draw.
-This can be used to force a set of XML elements to a given value.
+This pseudo-distribution produces the designated value on every draw.
+It can be used to force a set of XML elements to a given value.
 
 +-------------+------------+-----------+----------+
 | Attribute   | Required   | Default   | Values   |
@@ -217,6 +217,25 @@ This can be used to force a set of XML elements to a given value.
 | value       | yes        | (none)    | float    |
 +-------------+------------+-----------+----------+
 
+
+<Sequence>
+^^^^^^^^^^^^^^^^^
+This pseudo-distribution produces each value from a discrete
+set of comma-separated values, in order. If the number of trials
+exceeds the number of values, the list is recycled as many times
+as needed. This distribution can be used to generate trials with
+a series of specific values.
+
++-------------+------------+-----------+----------+
+| Attribute   | Required   | Default   | Values   |
++=============+============+===========+==========+
+| values      | yes        | (none)    | text*    |
++-------------+------------+-----------+----------+
+
+The ``values`` attribute takes a text argument that must contain
+comma-delimited integer or floating point values. (Integers are
+converted to float, however.) Spaces around commas are removed,
+so they can be added for readability.
 
 <Binary>
 ^^^^^^^^^^^^^^^^^

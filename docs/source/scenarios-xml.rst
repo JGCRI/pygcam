@@ -412,7 +412,7 @@ are taken if and only if the two values differ.
 Note that `value2` (but not `value1`) can be a comma-delimited
 string to identify multiple values. In this case, the test is
 whether `value1` is in the list of values created by splitting
-the string on the commmas and stripping blanks at the start and
+the string on the commas and stripping blanks at the start and
 end of the resulting values. Thus, the following two
 blocks are functionally equivalent:
 

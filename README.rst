@@ -33,13 +33,13 @@ Who do I talk to?
 
 Release Notes
 ==============
-Version 1.2.3 (3 Oct 2018)
+Version 1.3.0 (5 Oct 2018)
 ----------------------------
 * Bug fixes in support of 5.1.1 on Windows
 
 * Added option (``-P/--asPercentChange``) to ``diff`` sub-command to compute percent-change.
 
-* Several revisiions to Monte Carlo Simulation processing:
+* Several revisions to Monte Carlo Simulation processing:
 
   * Made policy scenarios dependent on completion of baseline scenarios so that for
     any trial number, the baseline runs first, after which any policies can run. This
@@ -57,6 +57,9 @@ Version 1.2.3 (3 Oct 2018)
   * The number of engines to run is now computed from the indicated trials, though
     you can still force a value using ``gt runsim -n XXX``. The limit set by
     ``IPP.MaxEngines`` is respected in either case.
+  * Created new pseudo-distribution that returns values from a discrete list, in order.
+    is used to produce a repeating array of values in the order given. Use this to run
+    an explicit set of parameter values. Example: ``<Sequence values="4, 6, 43.2"\>``
   * Converted various dicts to OrderedDicts, allowing user to place write funcs in
     parameters.xml in an order that ensures needed files are saved before read by
     other writeFuncs.
