@@ -38,7 +38,7 @@ def _dirFromNumber(n, prefix="", create=False):
         raise PygcamMcsUserError("MaxSimDirs must be a power of 10 (default value is 1000)")
     log = int(log)
 
-    level1 = n / maxnodes
+    level1 = n // maxnodes
     level2 = n % maxnodes
 
     directory = os.path.join(prefix, str(level1).zfill(log), str(level2).zfill(log))

@@ -36,6 +36,10 @@ class ParseCommaList(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, values.split(','))
 
+def splitAndStrip(s, delim):
+    items = [item.strip() for item in s.split(delim)]
+    return items
+
 # For gcam 5, read the map of river basins to countries (and other info)
 def readBasinMap():
     from .query import readCsv
@@ -91,7 +95,7 @@ def digitColumns(df, asInt=False):
     If asInt is True return as a list of integers, otherwise as strings.
     '''
     digitCols = filter(str.isdigit, df.columns)
-    return map(int, digitCols) if asInt else digitCols
+    return [int(x) for x in digitCols] if asInt else digitCols
 
 # Function to return current function name, or the caller, and so on up
 # the stack, based on value of n.
@@ -194,7 +198,6 @@ def getBooleanXML(value):
         raise PygcamException("Can't convert '%s' to boolean; must be in {false,no,0,true,yes,1} (case sensitive)." % value)
 
     return (val in true)
-
 
 _XMLDBPropertiesTemplate = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
@@ -429,13 +432,13 @@ def getYearCols(years, timestep=5):
     :return: (list of strings) the names of the corresponding columns
     """
     try:
-        yearRange = map(int, years.split('-'))
+        yearRange = [int(x) for x in years.split('-')]
         if not len(yearRange) == 2:
             raise Exception
     except:
         raise Exception('Years must be specified as two years separated by a hyphen, as in "2020-2050"')
 
-    cols = map(str, range(yearRange[0], yearRange[1]+1, timestep))
+    cols = [str(y) for y in range(yearRange[0], yearRange[1]+1, timestep)]
     return cols
 
 def saveToFile(txt, dirname='', filename=''):
@@ -630,26 +633,23 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
-# Unused
 def createTrialString(lst):
     '''
     Assemble a list of numbers into a compact list using hyphens to identify ranges.
-    This function is the inverse of :func:`parseTrialString`.
+    This reverses the operation of parseTrialString
     '''
-    from itertools import groupby   # lazy imports
-    from operator import itemgetter
+    from itertools import groupby   # lazy import
 
     lst = sorted(set(lst))
     ranges = []
-    for _, g in groupby(enumerate(lst), lambda (i, x): i - x):
-        group = map(lambda x: str(itemgetter(1)(x)), g)
+    for _, g in groupby(enumerate(lst), lambda pair: pair[0] - pair[1]):
+        group = [str(x[1]) for x in g]
         if group[0] == group[-1]:
             ranges.append(group[0])
         else:
             ranges.append(group[0] + '-' + group[-1])
     return TRIAL_STRING_DELIMITER.join(ranges)
 
-# Unused
 def chunkify(lst, chunks):
     """
     Iterator to turn a list into the number of lists given by chunks.
@@ -662,7 +662,7 @@ def chunkify(lst, chunks):
     """
     l = len(lst)
     numWithExtraEntry = l % chunks  # this many chunks have one extra entry
-    chunkSize = (l - numWithExtraEntry) / chunks + 1
+    chunkSize = (l - numWithExtraEntry) // chunks + 1
     switch = numWithExtraEntry * chunkSize
 
     i = 0

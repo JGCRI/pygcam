@@ -7,6 +7,7 @@
 from __future__ import print_function
 import copy
 import os
+import six
 import sys
 
 from lxml import etree as ET
@@ -224,7 +225,7 @@ def _makeRegionXpath(regions):
     if not regions:
         return ""
 
-    if isinstance(regions, (str, unicode)):
+    if isinstance(regions, six.string_types):
         regions = [regions]
 
     patterns = map(lambda s: "@name='%s'" % s, regions)
@@ -234,11 +235,11 @@ def _makeRegionXpath(regions):
     return xpath
 
 def _makeLandClassXpath(landClasses, protected=False):
-    if isinstance(landClasses, (str, unicode)):
+    if isinstance(landClasses, six.string_types):
         landClasses = [landClasses]
 
     prefix = 'Protected' if protected else ''
-    patterns = map(lambda s: 'starts-with(@name, "%s%s")' % (prefix, s), landClasses)
+    patterns = ['starts-with(@name, "%s%s")' % (prefix, s) for s in landClasses]
     landPattern = ' or '.join(patterns)
     xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
     _logger.debug('landClassXpath: ' + xpath)
@@ -399,7 +400,7 @@ def _landXmlPaths(workspace):
 
     subdir = 'aglu-xml' if version < (5, 1) else ''
     xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml', subdir)
-    paths = map(lambda filename: pathjoin(xmlDir, filename), landXmlFiles)
+    paths = [pathjoin(xmlDir, fname) for fname in landXmlFiles]
     return paths
 
 def parseLandProtectionFile(scenarioFile=None):

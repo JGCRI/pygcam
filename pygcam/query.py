@@ -9,13 +9,14 @@ import re
 import subprocess
 
 from lxml import etree as ET
+from semver import VersionInfo
 
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
 from .constants import NUM_AEZS, GCAM_32_REGIONS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
 from .log import getLogger
-from .queryFile import QueryFile, RewriteSetParser
+from .queryFile import QueryFile, RewriteSetParser, Query
 from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, saveToFile,
                     getExeDir, writeXmldbDriverProperties)
 from .temp_file import TempFile, getTempFile
@@ -30,9 +31,9 @@ def limitYears(df, years):
         range (inclusive) are kept. Data for other years is dropped.
     :return: (DataFrame) df, modified in place.
     """
-    first, last = map(int, years)
-    yearCols  = map(int, filter(str.isdigit, df.columns))
-    dropYears = map(str, filter(lambda y: y < first or y > last, yearCols))
+    first, last = [int(y) for y in years]
+    yearCols  = [int(y) for y in filter(str.isdigit, df.columns)]
+    dropYears = [str(y) for y in filter(lambda y: y < first or y > last, yearCols)]
     df.drop(dropYears, axis=1, inplace=True)
     return df
 
@@ -69,7 +70,7 @@ def interpolateYears(df, startYear=0, inplace=False):
       of `df` with interpolated values is returned.
     """
     yearCols = filter(str.isdigit, df.columns)
-    years = map(int, yearCols)
+    years = [int(y) for y in yearCols]
 
     for i in range(0, len(years)-1):
         start = years[i]
@@ -83,7 +84,7 @@ def interpolateYears(df, startYear=0, inplace=False):
         endCol   = df[str(end)]
 
         # compute vector of annual deltas for each row
-        delta = (endCol - startCol)/timestep
+        delta = (endCol - startCol) / timestep
 
         # interpolate the whole column -- but don't interpolate before the start year
         for j in range(1, timestep):
@@ -91,9 +92,9 @@ def interpolateYears(df, startYear=0, inplace=False):
             df[str(nextYear)] = df[str(nextYear-1)] + (0 if nextYear < startYear else delta)
 
     yearCols = filter(str.isdigit, df.columns)  # get annualized year columns
-    years = map(int, yearCols)       # sort as integers
+    years = [int(y) for y in yearCols]       # sort as integers
     years.sort()
-    yearCols = map(str, years)       # convert back to strings, now sorted
+    yearCols = [str(y) for y in years]       # convert back to strings, now sorted
 
     nonYearCols = list(set(df.columns) - set(yearCols))
     result = df.reindex_axis(nonYearCols + yearCols, axis=1, copy=(not inplace))
@@ -501,7 +502,8 @@ def _copyToLogFile(logFile, filename, msg=''):
     with open(logFile, 'a') as m:
         with open(filename, 'r') as f:
             m.write(msg)
-            map(m.write, f.readlines())
+            for line in f.readlines():
+                m.write(line)
 
 
 def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, tmpFiles=True,
@@ -593,8 +595,6 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         not deleted (use for debugging)
     :return: (str) the pathname of the temporary batch query file
     """
-    from queryFile import Query
-
     commands = []
 
     for obj in queries:
@@ -916,8 +916,8 @@ def sumYears(files, skiprows=1, interpolate=False):
     :param interpolate: (bool) if True, interpolate annual values between time-steps
     :return: none
     """
-    csvFiles = map(ensureCSV, files)
-    dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate), csvFiles)
+    csvFiles = [ensureCSV(f) for f in files]
+    dframes  = [readCsv(fname, skiprows=skiprows, interpolate=interpolate) for fname in csvFiles]
 
     # TBD: preserve columns that have a single value only? Maybe this collapses into sumYearsByGroup()?
     for df, fname in zip(dframes, csvFiles):
@@ -951,8 +951,8 @@ def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
     """
     import numpy as np
 
-    csvFiles = map(ensureCSV, files)
-    dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate), csvFiles)
+    csvFiles = [ensureCSV(f) for f in files]
+    dframes  = [readCsv(fname, skiprows=skiprows, interpolate=interpolate) for fname in csvFiles]
 
     for df, fname in zip(dframes, csvFiles):
         units = df['Units'].unique()
@@ -989,17 +989,17 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
     """
     import pandas as pd
 
-    csvFiles = map(ensureCSV, inFiles)
+    csvFiles = [ensureCSV(f) for f in inFiles]
 
     try:
-        dframes  = map(lambda fname: readCsv(fname, skiprows=skiprows, interpolate=interpolate,
-                                             years=years, startYear=startYear), csvFiles)
+        dframes  = [readCsv(fname, skiprows=skiprows, interpolate=interpolate,
+                            years=years, startYear=startYear) for fname in csvFiles]
     except Exception as e:
         raise CommandlineError("readCsv failed: %s" % e)
 
     formatStr = getParam('GCAM.ExcelNumberFormat')
 
-    basenames = map(os.path.basename, csvFiles)
+    basenames = [os.path.basename(f) for f in csvFiles]
     sheetNum = 1
     outFile = ensureExtension(outFile, '.xlsx')
     with pd.ExcelWriter(outFile, engine='xlsxwriter') as writer:
@@ -1027,7 +1027,7 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
 
             if numFormat:
                 # get the numerical indices of all column names that are numeric (i.e., years)
-                yearIndices = map(lambda pair: pair[0], filter(lambda pair: str.isdigit(pair[1]), enumerate(df.columns)))
+                yearIndices = [pair[0] for pair in filter(lambda pair: str.isdigit(pair[1]), enumerate(df.columns))]
                 for idx in yearIndices:
                     worksheet.set_column(idx, idx, None, numFormat)
 
@@ -1043,6 +1043,7 @@ def queryMain(args):
     # :param args:
     # :return: none
     # """
+    v_4_2_0     = VersionInfo(4, 2, 0)
     miLogFile   = getParam('GCAM.MI.LogFile')
     outputDir   = args.outputDir or getParam('GCAM.OutputDir')
     groupDir    = args.groupDir
@@ -1058,8 +1059,8 @@ def queryMain(args):
     prequery    = args.prequery
     versionNum  = getParam('GCAM.VersionNumber')
     versionInfo = parse_version_info()
-    inMemory        = versionInfo > (4, 2) and getParamAsBoolean('GCAM.InMemoryDatabase')
-    internalQueries = versionInfo > (4, 2) and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
+    inMemory        = versionInfo > v_4_2_0 and getParamAsBoolean('GCAM.InMemoryDatabase')
+    internalQueries = versionInfo > v_4_2_0 and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
     batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
     batchFileIn  = args.batchFile
@@ -1068,7 +1069,7 @@ def queryMain(args):
     # Post-GCAM queries are not possible when using in-memory database.
     # The 'prequery' step writes the XMLDBDriver.properties file used
     # by GCAM to query the in-memory database before exiting.
-    if prequery and versionInfo <= (4, 2):
+    if prequery and versionInfo <= v_4_2_0:
         _logger.info('Skipping pre-query step for gcam-v%s', versionNum)
         return
 

@@ -25,8 +25,8 @@ def subcommandHelp(cmd):
     return help
 
 def actionsFromParser(cmd, parser):
-    actions = map(lambda action: getActionInstance(cmd, action), parser._actions)
-    return filter(None, actions)    # remove Nones
+    actions = [getActionInstance(cmd, action) for action in parser._actions]
+    return list(filter(None, actions))    # remove Nones
 
 #
 # Class to support multi-page applications with dash

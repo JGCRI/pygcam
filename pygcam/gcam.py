@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import re
 import subprocess
+from semver import VersionInfo
 
 from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
@@ -85,7 +86,7 @@ def _gcamWrapper(args):
 
     gcamOut = gcamProc.stdout
     while True:
-        line = gcamOut.readline()
+        line = gcamOut.readline().decode('utf-8')
         if line == '':
             break
 
@@ -122,7 +123,7 @@ def linkToMacJava():
     cmd = '/usr/libexec/java_home'
     javaHome = ''
     try:
-        javaHome = subp.check_output(cmd).strip()
+        javaHome = subp.check_output(cmd).strip().decode('utf-8')
     except Exception:
         pass
 
@@ -189,8 +190,8 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     version = parse_version_info()
 
     # These features didn't exist in version 4.2
-    if version > (4, 2) and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
-                                 getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
+    if version > VersionInfo(4, 2, 0) and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
+                                               getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 

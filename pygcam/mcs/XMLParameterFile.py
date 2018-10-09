@@ -149,9 +149,7 @@ class XMLCorrelation(XMLWrapper):
     Parameters '%s' and '%s' cannot be correlated because
     they have a different number of random variables.''' % (corr.paramName, corr.otherName))
 
-                    varNumPairs = map(lambda pair: (pair[0].rv.getVarNum(),
-                                                    pair[1].rv.getVarNum()),
-                                      zip(p1Vars, p2Vars))
+                    varNumPairs = [(pair[0].rv.getVarNum(), pair[1].rv.getVarNum()) for pair in zip(p1Vars, p2Vars)]
 
                 # In either case, use the pairs of varNums to set up the matrix
                 for i, j in varNumPairs:
@@ -661,12 +659,12 @@ class XMLParameter(XMLWrapper):
         if self.dataSrc.isShared():
             self.rv = XMLRandomVar(None, self)   # Allocate an RV and have all variables share its varNum
             varNum = self.rv.getVarNum()
-            vars = map(lambda elt: XMLVariable(elt, self, varNum=varNum), elements)
+            vars = [XMLVariable(elt, self, varNum=varNum) for elt in elements]
         else:
             # TBD: this won't work without running the query, but it's not used for now...
             _logger.warn("Called XMLParameter.runQuery without 'tree' for independent element RVs")
             # XMLRandomVar assigns varNum directly
-            vars = map(lambda elt: XMLRandomVar(elt, self), elements)
+            vars = [XMLRandomVar(elt, self) for elt in elements]
 
         # Add these to the list since we might be called for multiple scenarios
         self.vars.extend(vars)

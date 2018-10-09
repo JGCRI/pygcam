@@ -7,6 +7,7 @@
 from __future__ import print_function
 import itertools
 import os
+import six
 from six.moves import input
 
 from ..config import getHomeDir, pathjoin, unixPath
@@ -117,8 +118,8 @@ def askDir(msg, default=''):
     is_cygwin = isCygwin()
 
     completer = PathCompleter(only_directories=True, expanduser=True)
-    msg     = unicode(msg) + u' '
-    default = unicode(default)
+    msg     = six.u(msg) + u' '
+    default = six.u(default)
     path = None
 
     while not path:

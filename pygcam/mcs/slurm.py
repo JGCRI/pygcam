@@ -56,8 +56,8 @@ class Slurm(object):
                 matchObj = re.search(pat, s)
                 return matchObj.group(1) if matchObj else ''
 
-            df['NODELIST'] = map(lambda s: search(pat1, s), values)
-            df['REASON']   = map(lambda s: search(pat2, s), values)
+            df['NODELIST'] = [search(pat1, s) for s in values]
+            df['REASON']   = [search(pat2, s) for s in values]
 
         return df
 

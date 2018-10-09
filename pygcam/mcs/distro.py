@@ -155,7 +155,7 @@ class sequence():
     of constant values. Useful for forcing parameters to given values.
     """
     def __init__(self, values):
-        self.values = map(float, values.split(','))
+        self.values = [float(item) for item in values.split(',')]
 
     def ppf(self, q):
         n = len(q)  # length of array to return

@@ -282,7 +282,7 @@ def diffMain(args):
                              interpolate=interpolate, years=years, startYear=startYear,
                              asPercentChange=asPercentChange)
     else:
-        csvFiles = map(ensureCSV, args.csvFiles)
+        csvFiles = [ensureCSV(f) for f in args.csvFiles]
         referenceFile = csvFiles[0]
         otherFiles    = csvFiles[1:] if len(csvFiles) > 1 else []
 

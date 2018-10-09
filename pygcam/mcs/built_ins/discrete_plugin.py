@@ -28,6 +28,7 @@ def getDiscreteDistFromData(data, bins=30):
     """
     import numpy as np
     from math import ceil, floor
+    from six import iteritems
     from ..error import DistributionSpecError
 
     if bins <= 0 or int(bins) != bins:
@@ -47,7 +48,7 @@ def getDiscreteDistFromData(data, bins=30):
     if binSize * bins == dataRange:
         binSize += 1
     size = 0
-    for key, cnt in data.iteritems():
+    for key, cnt in iteritems(data):
         dataArray[int(floor((key - minData) / binSize))] += cnt  # divide by size so results sum to 1
         size += cnt
 
@@ -283,10 +284,13 @@ class DiscreteDist(object):
         The percentiles parameter must be 'array-like' to match (some) of the
         behavior of scipy.stats.rv_continuous.ppf
         """
+        from functools import reduce
+
         if not reduce(lambda x, y: x and 0 < y < 1, percentiles):
             raise DistributionSpecError('Percentiles must all be > 0 and < 1')
 
-        return map(lambda x: self.fastPPF[int(x * self.precision)], percentiles)
+        return [self.fastPPF[int(x * self.precision)] for x in percentiles]
+        #return map(lambda x: self.fastPPF[int(x * self.precision)], percentiles)
 
     def rvs(self, n=1):
         """Returns one or more random values, according to the RV's distribution."""

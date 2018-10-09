@@ -287,7 +287,7 @@ def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title=""
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
     yearCols = filter(str.isdigit, df.columns)
-    x = map(int, yearCols)
+    x = [int(y) for y in yearCols]
     y = list(df[yearCols].iloc[0])
     plt.plot(x, y)
 

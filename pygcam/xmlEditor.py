@@ -25,6 +25,7 @@ import re
 import shutil
 import six
 from lxml import etree as ET
+from semver import VersionInfo
 
 from .config import getParam, getParamAsBoolean, parse_version_info, unixPath, pathjoin
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
@@ -285,7 +286,7 @@ def expandYearRanges(seq):
 
     :param seq_or_dict:
         The sequence of (year, value) tuples, or any object with an
-        iteritems() method that returns (year, value) pairs.
+        items() method that returns (year, value) pairs.
     :return:
         A list of tuples with the expanded sequence.
     """
@@ -306,7 +307,7 @@ def expandYearRanges(seq):
             endYear   = int(m.group(2))
             stepStr = m.group(4)
             step = int(stepStr) if stepStr else 5
-            expanded = map(lambda y: [y, value], range(startYear, endYear+step, step))
+            expanded = [[y, value] for y in range(startYear, endYear+step, step)]
             result.extend(expanded)
         else:
             result.append((int(year), value))
@@ -357,14 +358,17 @@ class ScenarioInfo(object):
     def relPath(self, y):
         pass
 
-    def scenarioXmlSourceDir(self):
-        return pathjoin(self.xmlSourceDir, self.xmlGroupSubdir, self.scenarioSubdir, 'xml') # TBD if keeping xml subdir
+    def scenarioXmlSourceDir(self, xmlSubdir=True):
+        xmlDir = 'xml' if xmlSubdir else ''
+        return pathjoin(self.xmlSourceDir, self.xmlGroupSubdir, self.scenarioSubdir, xmlDir)
 
     def scenarioXmlOutputDir(self):
         return pathjoin(self.xmlOutputDir, self.scenarioGroup, self.scenarioName)
 
     def scenarioXmlSourceFiles(self):
-        files = glob.glob(self.scenarioXmlSourceDir() + '/*.xml')
+        # These two versions handle legacy case with extra 'xml' subdir and new approach, without
+        files = glob.glob(self.scenarioXmlSourceDir(xmlSubdir=False) + '/*.xml')
+        files += glob.glob(self.scenarioXmlSourceDir(xmlSubdir=True) + '/*.xml')
         return files
 
     def cfgPath(self):
@@ -440,7 +444,7 @@ class XMLEditor(object):
         self.gcam_prefix_rel = prefix_rel = pathjoin('../', gcam_xml)
 
         version = parse_version_info()
-        if version > (5, 1):
+        if version > VersionInfo(5, 1, 0):
             # subdirs have been removed in v5.1
             self.aglu_dir_abs = ''
             self.emissions_dir_abs = ''
@@ -535,17 +539,17 @@ class XMLEditor(object):
         scenDir = self.scenario_dir_abs
         mkdirs(scenDir)
 
-        # TBD: there's nothing else now in these dirs, so "xml" subdir is not needed
-        xmlSubdir = pathjoin(self.xmlSourceDir, self.srcGroupDir, self.subdir or self.name, 'xml')
-        xmlFiles = glob.glob("%s/*.xml" % xmlSubdir)
+        # TBD: there's nothing else now in these dirs, so "xml" subdir is not really needed
+        topDir = pathjoin(self.xmlSourceDir, self.srcGroupDir, self.subdir or self.name)
+        subDir = pathjoin(topDir, 'xml') # legacy only
+        xmlFiles = glob.glob("{}/*.xml".format(topDir)) + glob.glob("{}/*.xml".format(subDir))
 
         if xmlFiles:
-            _logger.info("Copy %d static XML files from %s to %s", len(xmlFiles), xmlSubdir, scenDir)
+            _logger.info("Copy {} static XML files from {} to {}".format(len(xmlFiles), topDir, scenDir))
             for src in xmlFiles:
-                # dst = pathjoin(scenDir, os.path.basename(src))
                 shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
         else:
-            _logger.info("No XML files to copy in %s", unixPath(xmlSubdir, abspath=True))
+            _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
         configPath = self.cfgPath()
 
@@ -616,7 +620,7 @@ class XMLEditor(object):
         version = parse_version_info()
 
         # no longer necessary in 4.3. For 4.2, we reset names to those used in 4.3
-        if version < (4, 3):
+        if version < VersionInfo(4, 3, 0):
             self.renameScenarioComponent("interest_rate", pathjoin(self.socioeconomics_dir_rel, "interest_rate.xml"))
             self.renameScenarioComponent("socioeconomics", pathjoin(self.socioeconomics_dir_rel, "socioeconomics_GCAM3.xml"))
 
@@ -951,7 +955,7 @@ class XMLEditor(object):
         :raises: SetupException
         """
         value = coercible(yearOrPeriod, int)
-        stopPeriod = value if 1 < value < 1000 else 1 + (value - 2000)/5
+        stopPeriod = value if 1 < value < 1000 else 1 + (value - 2000)//5
 
         self.updateConfigComponent('Ints', 'stop-period', stopPeriod)
 
@@ -1262,7 +1266,7 @@ class XMLEditor(object):
             be a single year (as string or int), or a string specifying a range of
             years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
             which provides an alternative timestep. If `values` is dict-like (e.g. a
-            pandas Series) a list of tuples is created by calling values.iteritems() after
+            pandas Series) a list of tuples is created by calling values.items() after
             which the rest of the explanation above applies. The `price` can be
             anything coercible to float.
         :return: none
@@ -1301,7 +1305,7 @@ class XMLEditor(object):
             be a single year (as string or int), or a string specifying a range of
             years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
             which provides an alternative timestep. If `values` is dict-like (e.g. a
-            pandas Series) a list of tuples is created by calling values.iteritems() after
+            pandas Series) a list of tuples is created by calling values.items() after
             which the rest of the explanation above applies. The `shutdownRate` can be
             anything coercible to float.
         :param xmlBasename: (str) the name of an xml file in the energy-xml folder to edit.
@@ -1355,7 +1359,7 @@ class XMLEditor(object):
             be a single year (as string or int), or a string specifying a range of
             years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
             which provides an alternative timestep. If `values` is dict-like (e.g. a
-            pandas Series) a list of tuples is created by calling values.iteritems() after
+            pandas Series) a list of tuples is created by calling values.items() after
             which the rest of the explanation above applies. The `elasticity` can be
             anything coercible to float.
         :return: none
@@ -1412,7 +1416,7 @@ class XMLEditor(object):
             be a single year (as string or int), or a string specifying a range of
             years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
             which provides an alternative timestep. If `values` is dict-like (e.g. a
-            pandas Series) a list of tuples is created by calling values.iteritems() after
+            pandas Series) a list of tuples is created by calling values.items() after
             which the rest of the explanation above applies. The `shareWeight` can be
             anything coercible to float.
         :param stubTechnology: (str) the name of a GCAM technology in the global technology database
@@ -1456,7 +1460,7 @@ class XMLEditor(object):
             be a single year (as string or int), or a string specifying a range of
             years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
             which provides an alternative timestep. If `values` is dict-like (e.g. a
-            pandas Series) a list of tuples is created by calling values.iteritems() after
+            pandas Series) a list of tuples is created by calling values.items() after
             which the rest of the explanation above applies. The `shareWeight` can be
             anything coercible to float.
         :param xmlBasename: (str) the name of an xml file in the energy-xml folder to edit.
@@ -1491,7 +1495,7 @@ class XMLEditor(object):
             The name of the technology, e.g., 'cellulosic ethanol', 'FT biofuel', etc.
         :param energyInput: (str) the name of the minicam-energy-input
         :param values:
-            A sequence of tuples or object with ``iteritems`` method returning
+            A sequence of tuples or object with ``items`` method returning
             (year, coefficient). For example, to set
             the coefficients for cellulosic ethanol for years 2020 and 2025 to 1.234,
             the pairs would be ((2020, 1.234), (2025, 1.234)).

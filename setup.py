@@ -1,3 +1,4 @@
+import sys
 from pygcam.version import VERSION
 
 # Build the full version with MCS on when running on ReadTheDocs.
@@ -10,13 +11,23 @@ from pygcam.version import VERSION
 #     import ez_setup
 #     ez_setup.use_setuptools(version='36.7.2')
 
+
 from setuptools import setup
 
-requirements = [
+py2_deps = [
     'configparser>=3.5.0',     # backport of python 3.5 version
     'futures>=3.2.0',
+    'ipython<6.0',
+    'tornado<5.0',
+]
+
+py3_deps = [
+    'ipython>=6.5',
+    'tornado>=5.1',
+]
+
+common_deps = [
     'future>=0.16.0',
-    'ipython<6.0',              # 6.x requires Python 3
     'lxml>=4.2.5',
     'numpy>=1.15.2',
     'pandas>=0.23.3',
@@ -24,7 +35,6 @@ requirements = [
     'semver>=2.8.1',
     'six>=1.11.0',
     'sphinx-argparse>=0.2.1',
-    'tornado<5.0',
 
     # GUI requirements
     'flask>=1.0.2',
@@ -34,11 +44,12 @@ requirements = [
     'dash-renderer>=0.14.1',
 
     # MCS requirements
-    'ipyparallel>=6.2.2',
     'salib>=1.1.3',
     'scipy>=1.1.0',
     'sqlalchemy>=1.2.12',
 ]
+
+requirements = common_deps + (py3_deps if sys.version_info.major == 3 else py2_deps)
 
 long_description = '''
 pygcam
@@ -85,7 +96,7 @@ Who do I talk to?
 setup(
     name='pygcam',
     version=VERSION,
-    description='Python 2.7 library and scripts for interfacing with GCAM',
+    description='Python 2.7/3.7 library and scripts for interfacing with GCAM',
     platforms=['Windows', 'MacOS', 'Linux'],
 
     packages=['pygcam'],

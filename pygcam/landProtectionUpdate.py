@@ -86,7 +86,7 @@ def _update_protection(reg_dict, landtype, basin, prot_vals, unprot_vals):
 
 def _protect_land(tree, prot_dict):
     node_dict = _cache_land_nodes(tree, prot_dict.keys())
-    for (reg, prot_tups) in prot_dict.iteritems():
+    for (reg, prot_tups) in prot_dict.items():
         reg_dict = node_dict[reg]
         land_basin_pairs = _landtype_basin_pairs(reg_dict)
 
@@ -121,7 +121,7 @@ def protectLandTree(tree, scenarioName):
 
     prot_dict = {}
 
-    for reg, protReg in scenario.protRegDict.iteritems():
+    for reg, protReg in scenario.protRegDict.items():
         for prot in protReg.protections:
             fraction = prot.fraction
             basin = prot.basin

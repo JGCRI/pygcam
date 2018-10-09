@@ -126,10 +126,10 @@ class _TmpFile(_TmpFileBase):
             def getTag(node):
                 return node.get('tag')
 
-            tags = map(getTag, filter(getTag, textNodes))
+            tags = [tag for tag in [getTag(node) for node in textNodes] if tag]
 
             # Save all the defaults that are not overridden by current definitions
-            defaults = filter(lambda node: node.get('tag') not in tags, default.textNodes)
+            defaults = list(filter(lambda node: node.get('tag') not in tags, default.textNodes))
 
         self.textNodes = defaults + textNodes
 
@@ -345,8 +345,8 @@ class Project(XMLFile):
         self.scenarioGroupDict = self.scenarioSetup.groupDict
         self.setGroup(groupName)    # if None, resets scenarioGroupName to default group
 
-        dfltSteps = map(Step, defaultsNode.findall('./steps/step')) if hasDefaults else []
-        projSteps = map(Step, projectNode.findall('./steps/step'))
+        dfltSteps = [Step(item) for item in defaultsNode.findall('./steps/step')] if hasDefaults else []
+        projSteps = [Step(item) for item in projectNode.findall('./steps/step')]
         allSteps  = dfltSteps + projSteps
 
         # project steps with same name and seq overwrite defaults
@@ -358,17 +358,17 @@ class Project(XMLFile):
         self.vars = {}
 
         if hasDefaults:
-            map(Variable, defaultsNode.findall('./vars/var'))
+            [Variable(item) for item in defaultsNode.findall('./vars/var')]
 
-        map(Variable,  projectNode.findall('./vars/var'))
+        [Variable(item) for item in projectNode.findall('./vars/var')]
 
         dfltQueriesNodes = defaultsNode.findall('queries') if hasDefaults else []
         projQueriesNodes = projectNode.findall('queries')
-        self.queryFiles  = map(Queries, dfltQueriesNodes + projQueriesNodes)
+        self.queryFiles  = [Queries(item) for item in dfltQueriesNodes + projQueriesNodes]
 
         dfltTmpFileNodes = defaultsNode.findall('tmpFile') if hasDefaults else []
         projTmpFileNodes = projectNode.findall('tmpFile')
-        self.tmpFiles = map(_TmpFile, dfltTmpFileNodes + projTmpFileNodes)
+        self.tmpFiles = [_TmpFile(item) for item in dfltTmpFileNodes + projTmpFileNodes]
 
     instance = None
 
@@ -463,7 +463,7 @@ class Project(XMLFile):
         '''
         # sorting by not(node.isBaseline) results in baseline preceding scenarios
         sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)
-        knownScenarios  = map(lambda node: node.name, sortedScenarios)
+        knownScenarios  = [node.name for node in sortedScenarios]
         return knownScenarios
 
     def getKnownGroups(self):
@@ -471,7 +471,7 @@ class Project(XMLFile):
         Return a list of known scenarioGroups for the current project.
         '''
         sortedGroups = sorted(self.scenarioGroupDict.values(), key=lambda node: node.name)
-        knownGroups = map(lambda node: node.name, sortedGroups)
+        knownGroups = [node.name for node in sortedGroups]
         return knownGroups
 
     def validateProjectArgs(self, userArgs, knownArgs, argName):

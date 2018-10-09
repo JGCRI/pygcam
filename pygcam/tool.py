@@ -10,6 +10,7 @@ from glob import glob
 import os
 import pipes
 import re
+from semver import VersionInfo
 import subprocess
 import sys
 
@@ -113,12 +114,14 @@ class GcamTool(object):
 
         # load all built-in sub-commands
         if loadBuiltins:
-            map(self.instantiatePlugin, BuiltinSubcommands)
+            for item in BuiltinSubcommands:
+                self.instantiatePlugin(item)
 
         # If using MCS, load that set of built-ins, too
         if usingMCS():
             from .mcs.built_ins import MCSBuiltins
-            map(self.instantiatePlugin, MCSBuiltins)
+            for item in MCSBuiltins:
+                self.instantiatePlugin(item)
 
         # Load external plug-ins found in plug-in path
         if loadPlugins:
@@ -251,7 +254,8 @@ class GcamTool(object):
         # For top-level help, or if no args, load all plugins
         # so the generated help messages includes all subcommands
         if ns.help or not otherArgs:
-            map(self._loadCachedPlugin, self._pluginPaths.keys())
+            for item in self._pluginPaths.keys():
+                self._loadCachedPlugin(item)
         else:
             # Otherwise, load any referenced sub-command
             for command in self._pluginPaths.keys():
@@ -261,6 +265,7 @@ class GcamTool(object):
     def validateGcamVersion(self):
         from .utils import pushd
         from .gcam import setJavaPath
+        from semver import VersionInfo
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
         exeName = getParam('GCAM.Executable')
@@ -271,7 +276,7 @@ class GcamTool(object):
 
         # Starting with v4.3, gcam reports its version number
         versionCfg = parse_version_info()
-        if versionCfg >= (4, 3):
+        if versionCfg >= VersionInfo(4, 3, 0):
             versionFile = pathjoin(exeDir, '.version')
 
             # Check for cached version info
@@ -377,7 +382,7 @@ class GcamTool(object):
 
         # The LSF scheduler needs HH:MM; SLURM needs HH:MM:SS
         format = "%02d:%02d" if batchSystem == 'LSF' else "%02d:%02d:00"
-        walltime  = format % (minutes / 60, minutes % 60)
+        walltime  = format % (minutes // 60, minutes % 60)
 
         if logFile:
             logDir = getParam('GCAM.BatchLogDir')
@@ -435,7 +440,7 @@ class GcamTool(object):
             system = 'Mac OS X' if system == 'Darwin' else system
             raise CommandlineError('Batch commands are not supported on %s' % system)
 
-        shellArgs = map(pipes.quote, shellArgs)
+        shellArgs = [pipes.quote(arg) for arg in shellArgs]
         args = self.parser.parse_args(args=shellArgs)
 
         return self.runBatch2(shellArgs, jobName=args.jobName, queueName=args.queueName,
@@ -483,11 +488,13 @@ def _setDefaultProject(argv):
     # Set the data dir based on the version of the model used in this project
     version = parse_version_info()
 
-    dataDir = "gcamdata" if version >= (5, 1) else "gcam-data-system"
+    v_5_1_0 = VersionInfo(5, 1, 0)
+
+    dataDir = "gcamdata" if version >= v_5_1_0 else "gcam-data-system"
     setParam('GCAM.DataDir', dataDir, section=section)
 
     # ModelInterface was also relocated in v5.1, so we compute the path when setting the project
-    subdir = 'output/modelinterface' if version >= (5, 1) else 'input/gcam-data-system/_common/ModelInterface/src'
+    subdir = 'output/modelinterface' if version >= v_5_1_0 else 'input/gcam-data-system/_common/ModelInterface/src'
     setParam('GCAM.MI.Subdir', subdir )
 
 

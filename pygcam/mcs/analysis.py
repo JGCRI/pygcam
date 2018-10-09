@@ -2,11 +2,12 @@
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 import os
 import numpy as np
-
 from pygcam.matplotlibFix import plt
 
 import pandas as pd
 import seaborn as sns
+from six import iteritems
+from six.moves import xrange
 
 from pygcam.config import getParam, getParamAsBoolean
 from pygcam.log import getLogger
@@ -74,7 +75,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
 
     color = blue if color is None else color
     count = values.count()
-    bins  = count / 10 if count > 150 else (count / 5 if count > 50 else (count / 2 if count > 20 else None))
+    bins  = count // 10 if count > 150 else (count // 5 if count > 50 else (count // 2 if count > 20 else None))
     sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'shade': shade})
 
     #sns.axlabel(xlabel=xlabel, ylabel=ylabel)
@@ -251,8 +252,8 @@ def plotConvergence(simId, expName, paramName, values, show=True, save=False):
     count = values.count()
     results = {'Mean': [], 'Stdev': [], 'Skewness': [], '95% CI': []}
 
-    increment = min(100, int(count/20))
-    nValues = range(increment, count+increment-1, increment)
+    increment = min(100, count // 20)
+    nValues = range(increment, count + increment - 1, increment)
 
     for N in nValues:
         sublist = values[:N]
@@ -270,7 +271,7 @@ def plotConvergence(simId, expName, paramName, values, show=True, save=False):
         dataList.insert(0,0)
 
     labelsize=12
-    for key, values in results.iteritems():
+    for key, values in iteritems(results):
         plt.clf()   # clear previous figure
         ax = plt.gca()
         ax.tick_params(axis='x', labelsize=labelsize)
@@ -429,7 +430,7 @@ def plotInputDistributions(simId, inputDF):
     showKDE   = False
     showShade = getParamAsBoolean('MCS.PlotShowShading')
 
-    for heading, series in inputDF.iteritems():
+    for heading, series in iteritems(inputDF):
         plotHistogram(series, showCI=False,
                       xlabel='Parameter value', ylabel='Probability density',
                       title='Distribution for values of %s' % heading,
@@ -461,7 +462,7 @@ def readParameterValues(simId, trials):
     db = getDatabase()
 
     paramTuples = db.getParameters()        # Returns paramName, row, col
-    paramNames  = map(lambda tup: makeKey(*tup), paramTuples)   # names like "foo[1][14]"
+    paramNames  = [makeKey(*tup) for tup in paramTuples]   # names like "foo[1][14]"
     inputDF     = pd.DataFrame(index=xrange(trials), columns=paramNames, dtype=float)
     _logger.debug("Found %d distinct parameter names" % len(paramNames))
 
@@ -483,7 +484,7 @@ def exportInputs(exportFile, inputs):
     df = inputs.copy()
 
     # remove [x][y] from colnames
-    df.columns = map(_fixColname, df.columns)
+    df.columns = [_fixColname(c) for c in df.columns]
 
     _logger.debug("Exporting data to '%s'", exportFile)
     df.to_csv(exportFile)
@@ -565,7 +566,7 @@ def saveForEMA(simId, expNames, resultNames, inputDF, filename):
     def add_file(tgzfile, string_to_add, filename):
         tarinfo = tarfile.TarInfo(filename)
         tarinfo.size = len(string_to_add)
-        tarinfo.mode = 0644
+        tarinfo.mode = 0x644
         tarinfo.mtime = time.time()
         tgzfile.addfile(tarinfo, BytesIO(string_to_add.encode('UTF-8')))
 
@@ -581,13 +582,14 @@ def saveForEMA(simId, expNames, resultNames, inputDF, filename):
 
         # Write experiment metadata
         dtypes = inputDF.dtypes
-        # list(dtypes.iteritems()) produces results like:
+        # list(dtypes.items()) produces results like:
         # [('A', dtype('int64')), ('B', dtype('int64')), ('C', dtype('float64'))] and
-        # map(lambda dt: (dt[0], dt[1].descr), dtypes.iteritems()) produces:
+        # map(lambda dt: (dt[0], dt[1].descr), dtypes.items()) produces:
         # [('A', [('', '<i8')]), ('B', [('', '<i8')]), ('C', [('', '<f8')])]
-        # So, map(lambda dt: (dt[0], dt[1].descr[0][1]), dtypes.iteritems()) produces:
+        # So, map(lambda dt: (dt[0], dt[1].descr[0][1]), dtypes.items()) produces:
         # [('A', '<i8'), ('B', '<i8'), ('C', '<f8')]
-        tuples = map(lambda dt: (dt[0], dt[1].descr[0][1]), dtypes.iteritems())
+        tuples = [(dt[0], dt[1].descr[0][1]) for dt in iteritems(dtypes)]
+        tuples = map(lambda dt: (dt[0], dt[1].descr[0][1]), iteritems(dtypes))
         strings = ["{},{}".format(name, dtype) for name, dtype in tuples]
         fileText = "\n".join(strings) + '\n'
         add_file(z, fileText, 'experiments metadata.csv')
@@ -668,7 +670,7 @@ class Analysis(object):
         self.inputDF = df = readParameterValues(self.simId, self.trials)
         # TBD: [x][y] is probably obsolete
         # remove [x][y] subscripts from colnames
-        df.columns = map(_fixColname, df.columns)
+        df.columns = [_fixColname(c) for c in df.columns]
         return df
 
     def exportInputs(self, exportFile, columns=None, sep=','):
@@ -764,7 +766,7 @@ class Analysis(object):
         inputDF = self.getInputs()
         simId = self.simId
 
-        for heading, series in inputDF.iteritems():
+        for heading, series in iteritems(inputDF):
             plotHistogram(series, showCI=False,
                           xlabel='Parameter value', ylabel='Probability density',
                           title='Distribution for values of %s' % heading,
@@ -824,7 +826,7 @@ class Analysis(object):
         :param show: (bool) If True, show the figure.
         :return: none
         '''
-        from pandas.tools.plotting import parallel_coordinates
+        from pandas.plotting import parallel_coordinates
 
         corrDF = getCorrDF(inputDF, resultSeries)
         numInputs = numInputs or len(corrDF)

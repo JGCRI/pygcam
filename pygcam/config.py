@@ -4,12 +4,18 @@
 '''
 from __future__ import print_function
 import os
+import sys
 import platform
 import re
 from pkg_resources import resource_string
-from backports import configparser
-from .error import ConfigFileError, PygcamException
+from six import iteritems
 
+if sys.version_info.major == 2:
+    from backports import configparser
+else:
+    import configparser
+
+from .error import ConfigFileError, PygcamException
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
 USR_DEFAULTS_FILE = '.pygcam.defaults'
@@ -81,7 +87,7 @@ def savePathMap(mapString):
     pairs = [s.split(':') for s in pairStrings]
 
     # strip whitespace
-    pairs = [map(str.strip, pair) for pair in pairs]
+    pairs = [[s.strip() for s in pair] for pair in pairs]
 
     # process the longest strings first to avoid overlooking long prefixes
     pairs = sorted(pairs, key = lambda pair: len(pair[0]), reverse=True)
@@ -180,7 +186,7 @@ def _readConfigResourceFile(filename, package='pygcam', raiseError=True):
         else:
             return None
 
-    data = unicode(data)
+    data = data.decode('utf-8')
     _ConfigParser.read_string(data, source=filename)
     return data
 
@@ -334,7 +340,7 @@ def readConfigFiles(allowMissing=False):
     _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER', 'unknown'))
 
     # Create vars from environment variables as '$' + variable name, as in the shell
-    for name, value in os.environ.iteritems():
+    for name, value in iteritems(os.environ):
         value = value.replace(r'%', r'%%')
         _ConfigParser.set(DEFAULT_SECTION, '$' + name, value)
 

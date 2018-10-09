@@ -9,11 +9,12 @@
 '''
 This module includes contributions by Sam Fendell and Ryan Jones.
 '''
-import six
+from __future__ import print_function
 from collections import Iterable
 from contextlib import contextmanager
 from datetime import datetime
-from operator import itemgetter
+from six import string_types, iteritems
+from six.moves import xrange
 import sys
 
 from sqlalchemy import create_engine, Table, Column, String, Float, text, MetaData, event
@@ -21,7 +22,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, load_only
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.pool import QueuePool
+#from sqlalchemy.pool import QueuePool
 
 from pygcam.config import getSection, getParam, getParamAsBoolean
 from pygcam.log import getLogger
@@ -112,7 +113,7 @@ def beforeSavingRun(_mapper, _connection, run):
     elif run.startTime:
         run.endTime   = datetime.now()
         delta         = run.endTime - run.startTime
-        run.duration  = delta.seconds / 60
+        run.duration  = delta.seconds // 60
 
 
 # Associate a listener function with Run, to execute before inserts and updates
@@ -128,7 +129,7 @@ def parseSqlScript(filename=None, text=None):
       rather than the filename
     :return: (list of str) the individual statements
     '''
-    from StringIO import StringIO
+    from six.moves import StringIO
 
     if not (filename or text):
         raise PygcamMcsSystemError('Called parseSqlScript with neither filename nor text')
@@ -425,7 +426,7 @@ class CoreDatabase(object):
                 try:
                     meta.execute(text("DROP %s %s CASCADE" % (type, name)))
                 except SQLAlchemyError as e:
-                    print e
+                    print(e)
 
     def getTable(self, tableClass, orderBy=None):
         '''
@@ -507,7 +508,7 @@ class CoreDatabase(object):
 
     def getOutputs(self):
         rows = self.getTable(Output)
-        return map(lambda obj: obj.name, rows)
+        return [obj.name for obj in rows]
 
     def getOutputsWithValues(self, simId, scenario):
         with self.sessionScope() as session:
@@ -516,7 +517,7 @@ class CoreDatabase(object):
                 join(Experiment).filter_by(expName=scenario). \
                 distinct(Output.name)
             rows = query.all()
-            return map(lambda row: row[0], rows)
+            return [row[0] for row in rows]
 
     #
     # Very much like setAttrVal. So much so that perhaps the Result table can be
@@ -614,7 +615,7 @@ class CoreDatabase(object):
                  filter(InValue.simId == simId).join(Input).join(Program).filter(Program.name == program).order_by(InValue.trialNum)
 
         rslt = query.all()
-        cols = map(lambda d: d['name'], query.column_descriptions) if rslt else None
+        cols = [d['name'] for d in query.column_descriptions] if rslt else None
         self.endSession(session)
 
         if not rslt:
@@ -656,7 +657,7 @@ class CoreDatabase(object):
 
     def getInputs(self):
         rows = self.getTable(Input, orderBy=Input.paramName)
-        return map(lambda row: row.paramName, rows)
+        return [row.paramName for row in rows]
 
     def scenariosWithResults(self, simId):
         # Definition of view 'result':
@@ -668,7 +669,7 @@ class CoreDatabase(object):
                 query = session.query(Experiment.expName).join(Run).filter_by(simId=simId).\
                     join(OutValue).distinct(Experiment.expName)
                 rows = query.all()
-                names = map(lambda row: row[0], rows)
+                names = [row[0] for row in rows]
         except Exception as e:
             _logger.error("scenariosWithResults failed: %s", e)
             names = []
@@ -757,10 +758,10 @@ class CoreDatabase(object):
 
         # Allow expList and statusList to be a single string,
         # which we convert to lists
-        if isinstance(expList, six.string_types):
+        if isinstance(expList, string_types):
             expList = [expList]
 
-        if isinstance(statusList, six.string_types):
+        if isinstance(statusList, string_types):
             statusList = [statusList]
 
         session = self.Session()
@@ -773,7 +774,7 @@ class CoreDatabase(object):
         self.endSession(session)
 
         if rslt:
-            rslt = map(itemgetter(0), rslt) # collapse list of singleton tuples into a single list
+            rslt = [r[0] for r in rslt] # collapse list of singleton tuples into a single list
 
         #_logger.debug("for simid=%d, expList=%s, status=%s, rslt=%s" % (simId, expList, status, rslt))
         return rslt
@@ -787,7 +788,7 @@ class CoreDatabase(object):
         '''
         from .context import Context
 
-        if isinstance(statusList, six.string_types):
+        if isinstance(statusList, string_types):
             statusList = [statusList]
 
         if len(statusList) == 0:
@@ -805,9 +806,8 @@ class CoreDatabase(object):
             rslt = query.order_by(Run.trialNum).all()
 
         if groupName or projectName:
-            rslt = map(lambda r: Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], scenario=r[4],
-                                         baseline=r[5], groupName=groupName, projectName=projectName),
-                       rslt)
+            rslt = [Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], scenario=r[4],
+                            baseline=r[5], groupName=groupName, projectName=projectName) for r in rslt]
         return rslt
 
     def createSim(self, trials, description, simId=None):
@@ -878,7 +878,7 @@ class CoreDatabase(object):
             rows = q.all()
             if asDataFrame:
                 if rows:
-                    cols = map(lambda d: d['name'], q.column_descriptions)
+                    cols = [d['name'] for d in q.column_descriptions]
                     df = DataFrame.from_records(rows, columns=cols, index='runId')
                     return df
                 return None
@@ -1081,7 +1081,7 @@ class GcamDatabase(CoreDatabase):
 
         # Create the time series table with years (as columns) specified in the config file.
         years = activeYears()
-        cols = map(lambda y: YEAR_COL_PREFIX + y, years)
+        cols = [YEAR_COL_PREFIX + y for y in years]
         return cols
 
     def addYearCols(self, alterTable=True):
@@ -1118,7 +1118,7 @@ class GcamDatabase(CoreDatabase):
         # TBD: read region map from file identified in config file, or use default values
         # For now, use default mapping
         with self.sessionScope() as session:
-            for name, regId in regionMap.iteritems():
+            for name, regId in iteritems(regionMap):
                 self.addRegion(regId, name, session=session)
 
     def addRegion(self, regionId, name, session=None):
@@ -1154,9 +1154,9 @@ class GcamDatabase(CoreDatabase):
         # TBD: The following code is subject to a race condition, but we don't expect multiple users to
         # TBD: generate simulations in the same model run dir simultaneously. If they do, this may break.
         # TBD: Could handle this with a lock...
-        pnames = map(itemgetter(0), tuples)
+        pnames = [tup[0] for tup in tuples]
         rows = session.query(Input).filter(Input.programId == programId, Input.paramName.in_(pnames)).all()
-        found = map(lambda row: row.paramName, rows)
+        found = [row.paramName for row in rows]
 
         descByName = dict(tuples)
         notFound = set(pnames) - set(found)
@@ -1172,7 +1172,7 @@ class GcamDatabase(CoreDatabase):
                 updTuples.append(row)
 
         # Create a list of objects that need to be inserted, then add them all at once
-        newInputs = map(lambda name: Input(programId=programId, paramName=name, description=descByName[name]), notFound)
+        newInputs = [Input(programId=programId, paramName=name, description=descByName[name]) for name in notFound]
         session.add_all(newInputs)
 
         # Insert new parameter descriptions for these
@@ -1233,7 +1233,7 @@ class GcamDatabase(CoreDatabase):
 
         ts = TimeSeries(runId=runId, outputId=outputId, regionId=regionId, units=units)
 
-        for name, value in values.iteritems():  # Set the values for "year" columns
+        for name, value in iteritems(values):  # Set the values for "year" columns
             setattr(ts, name, value)
 
         sess.add(ts)

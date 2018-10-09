@@ -13,7 +13,7 @@ from inspect import stack, getargspec
 
 from pygcam.config import getParam, getParamAsInt
 from pygcam.log import getLogger
-from pygcam.utils import mkdirs, pathjoin
+from pygcam.utils import mkdirs, createTrialString, chunkify
 
 from .constants import COMMENT_CHAR
 from .context import getSimDir
@@ -89,6 +89,7 @@ def activeYears(asInt=False):
     # return cached values or compute and cache result
     if not _activeYearStrs:
         import re
+        from functools import reduce
 
         def reducer(lst, item):
             m = re.match(r"^(\d{4})-(\d{4})(?::(\d+))?$", item)
@@ -109,8 +110,8 @@ def activeYears(asInt=False):
         items = yearStr.split(',')
         years = reduce(reducer, items, [])
 
-        _activeYearInts = map(int, years)
-        _activeYearStrs = map(str, years)
+        _activeYearInts = [int(y) for y in years]
+        _activeYearStrs = [str(y) for y in years]
 
     return _activeYearInts if asInt else _activeYearStrs
 
@@ -321,7 +322,7 @@ def dirFromNumber(n, prefix="", create=False):
         raise PygcamMcsUserError("MaxSimDirs must be a power of 10 (default value is 1000)")
     log = int(log)
 
-    level1 = n / maxnodes
+    level1 = n // maxnodes
     level2 = n % maxnodes
 
     directory = os.path.join(prefix, str(level1).zfill(log), str(level2).zfill(log))
@@ -355,45 +356,10 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
-def createTrialString(lst):
-    '''
-    Assemble a list of numbers into a compact list using hyphens to identify ranges.
-    This reverses the operation of parseTrialString
-    '''
-    from itertools import groupby   # lazy import
-    from operator  import itemgetter
-
-    lst = sorted(set(lst))
-    ranges = []
-    for _, g in groupby(enumerate(lst), lambda (i, x): i - x):
-        group = map(lambda x: str(itemgetter(1)(x)), g)
-        if group[0] == group[-1]:
-            ranges.append(group[0])
-        else:
-            ranges.append(group[0] + '-' + group[-1])
-    return TRIAL_STRING_DELIMITER.join(ranges)
-
-def chunkify(lst, chunks):
-    '''
-    Generator to turn a list into the number of lists given by chunks.
-    In the case that len(lst) % chunksize != 0, all chunks are made as
-    close to the same size as possible.
-    '''
-    l = len(lst)
-    numWithExtraEntry = l % chunks  # this many chunks have one extra entry
-    chunkSize = (l - numWithExtraEntry) / chunks + 1
-    switch = numWithExtraEntry * chunkSize
-
-    i = 0
-    while i < l:
-        if i == switch:
-            chunkSize -= 1
-        yield lst[i:i + chunkSize]
-        i += chunkSize
 
 def saveDict(d, filename):
     with open(filename, 'w') as f:
-        for key, value in d.iteritems():
+        for key, value in d.items():
             f.write('%s=%s\n' % (key, value))
 
 def fullClassname(obj):

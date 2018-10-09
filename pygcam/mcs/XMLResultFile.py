@@ -83,8 +83,8 @@ class XMLResult(XMLWrapper):
         self.column = XMLColumn(col) if col is not None else None
 
         # Create the "where" clause to use with a DataFrame.query() on the results we'll read in
-        self.constraints = map(XMLConstraint, self.element.iterfind(CONSTRAINT_ELT_NAME))
-        constraintStrings = filter(None, map(XMLConstraint.asString, self.constraints))
+        self.constraints = [XMLConstraint(item) for item in self.element.iterfind(CONSTRAINT_ELT_NAME)]
+        constraintStrings = list(filter(None, map(XMLConstraint.asString, self.constraints)))
         self.whereClause = ' and '.join(constraintStrings)
 
     def isScalar(self):
@@ -306,7 +306,7 @@ def extractResult(context, scenario, outputDef, type):
         # When no column name is specified, assume this is a time-series result, so save all years.
         # Use sum() to collapse values to a single time series; for a single row it helpfully
         # converts the 1-element series to a simple float.
-        yearCols = map(lambda y: YEAR_COL_PREFIX + y, active)
+        yearCols = [YEAR_COL_PREFIX + y for y in active]
         value = {colName: selected[yearStr].sum() for colName, yearStr in zip(yearCols, active)}
 
     if outputDef.percentage:
@@ -360,7 +360,7 @@ def saveResults(context, resultList):
     session = db.Session()
 
     # Delete any stale results for this runId (i.e., if re-running a given runId)
-    names = map(lambda resultDict: resultDict['paramName'], resultList)
+    names = [resultDict['paramName'] for resultDict in resultList]
     ids = db.getOutputIds(names)
     db.deleteRunResults(runId, outputIds=ids, session=session)
     db.commitWithRetry(session)

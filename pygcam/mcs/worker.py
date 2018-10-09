@@ -323,7 +323,7 @@ def runTrial(context, argDict):
             startTime = time.time()
 
             wallTime  = os.getenv('MCS_WALLTIME', '2:00') # should always be set except when debugging
-            parts = map(int, wallTime.split(':'))
+            parts = [int(item) for item in wallTime.split(':')]
             secs = parts.pop()
             mins = parts.pop() if parts else 0
             hrs  = parts.pop() if parts else 0

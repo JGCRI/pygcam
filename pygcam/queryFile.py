@@ -27,7 +27,7 @@ class Query(object):
 
         # Create a list of tuples with (mapName, level) where level may be None
         rewriters = node.findall('rewriter')
-        self.rewriters = map(lambda obj: (obj.get('name'), obj.get('level')), rewriters)
+        self.rewriters = [(obj.get('name'), obj.get('level')) for obj in rewriters]
 
         # We add the default map in two cases: (i) user specified some rewriters and explicitly
         # set useDefault="1", or (ii) there are no rewriters and useDefault has not been set to "0".
@@ -48,7 +48,7 @@ class QueryFile(object):
         may differ from the original query name, e.g., if the same query
         needs to be rewritten differently for different purposes.
         """
-        names = map(lambda q: q.saveAs, self.queries)
+        names = [q.saveAs for q in self.queries]
         return names
 
     @classmethod
@@ -83,7 +83,7 @@ class RewriteSet(object):
         self.byAEZ = getBooleanXML(node.get('byAEZ', '0'))
         self.byBasin = getBooleanXML(node.get('byBasin', '0'))   # TBD: GCAM5
         self.appendValues = getBooleanXML(node.get('append-values', '0'))
-        self.rewrites = map(Rewrite, node.findall('rewrite'))
+        self.rewrites = [Rewrite(x) for x in node.findall('rewrite')]
 
     def __str__(self):
         # TBD: Add byBasin for GCAM5
@@ -102,7 +102,7 @@ class RewriteSetParser(object):
     cache = {}
 
     def __init__(self, node, filename):
-        rewriteSets = map(RewriteSet, node.findall('rewriteSet'))
+        rewriteSets = [RewriteSet(x) for x in node.findall('rewriteSet')]
         self.rewriteSets = {obj.name : obj for obj in rewriteSets}
         self.filename = filename # for error messages only
 

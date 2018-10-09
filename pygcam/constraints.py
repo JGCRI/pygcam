@@ -56,14 +56,14 @@ def _generateConstraintXML(name, series, gcamPolicy=DEFAULT_POLICY, policyType=N
     if policyType and not preConstraint:
         preConstraint = '<policyType>{policyType}</policyType>'.format(policyType=policyType)
 
-    constraints = map(genConstraint, series.index)
+    constraints = [genConstraint(i) for i in series.index]
     constraintText = '\n'.join(constraints)
 
     template = _MetaTemplate.format(name=name, gcamPolicy=gcamPolicy, policyType=policyType,
                                     region=region, market=market, summary=summary,
                                     preConstraint=preConstraint, constraints=constraintText)
 
-    args = {'year' + col: value for col, value in series.iteritems()}
+    args = {'year' + col: value for col, value in series.items()}
     xml = template.format(**args)
     return xml
 
@@ -223,7 +223,7 @@ def genBioConstraints(**kwargs):
                         groupName=subdir)#, fromMCS=fromMCS)
 
     # Create dictionary to use for template processing
-    xmlArgs = {"level" + year : value for year, value in desiredCellEtoh.iteritems()}
+    xmlArgs = {"level" + year : value for year, value in desiredCellEtoh.items()}
     xmlArgs['cellEtohPolicyType'] = 'subsidy' if cellEtohPolicyType == 'subs' else cellEtohPolicyType
 
     xml = cellEtohConstraintTemplate.format(**xmlArgs)
@@ -310,7 +310,7 @@ def genDeltaConstraints(**kwargs):
     printSeries(fuelTargets, fuelTag, header='fuelTargets:')
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>
-    yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.iteritems()]
+    yearConstraints = [yearConstraintTemplate.format(year=year, level=level) for year, level in fuelTargets.items()]
 
     xmlArgs = {}
     xmlArgs['fuelPolicyType'] = fuelPolicyType

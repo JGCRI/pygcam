@@ -63,7 +63,7 @@ def driver(args, tool):
         resultDF.drop(['units', '_sa_instance_state', 'outputId'], axis=1, inplace=True)
 
         # convert column names like 'y2020' to '2020'
-        cols = map(stripYearPrefix, resultDF.columns)
+        cols = [stripYearPrefix(c) for c in resultDF.columns]
         resultDF.columns = cols
 
         if forcingPlot:

@@ -250,10 +250,12 @@ if IsWindows:
 
     def islinkWindows(path):
         """ Windows islink implementation. """
+        import six
+
         if not os.path.lexists(path):
             return False
 
-        return win32file.GetFileAttributesW(unicode(path)) & REPARSE_FOLDER == REPARSE_FOLDER
+        return win32file.GetFileAttributesW(six.u(path)) & REPARSE_FOLDER == REPARSE_FOLDER
 
     def islinkWindows2(path):
         if not os.path.lexists(path):

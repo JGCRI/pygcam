@@ -66,7 +66,7 @@ class Xvfb(object):
             try:
                 self.proc = subp.Popen(args, stdout=subp.PIPE, stderr=subp.STDOUT)
 
-            except Exception, e:
+            except Exception as e:
                 raise XvfbException(e)
 
             time.sleep(self.delay)      # allow time for process to start

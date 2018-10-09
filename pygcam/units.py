@@ -193,7 +193,7 @@ class UnitNamespace(object):
         s.ha_to_m2 = 1e4
         s.m2_to_ha = 1e-4
         s.km2_to_ha = s.km2_to_m2 / s.ha_to_m2
-        s.ha_to_km2 = 1 / s.km2_to_ha
+        s.ha_to_km2 = 1.0 / s.km2_to_ha
         s.kkm2_to_ha = 1000 * s.km2_to_ha
         s.thous_km2_to_ha = s.kkm2_to_ha    # alias,
         s.kkm2_to_Mha = s.kkm2_to_ha / s.M
@@ -202,7 +202,7 @@ class UnitNamespace(object):
         s.ha_to_m2 =   1e4
         s.m2_to_ha =   1e-4
         s.acre_to_m2 = 4046.85
-        s.m2_to_acre = 1 / s.acre_to_m2
+        s.m2_to_acre = 1.0 / s.acre_to_m2
         s.Gm2_to_km2 = s.G_to_k
         s.bm2_to_km2 = s.G_to_k
         s.km2_to_Gm2 = s.k_to_G
@@ -223,15 +223,15 @@ class UnitNamespace(object):
 
         # time
         s.year_to_day = 365.25
-        s.day_to_year = 1 / s.year_to_day
+        s.day_to_year = 1.0 / s.year_to_day
         s.day_to_hour = 24
-        s.hour_to_day = 1. / s.day_to_hour
+        s.hour_to_day = 1.0 / s.day_to_hour
         s.year_to_hour = s.year_to_day * s.day_to_hour
 
         # energy unit conversions
         s.kbbl_to_bbl = s.k_to_ones
-        s.bbl_to_tonne_RFO = 1 / 6.66
-        s.bbl_to_tonne_distillate = 1 / 7.46
+        s.bbl_to_tonne_RFO = 1.0 / 6.66
+        s.bbl_to_tonne_distillate = 1.0 / 7.46
         s.tonne_to_GJ_distillate = 42.91
         s.tonne_to_GJ_RFO = 40.87
 
@@ -247,19 +247,19 @@ class UnitNamespace(object):
         s.GWh_to_EJ = 3.6e-6
         s.TWh_to_EJ = 3.6e-3
         s.btu_to_kJ = 1.0551
-        s.kJ_to_btu = 1 / s.btu_to_kJ
+        s.kJ_to_btu = 1.0 / s.btu_to_kJ
         s.MJ_to_btu = s.kJ_to_btu * s.M_to_k
-        s.btu_to_MJ = 1 / s.MJ_to_btu
+        s.btu_to_MJ = 1.0 / s.MJ_to_btu
         s.MMbtu_to_MJ = s.M_to_ones * s.btu_to_MJ
-        s.MJ_to_MMbtu = 1 / s.MMbtu_to_MJ
+        s.MJ_to_MMbtu = 1.0 / s.MMbtu_to_MJ
         s.MJ_to_MMBtu = s.MJ_to_MMbtu
         s.MMBtu_to_MJ = s.MMbtu_to_MJ
         s.quad_to_EJ = s.btu_to_kJ
-        s.EJ_to_quad = 1 / s.quad_to_EJ
+        s.EJ_to_quad = 1.0 / s.quad_to_EJ
 
         s.TOE_to_MJ = 41868
         s.MTOE_to_EJ = s.M * s.TOE_to_MJ * s.MJ_to_EJ
-        s.EJ_to_MTOE = 1 / s.MTOE_to_EJ
+        s.EJ_to_MTOE = 1.0 / s.MTOE_to_EJ
 
         # trillion and thousand btu to EJ
         s.Tbtu_to_EJ = 0.0010551

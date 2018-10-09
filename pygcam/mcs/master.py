@@ -247,10 +247,9 @@ class Master(object):
         finally:
             db.endSession(session)
 
-        contexts = map(lambda r: Context(projectName=projectName, runId=r.runId,
-                                         simId=simId, trialNum=r.trialNum,
-                                         scenario=scenario, groupName=groupName,
-                                         baseline=baseline, status=r.status), runs)
+        contexts = [Context(projectName=projectName, runId=r.runId, simId=simId,
+                            trialNum=r.trialNum, scenario=scenario, groupName=groupName,
+                            baseline=baseline, status=r.status) for r in runs]
         return contexts
 
     def setRunStatuses(self, pairs):
@@ -652,7 +651,7 @@ def getTrialsToRedo(db, simId, scenario, statuses):
     # If any of the "redo" options find trials, use these instead of args.trials
     tuples = db.getRunsByStatus(simId, scenario, statuses)
     if tuples:
-        trialNums += map(lambda tuple: tuple[2], tuples)  # unpack the (runId, simId, trialNum, ...) tuple
+        trialNums += [tup[2] for tup in tuples]  # unpack the (runId, simId, trialNum, ...) tuple
 
     if missing:
         trialNums += db.getMissingTrials(simId, scenario)

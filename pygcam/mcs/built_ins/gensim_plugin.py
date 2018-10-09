@@ -113,7 +113,7 @@ def genTrialData(simId, trials, paramFileObj, args):
         # TBD: data columns. This is ok for the current analysis, but needs to be rewritten
         # TBD: on integration with pygcam. (getName() will fail on XMLVariable instances)
 
-        paramNames = map(lambda obj: obj.getParameter().getName(), rvList)
+        paramNames = [obj.getParameter().getName() for obj in rvList]
         trialData = lhs(rvList, trials, corrMat=corrMatrix, columns=paramNames, skip=linked)
         writeTrialDataFile(simId, trialData)
     else:

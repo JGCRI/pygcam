@@ -71,7 +71,7 @@ def parseLevels(levelStr=None):
     :return: (dict) of log levels, keyed by module names
     """
     def splitAndStrip(s, delim):
-        items = map(str.strip, map(str, s.split(delim)))
+        items = [item.strip() for item in s.split(delim)]
         return items
 
     result = {}

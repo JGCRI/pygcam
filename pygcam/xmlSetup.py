@@ -12,7 +12,7 @@ import sys
 from .config import getParam, getParamAsBoolean, pathjoin
 from .error import PygcamException, SetupException
 from .log import getLogger
-from .utils import getBooleanXML, symlinkOrCopyFile
+from .utils import getBooleanXML, symlinkOrCopyFile, splitAndStrip
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 from .XMLFile import XMLFile, McsValues
 
@@ -64,10 +64,10 @@ class ScenarioSetup(object):
         self.templateDict = {'scenarioDir' : '{scenarioDir}',
                              'baselineDir' : '{baselineDir}'}
 
-        self.iterators = map(Iterator, node.findall('iterator'))
+        self.iterators = [Iterator(item) for item in node.findall('iterator')]
         self.iteratorDict = {obj.name : obj for obj in self.iterators}
 
-        templateGroups = map(ScenarioGroup, node.findall('scenarioGroup'))
+        templateGroups = [ScenarioGroup(item) for item in node.findall('scenarioGroup')]
 
         # Create a dict of expanded groups for lookup
         self.groupDict = OrderedDict()
@@ -139,7 +139,7 @@ class ScenarioSetup(object):
                 continue
 
             # allow iterator name to be comma-delimited list of iterators
-            iterators = map(str.strip, iterName.split(','))
+            iterators = splitAndStrip(iterName, ',')
             iterateList(self, ScenarioGroup, templateGroup.node, expand, iterators)
 
     def run(self, editor, directoryDict, dynamic=False):
@@ -194,14 +194,14 @@ class Iterator(object):
             self.format = node.get('format', '%d' if self.type == int else '%.1f')
 
             rangeFunc = irange if self.type == int else frange
-            self.values = map(lambda value: self.format % value, rangeFunc(self.min, self.max, self.step))
+            self.values = [self.format % value for value in rangeFunc(self.min, self.max, self.step)]
 
         else: # 'list'
             valuesStr = node.get('values')
             if not valuesStr:
                 raise SetupException('list iterator must provide a values attribute')
 
-            self.values = map(str.strip, valuesStr.split(','))
+            self.values = splitAndStrip(valuesStr, ',')
 
     def __str__(self):
         desc = "<iterator name='%s' type='%s' " % (self.name, self.type.__name__)
@@ -226,7 +226,7 @@ class ScenarioGroup(object):
         self.isDefault = getBooleanXML(node.get('default', default='0'))
         self.iteratorName = node.get('iterator')
         self.baselineSource = node.get('baselineSource')
-        self.templateScenarios = scenarios = map(Scenario, node.findall('scenario'))
+        self.templateScenarios = scenarios = [Scenario(item) for item in node.findall('scenario')]
         self.templateDict = {obj.name: obj for obj in scenarios}
         self.finalDict = OrderedDict()
         self.baseline = None
@@ -265,7 +265,7 @@ class ScenarioGroup(object):
                 continue
 
             # allow iterator name to be comma-delimited list of iterators
-            iterators = map(str.strip, iterName.split(','))
+            iterators = splitAndStrip(iterName, ',')
             iterateList(scenarioSetup, Scenario, templateScenario.node, expand, iterators)
 
     def writeXML(self, stream, indent=0):
@@ -285,7 +285,7 @@ class Scenario(object):
         self.isBaseline = getBooleanXML(node.get('baseline', default=0))
         self.isActive   = getBooleanXML(node.get('active',   default='1'))
         self.iteratorName = node.get('iterator')
-        self.actions = map(_classForNode, node)
+        self.actions = [_classForNode(item) for item in node]
         self.subdir = node.get('subdir', default=self.name)
 
     def __str__(self):
@@ -394,7 +394,7 @@ class If(ConfigActionBase):
         self.value1 = node.get('value1')
         self.value2 = node.get('value2')
         self.matches = getBooleanXML(node.get('matches', '1'))
-        self.actions = map(_classForNode, node)
+        self.actions = [_classForNode(item) for item in node]
         self.formattedValue1 = ''
         self.formattedValue2 = ''
 
@@ -415,7 +415,7 @@ class If(ConfigActionBase):
 
     # N.B. Override superclass method since this runs regardless of dynamic flag
     def run(self, editor, directoryDict, dynamic=False):
-        values = map(str.strip, self.formattedValue2.split(','))
+        values = splitAndStrip(self.formattedValue2, ',')
         if (self.formattedValue1 in values) == self.matches:
             for action in self.actions:
                 action.run(editor, directoryDict, dynamic=dynamic)
