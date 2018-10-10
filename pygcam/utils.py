@@ -95,7 +95,7 @@ def digitColumns(df, asInt=False):
     If asInt is True return as a list of integers, otherwise as strings.
     '''
     digitCols = filter(str.isdigit, df.columns)
-    return [int(x) for x in digitCols] if asInt else digitCols
+    return [int(x) for x in digitCols] if asInt else list(digitCols)
 
 # Function to return current function name, or the caller, and so on up
 # the stack, based on value of n.

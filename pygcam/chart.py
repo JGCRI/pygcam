@@ -19,7 +19,7 @@ from .config import pathjoin, unixPath
 from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
-from .utils import systemOpenFile
+from .utils import systemOpenFile, digitColumns
 
 _logger = getLogger(__name__)
 
@@ -100,7 +100,8 @@ def plotUnstackedRegionComparison(df, categoryCol, valueCol=None, region=None,
     plotCol   = '_value_'
     regionCol = '_region_'
 
-    yearCols = filter(str.isdigit, df.columns)
+    yearCols = digitColumns(df)
+
     if valueCol:
         # Copy value col so we can delete all yearCols
         df[plotCol] = df[valueCol]
@@ -177,7 +178,7 @@ def plotStackedBarsScalar(df, indexCol, columns, valuesCol, box=False, rotation=
     #_logger.debug('plotStackedBarsScalar %s', sideLabel)
     setupPlot()
 
-    colList = filter(None, [indexCol, columns, valuesCol])  # if indexCol is None, this drops it
+    colList = [item for item in [indexCol, columns, valuesCol] if item]  # if indexCol is None, this drops it
 
     # TBD: handle year values as columns to plot
     df2 = df[colList].pivot(index=indexCol, columns=columns, values=valuesCol)
@@ -237,7 +238,7 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
 
     # space out year labels to every 5 years
     locs, labels = plt.xticks()
-    yearCols = filter(str.isdigit, df.columns)
+    yearCols = digitColumns(df)
 
     if int(yearCols[1]) - int(yearCols[0]) == 1 and yearStep > 1:
         plt.xticks(locs[::yearStep], yearCols[::yearStep])
@@ -286,7 +287,8 @@ def plotTimeSeries(df, xlabel='', ylabel='', box=False, zeroLine=False, title=""
     setupPlot()
     fig, ax = plt.subplots(1, 1, figsize=(8, 4))
 
-    yearCols = filter(str.isdigit, df.columns)
+    yearCols = digitColumns(df)
+
     x = [int(y) for y in yearCols]
     y = list(df[yearCols].iloc[0])
     plt.plot(x, y)
@@ -425,7 +427,7 @@ def chartGCAM(args, num=None, negate=False):
         except Exception as e:
             raise CommandlineError("Failed to apply constraint: %s\n  -- %s" % (constraint, e))
 
-    yearCols = filter(str.isdigit, df.columns)
+    yearCols = digitColumns(df)
 
     if args.multiplier or args.divisor or negate:
         df = df.copy(deep=True)

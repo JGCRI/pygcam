@@ -532,7 +532,7 @@ class XMLParameter(XMLWrapper):
         self.dataSrc = None  # A subclass of XMLTrialData instance
         self.parent  = None
 
-        children = filter(lambda elt: not elt.tag is ET.Comment, element.getchildren())
+        children = [elt for elt in element.getchildren() if elt.tag is not ET.Comment]
         maxChildren = 3
         assert len(children) <= maxChildren, \
             "<Parameter> cannot have more than %d children. (The XMLSchema is broken.)" % maxChildren

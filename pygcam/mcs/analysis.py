@@ -996,7 +996,7 @@ def analyzeSimulationNew(args):
             inputsWithResults = inputDF.ix[resultDF.index]
 
             # Drop any inputs with names ending in '-linked' since these are an artifact
-            linked = filter(lambda s: s.endswith('-linked'), inputsWithResults.columns)
+            linked = [s for s in inputsWithResults.columns if s.endswith('-linked')]
             if linked:
                 inputsWithResults.drop(linked, axis=1, inplace=True)
 
@@ -1133,7 +1133,7 @@ def analyzeSimulation(args):
                 colname = colname if pos < 0 else colname[0:pos]
                 return colname.endswith('-linked')
 
-            linked = filter(_isLinked, inputsWithResults.columns)
+            linked = list(filter(_isLinked, inputsWithResults.columns))
             if linked:
                 inputsWithResults.drop(linked, axis=1, inplace=True)
 

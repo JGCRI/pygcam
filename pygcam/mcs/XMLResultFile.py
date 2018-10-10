@@ -146,7 +146,7 @@ class XMLResultFile(XMLFile):
         results = self.results.values()
 
         if type:
-            results = filter(lambda result: result.type == type, results)
+            results = [result for result in results if result.type == type]
 
         return results
 

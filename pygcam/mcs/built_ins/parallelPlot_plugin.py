@@ -74,7 +74,7 @@ class ParallelPlotCommand(McsSubcommandABC):
         inputDF = anaObj.getInputs()
 
         # Drop any inputs with names ending in '-linked' since these are an artifact
-        linked = filter(lambda s: s.endswith('-linked'), inputDF.columns)
+        linked = [s for s in inputDF.columns if s.endswith('-linked')]
         if linked:
             inputDF = inputDF.drop(linked, axis=1)
 

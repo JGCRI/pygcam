@@ -568,8 +568,8 @@ class Master(object):
             return exps.get(scenario)
 
         # sort so baselines come first
-        baselines = filter(isBaseline,  scenarios)
-        policies  = filter(notBaseline, scenarios)
+        baselines = list(filter(isBaseline,  scenarios))
+        policies  = list(filter(notBaseline, scenarios))
         scenarios = baselines + policies
 
         baselineARs = {}      # baseline async_result objects keyed by trialnum
@@ -596,7 +596,7 @@ class Master(object):
                     userTrials = len(trialList)
 
                     # remove nonsense values and warn user about them
-                    trialNums = filter(lambda trial: 0 <= trial < trialCount, trialList)
+                    trialNums = [trial for trial in trialList if 0 <= trial < trialCount]
                     goodTrials = len(trialNums)
                     if goodTrials != userTrials:
                         _logger.warn('Ignoring %d trial numbers that are out of range [0,%d]',

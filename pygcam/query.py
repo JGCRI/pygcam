@@ -18,10 +18,11 @@ from .error import PygcamException, ConfigFileError, FileFormatError, Commandlin
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser, Query
 from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, saveToFile,
-                    getExeDir, writeXmldbDriverProperties)
+                    getExeDir, writeXmldbDriverProperties, digitColumns)
 from .temp_file import TempFile, getTempFile
 
 _logger = getLogger(__name__)
+
 
 def limitYears(df, years):
     """
@@ -32,7 +33,7 @@ def limitYears(df, years):
     :return: (DataFrame) df, modified in place.
     """
     first, last = [int(y) for y in years]
-    yearCols  = [int(y) for y in filter(str.isdigit, df.columns)]
+    yearCols  = digitColumns(df, asInt=True)
     dropYears = [str(y) for y in filter(lambda y: y < first or y > last, yearCols)]
     df.drop(dropYears, axis=1, inplace=True)
     return df
@@ -42,7 +43,7 @@ def limitYears(df, years):
 # def interp(df):
 #     import numpy as np
 #
-#     years = sorted(map(int, filter(str.isdigit, df.columns)))
+#     years = digitColumns(df, asInt=True)
 #     all_years = range(years[0], years[-1] + 1)
 #     interp_yrs = sorted(set(all_years) - set(years))
 #
@@ -69,7 +70,7 @@ def interpolateYears(df, startYear=0, inplace=False):
     :return: if `inplace` is True, `df` is returned; otherwise a copy
       of `df` with interpolated values is returned.
     """
-    yearCols = filter(str.isdigit, df.columns)
+    yearCols = digitColumns(df)
     years = [int(y) for y in yearCols]
 
     for i in range(0, len(years)-1):
@@ -91,8 +92,8 @@ def interpolateYears(df, startYear=0, inplace=False):
             nextYear = start + j
             df[str(nextYear)] = df[str(nextYear-1)] + (0 if nextYear < startYear else delta)
 
-    yearCols = filter(str.isdigit, df.columns)  # get annualized year columns
-    years = [int(y) for y in yearCols]       # sort as integers
+    # get annualized year columns and sort as integers
+    years = digitColumns(df, asInt=True)
     years.sort()
     yearCols = [str(y) for y in years]       # convert back to strings, now sorted
 
@@ -923,7 +924,7 @@ def sumYears(files, skiprows=1, interpolate=False):
     for df, fname in zip(dframes, csvFiles):
         root, ext = os.path.splitext(fname)
         outFile = root + '-sum' + ext
-        yearCols = filter(str.isdigit, df.columns)
+        yearCols = digitColumns(df)
 
         with open(outFile, 'w') as f:
             sums = df[yearCols].sum()
@@ -963,7 +964,7 @@ def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
         name = groupCol.replace(' ', '_')     # eliminate spaces for general convenience
         outFile = '%s-groupby-%s%s' % (root, name, ext)
 
-        cols = [groupCol] + filter(str.isdigit, df.columns)
+        cols = [groupCol] + digitColumns(df)
         grouped = df[cols].groupby(groupCol)
         df2 = grouped.aggregate(np.sum)
         df2['Units'] = units[0]         # add these units to all rows

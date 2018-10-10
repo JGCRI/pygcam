@@ -96,7 +96,7 @@ def drawMap(df, imagefile, years=None, interpolate=False, sumByYear=False,
         df = interpolateYears(df, startYear=startYear, inplace=True)
 
     if sumByYear:
-        yearCols = filter(str.isdigit, df.columns)
+        yearCols = [col for col in df.columns if col.isdigit()]
         dataCol = 'sum'
         df[dataCol] = df[yearCols].sum(axis=1)
         animate = False

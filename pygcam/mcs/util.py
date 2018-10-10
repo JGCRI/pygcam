@@ -336,7 +336,8 @@ def findParamData(paramList, name):
     Convenience method mostly used in testing.
     Finds a param from a given list of Parameter instances with given name.
     '''
-    return filter(lambda x: x.name == name, paramList)[0].data
+    items = [x for x in paramList if x.name == name]
+    return items[0].data
 
 TRIAL_STRING_DELIMITER = ','
 

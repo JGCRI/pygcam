@@ -7,7 +7,8 @@ def main():
     with open(cfg, 'r') as f:
         lines = f.readlines()
 
-    match = filter(lambda line: line.startswith('GCAM.DefaultProject'), lines)
+    match = [line for line in lines if line.startswith('GCAM.DefaultProject')]
+
     if match:
         line = match[0]
         defaultProject = line.split('=')[1].strip()

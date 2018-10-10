@@ -100,7 +100,7 @@ def genTrialData(simId, trials, paramFileObj, args):
 
     rvList = XMLRandomVar.getInstances()
 
-    linked = filter(lambda obj: obj.param.dataSrc.isLinked(), rvList)
+    linked = [obj for obj in rvList if obj.param.dataSrc.isLinked()]
 
     method = args.method
     if method == 'montecarlo':
@@ -133,6 +133,7 @@ def saveTrialData(df, simId, start=0):
     """
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLRandomVar
+    from six.moves import xrange
 
     trials = df.shape[0]
 

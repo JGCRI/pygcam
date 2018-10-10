@@ -109,7 +109,7 @@ class McsData(object):
         inputsDF = db.getParameterValues2(simId)
 
         # Drop any inputs with names ending in '-linked' since they're redundant
-        linked = filter(lambda s: s.endswith('-linked'), inputsDF.columns)
+        linked = [s for s in inputsDF.columns if s.endswith('-linked')]
         if linked:
             inputsDF = inputsDF.drop(linked, axis=1, inplace=False)
 

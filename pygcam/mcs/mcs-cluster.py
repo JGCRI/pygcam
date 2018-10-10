@@ -2,7 +2,7 @@ from __future__ import print_function
 from pygcam.matplotlibFix import plt
 
 import pandas as pd
-from pandas.tools.plotting import parallel_coordinates
+from pandas.plotting import parallel_coordinates
 import seaborn as sns
 
 from .analysis import spearmanCorrelation
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     filename = 'Combined.csv'
     df = pd.read_table(filename, sep=',', index_col='trial')
 
-    linked = filter(isLinked, df.columns)
+    linked = list(filter(isLinked, df.columns))
     if linked:
         df.drop(linked, axis=1, inplace=True)
 

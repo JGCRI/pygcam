@@ -85,7 +85,7 @@ def driver(args):
              commandGroupPage(app, 'utils', 'mi', label='Utilities'),
              GlobalArgsPage(app)]
 
-    RootPage(app, term, filter(None, pages))
+    RootPage(app, term, list(filter(None, pages)))
 
     term.registerCallbacks(app)
     app.run_server(debug=debug)
