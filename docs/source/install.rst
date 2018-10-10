@@ -3,8 +3,7 @@ Installation
 
 .. note::
    If you are having trouble running ``pygcam`` and are running a version older than
-   ``v1.0.1`` (i.e., ``v1.0.0``, or a beta version (``v1.0b...``) or release candidate
-   (``v1.0rc...``), or are having difficulties installing ``pygcam``, you can resolve many problems
+   ``v1.0.1`` or are having difficulties installing ``pygcam``, you can resolve many problems
    by running these commands after activating your ``pygcam`` environment::
 
      pip uninstall pygcam              # not necessary if not yet installed
@@ -79,8 +78,19 @@ packages and you are more familiar with managing package dependencies.
         PATH="$HOME/anaconda2:$HOME/anaconda2/bin"
 
 2. Download the environment file for your platform from
-   https://anaconda.org/plevin/pygcam/files by selecting
-   ``pygcam_windows.yml``, ``pygcam_macos.yml``, or ``pygcam_linux.yml``.
+   https://anaconda.org/plevin/pygcam/files by selecting one of the following.
+
+   For Python 2.7:
+
+   * py2_pygcam_windows.yml
+   * py2_pygcam_macos.yml
+   * py2_pygcam_linux.yml
+
+   For Python 3.7:
+
+   * py3_pygcam_macos.yml
+   * py3_pygcam_windows.yml
+   * py3_pygcam_linux.yml
 
 3. Run the following command, replacing the ``/path/to/file.yml`` with the
    path to the file you downloaded in step 2:
@@ -152,24 +162,20 @@ Install Anaconda
 
   .. note::
 
-     Be sure to install Anaconda for **Python 2.7!** Pygcam does not yet run in Python 3.
+     Prior to version 1.3.1 of pygcam, you must use **Python 2.7**. Starting
+     with pygcam 1.3.1, you can use either Python 2.7 or 3.7.
 
 The most convenient way to install and manage a scientific Python environment
 is to use the free `Anaconda 5 <https://www.anaconda.com/download>`_ distribution.
 Anaconda includes most of the scientific and statistical modules used by ``pygcam``.
-You can, however, use any installation of Python **2.7** if you prefer. Without
+You can, however, use any installation of Python if you prefer. Without
 Anaconda you may have to install more packages. Note that all development and
-testing of pygcam uses Anaconda. Follow the installation instructions for you
+testing of pygcam uses Anaconda. Follow the installation instructions for your
 platform.
 
   - `Download Anaconda 5 <https://www.anaconda.com/download>`_
 
-If you mistakenly install Python 3, I recommend uninstalling it to avoid confusion. Creating
-a Python 2.7 virtual environment from a Python 3 installation requires more work than simply
-downloading the correct Python 2.7 version of Anaconda.
-
   .. _pygcam_install_label:
-
 
 Working with pygcam source code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -204,7 +210,7 @@ first, then rerun the ``pygcam`` installation::
   pip install salib
   python setup.py develop
 
-This seems to solve the problem. (I'm working on a better solution...)
+This seems to solve the problem. (The problem appears resolved with salib-1.1.3)
 
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
 Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, this has
@@ -340,7 +346,7 @@ up-to-date information.
 Quick Links
 ^^^^^^^^^^^^^
 
-  - `Download install-gcam.py <https://raw.githubusercontent.com/JGCRI/pygcam/master/install-gcam.py>`_
+  - `Download install-gcam.py <https://raw.githubusercontent.com/JGCRI/pygcam/master/install-gcam.py>`_ (Helpful for GCAM 4.3).
   - `Download GCAM <https://github.com/JGCRI/gcam-core/releases>`_
   - `Download Java <http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html>`_
 
@@ -348,16 +354,22 @@ Quick Links
 Install GCAM
 ^^^^^^^^^^^^^^
 
-gcam-v4.4
+GCAM v5.1.1
+~~~~~~~~~~~~
+GCAM v5.1.1 was also released in July, 2018. Download MacOS or Windows binary packages, or source packages
+for Linux from the `GCAM v5.1.1 <https://github.com/JGCRI/gcam-core/releases/tag/gcam-v5.1.1>`_ release page.
+
+GCAM v4.4.1
 ~~~~~~~~~~~
-GCAM v4.4, which was release in November 2017, has single-file packages for macOS and Windows.
-Download these from the `GCAM <https://github.com/JGCRI/gcam-core/releases>`_ release page.
+GCAM v4.4.1, which was released in July 2018 (a bug fix for v4.1, released in November 2017),
+has single-file packages for macOS and Windows.
+Download these from the `GCAM v4.4.1 <https://github.com/JGCRI/gcam-core/releases/tag/gcam-v4.4.1>`_ release page.
 
 For users building GCAM from source, you will need the both the source code (either the ``.zip``
 or ``.tar.gz`` version) as well as ``data-system.tar.gz``: after unpacking the source files, change
 directory to the ``input/gcam-data-system`` directory before untarring the data system files.
 
-gcam-v4.3
+GCAM v4.3
 ~~~~~~~~~~~
 You can follow the installation instructions on the `GCAM <https://github.com/JGCRI/gcam-core/releases>`_
 web page, but some users have found these instructions confusing.

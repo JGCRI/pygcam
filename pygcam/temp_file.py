@@ -131,7 +131,7 @@ class TempFile(object):
 
     @classmethod
     def deleteAll(cls):
-        for obj in cls.Instances.values():
+        for obj in list(cls.Instances.values()):    # compose a list to avoid changing dict during iteration
             obj.deleteFile()
 
     @classmethod
