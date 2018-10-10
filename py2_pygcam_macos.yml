@@ -108,6 +108,7 @@ dependencies:
   - sqlite=3.25.2=ha441bb4_0
   - tk=8.6.8=ha441bb4_0
   - wheel=0.32.0=py27_0
+  - xlsxwriter=1.1.1=py27_0
   - zlib=1.2.11=hf3cbc9b_2
   - pip:
     - backports.ssl-match-hostname==3.5.0.1

@@ -104,6 +104,7 @@ dependencies:
   - sqlite=3.24.0=ha441bb4_0
   - tk=8.6.8=ha441bb4_0
   - wheel=0.31.1=py37_0
+  - xlsxwriter=1.1.1-py37_0
   - pip:
     - dash==0.28.1
     - dash-core-components==0.32.0

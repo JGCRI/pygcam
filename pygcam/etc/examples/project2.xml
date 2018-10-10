@@ -4,7 +4,7 @@ This file defines one or more "projects" that are run using the "gt run" subcomm
 -->
 <projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:noNamespaceSchemaLocation="project-schema.xsd">
-	<project name="tutorial">
+	<project name="ctax">
 		<vars>
 			<var name="startYear">2015</var>
 			<var name="endYear">2050</var>  <!-- stops at 2050 so tutorial runs faster -->
