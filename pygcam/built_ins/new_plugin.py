@@ -78,7 +78,7 @@ def driver(args, tool):
             if not overwrite and os.path.lexists(dst):
                 raise CommandlineError("Refusing to overwrite '%s'" % unixPath(dst, abspath=True))
 
-            oldText = getResource(src)
+            oldText = getResource(src).decode('utf-8')
             newText = re.sub('<project name="(\w*)">', '<project name="%s">' % projectName, oldText)
             with open(dst, 'w') as fp:
                 fp.write(newText)
