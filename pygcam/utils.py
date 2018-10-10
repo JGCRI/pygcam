@@ -149,7 +149,7 @@ def getResource(relpath):
     :return: the file contents
     """
     contents = pkgutil.get_data('pygcam', relpath)
-    return contents
+    return contents.decode('utf-8')
 
 def resourceStream(relpath):
     """
