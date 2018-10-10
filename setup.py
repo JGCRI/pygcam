@@ -18,7 +18,7 @@ py2_deps = [
     'configparser>=3.5.0',     # backport of python 3.5 version
     'futures>=3.2.0',
     'ipython<6.0',
-    'tornado<5.0',
+    'tornado<6.0',
 ]
 
 py3_deps = [
@@ -96,7 +96,7 @@ Who do I talk to?
 setup(
     name='pygcam',
     version=VERSION,
-    description='Python 2.7/3.7 library and scripts for interfacing with GCAM',
+    description='Python (2 and 3) library and scripts for interfacing with GCAM',
     platforms=['Windows', 'MacOS', 'Linux'],
 
     packages=['pygcam'],

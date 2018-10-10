@@ -18,13 +18,6 @@ Installation
    from https://anaconda.org/plevin/pygcam/files as described in :ref:`Option 1 <option1>`,
    below.
 
-.. note::
-   A bug in the ModelInterface code in gcam-v4.4 prevented the ``pygcam``
-   query sub-command from working. Please install gcam-v4.4.1 (when available)
-   or update your the gcam-v4.4 installation, replacing the file
-   ``.../input/gcam-data-system/_common/ModelInterface/src/ModelInterface.jar``
-   with the updated file, available `here <https://github.com/JGCRI/pygcam/releases/download/v1.0rc5/ModelInterface.jar>`_.
-
 There are two options for installing and using pygcam and :doc:`gcamtool`.
 
   - :ref:`Option 1 <option1>` -- **This option is recommended for most users.** It creates
@@ -58,39 +51,61 @@ This is the recommended option for most users, as it is the most reliable. Use
 :ref:`Option 2 <option2>` if you need to integrate ``pygcam`` with other Python
 packages and you are more familiar with managing package dependencies.
 
-1. Download and install `Anaconda 5 <https://www.anaconda.com/download>`_
-   (the **Python 2.7** version!) for your platform.
+1. Download and install `Anaconda 5 <https://www.anaconda.com/download>`_ for your platform.
+
+The most convenient way to install and manage a scientific Python environment
+is to use the free `Anaconda 5 <https://www.anaconda.com/download>`_ distribution.
+Anaconda includes most of the scientific and statistical modules used by ``pygcam``.
+You can, however, use any installation of Python if you prefer. Without
+Anaconda you may have to install more packages. Note that all development and
+testing of pygcam uses Anaconda. Follow the installation instructions for your
+platform.
+
+    .. note::
+
+       Starting with pygcam v1.3.1, you can use either Anaconda 2 (which uses Python 2.7)
+       or Anaconda 3 (which uses Python 3.7 as of this writing.) Older versions
+       of pygcam require **Python 2.7** so you must use Anaconda 2.
 
    * On Windows, you can use the Anaconda Prompt from the Start menu to open a
      command prompt that refers to the Anaconda installation. Alternatively, you can
      allow the Anaconda installer to set the required ``PATH`` elements (or set them yourself)
      to use Anaconda from a standard Windows command prompt. If you do this
-     manually, add both the ``Anaconda2`` directory (typically in C:/Users/*your name*/Anaconda2)
-     and the ``Anaconda2/Scripts`` directory below that, to your ``PATH``.
+     manually, add both the ``Anaconda2`` or ``Anaconda3`` directory
+     (e.g., C:/Users/*your name*/Anaconda2 or C:/Users/*your name*/Anaconda3)
+     and the ``Anaconda2/Scripts`` or ``Anaconda3\Scripts`` directory below that,
+     to your ``PATH``.
 
    * On macOS and Linux (assuming you installed Anaconda in your home directory) make sure
-     ``$HOME/anaconda2`` and ``$HOME/anaconda2/bin`` are in your ``PATH``. You can add these to your
-     ``PATH`` using by adding this command to your shell's startup file:
+     ``$HOME/anaconda2`` and ``$HOME/anaconda2/bin`` (for Python 2) or
+     ``$HOME/anaconda3`` and ``$HOME/anaconda3/bin`` (for Python 3) are in your
+     ``PATH``. You can add these to your ``PATH`` using by adding this command to your
+     shell's startup file:
 
      .. code-block:: bash
 
         # Adjust as needed if Anaconda is installed somewhere other than $HOME
+
+        # For Anaconda2 / Python 2:
         PATH="$HOME/anaconda2:$HOME/anaconda2/bin"
+
+        # For Anaconda3 / Python 3:
+        PATH="$HOME/anaconda3:$HOME/anaconda3/bin"
 
 2. Download the environment file for your platform from
    https://anaconda.org/plevin/pygcam/files by selecting one of the following.
 
-   For Python 2.7:
+   * For Python 2.7:
 
-   * py2_pygcam_windows.yml
-   * py2_pygcam_macos.yml
-   * py2_pygcam_linux.yml
+       * py2_pygcam_windows.yml
+       * py2_pygcam_macos.yml
+       * py2_pygcam_linux.yml
 
-   For Python 3.7:
+   * For Python 3.7:
 
-   * py3_pygcam_macos.yml
-   * py3_pygcam_windows.yml
-   * py3_pygcam_linux.yml
+       * py3_pygcam_macos.yml
+       * py3_pygcam_windows.yml
+       * py3_pygcam_linux.yml
 
 3. Run the following command, replacing the ``/path/to/file.yml`` with the
    path to the file you downloaded in step 2:
@@ -148,37 +163,8 @@ Option 2: Install pygcam into your current python environment
 Note that you may run into package conflicts this way. Option 1 is more reliable.
 
 
-Quick Links
-^^^^^^^^^^^^^
-
-  - `Download Anaconda 5 <https://www.anaconda.com/download>`_
-  - :ref:`Install pygcam <pygcam_install_label>`
-
-
-.. _install-anaconda:
-
-Install Anaconda
-^^^^^^^^^^^^^^^^^
-
-  .. note::
-
-     Prior to version 1.3.1 of pygcam, you must use **Python 2.7**. Starting
-     with pygcam 1.3.1, you can use either Python 2.7 or 3.7.
-
-The most convenient way to install and manage a scientific Python environment
-is to use the free `Anaconda 5 <https://www.anaconda.com/download>`_ distribution.
-Anaconda includes most of the scientific and statistical modules used by ``pygcam``.
-You can, however, use any installation of Python if you prefer. Without
-Anaconda you may have to install more packages. Note that all development and
-testing of pygcam uses Anaconda. Follow the installation instructions for your
-platform.
-
-  - `Download Anaconda 5 <https://www.anaconda.com/download>`_
-
-  .. _pygcam_install_label:
-
 Working with pygcam source code
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------
 
 If you are interested in working with the source code (e.g., writing plugins or
 adding functionality), you should clone the code repository (https://github.com/JGCRI/pygcam)
@@ -202,15 +188,6 @@ available immediately without requiring reinstallation of ``pygcam``.
 
    # Install pygcam in developer mode
    python setup.py develop
-
-The package "SALib" (sensitivity analysis library) sometimes fails to install
-properly within the ``pygcam`` installation. If this happens, install salib
-first, then rerun the ``pygcam`` installation::
-
-  pip install salib
-  python setup.py develop
-
-This seems to solve the problem. (The problem appears resolved with salib-1.1.3)
 
 The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
 Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, this has
@@ -405,9 +382,9 @@ above and save the file to your system. To see the available command-line option
    -r, --reuseTarFiles   Use the already-downloaded tar files rather then
                          retrieving them again. Implies -k/--keepTarFiles.
 
-The script requires Python 2.x (as does pygcam). If you have Python installed, you
+The script requires Python 2.x. If you have Python installed, you
 can use it to run this script, which uses only standard modules. If you need to
-install Python, follow the instructions for :ref:`installing Anaconda <install-anaconda>`,
+install Python, follow the instructions above for installing Anaconda,
 then you can download and run the install script. The installation script runs on all three
 GCAM platforms (MacOS, Windows, and Linux.)
 

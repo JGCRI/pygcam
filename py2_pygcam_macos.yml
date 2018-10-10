@@ -84,7 +84,7 @@ dependencies:
   - ssl_match_hostname=3.5.0.1=py27_1001
   - statsmodels=0.9.0=py27_0
   - subprocess32=3.5.2=py27h470a237_0
-  - tornado=4.5.3=py27_0
+  - tornado=5.1.1-py27h1de35cc_0
   - traitlets=4.3.2=py27_1000
   - typing=3.6.6=py27_1000
   - urllib3=1.23=py27_1
