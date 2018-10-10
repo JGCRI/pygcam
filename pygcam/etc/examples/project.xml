@@ -73,11 +73,11 @@ Also see project2.xml, which offers a slightly more complex example.
     </vars>
 
     <tmpFile varName="diffPlots">
-      <text>Land_Use_Change_Emission-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m C_to_CO2 -i -n 4 -T '$\Delta$ LUC emissions' -I region -x by-region.png</text>
+      <text>LUC_emissions_by_region-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m C_to_CO2 -i -n 4 -T '$\Delta$ LUC emissions' -I region -x by-region.png</text>
 
       <!-- Forcing and temperature change -->
-      <text>Climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
-      <text>Global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
+      <text>total_climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
+      <text>global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
     </tmpFile>
 
   </project>
