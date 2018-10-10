@@ -42,15 +42,14 @@ This file defines one or more "projects" that are run using the "gt run" subcomm
 
 		<!-- Queries to run, including rewrites to perform on results -->
 		<queries varName="queryXmlFile">
-			<query name="Land_Allocation">
-				<rewriter name="landCover"/>
+			<query name="aggregated_land_allocation">
 				<rewriter name="eightRegions"/>
 			</query>
-			<query name="Refined-liquids-production-by-technology">
+			<query name="refined_liquids_production_by_tech">
 				<rewriter name="liquidFuels"/>
 			</query>
-			<query name="Climate_forcing"/>
-			<query name="Global_mean_temperature"/>
+			<query name="total_climate_forcing"/>
+      <query name="global_mean_temperature"/>
 		</queries>
 
 		<vars>

@@ -62,9 +62,9 @@ Also see project2.xml, which offers a slightly more complex example.
       in a project variable, accessed as {queryXmlFile} in the "query" step.
     -->
     <queries varName="queryXmlFile">
-      <query name="Climate_forcing"/>
-      <query name="Global_mean_temperature"/>
-      <query name="Land_Use_Change_Emission"/>
+      <query name="LUC_emissions_by_region"/>
+      <query name="total_climate_forcing"/>
+      <query name="global_mean_temperature"/>
     </queries>
 
     <vars>
