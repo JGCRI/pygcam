@@ -106,7 +106,7 @@ dependencies:
   - wheel=0.31.1=py37_0
   - xlsxwriter=1.1.1-py37_0
   - pip:
-    - dash==0.28.1
+    - dash==0.28.2
     - dash-core-components==0.32.0
     - dash-html-components==0.13.2
     - dash-renderer==0.14.1

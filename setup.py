@@ -38,7 +38,7 @@ common_deps = [
 
     # GUI requirements
     'flask>=1.0.2',
-    'dash>=0.28.1',
+    'dash>=0.28.2',
     'dash-core-components>=0.32.0',
     'dash-html-components>=0.13.2',
     'dash-renderer>=0.14.1',

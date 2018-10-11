@@ -122,7 +122,7 @@ dependencies:
   - scipy=1.1.0=py27h2df7626_1
   - pip:
     - backports.ssl-match-hostname==3.5.0.1
-    - dash==0.28.1
+    - dash==0.28.2
     - dash-core-components==0.32.0
     - dash-html-components==0.13.2
     - dash-renderer==0.14.1

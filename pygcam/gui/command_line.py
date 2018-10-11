@@ -27,7 +27,7 @@ def commandGroupPage(app, group, default, label=None):
 def driver(args):
     from pkg_resources import resource_string
 
-    app = dash.Dash(csrf_protect=False)
+    app = dash.Dash(__name__, csrf_protect=False)
     app.config['suppress_callback_exceptions'] = True
 
     googleFonts = "https://fonts.googleapis.com/css?family=Dosis:regular,semi-bold|Lato"
@@ -41,7 +41,7 @@ def driver(args):
         files = ('stylesheet.css', 'googlefonts.css', 'terminal_scroller.js')
         map_to_remote = {'googlefonts.css': googleFonts}
 
-        @app.server.route('/static/<path:path>')
+        @app.server.route('/assets/<path>')
         def serve_static(path):
             _logger.debug('Serving "%s"' % path)
 
@@ -58,13 +58,14 @@ def driver(args):
                 resource_path = 'gui/static/' + path
                 content = resource_string('pygcam', resource_path)
 
+            content = content.decode('utf-8')
             mimetype = "text/css" if path.endswith('.css') else "text/javascript"
             response = flask.Response(content, mimetype=mimetype)
 
             return response
 
         for filename in files:
-            arg_dict = {'external_url' : '/static/' + filename}
+            arg_dict = {'external_url' : '/assets/' + filename}
 
             if filename.endswith('.css'):
                 app.css.append_css(arg_dict)
@@ -85,7 +86,7 @@ def driver(args):
              commandGroupPage(app, 'utils', 'mi', label='Utilities'),
              GlobalArgsPage(app)]
 
-    RootPage(app, term, list(filter(None, pages)))
+    RootPage(app, term, [page for page in pages if page])
 
     term.registerCallbacks(app)
     app.run_server(debug=debug)

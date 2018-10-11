@@ -112,7 +112,7 @@ dependencies:
   - zlib=1.2.11=hf3cbc9b_2
   - pip:
     - backports.ssl-match-hostname==3.5.0.1
-    - dash==0.28.1
+    - dash==0.28.2
     - dash-core-components==0.32.0
     - dash-html-components==0.13.2
     - dash-renderer==0.14.1

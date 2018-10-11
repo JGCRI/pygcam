@@ -74,7 +74,7 @@ class Terminal(object):
                 if buf == '':
                     break
 
-                newText += buf
+                newText += buf.decode('utf-8')
 
             self.text += newText
 

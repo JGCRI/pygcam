@@ -172,7 +172,7 @@ class RootPage(PageSet):
         @app.callback(Output('root-content', 'children'),
                       [Input('url', 'pathname')])
         def displayPage(pathname):
-            _logger.debug("Pathname is", pathname)
+            _logger.debug("Pathname is %s", pathname)
             id = pathname[1:] if pathname else self.default
             elts = id.split('/')
             pageId = elts[0]
