@@ -58,7 +58,7 @@ def findGCAM():
 
     home = getHomeDir()
 
-    withReleasePackages = ['gcam-v5.1', 'gcam-v4.4']
+    withReleasePackages = ['gcam-v5.1.1', 'gcam-v4.4.1', 'gcam-v5.1', 'gcam-v4.4']
     versions = withReleasePackages + ['gcam-v4.3']
     dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
@@ -248,7 +248,7 @@ class InitCommand(SubcommandABC):
         configPath = pathjoin(getHomeDir(), USR_CONFIG_FILE)
 
         try:
-            dfltProject = args.defaultProject or askString('Default project name?', 'tutorial')
+            dfltProject = args.defaultProject or askString('Default project name?', 'ctax')
             gcamDir     = args.gcamDir or askDir('Where is GCAM installed?', default=findGCAM())
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
                                                     default=expandTilde(DefaultProjectDir))

@@ -228,7 +228,7 @@ consisting of a baseline and 4 carbon tax policy scenarios:
 This scenarios file relies on files distributed with GCAM that define various
 levels of carbon taxes::
 
-    $ cd ~/GCAM/gcam-v4.3/input/policy
+    $ cd ~/GCAM/gcam-v5.1.1/input/policy
     $ ls carbon*
     carbon_tax_10_5.xml  carbon_tax_15_5.xml  carbon_tax_20_5.xml  carbon_tax_25_5.xml
 

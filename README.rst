@@ -39,6 +39,8 @@ Version 1.3.1 (10 Oct 2018)
 
 * Pygcam now runs under Python versions 2.7 and 3.7.
 
+* Updated example/tutorial project files to use GCAM 5.x query names
+
 Version 1.3.0 (5 Oct 2018)
 ----------------------------
 * Bug fixes in support of 5.1.1 on Windows

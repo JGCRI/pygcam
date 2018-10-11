@@ -58,7 +58,7 @@ This file defines one or more "projects" that are run using the "gt run" subcomm
 		</vars>
 
 		<tmpFile varName="scenPlots">
-			<text>Refined-liquids-production-by-technology-{scenario}.csv -Y EJ -I technology -i -T 'Refined liquid fuels production' -c region -n 4</text>
+			<text>refined_liquids_production_by_tech-{scenario}.csv -Y EJ -I technology -i -T 'Refined liquid fuels production' -c region -n 4</text>
 		</tmpFile>
 
 		<vars>
@@ -72,7 +72,7 @@ This file defines one or more "projects" that are run using the "gt run" subcomm
 			<text>refined_liquids_production_by_tech-{scenario}-{reference}.csv -x USA.png --region "USA" -c region -I technology -T '$\Delta$ Refined liquid fuels production (USA)' -n 3</text>
 
 			<!-- Land allocation -->
-			<text>aggregated_land_allocation-{scenario}-{reference}.csv -Y 'hectares' -m kkm2_to_ha -n 3 -x by-region-2050.png -c land-allocation -I region -v 2050 --format=',' -T 'Area change (2050)'</text>
+			<text>aggregated_land_allocation-{scenario}-{reference}.csv -Y 'hectares' -m kkm2_to_ha -n 3 -x by-region-2050.png -c LandLeaf -I region -v 2050 --format=',' -T 'Area change (2050)'</text>
 
 			<!-- Forcing and temperature change -->
 			<text>total_climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
