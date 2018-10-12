@@ -566,7 +566,7 @@ def saveForEMA(simId, expNames, resultNames, inputDF, filename):
     def add_file(tgzfile, string_to_add, filename):
         tarinfo = tarfile.TarInfo(filename)
         tarinfo.size = len(string_to_add)
-        tarinfo.mode = 0x644
+        tarinfo.mode = 0o644
         tarinfo.mtime = time.time()
         tgzfile.addfile(tarinfo, BytesIO(string_to_add.encode('UTF-8')))
 
