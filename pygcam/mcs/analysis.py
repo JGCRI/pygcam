@@ -1062,7 +1062,6 @@ def analyzeSimulation(args):
     if not trials:
         raise PygcamMcsUserError('No trials were found for simId %d' % simId)
 
-    # TBD: instead, have commands requiring inputs call
     # inputs are shared across experiments, so gather these before looping over experiments
     if requireInputs:
         inputDF = readParameterValues(simId, trials)
