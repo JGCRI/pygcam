@@ -72,7 +72,7 @@ def categorizeCI(count, inputDF, title=None, addCount=False):
 def categorizeCI2(inputDF, subsampleFactor=10, title=None):
     #inputDF = normalize(inputDF)
     binLabels = ['Low', 'Medium', 'High']
-    indices = range(0, inputDF.shape[0], subsampleFactor)
+    indices = list(range(0, inputDF.shape[0], subsampleFactor))
     plotDF = inputDF.iloc[indices].copy()
     plotDF['bin'] = pd.qcut(inputDF['ci'], len(binLabels), labels=binLabels)
     plotDF.drop(['ci'], axis=1, inplace=True)

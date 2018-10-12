@@ -147,7 +147,7 @@ def tsplot(data, time=None, unit=None, condition=None, value=None,
 
         # Conditions split the timeseries plots
         if condition is None:
-            conds = range(n_cond)
+            conds = list(range(n_cond))
             legend = False
             if isinstance(color, dict):
                 err = "Must have condition names if using color dict."

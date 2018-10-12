@@ -16,7 +16,7 @@ from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
 from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
 from pygcam.mcs.util import readTrialDataFile, symlink
-from pygcam.mcs.XMLParameterFile import XMLParameter, XMLParameterFile
+from pygcam.mcs.XMLParameterFile import XMLParameter, XMLParameterFile, decache
 
 _logger = getLogger(__name__)
 
@@ -86,8 +86,6 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     '''
     Run GCAM in the current working directory and return exit status.
     '''
-    from XMLParameterFile import XMLParameter, decache
-
     _logger.debug("_runGcamTool: %s", context)
 
     # For running in an ipyparallel engine, forget instances from last run

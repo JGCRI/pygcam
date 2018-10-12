@@ -106,5 +106,5 @@ def policyConstraintsXml(policyName, region, targets, market=None, minPrice=None
 
 
 # Example:
-# policyMarketXml('Corn-Etoh-Floor', 'USA', 'ethanol', 'corn ethanol', 'corn ethanol', range(2010, 2051, 10), pathname="/tmp/mkt.xml")
+# policyMarketXml('Corn-Etoh-Floor', 'USA', 'ethanol', 'corn ethanol', 'corn ethanol', list(range(2010, 2051, 10)), pathname="/tmp/mkt.xml")
 # policyConstraintsXml('Corn-Etoh-Floor', [(2015, 1.6), (2020, 2.0)], 'USA', minPrice=-100, pathname="/tmp/con.xml")

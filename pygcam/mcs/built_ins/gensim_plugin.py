@@ -6,7 +6,7 @@ from six.moves import xrange
 import os
 from pygcam.config import getParam, setParam, pathjoin
 from pygcam.log import getLogger
-from pygcam.utils import mkdirs
+from pygcam.utils import mkdirs, getResource
 from ..context import getSimDir
 from .McsSubcommandABC import McsSubcommandABC
 
@@ -289,8 +289,6 @@ def _newsim(runWorkspace, trials):
     '''
     Setup the app and run directories for a given user app.
     '''
-    import pkgutil
-
     from pygcam.scenarioSetup import copyWorkspace
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
@@ -309,7 +307,7 @@ def _newsim(runWorkspace, trials):
         XMLResultFile.addOutputs()
 
         # Load SQL script to create convenient views
-        text = pkgutil.get_data('pygcam', 'mcs/etc/views.sql')
+        text = getResource('mcs/etc/views.sql')
         db.executeScript(text=text)
 
 

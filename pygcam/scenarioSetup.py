@@ -125,7 +125,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     outputDir = pathjoin(sandbox, 'output')
 
     if mcsMode:
-        from mcs.util import createOutputDir
+        from .mcs.util import createOutputDir
         # link {sandbox}/dyn-xml to ../dyn-xml
         dynXmlDir = pathjoin('..', DYN_XML_NAME)
 

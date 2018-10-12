@@ -167,7 +167,7 @@ def _configureLogger(name, force=False):
         _addHandler(logger, fileFormat, logFile=logFile)
 
     if not logger.handlers:
-        logger.addHandler(logger, logging.NullHandler())
+        logger.addHandler(logging.NullHandler())
         _debug("Added NullHandler to root logger")
 
 

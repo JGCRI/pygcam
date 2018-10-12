@@ -83,7 +83,7 @@ def genCarbonTaxFile(filename, value, startYear=2020, endYear=2100, timestep=5, 
     :param rate: (float) annual rate of increase
     :return: none
     '''
-    years = range(startYear, endYear + timestep, timestep)
+    years = list(range(startYear, endYear + timestep, timestep))
     text = genCarbonTax(value, years, rate, regions=regions, market=market)
     with open(filename, 'w') as f:
         f.write(text)

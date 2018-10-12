@@ -97,7 +97,7 @@ def activeYears(asInt=False):
                 start = int(m.group(1))
                 end = int(m.group(2))
                 step = int(m.group(3)) if m.lastindex == 3 else 5    # default 5 yr timestep
-                rng = range(start, end + 1, step)
+                rng = list(range(start, end + 1, step))
                 lst.extend(rng)
             elif item.isdigit():
                 lst.append(int(item))
@@ -351,7 +351,7 @@ def parseTrialString(string):
     for rangeStr in rangeStrs:
         r = [int(x) for x in rangeStr.strip().split('-')]
         if len(r) == 2:
-            r = range(r[0], r[1] + 1)
+            r = list(range(r[0], r[1] + 1))
         elif len(r) != 1:
             raise ValueError('Malformed trial string.')
         res = res.union(set(r))

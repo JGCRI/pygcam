@@ -537,7 +537,7 @@ class Master(object):
         self.client.shutdown(hub=True, block=True)
 
     def runTrials(self):
-        import worker
+        from . import worker
 
         args = vars(self.args)
 
@@ -603,7 +603,7 @@ class Master(object):
                                      userTrials - goodTrials, trialCount)
                 else:
                     # if trials aren't specified, queue all of them
-                    trialNums = range(trialCount)
+                    trialNums = list(range(trialCount))
 
                 contexts = self.createRuns(simId, scenario, trialNums)
 

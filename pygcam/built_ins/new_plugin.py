@@ -45,7 +45,7 @@ def driver(args, tool):
     except Exception as e:
         raise CommandlineError("Can't chdir to '%s': %s" % (projectDir, e))
 
-    dirsToCreate  = ['etc', 'queries', 'plugins', 'xmlsrc/baseline/xml']
+    dirsToCreate  = ['etc', 'queries', 'plugins', 'xmlsrc']
     initsToCreate = ['__init__.py', 'xmlsrc/__init__.py']
 
     for name in dirsToCreate:
@@ -65,7 +65,7 @@ def driver(args, tool):
     filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml', 'scenarios.xml',
                    'scenarios-iterator.xml', 'project2.xml', 'Instructions.txt',
                    'project-schema.xsd', 'protection-schema.xsd', 'queries-schema.xsd',
-                   'rewriteSets-schema.xsd', 'scenarios-schema.xsd']
+                   'rewriteSets-schema.xsd', 'scenarios-schema.xsd', 'comment.xsd','conditional.xsd']
 
     for filename in filesToCopy:
         srcDir = etcDir if filename.endswith('.xsd') else exampleDir

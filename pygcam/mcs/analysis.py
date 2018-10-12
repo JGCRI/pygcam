@@ -169,8 +169,8 @@ def plotTornado(data, colname='value', labelsize=9, title=None, color=None, heig
     revIndex = list(reversed(data.index))
     data = data.loc[revIndex]
 
-    itemNums = range(count)
-    ypos = np.array(itemNums) - 0.08   # goose the values to better center labels
+    itemNums = list(range(count))
+    # ypos = np.array(itemNums) - 0.08   # goose the values to better center labels
 
     if not figsize:
         figsize = (12, 6) if rlabels else (8, 6)
@@ -253,7 +253,7 @@ def plotConvergence(simId, expName, paramName, values, show=True, save=False):
     results = {'Mean': [], 'Stdev': [], 'Skewness': [], '95% CI': []}
 
     increment = min(100, count // 20)
-    nValues = range(increment, count + increment - 1, increment)
+    nValues = list(range(increment, count + increment - 1, increment))
 
     for N in nValues:
         sublist = values[:N]

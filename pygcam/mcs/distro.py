@@ -132,7 +132,7 @@ def integers(min, max):
     min = int(min)
     max = int(max)
     count = max - min + 1
-    nums  = range(min, max + 1)
+    nums  = list(range(min, max + 1))
     probs = [1.0/count] * count
     return rv_discrete(name='integers', values=[nums, probs])
 

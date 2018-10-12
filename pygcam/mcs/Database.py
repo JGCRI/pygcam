@@ -13,7 +13,7 @@ from __future__ import print_function
 from collections import Iterable
 from contextlib import contextmanager
 from datetime import datetime
-from six import string_types, iteritems
+from six import string_types, iteritems, MAXSIZE
 from six.moves import xrange
 import sys
 
@@ -562,7 +562,7 @@ class CoreDatabase(object):
 
         session = self.Session()
 
-        limit = sys.maxint if limit is None or limit <= 0 else limit
+        limit = MAXSIZE if limit is None or limit <= 0 else limit
 
         # This is essentially this query, but with "JOIN xx ON" syntax generated:
         #   select r.trialNum, v.value from run r, outvalue v, experiment e, output o

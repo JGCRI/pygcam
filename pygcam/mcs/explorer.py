@@ -419,8 +419,8 @@ class McsData(object):
         colsToDrop = set(inputsDF.columns) - set(topParams)
         inputsDF = inputsDF.drop(colsToDrop, axis=1, inplace=False) # not inplace since it's a slice of the original
 
-        trialSteps = range(CORR_STEP, len(results), CORR_STEP)      # produce corrDF for increments of 100 trials
-        trialSteps.append(len(results))                             # final value is for however many trials there were
+        trialSteps = list(range(CORR_STEP, len(results), CORR_STEP))    # produce corrDF for increments of 100 trials
+        trialSteps.append(len(results))                                 # final value is for however many trials there were
 
         corrByTrials = pd.DataFrame()
 

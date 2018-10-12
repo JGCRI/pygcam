@@ -207,19 +207,3 @@ def plotTimeSeries(datasets, timeCol, unit, valueCol='value', estimator=np.mean,
         plt.show()
 
     return fig
-
-
-# if __name__ == "__main__":
-#     def test_confidence_interval_plot():
-#
-#         # Create a fake dataset
-#         years = range(1990, 2055, 5)
-#         datasets = []
-#         datasets.append(np.random.normal(100, 25, (100,len(years)))*(np.arange(1,len(years)+1)**1.1))
-#
-#         plotTimeSeries(datasets, years, ci=[95, 50], title='Test Figure', xlabel='Year', ylabel='Emissions (Mg CO$_2$)',
-#                        legend_labels=['Total CO$_2$ Emissions'], legend_name='Legend', text_label=['95% Confidence Interval','50% Confidence Interval'])
-#
-#     test_confidence_interval_plot()
-
-
