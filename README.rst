@@ -34,7 +34,7 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.3.1 (10 Oct 2018)
+Version 1.4 (12 Oct 2018)
 ---------------------------
 
 * Pygcam now runs under Python versions 2.7 and 3.7.
