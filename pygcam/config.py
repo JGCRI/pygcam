@@ -127,23 +127,23 @@ def parse_version_info(vers=None):
 
 def setInputFilesByVersion():
     '''
-    Set "GCAM.InputFiles" to the correct version-specific config parameter. For example,
-    if "GCAM.VersionNumber" is "5.1", "GCAM.InputFiles" is set to the value of parameter
-    "GCAM.InputFiles.5.1".
+    Set "GCAM.InputFiles" to the correct version-specific config parameter. First check for
+    "GCAM.InputFiles." plus major.minor.patch version, then just major.minor, and finally,
+    just the major version number.  For example, if "GCAM.VersionNumber" is "5.1.2", and
+    "GCAM.InputFiles.5.1.2" is not defined, but "GCAM.InputFiles.5.1" is, we set "GCAM.InputFiles"
+    to the value of parameter "GCAM.InputFiles.5.1".
     '''
     from semver import VersionInfo
 
     vers = parse_version_info()
 
-    # First see if a var is defined for major.minor.patch version, then major.minor,
-    # then just the major version number.
-    major = str(vers.major)
-    minor = '{}.{}'.format(major, vers.minor)
-    patch = '{}.{}'.format(minor, vers.patch)
+    major = str(vers.major)                     # e.g., "5"
+    minor = '{}.{}'.format(major, vers.minor)   # e.g., "5.1"
+    patch = '{}.{}'.format(minor, vers.patch)   # e.g., "5.1.2"
     levels = [patch, minor, major]
 
     for level in levels:
-        paramName = 'GCAM.InputFiles.{}'.format(level)
+        paramName = 'GCAM.InputFiles.' + level
         inputFiles = getParam(paramName, raiseError=False)
         if inputFiles is not None:
             setParam('GCAM.InputFiles', inputFiles)
