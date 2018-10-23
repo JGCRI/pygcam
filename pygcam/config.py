@@ -131,14 +131,26 @@ def setInputFilesByVersion():
     if "GCAM.VersionNumber" is "5.1", "GCAM.InputFiles" is set to the value of parameter
     "GCAM.InputFiles.5.1".
     '''
-    version = getParam('GCAM.VersionNumber')
-    try:
-        paramName = 'GCAM.InputFiles.' + version
-        inputFiles = getParam(paramName)
-    except KeyError:
-        raise ConfigFileError('Config parameter {} is undefined. Fix system.cfg or .pygcam.cfg'.format(paramName))
+    from semver import VersionInfo
 
-    setParam('GCAM.InputFiles', inputFiles)
+    vers = parse_version_info()
+
+    # First see if a var is defined for major.minor.patch version, then major.minor,
+    # then just the major version number.
+    major = str(vers.major)
+    minor = '{}.{}'.format(major, vers.minor)
+    patch = '{}.{}'.format(minor, vers.patch)
+    levels = [patch, minor, major]
+
+    for level in levels:
+        paramName = 'GCAM.InputFiles.{}'.format(level)
+        inputFiles = getParam(paramName, raiseError=False)
+        if inputFiles is not None:
+            setParam('GCAM.InputFiles', inputFiles)
+            return
+
+    raise ConfigFileError('Config parameters {} are undefined. Fix system.cfg or .pygcam.cfg'.format(levels))
+
 
 def getSection():
     return _ProjectSection
