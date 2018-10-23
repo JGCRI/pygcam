@@ -288,7 +288,7 @@ class GcamTool(object):
                 with pushd(exeDir):
                     try:
                         cmd = [exePath, '--versionID']
-                        versionStr = subprocess.check_output(cmd, shell=False).strip()
+                        versionStr = subprocess.check_output(cmd, shell=False).strip().decode('utf-8')
 
                     except subprocess.CalledProcessError:
                         raise ConfigFileError(

@@ -6,7 +6,7 @@
 '''
 import os
 
-from .config import getParam, getParamAsBoolean, pathjoin
+from .config import getParam, getParamAsBoolean, pathjoin, parse_version_info
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
 from .log import getLogger
@@ -86,6 +86,8 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
        for pygcam-mcs trials.
     :return: none
     '''
+    from semver import VersionInfo
+
     if not srcWorkspace:
         srcWorkspace = getParam('GCAM.RefWorkspace') if mcsMode == 'gensim' \
             else getParam('GCAM.SandboxRefWorkspace')
@@ -113,6 +115,11 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     # also makes sandbox and sandbox/exe
     logPath = pathjoin(sandbox, 'exe', 'logs')
     mkdirs(logPath)
+
+    # Need to mkdir("exe/restart") for gcam-v5.1.2 (and beyond?)
+    if parse_version_info() >= VersionInfo(5, 1, 2):
+        restartDir = pathjoin(sandbox, 'exe', 'restart')
+        mkdirs(restartDir)
 
     filesToCopy, filesToLink = _getFilesToCopyAndLink('GCAM.SandboxFilesToLink')
 
