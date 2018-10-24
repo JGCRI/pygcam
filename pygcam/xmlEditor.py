@@ -162,8 +162,26 @@ def xmlSel(filename, xpath, asText=False):
 
     return bool(result)
 
+#
+# xmlEdit can set a value, multiply a value in the XML by a constant,
+# or add a constant to the value in the XML. These funcs handle each
+# operation, allowing the logic to be outside the loop, which might
+# iterate over thousands of elements.
+#
+def _set(elt, value):
+    elt.text = str(value)
 
-def xmlEdit(filename, pairs, useCache=True):
+def _multiply(elt, value):
+    elt.text = str(float(elt.text) * value)
+
+def _add(elt, value):
+    elt.text = str(float(elt.text) + value)
+
+_editFunc = {'set'      : _set,
+             'multiply' : _multiply,
+             'add'      : _add}
+
+def xmlEdit(filename, pairs, op='set', useCache=True):
     """
     Edit the XML file `filename` in place, applying the values to the given xpaths
     in the list of pairs.
@@ -171,11 +189,22 @@ def xmlEdit(filename, pairs, useCache=True):
     :param filename: the file to edit in-place.
     :param pairs: (iterable of (xpath, value) pairs) In each pair, the xpath selects
       elements or attributes to update with the given values.
+    :param op: (str) Operation to perform. Must be in ('set', 'multiply', 'add').
+      Note that 'multiply' and 'add' are *not* available for xpaths selecting
+      attributes rather than node values. For 'multiply'  and 'add', the value
+      should be passed as a float. For 'set', it can be a float or a string.
     :param useCache: (bool) if True, the etree is sought first in the XmlCache. This
       avoids repeated parsing, but the file is always written (eventually) if updated
       by this function.
     :return: True on success, else False
     """
+    legalOps = _editFunc.keys()
+
+    if op not in legalOps:
+        raise PygcamException('xmlEdit: unknown operation "{}". Must be one of {}'.format(op, legalOps))
+
+    modFunc = _editFunc[op]
+
     item = CachedFile.getFile(filename)
     tree = item.tree
 
@@ -184,7 +213,6 @@ def xmlEdit(filename, pairs, useCache=True):
     # if at least one xpath is found, update and write file
     for xpath, value in pairs:
         attr = None
-        value = str(value)
 
         # If it's an attribute update, extract the attribute
         # and use the rest of the xpath to select the elements.
@@ -197,11 +225,12 @@ def xmlEdit(filename, pairs, useCache=True):
         if len(elts):
             updated = True
             if attr:                # conditional outside loop since there may be many elements
+                value = str(value)
                 for elt in elts:
                     elt.set(attr, value)
             else:
                 for elt in elts:
-                    elt.text = value
+                    modFunc(elt, value)
 
     if updated:
         if useCache:
@@ -864,6 +893,42 @@ class XMLEditor(object):
         cfg = self.cfgPath()
 
         xmlEdit(cfg, [("//ScenarioComponents/Value[text()='%s']/@name" % xmlfile, name)])
+
+    @callableMethod
+    def multiply(self, tag, xpath, value):
+        """
+        Run the `xpath` query on the XML file with `tag` in the config file, and
+        replace all values found with the result of multiplying them by `value`.
+
+        :param tag: (str) the tag identifying a scenario component
+        :param xpath: (str) an XPath query to run against the file indicated by `tag`
+        :param value: (float) a value to multiply results of the `xpath` query by.
+        :return: none
+        """
+        _logger.info("multiply: tag='{}', xpath='{}', multiplier={}".format(tag, xpath, value))
+
+        fileRel, fileAbs = self.getLocalCopy(tag)
+
+        xmlEdit(fileAbs, [(xpath, value)], op='multiply')
+        self.updateScenarioComponent(tag, fileRel)
+
+    @callableMethod
+    def add(self, tag, xpath, value):
+        """
+        Run the `xpath` query on the XML file with `tag` in the config file, and
+        replace all values found with the result of adding `value` to them.
+
+        :param tag: (str) the tag identifying a scenario component
+        :param xpath: (str) an XPath query to run against the file indicated by `tag`
+        :param value: (float) a value to multiply results of the `xpath` query by.
+        :return: none
+        """
+        _logger.info("add: tag='{}', xpath='{}', multiplier={}".format(tag, xpath, value))
+
+        fileRel, fileAbs = self.getLocalCopy(tag)
+
+        xmlEdit(fileAbs, [(xpath, value)], op='add')
+        self.updateScenarioComponent(tag, fileRel)
 
     # TBD dynamic keyword might still be useful if subdir e.g. local-xml/dynamic but policy file would be in local-xml anyway
     @callableMethod
