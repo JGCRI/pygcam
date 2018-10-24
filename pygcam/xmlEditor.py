@@ -905,7 +905,7 @@ class XMLEditor(object):
         :param value: (float) a value to multiply results of the `xpath` query by.
         :return: none
         """
-        _logger.info("multiply: tag='{}', xpath='{}', multiplier={}".format(tag, xpath, value))
+        _logger.info("multiply: tag='{}', xpath='{}', value={}".format(tag, xpath, value))
 
         fileRel, fileAbs = self.getLocalCopy(tag)
 
@@ -923,7 +923,7 @@ class XMLEditor(object):
         :param value: (float) a value to multiply results of the `xpath` query by.
         :return: none
         """
-        _logger.info("add: tag='{}', xpath='{}', multiplier={}".format(tag, xpath, value))
+        _logger.info("add: tag='{}', xpath='{}', value={}".format(tag, xpath, value))
 
         fileRel, fileAbs = self.getLocalCopy(tag)
 
