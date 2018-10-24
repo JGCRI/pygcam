@@ -690,7 +690,6 @@ class XMLEditor(object):
             pathname = self.componentPath(configTag, configPath=refConfigFile)
             srcAbsPath = pathjoin(refWorkspace, 'exe', pathname, abspath=True)
 
-        # TBD: verify that this works in 5.1
         # If path includes /*-xml/* (e.g., '/energy-xml/', '/aglu-xml/'), retain
         # this subdir in destination, else just use the basename of the path.
         matches = list(re.finditer(XmlDirPattern, srcAbsPath))
