@@ -7,6 +7,7 @@
 from __future__ import print_function
 import copy
 import os
+from semver import VersionInfo
 import six
 import sys
 
@@ -313,7 +314,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
     :return: None
     """
     version = parse_version_info()
-    if version >= (5, 0):
+    if version >= VersionInfo(5, 0, 0):
         raise PygcamException("Called landProtection.createProtected on GCAM version >= 5.0. Use landProtectionUpdate.protectLand instead.")
 
     _logger.debug('createProtected: fraction=%.2f, landClasses=%s, regions=%s, unprotect=%s',
@@ -396,9 +397,9 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
 def _landXmlPaths(workspace):
     version = parse_version_info()
     landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml'] \
-        if version >= (5, 1) else ['land2.xml', 'land3.xml']
+        if version >= VersionInfo(5, 1, 0) else ['land2.xml', 'land3.xml']
 
-    subdir = 'aglu-xml' if version < (5, 1) else ''
+    subdir = 'aglu-xml' if version < (5, 1, 0) else ''
     xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml', subdir)
     paths = [pathjoin(xmlDir, fname) for fname in landXmlFiles]
     return paths

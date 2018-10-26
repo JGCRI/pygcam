@@ -37,7 +37,7 @@ def setJavaPath(exeDir):
         # print an error.
         with pushd(exeDir):
             versionInfo = parse_version_info()
-            if versionInfo > (4, 2):
+            if versionInfo > VersionInfo(4, 2, 0):
                 classpath = getParam('GCAM.MI.ClassPath')
                 command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
             else:
