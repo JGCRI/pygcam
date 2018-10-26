@@ -613,10 +613,18 @@ class XMLEditor(object):
             self.updateConfigComponent('Files', 'xmlOutputFileName', value=None,
                                        writeOutput=getParamAsBoolean('GCAM.WriteXmlOutputFile'))
 
-        # According to Pralit, outFile.csv isn't maintained and isn't reliable.
-        if getParam('GCAM.WriteOutputCsv'):
-            self.updateConfigComponent('Files', 'outFileName', value=None,
-                                       writeOutput=getParamAsBoolean('GCAM.WriteOutputCsv'))
+        version = parse_version_info()
+
+        if version < VersionInfo(5, 1, 2):
+            # this option was removed in gcam-v5.1.2
+            if getParam('GCAM.WriteOutputCsv'):
+                self.updateConfigComponent('Files', 'outFileName', value=None,
+                                           writeOutput=getParamAsBoolean('GCAM.WriteOutputCsv'))
+
+        if version >= VersionInfo(5, 1, 2):
+            if getParam('GCAM.WriteRestartFiles'):
+                self.updateConfigComponent('Files', 'restart', value=None,
+                                           writeOutput=getParamAsBoolean('GCAM.WriteRestartFiles'))
 
         CachedFile.decacheAll()
 
