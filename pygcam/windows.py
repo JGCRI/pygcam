@@ -248,14 +248,14 @@ if IsWindows:
 
     REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
 
-    def islinkWindows(path):
-        """ Windows islink implementation. """
-        import six
-
-        if not os.path.lexists(path):
-            return False
-
-        return win32file.GetFileAttributesW(six.u(path)) & REPARSE_FOLDER == REPARSE_FOLDER
+    # def islinkWindows(path):
+    #     """ Windows islink implementation. """
+    #     import six
+    #
+    #     if not os.path.lexists(path):
+    #         return False
+    #
+    #     return win32file.GetFileAttributesW(six.u(path)) & REPARSE_FOLDER == REPARSE_FOLDER
 
     def islinkWindows2(path):
         if not os.path.lexists(path):
@@ -306,7 +306,7 @@ if IsWindows:
     # (In python 2.7.11 os.path.islink() indeed failed to detect link made with mklink)
     os.symlink = symlinkWindows
     os.readlink = readlinkWindows
-    os.path.islink = islinkWindows
+    os.path.islink = islinkWindows2
     os.path.samefile = samefileWindows
 
 def removeSymlink(path):
