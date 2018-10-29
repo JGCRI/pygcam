@@ -732,7 +732,7 @@ class XMLEditor(object):
         matches = list(re.finditer(XmlDirPattern, srcAbsPath))
         if matches:
             m = matches[-1]
-            suffix = srcAbsPath[m.start()+1:]   # from after '/' to end
+            suffix = os.path.basename(srcAbsPath) if m.group(0) == '/local-xml/' else srcAbsPath[m.start()+1:]   # from after '/' to end
         else:
             suffix = os.path.basename(srcAbsPath)
 
