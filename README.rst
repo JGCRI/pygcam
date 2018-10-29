@@ -34,6 +34,12 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.4.2 (29 Oct 2018)
+---------------------------
+* Fixed detection of symbolic links on Windows
+* Added support for suppressing "restart" files in v5.1.2 and later.
+  (Set config variable `GCAM.WriteRestartFiles = False`)
+
 Version 1.4.1 (24 Oct 2018)
 ---------------------------
 * Fix for GCAM v5.1.2: create required 'restart' directory in sandbox 'exe' folder
