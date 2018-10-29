@@ -34,11 +34,18 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.4.3 (29 Oct 2018)
+---------------------------
+* Fixed pathname bug that prevented multiple function calls on the same file
+  (specified in scenarios.xml) to work correctly.
+
+
 Version 1.4.2 (29 Oct 2018)
 ---------------------------
 * Fixed detection of symbolic links on Windows
 * Added support for suppressing "restart" files in v5.1.2 and later.
   (Set config variable `GCAM.WriteRestartFiles = False`)
+
 
 Version 1.4.1 (24 Oct 2018)
 ---------------------------
