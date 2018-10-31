@@ -100,6 +100,12 @@ def logfactor(factor):
     return lognormalRvFor95th(1 / factor, factor)
 
 def triangle(min, mode, max):  # @ReservedAssignment
+    # correct ordering if necessary
+    if min > max:
+        tmp = min
+        min = max
+        max = tmp
+
     scale = max - min
     if scale == 0:
         raise PygcamMcsUserError("Scale of triangle distribution is zero")
