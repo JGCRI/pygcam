@@ -30,18 +30,18 @@ COLUMN_ELT_NAME     = 'Column'
 VALUE_ELT_NAME      = 'Value'
 
 class XMLConstraint(XMLWrapper):
-    equal = ['==', '=', 'equal', 'eq']
+    equal    = ['==', '=', 'equal', 'eq']
     notEqual = ['!=', '<>', 'notEqual', 'not equal', 'neq']
+    strMatch = ['startswith', 'endswith', 'contains']
 
     def __init__(self, element):
         super(XMLConstraint, self).__init__(element)
         self.column = element.get('column')
         self.op = element.get('op')
         self.value = element.get('value')
-        self.groupBy = element.get('groupby')
 
         if self.op:
-            known = self.equal + self.notEqual
+            known = self.equal + self.notEqual + self.strMatch
             if not self.op in known:
                 raise PygcamMcsUserError('Unknown operator in constraint: %s' % self.op)
 
@@ -49,13 +49,33 @@ class XMLConstraint(XMLWrapper):
                 raise PygcamMcsUserError('Constraint with operator "%s" is missing a value' % self.op)
 
     def asString(self):
-        op = '==' if self.op in self.equal else ('!=' if self.op in self.notEqual else None)
+        if self.op in self.equal:
+            op = '=='
+        elif self.op in self.notEqual:
+            op = '!='
+        else:
+            # strMatch ops are handled outside of df.query()
+            op = None
 
-        if op:
-            return "%s %s %r" % (self.column, op, self.value)
+        return "%s %s %r" % (self.column, op, self.value) if op else None
 
-        return None
+    def stringMatch(self, df):
+        if self.op not in self.strMatch:
+            return None
 
+        col = df[self.column]
+
+        if self.op == 'startswith':     # simple string only
+            fn = col.str.startswith
+
+        elif self.op == 'endswith':     # simple string only
+            fn = col.str.endswith
+
+        elif self.op == 'contains':     # string or regex (note: quote regex chars if used literally)
+            fn = col.str.contains
+
+        mask = fn(self.value)
+        return df[mask]
 
 class XMLColumn(XMLWrapper):
     def __init__(self, element):
@@ -86,6 +106,16 @@ class XMLResult(XMLWrapper):
         self.constraints = [XMLConstraint(item) for item in self.element.iterfind(CONSTRAINT_ELT_NAME)]
         constraintStrings = list(filter(None, map(XMLConstraint.asString, self.constraints)))
         self.whereClause = ' and '.join(constraintStrings)
+        self.matchConstraints = list(filter(lambda constraint: constraint.op in XMLConstraint.strMatch, self.constraints))
+
+    def stringMatch(self, df):
+        """
+        Handle any string matching constraints since these can't be handled in a df.query()
+        """
+        for c in self.matchConstraints:
+            df = c.stringMatch(df)
+
+        return df
 
     def isScalar(self):
         return self.column is not None or self.cumulative
@@ -272,19 +302,23 @@ def extractResult(context, scenario, outputDef, type):
     paramName   = outputDef.name
     whereClause = outputDef.whereClause
 
+    # apply (in)equality constraints
     selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
+
+    # apply string constraints
+    selected = outputDef.stringMatch(selected)
+
     count = selected.shape[0]
 
     if count == 0:
-        raise PygcamMcsUserError('Query where clause(%r) matched no results' % whereClause)
+        raise PygcamMcsUserError('Query matched no results')
 
     if 'region' in selected.columns:
         firstRegion = selected.region.iloc[0]
         if count == 1:
             regionName = firstRegion
         else:
-            _logger.debug(
-                "Query where clause (%r) yielded %d rows; year columns will be summed" % (whereClause, count))
+            _logger.debug("Query yielded {} rows; year columns will be summed".format(count))
             regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
     else:
         regionName = 'global'

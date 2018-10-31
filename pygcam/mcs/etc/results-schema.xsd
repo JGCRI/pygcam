@@ -3,7 +3,7 @@
 	<!-- Attribute types -->
     <xs:simpleType name="OperatorType">
         <xs:restriction base="xs:string">
-			<xs:pattern value="==|=|eq|equal|!=|&gt;&lt;|neq|notEqual|not equal"/>
+			<xs:pattern value="==|=|eq|equal|!=|&gt;&lt;|neq|notEqual|not equal|startswith|endswith|contains"/>
         </xs:restriction>
 	</xs:simpleType>
 
