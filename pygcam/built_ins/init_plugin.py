@@ -58,7 +58,7 @@ def findGCAM():
 
     home = getHomeDir()
 
-    withReleasePackages = ['gcam-v5.1.1', 'gcam-v4.4.1', 'gcam-v5.1', 'gcam-v4.4']
+    withReleasePackages = ['gcam-v5.1.2', 'gcam-v5.1.1', 'gcam-v4.4.1', 'gcam-v5.1', 'gcam-v4.4']
     versions = withReleasePackages + ['gcam-v4.3']
     dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
@@ -112,7 +112,13 @@ def askString(msg, default):
 
 def askDir(msg, default=''):
     from prompt_toolkit import prompt
-    from prompt_toolkit.contrib.completers import PathCompleter
+    try:
+        # prompt_toolkit 1
+        from prompt_toolkit.contrib.completers import PathCompleter
+    except Exception:
+        # prompt_toolkit 2
+        from prompt_toolkit.completion import PathCompleter
+
     from ..utils import mkdirs
 
     is_cygwin = isCygwin()
@@ -250,10 +256,12 @@ class InitCommand(SubcommandABC):
         try:
             dfltProject = args.defaultProject or askString('Default project name?', 'ctax')
             gcamDir     = args.gcamDir or askDir('Where is GCAM installed?', default=findGCAM())
+
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
                                                     default=expandTilde(DefaultProjectDir))
+            
             sandboxDir  = args.sandboxDir or askDir('Directory in which to create pygcam run-time sandboxes?',
-                                                    default=defaultSandboxDir(projectDir))
+                                                    default=defaultSandboxDir(str(projectDir)))
 
             # make backup of configuration file if it exists and is not zero length
             if os.path.lexists(configPath) and os.stat(configPath).st_size > 0:
