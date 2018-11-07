@@ -34,10 +34,11 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.5 (7 Nov 2018)
+Version 1.5.1 (7 Nov 2018)
 ---------------------------
 * Fixed bug preventing `gt init` from working properly in interactive mode.
 * Updated YML files for creating pygcam-ready Anaconda environments for Python 2 and 3.
+* Updated installation instructions to correspond with new YML files.
 * Added string match functions to Constraint: startswith, endswith, contains are now supported.
 
 Version 1.4.3 (29 Oct 2018)
