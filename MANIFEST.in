@@ -7,14 +7,17 @@ include ez_setup.py
 include pygcam/*.py
 graft pygcam/built_ins
 
+# Assorted data files
+graft pygcam/etc
+
 # Documentation source as well as generated html
 graft docs/source
 include docs/[mM]ake*
 
+# anaconda environment definitions
+graft envs
+
 # Test code
 graft tests
-
-# Assorted data files
-graft pygcam/etc
 
 global-exclude .DS_Store .gitignore *.pyc
