@@ -510,6 +510,13 @@ class CoreDatabase(object):
         rows = self.getTable(Output)
         return [obj.name for obj in rows]
 
+    def getOutputUnits(self, name):
+        with self.sessionScope() as session:
+            query = session.query(Output.units).filter_by(name=name)
+            row = query.one()
+            units = row[0] if row else ''
+            return units
+
     def getOutputsWithValues(self, simId, scenario):
         with self.sessionScope() as session:
             query = session.query(Output.name).\

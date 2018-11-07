@@ -3,7 +3,6 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
-from functools import wraps
 import json
 import numpy as np
 import pandas as pd
@@ -1024,7 +1023,7 @@ def main(args):
                 xtitle = 'g CO<sub>2</sub> MJ<sup>-1</sup>'
                 xticksuffix = None
         else:
-            xtitle = ''
+            xtitle = data.db.getOutputUnits(outputName)
             xticksuffix = ''
 
         layout = updateStyle('Plot',
