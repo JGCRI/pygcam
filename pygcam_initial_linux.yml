@@ -119,7 +119,6 @@ dependencies:
     - flask-compress==1.4.0
     - future==0.16.0
     - plotly==3.3.0
-    - pygcam==1.2.2
     - retrying==1.3.3
     - salib==1.1.3
     - semver==2.8.1
