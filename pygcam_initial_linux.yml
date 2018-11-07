@@ -1,10 +1,9 @@
-name: pygcam
+name: pygcam3
 channels:
   - conda-forge
   - defaults
 dependencies:
   - alabaster=0.7.12
-  - appnope=0.1.0
   - asn1crypto=0.24.0
   - babel=2.6.0
   - backports=1.0
@@ -94,11 +93,10 @@ dependencies:
   - zeromq=4.2.5
   - ca-certificates=2018.03.07
   - filelock=3.0.8
-  - libcxx=4.0.1
-  - libcxxabi=4.0.1
+  - libcxx
   - libedit=3.1.20170329
   - libffi=3.2.1
-  - libgfortran=3.0.1
+  - libgfortran
   - libopenblas=0.3.3
   - ncurses=6.1
   - numexpr=2.6.8
@@ -119,7 +117,6 @@ dependencies:
     - flask-compress==1.4.0
     - future==0.16.0
     - plotly==3.3.0
-    - pygcam==1.2.2
     - retrying==1.3.3
     - salib==1.1.3
     - semver==2.8.1
