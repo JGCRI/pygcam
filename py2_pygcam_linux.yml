@@ -1,4 +1,4 @@
-name: pygcam
+name: pygcam2
 channels:
 - defaults
 dependencies:
