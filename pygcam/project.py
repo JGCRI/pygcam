@@ -292,7 +292,8 @@ class Variable(SimpleVariable):
         result = simpleFormat(value, argDict) if value and self.eval else value
 
         # recurse in case there are vars whose values are variable references
-        return self.evaluate(argDict, value=result) if re.search('\{[^\}]+\}', result) else result
+        result = self.evaluate(argDict, value=result) if re.search('\{[^\}]+\}', result) else result
+        return result
 
 class Project(XMLFile):
     """
