@@ -259,7 +259,7 @@ class InitCommand(SubcommandABC):
 
             projectDir  = args.projectDir or askDir('Directory in which to create pygcam projects?',
                                                     default=expandTilde(DefaultProjectDir))
-            
+
             sandboxDir  = args.sandboxDir or askDir('Directory in which to create pygcam run-time sandboxes?',
                                                     default=defaultSandboxDir(str(projectDir)))
 
