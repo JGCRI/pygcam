@@ -91,19 +91,7 @@ clause which specifies that a column must have a given
 relationship to a given value. The ``column`` attribute
 indicates which column to apply the constraint to; the ``value``
 attribute provides a value to compare against; and the ``op``
-attribute indicates how to perform the comparison. The following
-values for ``op`` are recognized:
-
- * ``==``, ``=``, ``eq``, ``equal`` : synonyms for equality, i.e.,
-   the value in the named column must be the same as ``value``.
-
- * ``<>``, ``!=``, ``neq``, ``notEqual``, ``not equal`` : synonyms for
-   inequaltiy, i.e., the value in the named column must be different
-   than ``value``.
-
-
-A ``groupby`` attribute is currently accepted, but is not yet implemented.
-
+attribute indicates how to perform the comparison.
 
 +-------------+------------+-----------+-------------+
 | Attribute   | Required   | Default   | Values      |
@@ -114,8 +102,28 @@ A ``groupby`` attribute is currently accepted, but is not yet implemented.
 +-------------+------------+-----------+-------------+
 | value       | yes        | (none)    | text        |
 +-------------+------------+-----------+-------------+
-| groupby     | no         | (none)    | text        |
-+-------------+------------+-----------+-------------+
+
+The following values for ``op`` are recognized:
+
+ * ``==``, ``=``, ``eq``, ``equal`` : synonyms for equality, i.e.,
+   the value in the named column must be the same as ``value``.
+
+ * ``<>``, ``!=``, ``neq``, ``notEqual``, ``not equal`` : synonyms for
+   inequaltiy, i.e., the value in the named column must be different
+   than ``value``.
+
+ * ``startswith`` : the value in the named column must start with
+   the given ``value``.
+
+ * ``endswith`` : the value in the named column must end with
+   the given ``value``.
+
+ * ``contains`` : the value in the named column contain the string
+   given in ``value``. Note that ``contains`` accepts Python
+   `regular expressions <https://docs.python.org/2/library/re.html>`_,
+   which means special regex characters must be "escaped" by preceding
+   them with a "\" character. See the documentation link above for
+   further details.
 
 
 Example
