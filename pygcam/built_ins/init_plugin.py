@@ -25,6 +25,7 @@ def defaultSandboxDir(projectRoot):
 Template = '''[DEFAULT]
 GCAM.DefaultProject  = {dfltProject}
 GCAM.RefWorkspace    = {gcamDir}
+GCAM.VersionNumber   = {versionNum}
 GCAM.ProjectRoot     = {projectRoot}
 GCAM.SandboxRoot     = {sandboxRoot}
 GCAM.RewriteSetsFile = %(GCAM.ProjectDir)s/etc/rewriteSets.xml
@@ -52,13 +53,12 @@ def expandTilde(path):
         path = getHomeDir() + path[1:]
     return unixPath(path)
 
-# TODO: TEST THESE CHANGES
 def findGCAM():
     import platform
 
     home = getHomeDir()
 
-    withReleasePackages = ['gcam-v5.1.2', 'gcam-v5.1.1', 'gcam-v4.4.1', 'gcam-v5.1', 'gcam-v4.4']
+    withReleasePackages = ['gcam-v5.1.2', 'gcam-v4.4.1', 'gcam-v5.1.1', 'gcam-v4.4']
     versions = withReleasePackages + ['gcam-v4.3']
     dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
@@ -129,8 +129,16 @@ def askDir(msg, default=''):
     path = None
 
     while not path:
-        # prompt_toolkit doesn't work in cygwin terminal
-        path = askString(msg, default) if is_cygwin else prompt(msg, default=default, completer=completer)
+        # prompt_toolkit doesn't work in cygwin terminal or in PyCharm debugger
+        # path = askString(msg, default) if is_cygwin else prompt(msg, default=default, completer=completer)
+        if is_cygwin:
+            path = askString(msg, default)
+        else:
+            try:
+                prompt(msg, default=default, completer=completer)
+            except AssertionError:  # stdout.isatty() fails in PyCharm debugger
+                path = askString(msg, default)
+
         path = expandTilde(path)
 
         if path and not os.path.isdir(path):
@@ -215,11 +223,11 @@ class InitCommand(SubcommandABC):
                            help='''Do not create the project structure for the given default project.
                            Mutually exclusive with -c / --create-project option.''')
 
-        # TBD: implement what this says!
         parser.add_argument('-g', '--gcamDir',
                             help='''The directory that is a GCAM v4.x or v5.x
                             workspace. Sets config var GCAM.RefWorkspace. By default,
-                            looks for gcam-v5.1 (then v4.4) in ~, ~/GCAM, and ~/gcam, 
+                            looks for gcam-v5.1.2 (then v4.4.1) in ~, ~/GCAM, and ~/gcam,
+                            ~/Documents/GCAM, and ~/Documents/gcam,  
                             where "~" indicates your home directory.''')
 
         parser.add_argument('--overwrite', action='store_true',
@@ -245,6 +253,7 @@ class InitCommand(SubcommandABC):
     def run(self, args, tool):
         from ..config import USR_CONFIG_FILE
         from ..utils import deleteFile, mkdirs
+        from ..gcam import getGcamVersion
 
         # Detect cygwin terminals, which quite lamely cannot handle interactive input
         if (isCygwin() and not os.environ.get('PYTHONUNBUFFERED')):
@@ -278,8 +287,12 @@ class InitCommand(SubcommandABC):
             print(e)
             return
 
+        except Exception as e:
+            raise(e)
+
         # initialize configuration file
-        text = Template.format(dfltProject=dfltProject, gcamDir=gcamDir,
+        versionNum = getGcamVersion(pathjoin(gcamDir, 'exe'))
+        text = Template.format(dfltProject=dfltProject, gcamDir=gcamDir, versionNum=versionNum,
                                projectRoot=projectDir, sandboxRoot=sandboxDir)
 
         with open(configPath, 'w') as f:

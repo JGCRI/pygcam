@@ -26,7 +26,7 @@ class AddExpCommand(McsSubcommandABC):
         super(AddExpCommand, self).__init__('addexp', subparsers, kwargs)
 
     def addArgs(self, parser):
-        parser.add_argument('-e', '--expName', type=str, required=True,
+        parser.add_argument('expName', type=str,
                             help='Add the named experiment to the database.')
 
         parser.add_argument('-d', '--description', type=str, required=False,
