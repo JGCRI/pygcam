@@ -11,7 +11,7 @@ import subprocess
 from semver import VersionInfo
 
 from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
-from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException
+from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
 from .log import getLogger
 from .scenarioSetup import createSandbox
 from .utils import writeXmldbDriverProperties, getExeDir, pushd
@@ -20,6 +20,43 @@ from .windows import IsWindows
 _logger = getLogger(__name__)
 
 PROGRAM = os.path.basename(__file__)
+
+_VersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
+
+def getGcamVersion(exeDir):
+    '''
+    Try to get GCAM version by running gcam with --versionID flag, but if that
+    fails, try to extract it from the path.
+    '''
+    exeName = getParam('GCAM.Executable')
+    exePath = pathjoin(exeDir, exeName)
+
+    if not os.path.lexist(exePath):
+        gcamDir = os.path.dirname(exeDir)
+        _logger.info("GCAM not found at %s; extracting version from path", gcamDir)
+        m = re.match(_VersionPattern, gcamDir)
+        if m:
+            return m.group(1)
+        else:
+            raise PygcamException('Failed to extract version number from path {}'.format(gcamDir))
+
+    setJavaPath(exeDir)
+    with pushd(exeDir):
+        try:
+            cmd = [exePath, '--versionID']
+            versionStr = subprocess.check_output(cmd, shell=False).strip().decode('utf-8')
+
+        except subprocess.CalledProcessError:
+            raise ConfigFileError(
+                "Attempt to run '%s --versionID' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber manually" % exePath)
+
+    prefix = 'gcam-v'
+    if not versionStr.startswith(prefix):
+        raise ConfigFileError('GCAM --versionID "%s" is not the correct format. Should start with "gcam-v"',
+                              versionStr)
+
+    versionNum = versionStr[len(prefix):]
+    return versionNum
 
 def setJavaPath(exeDir):
     '''
@@ -44,7 +81,7 @@ def setJavaPath(exeDir):
                 command = 'java WriteLocalBaseXDB'
 
             try:
-                output = subprocess.check_output(str(command), shell=True)
+                output = str(subprocess.check_output(str(command), shell=True))
             except Exception as e:
                 raise PygcamException("Cannot get java home dir: %s" % e)
 

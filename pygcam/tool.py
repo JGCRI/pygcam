@@ -194,7 +194,7 @@ class GcamTool(object):
         parser.add_argument('+v', '--verbose', action='store_true',
                             help='''Show diagnostic output''')
 
-        parser.add_argument('--version', action='version', version='%(prog)s-' + VERSION)   # goes to stderr, handled by argparse
+        parser.add_argument('--version', action='version', version=VERSION)   # goes to stderr, handled by argparse
 
         parser.add_argument('--VERSION', action='store_true')   # goes to stdout, but handled by gt
 
@@ -263,8 +263,7 @@ class GcamTool(object):
                     self.getPlugin(command)
 
     def validateGcamVersion(self):
-        from .utils import pushd
-        from .gcam import setJavaPath
+        from .gcam import getGcamVersion
         from semver import VersionInfo
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
@@ -284,22 +283,7 @@ class GcamTool(object):
                 with open(versionFile, 'r') as f:
                     versionNum = f.readline().strip()
             else:
-                setJavaPath(exeDir)
-                with pushd(exeDir):
-                    try:
-                        cmd = [exePath, '--versionID']
-                        versionStr = subprocess.check_output(cmd, shell=False).strip().decode('utf-8')
-
-                    except subprocess.CalledProcessError:
-                        raise ConfigFileError(
-                            "Attempt to run '%s --versionID' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber accordingly" % exePath)
-
-                prefix = 'gcam-v'
-                if not versionStr.startswith(prefix):
-                    raise ConfigFileError('GCAM --versionID "%s" is not the correct format. Should start with "gcam-v"',
-                                          versionStr)
-
-                versionNum = versionStr[len(prefix):]
+                versionNum = getGcamVersion(exeDir)
 
                 # cache version number so we don't have to run 'gcam.exe --versionID' every time
                 with open(versionFile, 'w') as f:
@@ -516,7 +500,7 @@ def _showVersion(argv):
     ns, otherArgs = parser.parse_known_args(args=argv)
 
     if ns.VERSION:
-        print(PROGRAM + '-' + VERSION)
+        print(VERSION)
         sys.exit(0)
 
 def _main(argv=None):
