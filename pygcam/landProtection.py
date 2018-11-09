@@ -53,7 +53,7 @@ def _findChildren(node, tag, cls=None):
     else:
         children = map(cls, nodes)
 
-    return children
+    return list(children)
 
 
 class LandProtection(object):
@@ -107,15 +107,18 @@ class LandProtection(object):
         :param unprotectFirst: (bool) if True, make all land "unprotected" before protecting.
         :return: none
         """
+        from .landProtectionUpdate import protectLandTree
+
         parser = ET.XMLParser(remove_blank_text=True)
         tree = ET.parse(infile, parser)
 
         # TBD: eliminate this for v5.0
         # Remove any existing land protection, if so requested
-        if unprotectFirst:
-            unProtectLand(tree, otherArable=True)
+        # if unprotectFirst:
+        #     unProtectLand(tree, otherArable=True)
 
-        self.protectLandTree(tree, scenarioName)
+        # self.protectLandTree(tree, scenarioName)
+        protectLandTree(tree, scenarioName)
 
         if backup:
             try:
@@ -161,7 +164,7 @@ class Group(object):
     @classmethod
     def regionNames(cls, groupName):
         group = cls.getGroup(groupName)
-        return map(lambda region: region.name, group.regions)
+        return list(map(lambda region: region.name, group.regions))
 
     @staticmethod
     def expandNames(name, names):
