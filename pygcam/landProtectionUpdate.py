@@ -92,13 +92,12 @@ def _protect_land(tree, prot_dict):
 
         for (landtype, basin, prot_frac) in prot_tups:
             for (l, b) in land_basin_pairs:
-                basin = basin or b              # if basin is not specified, apply to all basins in the region
-                if landtype == l and basin == b:
-                    # print("Processing {}, {}, {}".format(reg, landtype, basin))
-                    total = _get_total_area(reg_dict, landtype, basin)
+                if landtype == l and (basin == b or not basin):
+                    print("Processing {}, {}, {}".format(reg, landtype, b))
+                    total = _get_total_area(reg_dict, landtype, b)
                     prot_vals   = total * prot_frac
                     unprot_vals = total - prot_vals
-                    _update_protection(reg_dict, landtype, basin, prot_vals, unprot_vals)
+                    _update_protection(reg_dict, landtype, b, prot_vals, unprot_vals)
 
 #
 # Modified from landProtection.py method of same name
@@ -113,18 +112,20 @@ def protectLandTree(tree, scenarioName):
     :param scenarioName: (str) the name of the scenario to apply
     :return: none
     """
+    from collections import defaultdict
+
     _logger.info("Applying protection scenario %s", scenarioName)
 
     scenario = Scenario.getScenario(scenarioName)
     if not scenario:
         raise FileFormatError("Scenario '%s' was not found" % scenarioName)
 
-    prot_dict = {}
+    prot_dict = defaultdict(list)
 
     for reg, protReg in scenario.protRegDict.items():
         for prot in protReg.protections:
             fraction = prot.fraction
             basin = prot.basin
-            prot_dict[reg] = [(landtype, basin, fraction) for landtype in prot.landClasses]
+            prot_dict[reg] += [(landtype, basin, fraction) for landtype in prot.landClasses]
 
     _protect_land(tree, prot_dict)
