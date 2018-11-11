@@ -1,7 +1,7 @@
 from lxml import etree as ET
 from pygcam.config import getParam
 from pygcam.utils import pathjoin
-from pygcam.landProtectionUpdate import protect_land
+from pygcam.landProtection import _protect_land
 
 def main():
     import pandas as pd
@@ -34,19 +34,19 @@ def main():
 
     # protected_land_2 has only UnmanagedPasture
     prot2_dict = {reg: [('UnmanagedPasture', fracs[reg])] for reg in fracs.index}
-    protect_land(prot2, prot2_dict)
+    _protect_land(prot2, prot2_dict)
 
     outfile = "/Users/rjp/Downloads/land_prot2_modified.xml"
-    print "Writing", outfile
+    print("Writing", outfile)
     prot2.write(outfile, xml_declaration=True, pretty_print=True)
 
     # protected_land_3 has all the other unmanaged types
     landtypes = ['UnmanagedForest', 'Grassland', 'Shrubland']
     prot3_dict = {reg: [(landtype, fracs[reg]) for landtype in landtypes] for reg in fracs.index}
-    protect_land(prot3, prot3_dict)
+    _protect_land(prot3, prot3_dict)
 
     outfile = "/Users/rjp/Downloads/land_prot3_modified.xml"
-    print "Writing", outfile
+    print("Writing", outfile)
     prot3.write(outfile, xml_declaration=True, pretty_print=True)
 
 if __name__ == '__main__':

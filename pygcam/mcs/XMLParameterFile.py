@@ -918,6 +918,8 @@ class XMLInputFile(XMLWrapper):
         :param xmlFile: (XMLFile or subclass) container for file being operated on
         :param trialDir: (str) this trial's trial-dir
         """
+        # TBD: allow fn spec in elt.text or as name attribute, in which case, pass kwargs
+        # TBD: specified in elt.text as writeFunc(self, xmlFile, trialDir, **kwargs)
         for fn in self.writeFuncs.values():
             try:
                 fn(self, xmlFile, trialDir)     # fn can modify self.tree as needed

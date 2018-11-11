@@ -404,8 +404,9 @@ class If(ConfigActionBase):
         return "<%s value1='%s' value2='%s' matches='%s'/>" % (self.tag, value1, value2, self.matches)
 
     def writeXML(self, stream, indent=0):
-        value1 = self.formattedValue1 or self.value1
-        value2 = self.formattedValue2 or self.value2
+        # deprecated
+        # value1 = self.formattedValue1 or self.value1
+        # value2 = self.formattedValue2 or self.value2
 
         # output active actions, without the "<if>"
         values = self.formattedValue2.split(',')
@@ -560,16 +561,6 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
                 directoryDict['baselineDir'] = self.baseline_dir_rel = self.parent.scenario_dir_rel
 
             super(XmlEditorSubclass, self).setupStatic(args)
-
-            # We add this to the baseline. It's ignored by GCAM, but used by MCS. It needs
-            # to be found in the config file to be able to apply distributions to the values.
-            # TBD: (old) Note that this was "if self.mcsMode and not self.parent:"
-            # TBD: (new) No longer add this to config since GCAM 4.3 doesn't ignore it!
-            # TBD:       Current approach is to set e.g., name="../local-xml/baseline/mcsValues.xml"
-            # TBD:       in parameters.xml, which avoids lookup by tag in config.xml.
-            # mcsValuesPath = pathjoin(self.scenario_dir_abs, MCSVALUES_FILE)
-            # if self.mcsMode == 'gensim' and not self.parent and os.path.lexists(mcsValuesPath):
-            #     self.addScenarioComponent('mcsValues', pathjoin(self.scenario_dir_rel, MCSVALUES_FILE))
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
             CachedFile.decacheAll()
