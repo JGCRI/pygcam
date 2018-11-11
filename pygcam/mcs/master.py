@@ -625,7 +625,8 @@ class Master(object):
                         else:
                             # TBD: check this works when baseline is not also run (is None the right default, or use []?
                             # If we're also running the baseline for this trial, create a dependency
-                            with view.temp_flags(after=baselineARs.get(context.trialNum, None)):
+                            with view.temp_flags(after=baselineARs.get(context.trialNum, [])):
+                                _logger.debug("%s depends on ID %s", context, baselineARs[context.trialNum])
                                 result = view.map_async(worker.runTrial, [context], [argDict])
 
                         statusPairs.append((context, RUN_QUEUED))

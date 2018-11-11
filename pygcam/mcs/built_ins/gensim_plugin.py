@@ -264,13 +264,13 @@ def genSimulation(simId, trials, paramPath, args):
     context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
     paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
 
-    if not trials:
-        _logger.warn("Simulation meta-data has been copied.")
-        return
-
     # Define the experiments (scenarios) in the database
     db = getDatabase()
     db.addExperiments(scenarioNames, baseline, scenarioFile)
+
+    if not trials:
+        _logger.warn("Simulation meta-data has been copied.")
+        return
 
     paramFileObj.generateRandomVars()
 
@@ -404,7 +404,9 @@ class GensimCommand(McsSubcommandABC):
                             help='The id of the simulation. Default is 1.')
 
         parser.add_argument('-t', '--trials', type=int, required=True,
-                            help='The number of trials to create for this simulation (REQUIRED)')
+                            help='''The number of trials to create for this simulation (REQUIRED). If a
+                            value of 0 is given, scenario setup is performed, scenario names are added to 
+                            the database, and meta-data is copied, but new trial data is not generated.''')
 
         return parser   # for auto-doc generation
 
