@@ -81,11 +81,12 @@ def setJavaPath(exeDir):
                 command = 'java WriteLocalBaseXDB'
 
             try:
-                output = str(subprocess.check_output(str(command), shell=True))
+                output = subprocess.check_output(str(command), shell=True)
+                javaHome = output.decode('utf-8').strip()
             except Exception as e:
                 raise PygcamException("Cannot get java home dir: %s" % e)
 
-        os.environ['JAVA_HOME'] = javaHome = output and output.strip()
+        os.environ['JAVA_HOME'] = javaHome
 
         if not javaHome:
             raise PygcamException("JAVA_HOME not set and failed to read java home directory from WriteLocalBaseXDB")
