@@ -31,7 +31,7 @@ def getGcamVersion(exeDir):
     exeName = getParam('GCAM.Executable')
     exePath = pathjoin(exeDir, exeName)
 
-    if not os.path.lexist(exePath):
+    if not os.path.lexists(exePath):
         gcamDir = os.path.dirname(exeDir)
         _logger.info("GCAM not found at %s; extracting version from path", gcamDir)
         m = re.match(_VersionPattern, gcamDir)
