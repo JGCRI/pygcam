@@ -135,7 +135,7 @@ def askDir(msg, default=''):
             path = askString(msg, default)
         else:
             try:
-                prompt(msg, default=default, completer=completer)
+                path = prompt(msg, default=default, completer=completer)
             except AssertionError:  # stdout.isatty() fails in PyCharm debugger
                 path = askString(msg, default)
 
