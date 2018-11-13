@@ -19,6 +19,7 @@ from .Database import getDatabase, Input
 _logger = getLogger(__name__)
 
 DEFAULT_BIN_COUNT = 3
+DEFAULT_MAX_TORNADO_VARS = 15
 
 def makePlotPath(value, simId):
     plotDir = getParam('MCS.PlotDir')
@@ -137,7 +138,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
 
 
 def plotTornado(data, colname='value', labelsize=9, title=None, color=None, height=0.8,
-                limit=None, rlabels=None, xlabel='Contribution to variance', figsize=None,
+                maxVars=DEFAULT_MAX_TORNADO_VARS, rlabels=None, xlabel='Contribution to variance', figsize=None,
                 show=True, filename=None, extra=None, extraColor='grey', extraLoc='right'):
     '''
     :param data: A sorted DataFrame or Series indexed by variable name, with
@@ -147,23 +148,22 @@ def plotTornado(data, colname='value', labelsize=9, title=None, color=None, heig
     :param title: If not None, the title to show
     :param color: The color of the horizontal bars
     :param height: Bar height
-    :param limit: The maximum number of variables to display
+    :param maxVars: The maximum number of variables to display
     :param rlabels: If not None, the name of a column holding values to show on the right
     :param xlabel: Label for X-axis
     :param figsize: tuple for desired figure size. Defaults to (12,6) if rlabels else (8,6).
     :param show: If True, the figure is displayed on screen
     :param filename: If not None, the figure is saved to this file
-    :param extra: Extra text to display in the lower left corner of the plot
+    :param extra: Extra text to display in a lower corner of the plot (see extraLoc)
+    :param extraColor: (str) color for extra text
+    :param extraLoc: (str) location of extra text, i.e., 'right', or 'left'.
     :return: nothing
     '''
     count, cols = data.shape
 
-    if limit is None:
-        limit = 20
-
-    if 0 < limit < count:
-        data = data[:limit]            # Truncate the DF to the top "limit" rows
-        count = limit
+    if 0 < maxVars < count:
+        data = data[:maxVars]            # Truncate the DF to the top "maxVars" rows
+        count = maxVars
 
     # Reverse the order so the larger (abs) values are at the top
     revIndex = list(reversed(data.index))
@@ -356,7 +356,7 @@ def spearmanCorrelation(inputs, results):
     return spearman
 
 
-def plotSensitivityResults(varName, data, filename=None, extra=None, limit=None, printIt=True):
+def plotSensitivityResults(varName, data, filename=None, extra=None, maxVars=None, printIt=True):
     '''
     Prints results and generates a tornado plot with normalized squares of Spearman
     rank correlations between an output variable and all input variables.
@@ -370,10 +370,10 @@ def plotSensitivityResults(varName, data, filename=None, extra=None, limit=None,
         print(data.to_string(columns=['spearman', 'value'], float_format="{:4.2f}".format))
 
     title = 'Sensitivity of %s' % varName
-    plotTornado(data, title=title, show=False, filename=filename, extra=extra, limit=limit)
+    plotTornado(data, title=title, show=False, filename=filename, extra=extra, maxVars=maxVars)
 
 # Deprecated?
-def plotGroupSensitivityResults(varName, data, filename=None, extra=None, limit=None, printIt=True):
+def plotGroupSensitivityResults(varName, data, filename=None, extra=None, maxVars=None, printIt=True):
     '''
     Sum the normalized contribution to variance for subscripted parameters,
     along with contribution from unsubscripted ones. For example, we sum
@@ -420,7 +420,7 @@ def plotGroupSensitivityResults(varName, data, filename=None, extra=None, limit=
         print(df.to_string(columns=['value', 'description'], float_format="{:4.2f}".format))
 
     title = 'Sensitivity of %s' % varName
-    plotTornado(df, title=title, figsize=None, show=False, filename=filename, limit=limit, extra=extra)
+    plotTornado(df, title=title, figsize=None, show=False, filename=filename, maxVars=maxVars, extra=extra)
 
 
 def plotInputDistributions(simId, inputDF):
@@ -1034,6 +1034,7 @@ def analyzeSimulation(args):
     convergence = args.convergence
     resultName  = args.resultName
     limit       = args.limit
+    maxVars     = args.maxVars
     xlabel      = args.xlabel
     inputsFile  = args.exportInputs
     resultFile  = args.resultFile
@@ -1146,11 +1147,11 @@ def analyzeSimulation(args):
             data['value'] = data.normalized * data.sign     # normalized squares with signs restored
 
             if importance:
-                plotSensitivityResults(resultName, data, limit=15,
+                plotSensitivityResults(resultName, data, maxVars=maxVars,
                                        filename=makePlotPath('%s-s%02d-%s-ind' % (expName, simId, resultName), simId),
                                        extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))
 
             if groups:
-                plotGroupSensitivityResults(resultName, data, limit=15,
+                plotGroupSensitivityResults(resultName, data, maxVars=maxVars,
                                             filename=makePlotPath('%s-s%02d-%s-grp' % (expName, simId, resultName), simId),
                                             extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numResults, trials))

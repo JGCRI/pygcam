@@ -472,7 +472,9 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             self.parentConfigPath = None
 
             self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
-            group = scenarioSetup.groupDict[groupName or scenarioSetup.defaultGroup]
+
+            # deprecated
+            # group = scenarioSetup.groupDict[groupName or scenarioSetup.defaultGroup]
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:

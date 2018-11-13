@@ -34,6 +34,21 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.5.4 (13 Nov 2018)
+---------------------------
+* Added option to `gt analyze` to limit the number of variables displayed in tornado plots.
+
+
+Version 1.5.3 (12 Nov 2018)
+---------------------------
+* Fixed another bug in `gt init` in setting Java home directory.
+* Fixed error in new land-protection code.
+
+Version 1.5.2 (8 Nov 2018)
+---------------------------
+* Version number is taken from gcam directory name (if possible) if executable doesn't accept `--versionID` flag.
+* Corrected version number of tornado package in macOS YML file.
+
 Version 1.5.1 (7 Nov 2018)
 ---------------------------
 * Fixed bug preventing `gt init` from working properly in interactive mode.

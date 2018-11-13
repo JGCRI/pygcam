@@ -761,8 +761,6 @@ class CoreDatabase(object):
                 self.endSession(sess)
 
     def getRunsWithStatus(self, simId, expList, statusList):
-        from operator import itemgetter         # lazy import
-
         # Allow expList and statusList to be a single string,
         # which we convert to lists
         if isinstance(expList, string_types):

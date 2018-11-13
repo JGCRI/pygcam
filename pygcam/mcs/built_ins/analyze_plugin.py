@@ -114,6 +114,8 @@ class AnalyzeCommand(McsSubcommandABC):
         super(AnalyzeCommand, self).__init__('analyze', subparsers, kwargs)
 
     def addArgs(self, parser):
+        from ..analysis import DEFAULT_MAX_TORNADO_VARS
+
         parser.add_argument('-c', '--convergence', action='store_true', default=False,
                             help='Generate convergence plots for mean, std dev, skewness, and 95%% coverage interval.')
 
@@ -141,14 +143,14 @@ class AnalyzeCommand(McsSubcommandABC):
         parser.add_argument('-i', '--importance', action='store_true', default=False,
                             help='Show the uncertainty importance for each parameter.')
 
-        parser.add_argument('-l', '--limit', type=int, required=False, default=-1,
+        parser.add_argument('-l', '--limit', type=int, default=-1,
                             help='Limit the analysis to the given number of results')
 
-        parser.add_argument('-m', '--min', type=float, required=False, default=None,
+        parser.add_argument('-m', '--min', type=float, default=None,
                             help='''Limit the analysis to values (for the result named with -r) greater
                             than or equal to this value''')
 
-        parser.add_argument('-M', '--max', type=float, required=False, default=None,
+        parser.add_argument('-M', '--max', type=float, default=None,
                             help='''Limit the analysis to values (for the result named with -r) less
                             than or equal to this value''')
 
@@ -179,6 +181,10 @@ class AnalyzeCommand(McsSubcommandABC):
 
         parser.add_argument('-t', '--timeseries', action='store_true',
                             help='Plot a timeseries distribution')
+
+        parser.add_argument('-T', '--maxVars', type=int, default=DEFAULT_MAX_TORNADO_VARS,
+                            help='''Limit the number of variables displayed on tornado plots to the given value. 
+                                    (Default is {}'''.format(DEFAULT_MAX_TORNADO_VARS))
 
         parser.add_argument('-x', '--xlabel', dest='xlabel', type=str, default=r'g CO$_2$e MJ$^{-1}$',
                             help='Specify a label for the x-axis in the histogram.')
