@@ -214,7 +214,6 @@ def runStaticSetup(runWorkspace, project, groupName):
 
     return status
 
-
 def genSimulation(simId, trials, paramPath, args):
     '''
     Generate a simulation based on the given parameters.
@@ -284,7 +283,6 @@ def genSimulation(simId, trials, paramPath, args):
     simParamFile = getSimParameterFile(simId)
     filecopy(paramPath, simParamFile)
 
-
 def _newsim(runWorkspace, trials):
     '''
     Setup the app and run directories for a given user app.
@@ -310,6 +308,61 @@ def _newsim(runWorkspace, trials):
         text = getResource('mcs/etc/views.sql')
         db.executeScript(text=text)
 
+def _simplifyDistro(dataSrc):
+    '''
+    Convert triangle distros declared with logfactor, factor, or range to min/mode/max
+    format for documentation purposes.
+    '''
+    if dataSrc.distroName == 'triangle':
+        argDict = dataSrc.argDict
+        keys = list(argDict.keys())
+        if len(keys) == 1:
+            key = keys[0]
+            value = argDict[key]
+            del argDict[key]
+
+            if key == 'factor':
+                argDict['min']  = 1 - value
+                argDict['mode'] = 1
+                argDict['max']  = 1 + value
+
+            elif key == 'logfactor':
+                argDict['min']  = round(1.0/value, 3)
+                argDict['mode'] = 1
+                argDict['max']  = value
+
+            elif key == 'range':
+                argDict['min']  = -value
+                argDict['mode'] = 0
+                argDict['max']  = value
+
+
+def _exportVars(paramFile, outputFile):
+    import re
+    from itertools import chain
+    from pygcam.mcs.XMLParameterFile import XMLDistribution, XMLParameterFile
+
+    paramFileObj = XMLParameterFile(paramFile)
+    params = list(chain.from_iterable(map(lambda x: x.parameters.values(), paramFileObj.inputFiles.values())))
+
+    def getDistStr(dataSrc):
+        _simplifyDistro(dataSrc)
+        argStr = ', '.join(['{}={}'.format(name, value) for name, value in dataSrc.argDict.items()])
+        distro = '{}({})'.format(dataSrc.distroName.capitalize(), argStr)
+        return distro
+
+    distDict = {p.name : (getDistStr(p.dataSrc), p.dataSrc.modDict, p.desc) for p in params if isinstance(p.dataSrc, XMLDistribution)}
+
+    keys = sorted(distDict.keys(), key=str.casefold) # case insensitive sort
+
+    _logger.info("Writing %s", outputFile)
+    with open(outputFile, 'w') as f:
+        f.write("Name\tDistribution\tApplication\tDescription\n")
+
+        for name in keys:
+            dist, modDict, desc = distDict[name]
+            desc = re.sub('\s+', ' ', desc)
+            f.write("{}\t{}\t{}\t{}\n".format(name, dist, modDict['apply'], desc))
 
 def driver(args, tool):
     '''
@@ -317,7 +370,21 @@ def driver(args, tool):
     '''
     from pygcam.utils import removeTreeSafely
     from ..Database import getDatabase
+    from ..error import PygcamMcsUserError
     from ..util import saveDict
+
+    paramFile = args.paramFile or getParam('MCS.ParametersFile')
+
+    if args.exportVars:
+        _exportVars(paramFile, args.exportVars)
+        return
+
+    simId  = args.simId
+    desc   = args.desc
+    trials = args.trials
+
+    if trials < 0:
+        raise PygcamMcsUserError("Trials argument is required: must be an integer >= 0")
 
     projectName = args.projectName
     runRoot = args.runRoot
@@ -334,10 +401,6 @@ def driver(args, tool):
 
     runWorkspace = getParam('MCS.RunWorkspace')
 
-    simId  = args.simId
-    trials = args.trials
-    desc   = args.desc
-
     if not os.path.exists(runWorkspace):
         _newsim(runWorkspace, trials)
 
@@ -348,7 +411,6 @@ def driver(args, tool):
         db = getDatabase()
         simId = db.createSim(trials, desc, simId=simId)
 
-    paramFile = args.paramFile or getParam('MCS.ParametersFile')
     genSimulation(simId, trials, paramFile, args=args)
 
     if trials:
@@ -370,6 +432,9 @@ class GensimCommand(McsSubcommandABC):
 
         parser.add_argument('-D', '--desc', type=str, default='',
                             help='A brief (<= 256 char) description the simulation.')
+
+        parser.add_argument('-e', '--exportVars', default='',
+                            help='Export variable and distribution info in a tab-delimited file with the given name and exit.')
 
         parser.add_argument('-g', '--groupName', default='',
                             help='''The name of a scenario group to process.''')
@@ -403,7 +468,7 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-s', '--simId', type=int, default=1,
                             help='The id of the simulation. Default is 1.')
 
-        parser.add_argument('-t', '--trials', type=int, required=True,
+        parser.add_argument('-t', '--trials', type=int, default=-1,
                             help='''The number of trials to create for this simulation (REQUIRED). If a
                             value of 0 is given, scenario setup is performed, scenario names are added to 
                             the database, and meta-data is copied, but new trial data is not generated.''')

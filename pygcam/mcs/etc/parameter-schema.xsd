@@ -7,6 +7,7 @@
     <xs:element name="WriteFunc" type="PythonFuncRef"/>
     <xs:element name="Query" type="xs:string"/>
     <xs:element name="DataFile" type="xs:string"/>
+    <xs:element name="Description" type="xs:string"/>
 
     <!-- Attributes types -->
     <xs:simpleType name="ApplyType">
@@ -43,7 +44,6 @@
             <xs:pattern value="(\d*\.\d+|\d+\.\d*|\d+)( *, *((\d*\.\d+)|(\d+\.\d*)|(\d+)))*"/>
         </xs:restriction>
     </xs:simpleType>
-
 
     <!-- Complex elements -->
     <xs:element name='comment'>
@@ -197,6 +197,7 @@
                 <xs:element ref="Correlation" minOccurs="0"/>
                 <xs:element ref="Query" minOccurs="0"/>        <!-- required if not a trialFunc in apply="x.y" -->
                 <xs:element ref="comment" minOccurs="0"/>
+                <xs:element ref="Description" minOccurs="0"/>
             </xs:all>
             <xs:attribute name="name" use="required" type="xs:NCName"/>
             <xs:attribute name="mode" type="ModeType" default="shared"/>

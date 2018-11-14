@@ -29,6 +29,7 @@ INFILE_ELT_NAME      = 'InputFile'
 PARAMLIST_ELT_NAME   = 'ParameterList'
 PARAM_ELT_NAME       = 'Parameter'
 QUERY_ELT_NAME       = 'Query'
+DESC_ELT_NAME        = 'Description'
 CORRELATION_ELT_NAME = 'Correlation'
 WITH_ELT_NAME        = 'With'
 DISTRO_ELT_NAME      = 'Distribution'
@@ -531,9 +532,10 @@ class XMLParameter(XMLWrapper):
         self.query   = None  # XMLQuery instance
         self.dataSrc = None  # A subclass of XMLTrialData instance
         self.parent  = None
+        self.desc    = ''    # documentation
 
         children = [elt for elt in element.getchildren() if elt.tag is not ET.Comment]
-        maxChildren = 3
+        maxChildren = 4
         assert len(children) <= maxChildren, \
             "<Parameter> cannot have more than %d children. (The XMLSchema is broken.)" % maxChildren
 
@@ -545,6 +547,9 @@ class XMLParameter(XMLWrapper):
 
             elif tag == CORRELATION_ELT_NAME:
                 XMLCorrelation.createCorrelations(elt, self)
+
+            elif tag == DESC_ELT_NAME:
+                self.desc = elt.text
 
             # XMLSchema ensures that the only other tag is Distribution
             # TBD: test for DISTRIBUTION_ELT_NAME explicitly
