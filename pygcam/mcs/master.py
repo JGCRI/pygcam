@@ -628,6 +628,7 @@ class Master(object):
                                 result = view.map_async(worker.runTrial, [context], [argDict])
                             else:
                                 # Create a dependency on the baseline that we've already submitted
+                                # TBD: looks like this should work ok if after=None...
                                 with view.temp_flags(after=baselineAR):
                                     result = view.map_async(worker.runTrial, [context], [argDict])
 
@@ -662,11 +663,6 @@ def getTrialsToRedo(db, simId, scenario, statuses):
     return trialNums
 
 def listTrialsToRedo(db, simId, scenarios, statuses):
-    # 'missing' is not a real status found in the database
-    missing = 'missing' in statuses
-    if missing:
-        statuses.remove('missing')
-
     for scenario in scenarios:
         trialNums = getTrialsToRedo(db, simId, scenario, statuses)
 
