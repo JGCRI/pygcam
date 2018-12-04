@@ -299,19 +299,23 @@ def extractResult(context, scenario, outputDef, type):
     csvPath = outputDef.csvPathname(scenario, outputDir=outputDir, baseline=baseline, type=type)
 
     queryResult = getCachedFile(csvPath)
+    _logger.debug("queryResult:\n%s", queryResult.df)
+ 
     paramName   = outputDef.name
     whereClause = outputDef.whereClause
+    _logger.debug("whereClause: %s", whereClause)
 
     # apply (in)equality constraints
     selected = queryResult.df.query(whereClause) if whereClause else queryResult.df
 
     # apply string constraints
     selected = outputDef.stringMatch(selected)
+    _logger.debug("Selected:\n%s", selected)
 
     count = selected.shape[0]
 
     if count == 0:
-        raise PygcamMcsUserError('Query matched no results')
+        raise PygcamMcsUserError('Query for "{}" matched no results'.format(outputDef.name))
 
     if 'region' in selected.columns:
         firstRegion = selected.region.iloc[0]
