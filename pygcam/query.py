@@ -98,7 +98,7 @@ def interpolateYears(df, startYear=0, inplace=False):
     yearCols = [str(y) for y in years]       # convert back to strings, now sorted
 
     nonYearCols = list(set(df.columns) - set(yearCols))
-    result = df.reindex_axis(nonYearCols + yearCols, axis=1, copy=(not inplace))
+    result = df.reindex(nonYearCols + yearCols, axis=1, copy=(not inplace))
     return result
 
 _csvCache = {}

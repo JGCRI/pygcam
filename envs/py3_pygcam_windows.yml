@@ -44,7 +44,7 @@ dependencies:
   - lxml=4.2.5
   - markupsafe=1.0
   - matplotlib=2.2.3
-  - mkl=2019.0=118
+  - mkl=2018.0.3
   - mkl-service=1.1.2
   - mkl_fft=1.0.4
   - mkl_random=1.0.1
