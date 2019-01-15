@@ -1,36 +1,21 @@
 #
 # Goal is eventually to translate a file like ../etc/exampleRES.xml into standard GCAM XML.
 #
+from copy import deepcopy
 import pandas as pd
 from lxml import etree as ET
+from lxml.etree import Element, SubElement
 
-# Clean up an xml string
-def prettify(xml, xml_declaration=True, encoding='utf-8'):
-    elt = ET.XML(xml)
-    xml = ET.tostring(elt, xml_declaration=xml_declaration, encoding=encoding, pretty_print=True)
-    return xml
+# Sadly, we must re-parse the XML to get the formatting right.
+def write_xml(tree, filename):
+    from io import StringIO
 
-def cat(str_list):
-    return '\n'.join(str_list)
+    parser = ET.XMLParser(remove_blank_text=True)
+    xml = ET.tostring(tree.getroot())
+    file_obj = StringIO(xml.decode('utf-8'))
+    tree = ET.parse(file_obj, parser)
 
-electricity_producers = [
-    #   sector      subsector     technology
-    #   ------      ---------     ----------
-    ('electricity', 'nuclear',    'Gen_II_LWR'),
-    ('electricity', 'nuclear',    'GEN_III'),
-    ('electricity', 'geothermal', 'geothermal'),
-    ('electricity', 'solar',      'PV'),
-    ('electricity', 'solar',      'CSP'),
-    ('electricity', 'solar',      'PV_storage'),
-    ('electricity', 'solar',      'CSP_storage'),
-    ('electricity', 'wind',       'wind'),
-    ('electricity', 'wind',       'wind_storage'),
-    ('electricity', 'biomass',    'biomass (conv)'),
-    ('electricity', 'biomass',    'biomass (conv CCS)'),
-    ('electricity', 'biomass',    'biomass (IGCC)'),
-    ('electricity', 'biomass',    'biomass (IGCC CCS)'),
-    ('elect_td_bld','rooftop_pv', 'rooftop_pv')
-]
+    tree.write(filename, pretty_print=True, xml_declaration=True)
 
 # Surface level (tag and attribute) comparison of elements
 def match_element(elt1, elt2):
@@ -52,9 +37,6 @@ def match_element(elt1, elt2):
 
     return True
 
-#
-# TBD: Write a function to merge XML trees following GCAM's rules
-#
 def merge_element(parent, new_elt):
     """
     Add an element if none of parent's children has the same tag and attributes
@@ -63,52 +45,42 @@ def merge_element(parent, new_elt):
     """
     for sibling in parent:
         if match_element(new_elt, sibling):
-            for child in new_elt:
-                merge_element(sibling, child)
+            merge_elements(sibling, new_elt.getchildren())
             return
 
-    parent.append(new_elt)
+    # if it wasn't merged, append it to parent
+    parent.append(deepcopy(new_elt))
 
-def techs_dataframe(tups=electricity_producers):
-    return pd.DataFrame(data=tups, columns=['sector', 'subsector', 'technology'])
-
-def query_techs(df, sectors=None, subsectors=None, techs=None):
-    subqueries = []
-
-    if sectors:
-        subqueries.append("sector in {}".format(sectors))
-    if subsectors:
-        subqueries.append("subsector in {}".format(subsectors))
-    if techs:
-        subqueries.append("technology in {}".format(techs))
-
-    if len(subqueries) == 0:
-        return None
-
-    query = ' or '.join(subqueries)
-    rows = df.query(query)
-    return rows
+def merge_elements(parent, elt_list):
+    """
+    For each element in elt_list, add the append to parent if none of parent's children has the
+    same tag and attributes as element. If a match is found, merge element's children with those
+    of the matching element, recursively.
+    """
+    for elt in elt_list:
+        merge_element(parent, elt)
 
 #
 # Policy setup
 #
-def create_policy_region(region, commodity, market, consumer_xml, producer_xml, startYear=2015):
-    template = '''    
-<region name="{region}">
-  <policy-portfolio-standard name="{commodity}">
-    <market>{market}</market>
-    <policyType>RES</policyType>
-    <constraint fillout="1" year="{startYear}">0</constraint>
-    <min-price year="{startYear}" fillout="1">-1000</min-price>
-  </policy-portfolio-standard>
-  {consumer_xml}
-  {producer_xml}
-</region>'''
+def create_policy_region(region, commodity, market, consumer_elts, producer_elts, startYear=2015):
+    policy_template =  """
+    <policy-portfolio-standard name="{commodity}">
+      <market>{market}</market>
+      <policyType>RES</policyType>
+      <constraint fillout="1" year="{startYear}">0</constraint>
+      <min-price  fillout="1" year="{startYear}">-1000</min-price>
+    </policy-portfolio-standard>"""
 
-    xml = template.format(region=region, commodity=commodity, market=market,
-                          consumer_xml=consumer_xml, producer_xml=producer_xml,
-                          startYear=startYear)
-    return xml
+    policy_elt = ET.XML(policy_template.format(commodity=commodity, market=market,
+                                               startYear=startYear))
+
+    region_elt = Element('region', name=region)
+    region_elt.append(policy_elt)
+
+    region_elt.extend(consumer_elts)
+    merge_elements(region_elt, producer_elts)
+    return region_elt
 
 #
 # REC demand
@@ -124,51 +96,33 @@ def create_demand_period(year, commodity, coefficient, priceUnitConv=0):
 </period>'''
 
     xml = template.format(year=year, commodity=commodity,
-                              coefficient=coefficient, priceUnitConv=priceUnitConv)
-    return xml
+                          coefficient=coefficient, priceUnitConv=priceUnitConv)
+    elt = ET.XML(xml)
+    return elt
 
-# TBD: it won't always be the global tech DB, i.e., stub-technology we want to affect
-def create_demand_tech(tech, period_xml):
-    template = '''
-<stub-technology name="{technology}">
-  {period_xml}
-</subsector>'''
+def create_elt(tag, name, child_list):
+    elt = Element(tag, name=name)
+    elt.extend(deepcopy(child_list))    # since we reuse redundant elements
+    return elt
 
-    xml = template.format(technology=tech, period_xml=period_xml)
-    return xml
+# TBD: unclear when to use technology vs stub-technology
+def create_stub_tech(tech, period_list):
+    return create_elt('stub-technology', tech, period_list)
 
-def create_demand_subsector(subsector, tech_xml):
-    template = '''
-<subsector name="{subsector}">
-  {tech_xml}
-</subsector>'''
+def create_tech(tech, period_list):
+    return create_elt('technology', tech, period_list)
 
-    xml = template.format(subsector=subsector, tech_xml=tech_xml)
-    return xml
+def create_subsector(subsector, tech_list):
+    return create_elt('subsector', subsector, tech_list)
 
-def create_demand_sector(sector, subsector_xml):
-    template = '''  
-<supplysector name="{sector}">
-  {subsector_xml}
-</supplysector>'''
-
-    xml = template.format(sector=sector, subsector_xml=subsector_xml)
-    return xml
-
-# def create_ownuse_demand_sector(periods):
-#     name = 'electricity_net_ownuse'
-#     xml = create_demand_sector(name, name, name, periods)
-#     return xml
-#
-# def create_rooftop_PV_demand_sector(periods):
-#     xml = create_demand_sector('elect_td_bld', 'rooftop_pv', 'rooftop_pv', periods)
-#     return xml
+def create_sector(sector, subsector_list):
+    return create_elt('supplysector', sector, subsector_list)
 
 #
 # REC supply
 #
 
-def create_supply_period(year, commodity, outputRatio=1, pMultiplier=1):
+def create_supply_period(year, commodity, outputRatio, pMultiplier):
     template = '''
 <period year="{year}">
   <res-secondary-output name="{commodity}">
@@ -179,47 +133,21 @@ def create_supply_period(year, commodity, outputRatio=1, pMultiplier=1):
 
     xml = template.format(year=year, commodity=commodity,
                           outputRatio=outputRatio, pMultiplier=pMultiplier)
-    return xml
+    elt = ET.XML(xml)
+    return elt
 
-def create_supply_tech(tech, period_xml):
-    template = '''
-<technology name="{technology}">
-  {period_xml}
-</technology>'''
+def create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1):
+    years = [pair[0] for pair in targets]
+    sector_list = []
 
-    xml = template.format(technology=tech, period_xml=period_xml)
-    return xml
+    for sector in df.sector.unique():
+        sub_df = df[df.sector == sector]
 
-def create_supply_subsector(subsector, tech_xml):
-    template = '''
-<subsector name="{subsector}">
-  {tech_xml}
-</subsector>'''
-
-    xml = template.format(subsector=subsector, tech_xml=tech_xml)
-    return xml
-
-def create_supply_sector(sector, subsector_xml):
-    template = '''
-<supplysector name="{sector}">
-  {subsector_xml}
-</supplysector>'''
-
-    xml = template.format(sector=sector, subsector_xml=subsector_xml)
-    return xml
-
-def create_supply_sectors(df, commodity, years, sectors=None, subsectors=None, techs=None,
-                         outputRatio=1, pMultiplier=1):
-    rows = query_techs(df, sectors=sectors, subsectors=subsectors, techs=techs)
-
-    sect_list = []
-    for sector in rows.sector.unique():
-        sub_rows = query_techs(df, sectors=[sector])
         sub_list = []
-        for subsector in sub_rows.subsector.unique():
-            tech_rows = query_techs(df, sectors=[sector], subsectors=[subsector])
+        for subsector in sub_df.subsector.unique():
+            tech_df = sub_df[sub_df.subsector == subsector]
             tech_list = []
-            for tech in tech_rows.technology.unique():
+            for tech in tech_df.technology.unique():
                 period_list = []
                 for year in years:
                     period = create_supply_period(year, commodity,
@@ -227,95 +155,106 @@ def create_supply_sectors(df, commodity, years, sectors=None, subsectors=None, t
                                                   pMultiplier=pMultiplier)
                     period_list.append(period)
 
-                periods_xml = cat(period_list)
-                tech_list.append(create_supply_tech(tech, periods_xml))
+                tech_list.append(create_tech(tech, period_list))
 
-            tech_xml = cat(tech_list)
-            sub_list.append(create_supply_subsector(subsector, tech_xml))
+            sub_list.append(create_subsector(subsector, tech_list))
 
-        sub_xml = cat(sub_list)
-        sect_list.append(create_supply_sector(sector, sub_xml))
+        sector_list.append(create_sector(sector, sub_list))
 
-    xml = cat(sect_list)
-    return xml
+    return sector_list
 
-# Defines the sectors/subsectors/techs that consume RECs
-def create_REC_demand(df, market, commodity, targets, coefficient=1):
-    period_list = [create_demand_period(year, commodity, coefficient) for year, _ in targets]
+def create_demand_sectors(df, commodity, targets, priceUnitConv=0):
+    sector_list = []
 
-    # this makes sense if we attach to techs directly, rather than to net_ownuse. Allows some tech exclusions, too.
-    xml_list = [create_demand_sector(row.sector, row.subsector, row.technology, period_list) for idx, row in df.iterrows()]
-    xml = cat(xml_list)
-    return xml
+    for sector in df.sector.unique():
+        sub_df = df[df.sector == sector]
 
-# Defines the sectors/subsectors/techs that produce RECs
-def create_REC_supply(df, market, commodity, targets, outputRatio=1, pMultiplier=1):
-    period_list = [create_supply_period(year, commodity, coefficient) for year, fraction in targets]
+        sub_list = []
+        for subsector in sub_df.subsector.unique():
+            tech_df = sub_df[sub_df.subsector == subsector]
+            tech_list = []
+            for tech in tech_df.technology.unique():
+                period_list = []
+                for year, coefficient in targets:
+                    period = create_demand_period(year, commodity, coefficient,
+                                                  priceUnitConv=priceUnitConv)
+                    period_list.append(period)
 
-    create_supply_period(year, commodity, outputRatio=1, pMultiplier=1)
+                tech_list.append(create_stub_tech(tech, period_list))
 
-    xml_list = [create_supply_sector(row.sector, row.subsector, row.technology, period_list) for idx, row in df.iterrows()]
-    xml = cat(xml_list)
-    return xml
+            sub_list.append(create_subsector(subsector, tech_list))
 
-def create_RES(regions, commodity, market, targets, startYear=2015,
-               sectors=None, subsectors=None, techs=None,
-               outputRatio=1, pMultiplier=1, filename=None):
+        sector_list.append(create_sector(sector, sub_list))
 
-    template = '''
-<scenario>
-  <world>
-    {region_xml}
-  </world>
-</scenario>
-'''
-    # TBD: maybe start with ownuse version and work up to each tech individually
-    consumer_tups = [
-        ('electricty_net_ownuse', 'electricty_net_ownuse', 'electricty_net_ownuse'),
-        ('elect_td_bld',          'rooftop_pv',            'rooftop_pv')
-    ]
+    return sector_list
 
-    consumer_df = techs_dataframe(tups=consumer_tups)
-    consumer_xml = create_REC_demand(consumer_df, market, commodity, targets,
-                                     outputRatio=outputRatio, pMultiplier=pMultiplier)
+def create_RES(tech_df, regions, commodity, market, targets, filename=None,
+               outputRatio=1, pMultiplier=1, priceUnitConv=0):
 
-    tech_df = techs_dataframe() # TBD: pass in df with constrained sectors/subsects/techs
-    producer_df = query_techs(tech_df, sectors=sectors, subsectors=subsectors, techs=techs)
-    producer_xml = create_REC_supply(producer_df, market, commodity, targets)
+    startYear = min([int(pair[0]) for pair in targets])
 
-    regionList = [create_policy_region(region, commodity, market,
-                                       consumer_xml, producer_xml,
-                                       startYear=startYear) for region in regions]
+    consumer_df = tech_df.query('consumer == 1')
+    consumer_elts = create_demand_sectors(consumer_df, commodity, targets,
+                                          priceUnitConv=priceUnitConv)
 
-    xml = prettify(template.format(region_xml=cat(regionList)))
+    producer_df = tech_df.query('producer == 1')
+    producer_elts = create_supply_sectors(producer_df, commodity, targets,
+                                          outputRatio=outputRatio, pMultiplier=pMultiplier)
 
+    region_list = [create_policy_region(region, commodity, market,
+                                        deepcopy(consumer_elts), deepcopy(producer_elts),
+                                        startYear=startYear) for region in regions]
+    scenario = Element('scenario')
+    world = SubElement(scenario, 'world')
+    merge_elements(world, region_list)
+
+    tree = ET.ElementTree(scenario)
     if filename:
-        with open(filename, "w") as f:
-            f.write(xml)
-
-    return xml
-
-
-def print_xml(element):
-    print(ET.tostring(element, pretty_print=True).decode('UTF-8'))
+        write_xml(tree, filename)
 
 if __name__ == '__main__':
-    # scenario = ET.Element("scenario")
-    # world = ET.SubElement(scenario, "world")
-    # region = ET.SubElement(world, "region", name="USA")
-    # print_xml(scenario)
+    tech_tups = [
+        # Adapted from gcam-v5.1.2/input/gcamdata/inst/extdata/energy/A23.globaltech_capacity_factor.csv
+        # except for the REC producer/consumer columns, which define the techs the policy applies to.
+        #
+        #                                                                REC        REC
+        # sector         subsector          technology                 producer   consumer
+        # ============== =============      ====================       ========   ========
+        ('electricity',  'coal',            'coal (conv pul)',            0,         1),
+        ('electricity',  'coal',            'coal (conv pul CCS)',        0,         1),
+        ('electricity',  'coal',            'coal (IGCC)',                0,         1),
+        ('electricity',  'coal',            'coal (IGCC CCS)',            0,         1),
+        ('electricity',  'gas',             'gas (steam/CT)',             0,         1),
+        ('electricity',  'gas',             'gas (CC)',                   0,         1),
+        ('electricity',  'gas',             'gas (CC CCS)',               0,         1),
+        ('electricity',  'refined liquids', 'refined liquids (steam/CT)', 0,         1),
+        ('electricity',  'refined liquids', 'refined liquids (CC)',       0,         1),
+        ('electricity',  'refined liquids', 'refined liquids (CC CCS)',   0,         1),
+        ('electricity',  'nuclear',         'Gen_II_LWR',                 0,         1),
+    #   ('electricity',  'nuclear',         'GEN_III',                    0,         1),    # doesn't exist in reference case?
+        ('electricity',  'geothermal',      'geothermal',                 0,         1),
+        ('electricity',  'biomass',         'biomass (conv)',             0,         1),
+        ('electricity',  'biomass',         'biomass (conv CCS)',         0,         1),
+        ('electricity',  'biomass',         'biomass (IGCC)',             0,         1),
+        ('electricity',  'biomass',         'biomass (IGCC CCS)',         0,         1),
 
-    regions    = ('USA', 'Canada')
-    market     = 'NorthAmerica'
-    commodity  = 'REC'
-    targets    = ((2020, 0.15), (2025, 0.20), (2030, 0.25))
-    subsectors = ('solar', 'rooftop_pv')
+        ('electricity',  'solar',           'PV',                         1,         1),
+        ('electricity',  'solar',           'CSP',                        1,         1),
+        ('electricity',  'solar',           'PV_storage',                 1,         1),
+        ('electricity',  'solar',           'CSP_storage',                1,         1),
+        ('electricity',  'wind',            'wind',                       1,         1),
+        ('electricity',  'wind',            'wind_storage',               1,         1),
+        ('elect_td_bld', 'rooftop_pv',      'rooftop_pv',                 1,         1)
+    ]
 
-    df = techs_dataframe()
-    years = [pair[0] for pair in targets]
-    xml = create_supply_sectors(df, commodity, years, subsectors=subsectors)
-    print(xml)
+    tech_df = pd.DataFrame(data=tech_tups,
+                           columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
 
-    xml = create_RES(regions, commodity, market, targets, subsectors=subsectors)
-    print(xml)
+    regions    = ('USA',) # 'Canada')
+    market     = 'USA'
+    commodity  = 'WindSolarREC'
+    targets    = ((2020, 0.15), (2025, 0.20), (2030, 0.25), (2035, 0.25),
+                  (2040, 0.25), (2045, 0.25), (2050, 0.25))
 
+
+    create_RES(tech_df, regions, commodity, market, targets, filename="/Users/rjp/bitbucket/gcam_res/xmlsrc/test/generated_res.xml")
