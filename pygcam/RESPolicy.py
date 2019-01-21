@@ -1,18 +1,17 @@
 #
 # Goal is eventually to translate a file like ../etc/exampleRES.xml into standard GCAM XML.
 #
-from copy import deepcopy
+from copy import copy, deepcopy
 import pandas as pd
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
 
 # We deal only with one historical year (2010) and all future years
-LAST_HISTORICAL = 2010
-END_YEAR = 2100
 TIMESTEP = 5
-GCAM_YEARS = [year for year in range(LAST_HISTORICAL, END_YEAR+1, TIMESTEP)]
-
-SMALL_NUMBER = 1E-6
+LAST_HISTORICAL_YEAR = 2010
+FIRST_MODELED_YEAR = LAST_HISTORICAL_YEAR + TIMESTEP
+END_YEAR = 2100
+GCAM_YEARS = [1975, 1990, 2005] + [year for year in range(LAST_HISTORICAL_YEAR, END_YEAR + 1, TIMESTEP)]
 
 # Oddly, we must re-parse the XML to get the formatting right.
 def write_xml(tree, filename):
@@ -82,7 +81,7 @@ def SubElementWithText(parent, tag, text, **kwargs):
 # Policy setup
 #
 def create_policy_region(region, commodity, market, consumer_elts, producer_elts,
-                         minPrice=None,  startYear=2015):
+                         minPrice=0, startYear=FIRST_MODELED_YEAR):
     policy_template =  """
     <policy-portfolio-standard name="{commodity}">
       <market>{market}</market>
@@ -91,9 +90,9 @@ def create_policy_region(region, commodity, market, consumer_elts, producer_elts
     </policy-portfolio-standard>"""
 
     policy_elt = ET.XML(policy_template.format(commodity=commodity, market=market,
-                                               minPrice=minPrice, startYear=startYear))
-
-    if minPrice is not None:
+                                               minPrice=minPrice,
+                                               startYear=startYear))
+    if minPrice:
         SubElementWithText(policy_elt, 'min-price', minPrice, year=str(startYear))
 
     # Disable markets for the RECs prior to start year
@@ -109,24 +108,6 @@ def create_policy_region(region, commodity, market, consumer_elts, producer_elts
     merge_elements(region_elt, producer_elts)
 
     return region_elt
-
-#
-# REC demand
-#
-
-def create_demand_period(year, commodity, coefficient, priceUnitConv=0):
-    template = '''
-<period year="{year}">
-  <minicam-energy-input name="{commodity}">
-    <coefficient>{coefficient}</coefficient>
-    <price-unit-conversion>{priceUnitConv}</price-unit-conversion>
-  </minicam-energy-input>
-</period>'''
-
-    xml = template.format(year=year, commodity=commodity,
-                          coefficient=coefficient, priceUnitConv=priceUnitConv)
-    elt = ET.XML(xml)
-    return elt
 
 def create_elt(tag, name, child_list):
     elt = Element(tag, name=name)
@@ -162,7 +143,7 @@ def create_supply_period(year, commodity, outputRatio, pMultiplier):
     elt = ET.XML(xml)
     return elt
 
-def   create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1):
+def create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1):
     sector_list = []
 
     for sector in df.sector.unique():
@@ -176,7 +157,7 @@ def   create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1
                 period_list = []
                 for year, coefficient in targets:
                     period = create_supply_period(year, commodity,
-                                                  outputRatio=outputRatio if coefficient else SMALL_NUMBER,
+                                                  outputRatio=outputRatio,
                                                   pMultiplier=pMultiplier)
                     period_list.append(period)
 
@@ -188,8 +169,46 @@ def   create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1
 
     return sector_list
 
+#
+# REC demand
+#
+def create_adjusted_coefficients(targets):
+    """
+    Create a dictionary of "adjusted-coefficient" elements (as XML text) for the given targets,
+    where the key is the year and the value is the text for all elements starting at that year.
+    """
+    template = '<adjusted-coefficient year="{year}">{coefficient}</adjusted-coefficient>\n'
+
+    # reverse a copy of the targets
+    targets = sorted(targets, key=lambda tup: tup[0], reverse=True)  # sort by year, descending
+
+    xml_dict = {}
+    xml = ''
+
+    for year, coefficient in targets:
+        xml = template.format(year=year, coefficient=coefficient) + xml
+        xml_dict[year] = xml
+
+    return xml_dict
+
+def create_demand_period(year, commodity, coefficients, priceUnitConv=0):
+    template = '''
+<period year="{year}">
+  <minicam-energy-input name="{commodity}">
+    {coefficients}
+    <price-unit-conversion>{priceUnitConv}</price-unit-conversion>
+  </minicam-energy-input>
+</period>'''
+
+    xml = template.format(year=year, commodity=commodity,
+                          coefficients=coefficients, priceUnitConv=priceUnitConv)
+    elt = ET.XML(xml)
+    return elt
+
 def create_demand_sectors(df, commodity, targets, priceUnitConv=0):
     sector_list = []
+
+    coef_xml_dict = create_adjusted_coefficients(targets)
 
     for sector in df.sector.unique():
         sub_df = df[df.sector == sector]
@@ -201,7 +220,7 @@ def create_demand_sectors(df, commodity, targets, priceUnitConv=0):
             for tech in tech_df.technology.unique():
                 period_list = []
                 for year, coefficient in targets:
-                    period = create_demand_period(year, commodity, coefficient or SMALL_NUMBER,
+                    period = create_demand_period(year, commodity, coef_xml_dict[year],
                                                   priceUnitConv=priceUnitConv)
                     period_list.append(period)
 
@@ -213,20 +232,24 @@ def create_demand_sectors(df, commodity, targets, priceUnitConv=0):
 
     return sector_list
 
-def firstYear(targets):
+def firstTarget(targets):
     """
-    Return the first year in targets (a list of tuples of (year, coefficient)
-    for which the coefficient is > 0.
+    Return the first (year, coefficient) tuple in targets with coefficient != 0.
     """
-    return min([int(pair[0]) for pair in targets if pair[1] > 0])
+    targets.sort(key=lambda tup: tup[0])    # sort by year
+
+    for year, coefficient in targets:
+        if coefficient: # ignore zeros
+            return (year, coefficient)
 
 def create_RES(tech_df, regions, commodity, market, targets, filename=None,
                outputRatio=1, pMultiplier=1, priceUnitConv=0, minPrice=None):
 
-    startYear = firstYear(targets)
+    startYear, startTarget = firstTarget(targets)
 
-    # Create "targets" with zero coefficient in years prior to start year so market exists
-    prepolicy = [(year, 0) for year in GCAM_YEARS if year < startYear]
+    # Create "targets" with initial policy target in years prior to start year
+    # since older plants will retain this as their definition (until GCAM is patched)
+    prepolicy = [(year, startTarget) for year in GCAM_YEARS if year < startYear]
 
     targets = prepolicy + targets
 
@@ -258,6 +281,7 @@ def get_electricity_techs():
 
     tech_dict = {}
 
+    # TBD: change this to grab elec_*, electricity, and elect_td_bld
     locations = tree.xpath('//global-technology-database/location-info[starts-with(@sector-name, "elec_")]')
 
     for location in locations:
@@ -267,74 +291,67 @@ def get_electricity_techs():
 
         tech_dict[(sector, subsector)] = techs
 
+    # TBD: return a DF?
+    # (sector, subsector, tech, 0, 1)   # default: all consume nothing produces?
+    # TBD: or just return techs and add producer/consumer cols in caller
+    # tech_df = pd.DataFrame(data=tech_tups,
+    #                        columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
     return tech_dict
 
+def new_function(consumers, producers):
+    """
+
+    :param consumers: (list) tuples of REC consuming technologies expressed
+      as (sector, subsector, tech), where tech or subsector and tech can be
+      None => use everything in the given sector or subsector.
+    :param producers: (list) analogous to `consumers` for REC producing techs.
+    :return: (pandas.DataFrame) all producing and consuming technologies, with
+      columns: [sector, subsector, tech, producer, consumer] where the producer
+      and consumer columns are 1 where the tech is in the given category, else 0.
+    """
+
 if __name__ == '__main__':
+    # TBD: change this to return all electricity techs,
+    # TBD: convert to DF, then amend it to flip producer flag.
     tech_dict = get_electricity_techs()
 
     # technologies that consume RE certificates
     consumer_techs = []
 
     # These are just the techs with cooling technology variants
-    for pair, techs in tech_dict.items():
-        sector = pair[0]
-        subsector = pair[1]
-
+    for (sector, subsector), techs in tech_dict.items():
         for tech in techs:
-            isProducer = tech.startswith('CSP') # has cooling so it's in the consumer list
+            # handle special case of solar with cooling sub-techs
+            isProducer = tech.startswith('CSP')
             consumer_techs.append((sector, subsector, tech, isProducer, 1))
 
-    consumer_techs.append(('electricity', 'hydro', 'hydro', 0, 1))  # might be a credit producer in some policies
+    # Hydro is not treated as a credit producer in the current example
+    consumer_techs.append(('electricity', 'hydro', 'hydro', 0, 1))
 
-    consumer_tups_old = [
-        # Adapted from gcam-v5.1.2/input/gcamdata/inst/extdata/energy/A23.globaltech_capacity_factor.csv
-        # except for the REC producer/consumer columns, which define the techs the policy applies to.
-        #
-        #                                                                REC        REC
-        # sector         subsector          technology                 producer   consumer
-        # ============== =============      ====================       ========   ========
-        ('electricity',  'coal',            'coal (conv pul)',            0,         1),
-        ('electricity',  'coal',            'coal (conv pul CCS)',        0,         1),
-        ('electricity',  'coal',            'coal (IGCC)',                0,         1),
-        ('electricity',  'coal',            'coal (IGCC CCS)',            0,         1),
-        ('electricity',  'gas',             'gas (steam/CT)',             0,         1),
-        ('electricity',  'gas',             'gas (CC)',                   0,         1),
-        ('electricity',  'gas',             'gas (CC CCS)',               0,         1),
-        ('electricity',  'refined liquids', 'refined liquids (steam/CT)', 0,         1),
-        ('electricity',  'refined liquids', 'refined liquids (CC)',       0,         1),
-        ('electricity',  'refined liquids', 'refined liquids (CC CCS)',   0,         1),
-        ('electricity',  'nuclear',         'Gen_II_LWR',                 0,         1),
-    #   ('electricity',  'nuclear',         'GEN_III',                    0,         1),    # doesn't exist in reference case?
-        ('electricity',  'geothermal',      'geothermal',                 0,         1),
-        ('electricity',  'biomass',         'biomass (conv)',             0,         1),
-        ('electricity',  'biomass',         'biomass (conv CCS)',         0,         1),
-        ('electricity',  'biomass',         'biomass (IGCC)',             0,         1),
-        ('electricity',  'biomass',         'biomass (IGCC CCS)',         0,         1),
-
-        # ('electricity_net_ownuse', 'electricity_net_ownuse', 'electricity_net_ownuse', 0, 1)
-    ]
-
-    # Technologies that produce RE certificates
+    # Technologies that produce RE certificates. CSP has cooling, so it's handled above.
     producer_techs = [
         ('electricity',  'solar',      'PV',            1, 1),
         ('electricity',  'solar',      'PV_storage',    1, 1),
         ('electricity',  'wind',       'wind',          1, 1),
         ('electricity',  'wind',       'wind_storage',  1, 1),
         ('elect_td_bld', 'rooftop_pv', 'rooftop_pv',    1, 1),
-        # CSP has cooling, so we don't set it here
     ]
 
-    tech_tups = consumer_techs + producer_techs
-
-    tech_df = pd.DataFrame(data=tech_tups,
+    tech_df = pd.DataFrame(data=consumer_techs + producer_techs,
                            columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
 
     regions    = ('USA',) # 'Canada')  # works for multiple regions
     market     = 'USA'
     commodity  = 'WindSolarREC'
 
-    targets = [(2020, 0.10), (2025, 0.15), (2030, 0.21), (2035, 0.28), (2040, 0.35), (2045, 0.45), (2050, 0.55)]
+    # targets = [(2020, 0.20), (2025, 0.25), (2030, 0.30), (2035, 0.375), (2040, 0.45),
+    #            (2045, 0.55), (2050, 0.65), (2055, 0.75), (2060, 0.85)]
 
-    create_RES(tech_df, regions, commodity, market, targets,
-               # minPrice=-1000,
+    # targets = [(2020, 0.20), (2025, 0.30), (2030, 0.40), (2035, 0.50), (2040, 0.60),
+    #            (2045, 0.70), (2050, 0.80), (2055, 0.90), (2060, 0.975)]
+
+    targets = [(2020, 0.20), (2025, 0.325), (2030, 0.475), (2035, 0.625), (2040, 0.75),
+               (2045, 0.85), (2050, 0.95),  (2055, 0.965), (2060, 0.98)]
+
+    create_RES(tech_df, regions, commodity, market, targets, # minPrice=-1000,
                filename="/Users/rjp/bitbucket/gcam_res/xmlsrc/test/generated_res.xml")
