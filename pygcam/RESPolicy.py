@@ -273,30 +273,28 @@ def create_RES(tech_df, regions, commodity, market, targets, filename=None,
         print("Writing", filename)
         write_xml(tree, filename)
 
-def get_electricity_techs():
+def get_electricity_tech_df():
     from pygcam.config import getParam, pathjoin
     from pygcam.XMLFile import XMLFile
     electricity_xml = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcamdata', 'xml', 'electricity_water.xml')
     tree = XMLFile(electricity_xml).getTree()
 
-    tech_dict = {}
-
+    tech_tups = []
     # TBD: change this to grab elec_*, electricity, and elect_td_bld
-    locations = tree.xpath('//global-technology-database/location-info[starts-with(@sector-name, "elec_")]')
+    locations = tree.xpath('//global-technology-database/location-info[@sector-name="electricity" or @sector-name="elect_td_bld" or starts-with(@sector-name, "elec_")]')
 
     for location in locations:
         sector    = location.get('sector-name')
         subsector = location.get('subsector-name')
         techs     = location.xpath('./technology/@name') + location.xpath('./intermittent-technology/@name')
 
-        tech_dict[(sector, subsector)] = techs
+        # ignore pass-through-technology nodes
+        for tech in techs:
+            tech_tups.append((sector, subsector, tech, 0, 1))
 
-    # TBD: return a DF?
-    # (sector, subsector, tech, 0, 1)   # default: all consume nothing produces?
-    # TBD: or just return techs and add producer/consumer cols in caller
-    # tech_df = pd.DataFrame(data=tech_tups,
-    #                        columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
-    return tech_dict
+    tech_df = pd.DataFrame(data=tech_tups,
+                           columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
+    return tech_df
 
 def new_function(consumers, producers):
     """
@@ -311,34 +309,19 @@ def new_function(consumers, producers):
     """
 
 if __name__ == '__main__':
-    # TBD: change this to return all electricity techs,
-    # TBD: convert to DF, then amend it to flip producer flag.
-    tech_dict = get_electricity_techs()
+    # By default, all electricity techns consume RE certificates
+    tech_df = get_electricity_tech_df()
 
-    # technologies that consume RE certificates
-    consumer_techs = []
-
-    # These are just the techs with cooling technology variants
-    for (sector, subsector), techs in tech_dict.items():
-        for tech in techs:
-            # handle special case of solar with cooling sub-techs
-            isProducer = tech.startswith('CSP')
-            consumer_techs.append((sector, subsector, tech, isProducer, 1))
-
-    # Hydro is not treated as a credit producer in the current example
-    consumer_techs.append(('electricity', 'hydro', 'hydro', 0, 1))
-
-    # Technologies that produce RE certificates. CSP has cooling, so it's handled above.
+    # Sector/subsectors that produce RE certificates
     producer_techs = [
-        ('electricity',  'solar',      'PV',            1, 1),
-        ('electricity',  'solar',      'PV_storage',    1, 1),
-        ('electricity',  'wind',       'wind',          1, 1),
-        ('electricity',  'wind',       'wind_storage',  1, 1),
-        ('elect_td_bld', 'rooftop_pv', 'rooftop_pv',    1, 1),
+        ('electricity',  'solar'),
+        ('elec_CSP',  'CSP'),
+        ('electricity',  'wind'),
+        ('elect_td_bld', 'rooftop_pv'),
     ]
 
-    tech_df = pd.DataFrame(data=consumer_techs + producer_techs,
-                           columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
+    for sector, subsector in producer_techs:
+        tech_df.loc[(tech_df.sector == sector) & (tech_df.subsector == subsector), 'producer'] = 1
 
     regions    = ('USA',) # 'Canada')  # works for multiple regions
     market     = 'USA'
@@ -350,8 +333,9 @@ if __name__ == '__main__':
     # targets = [(2020, 0.20), (2025, 0.30), (2030, 0.40), (2035, 0.50), (2040, 0.60),
     #            (2045, 0.70), (2050, 0.80), (2055, 0.90), (2060, 0.975)]
 
-    targets = [(2020, 0.20), (2025, 0.325), (2030, 0.475), (2035, 0.625), (2040, 0.75),
-               (2045, 0.85), (2050, 0.95),  (2055, 0.965), (2060, 0.98)]
+    targets = [(2020, 0.20),  (2025, 0.325), (2030, 0.475),
+               (2035, 0.625), (2040, 0.75),  (2045, 0.85),
+               (2050, 0.95),  (2055, 0.965), (2060, 0.98)]
 
     create_RES(tech_df, regions, commodity, market, targets, # minPrice=-1000,
                filename="/Users/rjp/bitbucket/gcam_res/xmlsrc/test/generated_res.xml")
