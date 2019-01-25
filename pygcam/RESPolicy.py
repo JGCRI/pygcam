@@ -1,10 +1,16 @@
 #
 # Goal is eventually to translate a file like ../etc/exampleRES.xml into standard GCAM XML.
 #
-from copy import copy, deepcopy
+from copy import deepcopy
 import pandas as pd
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
+from .config import pathjoin, getParam
+from .log import getLogger
+from .XMLFile import XMLFile
+
+_logger = getLogger(__name__)
+
 
 # We deal only with one historical year (2010) and all future years
 TIMESTEP = 5
@@ -60,8 +66,8 @@ def merge_element(parent, new_elt):
 
 def merge_elements(parent, elt_list):
     """
-    For each element in elt_list, add the append to parent if none of parent's children has the
-    same tag and attributes as element. If a match is found, merge element's children with those
+    Add each element in elt_list to parent if none of parent's children has the same tag
+    and attributes as element. If a match is found, merge element's children with those
     of the matching element, recursively.
     """
     for elt in elt_list:
@@ -242,7 +248,7 @@ def firstTarget(targets):
         if coefficient: # ignore zeros
             return (year, coefficient)
 
-def create_RES(tech_df, regions, commodity, market, targets, filename=None,
+def create_RES(tech_df, regions, market, commodity, targets,
                outputRatio=1, pMultiplier=1, priceUnitConv=0, minPrice=None):
 
     startYear, startTarget = firstTarget(targets)
@@ -268,74 +274,225 @@ def create_RES(tech_df, regions, commodity, market, targets, filename=None,
     world = SubElement(scenario, 'world')
     merge_elements(world, region_list)
 
-    tree = ET.ElementTree(scenario)
-    if filename:
-        print("Writing", filename)
-        write_xml(tree, filename)
+    return scenario
+
+def match_str_or_regex(strings, name):
+    import re
+
+    if not name:
+        return strings
+
+    if name in strings:
+        return [name]
+
+    pattern = re.compile(name)
+    matches = [s for s in strings if pattern.match(s)]
+    return matches
+
+def find_techs(tree, tups):
+    """
+    Return a list of (sector, subsector, technology) triads that occur in any of the
+    indicated sectors and/or subsectors indicated in`pairs`. Each tuple in the list
+    `pairs` must be also be the form (sector, subsector, technology), but in this case,
+    each of these three element can be a string to match exactly items in the Global
+    Technology Database with the same value for this attribute, or a regular expression.
+    The value can also be `None` to match all values in the tech database for the given
+    attributes. Thus, you can indicate all technologies in all subsectors of the 'electricity'
+    sector as `('electricity', None, None)`, (or, equivalently, as `('electricity',)`), or
+    all technologies whose name starts with "elec_" using a regex: `("^elec_.*",)`
+
+    :param tree: (etree.ElementTree) in-memory representation of XML file
+    :param tups: Tuples or lists of 1, 2, or 3 elements. If the tuple contains 1 element,
+       is considered the sector, and the other elements are set to `None`. A 2-element
+       tuple specifies sectors and subsectors, with technology set to `None`
+
+    :return: (pandas.DataFrame) with three columns: sector, subsector, and technology,
+      populated based on the given `tups`.
+    """
+    import re
+
+    gtdb = tree.find('//global-technology-database')
+
+    all_sectors = set(gtdb.xpath('./location-info/@sector-name'))
+    tech_triads = []
+
+    for tup in tups:
+        tup = tup + (None, None, None)              # ensure length >= 3,
+        sector, subsector, technology = tup[0:3]    # use first 3 elements
+
+        sects = match_str_or_regex(all_sectors, sector)
+        if not sects:
+            _logger.warn("Sector name '{}' failed to match anything.".format(sector))
+            continue
+
+        for sect in sects:
+            all_subsects = set(gtdb.xpath('./location-info[@sector-name="{}"]/@subsector-name'.format(sect)))
+
+            subsects = match_str_or_regex(all_subsects, subsector)
+            if not subsects:
+                _logger.warn("In sector {}, subsector name '{}' failed to match anything.".format(sect, subsector))
+                continue
+
+            for subsect in subsects:
+                locations = gtdb.xpath('./location-info[@sector-name="{}" and @subsector-name="{}"]'.format(sect, subsect))
+                for location in locations:
+                    # missing techs (with names above) => pass-through, so we ignore empty returns
+                    all_techs = location.xpath('./technology/@name') + location.xpath('./intermittent-technology/@name')
+
+                    matching_techs = match_str_or_regex(all_techs, technology)
+                    for tech in matching_techs:
+                        tech_triads += [(sect, subsect, tech)]
+
+    return tech_triads
+
+# TBD: create a library of functions that understand GCAM's XML
+
+def get_tech_df(xmlfile, tech_specs):
+    tree = XMLFile(xmlfile).getTree()
+    tech_triads = find_techs(tree, tech_specs)
+
+    tech_df = pd.DataFrame(data=tech_triads, columns=['sector', 'subsector', 'technology'])
+    return tech_df
 
 def get_electricity_tech_df():
     from pygcam.config import getParam, pathjoin
-    from pygcam.XMLFile import XMLFile
-    electricity_xml = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcamdata', 'xml', 'electricity_water.xml')
-    tree = XMLFile(electricity_xml).getTree()
 
-    tech_tups = []
-    # TBD: change this to grab elec_*, electricity, and elect_td_bld
-    locations = tree.xpath('//global-technology-database/location-info[@sector-name="electricity" or @sector-name="elect_td_bld" or starts-with(@sector-name, "elec_")]')
+    tech_specs = [('electricity', None, None),
+                  ('elect_td_bld', 'rooftop_pv', 'rooftop_pv'),
+                  ('^elec_.*', None, None)]
 
-    for location in locations:
-        sector    = location.get('sector-name')
-        subsector = location.get('subsector-name')
-        techs     = location.xpath('./technology/@name') + location.xpath('./intermittent-technology/@name')
+    refWorkspace = getParam('GCAM.RefWorkspace')
+    xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', 'electricity_water.xml')
 
-        # ignore pass-through-technology nodes
-        for tech in techs:
-            tech_tups.append((sector, subsector, tech, 0, 1))
+    tech_df = get_tech_df(xmlfile, tech_specs)
+    tech_df.producer = 0
+    tech_df.consumer = 0
 
-    tech_df = pd.DataFrame(data=tech_tups,
-                           columns=['sector', 'subsector', 'technology', 'producer', 'consumer'])
     return tech_df
 
-def new_function(consumers, producers):
+def set_actor(tech_df, tech_tups, actor, value=1):
     """
-
-    :param consumers: (list) tuples of REC consuming technologies expressed
-      as (sector, subsector, tech), where tech or subsector and tech can be
-      None => use everything in the given sector or subsector.
-    :param producers: (list) analogous to `consumers` for REC producing techs.
-    :return: (pandas.DataFrame) all producing and consuming technologies, with
-      columns: [sector, subsector, tech, producer, consumer] where the producer
-      and consumer columns are 1 where the tech is in the given category, else 0.
+    actor must be 'producer' or 'consumer'
     """
+    for tup in tech_tups:
+        l = list(tup)
 
-if __name__ == '__main__':
+        sector    = l.pop(0)
+        subsector = l.pop(0) if l else None
+        tech      = l.pop(0) if l else None
+
+        mask = (tech_df.sector == sector)
+        if not any(mask):
+            mask = tech_df.sector.str.contains(sector)
+
+        if subsector:
+            subsects = (tech_df.subsector == subsector)
+            if not any(subsects):
+                subsects = tech_df.subsector.str.contains(subsector)
+
+            mask &= subsects
+
+        if tech:
+            techs = (tech_df.technology == tech)
+            if not any(techs):
+                techs = tech_df.technology.str.contains(tech)
+
+            mask &= techs
+
+        tech_df.loc[mask, actor] = value
+
+def set_producers(tech_df, tech_tups):
+    set_actor(tech_df, tech_tups, 'producer')
+
+def set_consumers(tech_df, tech_tups):
+    set_actor(tech_df, tech_tups, 'consumer')
+
+def is_abspath(pathname):
+    """Return True if pathname is an absolute pathname, else False."""
+    import re
+    return bool(re.match(r"^([/\\])|([a-zA-Z]:)", pathname))
+
+def get_path(pathname, defaultDir):
+    """Return pathname if it's an absolute pathname, otherwise return
+       the path composed of pathname relative to the given defaultDir"""
+    return pathname if is_abspath(pathname) else pathjoin(defaultDir, pathname)
+
+
+class RECertificate(object):
+    def __init__(self, node):
+        self.elt = node
+        self.name = node.get('name')
+        self.targets   = self.parseTargets()
+        self.producers = self.parseTechs('producers')
+        self.consumers = self.parseTechs('consumers')
+
+    def parseTargets(self):
+        from .xmlEditor import expandYearRanges
+
+        targetsNode = self.elt.find('targets')
+        targetTups = [(t.get('years'), t.get('fraction')) for t in targetsNode.findall('target')]
+        expanded = expandYearRanges(targetTups)
+        return expanded
+
+    def parseTechs(self, groupName):
+        groupNode = self.elt.find(groupName)
+        techs = groupNode.findall('tech')
+        techTups = [(t.get('sector'), t.get('subsector'), t.get('technology')) for t in techs]
+        return techTups
+
+class RESPolicy(XMLFile):
+    def __init__(self, filename):
+        super(RESPolicy, self).__init__(filename, load=True, schemaPath='etc/RES-schema.xsd')
+
+        self.root = root = self.tree.getroot()
+        self.market  = root.get('market')
+        self.regions = [s.strip() for s in root.get('regions').split(',')]
+        self.certs = self.parseRES()
+
+    def parseRES(self):
+        certs = [RECertificate(cert) for cert in self.root.findall('certificate')]
+        return certs
+
+def resPolicyMain(args):
+    from .error import CommandlineError
+
+    scenario  = args.scenario
+    inputXML  = args.inputXML  or getParam("GCAM.RESDescriptionXmlFile")
+    outputXML = args.outputXML or getParam("GCAM.RESImplementationXmlFile")
+
+    if not scenario and not (outputXML and is_abspath(outputXML)):
+        raise CommandlineError("outputXML ({}) is not an absolute pathname; a scenario must be specified".format(outputXML))
+
+    inPath   = get_path(inputXML,  pathjoin(getParam("GCAM.ProjectDir"), "etc", ))
+    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
+
+    resPolicy = RESPolicy(inPath)
+
     # By default, all electricity techns consume RE certificates
     tech_df = get_electricity_tech_df()
 
-    # Sector/subsectors that produce RE certificates
-    producer_techs = [
-        ('electricity',  'solar'),
-        ('elec_CSP',  'CSP'),
-        ('electricity',  'wind'),
-        ('elect_td_bld', 'rooftop_pv'),
-    ]
+    regions = resPolicy.regions
+    market  = resPolicy.market
 
-    for sector, subsector in producer_techs:
-        tech_df.loc[(tech_df.sector == sector) & (tech_df.subsector == subsector), 'producer'] = 1
+    scenario = None
 
-    regions    = ('USA',) # 'Canada')  # works for multiple regions
-    market     = 'USA'
-    commodity  = 'WindSolarREC'
+    for cert in resPolicy.certs:
+        targets = cert.targets
+        commodity = cert.name
 
-    # targets = [(2020, 0.20), (2025, 0.25), (2030, 0.30), (2035, 0.375), (2040, 0.45),
-    #            (2045, 0.55), (2050, 0.65), (2055, 0.75), (2060, 0.85)]
+        # reset all to zero
+        tech_df.consumer = tech_df.producer = 0
 
-    # targets = [(2020, 0.20), (2025, 0.30), (2030, 0.40), (2035, 0.50), (2040, 0.60),
-    #            (2045, 0.70), (2050, 0.80), (2055, 0.90), (2060, 0.975)]
+        # enable the indicated producers and consumers
+        set_consumers(tech_df, cert.consumers)
+        set_producers(tech_df, cert.producers)
 
-    targets = [(2020, 0.20),  (2025, 0.325), (2030, 0.475),
-               (2035, 0.625), (2040, 0.75),  (2045, 0.85),
-               (2050, 0.95),  (2055, 0.965), (2060, 0.98)]
+        res = create_RES(tech_df, regions, market, commodity, targets)
+        if scenario is None:
+            scenario = res
+        else:
+            merge_elements(scenario, res.getchildren())
 
-    create_RES(tech_df, regions, commodity, market, targets, # minPrice=-1000,
-               filename="/Users/rjp/bitbucket/gcam_res/xmlsrc/test/generated_res.xml")
+    tree = ET.ElementTree(scenario)
+    _logger.info("Writing '%s'", outPath)
+    write_xml(tree, outPath)

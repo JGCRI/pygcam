@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     - Needs a way to indicate the sector the policy pertains to, e.g., electricity vs refined liquids.
+     - Should these always apply regionally rather than dealing with the global technology database?
+     -->
+<portfolio-standard market="NorthAmerica" regions="USA,Canada,Mexico"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../RES-schema.xsd">
+	<certificate name="wind-solar-REC">
+		<targets>
+			<target years="2020" fraction="0.20"/>
+			<target years="2025-2040" fraction="0.30"/>
+			<target years="2045-2060" fraction="0.50"/>
+		</targets>
+		<producers>
+			<!-- incentivized sectors and technologies produce certificates -->
+			<tech sector="elect_td_bld" subsector="rooftop_pv"/>
+			<tech sector="electricity" subsector="solar|wind"/>
+			<tech sector="elec_CSP" subsector="CSP"/>
+		</producers>
+		<consumers>
+			<!-- regulated sectors and technologies consume certificates -->
+			<tech sector="elect_td_bld" subsector="rooftop_pv"/>
+			<tech sector="electricity" subsector="solar|wind|hydro"/>
+			<tech sector="^elec_.*"/>
+		</consumers>
+	</certificate>
+	<!-- In this example, we exclude biopower above and create a separate biopower standard -->
+	<certificate name="biopower-REC">
+		<consumers>
+			<tech sector="elect_td_bld" subsector="rooftop_pv" technology="rooftop_pv"/>
+			<tech sector="electricity" subsector="solar|wind|hydro"/>
+			<tech sector="^elec_.*"/>
+		</consumers>
+		<producers>
+			<tech sector="^elec_biomass.*"/>
+		</producers>
+		<targets>
+			<target years="2030-2060" fraction="0.10"/>
+		</targets>
+	</certificate>
+</portfolio-standard>

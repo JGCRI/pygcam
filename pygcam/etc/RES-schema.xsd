@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:element name="portfolio-standard">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="certificate"/>
+            </xs:sequence>
+            <xs:attribute name="market" use="required" type="xs:string"/>
+            <xs:attribute name="regions" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certificate">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="consumers"/>
+                <xs:element ref="producers"/>
+                <xs:element ref="targets"/>
+            </xs:choice>
+            <xs:attribute name="name" use="required" type="xs:NCName"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="consumers">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="tech"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="producers">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="tech"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="targets">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="target"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="target">
+        <xs:complexType>
+            <xs:attribute name="fraction" use="required" type="xs:decimal"/>
+            <xs:attribute name="years" use="required" type="xs:NMTOKEN"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="tech">
+        <xs:complexType>
+            <xs:attribute name="sector" use="required" type="xs:string"/>
+            <xs:attribute name="subsector" type="xs:string"/>
+            <xs:attribute name="technology" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
