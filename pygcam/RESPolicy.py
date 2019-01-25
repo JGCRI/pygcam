@@ -454,7 +454,9 @@ class RESPolicy(XMLFile):
         return certs
 
 def resPolicyMain(args):
+    import os
     from .error import CommandlineError
+    from .utils import mkdirs
 
     scenario  = args.scenario
     inputXML  = args.inputXML  or getParam("GCAM.RESDescriptionXmlFile")
@@ -494,5 +496,7 @@ def resPolicyMain(args):
             merge_elements(scenario, res.getchildren())
 
     tree = ET.ElementTree(scenario)
+    mkdirs(os.path.dirname(outPath))    # ensure the location exists
+
     _logger.info("Writing '%s'", outPath)
     write_xml(tree, outPath)
