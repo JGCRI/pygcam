@@ -11,7 +11,6 @@ from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
-
 # We deal only with one historical year (2010) and all future years
 TIMESTEP = 5
 LAST_HISTORICAL_YEAR = 2010
@@ -251,6 +250,8 @@ def firstTarget(targets):
 def create_RES(tech_df, regions, market, commodity, targets,
                outputRatio=1, pMultiplier=1, priceUnitConv=0, minPrice=None):
 
+    # print("{}:\n{}".format(regions, tech_df[['technology', 'consumer', 'producer']]))
+
     startYear, startTarget = firstTarget(targets)
 
     # Create "targets" with initial policy target in years prior to start year
@@ -365,8 +366,8 @@ def get_electricity_tech_df():
     xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', 'electricity_water.xml')
 
     tech_df = get_tech_df(xmlfile, tech_specs)
-    tech_df.producer = 0
-    tech_df.consumer = 0
+    tech_df['producer'] = 0
+    tech_df['consumer'] = 0
 
     return tech_df
 
@@ -374,12 +375,11 @@ def set_actor(tech_df, tech_tups, actor, value=1):
     """
     actor must be 'producer' or 'consumer'
     """
-    for tup in tech_tups:
-        l = list(tup)
+    tech_df[actor] = 0  # reset producer or consumer col, since we reuse the DF
 
-        sector    = l.pop(0)
-        subsector = l.pop(0) if l else None
-        tech      = l.pop(0) if l else None
+    for tup in tech_tups:
+        l = list(tup) + [None, None]      # ensure that we have at least 3 items
+        sector, subsector, tech = l[0:3]
 
         mask = (tech_df.sector == sector)
         if not any(mask):
@@ -401,11 +401,6 @@ def set_actor(tech_df, tech_tups, actor, value=1):
 
         tech_df.loc[mask, actor] = value
 
-def set_producers(tech_df, tech_tups):
-    set_actor(tech_df, tech_tups, 'producer')
-
-def set_consumers(tech_df, tech_tups):
-    set_actor(tech_df, tech_tups, 'consumer')
 
 def is_abspath(pathname):
     """Return True if pathname is an absolute pathname, else False."""
@@ -440,18 +435,23 @@ class RECertificate(object):
         techTups = [(t.get('sector'), t.get('subsector'), t.get('technology')) for t in techs]
         return techTups
 
+class PortfolioStandard(object):
+    def __init__(self, elt):
+        self.elt = elt
+        self.market = elt.get('market')
+        self.regions = [s.strip() for s in elt.get('regions').split(',')]
+        self.certs = self.parseRES()
+
+    def parseRES(self):
+        certs = [RECertificate(cert) for cert in self.elt.findall('certificate')]
+        return certs
+
 class RESPolicy(XMLFile):
     def __init__(self, filename):
         super(RESPolicy, self).__init__(filename, load=True, schemaPath='etc/RES-schema.xsd')
 
         self.root = root = self.tree.getroot()
-        self.market  = root.get('market')
-        self.regions = [s.strip() for s in root.get('regions').split(',')]
-        self.certs = self.parseRES()
-
-    def parseRES(self):
-        certs = [RECertificate(cert) for cert in self.root.findall('certificate')]
-        return certs
+        self.standards = [PortfolioStandard(elt) for elt in root.findall('portfolio-standard')]
 
 def resPolicyMain(args):
     import os
@@ -468,34 +468,31 @@ def resPolicyMain(args):
     inPath   = get_path(inputXML,  pathjoin(getParam("GCAM.ProjectDir"), "etc", ))
     outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
 
+    _logger.info("Reading '%s'", inPath)
     resPolicy = RESPolicy(inPath)
 
     # By default, all electricity techns consume RE certificates
     tech_df = get_electricity_tech_df()
 
-    regions = resPolicy.regions
-    market  = resPolicy.market
+    root = None
 
-    scenario = None
+    for std in resPolicy.standards:
+        for cert in std.certs:
+            _logger.debug("  Producers:", cert.producers)
+            _logger.debug("  Consumers:", cert.consumers)
 
-    for cert in resPolicy.certs:
-        targets = cert.targets
-        commodity = cert.name
+            # enable the indicated producers and consumers
+            set_actor(tech_df, cert.producers, 'producer')
+            set_actor(tech_df, cert.consumers, 'consumer')
 
-        # reset all to zero
-        tech_df.consumer = tech_df.producer = 0
+            res = create_RES(tech_df, std.regions, std.market, cert.name, cert.targets)
 
-        # enable the indicated producers and consumers
-        set_consumers(tech_df, cert.consumers)
-        set_producers(tech_df, cert.producers)
+            if root is None:
+                root = res
+            else:
+                merge_elements(root, res.getchildren())
 
-        res = create_RES(tech_df, regions, market, commodity, targets)
-        if scenario is None:
-            scenario = res
-        else:
-            merge_elements(scenario, res.getchildren())
-
-    tree = ET.ElementTree(scenario)
+    tree = ET.ElementTree(root)
     mkdirs(os.path.dirname(outPath))    # ensure the location exists
 
     _logger.info("Writing '%s'", outPath)

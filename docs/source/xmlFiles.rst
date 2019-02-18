@@ -36,5 +36,8 @@ from those read by the GCAM model itself. These include:
 
   - :doc:`results.xml <mcs/results>` defines Monte Carlo results to be saved in the SQL database.
 
+  - :doc:`resPolicy-xml` supports the definition of Renewable Energy Standard
+    (RES) policies.
+
 Most of these files allow a custom meta-language I call :doc:`conditional-xml`, which allows
 portions of the XML file to be selected based on the values of configuration variables.

@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xs:include schemaLocation="comment.xsd"/>
+
+    <xs:element name="portfolio-standards">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded" >
+                <xs:element ref="portfolio-standard"/>
+                <xs:element ref='comment'/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
     <xs:element name="portfolio-standard">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="certificate"/>
-            </xs:sequence>
+            <xs:choice maxOccurs='unbounded'>
+                <xs:element ref="certificate"/>
+                <xs:element ref='comment'/>
+            </xs:choice>
             <xs:attribute name="market" use="required" type="xs:string"/>
             <xs:attribute name="regions" use="required"/>
         </xs:complexType>
@@ -15,35 +27,39 @@
                 <xs:element ref="consumers"/>
                 <xs:element ref="producers"/>
                 <xs:element ref="targets"/>
+                <xs:element ref='comment'/>
             </xs:choice>
             <xs:attribute name="name" use="required" type="xs:NCName"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="consumers">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="tech"/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded" >
+                <xs:element ref="tech"/>
+                <xs:element ref='comment'/>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
     <xs:element name="producers">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="tech"/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="tech"/>
+                <xs:element ref='comment'/>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
     <xs:element name="targets">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="target"/>
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="target"/>
+                <xs:element ref='comment'/>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
     <xs:element name="target">
         <xs:complexType>
             <xs:attribute name="fraction" use="required" type="xs:decimal"/>
-            <xs:attribute name="years" use="required" type="xs:NMTOKEN"/>
+            <xs:attribute name="years" use="required" type="xs:string"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="tech">
