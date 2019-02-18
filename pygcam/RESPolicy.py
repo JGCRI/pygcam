@@ -126,8 +126,9 @@ def create_tech(tech, period_list, stub=True):
 def create_subsector(subsector, tech_list):
     return create_elt('subsector', subsector, tech_list)
 
-def create_sector(sector, subsector_list, pass_through=False):
-    tag = 'pass-through-sector' if pass_through else 'supplysector'
+
+def create_sector(sector, subsector_list):
+    tag = 'pass-through-sector' if sector.startswith('elec_') else 'supplysector'
     return create_elt(tag, sector, subsector_list)
 
 #
