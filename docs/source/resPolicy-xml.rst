@@ -8,11 +8,18 @@ XML elements
 
 The elements that comprise the ``resPolicy.xml`` file are described below.
 
-<portfolio-standard>
+
+<portfolio-standards>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 This is the outermost element, which takes no attributes and contains one
-or more ``<certificate>`` elements. It may also contain ``<comment>``
+or more ``<portfolio-standard>`` elements. It may also contain ``<comment>``
 elements.
+
+<portfolio-standard>
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Defines a single portfolio standard, for a given set of regions.
+This element takes no attributes and contains one or more
+``<certificate>`` elements, and zero or more ``<comment>`` elements.
 
 <certificate>
 ^^^^^^^^^^^^^
@@ -92,32 +99,57 @@ Example
 
   .. code-block:: xml
 
-     <portfolio-standard market="NorthAmerica" regions="USA,Canada,Mexico"
-                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                        xsi:noNamespaceSchemaLocation="RES-schema.xsd">
-        <certificate name="wind-solar-REC">
-            <targets>
-                <target years="2020" fraction="0.200"/>
-                <target years="2025" fraction="0.325"/>
-                <target years="2030" fraction="0.475"/>
-                <target years="2035" fraction="0.625"/>
-                <target years="2040" fraction="0.750"/>
-                <target years="2045" fraction="0.850"/>
-                <target years="2050" fraction="0.950"/>
-                <target years="2055" fraction="0.965"/>
-                <target years="2060" fraction="0.980"/>
-            </targets>
-            <producers>
-                <!-- incentivized sectors and technologies produce certificates -->
-                <tech sector="elect_td_bld" subsector="rooftop_pv"/>
-                <tech sector="electricity" subsector="^solar|wind$"/>
-                <tech sector="elec_CSP" subsector="CSP"/>
-            </producers>
-            <consumers>
-                <!-- regulated sectors and technologies consume certificates -->
-                <tech sector="elect_td_bld" subsector="rooftop_pv"/>
-                <tech sector="electricity" subsector="^solar|wind|hydro$"/>
-                <tech sector="^elec_.*"/>
-            </consumers>
-        </certificate>
-     </portfolio-standard>
+  <portfolio-standards xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="RES-schema.xsd">
+
+	<portfolio-standard market="Brazil" regions="Brazil">
+
+		<certificate name="Brazil-REC">
+			<targets>
+				<target years="2020" fraction="0.15"/>
+				<target years="2025" fraction="0.175"/>
+				<target years="2030" fraction="0.20"/>
+				<target years="2035" fraction="0.225"/>
+				<target years="2040" fraction="0.25"/>
+				<target years="2045" fraction="0.275"/>
+				<target years="2050" fraction="0.30"/>
+			</targets>
+			<producers>
+				<!-- incentivized sectors and technologies produce certificates -->
+				<tech sector="elect_td_bld" subsector="rooftop_pv"/>
+				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
+				<tech sector="^elec_(?:biomass|geothermal).*"/>
+			</producers>
+			<consumers>
+				<!-- regulated sectors and technologies consume certificates -->
+				<tech sector="elect_td_bld" subsector="rooftop_pv"/>
+				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
+				<tech sector="^elec_.*"/>
+			</consumers>
+		</certificate>
+	</portfolio-standard>
+
+	<portfolio-standard market="China" regions="China">
+		<certificate name="China-REC">
+			<targets>
+				<target years="2020" fraction="0.20"/>
+				<target years="2025" fraction="0.25"/>
+				<target years="2030" fraction="0.30"/>
+				<target years="2035" fraction="0.35"/>
+				<target years="2040" fraction="0.40"/>
+				<target years="2045" fraction="0.45"/>
+				<target years="2050" fraction="0.50"/>
+			</targets>
+			<producers>
+				<!-- incentivized sectors and technologies produce certificates -->
+				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
+				<tech sector="^elec_(?:biomass|geothermal).*"/>
+				<tech sector="elec_CSP"/>
+			</producers>
+			<consumers>
+				<!-- regulated sectors and technologies consume certificates -->
+				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
+				<tech sector="^elec_.*"/>
+			</consumers>
+		</certificate>
+	</portfolio-standard>
+  </portfolio-standards>
