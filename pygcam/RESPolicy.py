@@ -119,8 +119,9 @@ def create_elt(tag, name, child_list):
     elt.extend(deepcopy(child_list))    # since we reuse redundant elements
     return elt
 
-def create_tech(tech, period_list, stub=True):
-    tag = 'stub-technology' if stub else 'technology'
+def create_tech(tech, period_list): #, stub=False):
+    # tag = 'stub-technology' if stub else 'technology'
+    tag = 'stub-technology'
     return create_elt(tag, tech, period_list)
 
 def create_subsector(subsector, tech_list):
@@ -128,7 +129,8 @@ def create_subsector(subsector, tech_list):
 
 
 def create_sector(sector, subsector_list):
-    tag = 'pass-through-sector' if sector.startswith('elec_') else 'supplysector'
+    # tag = 'pass-through-sector' if sector.startswith('elec_') else 'supplysector'
+    tag = 'supplysector'
     return create_elt(tag, sector, subsector_list)
 
 #
@@ -162,9 +164,7 @@ def create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1):
             for tech in tech_df.technology.unique():
                 period_list = []
                 for year, coefficient in targets:
-                    period = create_supply_period(year, commodity,
-                                                  outputRatio=outputRatio,
-                                                  pMultiplier=pMultiplier)
+                    period = create_supply_period(year, commodity, outputRatio, pMultiplier)
                     period_list.append(period)
 
                 tech_list.append(create_tech(tech, period_list))
@@ -319,7 +319,7 @@ def find_techs(tree, tups):
     tech_triads = []
 
     for tup in tups:
-        tup = tup + (None, None, None)              # ensure length >= 3,
+        tup = tup + (None, None, None)        # ensure length >= 3,
         sector, subsector, technology = tup[0:3]    # use first 3 elements
 
         sects = match_str_or_regex(all_sectors, sector)
@@ -347,7 +347,7 @@ def find_techs(tree, tups):
 
     return tech_triads
 
-# TBD: create a library of functions that understand GCAM's XML
+# TBD: move this to a library of functions that process GCAM XML
 
 def get_tech_df(xmlfile, tech_specs):
     tree = XMLFile(xmlfile).getTree()
@@ -379,8 +379,8 @@ def set_actor(tech_df, tech_tups, actor, value=1):
     tech_df[actor] = 0  # reset producer or consumer col, since we reuse the DF
 
     for tup in tech_tups:
-        l = list(tup) + [None, None]      # ensure that we have at least 3 items
-        sector, subsector, tech = l[0:3]
+        tup = tup + (None, None, None)      # ensure that we have at least 3 items
+        sector, subsector, tech = tup[0:3]
 
         mask = (tech_df.sector == sector)
         if not any(mask):
