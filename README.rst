@@ -33,6 +33,11 @@ Who do I talk to?
 
 Release Notes
 ==============
+
+Version 1.6.1 (20 Feb 2019)
+---------------------------
+* Fix documentation build problems
+
 Version 1.6.0 (19 Feb 2019)
 ---------------------------
 * Added "res" sub-command, which reads a new XML file describing a set of renewable energy

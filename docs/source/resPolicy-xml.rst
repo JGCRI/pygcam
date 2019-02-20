@@ -99,57 +99,57 @@ Example
 
   .. code-block:: xml
 
-  <portfolio-standards xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="RES-schema.xsd">
+     <portfolio-standards xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="RES-schema.xsd">
 
-	<portfolio-standard market="Brazil" regions="Brazil">
+        <portfolio-standard market="Brazil" regions="Brazil">
 
-		<certificate name="Brazil-REC">
-			<targets>
-				<target years="2020" fraction="0.15"/>
-				<target years="2025" fraction="0.175"/>
-				<target years="2030" fraction="0.20"/>
-				<target years="2035" fraction="0.225"/>
-				<target years="2040" fraction="0.25"/>
-				<target years="2045" fraction="0.275"/>
-				<target years="2050" fraction="0.30"/>
-			</targets>
-			<producers>
-				<!-- incentivized sectors and technologies produce certificates -->
-				<tech sector="elect_td_bld" subsector="rooftop_pv"/>
-				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
-				<tech sector="^elec_(?:biomass|geothermal).*"/>
-			</producers>
-			<consumers>
-				<!-- regulated sectors and technologies consume certificates -->
-				<tech sector="elect_td_bld" subsector="rooftop_pv"/>
-				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
-				<tech sector="^elec_.*"/>
-			</consumers>
-		</certificate>
-	</portfolio-standard>
+            <certificate name="Brazil-REC">
+                <targets>
+                    <target years="2020" fraction="0.15"/>
+                    <target years="2025" fraction="0.175"/>
+                    <target years="2030" fraction="0.20"/>
+                    <target years="2035" fraction="0.225"/>
+                    <target years="2040" fraction="0.25"/>
+                    <target years="2045" fraction="0.275"/>
+                    <target years="2050" fraction="0.30"/>
+                </targets>
+                <producers>
+                    <!-- incentivized sectors and technologies produce certificates -->
+                    <tech sector="elect_td_bld" subsector="rooftop_pv"/>
+                    <tech sector="electricity" subsector="^solar|wind|hydro$"/>
+                    <tech sector="^elec_(?:biomass|geothermal).*"/>
+                </producers>
+                <consumers>
+                    <!-- regulated sectors and technologies consume certificates -->
+                    <tech sector="elect_td_bld" subsector="rooftop_pv"/>
+                    <tech sector="electricity" subsector="^solar|wind|hydro$"/>
+                    <tech sector="^elec_.*"/>
+                </consumers>
+            </certificate>
+        </portfolio-standard>
 
-	<portfolio-standard market="China" regions="China">
-		<certificate name="China-REC">
-			<targets>
-				<target years="2020" fraction="0.20"/>
-				<target years="2025" fraction="0.25"/>
-				<target years="2030" fraction="0.30"/>
-				<target years="2035" fraction="0.35"/>
-				<target years="2040" fraction="0.40"/>
-				<target years="2045" fraction="0.45"/>
-				<target years="2050" fraction="0.50"/>
-			</targets>
-			<producers>
-				<!-- incentivized sectors and technologies produce certificates -->
-				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
-				<tech sector="^elec_(?:biomass|geothermal).*"/>
-				<tech sector="elec_CSP"/>
-			</producers>
-			<consumers>
-				<!-- regulated sectors and technologies consume certificates -->
-				<tech sector="electricity" subsector="^solar|wind|hydro$"/>
-				<tech sector="^elec_.*"/>
-			</consumers>
-		</certificate>
-	</portfolio-standard>
-  </portfolio-standards>
+        <portfolio-standard market="China" regions="China">
+            <certificate name="China-REC">
+                <targets>
+                    <target years="2020" fraction="0.20"/>
+                    <target years="2025" fraction="0.25"/>
+                    <target years="2030" fraction="0.30"/>
+                    <target years="2035" fraction="0.35"/>
+                    <target years="2040" fraction="0.40"/>
+                    <target years="2045" fraction="0.45"/>
+                    <target years="2050" fraction="0.50"/>
+                </targets>
+                <producers>
+                    <!-- incentivized sectors and technologies produce certificates -->
+                    <tech sector="electricity" subsector="^solar|wind|hydro$"/>
+                    <tech sector="^elec_(?:biomass|geothermal).*"/>
+                    <tech sector="elec_CSP"/>
+                </producers>
+                <consumers>
+                    <!-- regulated sectors and technologies consume certificates -->
+                    <tech sector="electricity" subsector="^solar|wind|hydro$"/>
+                    <tech sector="^elec_.*"/>
+                </consumers>
+            </certificate>
+        </portfolio-standard>
+     </portfolio-standards>
