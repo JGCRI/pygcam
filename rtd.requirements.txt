@@ -1,7 +1,5 @@
 configparser==3.5.0
-dash-core-components==0.37.0
-dash-html-components==0.13.5
-dash-renderer==0.18.0
+dash==0.37.0
 filelock==3.0.8
 future==0.16.0
 futures==3.2.0
