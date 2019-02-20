@@ -33,6 +33,11 @@ Who do I talk to?
 
 Release Notes
 ==============
+Version 1.6.0 (19 Feb 2019)
+---------------------------
+* Added "res" sub-command, which reads a new XML file describing a set of renewable energy
+  standards that can vary by region, year, and technology, and writes a GCAM XML input file
+  that implements the policies.
 
 Version 1.5.4 (13 Nov 2018)
 ---------------------------
