@@ -2,7 +2,6 @@
 # Goal is eventually to translate a file like ../etc/exampleRES.xml into standard GCAM XML.
 #
 from copy import deepcopy
-import pandas as pd
 import re
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
@@ -349,6 +348,8 @@ def find_techs(tree, tups):
 # TBD: move this to a library of functions that process GCAM XML
 
 def get_tech_df(xmlfile, tech_specs):
+    import pandas as pd
+
     tree = XMLFile(xmlfile).getTree()
     tech_triads = find_techs(tree, tech_specs)
 
@@ -356,8 +357,6 @@ def get_tech_df(xmlfile, tech_specs):
     return tech_df
 
 def get_electricity_tech_df():
-    from pygcam.config import getParam, pathjoin
-
     tech_specs = [('electricity', None, None),
                   ('elect_td_bld', 'rooftop_pv', 'rooftop_pv'),
                   ('^elec_.*', None, None)]
@@ -493,6 +492,13 @@ def get_producers(row, tech_cols):
 
     return '\n'.join(producers)
 
+def read_csv(pathname):
+    import pandas as pd
+
+    _logger.debug("Reading '%s'", pathname)
+
+    df = pd.read_csv(pathname, index_col='region', skiprows=1)
+    return df
 
 def res_from_csv(csv_path):
     from pygcam.temp_file import getTempFile
@@ -500,7 +506,7 @@ def res_from_csv(csv_path):
 
     xml_path = getTempFile(suffix='.xml', delete=True)
 
-    df = pd.read_csv(csv_path, index_col='region', skiprows=1)
+    df = read_csv(csv_path)
     year_cols = [col for col in df.columns if str.isdigit(col)]
     tech_cols = [col for col in df.columns if not str.isdigit(col) and col != 'market']
 
@@ -531,6 +537,52 @@ def res_from_csv(csv_path):
 
     return RESPolicy(xml_path)
 
+def get_re_techs(tech_cols, params, region):
+    return [tech for tech in tech_cols if params.loc[region, tech] == 1]
+
+def validate(scenario, csv_path):
+    import pandas as pd
+    param_df = read_csv(csv_path)
+
+    year_cols = [col for col in param_df.columns if str.isdigit(col)]
+    tech_cols = [col for col in param_df.columns if not str.isdigit(col) and col != 'market']
+
+    sandboxDir  = getParam('GCAM.SandboxDir')
+    query_name  = 'ElecGenBySubsectorNoRECs'
+    result_csv = pathjoin(sandboxDir, scenario, 'queryResults', '{}-{}.csv'.format(query_name, scenario))
+
+    print("Reading", result_csv)
+    result_df = pd.read_csv(result_csv, skiprows=1)
+    result_df.reset_index(inplace=True)
+
+    keep = ['region', 'output', 'subsector'] + year_cols
+    df2 = result_df[keep]
+    regions = list(param_df.index)
+    df3 = df2.query('region in @regions and output in ("electricity", "elect_td_bld")')
+
+    elec_total = {}
+    rec_total = {}
+    fraction = {}
+
+    for region in regions:
+        elec = df3.query('region == @region')
+        elec_total[region] = elec[year_cols].sum()
+
+        re_techs = get_re_techs(tech_cols, param_df, region)  # N.B. interpolated in query below
+        recs = elec.query('subsector in @re_techs')
+        rec_total[region] = recs[year_cols].sum()
+
+        fraction[region] = rec_total[region] / elec_total[region]
+
+    result = None
+    for region in regions:
+        df = pd.DataFrame(round(fraction[region] * 100, 2)).T
+        df['region'] = region
+        result = df if result is None else result.append(df)
+
+    result.set_index('region', inplace=True)
+    print('{}:\n{}'.format(scenario, result))
+
 
 def resPolicyMain(args):
     import os
@@ -538,7 +590,7 @@ def resPolicyMain(args):
     from .utils import mkdirs
 
     scenario  = args.scenario
-    inputFile = args.inputFile or getParam("GCAM.RESDescriptionXmlFile")
+    inputFile = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these
     outputXML = args.outputXML or getParam("GCAM.RESImplementationXmlFile")
 
     if not scenario and not (outputXML and is_abspath(outputXML)):
@@ -548,6 +600,13 @@ def resPolicyMain(args):
     outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
 
     isCSV = (re.match('.*\.csv$', inPath, re.IGNORECASE) is not None)
+
+    if args.display:
+        if not isCSV:
+            raise CommandlineError("When using -d/--display, the input file must be in CSV format: '{}'.".format(inPath))
+
+        validate(scenario, inPath)
+        return  # exit
 
     _logger.info("Reading '%s'", inPath)
     resPolicy = res_from_csv(inPath) if isCSV else RESPolicy(inPath)

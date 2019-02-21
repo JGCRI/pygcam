@@ -18,7 +18,7 @@ class RESCommand(SubcommandABC):
     def addArgs(self, parser):
         parser.add_argument('-i', '--inputFile', default=None,
                             help='''A CSV or XML file defining the RES policy. Default is the value of
-                            configuration file parameter GCAM.RESDescriptionXmlFile. If set to a
+                            configuration file parameter GCAM.RESDescriptionFile. If set to a
                             relative pathname (i.e., not starting with "/", "\\", or drive specifier
                             "[a-zA-Z]:"), it is assumed to be relative to %%(GCAM.ProjectDir)s/etc.
                             If a CSV file is given, it is converted to an intermediate RES policy XML 
@@ -32,11 +32,15 @@ class RESCommand(SubcommandABC):
                                     %%(GCAM.SandboxRefWorkspace)s/local-xml/{scenario}, in which
                                     case, the "-s/--scenario" argument is required.''')
 
-        parser.add_argument('-s', '--scenario', default=None,
+        parser.add_argument('-S', '--scenario', default=None,
                             help='''The name of the scenario for which to generate the policy 
                                     implementation XML file. Required if no argument is given
                                     to the "-o/--outputXML" flag, or if the argument is a
                                     relative pathname.''')
+
+        parser.add_argument('-d', '--display', action="store_true",
+                            help='''If set, the result of the RES policy is displayed in tabular format,
+                                    and the program exits. ''')
         return parser
 
     def run(self, args, tool):

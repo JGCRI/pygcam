@@ -34,6 +34,10 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.6.2 (20 Feb 2019)
+---------------------------
+* Added ability to specify RES policy in a simple CSV file.
+
 Version 1.6.1 (20 Feb 2019)
 ---------------------------
 * Fix documentation build problems
