@@ -10,18 +10,19 @@ from ..subcommand import SubcommandABC
 
 class RESCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {#'aliases' : ['pro'],
-                 'help': '''Generate an XML file that implements a RES policy on the electricity
-                            sector as described in the given XML input file.'''}
+        kwargs = {'help': '''Generate an XML file that implements a RES policy on the electricity
+                             sector as described in the given XML input file.'''}
 
         super(RESCommand, self).__init__('res', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
-        parser.add_argument('-i', '--inputXML', default=None,
-                            help='''An XML file defining the RES policy. Default is the value of
+        parser.add_argument('-i', '--inputFile', default=None,
+                            help='''A CSV or XML file defining the RES policy. Default is the value of
                             configuration file parameter GCAM.RESDescriptionXmlFile. If set to a
                             relative pathname (i.e., not starting with "/", "\\", or drive specifier
-                            "[a-zA-Z]:"), it is assumed to be relative to %%(GCAM.ProjectDir)s/etc''')
+                            "[a-zA-Z]:"), it is assumed to be relative to %%(GCAM.ProjectDir)s/etc.
+                            If a CSV file is given, it is converted to an intermediate RES policy XML 
+                            file before translation to GCAM-readable input.''')
 
         parser.add_argument('-o', '--outputXML', default=None,
                             help='''The directory into which to write the modified files.
@@ -30,10 +31,6 @@ class RESCommand(SubcommandABC):
                                     it is assumed to be relative to 
                                     %%(GCAM.SandboxRefWorkspace)s/local-xml/{scenario}, in which
                                     case, the "-s/--scenario" argument is required.''')
-
-        parser.add_argument('-p', '--policy', default=None,
-                            help='''The name of a RES policy scenario given in the input XML file.
-                                 If none is provided, the first scenario in the file is used.''')
 
         parser.add_argument('-s', '--scenario', default=None,
                             help='''The name of the scenario for which to generate the policy 

@@ -3,6 +3,7 @@
 #
 from copy import deepcopy
 import pandas as pd
+import re
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
 from .config import pathjoin, getParam
@@ -279,8 +280,6 @@ def create_RES(tech_df, regions, market, commodity, targets,
     return scenario
 
 def match_str_or_regex(strings, name):
-    import re
-
     if not name:
         return strings
 
@@ -454,25 +453,106 @@ class RESPolicy(XMLFile):
         self.root = root = self.tree.getroot()
         self.standards = [PortfolioStandard(elt) for elt in root.findall('portfolio-standard')]
 
+target_template = '''        <target years="{year}" fraction="{fraction}"/>'''
+
+rooftop_pv        = '''        <tech sector="elect_td_bld" subsector="rooftop_pv"/>'''
+solar_wind_hydro  = '''        <tech sector="electricity" subsector="solar|wind|hydro"/>'''
+all_elec          = '''        <tech sector="^elec_.*"/>'''
+
+cert_template = '''    <certificate name="{market}-REC">
+      <targets>
+{targets}
+      </targets>
+      <producers>
+{producers}
+      </producers>
+      <consumers>
+{consumers}
+      </consumers>
+    </certificate>
+'''
+
+tech_map = {
+    'solar'      : ['''        <tech sector="electricity" subsector="solar"/>''',
+                    '''        <tech sector="elec_CSP"/>'''],
+    'wind'       : ['''        <tech sector="electricity" subsector="wind"/>'''],
+    'hydro'      : ['''        <tech sector="electricity" subsector="hydro"/>'''],
+    'biomass'    : ['''        <tech sector="elec_biomass"/>'''],
+    'CSP'        : ['''        <tech sector="elec_CSP"/>'''],
+    'nuclear'    : ['''        <tech sector="elec_Gen_II.*"/>'''],
+    'geothermal' : ['''        <tech sector="elec_geothermal"/>'''],
+    'rooftop_pv' : [rooftop_pv],
+}
+
+def get_producers(row, tech_cols):
+    producers = []
+
+    for tech in tech_cols:
+        if row[tech]:
+            producers += tech_map[tech]
+
+    return '\n'.join(producers)
+
+
+def res_from_csv(csv_path):
+    from pygcam.temp_file import getTempFile
+    from pygcam.error import FileFormatError
+
+    xml_path = getTempFile(suffix='.xml', delete=True)
+
+    df = pd.read_csv(csv_path, index_col='region', skiprows=1)
+    year_cols = [col for col in df.columns if str.isdigit(col)]
+    tech_cols = [col for col in df.columns if not str.isdigit(col) and col != 'market']
+
+    for tech in tech_cols:
+        if not tech in tech_map:
+            raise FileFormatError("Unrecognized technology name: {}".format(tech))
+
+    _logger.info("Writing '%s'", xml_path)
+    with open(xml_path, 'w') as f:
+        f.write('''<portfolio-standards xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="RES-schema.xsd">\n''')
+
+        for (region, row) in df.iterrows():
+            f.write('''  <portfolio-standard market="{market}" regions="{region}">\n'''.format(market=row.market, region=region))
+
+            targets = '\n'.join([target_template.format(year=year, fraction=row[year]) for year in year_cols])
+
+            producers = get_producers(row, tech_cols)
+
+            consumer_list = [solar_wind_hydro, all_elec] + ([rooftop_pv] if row.rooftop_pv else [])
+            consumers = '\n'.join(consumer_list)
+
+            cert = cert_template.format(market=row.market, targets=targets, producers=producers, consumers=consumers)
+            f.write(cert)
+
+            f.write('''  </portfolio-standard>\n''')
+
+        f.write("</portfolio-standards>\n")
+
+    return RESPolicy(xml_path)
+
+
 def resPolicyMain(args):
     import os
     from .error import CommandlineError
     from .utils import mkdirs
 
     scenario  = args.scenario
-    inputXML  = args.inputXML  or getParam("GCAM.RESDescriptionXmlFile")
+    inputFile = args.inputFile or getParam("GCAM.RESDescriptionXmlFile")
     outputXML = args.outputXML or getParam("GCAM.RESImplementationXmlFile")
 
     if not scenario and not (outputXML and is_abspath(outputXML)):
         raise CommandlineError("outputXML ({}) is not an absolute pathname; a scenario must be specified".format(outputXML))
 
-    inPath   = get_path(inputXML,  pathjoin(getParam("GCAM.ProjectDir"), "etc", ))
+    inPath   = get_path(inputFile,  pathjoin(getParam("GCAM.ProjectDir"), "etc"))
     outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
 
-    _logger.info("Reading '%s'", inPath)
-    resPolicy = RESPolicy(inPath)
+    isCSV = (re.match('.*\.csv$', inPath, re.IGNORECASE) is not None)
 
-    # By default, all electricity techns consume RE certificates
+    _logger.info("Reading '%s'", inPath)
+    resPolicy = res_from_csv(inPath) if isCSV else RESPolicy(inPath)
+
+    # By default, all electricity techs consume RE certificates
     tech_df = get_electricity_tech_df()
 
     root = None
