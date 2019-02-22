@@ -3,8 +3,8 @@ Tutorial, Part 3
 
 Here, in Part 3, we will customize the project to:
 
- * modify chart appearance
- * add another query and plot the results
+ * modify chart appearance,
+ * add another query and plot the results, and
  * aggregate regions to simplify plot appearance.
 
 3.0 The ``chart`` sub-command

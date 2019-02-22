@@ -58,8 +58,8 @@ Project file
 .. _query-def:
 
 Query definitions
-  A list of XML queries used to extract date from the GCAM database into CSV
-  files. Query definitions can be simply references to queries by name, or they
+  A list of XML queries used to extract data from the GCAM database into CSV
+  files. Query definitions can simply be references to queries by name, or they
   can include references to :ref:`rewrite sets <rewrite-sets-def>` to cause
   rewrites to be added to the XML query on-the-fly. See also: :doc:`query-xml`.
 
