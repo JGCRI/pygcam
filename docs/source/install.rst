@@ -214,10 +214,10 @@ Enable symbolic links
 
 In Unix-like systems, "symbolic links" (symlinks) are frequently used to provide shortcuts
 or aliases to files and directories. The pygcam scripts use symlinks to create GCAM workspaces
-without having to lots of large, read-only files. Rather, it creates workspaces with writable
+without having to make copies of lots of large, read-only files. Rather, it creates workspaces with writable
 directories where GCAM will create files at run-time, and it uses symlinks to the read-only
 files (e.g., the GCAM executable) and folders (e.g., the ``input`` directory holding GCAM's
-XML input files.
+XML input files).
 
 Windows (Vista and onward) also have symlinks, but only administrators can create symlinks
 **unless specific permission has been granted** to a user. To grant this permission, run the
@@ -232,7 +232,7 @@ account is in.)
   .. image:: images/symlinkPermission.jpg
 
 Also, note the following:
-  - To remove a symlink to a file, use the ``del`` command
+  - To remove a symlink to a file, use the ``del`` command.
   - To remove a symlink to a folder, use ``rmdir`` (or ``rd`` for short).
 
     **Using "del" on a symlink to a folder will offer to delete not just symlink,
@@ -242,7 +242,7 @@ Also, note the following:
 
   - Either type of symlink can be removed using the file Explorer as well.
 
-  - Symlinks work across devices and network, and through other symlinks, however, if you
+  - Symlinks work across devices and network, and through other symlinks. However, if you
     are working across multiple drives, be sure that you specify the drive letter (e.g., ``C:``)
     in the link target or the path will be interpreted relative to the current drive.
 
@@ -312,7 +312,7 @@ Installing GCAM and Java
 ---------------------------
 
 Regardless of how you've installed ``pygcam``, you will also need to install GCAM itself,
-which in turn requires java.
+which in turn requires Java.
 
 This is a short guide to these topics since they are outside the scope of ``pygcam``.
 See the `GCAM <https://github.com/JGCRI/gcam-core/releases>`_ website for the most

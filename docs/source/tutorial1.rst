@@ -218,7 +218,7 @@ project steps::
 1.2 The scenarios.xml file
 ---------------------------
 The following :doc:`scenarios-xml` file is also included automatically when you run the
-:ref:`init <init>` or :ref:`new <new>` sub-commands. It defined one scenario group
+:ref:`init <init>` or :ref:`new <new>` sub-commands. It defines one scenario group
 consisting of a baseline and 4 carbon tax policy scenarios:
 
 .. literalinclude:: ../../pygcam/etc/examples/scenarios.xml
@@ -375,7 +375,7 @@ The following is equivalent to our "cut & paste" example above:
 
 The example above defines an iterator named "tax", with values 10, 15, 20, and 25.
 The scenario group includes the same baseline as before, but now there are just two
-``<scenario>`` definition, one for fossil carbon and one for fossil and biogenic
+``<scenario>`` definitions, one for fossil carbon and one for fossil and biogenic
 carbon. The term ``{tax}`` is replaced by each value of the iterator in turn,
 defining a new scenario, and indicating which file to include in the ``<add>``
 element. Thus, by iterating over the tax levels, we have created 9 scenarios: one

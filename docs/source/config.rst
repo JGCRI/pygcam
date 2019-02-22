@@ -5,7 +5,7 @@ The ``pygcam`` scripts and libraries rely on a configuration file to:
 
   * define the location of essential and optional files,
   * allow the user to set defaults for many command-line arguments to scripts, and
-  * define both global default and project-specific values for all parameters
+  * define both global default and project-specific values for all parameters.
 
 The configuration file and variables are described below.
 
@@ -39,7 +39,7 @@ Project sections
 ^^^^^^^^^^^^^^^^^^^^^^
 Each project must have its own section. For example, to setup a project called,
 say, "myproj", I would create the section ``[myproj]``. Following this, I would define
-variables particular to this project, e.g., where the to find the files defining scenarios,
+variables particular to this project, e.g., where to find the files defining scenarios,
 queries, and so on.
 
 Note that the :ref:`new <new>` sub-command will set up the structure for a new

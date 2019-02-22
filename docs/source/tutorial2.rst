@@ -75,7 +75,7 @@ Let's start by running just the ``tax-10`` scenario::
 
     $ gt run -S tax-10
 
-Again, we wait while ``gt`` runs gcam, runs the defined queries to create CSV files.
+Again, we wait while ``gt`` runs gcam and runs the defined queries to create CSV files.
 Because this is a policy scenario, we will also compute the differences between
 query results for "policy minus baseline", and save these in the ``diffs`` directory
 in the scenario's sandbox. Our project file also generates a few plots to look at,

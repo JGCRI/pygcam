@@ -5,7 +5,7 @@ The :ref:`init <init>` sub-command creates the configuration file
 ``~/.pygcam.cfg`` and initializes key variables, based on command-line
 arguments (if provided) or interactive prompts. The :ref:`init <init>`
 sub-command must be run before any other :doc:`gcamtool` command can
-be run (with the exception of displaying command-line help.)
+be run (with the exception of displaying command-line help).
 
 The information required to initialize your config file includes:
 
