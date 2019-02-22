@@ -64,7 +64,7 @@ def driver(args, tool):
     # as resources from the pygcam package.
     filesToCopy = ['project.xml', 'protection.xml',  'rewriteSets.xml', 'scenarios.xml',
                    'scenarios-iterator.xml', 'project2.xml', 'Instructions.txt',
-                   'project-schema.xsd', 'protection-schema.xsd', 'queries-schema.xsd',
+                   'project-schema.xsd', 'protection-schema.xsd', 'queries-schema.xsd', 'RES-schema.xsd',
                    'rewriteSets-schema.xsd', 'scenarios-schema.xsd', 'comment.xsd','conditional.xsd']
 
     for filename in filesToCopy:
