@@ -60,6 +60,42 @@ def basinsByISO():
 
     return result
 
+def getRegionList(workspace=None):
+    """
+    Set the list of the defined region names from the data system, if possible,
+    otherwise use the built-in list of 32 regions.
+
+    :param workspace: the path to a ``Main_User_Workspace`` directory that
+      has the file
+      ``input/gcam-data-system/_common/mappings/GCAM_region_names.csv``,
+      or ``None``, in which case the value of config variable
+      ``GCAM.SourceWorkspace`` (if defined) is used. If `workspace` is
+      empty or ``None``, and the config variable ``GCAM.SourceWorkspace`` is
+      empty (the default value), the built-in default 32-region list is returned.
+    :return: a list of strings with the names of the defined regions
+    """
+    from .constants import setRegions, GCAM_32_REGIONS
+    from .csvCache import readCachedCsv
+
+    relpath = pathjoin('input', getParam('GCAM.DataDir'), '_common/mappings/GCAM_region_names.csv')
+
+    workspace = workspace or getParam('GCAM.RefWorkspace')
+    path = pathjoin(workspace, relpath) if workspace else None
+
+    if path and os.path.lexists(path):
+        _logger.info("Reading region names from %s", path)
+        # 3 => this is a gcam-data-system input file, which has a different format
+        df = readCachedCsv(path, skiprows=3)
+        regions = list(df.region)
+        setRegions(regions)
+        _logger.debug("Regions: %s", regions)
+
+    else:
+        _logger.info("Using built-in region names")
+        regions = GCAM_32_REGIONS
+
+    return regions
+
 def queueForStream(stream):
     """
     Create a thread to read from a non-socket file descriptor and

@@ -18,6 +18,7 @@ from .built_ins import BuiltinSubcommands
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
                      usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
+from .constants import GCAM_32_REGIONS
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -300,7 +301,6 @@ class GcamTool(object):
 
         setInputFilesByVersion()
 
-
     def run(self, args=None, argList=None):
         """
         Parse the script's arguments and invoke the run() method of the
@@ -310,6 +310,8 @@ class GcamTool(object):
         :param argList: (list of str) argument list to parse (when called recursively)
         :return: none
         """
+        from .utils import getRegionList
+
         assert args or argList, "GcamTool.run requires either args or argList"
 
         checkWindowsSymlinks()
@@ -334,6 +336,8 @@ class GcamTool(object):
                 except ConfigFileError as e:
                     _logger = getLogger(__name__)
                     _logger.warning("%s", e)
+
+                getRegionList()
 
             logLevel = args.logLevel or getParam('GCAM.LogLevel')
             if logLevel:
@@ -546,7 +550,7 @@ def _main(argv=None):
     # Set specified config vars
     for arg in ns.configVars:
         if not '=' in arg:
-            raise CommandlineError('-S requires an argument of the form variable=value, got "%s"' % arg)
+            raise CommandlineError('+s requires an argument of the form variable=value, got "%s"' % arg)
 
         name, value = arg.split('=')
         setParam(name, value)

@@ -1322,6 +1322,31 @@ class XMLEditor(object):
         xmlEdit(fileAbs, pairs)
         self.updateScenarioComponent(tag, fileRel)
 
+    @callableMethod
+    def freezeRegionPopulation(self, region, year, endYear=2100):
+        """
+        Freeze population subsequent to `year` at the value for that year.
+        """
+        tag = 'socioeconomics'
+        fileRel, fileAbs = self.getLocalCopy(tag)
+
+        fileObj = CachedFile.getFile(fileAbs)
+        tree = fileObj.tree
+
+        xpath = '//region[@name="%s"]/demographics/populationMiniCAM[@year="%s"]/totalPop' % (region, year)
+        popNode = tree.find(xpath)
+        population = popNode.text
+
+        _logger.info("Freezing pop in %s to %s value of %s" % (region, year, population))
+        values = [(y, population) for y in range(year+5, endYear+1, 5)]
+
+        self.setRegionPopulation(region, values)
+
+    @callableMethod
+    def freezeGlobalPopulation(self, year, endYear=2100):
+        for region in GCAM_32_REGIONS:
+            self.freezeRegionPopulation(region, year, endYear=endYear)
+
     # TBD: test
     @callableMethod
     def setGlobalTechNonEnergyCost(self, sector, subsector, technology, values):

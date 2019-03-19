@@ -3,7 +3,8 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 #
-# Constants shared across modules
+# Constants shared across modules.
+# Note that GCAM_32_REGIONS can be set from the data system, but then it's constant. ;~)
 #
 
 # TBD: move to gcamtool package
@@ -53,3 +54,9 @@ GCAM_32_REGIONS = [
     'Taiwan',
     'USA'
 ]
+
+# So it's not exactly constant after all...
+def setRegions(regionList):
+    global GCAM_32_REGIONS
+    GCAM_32_REGIONS = regionList
+
