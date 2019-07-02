@@ -545,11 +545,18 @@ def _update_protection(reg_dict, landtype, basin, prot_vals, unprot_vals):
     _upd(PROTECTED, prot_vals)
     _upd('', unprot_vals)
 
-def _get_allocation(reg_dict, landtype, basin, protected=''):
+def _get_allocation(reg_dict, landtype, basin, protected=None):
     import pandas as pd
 
-    land_key = protected + landtype + '_' + basin
-    land_leaf = reg_dict[land_key]
+    prefix = PROTECTED if protected else ''
+    land_key = prefix + landtype + '_' + basin
+
+    # TBD: probably don't need this once file is correct...
+    try:
+        land_leaf = reg_dict[land_key]
+    except KeyError:
+        return 0
+
     nodes = land_leaf.xpath('.//allocation[@year<1975]|.//landAllocation')
     [(node.get('year'), float(node.text)) for node in nodes]
     values = [(node.get('year'), float(node.text)) for node in nodes]
@@ -558,8 +565,8 @@ def _get_allocation(reg_dict, landtype, basin, protected=''):
     return s
 
 def _get_total_area(reg_dict, landtype, basin):
-    unprot = _get_allocation(reg_dict, landtype, basin, protected='')
-    prot   = _get_allocation(reg_dict, landtype, basin, protected=PROTECTED)
+    unprot = _get_allocation(reg_dict, landtype, basin, protected=False)
+    prot   = _get_allocation(reg_dict, landtype, basin, protected=True)
     return prot + unprot
 
 def _landtype_basin_pairs(reg_dict):
@@ -585,7 +592,7 @@ def _protect_land(tree, prot_dict):
         for (landtype, basin, prot_frac) in prot_tups:
             for (l, b) in land_basin_pairs:
                 if landtype == l and (basin == b or not basin):
-                    print("Processing {}, {}, {}".format(reg, landtype, b))
+                    _logger.debug("Processing {}, {}, {}".format(reg, landtype, b))
                     total = _get_total_area(reg_dict, landtype, b)
                     prot_vals   = total * prot_frac
                     unprot_vals = total - prot_vals

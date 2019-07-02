@@ -1196,13 +1196,13 @@ class XMLEditor(object):
         landXmlFiles = []
 
         # NB: this code depends on these being the tags assigned to the land files
-        # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
-        for num in [2, 3]:
-            fileTag  = 'land%d' % num
-            landFileRel, landFileAbs = self.getLocalCopy(fileTag)
+        for prefix in ('', 'protected_'):
+            for num in [2, 3]:
+                fileTag  = prefix + 'land%d' % num
+                landFileRel, landFileAbs = self.getLocalCopy(fileTag)
 
-            landXmlFiles.append(landFileAbs)
-            self.updateScenarioComponent(fileTag, landFileRel)
+                landXmlFiles.append(landFileAbs)
+                self.updateScenarioComponent(fileTag, landFileRel)
 
         # TBD: revisit this; it's a bit of a hack for Oct 16 deliverable
         scenarioFile = pathname = getParam('GCAM.LandProtectionXmlFile')
@@ -1629,4 +1629,41 @@ class XMLEditor(object):
         pathname = pathjoin(self.scenario_dir_abs, filename)
         policyConstraintsXml(policyName, region, expandYearRanges(targets), market=market, minPrice=minPrice,
                              policyElement=policyElement, policyType=policyType, pathname=pathname)
+
+    @callableMethod
+    def setRegionalNonCO2Emissions(self, region, sector, subsector, stubTechnology, species, values,
+                                 configFileTag="nonco2_energy"):
+        """
+        Create a modified version of all_energy_emissions.xml with the given values for
+        for `technology` in `sector` based on the data in `values`.
+        **Callable from XML setup files.**
+
+        :param sector: (str) the name of a GCAM sector
+        :param stubTechnology: (str) the name of a GCAM stub-technology in `sector`
+        :param values: (dict-like or iterable of tuples of (year, shareWeight)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.items() after
+            which the rest of the explanation above applies. The `shareWeight` can be
+            anything coercible to float.
+        :param species: (str) the name of the gas to set the emissions for
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. Default is "nonco2_energy" => all_energy_emissions.xml
+        :return: none
+        """
+        _logger.info("Set Non-CO2 emissions for (%s, %s, %s, %s, %s) to %s for %s" % (region, sector, subsector, stubTechnology, species, values, self.name))
+
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+
+        # //region[@name='USA']/supplysector[@name='N fertilizer']/subsector[@name='gas']/stub-technology[@name='gas']/period[@year='2005']/Non-CO2[@name='CH4']/input-emissions
+        xpath = "//region[@name='{region}']/supplysector[@name='{sector}']/subsector[@name='{subsector}']/stub-technology[@name='{stubTechnology}']/period[@year='%s']/Non-CO2[@name='{species}']/input-emissions".\
+            format(region=region, sector=sector, subsector=subsector, stubTechnology=stubTechnology, species=species)
+
+        pairs = []
+        for year, value in expandYearRanges(values):
+            pairs.append((xpath % year, coercible(value, float)))
+
+        xmlEdit(xmlFileAbs, pairs)
+        self.updateScenarioComponent(configFileTag, xmlFileRel)
 

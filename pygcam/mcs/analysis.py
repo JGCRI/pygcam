@@ -362,7 +362,7 @@ def plotSensitivityResults(varName, data, filename=None, extra=None, maxVars=Non
     rank correlations between an output variable and all input variables.
     '''
     # Sort descending by absolute value (normalized are all positive from squaring)
-    data.sort(columns=['normalized'], ascending=False, inplace=True)
+    data.sort_values(by=['normalized'], ascending=False, inplace=True)
 
     if printIt:
         print("UNCERTAINTY IMPORTANCE (%s)" % varName)
@@ -446,6 +446,9 @@ def plotOutputDistribution(simId, expName, resultSeries, resultName, xlabel, tri
     showShade = getParamAsBoolean('MCS.PlotShowShading')
 
     numValues = resultSeries.count()
+
+    db = getDatabase()
+    xlabel = db.getOutputUnits(resultName)
 
     plotHistogram(resultSeries, xlabel=xlabel, ylabel='Probability density',
                   title='Frequency distribution for %s' % resultName,

@@ -60,6 +60,11 @@ def driver(args, tool):
         records = [createRecord(pair) for pair in allResults]
         resultDF = pd.DataFrame.from_records(records, index='seriesId')
         units = resultDF.units.iloc[0]
+
+        # TBD: generalize this with a lookup table or file
+        if units == 'W/m^2':
+            units = 'W m$^{-2}$'
+
         resultDF.drop(['units', '_sa_instance_state', 'outputId'], axis=1, inplace=True)
 
         # convert column names like 'y2020' to '2020'
@@ -68,7 +73,7 @@ def driver(args, tool):
 
         if forcingPlot:
             filename = computeFilename('combo')
-            plotForcingSubplots(resultDF, filename=filename, ci=95, show_figure=False)
+            plotForcingSubplots(resultDF, filename=filename, ci=[100], show_figure=False, cum_rf=args.cumulative)
             return
 
         for expName in expList:
@@ -87,11 +92,7 @@ def driver(args, tool):
             extra = "name=%s trials=%d/%d simId=%d scenario=%s%s" % \
                     (resultName, resultDF.shape[0], trialCount, simId, expName, reg)
 
-            # TBD: generalize this with a lookup table or file
-            if units == 'W/m^2':
-                units = 'W m$^{-2}$'
-
-            plotTimeSeries(df, 'year', 'runId', title=title, xlabel=xlabel, ylabel=units, ci=[95], # [50, 95],
+            plotTimeSeries(df, 'year', 'runId', title=title, xlabel=xlabel, ylabel=units, ci=[95],
                            text_label=None, legend_name=None, legend_labels=None,
                            ymin=ymin, ymax=ymax, filename=filename, show_figure=False, extra=extra)
 
@@ -136,6 +137,9 @@ class AnalyzeCommand(McsSubcommandABC):
 
         parser.add_argument('--forcingPlot', action='store_true',
                             help='''Plot the data in a good format for multiple forcing timeseries plots''')
+
+        parser.add_argument('--cumulative', action='store_true',
+                            help='''For --forcingPlot, plot the cumulative annual change in RF''')
 
         parser.add_argument('-g', '--groups', action='store_true',
                             help='Show the uncertainty importance for groups of parameters.')

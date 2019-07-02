@@ -12,18 +12,19 @@ from pygcam.matplotlibFix import plt
 import pandas as pd
 import seaborn as sns
 
-import tsplotModified as tsm
+from . import tsplotModified as tsm
 from .analysis import printExtraText
 
 # TBD: Generalize this when integrating into pygcam
-def plotForcingSubplots(tsdata, filename=None, ci=95, show_figure=False, save_fig_kwargs=None):
+def plotForcingSubplots(tsdata, filename=None, ci=95, cum_rf=False, show_figure=False, save_fig_kwargs=None):
+    sns.set()
     sns.set_context('paper')
     expList = tsdata['expName'].unique()
 
     nrows = 1
     ncols = len(expList)
-    width  = 2 * ncols
-    height = 2
+    width  = 2.5 * ncols
+    height = 2.5
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharey=True, figsize=(width, height))
 
     def dataForExp(expName):
@@ -35,6 +36,9 @@ def plotForcingSubplots(tsdata, filename=None, ci=95, show_figure=False, save_fi
     for ax, expName in zip(axes, expList):
         df = dataForExp(expName)
 
+        if cum_rf:
+            df = df.groupby(by=['runId', 'year']).sum().groupby(level=[0]).cumsum().reset_index()
+
         pos = expName.find('-')
         title = expName[:pos] if pos >= 0 else expName
         ax.set_title(title.capitalize())
@@ -42,9 +46,8 @@ def plotForcingSubplots(tsdata, filename=None, ci=95, show_figure=False, save_fi
         tsm.tsplot(df, time='year', unit='runId', value='value', ci=ci, ax=ax)
 
         ylabel = 'W m$^{-2}$' if ax == axes[0] else ''
-        ax.set_ylabel(ylabel)
-        ax.set_xlabel('') # no need to say "year"
-        ax.axhline(0, color='navy', linewidth=0.5, linestyle='-')
+        ax.set(xlabel='', ylabel=ylabel) # eliminate xlabel "year"
+        ax.axhline(0, color='gray', linewidth=0.5, linestyle='-')
         plt.setp(ax.get_xticklabels(), rotation=270)
 
     plt.tight_layout()
