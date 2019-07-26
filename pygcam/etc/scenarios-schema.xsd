@@ -136,7 +136,7 @@
         </xs:complexType>
     </xs:element>
 
-	<xs:element name="if">
+    <xs:element name="if">
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
                 <xs:element minOccurs="0" ref='insert'/>

@@ -799,6 +799,31 @@ class XMLEditor(object):
         """
         self.updateConfigComponent('Ints', 'climateOutputInterval', coercible(years, int))
 
+    @callableMethod
+    def stringReplace(self, xpath, oldstr, newstr):
+        """
+        Edit the text for the nodes identified by xpath (applied to the current config file),
+        and change all occurences of `oldstr` to `newstr`. Currently does not support regex.
+        **Callable from XML setup files.**
+
+        :param xpath: (str) path to elements whose text should be changed
+        :param oldstr: (str) the substring to match
+        :param newstr: (str) the replacement string
+        :return: none
+        """
+        cfg = self.cfgPath()
+        item = CachedFile.getFile(cfg)
+        item.setEdited()
+
+        _logger.info("stringReplace('%s', '%s', '%s')" % (xpath, oldstr, newstr))
+
+        nodes = item.tree.xpath(xpath)
+        if nodes is None:
+            raise SetupException("stringReplace: No config elements match xpath '%s'" % xpath)
+
+        for node in nodes:
+            node.text = node.text.replace(oldstr, newstr)
+
     def addScenarioComponent(self, name, xmlfile):
         """
         Add a new ``<ScenarioComponent>`` to the configuration file, at the end of the list
