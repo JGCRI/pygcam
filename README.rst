@@ -44,7 +44,7 @@ Version 1.7.0 (29 Jul 2019)
 * Adjusted which files to copy/link on Windows
 * Added "exe/restart" to list of files to copy
 * MCS: xlabel on distribution plots is now set from units column in database "output" table
-* Improved RF subplots
+* Improved RF subplots 
 
 Version 1.6.2 (20 Feb 2019)
 ---------------------------
