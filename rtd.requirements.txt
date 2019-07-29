@@ -14,7 +14,7 @@ scipy==1.1.0
 seaborn==0.9.0
 semver==2.8.1
 six==1.11.0
-sphinx-argparse==0.2.2
-sphinx-rtd-theme==0.2.4
+sphinx-argparse==0.2.5
+sphinx-rtd-theme==0.4.3
 tornado==4.5.3
 traitlets==4.3.2
