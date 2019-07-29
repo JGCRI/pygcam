@@ -34,6 +34,18 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.7.0 (29 Jul 2019)
+---------------------------
+* GCAM regions are now read from the data system, if present. This supports use of other regionalizations.
+* Added "callable" functions (callable from scenarios.xml) to:
+  * Freeze population at any given year
+  * Modify non-CO2 emission coefficients
+  * Perform string replacement in generated config files (e.g., to change which "xml" dir to read from)
+* Adjusted which files to copy/link on Windows
+* Added "exe/restart" to list of files to copy
+* MCS: xlabel on distribution plots is now set from units column in database "output" table
+* Improved RF subplots
+
 Version 1.6.2 (20 Feb 2019)
 ---------------------------
 * Added ability to specify RES policy in a simple CSV file.
