@@ -22,12 +22,10 @@ _ConstraintTemplate = '                <constraint year="{year}">{value}</constr
 
 _MetaTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-    <output-meta-data>
-        <summary>
-        This is a generated constraint file. Edits will be overwritten!
-        {summary}
-        </summary>
-    </output-meta-data>
+    <!--
+    This is a generated constraint file. Edits will be overwritten!
+    {summary}
+    -->
     <world>
         <region name="{region}">
             <{gcamPolicy} name="{name}">
@@ -123,13 +121,10 @@ def parseStringPairs(argString, datatype=float):
 
 cellEtohConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-  <output-meta-data>
-    <summary>
-      Cellulosic ethanol constraints.
-
-      This is a generated constraint file. Edits will be overwritten!
-    </summary>
-  </output-meta-data>
+  <!--
+    Cellulosic ethanol constraints.
+    This is a generated constraint file. Edits will be overwritten!
+  -->
   <world>
     <region name="USA">
       <policy-portfolio-standard name="cellulosic-etoh-{cellEtohPolicyType}">
@@ -239,12 +234,10 @@ yearConstraintTemplate = '''        <constraint year="{year}">{level}</constrain
 
 fuelConstraintTemplate ='''<?xml version="1.0" encoding="UTF-8"?>
 <scenario>
-  <output-meta-data>
-    <summary>
-      Define fuel constraints.
-      This is a generated constraint file. Edits will be overwritten!
-    </summary>
-  </output-meta-data>
+  <!--
+    Define fuel constraints.
+    This is a generated constraint file. Edits will be overwritten!
+  -->
   <world>
     <region name="USA">
       <policy-portfolio-standard name="{fuelTag}-{fuelPolicyType}">
