@@ -18,6 +18,8 @@ FIRST_MODELED_YEAR = LAST_HISTORICAL_YEAR + TIMESTEP
 END_YEAR = 2100
 GCAM_YEARS = [1975, 1990, 2005] + [year for year in range(LAST_HISTORICAL_YEAR, END_YEAR + 1, TIMESTEP)]
 
+States = []
+
 # Oddly, we must re-parse the XML to get the formatting right.
 def write_xml(tree, filename):
     from io import StringIO
@@ -128,10 +130,8 @@ def create_subsector(subsector, tech_list):
     return create_elt('subsector', subsector, tech_list)
 
 
-def create_sector(sector, subsector_list):
-    # tag = 'pass-through-sector' if sector.startswith('elec_') else 'supplysector'
-    tag = 'supplysector'
-    return create_elt(tag, sector, subsector_list)
+def create_sector(sector, subsector_list, sectorTag):
+    return create_elt(sectorTag, sector, subsector_list)
 
 #
 # REC supply
@@ -151,10 +151,17 @@ def create_supply_period(year, commodity, outputRatio, pMultiplier):
     elt = ET.XML(xml)
     return elt
 
-def create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1):
+def sector_tag(sector, elecPassThru):
+    tag = 'pass-through-sector' if elecPassThru and sector == 'electricity' else 'supplysector'
+    return tag
+
+
+def create_supply_sectors(df, commodity, targets, elecPassThru,
+                          outputRatio=1, pMultiplier=1):
     sector_list = []
 
     for sector in df.sector.unique():
+        sectorTag = sector_tag(sector, elecPassThru)
         sub_df = df[df.sector == sector]
 
         sub_list = []
@@ -171,7 +178,7 @@ def create_supply_sectors(df, commodity, targets, outputRatio=1, pMultiplier=1):
 
             sub_list.append(create_subsector(subsector, tech_list))
 
-        sector_list.append(create_sector(sector, sub_list))
+        sector_list.append(create_sector(sector, sub_list, sectorTag))
 
     return sector_list
 
@@ -211,12 +218,13 @@ def create_demand_period(year, commodity, coefficients, priceUnitConv=0):
     elt = ET.XML(xml)
     return elt
 
-def create_demand_sectors(df, commodity, targets, priceUnitConv=0):
+def create_demand_sectors(df, commodity, targets, elecPassThru, priceUnitConv=0):
     sector_list = []
 
     coef_xml_dict = create_adjusted_coefficients(targets)
 
     for sector in df.sector.unique():
+        sectorTag = sector_tag(sector, elecPassThru)
         sub_df = df[df.sector == sector]
 
         sub_list = []
@@ -234,7 +242,7 @@ def create_demand_sectors(df, commodity, targets, priceUnitConv=0):
 
             sub_list.append(create_subsector(subsector, tech_list))
 
-        sector_list.append(create_sector(sector, sub_list))
+        sector_list.append(create_sector(sector, sub_list, sectorTag))
 
     return sector_list
 
@@ -251,7 +259,7 @@ def firstTarget(targets):
 def create_RES(tech_df, regions, market, commodity, targets,
                outputRatio=1, pMultiplier=1, priceUnitConv=0, minPrice=None):
 
-    # print("{}:\n{}".format(regions, tech_df[['technology', 'consumer', 'producer']]))
+    #print("{}:\n{}".format(regions, tech_df[['technology', 'consumer', 'producer']]))
 
     startYear, startTarget = firstTarget(targets)
 
@@ -261,12 +269,17 @@ def create_RES(tech_df, regions, market, commodity, targets,
 
     targets = prepolicy + targets
 
+    # N.B. We assume that a RES is applied either to a subset of states, or of regions,
+    # but never to both states and non-US regions in the same market. For states, the
+    # electricity sector tag is 'pass-through-sector' rather than 'supplysector'.
+    elecPassThru = (regions[0] in States)
+
     consumer_df = tech_df.query('consumer == 1')
-    consumer_elts = create_demand_sectors(consumer_df, commodity, targets,
+    consumer_elts = create_demand_sectors(consumer_df, commodity, targets, elecPassThru,
                                           priceUnitConv=priceUnitConv)
 
     producer_df = tech_df.query('producer == 1')
-    producer_elts = create_supply_sectors(producer_df, commodity, targets,
+    producer_elts = create_supply_sectors(producer_df, commodity, targets, elecPassThru,
                                           outputRatio=outputRatio, pMultiplier=pMultiplier)
 
     region_list = [create_policy_region(region, commodity, market,
@@ -356,19 +369,31 @@ def get_tech_df(xmlfile, tech_specs):
     tech_df = pd.DataFrame(data=tech_triads, columns=['sector', 'subsector', 'technology'])
     return tech_df
 
-def get_electricity_tech_df():
+def get_electricity_tech_df(useGcamUSA):
     tech_specs = [('electricity', None, None),
-                  ('elect_td_bld', 'rooftop_pv', 'rooftop_pv'),
-                  ('^elec_.*', None, None)]
+                  ('elect_td_bld', 'rooftop_pv', 'rooftop_pv')]
+
+    if useGcamUSA:
+        basename = 'electricity.xml'
+    else:
+        basename = 'electricity_water.xml'
+        tech_specs.append(('^elec_.*', None, None))
 
     refWorkspace = getParam('GCAM.RefWorkspace')
-    xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', 'electricity_water.xml')
+    xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', basename)
 
     tech_df = get_tech_df(xmlfile, tech_specs)
     tech_df['producer'] = 0
     tech_df['consumer'] = 0
 
     return tech_df
+
+def read_state_names():
+    global States
+
+    xmlfile = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcamdata', 'xml', 'socioeconomics_USA.xml')
+    tree = XMLFile(xmlfile).getTree()
+    States = tree.xpath('//region/@name')
 
 def set_actor(tech_df, tech_tups, actor, value=1):
     """
@@ -471,17 +496,35 @@ cert_template = '''    <certificate name="{market}-REC">
     </certificate>
 '''
 
-tech_map = {
-    'solar'      : ['''        <tech sector="electricity" subsector="solar"/>''',
-                    '''        <tech sector="elec_CSP"/>'''],
-    'wind'       : ['''        <tech sector="electricity" subsector="wind"/>'''],
-    'hydro'      : ['''        <tech sector="electricity" subsector="hydro"/>'''],
-    'biomass'    : ['''        <tech sector="elec_biomass"/>'''],
-    'CSP'        : ['''        <tech sector="elec_CSP"/>'''],
-    'nuclear'    : ['''        <tech sector="elec_Gen_II.*"/>'''],
-    'geothermal' : ['''        <tech sector="elec_geothermal"/>'''],
-    'rooftop_pv' : [rooftop_pv],
-}
+tech_map = None
+
+def set_tech_map(useGcamUSA):
+    global tech_map
+
+    if useGcamUSA:
+        tech_map = {
+            'solar'       : ['''        <tech sector="electricity" subsector="solar"/>'''],
+            'CSP'         : ['''        <tech sector="electricity" subsector="solar"/>'''],
+            'wind'        : ['''        <tech sector="electricity" subsector="wind"/>'''],
+            'wind_storage': ['''        <tech sector="electricity" subsector="wind"/>'''],
+            'hydro'       : ['''        <tech sector="electricity" subsector="hydro"/>'''],
+            'biomass'     : ['''        <tech sector="electricity" subsector="biomass"/>'''],
+            'nuclear'     : ['''        <tech sector="elec_Gen_II.*"/>'''],
+            'geothermal'  : ['''        <tech sector="electricity" subsector="geothermal"/>''']
+        }
+    else:
+        tech_map = {
+            'solar'      : ['''        <tech sector="electricity" subsector="solar"/>''',
+                            '''        <tech sector="elec_CSP"/>'''],
+            'wind'       : ['''        <tech sector="electricity" subsector="wind"/>'''],
+            'hydro'      : ['''        <tech sector="electricity" subsector="hydro"/>'''],
+            'biomass'    : ['''        <tech sector="elec_biomass"/>'''],
+            'CSP'        : ['''        <tech sector="elec_CSP"/>'''],
+            'nuclear'    : ['''        <tech sector="elec_Gen_II.*"/>'''],
+            'geothermal' : ['''        <tech sector="elec_geothermal"/>''']
+        }
+
+    tech_map['rooftop_pv'] = [rooftop_pv]
 
 def get_producers(row, tech_cols):
     producers = []
@@ -540,7 +583,7 @@ def res_from_csv(csv_path):
 def get_re_techs(tech_cols, params, region):
     return [tech for tech in tech_cols if params.loc[region, tech] == 1]
 
-def validate(scenario, csv_path):
+def validate(scenario, csv_path, useGcamUSA):
     import pandas as pd
     param_df = read_csv(csv_path)
 
@@ -548,7 +591,11 @@ def validate(scenario, csv_path):
     tech_cols = [col for col in param_df.columns if not str.isdigit(col) and col != 'market']
 
     sandboxDir  = getParam('GCAM.SandboxDir')
+
     query_name  = 'ElecGenBySubsectorNoRECs'
+    if useGcamUSA:
+        query_name += 'ByState'
+
     result_csv = pathjoin(sandboxDir, scenario, 'queryResults', '{}-{}.csv'.format(query_name, scenario))
 
     print("Reading", result_csv)
@@ -589,34 +636,43 @@ def resPolicyMain(args):
     from .error import CommandlineError
     from .utils import mkdirs
 
-    scenario  = args.scenario
-    inputFile = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these
-    outputXML = args.outputXML or getParam("GCAM.RESImplementationXmlFile")
+    scenario   = args.scenario
+    inputFile  = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these
+    outputXML  = args.outputXML or getParam("GCAM.RESImplementationXmlFile")
+    useGcamUSA = args.GCAM_USA
 
     if not scenario and not (outputXML and is_abspath(outputXML)):
         raise CommandlineError("outputXML ({}) is not an absolute pathname; a scenario must be specified".format(outputXML))
 
-    inPath   = get_path(inputFile,  pathjoin(getParam("GCAM.ProjectDir"), "etc"))
+    inPath   = get_path(inputFile, pathjoin(getParam("GCAM.ProjectDir"), "etc"))
     outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
 
     isCSV = (re.match('.*\.csv$', inPath, re.IGNORECASE) is not None)
+
+    set_tech_map(useGcamUSA)
+
+    if useGcamUSA:
+        read_state_names()
 
     if args.display:
         if not isCSV:
             raise CommandlineError("When using -d/--display, the input file must be in CSV format: '{}'.".format(inPath))
 
-        validate(scenario, inPath)
+        validate(scenario, inPath, useGcamUSA)
         return  # exit
 
     _logger.info("Reading '%s'", inPath)
     resPolicy = res_from_csv(inPath) if isCSV else RESPolicy(inPath)
 
     # By default, all electricity techs consume RE certificates
-    tech_df = get_electricity_tech_df()
+    tech_df = get_electricity_tech_df(useGcamUSA)
 
     root = None
 
     for std in resPolicy.standards:
+        if useGcamUSA and 'USA' in std.regions:
+            raise CommandlineError("The 'USA' region cannot be assigned a RES policy when using GCAM-USA (via the -u/--GCAM-USA flag)")
+
         for cert in std.certs:
             _logger.debug("  Producers:", cert.producers)
             _logger.debug("  Consumers:", cert.consumers)

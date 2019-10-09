@@ -41,6 +41,10 @@ class RESCommand(SubcommandABC):
         parser.add_argument('-d', '--display', action="store_true",
                             help='''If set, the result of the RES policy is displayed in tabular format,
                                     and the program exits. ''')
+
+        parser.add_argument('-u', '--GCAM-USA', action="store_true",
+                            help='''If set, produce output compatible with GCAM-USA regions.''')
+
         return parser
 
     def run(self, args, tool):
