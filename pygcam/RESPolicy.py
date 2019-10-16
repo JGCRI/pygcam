@@ -480,8 +480,6 @@ class RESPolicy(XMLFile):
 target_template = '''        <target years="{year}" fraction="{fraction}"/>'''
 
 rooftop_pv        = '''        <tech sector="elect_td_bld" subsector="rooftop_pv"/>'''
-solar_wind_hydro  = '''        <tech sector="electricity" subsector="solar|wind|hydro"/>'''
-all_elec          = '''        <tech sector="^elec_.*"/>'''
 
 cert_template = '''    <certificate name="{market}-REC">
       <targets>
@@ -543,7 +541,7 @@ def read_csv(pathname):
     df = pd.read_csv(pathname, index_col='region', skiprows=1)
     return df
 
-def res_from_csv(csv_path):
+def res_from_csv(csv_path, useGcamUSA):
     from pygcam.temp_file import getTempFile
     from pygcam.error import FileFormatError
 
@@ -557,6 +555,12 @@ def res_from_csv(csv_path):
         if not tech in tech_map:
             raise FileFormatError("Unrecognized technology name: {}".format(tech))
 
+    if useGcamUSA:
+        all_elec = ['''        <tech sector="electricity"/>''']
+    else:
+        all_elec = ['''        <tech sector="electricity" subsector="solar|wind|hydro"/>''',
+                    '''        <tech sector="^elec_.*"/>''']
+
     _logger.info("Writing '%s'", xml_path)
     with open(xml_path, 'w') as f:
         f.write('''<portfolio-standards xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="RES-schema.xsd">\n''')
@@ -568,7 +572,7 @@ def res_from_csv(csv_path):
 
             producers = get_producers(row, tech_cols)
 
-            consumer_list = [solar_wind_hydro, all_elec] + ([rooftop_pv] if row.rooftop_pv else [])
+            consumer_list = all_elec + ([rooftop_pv] if row.rooftop_pv else [])
             consumers = '\n'.join(consumer_list)
 
             cert = cert_template.format(market=row.market, targets=targets, producers=producers, consumers=consumers)
@@ -662,7 +666,7 @@ def resPolicyMain(args):
         return  # exit
 
     _logger.info("Reading '%s'", inPath)
-    resPolicy = res_from_csv(inPath) if isCSV else RESPolicy(inPath)
+    resPolicy = res_from_csv(inPath, useGcamUSA) if isCSV else RESPolicy(inPath)
 
     # By default, all electricity techs consume RE certificates
     tech_df = get_electricity_tech_df(useGcamUSA)
