@@ -58,7 +58,9 @@ def findGCAM():
 
     home = getHomeDir()
 
-    withReleasePackages = ['gcam-v5.1.2', 'gcam-v4.4.1', 'gcam-v5.1.1', 'gcam-v4.4']
+    withReleasePackages = ['gcam-v5.2',
+                           'gcam-v5.1.3', 'gcam-v5.1.2', 'gcam-v5.1.1',
+                           'gcam-v4.4.1', 'gcam-v4.4']
     versions = withReleasePackages + ['gcam-v4.3']
     dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
