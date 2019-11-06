@@ -11,7 +11,7 @@ XML File Formats
    landProtection-xml
    parameters.xml <mcs/parameters>
    results.xml <mcs/results>
-
+   resPolicy-xml
 
 Various :doc:`gcamtool` sub-commands take input from XML files that are distinct
 from those read by the GCAM model itself. These include:

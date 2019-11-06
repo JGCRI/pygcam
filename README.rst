@@ -34,6 +34,17 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.8.0 (6 Nov 2019)
+---------------------------
+* Updated "res" sub-command to generate Renewable Energy Standards for 32 regions and for GCAM-USA.
+* Update "init" sub-command to recognize recent GCAM versions, updated default version to 5.1.3.
+  (This will be updated to GCAM 5.2 after testing with that version is completed.)
+* Added support for making incremental improvements to building energy efficiencies, including
+  - A new sub-command, "building" which creates a CSV template that can be modified to set the percentage
+  improvement in building energy use by sector, subsector, technology, energy input, and year.
+  - A new callable method, "buildingTechEfficiency" that converts the CSV file to the required XML and
+    adds an entry to the configuration.xml to load the generated file.
+
 Version 1.7.0 (29 Jul 2019)
 ---------------------------
 * GCAM regions are now read from the data system, if present. This supports use of other regionalizations.
@@ -44,7 +55,7 @@ Version 1.7.0 (29 Jul 2019)
 * Adjusted which files to copy/link on Windows
 * Added "exe/restart" to list of files to copy
 * MCS: xlabel on distribution plots is now set from units column in database "output" table
-* Improved RF subplots 
+* Improved RF subplots
 
 Version 1.6.2 (20 Feb 2019)
 ---------------------------
