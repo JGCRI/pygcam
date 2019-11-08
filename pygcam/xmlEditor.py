@@ -803,7 +803,7 @@ class XMLEditor(object):
     def stringReplace(self, xpath, oldstr, newstr):
         """
         Edit the text for the nodes identified by xpath (applied to the current config file),
-        and change all occurences of `oldstr` to `newstr`. Currently does not support regex.
+        and change all occurrences of `oldstr` to `newstr`. Currently does not support regex.
         **Callable from XML setup files.**
 
         :param xpath: (str) path to elements whose text should be changed
@@ -823,6 +823,31 @@ class XMLEditor(object):
 
         for node in nodes:
             node.text = node.text.replace(oldstr, newstr)
+
+    @callableMethod
+    def setConfigValue(self, section, name, value):
+        """
+        Set the value of the item with `name` in `section` to the given `value`. Numeric
+        values are converted to strings automatically.
+
+        :param section: (str) the name of a section in the configuration.xml file, e.g., "Strings", "Bools", "Ints", etc.
+        :param name: (str) the name of the attribute on the element to change
+        :param value: the new value to set for the identified element
+        :return: none
+        """
+        cfg = self.cfgPath()
+        item = CachedFile.getFile(cfg)
+        item.setEdited()
+
+        _logger.info("setConfigValue('%s', '%s', '%s')" % (section, name, value))
+
+        xpath = '//{}/Value[@name="{}"]'.format(section, name)
+
+        elt = item.tree.find(xpath)
+        if elt is None:
+            raise SetupException("setConfigValue: No config elements match xpath '%s'" % xpath)
+
+        elt.text = str(value)
 
     def addScenarioComponent(self, name, xmlfile):
         """
