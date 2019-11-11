@@ -1552,11 +1552,13 @@ class XMLEditor(object):
                                configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
         Create a modified version of en_transformation.xml with the given share-weights
-        for `technology` in `sector` based on the data in `values`.
+        for `technology` in `sector` based on the data in `values`. Note that this function
+        affects regional technology definitions only. To affect definitions in the global
+        technology database, use the function setGlobalTechShareWeight (below).
         **Callable from XML setup files.**
 
         :param region: if not None, changes are made in a specific region, otherwise they're
-            made in the global-technology-database.
+            made in all regions.
         :param sector: (str) the name of a GCAM sector
         :param subsector: (str) the name of a GCAM subsector
         :param values: (dict-like or iterable of tuples of (year, shareWeight)) `year` can
@@ -1568,26 +1570,28 @@ class XMLEditor(object):
             anything coercible to float.
         :param stubTechnology: (str) the name of a GCAM technology in the global technology database
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
-           section of a config file. This must match `xmlBasename`.
+           section of a config file.
         :return: none
         """
         from .utils import printSeries
 
         _logger.info("Set share-weights for (%r, %r, %r, %r) for %r",
                      region, sector, subsector, stubTechnology, self.name)
-        _logger.info(printSeries(values, 'share-weights', asStr=True))
+        # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
 
-        prefix = "//region[@name='%s']/supplysector[@name='%s']/subsector[@name='%s']" % (region, sector, subsector)
+        regionElt = "//region[@name='{}']".format(region) if region else "//region"
+        prefix = "{}/supplysector[@name='{}']/subsector[@name='{}']".format(regionElt, sector, subsector)
 
         shareWeight = '/stub-technology[@name="{technology}"]/period[@year="{year}"]/share-weight' \
                       if stubTechnology else '/share-weight[@year="{year}"]'
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append((prefix + shareWeight.format(technology=stubTechnology, year=year),
-                         coercible(value, float)))
+            xpath = prefix + shareWeight.format(technology=stubTechnology, year=year)
+            _logger.debug('setRegionalShareWeights xpath: "%s"', xpath)
+            pairs.append((xpath, coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
@@ -1615,7 +1619,7 @@ class XMLEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        _logger.info("Set share-weights for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
+        _logger.info("Set global-technology-database share-weights for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
 
