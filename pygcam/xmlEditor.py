@@ -1722,13 +1722,20 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
-    def buildingTechEfficiency(self, csvFile, xmlTag='building_update', xmlFile='building_tech_improvements.xml'):
+    def buildingTechEfficiency(self, csvFile, xmlTag='building_update', xmlFile='building_tech_improvements.xml', mode="mult"):
         import pandas as pd
 
         df = pd.read_csv(csvFile)
         year_cols = [col for col in df.columns if col.isdigit()]
 
         changes = []
+
+        if mode == 'mult':
+            compute = lambda old, improvement: old * (1 + improvement)
+        elif mode == 'add':
+            compute = lambda old, improvement: old + improvement
+        else:
+            raise SetupException("buildingTechEfficiency: mode must be either 'add' or 'mult'; got '{}'".format(mode))
 
         def runForFile(tag, which):
             fileRel, fileAbs = self.getLocalCopy(tag)
@@ -1763,7 +1770,7 @@ class XMLEditor(object):
 
                     elt = elts[0]
                     old_value = float(elt.text)
-                    new_value = old_value * (1 - improvement)
+                    new_value = compute(old_value, improvement)
                     pairs.append((year, new_value))
 
                 if pairs:
@@ -1779,9 +1786,6 @@ class XMLEditor(object):
 
         xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
         xmlRel = pathjoin(self.scenario_dir_rel, xmlFile)
-
-        # Generate an additional XML file
-        # with open(xmlAbs, 'w') as f:
 
         scenarioElt = ET.Element('scenario')
         worldElt = ET.SubElement(scenarioElt, 'world')
@@ -1810,9 +1814,10 @@ class XMLEditor(object):
                 techElt    = getSubElement(subsectElt, 'stub-technology', 'name', tech)
                 periodElt  = getSubElement(techElt, 'period', 'year', year)
                 inputElt   = getSubElement(periodElt, 'minicam-energy-input', 'name', input)
-                inputElt.text = str(value)
+                efficElt   = ET.SubElement(inputElt, 'efficiency')
+                efficElt.text = str(value)
 
-        _logger.info("Writing '%s'", xmlAbs)
+        _logger.info("Writing building tech changes to '%s'", xmlAbs)
         tree = ET.ElementTree(scenarioElt)
         tree.write(xmlAbs, xml_declaration=True, encoding='utf-8', pretty_print=True)
 
