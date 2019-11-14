@@ -1731,9 +1731,21 @@ class XMLEditor(object):
         changes = []
 
         if mode == 'mult':
-            compute = lambda old, improvement: old * (1 + improvement)
+            # We treat the improvement as the change in the "inefficiency coefficient",
+            # best described by the algebra below...
+            def compute(old, improvement, tech):
+                if tech == 'electricity':
+                    return old * (1 + improvement)
+
+                inefficiency = (1./old) - 1.
+                inefficiency *= (1. - improvement)
+                coefficient = 1. + inefficiency
+                efficiency = 1./coefficient
+                return efficiency
+
         elif mode == 'add':
-            compute = lambda old, improvement: old + improvement
+            def compute(old, improvement, tech): return old + improvement
+
         else:
             raise SetupException("buildingTechEfficiency: mode must be either 'add' or 'mult'; got '{}'".format(mode))
 
@@ -1752,6 +1764,7 @@ class XMLEditor(object):
             for (idx, row) in subdf.iterrows():
                 xpath_prefix = xml_template.format(**row)
                 input = row['input']
+                tech  = row['technology']
                 pairs = []
 
                 for year in year_cols:
@@ -1770,7 +1783,7 @@ class XMLEditor(object):
 
                     elt = elts[0]
                     old_value = float(elt.text)
-                    new_value = compute(old_value, improvement)
+                    new_value = compute(old_value, improvement, tech)
                     pairs.append((year, new_value))
 
                 if pairs:
