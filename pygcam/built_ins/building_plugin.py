@@ -7,8 +7,6 @@
 .. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-from datetime import datetime
-
 from ..subcommand import SubcommandABC
 
 DFLT_PROJECT = 'gcam_res'

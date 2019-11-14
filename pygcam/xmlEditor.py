@@ -1769,8 +1769,13 @@ class XMLEditor(object):
                 if pairs:
                     changes.append((row, pairs))
 
-        runForFile('building', 'GCAM-32')
-        runForFile('bld_usa',  'GCAM-USA')
+        which_values = set(df.which)
+
+        if 'GCAM-32' in which_values:
+            runForFile('building', 'GCAM-32')
+
+        if 'GCAM-USA' in which_values:
+            runForFile('bld_usa',  'GCAM-USA')
 
         xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
         xmlRel = pathjoin(self.scenario_dir_rel, xmlFile)
