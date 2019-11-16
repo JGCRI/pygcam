@@ -1084,7 +1084,7 @@ class XMLEditor(object):
     @callableMethod
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
                                  funcName='linear', applyTo='share-weight', stubTechnology=None,
-                                 delete=False):
+                                 configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
         """
         Set the interpolation function for the share-weight of the `subsector`
         of `supplysector` to `funcName` between years `fromYear` to `toYear`
@@ -1098,12 +1098,15 @@ class XMLEditor(object):
         :param funcName: (str) the name of an interpolation function
         :param applyTo: (str) what the interpolation function is applied to
         :param stubTechnology: (str) the name of a technology to apply function to
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. This determines which file is edited, so it must correspond to
+           the indicated sector(s). Default is 'energy_transformation'.
         :param delete: (bool) if True, set delete="1", otherwise don't.
         :return: none
         """
         _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
+        enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
 
         # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
         prefix = '//region[@name="%s"]/supplysector[@name="%s"]/subsector[@name="%s"]%s/interpolation-rule[@apply-to="%s"]' % \
@@ -1455,9 +1458,6 @@ class XMLEditor(object):
             pandas Series) a list of tuples is created by calling values.items() after
             which the rest of the explanation above applies. The `shutdownRate` can be
             anything coercible to float.
-        :param xmlBasename: (str) the name of an xml file in the energy-xml folder to edit.
-        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
-           section of a config file. This must match `xmlBasename`.
         :return: none
         """
         _logger.info("Set shutdown rate for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
