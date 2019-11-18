@@ -160,7 +160,21 @@ def xmlSel(filename, xpath, asText=False):
     if asText:
         return result.text if result is not None else None
 
-    return bool(result)
+    return (result is not None)
+
+def xmlIns(filename, xpath, elt):
+    """
+    Insert the element `elt` as a child to the node found with `xpath`.
+    :param filename: (str) the file to edit
+    :param xpath: (str) the xml element(s) to search for
+    :param elt: (etree.Element) the node to insert
+    :return: none
+    """
+    item = CachedFile.getFile(filename)
+    item.setEdited()
+
+    parentElt = item.tree.find(xpath)
+    parentElt.append(elt)
 
 #
 # xmlEdit can set a value, multiply a value in the XML by a constant,
@@ -1122,13 +1136,20 @@ class XMLEditor(object):
                 (prefix + '/@to-year', str(toYear)),
                 (prefix + '/interpolation-function/@name', funcName)]
 
+        def set_or_insert_value(which, value):
+            xpath = prefix + '/' + which
+            if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
+                args.append((xpath, str(value)))
+            else:                                       # otherwise, insert the element
+                elt = ET.Element(which)
+                elt.text = str(value)
+                xmlIns(xmlFileAbs, prefix, elt)
+
         if fromValue is not None:
-            xpath = prefix + '/from-value'
-            args.append((xpath, str(fromValue)))
+            set_or_insert_value('from-value', fromValue)
 
         if toValue is not None:
-            xpath = prefix + '/to-value'
-            args.append((xpath, str(toValue)))
+            set_or_insert_value('to-value', toValue)
 
         if delete:
             args.append((prefix + '/@delete', "1"))
@@ -1557,16 +1578,15 @@ class XMLEditor(object):
         xmlEdit(filenameAbs, pairs)
         self.updateScenarioComponent(configFileTag, filenameRel)
 
-    # TBD: test
     @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
                                stubTechnology=None,
                                configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
-        Create a modified version of en_transformation.xml with the given share-weights
-        for `technology` in `sector` based on the data in `values`. Note that this function
-        affects regional technology definitions only. To affect definitions in the global
-        technology database, use the function setGlobalTechShareWeight (below).
+        Create a modified version of the indicated file (default is en_transformation.xml) with
+        the given share-weights for `technology` in `sector` based on the data in `values`. Note
+        that this function affects regional technology definitions only. To affect definitions in
+        the global technology database, use the function setGlobalTechShareWeight (below).
         **Callable from XML setup files.**
 
         :param region: if not None, changes are made in a specific region, otherwise they're
