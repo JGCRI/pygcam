@@ -1083,7 +1083,8 @@ class XMLEditor(object):
 
     @callableMethod
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
-                                 funcName='linear', applyTo='share-weight', stubTechnology=None,
+                                 funcName='linear', applyTo='share-weight', fromValue=None,
+                                 toValue=None,  stubTechnology=None,
                                  configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
         """
         Set the interpolation function for the share-weight of the `subsector`
@@ -1097,16 +1098,19 @@ class XMLEditor(object):
         :param toYear: (str or int) the year to stop interpolating
         :param funcName: (str) the name of an interpolation function
         :param applyTo: (str) what the interpolation function is applied to
+        :param fromValue: (str or number) the value to set in the <from-value> element (optional)
+        :param toValue: (str or number) the value to set in the <to-value> element (required for
+            all but "fixed" interpolation function.)
         :param stubTechnology: (str) the name of a technology to apply function to
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This determines which file is edited, so it must correspond to
-           the indicated sector(s). Default is 'energy_transformation'.
+           the indicated sector(s). Default is 'energy_transformation'.y
         :param delete: (bool) if True, set delete="1", otherwise don't.
         :return: none
         """
         _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
 
         # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
         prefix = '//region[@name="%s"]/supplysector[@name="%s"]/subsector[@name="%s"]%s/interpolation-rule[@apply-to="%s"]' % \
@@ -1118,12 +1122,20 @@ class XMLEditor(object):
                 (prefix + '/@to-year', str(toYear)),
                 (prefix + '/interpolation-function/@name', funcName)]
 
+        if fromValue is not None:
+            xpath = prefix + '/from-value'
+            args.append((xpath, str(fromValue)))
+
+        if toValue is not None:
+            xpath = prefix + '/to-value'
+            args.append((xpath, str(toValue)))
+
         if delete:
             args.append((prefix + '/@delete', "1"))
 
-        xmlEdit(enTransFileAbs, args)
+        xmlEdit(xmlFileAbs, args)
 
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
+        self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
     def setupSolver(self, solutionTolerance=None, broydenTolerance=None,
