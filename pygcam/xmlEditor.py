@@ -1127,6 +1127,10 @@ class XMLEditor(object):
         """
         _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
 
+        toYear = str(toYear)
+        fromYear = str(fromYear)
+
+
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
 
         # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
@@ -1142,17 +1146,39 @@ class XMLEditor(object):
         def set_or_insert_value(which, value):
             xpath = prefix + '/' + which
             if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
-                args.append((xpath, str(value)))
+                args.append((xpath, value))
             else:                                       # otherwise, insert the element
                 elt = ET.Element(which)
-                elt.text = str(value)
+                elt.text = value
                 xmlIns(xmlFileAbs, prefix, elt)
 
         if fromValue is not None:
+            fromValue = str(fromValue)
             set_or_insert_value('from-value', fromValue)
 
         if toValue is not None:
+            toValue = str(toValue)
             set_or_insert_value('to-value', toValue)
+
+            item = CachedFile.getFile(xmlFileAbs)
+            tree = item.tree
+
+            # Check if a share-weight node exists for the toYear; if so, set the value.
+            # If not insert one a new element for this year before the interpolation rule.
+            sharePath = prefix + '/share-weight[@year="{}"]'.format(toYear)
+            shareElt = tree.find(sharePath)
+
+            if shareElt is None:
+                ruleElt = tree.find(prefix)
+                parentElt = tree.find(prefix + '/..')
+                index = parentElt.index(ruleElt)
+
+                # insert <share-weight year=”{toYear}”>{toValue}</share-weight> before <interpolation-rule>
+                shareElt = ET.SubElement(parentElt, 'share-weight', attrib={'year' : toYear})
+                parentElt.insert(index, shareElt)
+
+            # Set the value for the toYear
+            shareElt.text = toValue
 
         if delete:
             args.append((prefix + '/@delete', "1"))
