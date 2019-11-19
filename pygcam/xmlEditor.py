@@ -1108,7 +1108,8 @@ class XMLEditor(object):
         of `supplysector` to `funcName` between years `fromYear` to `toYear`
         in `region`. **Callable from XML setup files.**
 
-        :param region: (str) the GCAM region to operate on
+        :param region: (str or None) If a string, the GCAM region to operate on. If None,
+            the function is applied to all regions.
         :param supplysector: (str) the name of a supply sector
         :param subsector: (str) the name of a sub-sector
         :param fromYear: (str or int) the year to start interpolating
@@ -1130,58 +1131,63 @@ class XMLEditor(object):
         toYear = str(toYear)
         fromYear = str(fromYear)
 
-
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
 
-        # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
-        prefix = '//region[@name="%s"]/supplysector[@name="%s"]/subsector[@name="%s"]%s/interpolation-rule[@apply-to="%s"]' % \
-                 (region, supplysector, subsector,
-                  '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '',
-                  applyTo)
+        item = CachedFile.getFile(xmlFileAbs)
+        tree = item.tree
 
-        args = [(prefix + '/@from-year', str(fromYear)),
-                (prefix + '/@to-year', str(toYear)),
-                (prefix + '/interpolation-function/@name', funcName)]
+        # convert to a list; if no region given, get list of regions in this file
+        regions = [region] if region else tree.xpath('//region/@name')
 
-        def set_or_insert_value(which, value):
-            xpath = prefix + '/' + which
-            if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
-                args.append((xpath, value))
-            else:                                       # otherwise, insert the element
-                elt = ET.Element(which)
-                elt.text = value
-                xmlIns(xmlFileAbs, prefix, elt)
+        for region in regions:
+            regionElt = "//region[@name='{}']".format(region)
 
-        if fromValue is not None:
-            fromValue = str(fromValue)
-            set_or_insert_value('from-value', fromValue)
+            # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
+            prefix = '{}/supplysector[@name="{}"]/subsector[@name="{}"]{}/interpolation-rule[@apply-to="{}"]'.format(
+                        regionElt, supplysector, subsector,
+                        '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '',
+                        applyTo)
 
-        if toValue is not None:
-            toValue = str(toValue)
-            set_or_insert_value('to-value', toValue)
+            args = [(prefix + '/@from-year', str(fromYear)),
+                    (prefix + '/@to-year', str(toYear)),
+                    (prefix + '/interpolation-function/@name', funcName)]
 
-            item = CachedFile.getFile(xmlFileAbs)
-            tree = item.tree
+            def set_or_insert_value(which, value):
+                xpath = prefix + '/' + which
+                if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
+                    args.append((xpath, value))
+                else:                                       # otherwise, insert the element
+                    elt = ET.Element(which)
+                    elt.text = value
+                    xmlIns(xmlFileAbs, prefix, elt)
 
-            # Check if a share-weight node exists for the toYear; if so, set the value.
-            # If not insert one a new element for this year before the interpolation rule.
-            sharePath = prefix + '/share-weight[@year="{}"]'.format(toYear)
-            shareElt = tree.find(sharePath)
+            if fromValue is not None:
+                fromValue = str(fromValue)
+                set_or_insert_value('from-value', fromValue)
 
-            if shareElt is None:
-                ruleElt = tree.find(prefix)
-                parentElt = tree.find(prefix + '/..')
-                index = parentElt.index(ruleElt)
+            if toValue is not None:
+                toValue = str(toValue)
+                set_or_insert_value('to-value', toValue)
 
-                # insert <share-weight year=”{toYear}”>{toValue}</share-weight> before <interpolation-rule>
-                shareElt = ET.SubElement(parentElt, 'share-weight', attrib={'year' : toYear})
-                parentElt.insert(index, shareElt)
+                # Check if a share-weight node exists for the toYear; if so, set the value.
+                # If not insert one a new element for this year before the interpolation rule.
+                sharePath = prefix + '/share-weight[@year="{}"]'.format(toYear)
+                shareElt = tree.find(sharePath)
 
-            # Set the value for the toYear
-            shareElt.text = toValue
+                if shareElt is None:
+                    ruleElt = tree.find(prefix)
+                    parentElt = tree.find(prefix + '/..')
+                    index = parentElt.index(ruleElt)
 
-        if delete:
-            args.append((prefix + '/@delete', "1"))
+                    # insert <share-weight year=”{toYear}”>{toValue}</share-weight> before <interpolation-rule>
+                    shareElt = ET.SubElement(parentElt, 'share-weight', attrib={'year' : toYear})
+                    parentElt.insert(index, shareElt)
+
+                # Set the value for the toYear
+                shareElt.text = toValue
+
+            if delete:
+                args.append((prefix + '/@delete', "1"))
 
         xmlEdit(xmlFileAbs, args)
 
