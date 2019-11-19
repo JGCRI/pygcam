@@ -174,6 +174,9 @@ def xmlIns(filename, xpath, elt):
     item.setEdited()
 
     parentElt = item.tree.find(xpath)
+    if parentElt is None:
+        raise SetupException("xmlIns: failed to find parent element at {} in {}".format(xpath, filename))
+
     parentElt.append(elt)
 
 #
@@ -1611,22 +1614,36 @@ class XMLEditor(object):
                      region, sector, subsector, stubTechnology, self.name)
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
 
         regionElt = "//region[@name='{}']".format(region) if region else "//region"
         prefix = "{}/supplysector[@name='{}']/subsector[@name='{}']".format(regionElt, sector, subsector)
 
         shareWeight = '/stub-technology[@name="{technology}"]/period[@year="{year}"]/share-weight' \
-                      if stubTechnology else '/share-weight[@year="{year}"]'
+                            if stubTechnology else '/share-weight[@year="{year}"]'
 
         pairs = []
         for year, value in expandYearRanges(values):
             xpath = prefix + shareWeight.format(technology=stubTechnology, year=year)
             _logger.debug('setRegionalShareWeights xpath: "%s"', xpath)
+
+            if not xmlSel(xmlFileAbs, xpath):    # if not found, add the element
+                _logger.debug('Inserting missing element at {}'.format(xpath))
+                if stubTechnology:
+                    elt = ET.Element('period', attrib={'year': str(year)})
+                    ET.SubElement(elt, 'share-weight')
+                    parentXpath = prefix + '/stub-technology[@name="{}"]'.format(stubTechnology)
+                else:
+                    elt = ET.Element('share-weight', attrib={'year': str(year)})
+                    parentXpath = prefix
+
+                _logger.debug("parentXpath={}".format(parentXpath))
+                xmlIns(xmlFileAbs, parentXpath, elt) # insert the element
+
             pairs.append((xpath, coercible(value, float)))
 
-        xmlEdit(enTransFileAbs, pairs)
-        self.updateScenarioComponent(configFileTag, enTransFileRel)
+        xmlEdit(xmlFileAbs, pairs)
+        self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     # TBD: Test
     @callableMethod
