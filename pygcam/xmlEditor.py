@@ -1139,6 +1139,8 @@ class XMLEditor(object):
         # convert to a list; if no region given, get list of regions in this file
         regions = [region] if region else tree.xpath('//region/@name')
 
+        args = []
+
         for region in regions:
             regionElt = "//region[@name='{}']".format(region)
 
@@ -1148,9 +1150,9 @@ class XMLEditor(object):
                         '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '',
                         applyTo)
 
-            args = [(prefix + '/@from-year', str(fromYear)),
-                    (prefix + '/@to-year', str(toYear)),
-                    (prefix + '/interpolation-function/@name', funcName)]
+            args += [(prefix + '/@from-year', fromYear),
+                     (prefix + '/@to-year', toYear),
+                     (prefix + '/interpolation-function/@name', funcName)]
 
             def set_or_insert_value(which, value):
                 xpath = prefix + '/' + which
