@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 """
-.. "new" sub-command (creates a new project)
+.. Read GCAM's transport technology files and generate a CSV template for the sectors/regions indicated
+.. by the user that can be modified to adjust the energy efficiencies of the selected technologies.
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016  Richard Plevin
+.. Copyright (c) 2019  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
+import os
+from ..config import getParam
+from ..XMLFile import XMLFile
 from ..subcommand import SubcommandABC
-
-DFLT_PROJECT = 'gcam_res'
-OUTPUT_FILE  = 'building_tech_template.csv'
-
-def get_re_techs(tech_cols, params, region):
-    return [tech for tech in tech_cols if params.loc[region, tech] == 1]
 
 def element_path(elt):
     d = {'input' : elt.attrib['name']}
@@ -25,6 +23,10 @@ def element_path(elt):
         if tag == 'period':
             pass
 
+        elif tag == 'region':
+            d['region'] = attr['name' ]
+            break
+
         elif tag == 'location-info':
             d['sector'] = attr['sector-name']
             d['subsector'] = attr['subsector-name']
@@ -35,13 +37,10 @@ def element_path(elt):
         elif tag in ('stub-technology', 'technology'):
             d['technology'] = attr['name']
 
-        elif tag == 'subsector':
+        elif tag == 'tranSubsector':
             d['subsector'] = attr['name']
 
-        elif tag in ('global-technology-database', 'region'):
-            break
-
-    return (d['sector'], d['subsector'], d['technology'], d['input'])
+    return (d['region'], d['sector'], d['subsector'], d['technology'], d['input'])
 
 def validate_years(years):
     pair = years.split('-')
@@ -60,103 +59,102 @@ def validate_years(years):
 
     return [i for i in range(first, last+1, 5)]
 
-def save_bldg_techs(f, args, years, xml_file, xpath, which):
-    from ..config import getParam
-    from ..utils import pathjoin
-    from ..XMLFile import XMLFile
+def save_transport_techs(f, args, years):
+    project = args.project or getParam('GCAM.DefaultProject')
+    if not project:
+        raise Exception('Must set GCAM.DefaultProject in .pygcam.cfg or use -P flag to specify a project')
 
-    gcamDir = getParam('GCAM.RefWorkspace', section=args.project)
-    pathname = pathjoin(gcamDir, 'input', 'gcamdata', 'xml', xml_file)
-
+    gcamDir = getParam('GCAM.RefWorkspace', section=project)
+    pathname = os.path.join(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
     print("Reading", pathname)
     xml = XMLFile(pathname)
     root = xml.getRoot()
 
+    if args.regions:
+        regions = args.regions.split(',')
+        comps = ['@name="{}"'.format(r) for r in regions]
+        regionPrefix = '//region[{}]'.format(' or '.join(comps))
+    else:
+        regionPrefix = '//region'
+
+    xpath = regionPrefix + '/supplysector/tranSubsector/stub-technology/period/minicam-energy-input'
+
     nodes = root.xpath(xpath)
-    paths = sorted(set([element_path(node) for node in nodes])) # use 'set' to remove dupes
+    paths = sorted(set([element_path(node) for node in nodes if node.find('./coefficient') is not None])) # use 'set' to remove dupes
+
+    matched_prefix = []
+    if args.prefixes:
+        prefixes = set(args.prefixes.split(','))
+        for path in paths:
+            for prefix in prefixes:
+                if path[1].startswith(prefix):
+                    matched_prefix.append(path)
 
     # filter out sectors missing from cmdline arg, if specified
+    matched_sector = []
     if args.sectors:
-        desired = []
         sectors = set(args.sectors.split(','))
         for path in paths:
-            if path[0] in sectors:
-                desired.append(path)
-        paths = desired
+            if path[1] in sectors:
+                matched_sector.append(path)
 
-    all_regions = root.xpath('//region/@name')
-    all_regions = set(all_regions).difference(['USA'])  # we remove USA from both sets
-
-    regions = args.regions.split(',') if args.regions else all_regions
-    regions = sorted(regions)
+    if args.prefixes or args.sectors:
+        paths = sorted(set(matched_prefix + matched_sector))
 
     zeroes = ',0' * len(years)    # fill in with zeroes for reading into a dataframe
 
     # data values
-    for region in regions:
-        if region not in all_regions:   # use only regions defined for this XML file
-            continue
-
-        for tup in paths:
-            f.write(which + ',' + region + ',')
-            f.write(','.join(tup))
-            f.write(zeroes + '\n')
+    for tup in paths:
+        f.write(','.join(tup) + zeroes + '\n')
 
 
-class BuildingCommand(SubcommandABC):
+
+class TransportCommand(SubcommandABC):
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Dump combinations of building energy use sectors, techs, and fuels.'''}
-        super(BuildingCommand, self).__init__('building', subparsers, kwargs, group='project')
+        kwargs = {'help' : '''Write combinations of transport sectors, techs, and fuels to a template CSV file.'''}
+        super(TransportCommand, self).__init__('transport', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
-        parser.add_argument('-p', '--project', default=DFLT_PROJECT,
-                            help='''The name of the project to use to locate GCAM reference files. Default is "{}"'''.format(
-                                DFLT_PROJECT))
+        OUTPUT_FILE = 'transport_tech_template.csv'
+
+        parser.add_argument('-P', '--project', default=None,
+                            help='''The name of the project to use to locate GCAM reference files.''')
 
         parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
-                            help='''The CSV file to create with lists of unique building sectors, 
+                            help='''The CSV template file to create with transport sectors, 
                             subsectors, and technologies. Default is "{}"'''.format(OUTPUT_FILE))
+
+        parser.add_argument('-p', '--prefixes', default=None,
+                            help='''A comma-delimited list of sector prefixes indicating which sectors to include in the 
+                            generated template. Use quotes around the argument if there are embedded blanks.''')
 
         parser.add_argument('-s', '--sectors', default=None,
                             help='''A comma-delimited list of sectors to include in the generated template. Use quotes 
-                            around the argument if there are embedded blanks. By default, all known building technology
+                            around the argument if there are embedded blanks. By default, all known transport technology
                             sectors are included.''')
 
         parser.add_argument('-r', '--regions', default=None,
                             help='''A comma-delimited list of regions to include in the generated template. 
                              By default all regions are included. ''')
 
-        parser.add_argument('-u', '--GCAM-USA', action="store_true",
-                            help='''If set, produce output compatible with GCAM-USA regions.''')
-
         parser.add_argument('-y', '--years', default='2015-2100',
                             help='''A hyphen-separated range of timestep years to include in the generated template.
                             Default is "2015-2100"''')
-
         return parser
 
 
     def run(self, args, tool):
-        main_xml_file = 'building_det.xml'
-        usa_xml_file = 'building_USA.xml'
-
-        main_xpath = '//supplysector/subsector/stub-technology/period/minicam-energy-input'
-        usa_xpath = '//global-technology-database/location-info/technology/period/minicam-energy-input'
+        years = validate_years(args.years)
+        if years is None:
+            raise Exception(
+                'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
+                    args.years))
 
         with open(args.outputFile, 'w') as f:
-            years = validate_years(args.years)
-            if years is None:
-                raise Exception(
-                    'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
-                        args.years))
-
             # column headers
-            f.write("which,region,sector,subsector,technology,input,")
+            f.write("region,sector,subsector,technology,input,")
             f.write(','.join(map(str, years)))
             f.write("\n")
 
-            save_bldg_techs(f, args, years, main_xml_file, main_xpath, 'GCAM-32')
-
-            if args.GCAM_USA:
-                save_bldg_techs(f, args, years, usa_xml_file, usa_xpath, 'GCAM-USA')
+            save_transport_techs(f, args, years)
