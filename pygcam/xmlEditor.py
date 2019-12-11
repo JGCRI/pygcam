@@ -1236,7 +1236,6 @@ class XMLEditor(object):
         maxModelCalcs = coercibleAndPositive('maxModelCalcs', maxModelCalcs, int)
         maxIterations = coercibleAndPositive('maxIterations', maxIterations, int)
 
-        solverFile = 'cal_broyden_config.xml'
         solverFileRel, solverFileAbs = self.getLocalCopy(SOLVER_TAG)
 
         prefix = "//scenario/user-configurable-solver[@year>=2010]/"
