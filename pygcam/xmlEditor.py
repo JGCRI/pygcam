@@ -1809,6 +1809,49 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
+    def transportTechEfficiency(self, csvFile, xmlTag='transportation'):
+        import pandas as pd
+
+        df = pd.read_csv(csvFile)
+        year_cols = [col for col in df.columns if col.isdigit()]
+
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(xmlTag)
+        fileObj = CachedFile.getFile(xmlFileAbs)
+        tree = fileObj.tree
+
+        xml_template = "//region[@name='{region}']/supplysector[@name='{sector}']/tranSubsector[@name='{subsector}']/stub-technology[@name='{technology}']/"
+
+        pairs = []
+
+        for (idx, row) in df.iterrows():
+            xpath_prefix = xml_template.format(**row)
+            input = row['input']
+
+            for year in year_cols:
+                improvement = row[year]
+                if improvement == 0:
+                    continue
+
+                xpath = xpath_prefix + "period[@year='{year}']/minicam-energy-input[@name='{input}']/coefficient".format(
+                    year=year, input=input)
+                elts = tree.xpath(xpath)
+
+                if elts is None:
+                    raise SetupException('XPath query {} on file "{}" failed to find an element'.format(xpath, xmlFileAbs))
+
+                if len(elts) != 1:
+                    raise SetupException(
+                        'XPath query {} on file "{}" returned multiple elements'.format(xpath, xmlFileAbs))
+
+                elt = elts[0]
+                old_value = float(elt.text)
+                new_value = old_value * (1 - improvement)
+                pairs.append((xpath, new_value))
+
+        xmlEdit(xmlFileAbs, pairs)
+        self.updateScenarioComponent(xmlTag, xmlFileRel)
+
+    @callableMethod
     def buildingTechEfficiency(self, csvFile, xmlTag='building_update', xmlFile='building_tech_improvements.xml', mode="mult"):
         import pandas as pd
 
