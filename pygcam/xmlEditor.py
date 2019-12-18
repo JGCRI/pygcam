@@ -760,6 +760,20 @@ class XMLEditor(object):
 
         return dstRelPath, dstAbsPath
 
+    @callableMethod
+    def replaceValue(self, tag, xpath, value):
+        """
+        Replace the value indicated by ``xpath`` with ``value`` in the file
+        identified with the config file name ``tag``.
+
+        :param tag: (str) the name of a config file element
+        :param xpath: (str) an XPath query string
+        :param value: the value to use in place of that found by the xpath.
+            (the value is converted to string, so you can pass ints or floats.)
+        """
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(tag)
+        xmlEdit(xmlFileAbs, [(xpath, str(value))])
+
     def updateConfigComponent(self, group, name, value=None, writeOutput=None, appendScenarioName=None):
         """
         Update the value of an arbitrary element in GCAM's configuration.xml file, i.e.,
