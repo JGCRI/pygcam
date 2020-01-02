@@ -123,7 +123,8 @@ class TransportCommand(SubcommandABC):
 
         parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
                             help='''The CSV template file to create with transport sectors, 
-                            subsectors, and technologies. Default is "{}"'''.format(OUTPUT_FILE))
+                            subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}"
+                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE))
 
         parser.add_argument('-p', '--prefixes', default=None,
                             help='''A comma-delimited list of sector prefixes indicating which sectors to include in the 
@@ -145,13 +146,19 @@ class TransportCommand(SubcommandABC):
 
 
     def run(self, args, tool):
+        from ..utils import pathjoin
+        from ..config import getParam
+
         years = validate_years(args.years)
         if years is None:
             raise Exception(
                 'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
                     args.years))
 
-        with open(args.outputFile, 'w') as f:
+        templateDir = getParam('GCAM.CsvTemplateDir', section=args.project)
+        outputPath = pathjoin(templateDir, args.outputFile)
+
+        with open(outputPath, 'w') as f:
             # column headers
             f.write("region,sector,subsector,technology,input,")
             f.write(','.join(map(str, years)))

@@ -116,7 +116,8 @@ class BuildingCommand(SubcommandABC):
 
         parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
                             help='''The CSV file to create with lists of unique building sectors, 
-                            subsectors, and technologies. Default is "{}"'''.format(OUTPUT_FILE))
+                            subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}".
+                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE))
 
         parser.add_argument('-s', '--sectors', default=None,
                             help='''A comma-delimited list of sectors to include in the generated template. Use quotes 
@@ -138,13 +139,19 @@ class BuildingCommand(SubcommandABC):
 
 
     def run(self, args, tool):
+        from ..utils import pathjoin
+        from ..config import getParam
+
         main_xml_file = 'building_det.xml'
         usa_xml_file = 'building_USA.xml'
 
         main_xpath = '//supplysector/subsector/stub-technology/period/minicam-energy-input'
         usa_xpath = '//global-technology-database/location-info/technology/period/minicam-energy-input'
 
-        with open(args.outputFile, 'w') as f:
+        templateDir = getParam('GCAM.CsvTemplateDir', section=args.project)
+        outputPath = pathjoin(templateDir, args.outputFile)
+
+        with open(outputPath, 'w') as f:
             years = validate_years(args.years)
             if years is None:
                 raise Exception(
