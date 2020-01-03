@@ -1859,7 +1859,10 @@ class XMLEditor(object):
 
                 elt = elts[0]
                 old_value = float(elt.text)
-                new_value = old_value * (1 + improvement)
+                # The coefficient in the XML file is in energy per output unit (e.g., vehicle-km or passenger-km).
+                # A value of 1 in the CSV template, which indicates a 100% improvement (a doubling) of fuel economy,
+                # should drop the coefficient value by 50%. Thus the following calculation:
+                new_value = old_value / (1 + improvement)
                 pairs.append((xpath, new_value))
 
         xmlEdit(xmlFileAbs, pairs)
