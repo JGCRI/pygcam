@@ -8,6 +8,9 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC
+from ..log import getLogger
+
+_logger = getLogger(__name__)
 
 DFLT_PROJECT = 'gcam_res'
 OUTPUT_FILE  = 'building_tech_template.csv'
@@ -68,7 +71,7 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
     gcamDir = getParam('GCAM.RefWorkspace', section=args.project)
     pathname = pathjoin(gcamDir, 'input', 'gcamdata', 'xml', xml_file)
 
-    print("Reading", pathname)
+    _logger.info("Reading {}".format(pathname))
     xml = XMLFile(pathname)
     root = xml.getRoot()
 
@@ -84,8 +87,9 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
                 desired.append(path)
         paths = desired
 
-    all_regions = root.xpath('//region/@name')
-    all_regions = set(all_regions).difference(['USA'])  # we remove USA from both sets
+    all_regions = set(root.xpath('//region/@name'))
+    if args.GCAM_USA:
+        all_regions = all_regions.difference(['USA'])  # remove USA since states will be used
 
     regions = args.regions.split(',') if args.regions else all_regions
     regions = sorted(regions)
@@ -151,6 +155,7 @@ class BuildingCommand(SubcommandABC):
         templateDir = getParam('GCAM.CsvTemplateDir', section=args.project)
         outputPath = pathjoin(templateDir, args.outputFile)
 
+        _logger.info('Writing {}'.format(outputPath))
         with open(outputPath, 'w') as f:
             years = validate_years(args.years)
             if years is None:

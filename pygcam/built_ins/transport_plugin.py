@@ -12,6 +12,9 @@ import os
 from ..config import getParam
 from ..XMLFile import XMLFile
 from ..subcommand import SubcommandABC
+from ..log import getLogger
+
+_logger = getLogger(__name__)
 
 def element_path(elt):
     d = {'input' : elt.attrib['name']}
@@ -66,7 +69,8 @@ def save_transport_techs(f, args, years):
 
     gcamDir = getParam('GCAM.RefWorkspace', section=project)
     pathname = os.path.join(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
-    print("Reading", pathname)
+    _logger.info("Reading {}".format(pathname))
+
     xml = XMLFile(pathname)
     root = xml.getRoot()
 
@@ -106,7 +110,6 @@ def save_transport_techs(f, args, years):
     # data values
     for tup in paths:
         f.write(','.join(tup) + zeroes + '\n')
-
 
 
 class TransportCommand(SubcommandABC):
@@ -158,6 +161,7 @@ class TransportCommand(SubcommandABC):
         templateDir = getParam('GCAM.CsvTemplateDir', section=args.project)
         outputPath = pathjoin(templateDir, args.outputFile)
 
+        _logger.info("Writing {}".format(outputPath))
         with open(outputPath, 'w') as f:
             # column headers
             f.write("region,sector,subsector,technology,input,")
