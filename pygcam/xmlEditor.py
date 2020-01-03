@@ -1859,7 +1859,7 @@ class XMLEditor(object):
 
                 elt = elts[0]
                 old_value = float(elt.text)
-                new_value = old_value * (1 - improvement)
+                new_value = old_value * (1 + improvement)
                 pairs.append((xpath, new_value))
 
         xmlEdit(xmlFileAbs, pairs)
