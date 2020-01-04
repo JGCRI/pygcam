@@ -95,7 +95,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     # MCS "new" sub-command creates its ref workspace; for non-MCS
     # we do it here, on demand, i.e., if it doesn't exist already.
     if not mcsMode:
-        copyWorkspace(srcWorkspace)
+        copyWorkspace(srcWorkspace, forceCreate=forceCreate)
 
     if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
         # Not prohibited; just a disk-hogging, suboptimal choice
@@ -197,6 +197,7 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
         _logger.warn('GCAM.CopyAllFiles = True while running MCS')
 
     if forceCreate:
+        _logger.info("Removing workspace '%s'", newWorkspace)
         removeTreeSafely(newWorkspace, ignore_errors=True)
 
     mkdirs(newWorkspace)
