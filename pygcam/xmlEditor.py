@@ -33,7 +33,8 @@ from .error import SetupException, PygcamException
 from .log import getLogger
 from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
-from .utils import (coercible, mkdirs, printSeries, symlinkOrCopyFile, removeTreeSafely)
+from .utils import (coercible, mkdirs, printSeries, symlinkOrCopyFile, removeTreeSafely,
+                    removeFileOrTree, pushd)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
@@ -520,6 +521,17 @@ class XMLEditor(object):
         # TBD: add climate and policy subdirs?
         self.solution_prefix_abs = pathjoin(refWorkspace, "input", "solution")
         self.solution_prefix_rel = pathjoin("..", "input", "solution")
+
+        # Remove stale files from local-xml folder for scenarios, but avoiding doing
+        # this when an XmlEditor is created for the baseline to run a non-baseline,
+        # which is identified by scenario being None.
+        if scenario:
+            with pushd(self.scenario_dir_abs):
+                files = glob.glob('*')
+                if files:
+                    _logger.debug("Deleting old files from %s: %s", self.scenario_dir_abs, files)
+                    for name in files:
+                        removeFileOrTree(name)
 
     def absPath(self, relPath):
         """
@@ -1826,6 +1838,7 @@ class XMLEditor(object):
     def transportTechEfficiency(self, csvFile, xmlTag='transportation'):
         import pandas as pd
 
+        _logger.info("Called transportTechEfficiency('%s', '%s')", csvFile, xmlTag)
         df = pd.read_csv(csvFile)
         year_cols = [col for col in df.columns if col.isdigit()]
 
@@ -1871,6 +1884,8 @@ class XMLEditor(object):
     @callableMethod
     def buildingTechEfficiency(self, csvFile, xmlTag='building_update', xmlFile='building_tech_improvements.xml', mode="mult"):
         import pandas as pd
+
+        _logger.info("Called buildingTechEfficiency('%s', '%s', '%s')", csvFile, xmlTag, xmlFile)
 
         df = pd.read_csv(csvFile)
         year_cols = [col for col in df.columns if col.isdigit()]
