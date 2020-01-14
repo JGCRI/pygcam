@@ -7,7 +7,7 @@
 .. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 from ..log import getLogger
 
 _logger = getLogger(__name__)
@@ -114,30 +114,26 @@ class BuildingCommand(SubcommandABC):
         super(BuildingCommand, self).__init__('building', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
-        parser.add_argument('-p', '--project', default=DFLT_PROJECT,
-                            help='''The name of the project to use to locate GCAM reference files. Default is "{}"'''.format(
-                                DFLT_PROJECT))
-
         parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
-                            help='''The CSV file to create with lists of unique building sectors, 
+                            help=clean_help('''The CSV file to create with lists of unique building sectors, 
                             subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}".
-                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE))
+                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE)))
 
         parser.add_argument('-s', '--sectors', default=None,
-                            help='''A comma-delimited list of sectors to include in the generated template. Use quotes 
+                            help=clean_help('''A comma-delimited list of sectors to include in the generated template. Use quotes 
                             around the argument if there are embedded blanks. By default, all known building technology
-                            sectors are included.''')
+                            sectors are included.'''))
 
         parser.add_argument('-r', '--regions', default=None,
-                            help='''A comma-delimited list of regions to include in the generated template. 
-                             By default all regions are included. ''')
+                            help=clean_help('''A comma-delimited list of regions to include in the generated template. 
+                             By default all regions are included. '''))
 
         parser.add_argument('-u', '--GCAM-USA', action="store_true",
-                            help='''If set, produce output compatible with GCAM-USA regions.''')
+                            help=clean_help('''If set, produce output compatible with GCAM-USA regions.'''))
 
         parser.add_argument('-y', '--years', default='2015-2100',
-                            help='''A hyphen-separated range of timestep years to include in the generated template.
-                            Default is "2015-2100"''')
+                            help=clean_help('''A hyphen-separated range of timestep years to include in the generated template.
+                            Default is "2015-2100"'''))
 
         return parser
 
@@ -152,7 +148,7 @@ class BuildingCommand(SubcommandABC):
         main_xpath = '//supplysector/subsector/stub-technology/period/minicam-energy-input'
         usa_xpath = '//global-technology-database/location-info/technology/period/minicam-energy-input'
 
-        templateDir = getParam('GCAM.CsvTemplateDir', section=args.project)
+        templateDir = getParam('GCAM.CsvTemplateDir')
         outputPath = pathjoin(templateDir, args.outputFile)
 
         _logger.info('Writing {}'.format(outputPath))

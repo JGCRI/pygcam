@@ -5,7 +5,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from __future__ import print_function
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 DefaultProperties = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
@@ -24,13 +24,13 @@ class ModelInterfaceCommand(SubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('-d', '--useDefault', action='store_true',
-                            help='''Use the Main_Queries.xml file from the GCAM
-                            reference workspace.''')
+                            help=clean_help('''Use the Main_Queries.xml file from the GCAM
+                            reference workspace.'''))
         parser.add_argument('-u', '--updateProperties', action='store_true',
-                            help='''Update the "model_interface.properties" file in the directory
+                            help=clean_help('''Update the "model_interface.properties" file in the directory
                             indicated by config var file GCAM.QueryDir so it refers to the query file
                             indicated by config var GCAM.MI.QueryFile, or if this does not refer
-                            to an existing file, by var GCAM.MI.RefQueryFile.''')
+                            to an existing file, by var GCAM.MI.RefQueryFile.'''))
         return parser
 
     def run(self, args, tool):

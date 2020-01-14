@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
@@ -51,11 +51,11 @@ class DelSimCommand(McsSubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('-r', '--deleteSims', action='store_true', default=False,
-                            help='Delete all simulations from the run directory.')
+                            help=clean_help('Delete all simulations from the run directory.'))
 
         parser.add_argument('-e', '--empty', action='store_true', default=False,
-                            help='''Create the database schema but don't add any data.
-                            Useful when restoring from a dumped database.''')
+                            help=clean_help('''Create the database schema but don't add any data.
+                            Useful when restoring from a dumped database.'''))
 
         return parser   # for auto-doc generation
 

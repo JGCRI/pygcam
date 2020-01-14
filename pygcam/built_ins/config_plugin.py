@@ -6,7 +6,7 @@
 '''
 from __future__ import print_function
 from ..error import PygcamException, CommandlineError
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 class ConfigCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -17,28 +17,28 @@ class ConfigCommand(SubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('-d', '--useDefault', action='store_true',
-                            help='Indicates to operate on the DEFAULT section rather '
-                                 'than the project section.')
+                            help=clean_help('Indicates to operate on the DEFAULT section rather '
+                                 'than the project section.'))
 
         parser.add_argument('-e', '--edit', action='store_true',
-                            help='Edit the configuration file. The command given by the '
+                            help=clean_help('Edit the configuration file. The command given by the '
                             'value of config variable GCAM.TextEditor is run with the '
-                            '.pygcam.cfg file as an argument.')
+                            '.pygcam.cfg file as an argument.'))
 
         parser.add_argument('name', nargs='?', default='',
-                            help='Show the names and values of all parameters whose '
+                            help=clean_help('Show the names and values of all parameters whose '
                             'name contains the given value. The match is case-insensitive. '
-                            'If not specified, all variable values are shown.')
+                            'If not specified, all variable values are shown.'))
 
         parser.add_argument('-x', '--exact', action='store_true',
-                            help='Treat the text not as a substring to match, but '
+                            help=clean_help('Treat the text not as a substring to match, but '
                             'as the name of a specific variable. Match is case-sensitive. '
-                            'Prints only the value.')
+                            'Prints only the value.'))
 
         parser.add_argument('-t', '--test', action='store_true',
-                            help='Test the settings in the configuration file to ensure '
+                            help=clean_help('Test the settings in the configuration file to ensure '
                             'that the basic setup is ok, i.e., required parameters have '
-                            'values that make sense. If specified, no variables are displayed.')
+                            'values that make sense. If specified, no variables are displayed.'))
 
         return parser
 

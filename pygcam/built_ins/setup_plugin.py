@@ -6,7 +6,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 class SetupCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -21,79 +21,79 @@ class SetupCommand(SubcommandABC):
         group2 = parser.add_mutually_exclusive_group()  # --modulePath, --moduleSpec, --setupXml
 
         parser.add_argument('-b', '--baseline',
-                            help='''Identify the baseline the selected scenario is based on.
-                                 Note: at least one of --baseline (-b) / --scenario (-s) must be used.''')
+                            help=clean_help('''Identify the baseline the selected scenario is based on.
+                                 Note: at least one of --baseline (-b) / --scenario (-s) must be used.'''))
 
         # mutually exclusive with --staticOnly
         group1.add_argument('-d', '--dynamicOnly', action='store_true',
-                            help='''Generate only dynamic XML for dyn-xml: don't create static XML.''')
+                            help=clean_help('''Generate only dynamic XML for dyn-xml: don't create static XML.'''))
 
         parser.add_argument('-f', '--forceCreate', action='store_true',
-                            help='''Re-create the workspace, even if it already exists.''')
+                            help=clean_help('''Re-create the workspace, even if it already exists.'''))
 
         parser.add_argument('-g', '--group',
-                            help='The scenario group to process. Defaults to the group labeled default="1".')
+                            help=clean_help('The scenario group to process. Defaults to the group labeled default="1".'))
 
         parser.add_argument('-G', '--srcGroupDir',
-                            help='''A sub-directory under xmlsrc in which to find scenario dirs for this group.
+                            help=clean_help('''A sub-directory under xmlsrc in which to find scenario dirs for this group.
                             Use this to consolidate static XML files shared by multiple scenario groups.
                             If --useGroupDir is specified, srcGroupDir defaults to the scenario group name.
-                            Using --srcGroupDir implies --useGroupDir.''')
+                            Using --srcGroupDir implies --useGroupDir.'''))
 
         # mutually exclusive with --moduleSpec and --setupXml
         group2.add_argument('-m', '--modulePath',
-                            help='''The path to a scenario definition module. See -M flag for more info.''')
+                            help=clean_help('''The path to a scenario definition module. See -M flag for more info.'''))
 
         # mutually exclusive with --modulePath and --setupXml
         group2.add_argument('-M', '--moduleSpec',
-                            help='''The "dot spec" for the Python module holding the setup classes and
+                            help=clean_help('''The "dot spec" for the Python module holding the setup classes and
                             a function called 'scenarioMapper' or a dictionary called 'ClassMap' which map
                             scenario names to classes. If the function 'scenarioMapper' exists, it is
                             used. If not, the 'ClassMap' is used. Default is "{xmlsrc}/subdir/scenarios.py" (if
                             subdir is defined) or "{xmlsrc}/scenarios.py" (if subdir is undefined) under the
-                            current ProjectRoot.''')
+                            current ProjectRoot.'''))
 
         parser.add_argument('-p', '--stop', type=int, metavar='period-or-year', dest='stopPeriod',
-                            help='The number of the GCAM period or the year to stop after')
+                            help=clean_help('The number of the GCAM period or the year to stop after'))
 
         parser.add_argument('-r', '--refWorkspace', default="",
-                            help='''A reference workspace to use instead of the value of GCAM.RefWorkspace''')
+                            help=clean_help('''A reference workspace to use instead of the value of GCAM.RefWorkspace'''))
 
         parser.add_argument('-R', '--resultsDir',
-                            help='The parent directory holding the GCAM output workspaces')
+                            help=clean_help('The parent directory holding the GCAM output workspaces'))
 
         parser.add_argument('-s', '--scenario',
-                            help='''Identify the scenario to run.
-                            Note: at least one of --baseline (-b) / --scenario (-s) must be used.''')
+                            help=clean_help('''Identify the scenario to run.
+                            Note: at least one of --baseline (-b) / --scenario (-s) must be used.'''))
 
         parser.add_argument('-S', '--subdir', default="",
-                            help='A sub-directory to use instead of scenario name')
+                            help=clean_help('A sub-directory to use instead of scenario name'))
 
         # mutually exclusive with --moduleSpec and --modulePath
         group2.add_argument('--setupXml',
-                            help='''An XML scenario definition file. Overrides configuration variable
-                             GCAM.ScenarioSetupFile.''')
+                            help=clean_help('''An XML scenario definition file. Overrides configuration variable
+                             GCAM.ScenarioSetupFile.'''))
 
         # mutually exclusive with --dynamicOnly
         group1.add_argument('-T', '--staticOnly', action='store_true',
-                            help='''Generate only static XML for local-xml: don't create dynamic XML.''')
+                            help=clean_help('''Generate only static XML for local-xml: don't create dynamic XML.'''))
 
         parser.add_argument('-u', '--useGroupDir', action='store_true',
-                            help='Use the group name as a sub directory below xmlsrc, local-xml, and dyn-xml')
+                            help=clean_help('Use the group name as a sub directory below xmlsrc, local-xml, and dyn-xml'))
 
         parser.add_argument('-x', '--xmlSourceDir',
-                            help='''The location of the xmlsrc directory.''')
+                            help=clean_help('''The location of the xmlsrc directory.'''))
 
         parser.add_argument('-X', '--xmlOutputRoot',
-                            help='''The root directory into which to generate XML files.''')
+                            help=clean_help('''The root directory into which to generate XML files.'''))
 
         parser.add_argument('-w', '--workspace', # i.e., sandbox
-                            help='''The pathname of the workspace to operate on.''')
+                            help=clean_help('''The pathname of the workspace to operate on.'''))
 
         # Deprecated or pass to scenario?
         parser.add_argument('-y', '--years', default=defaultYears,
-                            help='''Years to generate constraints for. Must be of the form
-                            XXXX-YYYY. Default is "%s"''' % defaultYears)
+                            help=clean_help('''Years to generate constraints for. Must be of the form
+                            XXXX-YYYY. Default is "%s"''' % defaultYears))
 
         return parser   # for auto-doc generation
 

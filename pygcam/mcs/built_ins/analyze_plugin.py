@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
@@ -118,88 +118,88 @@ class AnalyzeCommand(McsSubcommandABC):
         from ..analysis import DEFAULT_MAX_TORNADO_VARS
 
         parser.add_argument('-c', '--convergence', action='store_true', default=False,
-                            help='Generate convergence plots for mean, std dev, skewness, and 95%% coverage interval.')
+                            help=clean_help('Generate convergence plots for mean, std dev, skewness, and 95%% coverage interval.'))
 
         parser.add_argument('-d', '--distros', dest='plotInputs', action='store_true', default=False,
-                            help='Plot frequency distributions for input parameters.')
+                            help=clean_help('Plot frequency distributions for input parameters.'))
 
         parser.add_argument('-e', '--expName', type=str,
-                            help='The name of the experiment or scenario to run.')
+                            help=clean_help('The name of the experiment or scenario to run.'))
 
         parser.add_argument('-E', '--exportAll', type=str, default=None,
-                            help='''Export all inputs for which there are results, and all results for the
-                            given expName (-e flag) to the indicated file name.''')
+                            help=clean_help('''Export all inputs for which there are results, and all results for the
+                            given expName (-e flag) to the indicated file name.'''))
 
         parser.add_argument('--exportEMA', type=str, default=None,
-                            help='''Export results to the given .tar.gz file in a format suitable for analysis
+                            help=clean_help('''Export results to the given .tar.gz file in a format suitable for analysis
                             using the EMA Workbench. The -e (--expName) and -r (--resultName) flags can hold
-                            comma-delimited lists of experiments and results, respectively.''')
+                            comma-delimited lists of experiments and results, respectively.'''))
 
         parser.add_argument('--forcingPlot', action='store_true',
-                            help='''Plot the data in a good format for multiple forcing timeseries plots''')
+                            help=clean_help('''Plot the data in a good format for multiple forcing timeseries plots'''))
 
         parser.add_argument('--cumulative', action='store_true',
-                            help='''For --forcingPlot, plot the cumulative annual change in RF''')
+                            help=clean_help('''For --forcingPlot, plot the cumulative annual change in RF'''))
 
         parser.add_argument('-g', '--groups', action='store_true',
-                            help='Show the uncertainty importance for groups of parameters.')
+                            help=clean_help('Show the uncertainty importance for groups of parameters.'))
 
         parser.add_argument('-i', '--importance', action='store_true', default=False,
-                            help='Show the uncertainty importance for each parameter.')
+                            help=clean_help('Show the uncertainty importance for each parameter.'))
 
         parser.add_argument('-l', '--limit', type=int, default=-1,
-                            help='Limit the analysis to the given number of results')
+                            help=clean_help('Limit the analysis to the given number of results'))
 
         parser.add_argument('-m', '--min', type=float, default=None,
-                            help='''Limit the analysis to values (for the result named with -r) greater
-                            than or equal to this value''')
+                            help=clean_help('''Limit the analysis to values (for the result named with -r) greater
+                            than or equal to this value'''))
 
         parser.add_argument('-M', '--max', type=float, default=None,
-                            help='''Limit the analysis to values (for the result named with -r) less
-                            than or equal to this value''')
+                            help=clean_help('''Limit the analysis to values (for the result named with -r) less
+                            than or equal to this value'''))
 
         parser.add_argument('-o', '--exportInputs', type=str, default=None,
-                            help='A file into which to export input (trial) data.')
+                            help=clean_help('A file into which to export input (trial) data.'))
 
         parser.add_argument('-O', '--resultFile', type=str, default=None,
-                            help='''Export all model results to the given file. When used with this option,
+                            help=clean_help('''Export all model results to the given file. When used with this option,
                             the -r (--resultName) and -e (--expName) flags can be comma-delimited lists of
                             result names and experiment names (scenarios), respectively. The output file,
-                            in CSV format will have a header (and data in the form) "trialNum,value,expName,resultName"''')
+                            in CSV format will have a header (and data in the form) "trialNum,value,expName,resultName"'''))
 
         parser.add_argument('-p', '--plot', action='store_true', default=False,
-                            help='''Plot a histogram of the frequency distribution for the named model output
-                            (-r required).''')
+                            help=clean_help('''Plot a histogram of the frequency distribution for the named model output
+                            (-r required).'''))
 
         parser.add_argument('-R', '--regionName', default=None,
-                            help='The region to plot timeseries results for')
+                            help=clean_help('The region to plot timeseries results for'))
 
         parser.add_argument('-r', '--resultName', type=str, default=None,
-                            help='The name of the result variable to analyze.')
+                            help=clean_help('The name of the result variable to analyze.'))
 
         parser.add_argument('-s', '--simId', type=int, default=1,
-                            help='The id of the simulation')
+                            help=clean_help('The id of the simulation'))
 
         parser.add_argument('-S', '--stats', action='store_true', default=False,
-                            help='Print mean, median, max, min, std dev, skewness, and 95%% coverage interval.')
+                            help=clean_help('Print mean, median, max, min, std dev, skewness, and 95%% coverage interval.'))
 
         parser.add_argument('-t', '--timeseries', action='store_true',
-                            help='Plot a timeseries distribution')
+                            help=clean_help('Plot a timeseries distribution'))
 
         parser.add_argument('-T', '--maxVars', type=int, default=DEFAULT_MAX_TORNADO_VARS,
-                            help='''Limit the number of variables displayed on tornado plots to the given value. 
-                                    (Default is {}'''.format(DEFAULT_MAX_TORNADO_VARS))
+                            help=clean_help('''Limit the number of variables displayed on tornado plots to the given value. 
+                                    (Default is {}'''.format(DEFAULT_MAX_TORNADO_VARS)))
 
         parser.add_argument('-x', '--xlabel', dest='xlabel', type=str, default=r'g CO$_2$e MJ$^{-1}$',
-                            help='Specify a label for the x-axis in the histogram.')
+                            help=clean_help('Specify a label for the x-axis in the histogram.'))
 
         parser.add_argument('--ymax', type=float, default=None,
-                            help='''Set the scale of a figure by indicating the value to show as the
-                            maximum Y value. (By default, scale is set according to the data.)''')
+                            help=clean_help('''Set the scale of a figure by indicating the value to show as the
+                            maximum Y value. (By default, scale is set according to the data.)'''))
 
         parser.add_argument('--ymin', type=float, default=None,
-                            help='''Set the scale of a figure by indicating the value (given as abs(value),
-                            but used as -value) to show as the minimum Y value''')
+                            help=clean_help('''Set the scale of a figure by indicating the value (given as abs(value),
+                            but used as -value) to show as the minimum Y value'''))
 
         return parser   # for auto-doc generation
 

@@ -4,6 +4,11 @@
 '''
 from abc import ABCMeta, abstractmethod
 
+# Fixes help strings to display properly with sphinx-argparse
+def clean_help(s):
+    lines = s.splitlines()
+    return ' '.join(map(str.strip, lines))
+
 # class OptionInfo(object):
 #     """
 #     Stores information about a single sub-command option that is used to

@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 def driver(args, tool):
     """
@@ -40,47 +40,47 @@ class ClusterCommand(McsSubcommandABC):
         defaultMinutes    = getParamAsFloat('IPP.MinutesPerRun')
 
         parser.add_argument('mode', choices=['start', 'stop'],
-                            help='''Whether to start or stop the cluster''')
+                            help=clean_help('''Whether to start or stop the cluster'''))
 
         parser.add_argument('-c', '--clusterId', type=str, default=defaultClusterId,
-                            help='''A string to identify this cluster. Default is the
+                            help=clean_help('''A string to identify this cluster. Default is the
                             value of config var IPP.ClusterId, currently
-                            "%s".''' % defaultClusterId)
+                            "%s".''' % defaultClusterId))
 
         parser.add_argument('-e', '--maxEngines', type=int, default=defaultMaxEngines,
-                            help='''Set maximum number of engines to create.
+                            help=clean_help('''Set maximum number of engines to create.
                             Overrides config parameter IPP.MaxEngines, currently
-                            %s''' % defaultMaxEngines)
+                            %s''' % defaultMaxEngines))
 
         parser.add_argument('-m', '--minutesPerRun', type=int, default=defaultMinutes,
-                            help='''Set the number of minutes of walltime to allocate
+                            help=clean_help('''Set the number of minutes of walltime to allocate
                             per GCAM run.  Overrides config parameter IPP.MinutesPerRun,
-                            currently %s.''' % defaultMinutes)
+                            currently %s.''' % defaultMinutes))
 
         parser.add_argument('-n', '--numTrials', type=int, default=10,
-                            help='''The total number of GCAM trials that will be run on this
-                            cluster. (Relevant only for "start" command.)''')
+                            help=clean_help('''The total number of GCAM trials that will be run on this
+                            cluster. (Relevant only for "start" command.)'''))
 
         parser.add_argument('-o', '--otherArgs', type=str, default='',
-                            help='Command line arguments to append to the ipcluster command.')
+                            help=clean_help('Command line arguments to append to the ipcluster command.'))
 
         parser.add_argument('-p', '--profile', type=str, default=defaultProfile,
-                            help='''The name of the ipython profile to use. Default is
+                            help=clean_help('''The name of the ipython profile to use. Default is
                             the value of config var IPP.Profile, currently
-                            "%s".''' % defaultProfile)
+                            "%s".''' % defaultProfile))
 
         parser.add_argument('-q', '--queue', type=str, default=defaultQueue,
-                            help='''The queue or partition on which to create the controller
+                            help=clean_help('''The queue or partition on which to create the controller
                             and engines. Overrides config var IPP.Queue, currently
-                            "%s".''' % defaultQueue)
+                            "%s".''' % defaultQueue))
 
         parser.add_argument('-s', '--stopJobs', action='store_true',
-                            help='''Stop running jobs using the value if IPP.StopJobsCommand,
-                            currently "%s". (Ignored for mode "start".)''' % defaultStopJobsCmd)
+                            help=clean_help('''Stop running jobs using the value if IPP.StopJobsCommand,
+                            currently "%s". (Ignored for mode "start".)''' % defaultStopJobsCmd))
 
         parser.add_argument('-w', '--workDir', type=str, default=defaultWorkDir,
-                            help='''Where to run the ipcluster command. Overrides the
-                            value of config var IPP.WorkDir, currently '%s'.''' % defaultWorkDir)
+                            help=clean_help('''Where to run the ipcluster command. Overrides the
+                            value of config var IPP.WorkDir, currently '%s'.''' % defaultWorkDir))
 
         return parser   # for auto-doc generation
 

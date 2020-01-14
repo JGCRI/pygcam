@@ -1290,7 +1290,7 @@ class XMLEditor(object):
 
         if dropEmissions:
             version = parse_version_info()
-            if version > VersionInfo(5, 0, 0):
+            if version >= VersionInfo(5, 0, 0):
                 # drop emissions for protected land
                 self.deleteScenarioComponent("nonco2_aglu_prot")
 

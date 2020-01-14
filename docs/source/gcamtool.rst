@@ -9,6 +9,7 @@ by the pygcam library. Project-specific features can be added via
 
 .. note::
    Quick links to sub-commands:
+   :ref:`building <building>`,
    :ref:`chart <chart>`,
    :ref:`config <config>`,
    :ref:`diff <diff>`,
@@ -22,7 +23,8 @@ by the pygcam library. Project-specific features can be added via
    :ref:`query <query>`,
    :ref:`run <run>`,
    :ref:`setup <setup>`,
-   :ref:`sandbox <sandbox>`
+   :ref:`sandbox <sandbox>`,
+   :ref:`transport <transport>`
 
 The sub-commands support all the major workflow setups, including
 
@@ -159,6 +161,13 @@ Usage
 
           gt +P Foo run -s setup,gcam -S baseline,policy-1 -n
 
+
+   building : @replace
+      .. _building:
+
+      Generates a template CSV file which can be edited to set building energy efficiency
+      improvements that are applied by the callable function "buildingTechEfficiency", which
+      must be called in your scenarios.xml file.
 
    chart : @replace
       .. _chart:
@@ -430,6 +439,13 @@ Usage
       files and construction of a corresponding configuration XML file.
       See :doc:`setup` for a detailed description.
 
+
+   transport : @replace
+      .. _transport:
+
+      Generates a template CSV file which can be edited to set transport energy efficiency
+      improvements that are applied by the callable function "transportTechEfficiency", which
+      must be called in your scenarios.xml file.
 
 Extending gt using plug-ins
 ------------------------------

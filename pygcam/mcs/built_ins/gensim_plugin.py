@@ -8,7 +8,7 @@ from pygcam.config import getParam, setParam, pathjoin
 from pygcam.log import getLogger
 from pygcam.utils import mkdirs, getResource
 from ..context import getSimDir
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
@@ -428,50 +428,50 @@ class GensimCommand(McsSubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('--delete', action='store_true',
-                            help='''DELETE and recreate the simulation "run" directory.''')
+                            help=clean_help('''DELETE and recreate the simulation "run" directory.'''))
 
         parser.add_argument('-D', '--desc', type=str, default='',
-                            help='A brief (<= 256 char) description the simulation.')
+                            help=clean_help('A brief (<= 256 char) description the simulation.'))
 
         parser.add_argument('-e', '--exportVars', default='',
-                            help='Export variable and distribution info in a tab-delimited file with the given name and exit.')
+                            help=clean_help('Export variable and distribution info in a tab-delimited file with the given name and exit.'))
 
         parser.add_argument('-g', '--groupName', default='',
-                            help='''The name of a scenario group to process.''')
+                            help=clean_help('''The name of a scenario group to process.'''))
 
         parser.add_argument('-m', '--method', choices=['montecarlo', 'sobol', 'fast', 'morris'],
                             default='montecarlo',
-                            help='''Use the specified method to generate trial data. Default is "montecarlo".''')
+                            help=clean_help('''Use the specified method to generate trial data. Default is "montecarlo".'''))
 
         parser.add_argument('-o', '--outFile',
-                            help='''For methods other than "montecarlo". The path to a "package 
+                            help=clean_help('''For methods other than "montecarlo". The path to a "package 
                             directory" into which SALib-related data are stored.
                             If the filename does not end in '.sa', this extension is added. The file
                             'problem.csv' within the package directory will contain the parameter specs in
                             SALib format. The file inputs.csv is also generated in the file package using
                             the chosen method's sampling method. If an outFile is not specified, a package
-                            of the name 'data.sa' is created in the simulation run-time directory.''')
+                            of the name 'data.sa' is created in the simulation run-time directory.'''))
 
         parser.add_argument('-p', '--paramFile', default=None,
-                            help='''Specify an XML file containing parameter definitions.
+                            help=clean_help('''Specify an XML file containing parameter definitions.
                             Defaults to the value of config parameter MCS.ParametersFile
-                            (currently %s)''' % getParam('MCS.ParametersFile'))
+                            (currently %s)''' % getParam('MCS.ParametersFile')))
 
         runRoot = getParam('MCS.Root')
         parser.add_argument('-r', '--runRoot', default=None,
-                            help='''Root of the run-time directory for running user programs. Defaults to
-                            value of config parameter MCS.Root (currently %s)''' % runRoot)
+                            help=clean_help('''Root of the run-time directory for running user programs. Defaults to
+                            value of config parameter MCS.Root (currently %s)''' % runRoot))
 
         parser.add_argument('-S', '--calcSecondOrder', action='store_true',
-                            help='''For Sobol method only -- calculate second-order sensitivities.''')
+                            help=clean_help('''For Sobol method only -- calculate second-order sensitivities.'''))
 
         parser.add_argument('-s', '--simId', type=int, default=1,
-                            help='The id of the simulation. Default is 1.')
+                            help=clean_help('The id of the simulation. Default is 1.'))
 
         parser.add_argument('-t', '--trials', type=int, default=-1,
-                            help='''The number of trials to create for this simulation (REQUIRED). If a
+                            help=clean_help('''The number of trials to create for this simulation (REQUIRED). If a
                             value of 0 is given, scenario setup is performed, scenario names are added to 
-                            the database, and meta-data is copied, but new trial data is not generated.''')
+                            the database, and meta-data is copied, but new trial data is not generated.'''))
 
         return parser   # for auto-doc generation
 

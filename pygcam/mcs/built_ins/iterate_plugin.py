@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from pygcam.log import getLogger
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
@@ -83,23 +83,23 @@ class IterateCommand(McsSubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('-c', '--command', type=str, required=True,
-                            help='''A command string to execute for each trial. The following
+                            help=clean_help('''A command string to execute for each trial. The following
                             arguments are available for use in the command string, specified
                             within curly braces: projectName, simId, trialNum, scenario, expName, 
-                            trialDir, expDir.''')
+                            trialDir, expDir.'''))
 
         parser.add_argument('-n', '--noRun', action='store_true',
-                            help="Show the commands that would be executed, but don't run them")
+                            help=clean_help("Show the commands that would be executed, but don't run them"))
 
         parser.add_argument('-s', '--simId', type=int, default=1,
-                            help='The id of the simulation. Default is 1.')
+                            help=clean_help('The id of the simulation. Default is 1.'))
 
         parser.add_argument('-S', '--scenario', type=str, default="",
-                            help='The name of the scenario')
+                            help=clean_help('The name of the scenario'))
 
         parser.add_argument('-t', '--trials', type=str, default=None,
-                             help='''Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
-                             Defaults to running all trials for the given simulation.''')
+                             help=clean_help('''Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
+                             Defaults to running all trials for the given simulation.'''))
 
         return parser   # for auto-doc generation
 

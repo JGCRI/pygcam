@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 def driver(args, tool):
     """
@@ -30,30 +30,30 @@ class EngineCommand(McsSubcommandABC):
         defaultNumTrials = 1
 
         parser.add_argument('-c', '--clusterId', type=str, default=defaultClusterId,
-                            help='''A string to identify this cluster. Default is the
+                            help=clean_help('''A string to identify this cluster. Default is the
                             value of config var IPP.ClusterId, currently
-                            "%s".''' % defaultClusterId)
+                            "%s".''' % defaultClusterId))
 
         parser.add_argument('-n', '--numTrials', type=int, default=defaultNumTrials,
-                            help='''The number of additional trials to create engines for.
-                            Default is %d''' % defaultNumTrials)
+                            help=clean_help('''The number of additional trials to create engines for.
+                            Default is %d''' % defaultNumTrials))
 
         parser.add_argument('-o', '--otherArgs', type=str, default='',
-                            help='Command line arguments to append to the ipengine command.')
+                            help=clean_help('Command line arguments to append to the ipengine command.'))
 
         parser.add_argument('-p', '--profile', type=str, default=defaultProfile,
-                            help='''The name of the ipython profile to use. Default is
+                            help=clean_help('''The name of the ipython profile to use. Default is
                             the value of config var IPP.Profile, currently
-                            "%s".''' % defaultProfile)
+                            "%s".''' % defaultProfile))
 
         # parser.add_argument('-q', '--queue', type=str, default=defaultQueue,
-        #                     help='''The queue or partition on which to create the controller
+        #                     help=clean_help('''The queue or partition on which to create the controller
         #                     and engines. Overrides config var IPP.Queue, currently
-        #                     "%s".''' % defaultQueue)
+        #                     "%s".''' % defaultQueue))
 
         parser.add_argument('-w', '--workDir', type=str, default=defaultWorkDir,
-                            help='''Where to run the ipengine command. Overrides the
-                            value of config var IPP.WorkDir, currently '%s'.''' % defaultWorkDir)
+                            help=clean_help('''Where to run the ipengine command. Overrides the
+                            value of config var IPP.WorkDir, currently '%s'.''' % defaultWorkDir))
 
         return parser   # for auto-doc generation
 

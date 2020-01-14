@@ -11,7 +11,7 @@ import six
 from six.moves import input
 
 from ..config import getHomeDir, pathjoin, unixPath
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 class AbortInput(Exception):
     pass
@@ -205,9 +205,9 @@ def rerunForCygwin(args):
 
 class InitCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Initialize key variables in the  ~/.pygcam.cfg
+        kwargs = {'help' : clean_help('''Initialize key variables in the  ~/.pygcam.cfg
             configuration file. Values not provided on the command-line are
-            requested interactively.'''}
+            requested interactively.''')}
 
         super(InitCommand, self).__init__('init', subparsers, kwargs, group='utils')
 
@@ -216,39 +216,39 @@ class InitCommand(SubcommandABC):
 
         group.add_argument('-c', '--create-project',    dest='createProject', action='store_true',
                             default=None,
-                            help='''Create the project structure for the given default project. If 
+                            help=clean_help('''Create the project structure for the given default project. If 
                             neither -c/--create-project nor -C/--no-create-project is specified, the
-                            user is queried interactively.''')
+                            user is queried interactively.'''))
 
         group.add_argument('-C', '--no-create-project', dest='noCreateProject', action='store_true',
                             default=None,
-                           help='''Do not create the project structure for the given default project.
-                           Mutually exclusive with -c / --create-project option.''')
+                           help=clean_help('''Do not create the project structure for the given default project.
+                           Mutually exclusive with -c / --create-project option.'''))
 
         parser.add_argument('-g', '--gcamDir',
-                            help='''The directory that is a GCAM v4.x or v5.x
+                            help=clean_help('''The directory that is a GCAM v4.x or v5.x
                             workspace. Sets config var GCAM.RefWorkspace. By default,
                             looks for gcam-v5.1.2 (then v4.4.1) in ~, ~/GCAM, and ~/gcam,
                             ~/Documents/GCAM, and ~/Documents/gcam,  
-                            where "~" indicates your home directory.''')
+                            where "~" indicates your home directory.'''))
 
         parser.add_argument('--overwrite', action='store_true',
-                            help='''Overwrite an existing config file. (Makes
-                            a backup first in ~/.pygcam.cfg~.)''')
+                            help=clean_help('''Overwrite an existing config file. (Makes
+                            a backup first in ~/.pygcam.cfg~.)'''))
 
         parser.add_argument('-P', '--defaultProject',
-                            help='''Set the value of config var GCAM.DefaultProject to
-                                    the given value.''')
+                            help=clean_help('''Set the value of config var GCAM.DefaultProject to
+                                    the given value.'''))
 
         parser.add_argument('-p', '--projectDir',
-                            help='''The directory in which to create pygcam project
+                            help=clean_help('''The directory in which to create pygcam project
                             directories. Sets config var GCAM.ProjectRoot. Default
-                            is "%s".''' % DefaultProjectDir)
+                            is "%s".''' % DefaultProjectDir))
 
         parser.add_argument('-s', '--sandboxDir',
-                            help='''The directory in which to create pygcam project
+                            help=clean_help('''The directory in which to create pygcam project
                             directories. Sets config var GCAM.SandboxRoot. Default
-                            is "%s".''' % defaultSandboxDir(DefaultProjectDir))
+                            is "%s".''' % defaultSandboxDir(DefaultProjectDir)))
 
         return parser
 

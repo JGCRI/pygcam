@@ -11,7 +11,7 @@
 import os
 from ..config import getParam
 from ..XMLFile import XMLFile
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 from ..log import getLogger
 
 _logger = getLogger(__name__)
@@ -63,11 +63,7 @@ def validate_years(years):
     return [i for i in range(first, last+1, 5)]
 
 def save_transport_techs(f, args, years):
-    project = args.project or getParam('GCAM.DefaultProject')
-    if not project:
-        raise Exception('Must set GCAM.DefaultProject in .pygcam.cfg or use -P flag to specify a project')
-
-    gcamDir = getParam('GCAM.RefWorkspace', section=project)
+    gcamDir = getParam('GCAM.RefWorkspace')
     pathname = os.path.join(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
     _logger.info("Reading {}".format(pathname))
 
@@ -121,30 +117,27 @@ class TransportCommand(SubcommandABC):
     def addArgs(self, parser):
         OUTPUT_FILE = 'transport_tech_template.csv'
 
-        parser.add_argument('-P', '--project', default=None,
-                            help='''The name of the project to use to locate GCAM reference files.''')
-
         parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
-                            help='''The CSV template file to create with transport sectors, 
+                            help=clean_help('''The CSV template file to create with transport sectors, 
                             subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}"
-                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE))
+                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE)))
 
         parser.add_argument('-p', '--prefixes', default=None,
-                            help='''A comma-delimited list of sector prefixes indicating which sectors to include in the 
-                            generated template. Use quotes around the argument if there are embedded blanks.''')
+                            help=clean_help('''A comma-delimited list of sector prefixes indicating which sectors to include in the 
+                            generated template. Use quotes around the argument if there are embedded blanks.'''))
 
         parser.add_argument('-s', '--sectors', default=None,
-                            help='''A comma-delimited list of sectors to include in the generated template. Use quotes 
+                            help=clean_help('''A comma-delimited list of sectors to include in the generated template. Use quotes 
                             around the argument if there are embedded blanks. By default, all known transport technology
-                            sectors are included.''')
+                            sectors are included.'''))
 
         parser.add_argument('-r', '--regions', default=None,
-                            help='''A comma-delimited list of regions to include in the generated template. 
-                             By default all regions are included. ''')
+                            help=clean_help('''A comma-delimited list of regions to include in the generated template. 
+                             By default all regions are included. '''))
 
         parser.add_argument('-y', '--years', default='2015-2100',
-                            help='''A hyphen-separated range of timestep years to include in the generated template.
-                            Default is "2015-2100"''')
+                            help=clean_help('''A hyphen-separated range of timestep years to include in the generated template.
+                            Default is "2015-2100"'''))
         return parser
 
 
@@ -158,7 +151,7 @@ class TransportCommand(SubcommandABC):
                 'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
                     args.years))
 
-        templateDir = getParam('GCAM.CsvTemplateDir', section=args.project)
+        templateDir = getParam('GCAM.CsvTemplateDir')
         outputPath = pathjoin(templateDir, args.outputFile)
 
         _logger.info("Writing {}".format(outputPath))

@@ -34,6 +34,14 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.9.0 (PENDING)
+---------------------------
+* "transport" command and function "transportTechEfficiency"
+* updates to "building" command
+
+Many thanks to Robbie Orvis of Energy Innovation for funding the development
+of the three new policy-oriented features: "res", "building", and "transport".
+
 Version 1.8.0 (6 Nov 2019)
 ---------------------------
 * Updated "res" sub-command to generate Renewable Energy Standards for 32 regions and for GCAM-USA.

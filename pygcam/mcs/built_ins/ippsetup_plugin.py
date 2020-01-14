@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 import os
-from .McsSubcommandABC import McsSubcommandABC
+from .McsSubcommandABC import McsSubcommandABC, clean_help
 from pygcam.error import CommandlineError
 from pygcam.log import getLogger
 
@@ -71,29 +71,29 @@ class IppSetupCommand(McsSubcommandABC):
         defaultScheduler = schedulers[0]
 
         parser.add_argument('-a', '--account', default=defaultAccount,
-                            help='''The account name to use to run jobs on the cluster system.
-                            Used by Slurm only. Default is "%s"''' % defaultAccount)
+                            help=clean_help('''The account name to use to run jobs on the cluster system.
+                            Used by Slurm only. Default is "%s"''' % defaultAccount))
 
         parser.add_argument('-e', '--engines', type=int, default=defaultEngines,
-                            help='''Set default number of engines to allow per node.
+                            help=clean_help('''Set default number of engines to allow per node.
                             This is overridden by runsim; this value is used when running
-                            the cluster "manually". Default value is %d.''' % defaultEngines)
+                            the cluster "manually". Default value is %d.''' % defaultEngines))
 
         parser.add_argument('-m', '--minutes', type=int, default=defaultMinutes,
-                            help='''The default number of minutes to allocate
+                            help=clean_help('''The default number of minutes to allocate
                             per GCAM run. (Used by Slurm only.) This is used for 
                             the "+b / --batch" and "gt run -D" options only. The 
                             "runsim" sub-command uses the value in 
-                            IPP.MinutesPerRun. Default value is %d.''' % defaultMinutes)
+                            IPP.MinutesPerRun. Default value is %d.''' % defaultMinutes))
 
         parser.add_argument('-p', '--profile', type=str, default=defaultProfile,
-                            help='''The name of the ipython profile to create. Set config 
+                            help=clean_help('''The name of the ipython profile to create. Set config 
                             variable IPP.Profile to the same value. Default is
-                            "%s".''' % defaultProfile),
+                            "%s".''' % defaultProfile))
 
         parser.add_argument('-s', '--scheduler', choices=schedulers, default=defaultScheduler,
-                            help='''The resource manager / scheduler your system uses. 
-                            Default is %s.''' % defaultScheduler)
+                            help=clean_help('''The resource manager / scheduler your system uses. 
+                            Default is %s.''' % defaultScheduler))
 
         return parser   # for auto-doc generation
 

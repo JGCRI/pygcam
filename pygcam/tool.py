@@ -18,10 +18,10 @@ from .built_ins import BuiltinSubcommands
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
                      usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
-from .constants import GCAM_32_REGIONS
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
+from .subcommand import clean_help
 from .version import VERSION
 from .windows import IsWindows
 
@@ -132,68 +132,68 @@ class GcamTool(object):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
 
         parser.add_argument('+b', '--batch', action='store_true',
-                            help='''Run the commands by submitting a batch job using the command
-                            given by config variable GCAM.BatchCommand. (Linux only)''')
+                            help=clean_help('''Run the commands by submitting a batch job using the command
+                            given by config variable GCAM.BatchCommand. (Linux only)'''))
 
         parser.add_argument('+B', '--showBatch', action="store_true",
-                            help="Show the batch command to be run, but don't run it. (Linux only)")
+                            help=clean_help("Show the batch command to be run, but don't run it. (Linux only)"))
 
         parser.add_argument('+D', '--dirmap',
-                            help="""A comma-delimited sequence of colon-delimited directory names 
+                            help=clean_help("""A comma-delimited sequence of colon-delimited directory names 
                             of the form "/some/host/path:/a/container/path, /host:cont, ...", 
-                            mapping host dirs to their mount point in a docker container.""")
+                            mapping host dirs to their mount point in a docker container."""))
 
         parser.add_argument('+e', '--enviroVars',
-                            help='''Comma-delimited list of environment variable assignments to pass
-                            to queued batch job, e.g., -E "FOO=1,BAR=2". (Linux only)''')
+                            help=clean_help('''Comma-delimited list of environment variable assignments to pass
+                            to queued batch job, e.g., -E "FOO=1,BAR=2". (Linux only)'''))
 
         parser.add_argument('+j', '--jobName', default='gt',
-                            help='''Specify a name for the queued batch job. Default is "gt".
-                            (Linux only)''')
+                            help=clean_help('''Specify a name for the queued batch job. Default is "gt".
+                            (Linux only)'''))
 
         logLevel = str(getParam('GCAM.LogLevel'))   # so not unicode
         parser.add_argument('+l', '--logLevel',
                             default=logLevel or 'notset',
-                            help='''Sets the log level for modules of the program. A default
+                            help=clean_help('''Sets the log level for modules of the program. A default
                                 log level can be set for the entire program, or individual 
                                 modules can have levels set using the syntax 
                                 "module:level, module:level,...", where the level names must be
-                                one of {debug,info,warning,error,fatal} (case insensitive).''')
+                                one of {debug,info,warning,error,fatal} (case insensitive).'''))
 
         parser.add_argument('+L', '--logFile',
-                            help='''Sets the name of a log file for batch runs. Default is "gt-%%j.out"
-                            where "%%j" (in SLURM) is the jobid. If the argument is not an absolute 
-                            pathname, it is treated as relative to the value of GCAM.LogDir.''')
+                            help=clean_help('''Sets the name of a log file for batch runs. Default is "gt-%%j.out"
+                            where "%%j" (in SLURM) is the jobid. If the argument is not an absolute
+                            pathname, it is treated as relative to the value of GCAM.LogDir.'''))
 
         parser.add_argument('+m', '--minutes', type=float, default=getParamAsFloat('GCAM.Minutes'),
-                            help='''Set the number of minutes to allocate for the queued batch job.
-                            Overrides config parameter GCAM.Minutes. (Linux only)''')
+                            help=clean_help('''Set the number of minutes to allocate for the queued batch job.
+                            Overrides config parameter GCAM.Minutes. (Linux only)'''))
 
         parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'],
-                            help='''Used only when running gcamtool from pygcam-mcs.''')
+                            help=clean_help('''Used only when running gcamtool from pygcam-mcs.'''))
 
         parser.add_argument('+P', '--projectName', metavar='name', default=getParam('GCAM.DefaultProject'),
                             choices=sorted(getSections()),
-                            help='''The project name (the config file section to read from),
-                            which defaults to the value of config variable GCAM.DefaultProject''')
+                            help=clean_help('''The project name (the config file section to read from),
+                            which defaults to the value of config variable GCAM.DefaultProject'''))
 
         parser.add_argument('+q', '--queueName', default=getParam('GCAM.DefaultQueue'),
-                            help='''Specify the name of the queue to which to submit the batch job.
-                            Default is given by config variable GCAM.DefaultQueue. (Linux only)''')
+                            help=clean_help('''Specify the name of the queue to which to submit the batch job.
+                            Default is given by config variable GCAM.DefaultQueue. (Linux only)'''))
 
         parser.add_argument('+r', '--resources', default='',
-                            help='''Specify resources for the queued batch command. Can be a comma-delimited
-                            list of assignments of the form NAME=value, e.g., -r 'pvmem=6GB'. (Linux only)''')
+                            help=clean_help('''Specify resources for the queued batch command. Can be a comma-delimited
+                            list of assignments of the form NAME=value, e.g., -r 'pvmem=6GB'. (Linux only)'''))
 
         parser.add_argument('+s', '--set', dest='configVars', metavar='name=value', action='append', default=[],
-                            help='''Assign a value to override a configuration file parameter. For example,
+                            help=clean_help('''Assign a value to override a configuration file parameter. For example,
                             to set batch commands to start after a prior job of the same name completes,
                             use --set "GCAM.OtherBatchArgs=-d singleton". Enclose the argument in quotes if
                             it contains spaces or other characters that would confuse the shell.
-                            Use multiple --set flags and arguments to set multiple variables.''')
+                            Use multiple --set flags and arguments to set multiple variables.'''))
 
         parser.add_argument('+v', '--verbose', action='store_true',
-                            help='''Show diagnostic output''')
+                            help=clean_help('''Show diagnostic output'''))
 
         parser.add_argument('--version', action='version', version=VERSION)   # goes to stderr, handled by argparse
 

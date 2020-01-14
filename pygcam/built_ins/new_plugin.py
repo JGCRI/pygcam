@@ -9,7 +9,7 @@
 """
 from datetime import datetime
 
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 def driver(args, tool):
     import os
@@ -115,20 +115,20 @@ class NewProjectCommand(SubcommandABC):
     def addArgs(self, parser):
         # Positional args
         parser.add_argument('name',
-                            help='''Create the structure for the named project, and copy example
-                            XML files into the "etc" directory.''')
+                            help=clean_help('''Create the structure for the named project, and copy example
+                            XML files into the "etc" directory.'''))
 
         parser.add_argument('-c', '--addToConfig', action='store_true',
-                            help='''Add a section for the new project to $HOME/.pygcam.cfg after
-                            making a backup of the file in $HOME/.pygcam.cfg~''')
+                            help=clean_help('''Add a section for the new project to $HOME/.pygcam.cfg after
+                            making a backup of the file in $HOME/.pygcam.cfg~'''))
 
         parser.add_argument('--overwrite', action='store_true',
-                            help='''If files that are to be copied to the project directory exist, overwrite them.
-                            By default, existing files are not overwritten.''')
+                            help=clean_help('''If files that are to be copied to the project directory exist, overwrite them.
+                            By default, existing files are not overwritten.'''))
 
         parser.add_argument('-r', '--projectRoot', dest='root', metavar='PATH',
-                            help='''The directory in which to create a subdirectory for the named
-                            project. Default is the value of config variable GCAM.ProjectRoot''')
+                            help=clean_help('''The directory in which to create a subdirectory for the named
+                            project. Default is the value of config variable GCAM.ProjectRoot'''))
 
         return parser   # for auto-doc generation
 

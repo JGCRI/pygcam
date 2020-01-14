@@ -8,7 +8,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from __future__ import print_function
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 
 def driver(args, tool):
@@ -82,32 +82,32 @@ class SandboxCommand(SubcommandABC):
 
     def addArgs(self, parser):
         parser.add_argument('--create', action='store_true',
-                            help='''Create the identified sandbox. If used with --delete,
-                            the deletion occurs first.''')
+                            help=clean_help('''Create the identified sandbox. If used with --delete,
+                            the deletion occurs first.'''))
 
         parser.add_argument('--delete', action='store_true',
-                            help='''Delete the identified sandbox' If used with --create, the
-                            deletion occurs first.''')
+                            help=clean_help('''Delete the identified sandbox' If used with --create, the
+                            deletion occurs first.'''))
 
         parser.add_argument('--recreate', action='store_true',
-                            help='''Recreate the identified sandbox. Equivalent to using the
-                            --delete and --create options together.''')
+                            help=clean_help('''Recreate the identified sandbox. Equivalent to using the
+                            --delete and --create options together.'''))
 
         parser.add_argument('-g', '--groupDir', default='', metavar='NAME',
-                            help='''The name of the scenario group subdir''')
+                            help=clean_help('''The name of the scenario group subdir'''))
 
         parser.add_argument('-n', '--noExecute', action='store_true',
-                            help='''Print the command that would be executed by --run, but
-                            don't execute it.''')
+                            help=clean_help('''Print the command that would be executed by --run, but
+                            don't execute it.'''))
 
         parser.add_argument('-p', '--path', action='store_true',
-                            help='''Print the absolute path to the identified sandbox.''')
+                            help=clean_help('''Print the absolute path to the identified sandbox.'''))
 
         parser.add_argument('-r', '--run', metavar='CMD',
-                            help='''Run the given command in the identified sandbox.''')
+                            help=clean_help('''Run the given command in the identified sandbox.'''))
 
         parser.add_argument('-s', '--scenario', default='',
-                            help='''The scenario for the computed sandbox root.''')
+                            help=clean_help('''The scenario for the computed sandbox root.'''))
 
         return parser   # for auto-doc generation
 

@@ -7,7 +7,7 @@
 .. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-from ..subcommand import SubcommandABC
+from ..subcommand import SubcommandABC, clean_help
 
 def driver(args, tool):
     import os
@@ -89,8 +89,8 @@ def driver(args, tool):
 
 class CompareCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Compare two GCAM configuration files and the files they load to
-        find differences. Files are compared using "diff" based on matching "name" tags.'''}
+        kwargs = {'help' : clean_help('''Compare two GCAM configuration files and the files they load to
+        find differences. Files are compared using "diff" based on matching "name" tags.''')}
         super(CompareCommand, self).__init__('compare', subparsers, kwargs, group='utils')
 
     def addArgs(self, parser):
@@ -110,8 +110,8 @@ class CompareCommand(SubcommandABC):
                             help='''The "exe" from which config2 pathnames should be computed.''')
 
         parser.add_argument('-o', '--outputDir', default=defaultOutputDir,
-                            help='''The directory in which to create the normalized versions of XML
-                            input files for comparison. Default is %s''' % defaultOutputDir)
+                            help=clean_help('''The directory in which to create the normalized versions of XML
+                            input files for comparison. Default is %s''' % defaultOutputDir))
 
         return parser   # for auto-doc generation
 
