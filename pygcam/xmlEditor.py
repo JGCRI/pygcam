@@ -1209,7 +1209,7 @@ class XMLEditor(object):
                     parentElt = tree.find(prefix + '/..')
                     index = parentElt.index(ruleElt)
 
-                    # insert <share-weight year=”{toYear}”>{toValue}</share-weight> before <interpolation-rule>
+                    # insert <share-weight year="{toYear}">{toValue}</share-weight> before <interpolation-rule>
                     shareElt = ET.SubElement(parentElt, 'share-weight', attrib={'year' : toYear})
                     parentElt.insert(index, shareElt)
 
