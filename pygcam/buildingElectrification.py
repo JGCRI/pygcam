@@ -4,7 +4,7 @@ _logger = getLogger(__name__)
 
 # Templates
 Policy_year_template = """
-      <policy-portfolio-standard name="{year} {policy}">
+      <policy-portfolio-standard name="{policy}">
         <market>{market}</market>
         <policyType>RES</policyType>
         <constraint year="{year}">1</constraint>
@@ -13,22 +13,22 @@ Policy_year_template = """
 # stub-tech wrapped in <supplysector name="x"><subsector name="y"><stub-technology...
 Supply_year_template = """
             <period year="{year}">
-              <minicam-energy-input name="{year} {policy}">
+              <minicam-energy-input name="{policy}">
                 <coefficient>{coefficient}</coefficient>
                 <market-name>{market}</market-name>
-              </minicam-energy-input>
-              <res-secondary-output name="{year} {policy}">
-                <output-ratio>{outputRatio}</output-ratio>
-                <pMultiplier>1</pMultiplier>
-              </res-secondary-output>
+              </minicam-energy-input>{secondaryInput}
             </period>"""
 
-Technology_template = """
-          <stub-technology name="{technology}">{periodElts}
-          </stub-technology>"""
+SecondaryInput_template = """
+              <res-secondary-output name="{policy}">
+                <output-ratio>1</output-ratio>
+                <pMultiplier>1</pMultiplier>
+              </res-secondary-output>"""
 
 Subsector_template = """
-        <subsector name="{subsector}">{technologyElts}
+        <subsector name="{subsector}">
+          <stub-technology name="{subsector}">{periodElts}
+          </stub-technology>
         </subsector>"""
 
 Supply_template = """
@@ -50,17 +50,14 @@ Policy_file_template = """<?xml version="1.0" encoding="UTF-8"?>
 def emit_policy_year(market, year, policy):
     return Policy_year_template.format(market=market, year=year, policy=policy)
 
-def emit_supply_year(market, year, policy, coefficient, outputRatio=1):
+def emit_supply_year(market, year, policy, coefficient, secondaryInput):
     return Supply_year_template.format(market=market, year=year, policy=policy,
-                                       coefficient=coefficient, outputRatio=outputRatio)
+                                       coefficient=coefficient,
+                                       secondaryInput=secondaryInput)
 
-def emit_technology(technology, periodEltList):
+def emit_subsector(subsector, periodEltList):
     periodElts = ''.join(periodEltList)
-    return Technology_template.format(technology=technology, periodElts=periodElts)
-
-def emit_subsector(subsector, techEltList):
-    technologyElts = ''.join(techEltList)
-    return Subsector_template.format(subsector=subsector, technologyElts=technologyElts)
+    return Subsector_template.format(subsector=subsector, periodElts=periodElts)
 
 def emit_supply(sector, subsectorEltList):
     subsectorElts = ''.join(subsectorEltList)
@@ -76,18 +73,19 @@ def emit_policy_file(regionEltList):
     regionElts = ''.join(regionEltList)
     return Policy_file_template.format(regionElts=regionElts)
 
-def csv_to_xml(csv_path, xml_path):
+def generate_building_elec_xml(csv_path, xml_path):
     import pandas as pd
     from collections import OrderedDict
 
     _logger.debug("Reading '%s'", csv_path)
     df = pd.read_csv(csv_path, index_col=None, skiprows=0)
 
-    sort_cols = ['region', 'market', 'policy', 'supplysector', 'subsector',
-                 'technology', 'year', 'coefficient']
+    year_cols = [col for col in df.columns if col.isdigit()]
+    sort_cols = ['region', 'supplysector', 'subsector']
     df.sort_values(by=sort_cols, inplace=True)
 
-    top_dict = {}
+    region_dict = {}
+    market_dict = {}    # market name by region
 
     def subdict(d, key):
         if key not in d:
@@ -96,53 +94,46 @@ def csv_to_xml(csv_path, xml_path):
 
     # create hierarchical dict struct from dataframe
     for (idx, row) in df.iterrows():
-        region_dict  = subdict(top_dict, row.region)
-        market_dict  = subdict(region_dict, row.market)
-        policy_dict  = subdict(market_dict, row.policy)
-        supply_dict  = subdict(policy_dict, row.supplysector)
-        subsect_dict = subdict(supply_dict, row.subsector)
-        technol_dict = subdict(subsect_dict, row.technology)
-        technol_dict[row.year] = row.coefficient
+        market_dict[row.region] = row.market
+        sector_dict    = subdict(region_dict, row.region)
+        subsector_dict = subdict(sector_dict, row.supplysector)
+        period_dict    = subdict(subsector_dict, row.subsector)
+        for col in year_cols:
+            period_dict[col] = row[col]
 
     _logger.info("Writing '%s'", xml_path)
     with open(xml_path, 'w') as f:
 
         policy_elts = OrderedDict()
         region_elts = []
-        for (region, market_dict) in top_dict.items():
+        for (region, sector_dict) in region_dict.items():
+            market = market_dict[region]
 
-            for (market, policy_dict) in market_dict.items():
+            supplysector_elts = []
+            for (sector, subsector_dict) in sector_dict.items():
 
-                supplysector_elts = []
-                for (policy, supply_dict) in policy_dict.items():
-                    for (supplysector, subsect_dict) in supply_dict.items():
+                subsector_elts = []
+                for (subsector, period_dict) in subsector_dict.items():
 
-                        subsector_elts = []
-                        for (subsector, technology_dict) in subsect_dict.items():
+                    period_elts = []
+                    for (year, coefficient) in period_dict.items():
+                        policy = "BuildingElec-{}-{}".format(market, year)
+                        secondaryInput = SecondaryInput_template.format(policy=policy) if subsector == 'electricity' else ''
+                        period_elts.append(emit_supply_year(market, year, policy, coefficient, secondaryInput))
 
-                            technology_elts = []
-                            for (technology, period_dict) in technology_dict.items():
+                        policy_elts[policy] = emit_policy_year(market, year, policy)   # avoids duplicates since policy name is reused
 
-                                period_elts = []
-                                for (year, coefficient) in period_dict.items():
-                                    period_elts.append(emit_supply_year(market, year, policy, coefficient))
+                    subsector_elts.append(emit_subsector(subsector, period_elts))
 
-                                    policy_name = "{} {}".format(policy, year)
-                                    policy_elts[policy_name] = emit_policy_year(market, year, policy)   # avoids duplicates
-
-                                technology_elts.append(emit_technology(technology, period_elts))
-
-                            subsector_elts.append(emit_subsector(subsector, technology_elts))
-
-                        supplysector_elts.append(emit_supply(supplysector, subsector_elts))
+                supplysector_elts.append(emit_supply(sector, subsector_elts))
 
             region_elts.append(emit_region(region, policy_elts.values(), supplysector_elts))
 
         f.write(emit_policy_file(region_elts))
 
 if __name__ == '__main__':
-    dir_path = '/Users/rjp/Downloads/'
-    csv_path = dir_path + 'building-elec-sample.csv'
-    xml_path = dir_path + 'building-elec-sample.xml'
+    dir_path = '/tmp/'
+    csv_path = dir_path + 'building-elec-template.csv'
+    xml_path = dir_path + 'building-elec-policy.xml'
 
-    csv_to_xml(csv_path, xml_path)
+    generate_building_elec_xml(csv_path, xml_path)

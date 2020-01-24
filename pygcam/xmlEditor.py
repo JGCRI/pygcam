@@ -1997,3 +1997,16 @@ class XMLEditor(object):
         tree.write(xmlAbs, xml_declaration=True, encoding='utf-8', pretty_print=True)
 
         self.addScenarioComponent(xmlTag, xmlRel)
+
+    @callableMethod
+    def buildingElectrification(self, csvFile, xmlTag='building_electrification', xmlFile='building_electrification.xml'):
+        from .buildingElectrification import generate_building_elec_xml
+
+        xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
+        xmlRel = pathjoin(self.scenario_dir_rel, xmlFile)
+
+        generate_building_elec_xml(csvFile, xmlAbs)
+        self.addScenarioComponent(xmlTag, xmlRel)
+
+
+

@@ -1,4 +1,5 @@
 from .building_plugin import BuildingCommand
+from .buildingElec_plugin import BuildingElecCommand
 from .transport_plugin import TransportCommand
 from .chart_plugin import ChartCommand
 from .config_plugin import ConfigCommand
@@ -17,8 +18,8 @@ from .sandbox_plugin import SandboxCommand
 from .setup_plugin import SetupCommand
 from .compare_plugin import CompareCommand
 
-BuiltinSubcommands = [BuildingCommand, ChartCommand, CompareCommand, ConfigCommand, DiffCommand,
-                      GcamCommand, GUICommand, InitCommand, MCSCommand,
-                      ModelInterfaceCommand, NewProjectCommand, ProtectLandCommand,
+BuiltinSubcommands = [BuildingCommand, BuildingElecCommand, ChartCommand, CompareCommand,
+                      ConfigCommand, DiffCommand, GcamCommand, GUICommand, InitCommand,
+                      MCSCommand, ModelInterfaceCommand, NewProjectCommand, ProtectLandCommand,
                       QueryCommand, RESCommand, RunCommand, SandboxCommand, SetupCommand,
                       TransportCommand]
