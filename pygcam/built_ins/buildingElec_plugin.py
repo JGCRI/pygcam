@@ -41,10 +41,15 @@ def element_path(elt):
         elif tag == 'subsector':
             d['subsector'] = attr['name']
 
-        elif tag in ('global-technology-database', 'region'):
-            break
+        elif tag == 'global-technology-database':
+            d['region'] = 'global'
+            break # stop here
 
-    return (d['sector'], d['subsector']) # d['technology'], d['input'])
+        elif tag == 'region':
+            d['region'] = attr['name']
+            break # stop here
+
+    return (d['region'], d['sector'], d['subsector'])
 
 def validate_years(years):
     pair = years.split('-')
@@ -83,7 +88,7 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
         desired = []
         sectors = set(args.sectors.split(','))
         for path in paths:
-            if path[0] in sectors:
+            if path[1] in sectors:
                 desired.append(path)
         paths = desired
 
@@ -96,18 +101,14 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
 
     zeroes = ',0' * len(years)    # fill in with zeroes for reading into a dataframe
 
-    # data values
-    for region in regions:
-        if region not in all_regions:   # use only regions defined for this XML file
+    for (region, sector, subsector) in paths:
+        if region not in regions:   # use only regions defined for this XML file
             continue
 
-        prefix_tup = (which, region, region)    # market defaults to region name
-        prefix = ','.join(prefix_tup) + ','
-
-        for tup in paths:
-            f.write(prefix)
-            f.write(','.join(tup))
-            f.write(zeroes + '\n')
+        market = region    # market defaults to region name
+        full_tup = (which, region, market, sector, subsector)
+        f.write(','.join(full_tup))
+        f.write(zeroes + '\n')
 
 
 class BuildingElecCommand(SubcommandABC):
