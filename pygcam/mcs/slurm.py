@@ -5,7 +5,7 @@
 
 import pandas as pd
 import re
-import StringIO
+import six
 import subprocess
 import types
 
@@ -42,7 +42,7 @@ class Slurm(object):
         # Run command and read all results
         output = subprocess.check_output(command, shell=True)
 
-        df = pd.read_table(StringIO.StringIO(output), sep=sep, header=0, engine='c')
+        df = pd.read_table(six.StringIO(output), sep=sep, header=0, engine='c')
         df.fillna('', inplace=True)
 
         # Parse the overloaded nodelist column into separate columns
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 3515333|shared|t14_4_1|RUNNING|2-03:15:50|1|node141|7-00:00:00|nand374
 '''
     pd.set_option('display.width', 1000)
-    # df = pd.read_table(StringIO.StringIO(output), sep='|', header=0, engine='c')
+    # df = pd.read_table(six.StringIO(output), sep='|', header=0, engine='c')
 
     slurm = Slurm(username='plev920')
     df = slurm.squeue(formatStr="%i|%P|%j|%u|%T|%M|%D|%R|%l")

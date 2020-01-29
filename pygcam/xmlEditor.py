@@ -958,7 +958,7 @@ class XMLEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
-
+        _logger.info("Update scenario component name '{}' to refer to '{}'".format(name, xmlfile))
         self.updateConfigComponent('ScenarioComponents', name, xmlfile)
 
     def deleteScenarioComponent(self, name, useCache=True):
