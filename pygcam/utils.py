@@ -77,7 +77,8 @@ def getRegionList(workspace=None):
     from .constants import setRegions, GCAM_32_REGIONS
     from .csvCache import readCachedCsv
 
-    relpath = pathjoin('input', getParam('GCAM.DataDir'), '_common/mappings/GCAM_region_names.csv')
+    dataDir = getParam('GCAM.DataDir') or 'gcam-data-system'
+    relpath = pathjoin('input', dataDir, '_common', 'mappings', 'GCAM_region_names.csv')
 
     workspace = workspace or getParam('GCAM.RefWorkspace')
     path = pathjoin(workspace, relpath) if workspace else None
