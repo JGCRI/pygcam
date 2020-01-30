@@ -109,7 +109,7 @@ class CachedFile(object):
     cache = {}
 
     def __init__(self, filename):
-        self.filename = filename
+        self.filename = filename = os.path.realpath(filename)
         self.edited = False
 
         _logger.debug("Reading '%s'", filename)
@@ -118,6 +118,8 @@ class CachedFile(object):
 
     @classmethod
     def getFile(cls, filename):
+        filename = os.path.realpath(filename)  # operate on canonical pathnames
+
         if filename in cls.cache:
             #_logger.debug("Found '%s' in cache", filename)
             item = cls.cache[filename]
