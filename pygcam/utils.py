@@ -91,7 +91,7 @@ def getRegionList(workspace=None):
         _logger.debug("Regions: %s", regions)
 
     else:
-        _logger.info("Using built-in region names")
+        _logger.info("Path %s not found; Using built-in region names", path)
         regions = GCAM_32_REGIONS
 
     return regions
