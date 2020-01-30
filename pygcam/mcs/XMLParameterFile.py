@@ -700,7 +700,7 @@ class XMLParameter(XMLWrapper):
             originalValue = var.getFloatValue()  # apply factor and delta to cached, original value
 
             varName = var.getParameter().getName()
-            randomValue = df.ix[trialNum, varName]
+            randomValue = df.loc[trialNum, varName]
 
             newValue = randomValue * originalValue if isFactor else \
                 ((randomValue + originalValue) if isDelta else randomValue)
