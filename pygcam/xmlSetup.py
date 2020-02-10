@@ -485,7 +485,8 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
                                    srcGroupDir, baselineSubdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                                    refWorkspace, groupName, srcGroupDir, subdir, parent=parent)
+                                                    refWorkspace, groupName, srcGroupDir, subdir,
+                                                    mcsMode=mcsMode, parent=parent)
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
