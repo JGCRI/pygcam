@@ -269,25 +269,19 @@ class Master(object):
         worker tasks, so we lookup the equivalent in our local cache to test
         for whether a change has occurred.
         """
-        debug = False   # set to True for extra diagnostic msgs
-
-        if debug:
-            _logger.debug('setRunStatus: %s', context)
+        _logger.debug('setRunStatus: %s', context)
 
         status = status or context.status
 
         cached = Context.getRunInfo(context.runId)
         if cached:
-            if debug:
-                _logger.debug('setRunStatus: cache hit: %s', cached)
+            _logger.debug('setRunStatus: cache hit: %s', cached)
 
             if cached.status == status:
-                if debug:
-                    _logger.debug('setRunStatus: no change; returning')
+                _logger.debug('setRunStatus: no change; returning')
                 return
         else:
-            if debug:
-                _logger.debug('adding context for runId %d to cache', context.runId)
+            _logger.debug('adding context for runId %d to cache', context.runId)
             cached = context.saveRunInfo()
 
         _logger.info('%s -> %s', cached, status)

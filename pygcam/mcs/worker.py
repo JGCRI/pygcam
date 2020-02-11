@@ -333,6 +333,7 @@ def runTrial(context, argDict):
             if time.time() > latestStartTime:
                 # TBD: test this!
                 # raising UnmetDependency error causes scheduler to reassign to another engine
+                _logger.info("Insufficient time remaining on engine. Worker raising 'ipp.UnmetDependency'")
                 raise ipp.UnmetDependency()
 
                 # context.setVars(status=ENG_TERMINATE) # tell master to terminate us
