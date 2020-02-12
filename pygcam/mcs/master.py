@@ -275,10 +275,10 @@ class Master(object):
 
         cached = Context.getRunInfo(context.runId)
         if cached:
-            _logger.debug('setRunStatus: cache hit: %s', cached)
+            # _logger.debug('setRunStatus: cache hit: %s', cached)
 
             if cached.status == status:
-                _logger.debug('setRunStatus: no change; returning')
+                # _logger.debug('setRunStatus: no change; returning')
                 return
         else:
             _logger.debug('adding context for runId %d to cache', context.runId)
@@ -288,21 +288,22 @@ class Master(object):
         cached.setVars(status=status)
         self.db.setRunStatus(context.runId, status, session=session)
 
-    def _query_completion_status(self, completed=True):
-        # 'completed' flag '$ne' None => running, '$eq' None => completed
-        op = ('$ne' if completed else '$eq')
-
-        # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
-        recs = self.client.db_query({'completed': {op: None}}, keys=['msg_id'])
-
-        ids = [rec['msg_id'] for rec in recs]
-        return ids
-
-    def runningTasks(self):
-        return self._query_completion_status(completed=False)
-
-    def completedTasks(self):
-        return self._query_completion_status(completed=True)
+    # Deprecated
+    # def _query_completion_status(self, completed=True):
+    #     # 'completed' flag '$ne' None => running, '$eq' None => completed
+    #     op = ('$ne' if completed else '$eq')
+    #
+    #     # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
+    #     recs = self.client.db_query({'completed': {op: None}}, keys=['msg_id'])
+    #
+    #     ids = [rec['msg_id'] for rec in recs]
+    #     return ids
+    #
+    # def runningTasks(self):
+    #     return self._query_completion_status(completed=False)
+    #
+    # def completedTasks(self):
+    #     return self._query_completion_status(completed=True)
 
     def resubmit(self, task, context):
         _logger.info('Resubmitting task %s', context)
