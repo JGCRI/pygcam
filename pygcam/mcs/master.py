@@ -464,7 +464,7 @@ class Master(object):
 
         ars = self.runTrials()
 
-        pending = self.client.outstanding
+        pending = copy.copy(self.client.outstanding)
 
         counter = 0         # for occasionally displaying queue status
 
