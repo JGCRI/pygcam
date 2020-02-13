@@ -347,7 +347,6 @@ class Master(object):
 
                 elif status == RUN_KILLED:
                     self.resubmit(task, context, "run killed")
-                    continue
 
                 else:
                     results.append(workerResult)
