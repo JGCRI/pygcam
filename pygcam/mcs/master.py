@@ -105,6 +105,8 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                   }
 
 class Master(object):
+    idleEngines = set()
+
     def __init__(self, args):
         self.args = args
         self.db = getDatabase(checkInit=False)
@@ -175,44 +177,27 @@ class Master(object):
         return totals
 
     def shutdownIdleEngines(self):
-        '''
-        Shutdown the engines.
-        '''
-        engines = self.client.ids
-        engineCount = len(engines)
-
-        if engineCount == 0:
-            _logger.info("No engines are running")
-            return
-
-        qstatus = self.client.queue_status(targets=engines)
+        qstatus = self.client.queue_status()
 
         if qstatus.pop(u'unassigned'):
             # some tasks are not yet assigned to engines
             return
 
+        engineCount = len(qstatus)
+        if engineCount == 0:
+            _logger.info("No engines are running")
+            return
+
         # Shutdown idle engines if there are no unassigned tasks
-        idleEngines = [id for id, stats in iteritems(qstatus) if stats[u'tasks'] + stats[u'queue'] == 0]
+        idleEngines = set([id for id, stats in iteritems(qstatus) if stats[u'tasks'] + stats[u'queue'] == 0])
 
         if idleEngines:
-            _logger.info('Shutting down %d idle engines', len(idleEngines))
-            _logger.debug('Idle: %s', idleEngines)
-            self.client.shutdown(targets=idleEngines, block=False)
+            newlyIdle = idleEngines.difference(self.idleEngines)
+            self.idleEngines = self.idleEngines.union(idleEngines)
 
-            # Clients are getting shutdown, but this check stopped working. However, there's
-            # no need to wait for the shutdowns. It would be nice to get the real count, though.
-            #
-            # maxTries = 5
-            # seconds  = 2
-            #
-            # expectedEngines = engineCount - len(idleEngines)
-            # for i in range(maxTries):
-            #     _logger.debug("Sleeping %s seconds waiting for engines to shutdown", seconds)
-            #     sleep(seconds)
-            #     if len(self.client.ids) == expectedEngines:
-            #         break
-            #
-            _logger.info("%d engines active", len(self.client))
+            _logger.debug('Idle engines: %s', newlyIdle)
+            _logger.info('Shutting down %d idle engines', len(newlyIdle))
+            self.client.shutdown(targets=newlyIdle, block=False)
 
     def createRuns(self, simId, scenario, trialNums):
         '''
