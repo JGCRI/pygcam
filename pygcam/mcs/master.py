@@ -195,7 +195,7 @@ class Master(object):
         if idleEngines:
             _logger.info('Shutting down %d idle engines', len(idleEngines))
             _logger.debug('Idle: %s', idleEngines)
-            self.client.shutdown(targets=idleEngines, block=True)
+            self.client.shutdown(targets=idleEngines, block=False)
 
             maxTries = 5
             seconds  = 1.5
