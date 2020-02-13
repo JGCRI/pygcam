@@ -198,13 +198,14 @@ class Master(object):
             self.client.shutdown(targets=idleEngines, block=False)
 
             maxTries = 5
-            seconds  = 1.5
+            seconds  = 2
 
             expectedEngines = engineCount - len(idleEngines)
             for i in range(maxTries):
-                if len(self.client.ids) != expectedEngines:
-                    _logger.debug("Sleeping %d seconds waiting for engines to shutdown", seconds)
-                    sleep(seconds)
+                _logger.debug("Sleeping %s seconds waiting for engines to shutdown", seconds)
+                sleep(seconds)
+                if len(self.client.ids) == expectedEngines:
+                    break
 
             # TBD: handle timeout waiting for engines to stop
             _logger.info("%d engines active", len(self.client.ids))
