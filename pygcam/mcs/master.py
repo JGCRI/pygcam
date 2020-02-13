@@ -270,7 +270,7 @@ class Master(object):
         worker tasks, so we lookup the equivalent in our local cache to test
         for whether a change has occurred.
         """
-        _logger.debug('setRunStatus: %s', context)
+        # _logger.debug('setRunStatus: %s', context)
 
         status = status or context.status
 
@@ -306,8 +306,8 @@ class Master(object):
     # def completedTasks(self):
     #     return self._query_completion_status(completed=True)
 
-    def resubmit(self, task, context):
-        _logger.info('Resubmitting task %s', context)
+    def resubmit(self, task, context, reason):
+        _logger.info('Resubmitting task (%s) %s', reason, context)
         self.client.resubmit(task)
         self.setRunStatus(context, RUN_QUEUED)
 
@@ -343,10 +343,10 @@ class Master(object):
                         _logger.info("Terminating engine %s: insufficient time remaining", ar.engine_id)
                         client.shutdown(ar.engine_id)
                         sleep(2)
-                        self.resubmit(task, context)
+                        self.resubmit(task, context, "engine terminated")
 
                 elif status == RUN_KILLED:
-                    self.resubmit(task, context)
+                    self.resubmit(task, context, "run killed")
                     continue
 
                 else:
@@ -354,7 +354,6 @@ class Master(object):
 
             except Exception as e:
                 # Raised if an engine dies, e.g., walltime expired.
-                # With retries=1, should be able to recover from this.
                 _logger.warning('getResults: %s', e)
 
             client.purge_results(jobs=task)
@@ -552,7 +551,7 @@ class Master(object):
 
         asyncResults = []
 
-        view = None if runLocal else self.client.load_balanced_view(retries=2)
+        view = None if runLocal else self.client.load_balanced_view() # retries=2)
 
         db = getDatabase()
         exps = {e.expName: e.parent for e in db.getExps()}
