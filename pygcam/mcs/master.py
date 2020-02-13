@@ -187,6 +187,7 @@ class Master(object):
         qstatus = self.client.queue_status(targets=engines)
 
         if qstatus.pop(u'unassigned'):
+            # some tasks are not yet assigned to engines
             return
 
         # Shutdown idle engines if there are no unassigned tasks
@@ -197,7 +198,8 @@ class Master(object):
             _logger.debug('Idle: %s', idleEngines)
             self.client.shutdown(targets=idleEngines, block=False)
 
-            # This stopped working, but there's no real need to wait for the shutdowns
+            # Clients are getting shutdown, but this check stopped working. However, there's
+            # no need to wait for the shutdowns. It would be nice to get the real count, though.
             #
             # maxTries = 5
             # seconds  = 2
@@ -209,8 +211,7 @@ class Master(object):
             #     if len(self.client.ids) == expectedEngines:
             #         break
             #
-            # # TBD: handle timeout waiting for engines to stop
-            # _logger.info("%d engines active", len(self.client.ids))
+            _logger.info("%d engines active", len(self.client))
 
     def createRuns(self, simId, scenario, trialNums):
         '''
@@ -438,7 +439,7 @@ class Master(object):
 
                 else:
                     _logger.info("No engines running or pending. Shutting down hub.")
-                    client.shutdown(hub=True, block=True)
+                    client.shutdown(hub=True) #, block=True) # stopped working on PIC
                     return False
 
             except ipp.NoEnginesRegistered:
