@@ -197,18 +197,20 @@ class Master(object):
             _logger.debug('Idle: %s', idleEngines)
             self.client.shutdown(targets=idleEngines, block=False)
 
-            maxTries = 5
-            seconds  = 2
-
-            expectedEngines = engineCount - len(idleEngines)
-            for i in range(maxTries):
-                _logger.debug("Sleeping %s seconds waiting for engines to shutdown", seconds)
-                sleep(seconds)
-                if len(self.client.ids) == expectedEngines:
-                    break
-
-            # TBD: handle timeout waiting for engines to stop
-            _logger.info("%d engines active", len(self.client.ids))
+            # This stopped working, but there's no real need to wait for the shutdowns
+            #
+            # maxTries = 5
+            # seconds  = 2
+            #
+            # expectedEngines = engineCount - len(idleEngines)
+            # for i in range(maxTries):
+            #     _logger.debug("Sleeping %s seconds waiting for engines to shutdown", seconds)
+            #     sleep(seconds)
+            #     if len(self.client.ids) == expectedEngines:
+            #         break
+            #
+            # # TBD: handle timeout waiting for engines to stop
+            # _logger.info("%d engines active", len(self.client.ids))
 
     def createRuns(self, simId, scenario, trialNums):
         '''
