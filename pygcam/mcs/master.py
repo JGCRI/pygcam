@@ -163,9 +163,10 @@ class Master(object):
         Return totals for queue status across all engines
         """
         qstatus = self.client.queue_status()
-
         unassigned = qstatus.pop(u'unassigned')
         totals = dict(queue=0, completed=0, tasks=0, unassigned=unassigned)
+
+        _logger.debug("queueTotals: %d statuses returned", len(qstatus))
 
         for eid, qs in iteritems(qstatus):
             for key, count in iteritems(qs):
