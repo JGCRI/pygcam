@@ -519,7 +519,9 @@ class Master(object):
                     self.shutdownIdleEngines()
 
             if counter % 5 == 0:
-                _logger.info("%d engines: %s", len(self.client.ids), self.queueTotals())
+                totals = self.queueTotals()
+                _logger.info("%d clients, %d client.ids, %d tasks", len(self.client), len(self.client.ids), totals['tasks'])
+                _logger.info("Queue totals: %s", totals)
 
             secs = args.waitSecs if state == 'nominal' else 2
             _logger.debug('sleep(%d)', secs)
