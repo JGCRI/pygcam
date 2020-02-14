@@ -425,7 +425,7 @@ class Master(object):
 
                 else:
                     _logger.info("No engines running or pending. Shutting down hub.")
-                    client.shutdown(hub=True) #, block=True) # stopped working on PIC
+                    client.shutdown(targets='all',  hub=True, block=False) #, block=True) # stopped working on PIC
                     return False
 
             except ipp.NoEnginesRegistered:
