@@ -165,13 +165,15 @@ class Master(object):
         Return totals for queue status across all engines
         """
         qstatus = self.client.queue_status()
+        _logger.debug("queueTotals: %d statuses returned", len(qstatus))
+
         unassigned = qstatus.pop(u'unassigned')
         totals = dict(queue=0, completed=0, tasks=0, unassigned=unassigned)
 
-        _logger.debug("queueTotals: %d statuses returned", len(qstatus))
-
         for eid, qs in iteritems(qstatus):
             for key, count in iteritems(qs):
+                if count < 0 or count > 100:
+                    _logger.debug("qstatus['%s'] = %s", key, count)
                 totals[key] += count
 
         return totals
@@ -179,8 +181,8 @@ class Master(object):
     def shutdownIdleEngines(self):
         qstatus = self.client.queue_status()
 
-        if qstatus.pop(u'unassigned'):
-            # some tasks are not yet assigned to engines
+        if qstatus.pop(u'unassigned') > 0:
+            # some tasks are not yet assigned to engines => not idle
             return
 
         engineCount = len(qstatus)
@@ -189,7 +191,7 @@ class Master(object):
             return
 
         # Shutdown idle engines if there are no unassigned tasks
-        idleEngines = set([id for id, stats in iteritems(qstatus) if stats[u'tasks'] + stats[u'queue'] == 0])
+        idleEngines = set([eid for eid, qs in iteritems(qstatus) if (eid.isdigit() and qs[u'tasks'] + qs[u'queue']) == 0])
 
         if idleEngines:
             newlyIdle = idleEngines.difference(self.idleEngines)
@@ -278,23 +280,6 @@ class Master(object):
         _logger.info('%s -> %s', cached, status)
         cached.setVars(status=status)
         self.db.setRunStatus(context.runId, status, session=session)
-
-    # Deprecated
-    # def _query_completion_status(self, completed=True):
-    #     # 'completed' flag '$ne' None => running, '$eq' None => completed
-    #     op = ('$ne' if completed else '$eq')
-    #
-    #     # db_query returns a list of dicts: [{'msg_id': '.....'}, ...]
-    #     recs = self.client.db_query({'completed': {op: None}}, keys=['msg_id'])
-    #
-    #     ids = [rec['msg_id'] for rec in recs]
-    #     return ids
-    #
-    # def runningTasks(self):
-    #     return self._query_completion_status(completed=False)
-    #
-    # def completedTasks(self):
-    #     return self._query_completion_status(completed=True)
 
     def resubmit(self, task, context, reason):
         _logger.info('Resubmitting task (%s) %s', reason, context)
@@ -506,8 +491,7 @@ class Master(object):
 
             if counter % 5 == 0:
                 totals = self.queueTotals()
-                _logger.info("%d clients, %d client.ids, %d tasks", len(self.client), len(self.client.ids), totals['tasks'])
-                _logger.info("Queue totals: %s", totals)
+                _logger.info("%d clients; totals: %s", len(self.client), totals)
 
             secs = args.waitSecs if state == 'nominal' else 2
             _logger.debug('sleep(%d)', secs)
