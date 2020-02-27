@@ -197,7 +197,7 @@ class Master(object):
 
             _logger.debug('Idle engines: %s', newlyIdle)
             _logger.info('Shutting down %d idle engines', len(newlyIdle))
-            self.client.shutdown(targets=newlyIdle, block=False)
+            self.client.shutdown(targets=list(newlyIdle), block=False)
 
     def createRuns(self, simId, scenario, trialNums):
         '''
