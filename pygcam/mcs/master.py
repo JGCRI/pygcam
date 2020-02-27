@@ -10,7 +10,7 @@
 #
 from __future__ import division, print_function
 import copy
-from six import iteritems
+from six import iteritems, string_types
 import os
 import stat
 import sys
@@ -191,7 +191,8 @@ class Master(object):
             return
 
         # Shutdown idle engines if there are no unassigned tasks
-        idleEngines = set([eid for eid, qs in iteritems(qstatus) if (eid.isdigit() and qs[u'tasks'] + qs[u'queue']) == 0])
+        idleEngines = set([eid for eid, qs in iteritems(qstatus) if
+                (isinstance(eid, string_types) and eid.isdigit() and qs[u'tasks'] + qs[u'queue']) == 0])
 
         if idleEngines:
             newlyIdle = idleEngines.difference(self.idleEngines)
