@@ -161,7 +161,7 @@ def saveTrialData(df, simId, start=0):
     # SALib methods may not create exactly the number of trials requested
     # so we update the database to set the record straight.
     db.updateSimTrials(simId, trials)
-    _logger.info('Generated %d trials for simId %d', trials, simId)
+    _logger.info('Saved %d trials for simId %d', trials, simId)
 
 
 def runStaticSetup(runWorkspace, project, groupName):
@@ -273,8 +273,13 @@ def genSimulation(simId, trials, paramPath, args):
 
     paramFileObj.generateRandomVars()
 
-    _logger.info("Generating %d trials to %r", trials, simDir)
-    df = genTrialData(simId, trials, paramFileObj, args)
+    if args.dataFile:
+        from pandas import read_table
+        df = read_table(args.dataFile, sep=',', index_col='trialNum')
+        _logger.info("Loaded data for %d trials from %s", df.shape[0], args.dataFile)
+    else:
+        _logger.info("Generating %d trials to %r", trials, simDir)
+        df = genTrialData(simId, trials, paramFileObj, args)
 
     # Save generated values to the database for post-processing
     saveTrialData(df, simId)
@@ -373,21 +378,13 @@ def driver(args, tool):
     from ..error import PygcamMcsUserError
     from ..util import saveDict
 
-    simId  = args.simId
-
-    if args.dataFile:
-        from pandas import read_table
-        _logger.info("Loading trial data from %s", args.dataFile)
-        df = read_table(args.dataFile, sep=',', index_col='trialNum')
-        saveTrialData(df, simId)
-        return
-
     paramFile = args.paramFile or getParam('MCS.ParametersFile')
 
     if args.exportVars:
         _exportVars(paramFile, args.exportVars)
         return
 
+    simId  = args.simId
     desc   = args.desc
     trials = args.trials
 
