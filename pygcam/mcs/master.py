@@ -165,7 +165,6 @@ class Master(object):
         Return totals for queue status across all engines
         """
         qstatus = self.client.queue_status()
-        _logger.debug("queueTotals: %d statuses returned", len(qstatus))
 
         unassigned = qstatus.pop(u'unassigned')
         totals = dict(queue=0, completed=0, tasks=0, unassigned=unassigned)
@@ -198,9 +197,10 @@ class Master(object):
             newlyIdle = idleEngines.difference(self.idleEngines)
             self.idleEngines = self.idleEngines.union(idleEngines)
 
-            _logger.debug('Idle engines: %s', newlyIdle)
-            _logger.info('Shutting down %d idle engines', len(newlyIdle))
-            self.client.shutdown(targets=list(newlyIdle), block=False)
+            if newlyIdle:
+                _logger.debug('Idle engines: %s', newlyIdle)
+                _logger.info('Shutting down %d idle engines', len(newlyIdle))
+                self.client.shutdown(targets=list(newlyIdle), block=False)
 
     def createRuns(self, simId, scenario, trialNums):
         '''
