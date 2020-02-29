@@ -373,13 +373,21 @@ def driver(args, tool):
     from ..error import PygcamMcsUserError
     from ..util import saveDict
 
+    simId  = args.simId
+
+    if args.dataFile:
+        from pandas import read_table
+        _logger.info("Loading trial data from %s", args.dataFile)
+        df = read_table(args.dataFile, sep=',', index_col='trialNum')
+        saveTrialData(df, simId)
+        return
+
     paramFile = args.paramFile or getParam('MCS.ParametersFile')
 
     if args.exportVars:
         _exportVars(paramFile, args.exportVars)
         return
 
-    simId  = args.simId
     desc   = args.desc
     trials = args.trials
 
@@ -429,6 +437,9 @@ class GensimCommand(McsSubcommandABC):
     def addArgs(self, parser):
         parser.add_argument('--delete', action='store_true',
                             help=clean_help('''DELETE and recreate the simulation "run" directory.'''))
+
+        parser.add_argument('-d', '--dataFile', type=str, default=None,
+                            help=clean_help('Load the trial data from a CSV into the database. Useful for restoring data.'))
 
         parser.add_argument('-D', '--desc', type=str, default='',
                             help=clean_help('A brief (<= 256 char) description the simulation.'))
