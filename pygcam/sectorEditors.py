@@ -33,10 +33,10 @@ class BioenergyEditor(XMLEditor):
     BioenergyEditor adds knowledge of biomass and biofuels.
     """
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, workspaceDir,
-                 groupDir, srcGroupDir, subdir, parent=None):
+                 groupDir, srcGroupDir, subdir, parent=None, mcsMode=None):
         super(BioenergyEditor, self).__init__(baseline, scenario, xmlOutputRoot, xmlSourceDir,
                                               workspaceDir, groupDir, srcGroupDir, subdir,
-                                              parent=parent)
+                                              parent=parent, mcsMode=mcsMode)
 
         # TBD: unclear whether this is useful or general
         cornEthanolUsaFile = 'cornEthanolUSA.xml'

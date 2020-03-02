@@ -269,7 +269,8 @@ def genSimulation(simId, trials, paramPath, args):
 
     if not trials:
         _logger.warn("Simulation meta-data has been copied.")
-        return
+        if not args.dataFile:
+            return
 
     paramFileObj.generateRandomVars()
 

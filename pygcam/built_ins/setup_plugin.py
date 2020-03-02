@@ -179,7 +179,7 @@ class SetupCommand(SubcommandABC):
 
         # TBD: Document that all setup classes must conform to this protocol
         obj = scenClass(args.baseline, args.scenario, xmlOutputRoot, xmlSourceDir,
-                        refWorkspace, groupName, srcGroupDir, subdir)
+                        refWorkspace, groupName, srcGroupDir, subdir, mcsMode=mcsMode)
 
         obj.mcsMode = mcsMode
         obj.setup(args)

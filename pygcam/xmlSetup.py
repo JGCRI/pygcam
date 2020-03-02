@@ -468,7 +468,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
     class XmlEditorSubclass(superclass):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
-                     srcGroupDir, subdir, parent=None):
+                     srcGroupDir, subdir, parent=None, mcsMode=None):
             self.parentConfigPath = None
 
             self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
