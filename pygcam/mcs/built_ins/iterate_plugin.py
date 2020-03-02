@@ -13,7 +13,7 @@ def driver(args, tool):
     scenario, simDir, trialDir, and scenarioDir.
     """
     from subprocess import call
-
+    from six.moves import xrange
     from pygcam.config import getSection
 
     from ..Database import getDatabase
