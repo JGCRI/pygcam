@@ -40,7 +40,7 @@ class Slurm(object):
         _logger.debug(command)
 
         # Run command and read all results
-        output = subprocess.check_output(command, shell=True)
+        output = subprocess.check_output(command, shell=True).decode("utf-8")
 
         df = pd.read_table(six.StringIO(output), sep=sep, header=0, engine='c')
         df.fillna('', inplace=True)
