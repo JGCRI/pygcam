@@ -310,6 +310,10 @@ class Master(object):
                     continue
 
                 chunk = ar.get()
+                if chunk is None:
+                    _logger.debug('getResults: ar.get() returned None')
+                    continue
+
                 workerResult = chunk[0]
                 context = workerResult.context
                 status = context.status
