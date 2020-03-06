@@ -411,7 +411,7 @@ class Master(object):
 
                 else:
                     _logger.info("No engines running or pending. Shutting down hub.")
-                    client.shutdown(targets='all',  hub=True, block=False) #, block=True) # stopped working on PIC
+                    client.shutdown(hub=False, block=False) #, block=True) # stopped working on PIC
                     return False
 
             except ipp.NoEnginesRegistered:
@@ -505,7 +505,7 @@ class Master(object):
             counter += 1
 
         _logger.info("Shutting down hub")
-        self.client.shutdown(hub=True, block=True)
+        self.client.shutdown(hub=False, block=False)
 
     def runTrials(self):
         from . import worker
