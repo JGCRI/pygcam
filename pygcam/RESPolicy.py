@@ -360,14 +360,23 @@ def find_techs(tree, tups):
 
 # TBD: move this to a library of functions that process GCAM XML
 
-def get_tech_df(xmlfile, tech_specs):
+def get_tech_df(tree, tech_specs):
     import pandas as pd
 
-    tree = XMLFile(xmlfile).getTree()
     tech_triads = find_techs(tree, tech_specs)
 
     tech_df = pd.DataFrame(data=tech_triads, columns=['sector', 'subsector', 'technology'])
     return tech_df
+
+def ref_pathname(basename):
+    refWorkspace = getParam('GCAM.RefWorkspace')
+    xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', basename)
+    return xmlfile
+
+def ref_xmltree(basename):
+    pathname = ref_pathname(basename)
+    tree = XMLFile(pathname).getTree()
+    return tree
 
 def get_electricity_tech_df(useGcamUSA):
     tech_specs = [('electricity', None, None),
@@ -379,10 +388,9 @@ def get_electricity_tech_df(useGcamUSA):
         basename = 'electricity_water.xml'
         tech_specs.append(('^elec_.*', None, None))
 
-    refWorkspace = getParam('GCAM.RefWorkspace')
-    xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', basename)
+    tree = ref_xmltree(basename)
 
-    tech_df = get_tech_df(xmlfile, tech_specs)
+    tech_df = get_tech_df(tree, tech_specs)
     tech_df['producer'] = 0
     tech_df['consumer'] = 0
 
@@ -397,7 +405,7 @@ def read_state_names():
 
 def set_actor(tech_df, tech_tups, actor, value=1):
     """
-    actor must be 'producer' or 'consumer'
+    Actor must be 'producer' or 'consumer'
     """
     tech_df[actor] = 0  # reset producer or consumer col, since we reuse the DF
 
@@ -471,7 +479,7 @@ class PortfolioStandard(object):
         return certs
 
 class RESPolicy(XMLFile):
-    def __init__(self, filename):
+    def __init__(self, filename, useGcamUSA):
         super(RESPolicy, self).__init__(filename, load=True, schemaPath='etc/RES-schema.xsd')
 
         self.root = root = self.tree.getroot()
@@ -555,6 +563,7 @@ def res_from_csv(csv_path, useGcamUSA):
         if not tech in tech_map:
             raise FileFormatError("Unrecognized technology name: {}".format(tech))
 
+    # TBD: this supports state policies but not together with non-USA regional policies
     if useGcamUSA:
         all_elec = ['''        <tech sector="electricity"/>''']
     else:
@@ -582,7 +591,7 @@ def res_from_csv(csv_path, useGcamUSA):
 
         f.write("</portfolio-standards>\n")
 
-    return RESPolicy(xml_path)
+    return RESPolicy(xml_path, useGcamUSA)
 
 def get_re_techs(tech_cols, params, region):
     return [tech for tech in tech_cols if params.loc[region, tech] == 1]
@@ -634,6 +643,47 @@ def validate(scenario, csv_path, useGcamUSA):
     result.set_index('region', inplace=True)
     print('{}:\n{}'.format(scenario, result))
 
+# Create a dict of regionally-available subsectors like this:
+#
+# {"CA" : {("electricity", "coal") : 0,	# we just use the hash index lookup, value doesn't matter
+#          ("electricity", "solar") : 0,
+#          ...,
+#          ("elect_td_bld", "rooftop_pv")},
+#  ...
+# }
+def create_subsector_dict(useGcamUSA):
+    from _collections import defaultdict
+
+    tree = ref_xmltree('electricity_water.xml')
+    xpath = '//region/supplysector[@name="electricity" or @name="elect_td_bld"]/subsector'
+    elts = tree.xpath(xpath)
+
+    if useGcamUSA:
+        tree = ref_xmltree('electricity_USA.xml')
+
+        xpath1 = '//region/pass-through-sector[@name="electricity"]/subsector'
+        xpath2 = '//region/supplysector[@name="elect_td_bld"]/subsector'
+
+        elts += tree.xpath(xpath1) + tree.xpath(xpath2)
+
+    by_region = defaultdict(dict)
+    for elt in elts:
+        parent = elt.getparent()
+        grandparent = parent.getparent()
+
+        region = grandparent.attrib['name']
+
+        # Skip 'USA' if we're including all the states
+        if useGcamUSA and region == 'USA':
+            continue
+
+        # sector = parent.attrib['name']
+        subsector = elt.attrib['name']
+        # key = (sector, subsector)
+        reg_dict = by_region[region]
+        reg_dict[subsector] = True     # we're using dict just for hash lookup, so we don't care about dict values
+
+    return by_region
 
 def resPolicyMain(args):
     import os
@@ -665,8 +715,10 @@ def resPolicyMain(args):
         validate(scenario, inPath, useGcamUSA)
         return  # exit
 
+    subsector_dict = create_subsector_dict(useGcamUSA)
+
     _logger.info("Reading '%s'", inPath)
-    resPolicy = res_from_csv(inPath, useGcamUSA) if isCSV else RESPolicy(inPath)
+    resPolicy = res_from_csv(inPath, useGcamUSA) if isCSV else RESPolicy(inPath, useGcamUSA)
 
     # By default, all electricity techs consume RE certificates
     tech_df = get_electricity_tech_df(useGcamUSA)
@@ -677,6 +729,11 @@ def resPolicyMain(args):
         if useGcamUSA and 'USA' in std.regions:
             raise CommandlineError("The 'USA' region cannot be assigned a RES policy when using GCAM-USA (via the -u/--GCAM-USA flag)")
 
+        # TBD: this is not a complete solution when working from XML but works for CSV inputs.
+        # Filter subsectors by those defined for the first of the regions.
+        first_region = std.regions[0]
+        subsectors = subsector_dict[first_region]
+
         for cert in std.certs:
             _logger.debug("  Producers:", cert.producers)
             _logger.debug("  Consumers:", cert.consumers)
@@ -684,6 +741,12 @@ def resPolicyMain(args):
             # enable the indicated producers and consumers
             set_actor(tech_df, cert.producers, 'producer')
             set_actor(tech_df, cert.consumers, 'consumer')
+
+            # skip non-existent subsectors (e.g., geothermal), with a warning
+            for idx, row in tech_df.iterrows():
+                if (row.producer or row.consumer) and not subsectors.get(row.subsector, False):
+                    _logger.warn("Ignoring non-existent subsector '%s' for region '%s'", row.subsector, first_region)
+                    tech_df.loc[idx, 'producer'] = tech_df.loc[idx, 'consumer'] = 0
 
             res = create_RES(tech_df, std.regions, std.market, cert.name, cert.targets)
 
