@@ -256,7 +256,7 @@ def firstTarget(targets):
         if coefficient: # ignore zeros
             return (year, coefficient)
 
-def create_RES(tech_df, regions, market, commodity, targets,
+def create_RES(tech_df, regions, market, commodity, targets, subsector_dict,
                outputRatio=1, pMultiplier=1, priceUnitConv=0, minPrice=None):
 
     #print("{}:\n{}".format(regions, tech_df[['technology', 'consumer', 'producer']]))
@@ -285,6 +285,31 @@ def create_RES(tech_df, regions, market, commodity, targets,
     region_list = [create_policy_region(region, commodity, market,
                                         deepcopy(consumer_elts), deepcopy(producer_elts),
                                         startYear=startYear, minPrice=minPrice) for region in regions]
+
+    supply_sector_tag = 'pass-through-sector' if elecPassThru else 'supplysector'
+    subsect_xpath = '/region/{}/subsector'.format(supply_sector_tag)
+
+    # Excise non-existent subsectors (e.g., geothermal) in each region
+    for region_elt in region_list:
+        region = region_elt.attrib['name']
+        subsects = subsector_dict[region]
+
+        to_remove = []
+        for subsect_elt in region_elt.xpath(subsect_xpath):
+            subsect_name = subsect_elt.attrib['name']
+            if not subsects.get(subsect_name, False):
+                to_remove.append(subsect_elt)
+
+        # Skip non-existent subsectors (e.g., geothermal), with a warning. Remove them
+        # after iterating over subsectors.
+        if to_remove:
+            sector_elt = region_elt.find(supply_sector_tag)
+            for elt in to_remove:
+                sector_elt.remove(elt)
+                _logger.warn("Ignoring non-existent subsector '%s' in region '%s'",
+                             elt.attrib['name'], region)
+
+
     scenario = Element('scenario')
     world = SubElement(scenario, 'world')
     merge_elements(world, region_list)
@@ -742,13 +767,7 @@ def resPolicyMain(args):
             set_actor(tech_df, cert.producers, 'producer')
             set_actor(tech_df, cert.consumers, 'consumer')
 
-            # skip non-existent subsectors (e.g., geothermal), with a warning
-            for idx, row in tech_df.iterrows():
-                if (row.producer or row.consumer) and not subsectors.get(row.subsector, False):
-                    _logger.warn("Ignoring non-existent subsector '%s' for region '%s'", row.subsector, first_region)
-                    tech_df.loc[idx, 'producer'] = tech_df.loc[idx, 'consumer'] = 0
-
-            res = create_RES(tech_df, std.regions, std.market, cert.name, cert.targets)
+            res = create_RES(tech_df, std.regions, std.market, cert.name, cert.targets, subsector_dict)
 
             if root is None:
                 root = res
