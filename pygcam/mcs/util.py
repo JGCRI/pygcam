@@ -140,7 +140,7 @@ def tail(filename, count):
 
     try:
         cmd = 'tail -n %d %s' % (count, filename)
-        lines = check_output(cmd, shell=True)
+        lines = check_output(cmd, shell=True).decode('utf-8')
 
     except Exception as e:
         msg = "Failed run 'tail' on file '%s': %s" % (filename, e)

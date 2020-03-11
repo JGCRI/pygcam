@@ -409,7 +409,7 @@ class GcamTool(object):
 
         _logger.info('Running: %s', command)
         try:
-            jobStr = subprocess.check_output(command, shell=True)
+            jobStr = subprocess.check_output(command, shell=True).decode('utf-8')
             result = re.search('\d+', jobStr)
             jobId = int(result.group(0)) if result else -1
             return jobId
