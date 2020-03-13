@@ -161,7 +161,7 @@ def computeLogPath(simId, scenario, logDir, trials):
     return logPath, logFile, jobName
 
 def sign(number):
-    return cmp(number, 0)
+    return (number > 0) - (number < 0)      # cmp() removed in py3
 
 def is_number(s):
     try:
