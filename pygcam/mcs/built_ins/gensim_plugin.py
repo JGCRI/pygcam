@@ -115,13 +115,15 @@ def genTrialData(simId, trials, paramFileObj, args):
 
         paramNames = [obj.getParameter().getName() for obj in rvList]
         trialData = lhs(rvList, trials, corrMat=corrMatrix, columns=paramNames, skip=linked)
-        writeTrialDataFile(simId, trialData)
     else:
         # SALib methods
         trialData = genSALibData(trials, method, paramFileObj, args)
 
-    linkedDistro.storeTrialData(trialData)  # so its ppf() can access linked values
-    lhsAmend(trialData, linked, trials)
+    linkedDistro.storeTrialData(trialData)  # stores trial data in class so its ppf() can access linked values
+    lhsAmend(trialData, linked, trials, shuffle=False)
+
+    if method == 'montecarlo':
+        writeTrialDataFile(simId, trialData)
 
     df = DataFrame(data=trialData)
     return df
