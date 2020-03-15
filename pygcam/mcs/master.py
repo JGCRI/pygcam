@@ -334,6 +334,7 @@ class Master(object):
             except Exception as e:
                 # Raised if an engine dies, e.g., walltime expired.
                 _logger.warning('getResults: %s', e)
+                _logger.debug('getResults: type(chunk)=%s; type(workerResult)=%s', type(chunk), type(workerResult))
 
             client.purge_results(jobs=task)
 
