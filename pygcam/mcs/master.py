@@ -479,7 +479,7 @@ class Master(object):
                 if results:
                     self.saveResults(results)
                 else:
-                    _logger.warning('Purging %d completed tasks with no results (engine died?)', len(finished))
+                    _logger.debug('Purging %d completed tasks with no results (engine died?)', len(finished))
                     self.client.purge_results(jobs=finished)
 
                 # drop finished tasks from list to avoid checking status needlessly
