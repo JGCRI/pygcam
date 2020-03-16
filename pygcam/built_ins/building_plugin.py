@@ -68,7 +68,7 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
     from ..utils import pathjoin
     from ..XMLFile import XMLFile
 
-    gcamDir = getParam('GCAM.RefWorkspace', section=args.project)
+    gcamDir = getParam('GCAM.RefWorkspace', section=args.projectName)
     pathname = pathjoin(gcamDir, 'input', 'gcamdata', 'xml', xml_file)
 
     _logger.info("Reading {}".format(pathname))
