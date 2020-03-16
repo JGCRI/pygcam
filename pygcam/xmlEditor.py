@@ -1176,16 +1176,29 @@ class XMLEditor(object):
             regionElt = "//region[@name='{}']".format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
-            prefix = '{}/supplysector[@name="{}"]/{}[@name="{}"]{}/interpolation-rule[@apply-to="{}"]'.format(
+            subsect = '{}/supplysector[@name="{}"]/{}[@name="{}"]{}'.format(
                         regionElt, supplysector, subsectorTag, subsector,
-                        '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '',
-                        applyTo)
+                        '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '')
+
+            interp_rule = subsect + '/interpolation-rule'
+            prefix = interp_rule + '[@apply-to="{}"]'.format(applyTo)
 
             args += [(prefix + '/@from-year', fromYear),
                      (prefix + '/@to-year', toYear),
                      (prefix + '/interpolation-function/@name', funcName)]
 
             def set_or_insert_value(which, value):
+                # insert interpolation-rule if not present
+                if not xmlSel(xmlFileAbs, interp_rule):
+                    elt = ET.Element('interpolation-rule', attrib={'apply-to' : applyTo})
+                    xmlIns(xmlFileAbs, subsect, elt)
+
+                # insert interpolation-function if not present
+                interp_func = interp_rule + '/interpolation-function'
+                if not xmlSel(xmlFileAbs, interp_func):
+                    elt = ET.Element('interpolation-function', attrib={'name' : funcName})
+                    xmlIns(xmlFileAbs, prefix, elt)
+
                 xpath = prefix + '/' + which
                 if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
                     args.append((xpath, value))
