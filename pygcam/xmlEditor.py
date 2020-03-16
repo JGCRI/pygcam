@@ -1197,15 +1197,15 @@ class XMLEditor(object):
                 interp_func = interp_rule + '/interpolation-function'
                 if not xmlSel(xmlFileAbs, interp_func):
                     elt = ET.Element('interpolation-function', attrib={'name' : funcName})
-                    xmlIns(xmlFileAbs, prefix, elt)
+                    xmlIns(xmlFileAbs, interp_rule, elt)
 
-                xpath = prefix + '/' + which
+                xpath = interp_rule + '/' + which
                 if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
                     args.append((xpath, value))
                 else:                                       # otherwise, insert the element
                     elt = ET.Element(which)
                     elt.text = value
-                    xmlIns(xmlFileAbs, prefix, elt)
+                    xmlIns(xmlFileAbs, interp_rule, elt)
 
             if fromValue is not None:
                 fromValue = str(fromValue)
