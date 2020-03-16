@@ -54,5 +54,5 @@ clean-requirements:
 	rm $(RTD_RQMTS)
 
 rtd-reqs $(RTD_RQMTS): requirements.in
-	pip freeze | egrep '$(EXPR)' > $(RTD_RQMTS)
-
+	python -V|sed -e 's/Python /python==/' > $(RTD_RQMTS)
+	pip freeze | egrep '$(EXPR)' >> $(RTD_RQMTS)
