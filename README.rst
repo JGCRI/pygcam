@@ -34,10 +34,15 @@ Who do I talk to?
 Release Notes
 ==============
 
-Version 1.9.0 (PENDING)
+Version 1.9.0 (16 Mar 2020)
 ---------------------------
 * "transport" command and function "transportTechEfficiency"
+* new "buildingElec" command for creating building electrification policies
 * updates to "building" command
+* numerous updates to callable functions setRegionalShareWeights and setInterpolationFunction
+* modified setup step to remove stale local-xml files when setting up a scenario
+* numerous updates to MCS subsystem
+* improved support for using "restart" files
 
 Many thanks to Robbie Orvis of Energy Innovation for funding the development
 of the three new policy-oriented features: "res", "building", and "transport".
