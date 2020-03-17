@@ -1899,11 +1899,27 @@ class XMLEditor(object):
 
     @callableMethod
     def buildingTechEfficiency(self, csvFile, xmlTag='building_update', xmlFile='building_tech_improvements.xml', mode="mult"):
+        """
+        Generate an XML file that implements building technology efficiency policies based on
+        the CSV input file.
+
+        :param csvFile: (str) The name of the file to create. The given argument is interpreted
+            as relative to "{GCAM.ProjectDir}/etc/", but an absolute path can be provided to override
+            this.
+        :param xmlTag: (str) the tag in the config.xml file to use to find the relevant GCAM input
+            XML file.
+        :param xmlFile: (str) the name of the XML policy file to generate. The file is written to
+            the "local-xml" dir for the current scenario, and it is added to the config.xml file.
+        :param mode: (str) Must be "mult" (the default) or "add", controlling how CSV data are processed.
+        :return: none
+        """
         import pandas as pd
 
-        _logger.info("Called buildingTechEfficiency('%s', '%s', '%s')", csvFile, xmlTag, xmlFile)
+        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
 
-        df = pd.read_csv(csvFile)
+        _logger.info("Called buildingTechEfficiency('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
+
+        df = pd.read_csv(csvPath)
         year_cols = [col for col in df.columns if col.isdigit()]
 
         changes = []
