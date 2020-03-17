@@ -1854,8 +1854,10 @@ class XMLEditor(object):
     def transportTechEfficiency(self, csvFile, xmlTag='transportation'):
         import pandas as pd
 
-        _logger.info("Called transportTechEfficiency('%s', '%s')", csvFile, xmlTag)
-        df = pd.read_csv(csvFile)
+        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+
+        _logger.info("Called transportTechEfficiency('%s', '%s')", csvPath, xmlTag)
+        df = pd.read_csv(csvPath)
         year_cols = [col for col in df.columns if col.isdigit()]
 
         xmlFileRel, xmlFileAbs = self.getLocalCopy(xmlTag)
@@ -2034,10 +2036,13 @@ class XMLEditor(object):
     def buildingElectrification(self, csvFile, xmlTag='building_electrification', xmlFile='building_electrification.xml'):
         from .buildingElectrification import generate_building_elec_xml
 
+        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+        _logger.info("Called buildingElectrification('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
+
         xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
         xmlRel = pathjoin(self.scenario_dir_rel, xmlFile)
 
-        generate_building_elec_xml(csvFile, xmlAbs)
+        generate_building_elec_xml(csvPath, xmlAbs)
         self.addScenarioComponent(xmlTag, xmlRel)
 
 
