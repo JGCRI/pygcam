@@ -3,7 +3,7 @@ dash-core-components
 dash-html-components
 dash-renderer
 filelock
-flask
+Flask
 future
 futures
 ipyparallel
@@ -13,7 +13,7 @@ numexpr
 numpy
 pandas
 python-dateutil
-salib
+SALib
 scipy
 seaborn
 semver
@@ -21,6 +21,6 @@ setuptools
 six
 sphinx-rtd-theme
 sphinx-argparse
-sqlalchemy
+SQLAlchemy
 tornado
 traitlets
