@@ -1216,13 +1216,14 @@ class XMLEditor(object):
                 set_or_insert_value('to-value', toValue)
 
                 # Check if a share-weight node exists for the toYear; if so, set the value.
-                # If not insert one a new element for this year before the interpolation rule.
-                sharePath = prefix + '/share-weight[@year="{}"]'.format(toYear)
+                # If not insert a new element for this year before the interpolation rule.
+                start = subsect if stubTechnology else prefix
+                sharePath = start + '/share-weight[@year="{}"]'.format(toYear)
                 shareElt = tree.find(sharePath)
 
                 if shareElt is None:
-                    ruleElt = tree.find(prefix)
-                    parentElt = tree.find(prefix + '/..')
+                    ruleElt = tree.find(start)
+                    parentElt = tree.find(start + '/..')
                     index = parentElt.index(ruleElt)
 
                     # insert <share-weight year="{toYear}">{toValue}</share-weight> before <interpolation-rule>
