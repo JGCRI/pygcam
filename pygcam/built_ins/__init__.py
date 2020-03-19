@@ -17,9 +17,10 @@ from .run_plugin import RunCommand
 from .sandbox_plugin import SandboxCommand
 from .setup_plugin import SetupCommand
 from .compare_plugin import CompareCommand
+from .zev_plugin import ZEVCommand
 
 BuiltinSubcommands = [BuildingCommand, BuildingElecCommand, ChartCommand, CompareCommand,
                       ConfigCommand, DiffCommand, GcamCommand, GUICommand, InitCommand,
                       MCSCommand, ModelInterfaceCommand, NewProjectCommand, ProtectLandCommand,
                       QueryCommand, RESCommand, RunCommand, SandboxCommand, SetupCommand,
-                      TransportCommand]
+                      TransportCommand, ZEVCommand]
