@@ -267,7 +267,8 @@ def create_RES(tech_df, regions, market, commodity, targets, subsector_dict,
     # since older plants will retain this as their definition (until GCAM is patched)
     prepolicy = [(year, startTarget) for year in GCAM_YEARS if year < startYear]
 
-    targets = prepolicy + targets
+    # avoid duplicating years by starting targets at "startYear"
+    targets = prepolicy + [t for t in targets if t[0] >= startYear]
 
     # N.B. We assume that a RES is applied either to a subset of states, or of regions,
     # but never to both states and non-US regions in the same market. For states, the
