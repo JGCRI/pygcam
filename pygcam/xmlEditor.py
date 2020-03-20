@@ -1133,9 +1133,9 @@ class XMLEditor(object):
                                  toValue=None,  stubTechnology=None, subsectorTag='subsector',
                                  configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
         """
-        Set the interpolation function for the share-weight of the `subsector`
-        of `supplysector` to `funcName` between years `fromYear` to `toYear`
-        in `region`. **Callable from XML setup files.**
+        Set the interpolation function for the share-weight of the `subsector` of `supplysector`
+        (and optional technology) to `funcName` between years `fromYear` to `toYear` in `region`.
+        **Callable from XML setup files.**
 
         :param region: (str or None) If a string, the GCAM region to operate on. If None,
             the function is applied to all regions.
@@ -1150,14 +1150,15 @@ class XMLEditor(object):
         :param fromValue: (str or number) the value to set in the <from-value> element (optional)
         :param toValue: (str or number) the value to set in the <to-value> element (required for
             all but "fixed" interpolation function.)
-        :param stubTechnology: (str) the name of a technology to apply function to
+        :param stubTechnology: (str) the name of a technology to apply function to; if absent,
+            the function is applied at the subsector level.
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This determines which file is edited, so it must correspond to
-           the indicated sector(s). Default is 'energy_transformation'.y
+           the indicated sector(s). Default is 'energy_transformation'.
         :param delete: (bool) if True, set delete="1", otherwise don't.
         :return: none
         """
-        _logger.info("Set interpolation function for '%s' : '%s' to '%s'" % (supplysector, subsector, funcName))
+        _logger.info("Set interpolation function '%s' for '%s' : '%s%s'" % (funcName, supplysector, subsector, (' : ' + stubTechnology if stubTechnology else '')))
 
         toYear = str(toYear)
         fromYear = str(fromYear)
@@ -1173,25 +1174,29 @@ class XMLEditor(object):
         args = []
 
         for region in regions:
-            regionElt = "//region[@name='{}']".format(region)
+            regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
-            subsect = '{}/supplysector[@name="{}"]/{}[@name="{}"]{}'.format(
-                        regionElt, supplysector, subsectorTag, subsector,
-                        '/stub-technology[@name="%s"]' % stubTechnology if stubTechnology else '')
+            subsect = '{}/supplysector[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysector, subsectorTag, subsector)
 
-            interp_rule = subsect + '/interpolation-rule'
-            prefix = interp_rule + '[@apply-to="{}"]'.format(applyTo)
+            if stubTechnology:
+                rule_parent = subsect + '/stub-technology[@name="%s"]' % stubTechnology
+            else:
+                rule_parent = subsect
 
-            args += [(prefix + '/@from-year', fromYear),
-                     (prefix + '/@to-year', toYear),
-                     (prefix + '/interpolation-function/@name', funcName)]
+            # interp_rule = rule_parent + '/interpolation-rule'
+            # prefix = interp_rule + '/interpolation-rule[@apply-to="{}"]'.format(applyTo)
+            interp_rule = rule_parent + '/interpolation-rule[@apply-to="{}"]'.format(applyTo)
 
-            def set_or_insert_value(which, value):
+            args += [(interp_rule + '/@from-year', fromYear),
+                     (interp_rule + '/@to-year', toYear),
+                     (interp_rule + '/interpolation-function/@name', funcName)]
+
+            def set_or_insert_value(to_or_from_tag, value):
                 # insert interpolation-rule if not present
                 if not xmlSel(xmlFileAbs, interp_rule):
                     elt = ET.Element('interpolation-rule', attrib={'apply-to' : applyTo})
-                    xmlIns(xmlFileAbs, subsect, elt)
+                    xmlIns(xmlFileAbs, rule_parent, elt)
 
                 # insert interpolation-function if not present
                 interp_func = interp_rule + '/interpolation-function'
@@ -1199,11 +1204,11 @@ class XMLEditor(object):
                     elt = ET.Element('interpolation-function', attrib={'name' : funcName})
                     xmlIns(xmlFileAbs, interp_rule, elt)
 
-                xpath = interp_rule + '/' + which
+                xpath = interp_rule + '/' + to_or_from_tag
                 if xmlSel(xmlFileAbs, xpath):               # if element exists, edit it in place
                     args.append((xpath, value))
                 else:                                       # otherwise, insert the element
-                    elt = ET.Element(which)
+                    elt = ET.Element(to_or_from_tag)
                     elt.text = value
                     xmlIns(xmlFileAbs, interp_rule, elt)
 
@@ -1217,24 +1222,35 @@ class XMLEditor(object):
 
                 # Check if a share-weight node exists for the toYear; if so, set the value.
                 # If not insert a new element for this year before the interpolation rule.
-                start = subsect if stubTechnology else prefix
-                sharePath = start + '/share-weight[@year="{}"]'.format(toYear)
-                shareElt = tree.find(sharePath)
+                # For techs, the share-weight appears inside the <period year="xxx"> element,
+                # but for subsectors, the year is an attribute, i.e., <share-weight year="xxx">
+                if stubTechnology:
+                    share_parent = rule_parent + '/period[@year="{}"]'.format(toYear)
+                    share_weight = share_parent + '/share-weight'
 
-                if shareElt is None:
-                    ruleElt = tree.find(start)
-                    parentElt = tree.find(start + '/..')
-                    index = parentElt.index(ruleElt)
+                else: # subsector level
+                    share_parent = rule_parent
+                    share_weight = share_parent + '/share-weight[@year="{}"]'.format(toYear)
 
-                    # insert <share-weight year="{toYear}">{toValue}</share-weight> before <interpolation-rule>
-                    shareElt = ET.SubElement(parentElt, 'share-weight', attrib={'year' : toYear})
-                    parentElt.insert(index, shareElt)
+                share_elt = tree.find(share_weight)
+
+                if share_elt is None:
+                    interp_rule_elt = tree.find(interp_rule)
+                    rule_parent_elt = tree.find(rule_parent)
+                    index = rule_parent_elt.index(interp_rule_elt)
+
+                    attrib = {} if stubTechnology else {'year' : toYear}
+                    share_elt = ET.Element('share-weight', attrib=attrib)
+
+                    # insert <share-weight> before <interpolation-rule>
+                    share_parent_elt = tree.find(share_parent)
+                    share_parent_elt.insert(index, share_elt)
 
                 # Set the value for the toYear
-                shareElt.text = toValue
+                share_elt.text = toValue
 
             if delete:
-                args.append((prefix + '/@delete', "1"))
+                args.append((interp_rule + '/@delete', "1"))        # TBD: not sure this is correct
 
         xmlEdit(xmlFileAbs, args)
 
