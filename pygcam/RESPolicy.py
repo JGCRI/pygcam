@@ -540,7 +540,7 @@ def set_tech_map(useGcamUSA):
             'wind_storage': ['''        <tech sector="electricity" subsector="wind"/>'''],
             'hydro'       : ['''        <tech sector="electricity" subsector="hydro"/>'''],
             'biomass'     : ['''        <tech sector="electricity" subsector="biomass"/>'''],
-            'nuclear'     : ['''        <tech sector="elec_Gen_II.*"/>'''],
+            'nuclear'     : ['''        <tech sector="electricity" subsector="nuclear"/>'''],
             'geothermal'  : ['''        <tech sector="electricity" subsector="geothermal"/>''']
         }
     else:
@@ -551,7 +551,7 @@ def set_tech_map(useGcamUSA):
             'hydro'      : ['''        <tech sector="electricity" subsector="hydro"/>'''],
             'biomass'    : ['''        <tech sector="elec_biomass"/>'''],
             'CSP'        : ['''        <tech sector="elec_CSP"/>'''],
-            'nuclear'    : ['''        <tech sector="elec_Gen_II.*"/>'''],
+            'nuclear'    : ['''        <tech sector="electricity" subsector="nuclear"/>'''],
             'geothermal' : ['''        <tech sector="elec_geothermal"/>''']
         }
 
