@@ -1960,14 +1960,14 @@ class XMLEditor(object):
                 if subsector == 'electricity':
                     return old * (1 + improvement)
 
-                inefficiency = (1./old) - 1.
-                inefficiency *= (1. - improvement)
-                coefficient = 1. + inefficiency
-                efficiency = 1./coefficient
+                inefficiency = (1. /old) - 1
+                coefficient = inefficiency / (1 + improvement)
+                efficiency = 1 - coefficient
                 return efficiency
 
         elif mode == 'add':
-            def compute(old, improvement, tech): return old + improvement
+            def compute(old, improvement, tech):
+                return old + improvement
 
         else:
             raise SetupException("buildingTechEfficiency: mode must be either 'add' or 'mult'; got '{}'".format(mode))
