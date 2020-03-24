@@ -1932,8 +1932,8 @@ class XMLEditor(object):
         Generate an XML file that implements building technology efficiency policies based on
         the CSV input file.
 
-        :param csvFile: (str) The name of the file to create. The given argument is interpreted
-            as relative to "{GCAM.ProjectDir}/etc/", but an absolute path can be provided to override
+        :param csvFile: (str) The name of the file to read. The given argument is interpreted as
+            relative to "{GCAM.ProjectDir}/etc/", but an absolute path can be provided to override
             this.
         :param xmlTag: (str) the tag in the config.xml file to use to find the relevant GCAM input
             XML file.
@@ -1956,8 +1956,8 @@ class XMLEditor(object):
         if mode == 'mult':
             # We treat the improvement as the change in the "inefficiency coefficient",
             # best described by the algebra below...
-            def compute(old, improvement, tech):
-                if tech == 'electricity':
+            def compute(old, improvement, subsector):
+                if subsector == 'electricity':
                     return old * (1 + improvement)
 
                 inefficiency = (1./old) - 1.
@@ -1987,7 +1987,7 @@ class XMLEditor(object):
             for (idx, row) in subdf.iterrows():
                 xpath_prefix = xml_template.format(**row)
                 input = row['input']
-                tech  = row['technology']
+                subsector  = row['subsector']
                 pairs = []
 
                 for year in year_cols:
@@ -2006,7 +2006,7 @@ class XMLEditor(object):
 
                     elt = elts[0]
                     old_value = float(elt.text)
-                    new_value = compute(old_value, improvement, tech)
+                    new_value = compute(old_value, improvement, subsector)
                     pairs.append((year, new_value))
 
                 if pairs:
@@ -2061,6 +2061,15 @@ class XMLEditor(object):
 
     @callableMethod
     def buildingElectrification(self, csvFile, xmlTag='building_electrification', xmlFile='building_electrification.xml'):
+        """
+        Generate a building electrification policy XML file and incorporate it into the scenario's config.xml.
+
+        :param csvFile: (str) the name of the CSV template file to read. Relative paths are assumed relative
+            to {GCAM.ProjectDir}/etc. Absolute paths override this.
+        :param xmlTag: (str) a config file tag to use for the generated XML file.
+        :param xmlFile: (str) the name of the generated XML file.
+        :return:
+        """
         from .buildingElectrification import generate_building_elec_xml
 
         csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
