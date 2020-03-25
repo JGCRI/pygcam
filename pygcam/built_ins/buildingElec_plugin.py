@@ -41,15 +41,10 @@ def element_path(elt):
         elif tag == 'subsector':
             d['subsector'] = attr['name']
 
-        elif tag == 'global-technology-database':
-            d['region'] = 'global'
-            break # stop here
+        elif tag in ('global-technology-database', 'region'):
+            break
 
-        elif tag == 'region':
-            d['region'] = attr['name']
-            break # stop here
-
-    return (d['region'], d['sector'], d['subsector'])
+    return (d['sector'], d['subsector'],d['technology'])
 
 def validate_years(years):
     pair = years.split('-')
@@ -88,7 +83,7 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
         desired = []
         sectors = set(args.sectors.split(','))
         for path in paths:
-            if path[1] in sectors:
+            if path[0] in sectors:
                 desired.append(path)
         paths = desired
 
@@ -101,20 +96,21 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
 
     zeroes = ',0' * len(years)    # fill in with zeroes for reading into a dataframe
 
-    for (region, sector, subsector) in paths:
-        if region not in regions:   # use only regions defined for this XML file
+    # data values
+    for region in regions:
+        if region not in all_regions:   # use only regions defined for this XML file
             continue
 
-        market = region    # market defaults to region name
-        full_tup = (which, region, market, sector, subsector)
-        f.write(','.join(full_tup))
-        f.write(zeroes + '\n')
+        for tup in paths:
+            f.write(which + ',' + region + ',')
+            f.write(','.join(tup))
+            f.write(zeroes + '\n')
 
 
 class BuildingElecCommand(SubcommandABC):
 
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Dump combinations of building electricity use sectors, techs, and fuels.'''}
+        kwargs = {'help' : '''Dump combinations of building energy use sectors, techs, and fuels.'''}
         super(BuildingElecCommand, self).__init__('buildingElec', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
@@ -124,9 +120,9 @@ class BuildingElecCommand(SubcommandABC):
                             Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE)))
 
         parser.add_argument('-s', '--sectors', default=None,
-                            help=clean_help('''A comma-delimited list of sectors to include in the generated template. 
-                            Use quotes around the argument if there are embedded blanks. By default, all known building
-                            technology sectors are included.'''))
+                            help=clean_help('''A comma-delimited list of sectors to include in the generated template. Use quotes 
+                            around the argument if there are embedded blanks. By default, all known building technology
+                            sectors are included.'''))
 
         parser.add_argument('-r', '--regions', default=None,
                             help=clean_help('''A comma-delimited list of regions to include in the generated template. 
@@ -155,16 +151,16 @@ class BuildingElecCommand(SubcommandABC):
         templateDir = getParam('GCAM.CsvTemplateDir')
         outputPath = pathjoin(templateDir, args.outputFile)
 
-        years = validate_years(args.years)
-        if years is None:
-            raise Exception(
-                'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
-                    args.years))
-
         _logger.info('Writing {}'.format(outputPath))
         with open(outputPath, 'w') as f:
+            years = validate_years(args.years)
+            if years is None:
+                raise Exception(
+                    'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
+                        args.years))
+
             # column headers
-            f.write("which,region,market,supplysector,subsector,")
+            f.write("which,region,sector,subsector,technology,")
             f.write(','.join(map(str, years)))
             f.write("\n")
 

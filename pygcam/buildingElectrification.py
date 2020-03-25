@@ -26,10 +26,12 @@ SecondaryInput_template = """
               </res-secondary-output>"""
 
 Subsector_template = """
-        <subsector name="{subsector}">
-          <stub-technology name="{subsector}">{periodElts}
-          </stub-technology>
+        <subsector name="{subsector}">{technologyElts}
         </subsector>"""
+        
+Technology_template = """
+          <stub-technology name="{technology}">{periodElts}
+          </stub-technology>"""
 
 Supply_template = """
       <supplysector name="{sector}">{subsectorElts}
@@ -55,9 +57,14 @@ def emit_supply_year(market, year, policy, coefficient, secondaryInput):
                                        coefficient=coefficient,
                                        secondaryInput=secondaryInput)
 
-def emit_subsector(subsector, periodEltList):
+def emit_subsector(subsector, technologyEltList):
+    technologyElts = ''.join(technologyEltList)
+    return Subsector_template.format(subsector=subsector, technologyElts=technologyElts)
+
+def emit_technology(technology,periodEltList):
     periodElts = ''.join(periodEltList)
-    return Subsector_template.format(subsector=subsector, periodElts=periodElts)
+    return Technology_template.format(technology=technology,
+                                     periodElts=periodElts)
 
 def emit_supply(sector, subsectorEltList):
     subsectorElts = ''.join(subsectorEltList)
@@ -81,7 +88,7 @@ def generate_building_elec_xml(csv_path, xml_path):
     df = pd.read_csv(csv_path, index_col=None, skiprows=0)
 
     year_cols = [col for col in df.columns if col.isdigit()]
-    sort_cols = ['region', 'supplysector', 'subsector']
+    sort_cols = ['region', 'sector', 'subsector','technology']
     df.sort_values(by=sort_cols, inplace=True)
 
     region_dict = {}
@@ -94,10 +101,11 @@ def generate_building_elec_xml(csv_path, xml_path):
 
     # create hierarchical dict struct from dataframe
     for (idx, row) in df.iterrows():
-        market_dict[row.region] = row.market
+        market_dict[row.region] = row.region
         sector_dict    = subdict(region_dict, row.region)
-        subsector_dict = subdict(sector_dict, row.supplysector)
-        period_dict    = subdict(subsector_dict, row.subsector)
+        subsector_dict = subdict(sector_dict, row.sector)
+        technology_dict = subdict(subsector_dict, row.subsector)
+        period_dict    = subdict(technology_dict, row.technology)
         for col in year_cols:
             period_dict[col] = row[col]
 
@@ -113,17 +121,22 @@ def generate_building_elec_xml(csv_path, xml_path):
             for (sector, subsector_dict) in sector_dict.items():
 
                 subsector_elts = []
-                for (subsector, period_dict) in subsector_dict.items():
+                for (subsector, technology_dict) in subsector_dict.items():
+                    
+                    technology_elts=[]
+                    for (technology, period_dict) in technology_dict.items():
+                        
+                        period_elts = []
+                        for (year, coefficient) in period_dict.items():
+                            policy = "BuildingElec-{}-{}-{}".format(market, technology, year)
+                            secondaryInput = SecondaryInput_template.format(policy=policy) if subsector == 'electricity' else ''
+                            period_elts.append(emit_supply_year(market, year, policy, coefficient, secondaryInput))    
 
-                    period_elts = []
-                    for (year, coefficient) in period_dict.items():
-                        policy = "BuildingElec-{}-{}".format(market, year)
-                        secondaryInput = SecondaryInput_template.format(policy=policy) if subsector == 'electricity' else ''
-                        period_elts.append(emit_supply_year(market, year, policy, coefficient, secondaryInput))
+                            policy_elts[policy] = emit_policy_year(market, year, policy)   # avoids duplicates since policy name is reused
+                            
+                        technology_elts.append(emit_technology(technology,period_elts))
 
-                        policy_elts[policy] = emit_policy_year(market, year, policy)   # avoids duplicates since policy name is reused
-
-                    subsector_elts.append(emit_subsector(subsector, period_elts))
+                    subsector_elts.append(emit_subsector(subsector, technology_elts))
 
                 supplysector_elts.append(emit_supply(sector, subsector_elts))
 
