@@ -1,43 +1,132 @@
+#!/usr/bin/env python
 """
-.. Support for generating renewable energy standards described in an XML file.
+.. "new" sub-command (creates a new project)
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2020 Richard Plevin
+.. Copyright (c) 2016  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC, clean_help
+from ..log import getLogger
+
+_logger = getLogger(__name__)
+
+DFLT_PROJECT = 'gcam_res'
+OUTPUT_FILE  = 'ZEV_template.csv'
+
+def get_re_techs(tech_cols, params, region):
+    return [tech for tech in tech_cols if params.loc[region, tech] == 1]
+
+def element_path(elt):
+    d = {'input' : elt.attrib['name']}
+
+    for node in elt.iterancestors():    # walk up the hierarchy
+        tag = node.tag
+        attr = node.attrib
+
+        if tag == 'period':
+            pass
+
+        elif tag == 'location-info':
+            d['sector'] = attr['sector-name']
+            d['subsector'] = attr['subsector-name']
+
+        elif tag == 'supplysector':
+            d['sector'] = attr['name']
+
+        elif tag == 'tranSubsector':
+            d['tranSubsector'] = attr['name']
+        
+        elif tag in ('stub-technology', 'technology'):
+            d['technology'] = attr['name']
+            
+        elif tag in ('global-technology-database', 'region'):
+            break
+
+    return (d['sector'], d['tranSubsector'],d['technology'])
+
+def validate_years(years):
+    pair = years.split('-')
+    if len(pair) != 2:
+        return None
+
+    (first, last) = pair
+    if not (first.isdigit() and last.isdigit()):
+        return None
+
+    first = int(first)
+    last  = int(last)
+
+    if not (first < last):
+        return None
+
+    return [i for i in range(first, last+1, 5)]
+
+def save_tran_techs(f, args, years, xml_file, xpath, which):
+    from ..config import getParam
+    from ..utils import pathjoin
+    from ..XMLFile import XMLFile
+
+    gcamDir = getParam('GCAM.RefWorkspace', section=args.projectName)
+    pathname = pathjoin(gcamDir, 'input', 'gcamdata', 'xml', xml_file)
+
+    _logger.info("Reading {}".format(pathname))
+    xml = XMLFile(pathname)
+    root = xml.getRoot()
+
+    nodes = root.xpath(xpath)
+    paths = sorted(set([element_path(node) for node in nodes])) # use 'set' to remove dupes
+
+    # filter out sectors missing from cmdline arg, if specified
+    if args.sectors:
+        desired = []
+        sectors = set(args.sectors.split(','))
+        for path in paths:
+            if path[0] in sectors:
+                desired.append(path)
+        paths = desired
+
+    all_regions = set(root.xpath('//region/@name'))
+    if args.GCAM_USA:
+        all_regions = all_regions.difference(['USA'])  # remove USA since states will be used
+
+    regions = args.regions.split(',') if args.regions else all_regions
+    regions = sorted(regions)
+
+    zeroes = ',0' * len(years)    # fill in with zeroes for reading into a dataframe
+
+    # data values
+    for region in regions:
+        if region not in all_regions:   # use only regions defined for this XML file
+            continue
+
+        for tup in paths:
+            f.write(which + ',' + region + ',')
+            f.write(','.join(tup))
+            f.write(zeroes + '\n')
+
 
 class ZEVCommand(SubcommandABC):
-    def __init__(self, subparsers):
-        kwargs = {'help': clean_help('''Generate an CSV template file that can be used to implement a
-            ZEV policy on the sectors, transSubsectors and technologies as described on the command-line.''')}
 
-        super(ZEVCommand, self).__init__('zev', subparsers, kwargs, group='project')
+    def __init__(self, subparsers):
+        kwargs = {'help' : '''Dump combinations of transportation sectors, techs, and fuels.'''}
+        super(ZEVCommand, self).__init__('ZEV', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
-        parser.add_argument('-i', '--include', action='append', default=None,
-                            help=clean_help('''A colon (":") delimited list of comma-delimited sectors, 
-                                tranSubsectors, and technologies to include in the CSV template file.
-                                Example: "--include trn_pass_road_LDV_4W::BEV,FCEV" means include only two 
-                                technologies (BEV,FCEV), but for any tranSubsector under the specified sector. 
-                                Multiple -I arguments are allowed.'''))
+        parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
+                            help=clean_help('''The CSV file to create with lists of unique transportation sectors, 
+                            subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}".
+                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE)))
 
-        defaultCSV = 'zev_policy.csv'
-        parser.add_argument('-o', '--outputCSV', default=defaultCSV,
-                            help=clean_help('''The directory into which to write the generated CSV template.
-                                    Default is "{}". If set to a relative pathname, it is assumed to 
-                                    be relative to %%(GCAM.ProjectDir)s/etc.'''.format(defaultCSV)))
+        parser.add_argument('-s', '--sectors', default=None,
+                            help=clean_help('''A comma-delimited list of sectors to include in the generated template. Use quotes 
+                            around the argument if there are embedded blanks. By default, all known transportation technology
+                            sectors are included.'''))
 
         parser.add_argument('-r', '--regions', default=None,
                             help=clean_help('''A comma-delimited list of regions to include in the generated template. 
                              By default all regions are included. '''))
-
-        parser.add_argument('-S', '--scenario', default=None,
-                            help=clean_help('''The name of the scenario for which to generate the policy 
-                                    implementation XML file. Required if no argument is given
-                                    to the "-o/--outputXML" flag, or if the argument is a
-                                    relative pathname.'''))
 
         parser.add_argument('-u', '--GCAM-USA', action="store_true",
                             help=clean_help('''If set, produce output compatible with GCAM-USA regions.'''))
@@ -48,7 +137,34 @@ class ZEVCommand(SubcommandABC):
 
         return parser
 
-    def run(self, args, tool):
-        from ..ZEVPolicy import zevPolicyMain
 
-        zevPolicyMain(args)
+    def run(self, args, tool):
+        from ..utils import pathjoin
+        from ..config import getParam
+
+        main_xml_file = 'transportation_UCD_CORE.xml'
+        usa_xml_file = 'transportation_USA.xml'
+
+        main_xpath = '//supplysector/tranSubsector/stub-technology/period/minicam-energy-input'
+        usa_xpath =  '//supplysector/tranSubsector/stub-technology/period/minicam-energy-input'
+
+        templateDir = getParam('GCAM.CsvTemplateDir')
+        outputPath = pathjoin(templateDir, args.outputFile)
+
+        _logger.info('Writing {}'.format(outputPath))
+        with open(outputPath, 'w') as f:
+            years = validate_years(args.years)
+            if years is None:
+                raise Exception(
+                    'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
+                        args.years))
+
+            # column headers
+            f.write("which,region,sector,tranSubsector,technology,")
+            f.write(','.join(map(str, years)))
+            f.write("\n")
+
+            save_tran_techs(f, args, years, main_xml_file, main_xpath, 'GCAM-32')
+
+            if args.GCAM_USA:
+                save_tran_techs(f, args, years, usa_xml_file, usa_xpath, 'GCAM-USA')
