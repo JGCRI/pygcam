@@ -48,7 +48,7 @@ def unixPath(path, rmFinalSlash=False, abspath=False):
     if PlatformName == 'Windows':
         path = path.replace('\\', '/')
 
-    if rmFinalSlash and path[-1] == '/':
+    if rmFinalSlash and len(path) and path[-1] == '/':
         path = path[0:-1]
 
     return path

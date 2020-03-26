@@ -433,7 +433,7 @@ class If(ConfigActionBase):
 
 MCSVALUES_FILE = 'mcsValues.xml'
 
-def createXmlEditorSubclass(setupFile, mcsMode=None):
+def createXmlEditorSubclass(setupFile, mcsMode=None, cleanXML=True):
     """
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
@@ -468,7 +468,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
     class XmlEditorSubclass(superclass):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
-                     srcGroupDir, subdir, parent=None, mcsMode=None):
+                     srcGroupDir, subdir, parent=None, mcsMode=None, cleanXML=True):
             self.parentConfigPath = None
 
             self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
@@ -486,7 +486,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
                                                     refWorkspace, groupName, srcGroupDir, subdir,
-                                                    mcsMode=mcsMode, parent=parent)
+                                                    parent=parent, mcsMode=mcsMode, cleanXML=cleanXML)
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
@@ -569,3 +569,35 @@ def createXmlEditorSubclass(setupFile, mcsMode=None):
             CachedFile.decacheAll()
 
     return XmlEditorSubclass
+
+
+def scenarioEditor(scenario):
+    setupXml = getParam('GCAM.ScenarioSetupFile')
+    editorClass = createXmlEditorSubclass(setupXml, cleanXML=False)
+
+    # we don't need to specify any of these for real since we're just getting the config file
+    baseline = ''
+    xmlSrcDir = ''
+    refWorkspace = ''
+    groupName = ''
+    srcGroupDir = ''
+    subdir = ''
+
+    xmlOutputRoot = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, normpath=True)
+
+    editor = editorClass(baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace,
+                         groupName, srcGroupDir, subdir, cleanXML=False)
+    return editor
+
+def scenarioConfigPath(scenario):
+    editor = scenarioEditor(scenario)
+    path = editor.cfgPath()
+    return path
+
+def scenarioXML(scenario, tag, groupName=None):
+    editor = scenarioEditor(scenario)
+    path = editor.componentPath(tag)
+    groupName = groupName or ''
+    absPath = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, 'exe', path, abspath=True)
+    return absPath
+
