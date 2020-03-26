@@ -1550,7 +1550,7 @@ class XMLEditor(object):
     @callableMethod
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
                                  funcName='linear', applyTo='share-weight', fromValue=None,
-                                 toValue=None,  stubTechnology=None, subsectorTag='subsector',
+                                 toValue=None,  stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
                                  configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
         """
         Set the interpolation function for the share-weight of the `subsector` of `supplysector`
@@ -1560,6 +1560,8 @@ class XMLEditor(object):
         :param region: (str or None) If a string, the GCAM region to operate on. If None,
             the function is applied to all regions.
         :param supplysector: (str) the name of a supply sector
+        :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
+            for electricity, this should be passed as supplysectorTag='pass-through-sector'
         :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
             for transportation, this should be passed as subsectorTag='tranSubsector'
         :param subsector: (str) the name of a sub-sector
@@ -1597,7 +1599,7 @@ class XMLEditor(object):
             regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
-            subsect = '{}/supplysector[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysector, subsectorTag, subsector)
+            subsect = '{}/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, supplysector, subsectorTag, subsector)
 
             if stubTechnology:
                 rule_parent = subsect + '/stub-technology[@name="%s"]' % stubTechnology
@@ -1678,7 +1680,7 @@ class XMLEditor(object):
 
     @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
-                               stubTechnology=None, subsectorTag='subsector',
+                               stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
                                configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
         Create a modified version of the indicated file (default is en_transformation.xml) with
@@ -1699,6 +1701,8 @@ class XMLEditor(object):
             which the rest of the explanation above applies. The `shareWeight` can be
             anything coercible to float.
         :param stubTechnology: (str) the name of a GCAM technology in the global technology database
+        :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
+            for electricity, this should be passed as supplysectorTag='pass-through-sector'
         :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
             for transportation, this should be passed as subsectorTag='tranSubsector'
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
@@ -1725,7 +1729,7 @@ class XMLEditor(object):
             regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
-            subsect = '{}/supplysector[@name="{}"]/{}[@name="{}"]'.format(regionElt, sector, subsectorTag, subsector)
+            subsect = '{}/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, sector, subsectorTag, subsector)
 
             for year, value in expandYearRanges(values):
 
