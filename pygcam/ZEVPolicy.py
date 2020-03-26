@@ -248,7 +248,7 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
         elt.text = str(value)
         return elt
 
-    def rec_name(region, subsector, year, policy='ZEV'):
+    def rec_name(region, subsector, year, policy='ZEC'):
         name = '{} {} {} {}'.format(region, subsector, policy, year)
         return name
 
@@ -283,7 +283,7 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
 
         for idx, row in region_df.iterrows():
             for year in year_cols:
-                # <policy-portfolio-standard name="{region} {tranSubsector} ZEV {year}">
+                # <policy-portfolio-standard name="{region} {tranSubsector} ZEC {year}">
                 #   <market>{market}</market>
                 #   <policyType>RES</policyType>
                 #   <constraint year="{year}">1</constraint>
@@ -296,8 +296,7 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
 
             sector    = row.supplysector
             subsector = row.tranSubsector
-            sect_elt    = find_or_create(region_elt, 'supplysector', sector)
-            subsect_elt = find_or_create(sect_elt, 'tranSubsector', subsector)
+            sect_elt  = None  # created on demand in loop below
 
             # <supplysector name="trn_freight_road">
             #   <tranSubsector name="Truck (>32t)">
@@ -312,16 +311,15 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
             #         </res-secondary-output>
             #       </period>
             for tech in tech_cols:
-                if not region_df.loc[idx, tech]:
-                    continue
-
-                tech_elt = find_or_create(subsect_elt, 'stub-technology', tech)
-
                 for year in year_cols:
                     target = region_df.loc[idx, year]
                     if not target:
                         continue
 
+                    sect_elt = sect_elt if sect_elt is not None else find_or_create(region_elt, 'supplysector', sector)
+                    subsect_elt = find_or_create(sect_elt, 'tranSubsector', subsector)
+
+                    tech_elt = find_or_create(subsect_elt, 'stub-technology', tech)
                     period_elt = ET.SubElement(tech_elt, 'period', year=year)
                     name = rec_name(region, subsector, year)
 
@@ -330,9 +328,11 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
                     value = target / BtuToMJ * 1E3 * load_factor(region, sector, subsector, tech, year)
                     set_text(ET.SubElement(en_input_elt, 'coefficient'), value)
 
-                    sec_input_elt = ET.SubElement(period_elt, 'res-secondary-output', name=name)
-                    set_text(ET.SubElement(sec_input_elt, 'output-ratio'), outputRatio)
-                    set_text(ET.SubElement(sec_input_elt, 'pMultiplier'), pMultiplier)
+                    # create res-secondary-output elements only for technologies included in the policy
+                    if region_df.loc[idx, tech]:
+                        sec_input_elt = ET.SubElement(period_elt, 'res-secondary-output', name=name)
+                        set_text(ET.SubElement(sec_input_elt, 'output-ratio'), outputRatio)
+                        set_text(ET.SubElement(sec_input_elt, 'pMultiplier'), pMultiplier)
 
     _logger.info("Writing '%s'", xmlPath)
     mkdirs(os.path.dirname(xmlPath))    # ensure the location exists
