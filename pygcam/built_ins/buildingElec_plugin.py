@@ -12,7 +12,6 @@ from ..log import getLogger
 
 _logger = getLogger(__name__)
 
-DFLT_PROJECT = 'gcam_res'
 OUTPUT_FILE  = 'building_elec_template.csv'
 
 def get_re_techs(tech_cols, params, region):

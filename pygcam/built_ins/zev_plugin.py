@@ -39,6 +39,9 @@ class ZEVCommand(SubcommandABC):
                                     to the "-o/--outputXML" flag, or if the argument is a
                                     relative pathname.'''))
 
+        parser.add_argument('-t', '--tag', default='transportation',
+                            help=clean_help('''The config file tag identifying the transportation file to operate on.'''))
+
         parser.add_argument('-u', '--GCAM-USA', action="store_true",
                             help=clean_help('''If set, produce output compatible with GCAM-USA regions.'''))
 
@@ -50,5 +53,4 @@ class ZEVCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..ZEVPolicy import zevPolicyMain
-
         zevPolicyMain(args)

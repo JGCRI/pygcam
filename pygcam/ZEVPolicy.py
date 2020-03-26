@@ -1,10 +1,9 @@
 #
 # Goal is eventually to translate a file like ../etc/exampleRES.xml into standard GCAM XML.
 #
-from copy import deepcopy
-import re
+# from copy import deepcopy
+# import re
 from lxml import etree as ET
-from lxml.etree import Element, SubElement
 from .config import pathjoin, getParam
 from .log import getLogger
 from .XMLFile import XMLFile
@@ -143,10 +142,9 @@ def validate_years(years):
     return [i for i in range(first, last+1, 5)]
 
 def zevPolicyMain(args):
-    import os
     import pandas as pd
     from .error import CommandlineError
-    # from .utils import mkdirs
+    from .xmlSetup import scenarioXML
 
     years = validate_years(args.years)
     if years is None:
@@ -178,12 +176,8 @@ def zevPolicyMain(args):
         xpath = '/supplysector{}/tranSubsector{}/stub-technology{}'.format(sector_match, subsect_match, tech_match)
         xpaths.append(xpath)
 
-    # TBD: make this more flexible, e.g., based on tag rather than filename
-    gcamDir = getParam('GCAM.RefWorkspace')
-    pathname = os.path.join(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
-    _logger.info("Reading {}".format(pathname))
-
-    xml = XMLFile(pathname)
+    transportXML = scenarioXML(args.scenario, args.tag) # read the file associated with the given tag
+    xml = XMLFile(transportXML)
     root = xml.getRoot()
 
     if args.regions:
@@ -235,3 +229,112 @@ def zevPolicyMain(args):
     df.to_csv(outPath, index=None)
 
 
+BtuToMJ = 1.055
+
+def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outputRatio):
+    import os
+    import pandas as pd
+    from .utils import mkdirs
+    from .RESPolicy import write_xml
+    from .xmlSetup import scenarioXML
+
+    df = pd.read_csv(csvPath, index_col=None)
+
+    common_cols = ['region', 'market', 'supplysector', 'tranSubsector']
+    year_cols = [col for col in df.columns if col.isdigit()]
+    tech_cols = list(set(df.columns) - set(common_cols + year_cols))
+
+    def set_text(elt, value):
+        elt.text = str(value)
+        return elt
+
+    def rec_name(region, subsector, year, policy='ZEV'):
+        name = '{} {} {} {}'.format(region, subsector, policy, year)
+        return name
+
+    # we use the indicated transportation XML file to extract load factors
+    transportXML = scenarioXML(scenario, transportTag) # read the file associated with the given tag
+    xml = XMLFile(transportXML)
+    trans_root = xml.getRoot()
+
+    def load_factor(region, sector, subsector, tech, year):
+        xpath = "//region[@name='{}']/supplysector[@name='{}']/tranSubsector[@name='{}']/stub-technology[@name='{}']/period[@year='{}']/loadFactor".format(
+            region, sector, subsector, tech, year)
+        nodes = trans_root.xpath(xpath)
+        if len(nodes) == 0:
+            raise Exception('ZEVPolicy: Failed to find loadFactor for "{}"'.format(xpath))
+
+        return float(nodes[0].text)
+
+    def find_or_create(parent, tag, name):
+        elt = parent.find('{}[@name="{}"]'.format(tag, name))
+        if elt is None:
+            elt = ET.SubElement(parent, tag, name=name)
+
+        return elt
+
+    root = ET.Element('scenario')
+    world = ET.SubElement(root, 'world')
+
+    for region in sorted(df.region.unique()):
+        region_df = df.query('region == @region')
+
+        region_elt = find_or_create(world, 'region', region)
+
+        for idx, row in region_df.iterrows():
+            for year in year_cols:
+                # <policy-portfolio-standard name="{region} {tranSubsector} ZEV {year}">
+                #   <market>{market}</market>
+                #   <policyType>RES</policyType>
+                #   <constraint year="{year}">1</constraint>
+                # </policy-portfolio-standard>
+                name = rec_name(region, row.tranSubsector, year)
+                std_elt = ET.SubElement(region_elt, 'policy-portfolio-standard', name=name)
+                set_text(ET.SubElement(std_elt, 'market'), row.market)
+                set_text(ET.SubElement(std_elt, 'policyType'), 'RES')
+                set_text(ET.SubElement(std_elt, 'constraint', year=year), 1)
+
+            sector    = row.supplysector
+            subsector = row.tranSubsector
+            sect_elt    = find_or_create(region_elt, 'supplysector', sector)
+            subsect_elt = find_or_create(sect_elt, 'tranSubsector', subsector)
+
+            # <supplysector name="trn_freight_road">
+            #   <tranSubsector name="Truck (>32t)">
+            #     <stub-technology name="electric">
+            #       <period year="2030">
+            #         <minicam-energy-input name="EU15 Truck (>32t) ZEC 2030">
+            #           <coefficient>1544.0758</coefficient>
+            #         </minicam-energy-input>
+            #         <res-secondary-output name="EU15 Truck (>32t) ZEC 2030">
+            #           <output-ratio>0.000001</output-ratio>
+            #           <pMultiplier>1.25E10</pMultiplier>
+            #         </res-secondary-output>
+            #       </period>
+            for tech in tech_cols:
+                if not region_df.loc[idx, tech]:
+                    continue
+
+                tech_elt = find_or_create(subsect_elt, 'stub-technology', tech)
+
+                for year in year_cols:
+                    target = region_df.loc[idx, year]
+                    if not target:
+                        continue
+
+                    period_elt = ET.SubElement(tech_elt, 'period', year=year)
+                    name = rec_name(region, subsector, year)
+
+                    en_input_elt = ET.SubElement(period_elt, 'minicam-energy-input', name=name)
+
+                    value = target / BtuToMJ * 1E3 * load_factor(region, sector, subsector, tech, year)
+                    set_text(ET.SubElement(en_input_elt, 'coefficient'), value)
+
+                    sec_input_elt = ET.SubElement(period_elt, 'res-secondary-output', name=name)
+                    set_text(ET.SubElement(sec_input_elt, 'output-ratio'), outputRatio)
+                    set_text(ET.SubElement(sec_input_elt, 'pMultiplier'), pMultiplier)
+
+    _logger.info("Writing '%s'", xmlPath)
+    mkdirs(os.path.dirname(xmlPath))    # ensure the location exists
+    tree = ET.ElementTree(root)
+    write_xml(tree, xmlPath)

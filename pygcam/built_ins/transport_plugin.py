@@ -143,7 +143,6 @@ class TransportCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..utils import pathjoin
-        from ..config import getParam
 
         years = validate_years(args.years)
         if years is None:
