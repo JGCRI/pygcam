@@ -1,8 +1,3 @@
-#
-# Goal is eventually to translate a file like ../etc/exampleRES.xml into standard GCAM XML.
-#
-# from copy import deepcopy
-# import re
 from lxml import etree as ET
 from .config import pathjoin, getParam
 from .log import getLogger
@@ -10,32 +5,6 @@ from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
-# We deal only with one historical year (2010) and all future years
-TIMESTEP = 5
-LAST_HISTORICAL_YEAR = 2010
-FIRST_MODELED_YEAR = LAST_HISTORICAL_YEAR + TIMESTEP
-END_YEAR = 2100
-GCAM_YEARS = [1975, 1990, 2005] + [year for year in range(LAST_HISTORICAL_YEAR, END_YEAR + 1, TIMESTEP)]
-
-States = []
-
-# def ref_pathname(basename):
-#     refWorkspace = getParam('GCAM.RefWorkspace')
-#     xmlfile = pathjoin(refWorkspace, 'input', 'gcamdata', 'xml', basename)
-#     return xmlfile
-#
-# def ref_xmltree(basename):
-#     pathname = ref_pathname(basename)
-#     tree = XMLFile(pathname).getTree()
-#     return tree
-#
-# def read_state_names():
-#     global States
-#
-#     xmlfile = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcamdata', 'xml', 'socioeconomics_USA.xml')
-#     tree = XMLFile(xmlfile).getTree()
-#     States = tree.xpath('//region/@name')
-#
 def is_abspath(pathname):
     """Return True if pathname is an absolute pathname, else False."""
     import re
@@ -45,61 +14,6 @@ def get_path(pathname, defaultDir):
     """Return pathname if it's an absolute pathname, otherwise return
        the path composed of pathname relative to the given defaultDir"""
     return pathname if is_abspath(pathname) else pathjoin(defaultDir, pathname)
-#
-# def read_csv(pathname):
-#     import pandas as pd
-#
-#     _logger.debug("Reading '%s'", pathname)
-#
-#     df = pd.read_csv(pathname, index_col='region', skiprows=1)
-#     return df
-
-# def validate(scenario, csv_path, useGcamUSA):
-#     import pandas as pd
-#     param_df = read_csv(csv_path)
-#
-#     year_cols = [col for col in param_df.columns if str.isdigit(col)]
-#     tech_cols = [col for col in param_df.columns if not str.isdigit(col) and col != 'market']
-#
-#     sandboxDir  = getParam('GCAM.SandboxDir')
-#
-#     query_name  = 'ElecGenBySubsectorNoRECs'
-#     if useGcamUSA:
-#         query_name += 'ByState'
-#
-#     result_csv = pathjoin(sandboxDir, scenario, 'queryResults', '{}-{}.csv'.format(query_name, scenario))
-#
-#     print("Reading", result_csv)
-#     result_df = pd.read_csv(result_csv, skiprows=1)
-#     result_df.reset_index(inplace=True)
-#
-#     keep = ['region', 'output', 'subsector'] + year_cols
-#     df2 = result_df[keep]
-#     regions = list(param_df.index)
-#     df3 = df2.query('region in @regions and output in ("electricity", "elect_td_bld")')
-#
-#     elec_total = {}
-#     rec_total = {}
-#     fraction = {}
-#
-#     for region in regions:
-#         elec = df3.query('region == @region')
-#         elec_total[region] = elec[year_cols].sum()
-#
-#         re_techs = get_re_techs(tech_cols, param_df, region)  # N.B. interpolated in query below
-#         recs = elec.query('subsector in @re_techs')
-#         rec_total[region] = recs[year_cols].sum()
-#
-#         fraction[region] = rec_total[region] / elec_total[region]
-#
-#     result = None
-#     for region in regions:
-#         df = pd.DataFrame(round(fraction[region] * 100, 2)).T
-#         df['region'] = region
-#         result = df if result is None else result.append(df)
-#
-#     result.set_index('region', inplace=True)
-#     print('{}:\n{}'.format(scenario, result))
 
 def element_path(elt):
     d = {'technology' : elt.attrib['name']}
@@ -224,7 +138,6 @@ def zevPolicyMain(args):
             if combos.get(key, False):
                df.loc[idx, tech] = 1
 
-
     _logger.info("Writing '%s'", outPath)
     df.to_csv(outPath, index=None)
 
@@ -282,20 +195,22 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
         region_elt = find_or_create(world, 'region', region)
 
         for idx, row in region_df.iterrows():
+            sector    = row.supplysector
+            subsector = row.tranSubsector
+            market    = row.market
+
             for year in year_cols:
                 # <policy-portfolio-standard name="{region} {tranSubsector} ZEC {year}">
                 #   <market>{market}</market>
                 #   <policyType>RES</policyType>
                 #   <constraint year="{year}">1</constraint>
                 # </policy-portfolio-standard>
-                name = rec_name(region, row.tranSubsector, year)
+                name = rec_name(region, subsector, year)
                 std_elt = ET.SubElement(region_elt, 'policy-portfolio-standard', name=name)
-                set_text(ET.SubElement(std_elt, 'market'), row.market)
+                set_text(ET.SubElement(std_elt, 'market'), market)
                 set_text(ET.SubElement(std_elt, 'policyType'), 'RES')
                 set_text(ET.SubElement(std_elt, 'constraint', year=year), 1)
 
-            sector    = row.supplysector
-            subsector = row.tranSubsector
             sect_elt  = None  # created on demand in loop below
 
             # <supplysector name="trn_freight_road">
