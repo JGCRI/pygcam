@@ -12,14 +12,13 @@ from ..log import getLogger
 
 _logger = getLogger(__name__)
 
-DFLT_PROJECT = 'gcam_res'
-OUTPUT_FILE  = 'building_tech_template.csv'
-
 def get_re_techs(tech_cols, params, region):
     return [tech for tech in tech_cols if params.loc[region, tech] == 1]
 
-def element_path(elt):
+def element_path(elt, withInput):
     d = {'input' : elt.attrib['name']}
+
+    sector = subsector = technology = None
 
     for node in elt.iterancestors():    # walk up the hierarchy
         tag = node.tag
@@ -29,22 +28,22 @@ def element_path(elt):
             pass
 
         elif tag == 'location-info':
-            d['sector'] = attr['sector-name']
-            d['subsector'] = attr['subsector-name']
+            d['sector'] = sector = attr['sector-name']
+            d['subsector'] = subsector = attr['subsector-name']
 
         elif tag == 'supplysector':
-            d['sector'] = attr['name']
+            d['sector'] = sector = attr['name']
 
         elif tag in ('stub-technology', 'technology'):
-            d['technology'] = attr['name']
+            d['technology'] = technology = attr['name']
 
         elif tag == 'subsector':
-            d['subsector'] = attr['name']
+            d['subsector'] = subsector = attr['name']
 
         elif tag in ('global-technology-database', 'region'):
             break
 
-    return (d['sector'], d['subsector'], d['technology'], d['input'])
+    return (sector, subsector, technology, d['input']) if withInput else (sector, subsector, technology)
 
 def validate_years(years):
     pair = years.split('-')
@@ -63,7 +62,7 @@ def validate_years(years):
 
     return [i for i in range(first, last+1, 5)]
 
-def save_bldg_techs(f, args, years, xml_file, xpath, which):
+def save_bldg_techs(f, args, years, xml_file, xpath, which, withInput):
     from ..config import getParam
     from ..utils import pathjoin
     from ..XMLFile import XMLFile
@@ -76,7 +75,7 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
     root = xml.getRoot()
 
     nodes = root.xpath(xpath)
-    paths = sorted(set([element_path(node) for node in nodes])) # use 'set' to remove dupes
+    paths = sorted(set([element_path(node, withInput) for node in nodes])) # use 'set' to remove dupes
 
     # filter out sectors missing from cmdline arg, if specified
     if args.sectors:
@@ -106,6 +105,8 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
             f.write(','.join(tup))
             f.write(zeroes + '\n')
 
+TECH_OUTPUT_FILE = 'building_tech_template.csv'
+ELEC_OUTPUT_FILE = 'building_elec_template.csv'
 
 class BuildingCommand(SubcommandABC):
 
@@ -114,10 +115,16 @@ class BuildingCommand(SubcommandABC):
         super(BuildingCommand, self).__init__('building', subparsers, kwargs, group='project')
 
     def addArgs(self, parser):
-        parser.add_argument('-o', '--outputFile', default=OUTPUT_FILE,
+        parser.add_argument('-e', '--electricOnly', action="store_true",
+                            help=clean_help('''Generate a template for electricity-based sources only.'''))
+
+
+        parser.add_argument('-o', '--outputFile', default=None,
                             help=clean_help('''The CSV file to create with lists of unique building sectors, 
-                            subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}".
-                            Use an absolute path to generate the file to another location.'''.format(OUTPUT_FILE)))
+                            subsectors, and technologies. Default is "[GCAM.CsvTemplateDir]/{}" or 
+                            "[GCAM.CsvTemplateDir]/{}", depending on the --electricOnly flag.
+                            Use an absolute path to generate the file to another location.'''.format(
+                                TECH_OUTPUT_FILE, ELEC_OUTPUT_FILE)))
 
         parser.add_argument('-s', '--sectors', default=None,
                             help=clean_help('''A comma-delimited list of sectors to include in the generated template. Use quotes 
@@ -142,6 +149,8 @@ class BuildingCommand(SubcommandABC):
         from ..utils import pathjoin
         from ..config import getParam
 
+        outputFile = args.outputFile or (ELEC_OUTPUT_FILE if args.electricOnly else TECH_OUTPUT_FILE)
+
         main_xml_file = 'building_det.xml'
         usa_xml_file = 'building_USA.xml'
 
@@ -149,7 +158,7 @@ class BuildingCommand(SubcommandABC):
         usa_xpath = '//global-technology-database/location-info/technology/period/minicam-energy-input'
 
         templateDir = getParam('GCAM.CsvTemplateDir')
-        outputPath = pathjoin(templateDir, args.outputFile)
+        outputPath = pathjoin(templateDir, outputFile)
 
         _logger.info('Writing {}'.format(outputPath))
         with open(outputPath, 'w') as f:
@@ -160,11 +169,15 @@ class BuildingCommand(SubcommandABC):
                         args.years))
 
             # column headers
-            f.write("which,region,sector,subsector,technology,input,")
+            f.write("which,region,sector,subsector,technology,")
+            withInput = not args.electricOnly
+            if withInput:
+                f.write("input,")
+
             f.write(','.join(map(str, years)))
             f.write("\n")
 
-            save_bldg_techs(f, args, years, main_xml_file, main_xpath, 'GCAM-32')
+            save_bldg_techs(f, args, years, main_xml_file, main_xpath, 'GCAM-32', withInput)
 
             if args.GCAM_USA:
-                save_bldg_techs(f, args, years, usa_xml_file, usa_xpath, 'GCAM-USA')
+                save_bldg_techs(f, args, years, usa_xml_file, usa_xpath, 'GCAM-USA', withInput)

@@ -105,7 +105,7 @@ def save_bldg_techs(f, args, years, xml_file, xpath, which):
             f.write(','.join(tup))
             f.write(zeroes + '\n')
 
-
+# Deprecated. Use gt building --electricOnly instead
 class BuildingElecCommand(SubcommandABC):
 
     def __init__(self, subparsers):

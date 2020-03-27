@@ -189,6 +189,9 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
     root = ET.Element('scenario')
     world = ET.SubElement(root, 'world')
 
+    # If the standard is zero in some years, emit no policy-portfolio-standard, no
+    # coefficients, and no secondary-res-outputs for that year.
+
     for region in sorted(df.region.unique()):
         region_df = df.query('region == @region')
 
@@ -199,17 +202,19 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
             subsector = row.tranSubsector
             market    = row.market
 
+            # <policy-portfolio-standard name="{region} {tranSubsector} ZEC {year}">
+            #   <market>{market}</market>
+            #   <policyType>RES</policyType>
+            #   <constraint year="{year}">1</constraint>
+            # </policy-portfolio-standard>
             for year in year_cols:
-                # <policy-portfolio-standard name="{region} {tranSubsector} ZEC {year}">
-                #   <market>{market}</market>
-                #   <policyType>RES</policyType>
-                #   <constraint year="{year}">1</constraint>
-                # </policy-portfolio-standard>
-                name = rec_name(region, subsector, year)
-                std_elt = ET.SubElement(region_elt, 'policy-portfolio-standard', name=name)
-                set_text(ET.SubElement(std_elt, 'market'), market)
-                set_text(ET.SubElement(std_elt, 'policyType'), 'RES')
-                set_text(ET.SubElement(std_elt, 'constraint', year=year), 1)
+                target = region_df.loc[idx, year]
+                if target:
+                    name = rec_name(region, subsector, year)
+                    std_elt = ET.SubElement(region_elt, 'policy-portfolio-standard', name=name)
+                    set_text(ET.SubElement(std_elt, 'market'), market)
+                    set_text(ET.SubElement(std_elt, 'policyType'), 'RES')
+                    set_text(ET.SubElement(std_elt, 'constraint', year=year), 1)
 
             sect_elt  = None  # created on demand in loop below
 
@@ -248,6 +253,11 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
                         sec_input_elt = ET.SubElement(period_elt, 'res-secondary-output', name=name)
                         set_text(ET.SubElement(sec_input_elt, 'output-ratio'), outputRatio)
                         set_text(ET.SubElement(sec_input_elt, 'pMultiplier'), pMultiplier)
+
+    # delete empty regions
+    emptyRegs = [reg for reg in world if len(reg) == 0]
+    for reg in emptyRegs:
+        world.remove(reg)
 
     _logger.info("Writing '%s'", xmlPath)
     mkdirs(os.path.dirname(xmlPath))    # ensure the location exists
