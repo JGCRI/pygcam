@@ -128,7 +128,7 @@ def generate_building_elec_xml(csv_path, xml_path):
                         
                         period_elts = []
                         for (year, coefficient) in period_dict.items():
-                            policy = "BuildingElec-{}-{}-{}".format(market, technology, year)
+                            policy = "BuildingElec-{}-{}-{}".format(market, sector, year)
                             secondaryInput = SecondaryInput_template.format(policy=policy) if subsector == 'electricity' else ''
                             period_elts.append(emit_supply_year(market, year, policy, coefficient, secondaryInput))    
 
