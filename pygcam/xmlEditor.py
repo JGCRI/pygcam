@@ -1965,7 +1965,7 @@ class XMLEditor(object):
                 if subsector == 'electricity':
                     return old * (1 + improvement)
 
-                inefficiency = (1. /old) - 1
+                inefficiency = (1 - old)
                 coefficient = inefficiency / (1 + improvement)
                 efficiency = 1 - coefficient
                 return efficiency
