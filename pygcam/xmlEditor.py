@@ -76,7 +76,7 @@ def makeDirPath(elements, require=False, create=False, mode=0o775):
         if create:
             os.makedirs(path, mode)
         elif require:
-            raise SetupException("Required path '%s' does not exist." % path)
+            raise SetupException("Required path '{}' does not exist.".format(path))
 
     return path
 
@@ -95,10 +95,10 @@ def copyIfMissing(src, dst, makedirs=False):
     if not os.path.lexists(dst):
         parentDir = os.path.dirname(dst)
         if makedirs and not os.path.isdir(parentDir):
-            _logger.debug("mkdir %s" % parentDir)
+            _logger.debug("mkdir '%s'", parentDir)
             os.makedirs(parentDir, 0o755)
 
-        _logger.info("Copy %s\n      to %s" % (src, dst))
+        _logger.info("Copy %s\n      to %s", src, dst)
         shutil.copy(src, dst)
         os.chmod(dst, 0o644)
 
@@ -281,7 +281,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
         rather than from the global-technology-database.
     :return: True on success, else False
     """
-    _logger.info("Extract stub-technology for %s (%s) to %s" % (technology, region if fromRegion else 'global', dstFile))
+    _logger.info("Extract stub-technology for %s (%s) to %s", technology, region if fromRegion else 'global', dstFile)
 
     if fromRegion:
         xpath = "//region[@name='%s']/%s[@name='%s']/subsector[@name='%s']/stub-technology[@name='%s']" % \
@@ -297,7 +297,7 @@ def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technolog
     # Rename technology => stub-technology (for global-tech-db case)
     elts = tree.xpath(xpath)
     if len(elts) != 1:
-        raise PygcamException('Xpath "%s" failed' % xpath)
+        raise PygcamException('XPath "{}" failed'.format(xpath))
 
     technologyElt = elts[0]
     technologyElt.tag = 'stub-technology'       # no-op if fromRegion == True
@@ -350,7 +350,7 @@ def expandYearRanges(seq):
         if isinstance(year, six.string_types) and '-' in year:
             m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
             if not m:
-                raise SetupException('Unrecognized year range specification: %s' % year)
+                raise SetupException('Unrecognized year range specification: {}'.format(year))
 
             startYear = int(m.group(1))
             endYear   = int(m.group(2))
@@ -562,14 +562,14 @@ class XMLEditor(object):
         :return: none
         """
 
-        _logger.info("Generating dyn-xml for scenario %s" % self.name)
+        _logger.info("Generating dyn-xml for scenario %s", self.name)
 
         # Delete old generated scenario files
         dynDir = self.scenario_dyn_dir_abs
         self.recreateDir(dynDir)
 
         scenDir = self.scenario_dir_abs
-        xmlFiles = glob.glob("%s/*.xml" % scenDir)
+        xmlFiles = glob.glob("{}/*.xml".format(scenDir))
 
         # TBD: no need to link or copy if all in one place. [But dyn are per-trial; local are not]
         if xmlFiles:
@@ -596,7 +596,7 @@ class XMLEditor(object):
             sub-command.
         :return: none
         """
-        _logger.info("Generating local-xml for scenario %s" % self.name)
+        _logger.info("Generating local-xml for scenario %s", self.name)
 
         scenDir = self.scenario_dir_abs
         mkdirs(scenDir)
@@ -618,7 +618,7 @@ class XMLEditor(object):
         parent = self.parent
         parentConfigPath = parent.cfgPath() if parent else getParam('GCAM.RefConfigFile')
 
-        _logger.info("Copy %s\n      to %s" % (parentConfigPath, configPath))
+        _logger.info("Copy %s\n      to %s", parentConfigPath, configPath)
         shutil.copy(parentConfigPath, configPath)
         os.chmod(configPath, 0o664)
 
@@ -703,9 +703,9 @@ class XMLEditor(object):
             self.renameScenarioComponent("fertilizer_energy", pathjoin(self.energy_dir_rel, "en_Fert.xml"))
             self.renameScenarioComponent("fertilizer_agriculture", pathjoin(self.aglu_dir_rel, "ag_Fert.xml"))
 
-            for i in (1,2,3):
-                tag = 'land%d' % i
-                filename = 'land_input_%d.xml' % i
+            for i in (1, 2, 3):
+                tag = 'land' + str(i)
+                filename = 'land_input_{}.xml'.format(i)
                 self.renameScenarioComponent(tag, pathjoin(self.aglu_dir_rel, filename))
 
                 if i > 1:
@@ -727,10 +727,10 @@ class XMLEditor(object):
 
     def componentPath(self, tag, configPath=None):
         configPath = configPath or self.cfgPath()
-        pathname = xmlSel(configPath, '//Value[@name="%s"]' % tag, asText=True)
+        pathname = xmlSel(configPath, '//Value[@name="{}"]'.format(tag), asText=True)
 
         if pathname is None:
-            raise PygcamException("Failed to find scenario component with tag '%s' in %s" % (tag, configPath))
+            raise PygcamException("Failed to find scenario component with tag '{}' in {}".format(tag, configPath))
 
         return pathname
 
@@ -752,7 +752,7 @@ class XMLEditor(object):
 
         # TBD: test this
         if not os.path.lexists(srcAbsPath):
-            _logger.debug("Didn't find %s; checking reference files" % srcAbsPath)
+            _logger.debug("Didn't find %s; checking reference files", srcAbsPath)
             # look to sandbox workspace if not found locally
             refWorkspace  = getParam('GCAM.SandboxRefWorkspace')
             refConfigFile = getParam('GCAM.RefConfigFile')
@@ -808,17 +808,17 @@ class XMLEditor(object):
           ``append-scenario-name`` attribute.
         :return: none
         """
-        textArgs = "name='%s'" % name
+        textArgs = "name='{}'".format(name)
         if writeOutput is not None:
             textArgs += " write-output='%d'" % (int(writeOutput))
         if appendScenarioName is not None:
             textArgs += " append-scenario-name='%d'" % (int(appendScenarioName))
 
-        _logger.debug("Update <%s><Value %s>%s</Value>" % (group, textArgs, '...' if value is None else value))
+        _logger.debug("Update <%s><Value %s>%s</Value>", group, textArgs, '...' if value is None else value)
 
         cfg = self.cfgPath()
 
-        prefix = "//%s/Value[@name='%s']" % (group, name)
+        prefix = "//{}/Value[@name='{}']".format(group, name)
         pairs = []
 
         if value is not None:
@@ -862,11 +862,11 @@ class XMLEditor(object):
         item = CachedFile.getFile(cfg)
         item.setEdited()
 
-        _logger.info("stringReplace('%s', '%s', '%s')" % (xpath, oldstr, newstr))
+        _logger.info("stringReplace('%s', '%s', '%s')", xpath, oldstr, newstr)
 
         nodes = item.tree.xpath(xpath)
         if nodes is None:
-            raise SetupException("stringReplace: No config elements match xpath '%s'" % xpath)
+            raise SetupException("stringReplace: No config elements match xpath '{}'".format(xpath))
 
         for node in nodes:
             node.text = node.text.replace(oldstr, newstr)
@@ -886,13 +886,13 @@ class XMLEditor(object):
         item = CachedFile.getFile(cfg)
         item.setEdited()
 
-        _logger.info("setConfigValue('%s', '%s', '%s')" % (section, name, value))
+        _logger.info("setConfigValue('%s', '%s', '%s')", section, name, value)
 
         xpath = '//{}/Value[@name="{}"]'.format(section, name)
 
         elt = item.tree.find(xpath)
         if elt is None:
-            raise SetupException("setConfigValue: No config elements match xpath '%s'" % xpath)
+            raise SetupException("setConfigValue: No config elements match xpath '{}'".format(xpath))
 
         elt.text = str(value)
 
@@ -909,7 +909,7 @@ class XMLEditor(object):
         self.deleteScenarioComponent(name)
 
         xmlfile = unixPath(xmlfile)
-        _logger.info("Add ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
+        _logger.info("Add ScenarioComponent name='%s', xmlfile='%s'", name, xmlfile)
 
         cfg = self.cfgPath()
         item = CachedFile.getFile(cfg)
@@ -934,7 +934,7 @@ class XMLEditor(object):
         self.deleteScenarioComponent(name)
 
         xmlfile = unixPath(xmlfile)
-        _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'" % (name, xmlfile, after))
+        _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'", name, xmlfile, after)
 
         cfg = self.cfgPath()
         item = CachedFile.getFile(cfg)
@@ -943,7 +943,7 @@ class XMLEditor(object):
         elt = item.tree.find('//ScenarioComponents')
         afterNode = elt.find('Value[@name="%s"]' % after)
         if afterNode is None:
-            raise SetupException("Can't insert %s after %s, as the latter doesn't exist" % (name, after))
+            raise SetupException("Can't insert {} after {}, as the latter doesn't exist".format(name, after))
 
         index = elt.index(afterNode) + 1
 
@@ -972,12 +972,12 @@ class XMLEditor(object):
         :param name: (str) the name of the ScenarioComponent to delete
         :return: none
         """
-        _logger.info("Delete ScenarioComponent name='%s' for scenario" % name)
+        _logger.info("Delete ScenarioComponent name='%s' for scenario", name)
         cfg = self.cfgPath()
         item = CachedFile.getFile(cfg)
 
         elt = item.tree.find("//ScenarioComponents")
-        valueNode = elt.find("Value[@name='%s']" % name)
+        valueNode = elt.find("Value[@name='{}']".format(name))
         if valueNode is not None:
             elt.remove(valueNode)
             item.setEdited()
@@ -994,10 +994,10 @@ class XMLEditor(object):
         :return: none
         """
         xmlfile = unixPath(xmlfile)
-        _logger.debug("Rename ScenarioComponent name='%s', xmlfile='%s'" % (name, xmlfile))
+        _logger.debug("Rename ScenarioComponent name='%s', xmlfile='%s'", name, xmlfile)
         cfg = self.cfgPath()
 
-        xmlEdit(cfg, [("//ScenarioComponents/Value[text()='%s']/@name" % xmlfile, name)])
+        xmlEdit(cfg, [("//ScenarioComponents/Value[text()='{}']/@name".format(xmlfile), name)])
 
     @callableMethod
     def multiply(self, tag, xpath, value):
@@ -1010,7 +1010,7 @@ class XMLEditor(object):
         :param value: (float) a value to multiply results of the `xpath` query by.
         :return: none
         """
-        _logger.info("multiply: tag='{}', xpath='{}', value={}".format(tag, xpath, value))
+        _logger.info("multiply: tag='%s', xpath='%s', value=%s", tag, xpath, value)
 
         fileRel, fileAbs = self.getLocalCopy(tag)
 
@@ -1053,11 +1053,11 @@ class XMLEditor(object):
            rather than this scenario's own directory.
         :return: none
         """
-        _logger.info("Add market constraint: %s %s for %s" % (target, policy, self.name))
+        _logger.info("Add market constraint: %s %s for %s", target, policy, self.name)
 
         cfg = self.cfgPath()
 
-        basename = "%s-%s" % (target, policy)	# e.g., biodiesel-subsidy
+        basename = target + '-' + policy	# e.g., biodiesel-subsidy
 
         policyTag     = target + "-policy"
         constraintTag = target + "-constraint"
@@ -1071,7 +1071,7 @@ class XMLEditor(object):
         constraintXML = pathjoin(reldir, basename + "-constraint.xml")
 
         # See if element exists in config file (-Q => quiet; just report exit status)
-        xpath = '//ScenarioComponents/Value[@name="%s"]' % policyTag
+        xpath = '//ScenarioComponents/Value[@name="{}"]'.format(policyTag)
 
         # If we've already added files for policy/constraint on this target,
         # we replace the old values with new ones. Otherwise, we add them.
@@ -1091,7 +1091,7 @@ class XMLEditor(object):
         :param policy: (str) one of ``subsidy`` or ``tax``
         :return: none
         """
-        _logger.info("Delete market constraint: %s %s for %s" % (target, policy, self.name))
+        _logger.info("Delete market constraint: %s %s for %s", target, policy, self.name)
         cfg = self.cfgPath()
 
         # if policy == "subsidy":
@@ -1101,7 +1101,7 @@ class XMLEditor(object):
         constraintTag = target + "-constraint"
 
         # See if element exists in config file (-Q => quiet; just report exit status)
-        xpath = '//ScenarioComponents/Value[@name="%s"]' % policyTag
+        xpath = '//ScenarioComponents/Value[@name="{}"]'.format(policyTag)
 
         if xmlSel(cfg, xpath):
             # found it; delete the elements
@@ -1224,7 +1224,7 @@ class XMLEditor(object):
         # NB: this code depends on these being the tags assigned to the land files
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
         for num in [2, 3]:
-            fileTag  = 'land%d' % num
+            fileTag  = 'land' + str(num)
             landFileRel, landFileAbs = self.getLocalCopy(fileTag)
 
             protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
@@ -1254,7 +1254,7 @@ class XMLEditor(object):
         # NB: this code depends on these being the tags assigned to the land files
         for prefix in ('', 'protected_'):
             for num in [2, 3]:
-                fileTag  = prefix + 'land%d' % num
+                fileTag  = '{}land{}'.format(prefix, num)
                 landFileRel, landFileAbs = self.getLocalCopy(fileTag)
 
                 landXmlFiles.append(landFileAbs)
@@ -1362,18 +1362,15 @@ class XMLEditor(object):
            the population to set for each year given.
         :return: none
         """
-        # msg = "Set population for %s in %s to:" % (region, self.name)
-        # printSeries(values, region, header=msg, loglevel='INFO')
-
         tag = 'socioeconomics'
         #path = self.componentPath(tag)
         # fileRel, fileAbs = self.getLocalCopy(path)
         fileRel, fileAbs = self.getLocalCopy(tag)
 
-        prefix = '//region[@name="%s"]/demographics/populationMiniCAM' % region
+        prefix = '//region[@name="{}"]/demographics/populationMiniCAM'.format(region)
         pairs = []
         for year, pop in expandYearRanges(values):
-            pairs.append((prefix + ('[@year="%s"]/totalPop' % year), int(round(pop))))
+            pairs.append(('{}[@year="{}"]/totalPop'.format(prefix, year)), int(round(pop)))
 
         xmlEdit(fileAbs, pairs)
         self.updateScenarioComponent(tag, fileRel)
@@ -1389,11 +1386,11 @@ class XMLEditor(object):
         fileObj = CachedFile.getFile(fileAbs)
         tree = fileObj.tree
 
-        xpath = '//region[@name="%s"]/demographics/populationMiniCAM[@year="%s"]/totalPop' % (region, year)
+        xpath = '//region[@name="{}"]/demographics/populationMiniCAM[@year="{}"]/totalPop'.format(region, year)
         popNode = tree.find(xpath)
         population = popNode.text
 
-        _logger.info("Freezing pop in %s to %s value of %s" % (region, year, population))
+        _logger.info("Freezing pop in %s to %s value of %s", region, year, population)
         values = [(y, population) for y in range(year+5, endYear+1, 5)]
 
         self.setRegionPopulation(region, values)
@@ -1424,10 +1421,8 @@ class XMLEditor(object):
             anything coercible to float.
         :return: none
         """
-        msg = "Set non-energy-cost of %s for %s to:" % (technology, self.name)
+        msg = "Set non-energy-cost of {} for {} to:".format(technology, self.name)
         _logger.info(printSeries(values, technology, header=msg, asStr=True))
-
-        #_logger.info("Set non-energy-cost of %s for %s to %s" % (technology, self.name, values))
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
 
@@ -1437,7 +1432,7 @@ class XMLEditor(object):
 
         pairs = []
         for year, price in expandYearRanges(values):
-            pairs.append((prefix + ('/period[@year="%s"]' % year) + suffix, price))
+            pairs.append(('{}/period[@year="{}"]{}'.format(prefix, year, suffix), price))
 
         xmlEdit(enTransFileAbs, pairs)
 
@@ -1463,7 +1458,7 @@ class XMLEditor(object):
             anything coercible to float.
         :return: none
         """
-        _logger.info("Set shutdown rate for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
+        _logger.info("Set shutdown rate for (%s, %s) to %s for %s", sector, technology, values, self.name)
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
 
@@ -1473,7 +1468,7 @@ class XMLEditor(object):
         pairs = []
 
         for year, value in expandYearRanges(values):
-            pairs.append((prefix + "/period[@year='%s']/phased-shutdown-decider/shutdown-rate" % year,
+            pairs.append(("{}/period[@year='{}']/phased-shutdown-decider/shutdown-rate".format(prefix, year),
                          coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
@@ -1514,7 +1509,7 @@ class XMLEditor(object):
             anything coercible to float.
         :return: none
         """
-        _logger.info("Set price-elasticity for (%s, %s) to %s for %s" % (regions, sectors, values, self.name))
+        _logger.info("Set price-elasticity for (%s, %s) to %s for %s", regions, sectors, values, self.name)
 
         filenameRel, filenameAbs = self.getLocalCopy(configFileTag)
 
@@ -1532,18 +1527,18 @@ class XMLEditor(object):
             '''
             Turn ['a', 'b'] into '@name="a" or @name="b"'
             '''
-            names = ['@name="%s"' % v for v in values]
+            names = ['@name="{}"'.format(v) for v in values]
             return ' or '.join(names)
 
         regions = listifyString(regions, aliasForNone='global')
         nameExpr = '[' + nameExpression(regions) + ']' if regions else ''
         regionExpr = '//region' + nameExpr
 
-        prefix = regionExpr + '/energy-final-demand[%s]' % nameExpression(sectors)
+        prefix = regionExpr + '/energy-final-demand[{}]'.format(nameExpression(sectors))
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append((prefix + '/price-elasticity[@year="%s"]' % year, coercible(value, float)))
+            pairs.append(('{}/price-elasticity[@year="{}"]'.format(prefix, year), coercible(value, float)))
 
         xmlEdit(filenameAbs, pairs)
         self.updateScenarioComponent(configFileTag, filenameRel)
@@ -1575,15 +1570,17 @@ class XMLEditor(object):
             all but "fixed" interpolation function.)
         :param stubTechnology: (str) the name of a technology to apply function to; if absent,
             the function is applied at the subsector level.
-        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for certain sectors
-        it may be 'technology'
+        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for
+            certain sectors it may be 'technology'
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This determines which file is edited, so it must correspond to
            the indicated sector(s). Default is 'energy_transformation'.
         :param delete: (bool) if True, set delete="1", otherwise don't.
         :return: none
         """
-        _logger.info("Set interpolation function '%s' for '%s' : '%s%s'" % (funcName, supplysector, subsector, (' : ' + stubTechnology if stubTechnology else '')))
+        _logger.info("Set interpolation function '%s' for '%s' : '%s%s'",
+                     funcName, supplysector, subsector,
+                     (' : ' + stubTechnology if stubTechnology else ''))
 
         toYear = str(toYear)
         fromYear = str(fromYear)
@@ -1605,7 +1602,7 @@ class XMLEditor(object):
             subsect = '{}/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, supplysector, subsectorTag, subsector)
 
             if stubTechnology:
-                rule_parent = subsect + '/{}[@name="%s"]'.format(technologyTag) % stubTechnology
+                rule_parent = subsect + '/{}[@name="{}"]'.format(technologyTag, stubTechnology)
             else:
                 rule_parent = subsect
 
@@ -1683,8 +1680,8 @@ class XMLEditor(object):
 
     @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
-                               stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector', technologyTag='stub-technology',
-                               configFileTag=ENERGY_TRANSFORMATION_TAG):
+                                stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
+                                technologyTag='stub-technology', configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
         Create a modified version of the indicated file (default is en_transformation.xml) with
         the given share-weights for `technology` in `sector` based on the data in `values`. Note
@@ -1704,8 +1701,8 @@ class XMLEditor(object):
             which the rest of the explanation above applies. The `shareWeight` can be
             anything coercible to float.
         :param stubTechnology: (str) the name of a GCAM technology in the global technology database
-        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for certain sectors
-        it may be 'technology'
+        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but
+            for certain sectors it may be 'technology'
         :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
             for electricity, this should be passed as supplysectorTag='pass-through-sector'
         :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
@@ -1784,16 +1781,17 @@ class XMLEditor(object):
            section of a config file. This must match `xmlBasename`.
         :return: none
         """
-        _logger.info("Set global-technology-database share-weights for (%s, %s) to %s for %s" % (sector, technology, values, self.name))
+        _logger.info("Set global-technology-database share-weights for (%s, %s) to %s for %s",
+                     sector, technology, values, self.name)
 
         enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
 
-        prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
-                 (sector, subsector, technology)
+        prefix = "//global-technology-database/location-info[@sector-name='{}' and @subsector-name='{}']/technology[@name='{}']".format(
+                 sector, subsector, technology)
 
         pairs = []
         for year, value in expandYearRanges(values):
-            pairs.append((prefix + "/period[@year=%s]/share-weight" % year, coercible(value, float)))
+            pairs.append(("{}/period[@year={}]/share-weight".format(prefix, year), coercible(value, float)))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent(configFileTag, enTransFileRel)
@@ -1818,19 +1816,19 @@ class XMLEditor(object):
         :return:
             none
         '''
-        _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s" % \
-                     (energyInput, technology, subsector, values))
+        _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s",
+                     energyInput, technology, subsector, values)
 
         enTransFileRel, enTransFileAbs = \
             self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
 
         prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
                  (subsector, technology)
-        suffix = "minicam-energy-input[@name='%s']/coefficient" % energyInput
+        suffix = "minicam-energy-input[@name='{}']/coefficient".format(energyInput)
 
         pairs = []
         for year, coef in expandYearRanges(values):
-            pairs.append(("%s/period[@year='%s']/%s" % (prefix, year, suffix), coef))
+            pairs.append(("{}/period[@year='{}']/{}".format(prefix, year, suffix), coef))
 
         xmlEdit(enTransFileAbs, pairs)
         self.updateScenarioComponent("energy_transformation", enTransFileRel)
@@ -1871,7 +1869,8 @@ class XMLEditor(object):
            section of a config file. Default is "nonco2_energy" => all_energy_emissions.xml
         :return: none
         """
-        _logger.info("Set Non-CO2 emissions for (%s, %s, %s, %s, %s) to %s for %s" % (region, sector, subsector, stubTechnology, species, values, self.name))
+        _logger.info("Set Non-CO2 emissions for (%s, %s, %s, %s, %s) to %s for %s",
+                     region, sector, subsector, stubTechnology, species, values, self.name)
 
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
 
