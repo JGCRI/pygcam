@@ -1552,7 +1552,7 @@ class XMLEditor(object):
     def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
                                  funcName='linear', applyTo='share-weight', fromValue=None,
                                  toValue=None,  stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
-                                 configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
+                                 technologyTag='stub-technology', configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
         """
         Set the interpolation function for the share-weight of the `subsector` of `supplysector`
         (and optional technology) to `funcName` between years `fromYear` to `toYear` in `region`.
@@ -1575,6 +1575,8 @@ class XMLEditor(object):
             all but "fixed" interpolation function.)
         :param stubTechnology: (str) the name of a technology to apply function to; if absent,
             the function is applied at the subsector level.
+        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for certain sectors
+        it may be 'technology'
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
            section of a config file. This determines which file is edited, so it must correspond to
            the indicated sector(s). Default is 'energy_transformation'.
@@ -1603,7 +1605,7 @@ class XMLEditor(object):
             subsect = '{}/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, supplysector, subsectorTag, subsector)
 
             if stubTechnology:
-                rule_parent = subsect + '/stub-technology[@name="%s"]' % stubTechnology
+                rule_parent = subsect + '/{}[@name="%s"]'.format(technologyTag) % stubTechnology
             else:
                 rule_parent = subsect
 
@@ -1681,7 +1683,7 @@ class XMLEditor(object):
 
     @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
-                               stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
+                               stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector', technologyTag='stub-technology',
                                configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
         Create a modified version of the indicated file (default is en_transformation.xml) with
@@ -1702,6 +1704,8 @@ class XMLEditor(object):
             which the rest of the explanation above applies. The `shareWeight` can be
             anything coercible to float.
         :param stubTechnology: (str) the name of a GCAM technology in the global technology database
+        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for certain sectors
+        it may be 'technology'
         :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
             for electricity, this should be passed as supplysectorTag='pass-through-sector'
         :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
@@ -1735,7 +1739,7 @@ class XMLEditor(object):
             for year, value in expandYearRanges(values):
 
                 if stubTechnology:
-                    stubTech = subsect + '/stub-technology[@name="{}"]'.format(stubTechnology)
+                    stubTech = subsect + '/{}[@name="{}"]'.format(technologyTag, stubTechnology)
                     sw_parent = stubTech + '/period[@year="{}"]'.format(year)
                     share_weight = sw_parent + '/share-weight'
 
