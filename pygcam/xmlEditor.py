@@ -1679,6 +1679,79 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
+    def insertStubTechParameter(self, region, supplysector, subsector, stubTechnology, nodeName, attributeName,
+                        attributeValue, nodeValues, supplysectorTag='supplysector',
+                        subsectorTag='subsector', technologyTag='stub-technology',  configFileTag=ENERGY_TRANSFORMATION_TAG):
+
+        """
+        Insert a parameter for a given region/supplysector/subsector/stub-technology/period.
+        **Callable from XML setup files.**
+
+        :param region: (str or None) If a string, the GCAM region to operate on. If None,
+            the function is applied to all regions.
+        :param supplysector: (str) the name of a supply sector
+        :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
+            for electricity, this should be passed as supplysectorTag='pass-through-sector'
+        :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
+            for transportation, this should be passed as subsectorTag='tranSubsector'
+        :param subsector: (str) the name of a sub-sector
+         :param stubTechnology: (str) the name of a technology to apply function to; if absent,
+            the function is applied at the subsector level (optional)
+        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for
+            certain sectors it may be 'technology'
+        :param nodeName: (str) defines the name of the node to insert.
+        :param attributeName: (str) defines any attributes that need to be added (e.g. @name) (optional)
+        :param attributeValue: (str) defines any attributevalues that need to be added (e.g. name="coal") (optional)
+        :param nodeValues: (dict-like or iterable of tuples of (year, nodeValue)) `year` can
+            be a single year (as string or int), or a string specifying a range of
+            years, of the form "xxxx-yyyy", which implies 5 year timestep, or "xxxx-yyyy:s",
+            which provides an alternative timestep. If `values` is dict-like (e.g. a
+            pandas Series) a list of tuples is created by calling values.items() after
+            which the rest of the explanation above applies. The `nodeValue` can be
+            anything coercible to float.
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. This determines which file is edited, so it must correspond to
+           the indicated sector(s). Default is 'energy_transformation'.
+        :return: none
+        """
+        from .utils import printSeries
+
+        _logger.info("Insert nodes and attributes for (%r, %r, %r, %r) for %r",
+                     region, supplysector, subsector, stubTechnology, self.name)
+        # _logger.info(printSeries(values, 'share-weights', asStr=True))
+
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+
+        item = CachedFile.getFile(xmlFileAbs)
+        tree = item.tree
+
+        # convert to a list; if no region given, get list of regions in this file
+        regions = [region] if region else tree.xpath('//region/@name')
+
+        args = []
+
+        for region in regions:
+            regionElt = '//region[@name="{}"]'.format(region)
+
+            # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
+            subsect = '{}/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, supplysector, subsectorTag,
+                                                                subsector)
+            for year,value in expandYearRanges(nodeValues):
+
+                stubTech = subsect + '/{}[@name="{}"]'.format(technologyTag, stubTechnology)
+                param_parent = stubTech + '/period[@year="{}"]'.format(year)
+                parameter = param_parent + '/{}[@{}="{}"]'.format(nodeName, attributeName, attributeValue)
+
+                if not xmlSel(xmlFileAbs, parameter):
+                    parameterElement = ET.Element(str(nodeName), {str(attributeName): str(attributeValue)})
+                    xmlIns(xmlFileAbs, param_parent, parameterElement)
+
+                args.append((parameter, coercible(value, float)))
+
+        xmlEdit(xmlFileAbs, args)
+        self.updateScenarioComponent(configFileTag, xmlFileRel)
+
+    @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
                                 stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
                                 technologyTag='stub-technology', configFileTag=ENERGY_TRANSFORMATION_TAG):
