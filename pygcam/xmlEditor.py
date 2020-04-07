@@ -1679,6 +1679,66 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
+    def insertSubsectorParameter(self, region, supplysector, subsector, nodeName, attributeName,
+                        attributeValue, nodeValue, supplysectorTag='supplysector',
+                        subsectorTag='subsector', configFileTag=ENERGY_TRANSFORMATION_TAG):
+
+        """
+        Insert a parameter for a given region/supplysector/subsector/stub-technology/period.
+        **Callable from XML setup files.**
+
+        :param region: (str or None) If a string, the GCAM region to operate on. If None,
+            the function is applied to all regions.
+        :param supplysector: (str) the name of a supply sector
+        :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
+            for electricity, this should be passed as supplysectorTag='pass-through-sector'
+        :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
+            for transportation, this should be passed as subsectorTag='tranSubsector'
+        :param subsector: (str) the name of a sub-sector
+        :param nodeName: (str) defines the name of the node to insert.
+        :param attributeName: (str) defines any attributes that need to be added (e.g. @name) (optional)
+        :param attributeValue: (str) defines any attributevalues that need to be added (e.g. name="coal") (optional)
+        :param nodeValue: (string or float) values to insert into the node
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. This determines which file is edited, so it must correspond to
+           the indicated sector(s). Default is 'energy_transformation'.
+        :return: none
+        """
+        from .utils import printSeries
+
+        _logger.info("Insert nodes and attributes for (%r, %r, %r) for %r",
+                     region, supplysector, subsector, self.name)
+        # _logger.info(printSeries(values, 'share-weights', asStr=True))
+
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+
+        item = CachedFile.getFile(xmlFileAbs)
+        tree = item.tree
+
+        # convert to a list; if no region given, get list of regions in this file
+        regions = [region] if region else tree.xpath('//region/@name')
+
+        args = []
+
+        for region in regions:
+            regionElt = '//region[@name="{}"]'.format(region)
+
+            # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
+            subsect = '{}/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, supplysector, subsectorTag,
+                                                                subsector)
+            parameter = subsect + '/{}[@{}="{}"]'.format(nodeName, attributeName, attributeValue)
+            parameterElement = ET.Element(str(nodeName), {str(attributeName): str(attributeValue)})
+
+            if not xmlSel(xmlFileAbs, str(parameterElement)):
+                parameterElement = ET.Element(str(nodeName), {str(attributeName): str(attributeValue)})
+                xmlIns(xmlFileAbs, subsect, parameterElement)
+
+                args.append((parameter, coercible(nodeValue, float)))
+
+        xmlEdit(xmlFileAbs, args)
+        self.updateScenarioComponent(configFileTag, xmlFileRel)
+
+    @callableMethod
     def setRegionalShareWeights(self, region, sector, subsector, values,
                                 stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
                                 technologyTag='stub-technology', configFileTag=ENERGY_TRANSFORMATION_TAG):
