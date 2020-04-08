@@ -16,7 +16,7 @@ import subprocess
 import sys
 from contextlib import contextmanager
 
-from .config import getParam, getParamAsBoolean, pathjoin, unixPath
+from .config import getParam, getParamAsBoolean, pathjoin, unixPath, parse_version_info
 from .error import PygcamException, FileFormatError
 from .log import getLogger
 
@@ -76,23 +76,31 @@ def getRegionList(workspace=None):
     """
     from .constants import setRegions, GCAM_32_REGIONS
     from .csvCache import readCachedCsv
+    from semver import VersionInfo
+
+    version = parse_version_info()
 
     dataDir = getParam('GCAM.DataDir') or 'gcam-data-system'
-    relpath = pathjoin('input', dataDir, '_common', 'mappings', 'GCAM_region_names.csv')
+
+    if version > VersionInfo(5, 0, 0):
+        relpath = pathjoin('input', dataDir, '_common', 'mappings', 'GCAM_region_names.csv')
+    else:
+        # input/gcamdata/inst/extdata/common/GCAM_region_names.csv
+        relpath = pathjoin('input', dataDir, 'inst', 'extdata', 'common', 'GCAM_region_names.csv')
 
     workspace = workspace or getParam('GCAM.RefWorkspace')
     path = pathjoin(workspace, relpath) if workspace else None
 
     if path and os.path.lexists(path):
-        _logger.info("Reading region names from %s", path)
-        # 3 => this is a gcam-data-system input file, which has a different format
+        _logger.debug("Reading region names from %s", path)
+        # 3 => this is a GCAM data system input file, which has a different format
         df = readCachedCsv(path, skiprows=3)
         regions = list(df.region)
         setRegions(regions)
         _logger.debug("Regions: %s", regions)
 
     else:
-        _logger.info("Path %s not found; Using built-in region names", path)
+        _logger.debug("Path %s not found; Using built-in region names", path)
         regions = GCAM_32_REGIONS
 
     return regions

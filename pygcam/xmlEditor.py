@@ -34,7 +34,7 @@ from .log import getLogger
 from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
 from .utils import (coercible, mkdirs, printSeries, symlinkOrCopyFile, removeTreeSafely,
-                    removeFileOrTree, pushd)
+                    removeFileOrTree, pushd, splitAndStrip)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
@@ -1544,7 +1544,7 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, filenameRel)
 
     @callableMethod
-    def setInterpolationFunction(self, region, supplysector, subsector, fromYear, toYear,
+    def setInterpolationFunction(self, regions, supplysector, subsector, fromYear, toYear,
                                  funcName='linear', applyTo='share-weight', fromValue=None,
                                  toValue=None,  stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
                                  technologyTag='stub-technology', configFileTag=ENERGY_TRANSFORMATION_TAG, delete=False):
@@ -1553,8 +1553,9 @@ class XMLEditor(object):
         (and optional technology) to `funcName` between years `fromYear` to `toYear` in `region`.
         **Callable from XML setup files.**
 
-        :param region: (str or None) If a string, the GCAM region to operate on. If None,
-            the function is applied to all regions.
+        :param regions(s): (str or None) If a string, the GCAM region(s) to operate on. Value can
+            be a single region or a comma-delimited list of regions. If None, the function is applied
+            to all regions found in the XML file.
         :param supplysector: (str) the name of a supply sector
         :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
             for electricity, this should be passed as supplysectorTag='pass-through-sector'
@@ -1590,12 +1591,12 @@ class XMLEditor(object):
         item = CachedFile.getFile(xmlFileAbs)
         tree = item.tree
 
-        # convert to a list; if no region given, get list of regions in this file
-        regions = [region] if region else tree.xpath('//region/@name')
+        # convert to a list; if no regions given, get list of regions in this file
+        regionList = splitAndStrip(regions, ',') if regions else tree.xpath('//region/@name')
 
         args = []
 
-        for region in regions:
+        for region in regionList:
             regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/interpolation-rule
@@ -1679,7 +1680,7 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
-    def insertStubTechParameter(self, region, supplysector, subsector, stubTechnology, nodeName, attributeName,
+    def insertStubTechParameter(self, regions, supplysector, subsector, stubTechnology, nodeName, attributeName,
                         attributeValue, nodeValues, supplysectorTag='supplysector',
                         subsectorTag='subsector', technologyTag='stub-technology',  configFileTag=ENERGY_TRANSFORMATION_TAG):
 
@@ -1687,8 +1688,8 @@ class XMLEditor(object):
         Insert a parameter for a given region/supplysector/subsector/stub-technology/period.
         **Callable from XML setup files.**
 
-        :param region: (str or None) If a string, the GCAM region to operate on. If None,
-            the function is applied to all regions.
+        :param regions: (str or None) If a string, the GCAM region(s) to operate on. If None,
+            the function is applied to all regions. Arg can be comma-delimited list of regions.
         :param supplysector: (str) the name of a supply sector
         :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
             for electricity, this should be passed as supplysectorTag='pass-through-sector'
@@ -1715,7 +1716,7 @@ class XMLEditor(object):
         :return: none
         """
         _logger.info("Insert nodes and attributes for (%r, %r, %r, %r) for %r",
-                     region, supplysector, subsector, stubTechnology, self.name)
+                     regions, supplysector, subsector, stubTechnology, self.name)
 
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
 
@@ -1723,11 +1724,11 @@ class XMLEditor(object):
         tree = item.tree
 
         # convert to a list; if no region given, get list of regions in this file
-        regions = [region] if region else tree.xpath('//region/@name')
+        regionList = splitAndStrip(regions, ',') if regions else tree.xpath('//region/@name')
 
         args = []
 
-        for region in regions:
+        for region in regionList:
             regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
@@ -1749,15 +1750,15 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
-    def insertSubsectorParameter(self, region, supplysector, subsector, nodeName, attributeName,
+    def insertSubsectorParameter(self, regions, supplysector, subsector, nodeName, attributeName,
                                  attributeValue, nodeValue, supplysectorTag='supplysector',
                                  subsectorTag='subsector', configFileTag=ENERGY_TRANSFORMATION_TAG):
 
         """
         Insert a parameter for a given region/supplysector/subsector/stub-technology/period.
         **Callable from XML setup files.**
-        :param region: (str or None) If a string, the GCAM region to operate on. If None,
-            the function is applied to all regions.
+        :param regions: (str or None) If a string, the GCAM region(s) to operate on. If None,
+            the function is applied to all regions. Arg can be comma-delimited list of regions.
         :param supplysector: (str) the name of a supply sector
         :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
             for electricity, this should be passed as supplysectorTag='pass-through-sector'
@@ -1776,7 +1777,7 @@ class XMLEditor(object):
         from .utils import printSeries
 
         _logger.info("Insert nodes and attributes for (%r, %r, %r) for %r",
-                     region, supplysector, subsector, self.name)
+                     regions, supplysector, subsector, self.name)
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
@@ -1785,11 +1786,11 @@ class XMLEditor(object):
         tree = item.tree
 
         # convert to a list; if no region given, get list of regions in this file
-        regions = [region] if region else tree.xpath('//region/@name')
+        regionList = splitAndStrip(regions, ',') if regions else tree.xpath('//region/@name')
 
         args = []
 
-        for region in regions:
+        for region in regionList:
             regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
@@ -1808,7 +1809,7 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
-    def setRegionalShareWeights(self, region, sector, subsector, values,
+    def setRegionalShareWeights(self, regions, sector, subsector, values,
                                 stubTechnology=None, supplysectorTag='supplysector', subsectorTag='subsector',
                                 technologyTag='stub-technology', configFileTag=ENERGY_TRANSFORMATION_TAG):
         """
@@ -1818,8 +1819,8 @@ class XMLEditor(object):
         the global technology database, use the function setGlobalTechShareWeight (below).
         **Callable from XML setup files.**
 
-        :param region: if not None, changes are made in a specific region, otherwise they're
-            made in all regions.
+        :param regions: if not None, changes are made in a specific region, or regions (a comma-delimited
+            list of regions) otherwise (if None) they're made in all global GCAM regions.
         :param sector: (str) the name of a GCAM sector
         :param subsector: (str) the name of a GCAM subsector
         :param values: (dict-like or iterable of tuples of (year, shareWeight)) `year` can
@@ -1840,10 +1841,8 @@ class XMLEditor(object):
            section of a config file.
         :return: none
         """
-        from .utils import printSeries
-
         _logger.info("Set share-weights for (%r, %r, %r, %r) for %r",
-                     region, sector, subsector, stubTechnology, self.name)
+                     regions, sector, subsector, stubTechnology, self.name)
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
@@ -1851,12 +1850,12 @@ class XMLEditor(object):
         item = CachedFile.getFile(xmlFileAbs)
         tree = item.tree
 
-        # convert to a list; if no region given, get list of regions in this file
-        regions = [region] if region else tree.xpath('//region/@name')
+        # convert to a list; if no regions given, get list of regions in this file
+        regionList = splitAndStrip(regions, ',') if regions else tree.xpath('//region/@name')
 
         args = []
 
-        for region in regions:
+        for region in regionList:
             regionElt = '//region[@name="{}"]'.format(region)
 
             # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
