@@ -1680,6 +1680,86 @@ class XMLEditor(object):
         self.updateScenarioComponent(configFileTag, xmlFileRel)
 
     @callableMethod
+    def insertStubTechRetirement(self, regions, supplysector, subsector, stubTechnologies, type, steepness, years,
+                        supplysectorTag='supplysector',
+                        subsectorTag='subsector', technologyTag='stub-technology',  halflife=0, configFileTag=ENERGY_TRANSFORMATION_TAG):
+
+        """
+        Insert a parameter for a given region/supplysector/subsector/stub-technology/period.
+        **Callable from XML setup files.**
+
+        :param regions: (str or None) If a string, the GCAM region(s) to operate on. If None,
+            the function is applied to all regions. Arg can be comma-delimited list of regions.
+        :param supplysector: (str) the name of a supply sector
+        :param supplysectorTag: (str) the tag for the supplysector level. Default is 'supplysector', but
+            for electricity, this should be passed as supplysectorTag='pass-through-sector'
+        :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
+            for transportation, this should be passed as subsectorTag='tranSubsector'
+        :param subsector: (str) the name of a sub-sector
+         :param stubTechnologies: (str) the name of a technology to apply function to; if absent,
+            the function is applied at the subsector level (optional)
+        :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for
+            certain sectors it may be 'technology'
+        :param type: (str) defines the type of shutdown function. Can be either 'profit' or 's-curve'
+        :param steepness: (float) defines the steepness value used in the function
+        :param years: (string or int) the years to which to apply to the shutdown function
+        :param halflife: (int or None) defines the halflife value to use. By default set to None, but s-curve shutdown
+            deciders need a halflife value
+        :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
+           section of a config file. This determines which file is edited, so it must correspond to
+           the indicated sector(s). Default is 'energy_transformation'.
+        :return: none
+        """
+        _logger.info("Insert shutdown functions for (%r, %r, %r, %r) for %r",
+                     regions, supplysector, subsector, stubTechnologies, self.name)
+
+        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+
+        item = CachedFile.getFile(xmlFileAbs)
+        tree = item.tree
+
+        # convert to a list; if no region given, get list of regions in this file
+        regionList = splitAndStrip(regions, ',') if regions else tree.xpath('//region/@name')
+        stubTechList = splitAndStrip(stubTechnologies,',')
+        yearList = splitAndStrip(years,',')
+        if type == "profit":
+            shutdownTypeDecider = "profit-shutdown-decider"
+        else:
+            shutdownTypeDecider="s-curve-shutdown-decider"
+
+        args = []
+
+        for region in regionList:
+            regionElt = '//region[@name="{}"]'.format(region)
+
+            # /scenario/world/region[@name='USA']/supplysector[@name='refining']/subsector[@name='biomass liquids']/share-weight
+            for stubTechnology in stubTechList:
+                stubTech = '{}/{}[@name="{}"]/{}[@name="{}"]/{}[@name="{}"]'.format(regionElt, supplysectorTag, supplysector, subsectorTag,
+                                                                    subsector,technologyTag,stubTechnology)
+                for year in yearList:
+
+                    period = stubTech + '/period[@year="{}"]'.format(year)
+                    shutdown = period + '/{}[@name="{}"]'.format(shutdownTypeDecider, type)
+                    steep = shutdown + '/steepness'
+                    half_life = shutdown + '/half-life'
+                    shutdownElement = ET.Element(str(shutdownTypeDecider), attrib={"name": str(type)})
+                    steepnessElement = ET.SubElement(shutdownElement,"steepness")
+
+                    if not xmlSel(xmlFileAbs, period):
+                        periodElement = ET.Element('period', attrib={'year': str(year)})
+                        xmlIns(xmlFileAbs, stubTech, periodElement)
+
+                    if type != "profit":
+                        halflifeElement = ET.SubElement(shutdownElement,"half-life")
+                    xmlIns(xmlFileAbs, period, shutdownElement)
+                    args.append((steep, coercible(steepness, float)))
+                    if type != "profit":
+                        args.append((half_life, coercible(halflife, float)))
+
+        xmlEdit(xmlFileAbs, args)
+        self.updateScenarioComponent(configFileTag, xmlFileRel)
+
+    @callableMethod
     def insertStubTechParameter(self, regions, supplysector, subsector, stubTechnology, nodeName, attributeName,
                         attributeValue, nodeValues, supplysectorTag='supplysector',
                         subsectorTag='subsector', technologyTag='stub-technology',  configFileTag=ENERGY_TRANSFORMATION_TAG):
