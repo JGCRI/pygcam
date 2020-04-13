@@ -22,6 +22,6 @@ from.industry_plugin import IndustryCommand
 
 BuiltinSubcommands = [BuildingCommand, BuildingElecCommand, ChartCommand, CompareCommand,
                       ConfigCommand, DiffCommand, GcamCommand, GUICommand, IndustryCommand,
-                      MCSCommand, ModelInterfaceCommand, NewProjectCommand, ProtectLandCommand,
-                      QueryCommand, RESCommand, RunCommand, SandboxCommand, SetupCommand,
-                      TransportCommand, ZEVCommand]
+                      InitCommand, MCSCommand, ModelInterfaceCommand, NewProjectCommand,
+                      ProtectLandCommand, QueryCommand, RESCommand, RunCommand, SandboxCommand,
+                      SetupCommand, TransportCommand, ZEVCommand]
