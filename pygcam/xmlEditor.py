@@ -2143,7 +2143,7 @@ class XMLEditor(object):
         self.updateScenarioComponent(xmlTag, xmlFileRel)
 
     @callableMethod
-    def buildingTechEfficiency(self, csvFile, xmlTag='building_update', xmlFile='building_tech_improvements.xml', mode="mult"):
+    def buildingTechEfficiency(self, csvFile, xmlTag='building', xmlFile='building_tech_improvements.xml', mode="mult"):
         """
         Generate an XML file that implements building technology efficiency policies based on
         the CSV input file.
