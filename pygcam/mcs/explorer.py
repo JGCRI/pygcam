@@ -409,6 +409,13 @@ class McsData(object):
         # failures = inputsDF.iloc[list(idx)]
         #   failures.to_csv('/Users/rjp/tmp/failures.csv')
 
+        # shuffle the results order (which we use to index the inputs) to avoid
+        # artifacts when using pseudo variables
+        from random import shuffle
+        idx = list(results.index)
+        shuffle(idx) # performed in place
+        results = results[idx]
+
         inputsDF = inputsDF.iloc[results.index]      # select only trials for which we have results
 
         paramsToShow = 10
@@ -544,6 +551,7 @@ class McsData(object):
         # create a trace for each parameter
         for paramName in params:
             paramData = df.query('paramName == "%s"' % paramName)
+
             trace = go.Scatter(x=list(paramData['count']),
                                y=list(paramData['spearman']),
                                name=paramName, mode='lines')

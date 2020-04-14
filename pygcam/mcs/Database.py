@@ -653,14 +653,12 @@ class CoreDatabase(object):
         return resultDF
 
     def getParameters(self):
-        session = self.Session()
-        query = session.query(Input.paramName, InValue.row, InValue.col).\
-            filter(Input.inputId == InValue.inputId).\
-            distinct(Input.paramName, InValue.row, InValue.col)
+        with self.sessionScope() as session:
+            query = session.query(Input.paramName, Input.inputId).order_by(Input.inputId)
+            rslt = query.all()
 
-        rslt = query.all()
-        self.endSession(session)
-        return rslt
+        triples = [(name, 0, col-1) for name, col in rslt]
+        return triples
 
     def getInputs(self):
         rows = self.getTable(Input, orderBy=Input.paramName)
