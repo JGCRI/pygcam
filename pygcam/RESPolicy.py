@@ -460,17 +460,6 @@ def set_actor(tech_df, tech_tups, actor, value=1):
         tech_df.loc[mask, actor] = value
 
 
-def is_abspath(pathname):
-    """Return True if pathname is an absolute pathname, else False."""
-    import re
-    return bool(re.match(r"^([/\\])|([a-zA-Z]:)", pathname))
-
-def get_path(pathname, defaultDir):
-    """Return pathname if it's an absolute pathname, otherwise return
-       the path composed of pathname relative to the given defaultDir"""
-    return pathname if is_abspath(pathname) else pathjoin(defaultDir, pathname)
-
-
 class RECertificate(object):
     def __init__(self, node):
         self.elt = node
@@ -714,7 +703,7 @@ def create_subsector_dict(useGcamUSA):
 def resPolicyMain(args):
     import os
     from .error import CommandlineError
-    from .utils import mkdirs
+    from .utils import mkdirs, is_abspath, get_path
 
     scenario   = args.scenario
     inputFile  = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these

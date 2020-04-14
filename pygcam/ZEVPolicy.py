@@ -5,16 +5,6 @@ from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
-def is_abspath(pathname):
-    """Return True if pathname is an absolute pathname, else False."""
-    import re
-    return bool(re.match(r"^([/\\])|([a-zA-Z]:)", pathname))
-
-def get_path(pathname, defaultDir):
-    """Return pathname if it's an absolute pathname, otherwise return
-       the path composed of pathname relative to the given defaultDir"""
-    return pathname if is_abspath(pathname) else pathjoin(defaultDir, pathname)
-
 def element_path(elt):
     d = {'technology' : elt.attrib['name']}
 
@@ -43,7 +33,7 @@ def zevPolicyMain(args):
     import pandas as pd
     from .error import CommandlineError
     from .xmlSetup import scenarioXML
-    from .utils import validate_years
+    from .utils import validate_years, get_path
 
     years = validate_years(args.years)
     if years is None:
