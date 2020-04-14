@@ -45,22 +45,6 @@ def element_path(elt):
 
     return (d['sector'], d['subsector'],d['technology'])
 
-def validate_years(years):
-    pair = years.split('-')
-    if len(pair) != 2:
-        return None
-
-    (first, last) = pair
-    if not (first.isdigit() and last.isdigit()):
-        return None
-
-    first = int(first)
-    last  = int(last)
-
-    if not (first < last):
-        return None
-
-    return [i for i in range(first, last+1, 5)]
 
 def save_bldg_techs(f, args, years, xml_file, xpath, which):
     from ..config import getParam
@@ -138,7 +122,7 @@ class BuildingElecCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        from ..utils import pathjoin
+        from ..utils import pathjoin, validate_years
         from ..config import getParam
 
         main_xml_file = 'building_det.xml'

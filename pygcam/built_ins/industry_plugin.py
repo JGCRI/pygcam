@@ -1,10 +1,7 @@
-#!/usr/bin/env python
 """
-.. "new" sub-command (creates a new project)
-
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016  Richard Plevin
+.. Copyright (c) 2020 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC, clean_help
@@ -45,22 +42,7 @@ def element_path(elt, withInput):
 
     return (sector, subsector, technology, d['input']) if withInput else (sector, subsector, technology)
 
-def validate_years(years):
-    pair = years.split('-')
-    if len(pair) != 2:
-        return None
 
-    (first, last) = pair
-    if not (first.isdigit() and last.isdigit()):
-        return None
-
-    first = int(first)
-    last  = int(last)
-
-    if not (first < last):
-        return None
-
-    return [i for i in range(first, last+1, 5)]
 
 def save_bldg_techs(f, args, years, xml_file, xpath, which, withInput):
     from ..config import getParam
@@ -146,7 +128,7 @@ class IndustryCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        from ..utils import pathjoin
+        from ..utils import pathjoin, validate_years
         from ..config import getParam
 
         outputFile = args.outputFile or (ELEC_OUTPUT_FILE if args.electricOnly else TECH_OUTPUT_FILE)

@@ -45,23 +45,6 @@ def element_path(elt):
 
     return (d['region'], d['sector'], d['subsector'], d['technology'], d['input'])
 
-def validate_years(years):
-    pair = years.split('-')
-    if len(pair) != 2:
-        return None
-
-    (first, last) = pair
-    if not (first.isdigit() and last.isdigit()):
-        return None
-
-    first = int(first)
-    last  = int(last)
-
-    if not (first < last):
-        return None
-
-    return [i for i in range(first, last+1, 5)]
-
 def save_transport_techs(f, args, years):
     gcamDir = getParam('GCAM.RefWorkspace')
     pathname = os.path.join(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
@@ -142,7 +125,7 @@ class TransportCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        from ..utils import pathjoin
+        from ..utils import pathjoin, validate_years
 
         years = validate_years(args.years)
         if years is None:

@@ -40,6 +40,23 @@ def splitAndStrip(s, delim):
     items = [item.strip() for item in s.split(delim)]
     return items
 
+def validate_years(years):
+    pair = years.split('-')
+    if len(pair) != 2:
+        return None
+
+    (first, last) = pair
+    if not (first.isdigit() and last.isdigit()):
+        return None
+
+    first = int(first)
+    last  = int(last)
+
+    if not (first < last):
+        return None
+
+    return [i for i in range(first, last+1, 5)]
+
 # For gcam 5, read the map of river basins to countries (and other info)
 def readBasinMap():
     from .query import readCsv

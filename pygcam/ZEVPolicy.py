@@ -38,27 +38,12 @@ def element_path(elt):
 
     return (d['region'], d['sector'], d['subsector'], d['technology'])
 
-def validate_years(years):
-    pair = years.split('-')
-    if len(pair) != 2:
-        return None
-
-    (first, last) = pair
-    if not (first.isdigit() and last.isdigit()):
-        return None
-
-    first = int(first)
-    last  = int(last)
-
-    if not (first < last):
-        return None
-
-    return [i for i in range(first, last+1, 5)]
 
 def zevPolicyMain(args):
     import pandas as pd
     from .error import CommandlineError
     from .xmlSetup import scenarioXML
+    from .utils import validate_years
 
     years = validate_years(args.years)
     if years is None:
