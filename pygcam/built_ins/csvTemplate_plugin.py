@@ -44,7 +44,8 @@ def element_path(elt):
 
         elif tag == 'region':
             region = attr['name' ]
-
+            break
+            
         elif tag == 'supplysector':
             sector = attr['name']
 
