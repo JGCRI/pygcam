@@ -1879,11 +1879,11 @@ class XMLEditor(object):
             parameter = subsect + '/{}[@{}="{}"]'.format(nodeName, attributeName, attributeValue)
             parameterElement = ET.Element(str(nodeName), {str(attributeName): str(attributeValue)})
 
-            if not xmlSel(xmlFileAbs, str(parameterElement)):
+            if not xmlSel(xmlFileAbs, parameter):
                 parameterElement = ET.Element(str(nodeName), {str(attributeName): str(attributeValue)})
                 xmlIns(xmlFileAbs, subsect, parameterElement)
 
-                args.append((parameter, coercible(nodeValue, float)))
+            args.append((parameter, coercible(nodeValue, float)))
 
         xmlEdit(xmlFileAbs, args)
         self.updateScenarioComponent(configFileTag, xmlFileRel)
