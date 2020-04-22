@@ -185,7 +185,7 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
             for year in year_cols:
                 target = region_df.loc[idx, year]
                 if target:
-                    name = rec_name(region, subsector, year)
+                    name = rec_name(market, subsector, year)
                     std_elt = ET.SubElement(region_elt, 'policy-portfolio-standard', name=name)
                     set_text(ET.SubElement(std_elt, 'market'), market)
                     set_text(ET.SubElement(std_elt, 'policyType'), 'RES')
@@ -216,7 +216,7 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
 
                     tech_elt = find_or_create(subsect_elt, 'stub-technology', tech)
                     period_elt = ET.SubElement(tech_elt, 'period', year=year)
-                    name = rec_name(region, subsector, year)
+                    name = rec_name(market, subsector, year)
 
                     en_input_elt = ET.SubElement(period_elt, 'minicam-energy-input', name=name)
 
