@@ -1131,7 +1131,7 @@ class XMLEditor(object):
 
     @callableMethod
     def setupSolver(self, solutionTolerance=None, broydenTolerance=None,
-                    maxModelCalcs=None, maxIterations=None):
+                    maxModelCalcs=None, maxIterations=None, year=2015):
         """
         Set the model solution tolerance to the given values for the solver
         "driver" (`solutionTolerance`) and, optionally for the Broyden component
@@ -1155,7 +1155,7 @@ class XMLEditor(object):
             if value <= 0:
                 raise SetupException(name + ' must be greater than zero')
 
-            _logger.info("Set %s to %s", name, value)
+            _logger.info("Set %s to %s for year %s", name, value, year)
             return value
 
         solutionTol = coercibleAndPositive('Driver solution tolerance', solutionTolerance, float)
@@ -1170,7 +1170,7 @@ class XMLEditor(object):
 
         solverFileRel, solverFileAbs = self.getLocalCopy(SOLVER_TAG)
 
-        prefix = "//scenario/user-configurable-solver[@year>=2010]/"
+        prefix = "//scenario/user-configurable-solver[@year={}]/".format(year)
         pairs = []
 
         if solutionTolerance:
