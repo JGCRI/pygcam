@@ -40,19 +40,26 @@ def limitYears(df, years):
 
 # TBD: simplify using this approach:
 
-# def interp(df):
-#     import numpy as np
-#
-#     years = digitColumns(df, asInt=True)
-#     all_years = range(years[0], years[-1] + 1)
-#     interp_yrs = sorted(set(all_years) - set(years))
-#
-#     # create the cols to interpolate and set to NaN for interpolate()
-#     for y in interp_yrs:
-#         df[str(y)] = np.nan
-#
-#     df = df.sort_index(axis=1).interpolate(axis=1)
-#     return df
+def interp(df):
+    from numpy import nan
+
+    df = df.copy()
+    years = digitColumns(df, asInt=True)
+    all_years = range(years[0], years[-1] + 1)
+    interp_yrs = sorted(set(all_years) - set(years))
+
+    # create the annual cols and set values to NaN for interpolate()
+    for y in interp_yrs:
+        df[str(y)] = nan
+
+    df.sort_index(axis='columns', inplace=True)
+
+    year_cols = [str(col) for col in all_years]
+    interp_cols = [str(col) for col in interp_yrs]
+
+    new_df = df[year_cols].interpolate(axis=1)
+    df[interp_cols] = new_df[interp_cols]
+    return df
 
 
 def interpolateYears(df, startYear=0, inplace=False):
