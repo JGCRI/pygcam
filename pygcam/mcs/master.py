@@ -293,8 +293,8 @@ class Master(object):
 
         client = self.client
         results = []
-        chunk = None
-        
+        workerResult = chunk = None
+
         for task in tasks:
             try:
                 # owner (bool [default: True]) - Whether this AsyncResult should own the result.
