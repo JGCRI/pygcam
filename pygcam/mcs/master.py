@@ -200,7 +200,12 @@ class Master(object):
             if newlyIdle:
                 _logger.debug('Idle engines: %s', newlyIdle)
                 _logger.info('Shutting down %d idle engines', len(newlyIdle))
-                self.client.shutdown(targets=list(newlyIdle), block=False)
+
+                try:
+                    self.client.shutdown(targets=list(newlyIdle), block=False)
+                except Exception as e:
+                    _logger.debug("shutdownIdleEngines: %s", e)
+                    # ignore the error
 
     def createRuns(self, simId, scenario, trialNums):
         '''
@@ -338,8 +343,11 @@ class Master(object):
                 else:
                     results.append(workerResult)
 
-            except Exception as e:
+            except ipp.EngineError as e:
                 # Raised if an engine dies, e.g., walltime expired.
+                _logger.warning('getResults: %s', e)
+
+            except Exception as e:
                 _logger.warning('getResults: %s', e)
                 _logger.debug('getResults: type(chunk)=%s; type(workerResult)=%s', type(chunk), type(workerResult))
 
