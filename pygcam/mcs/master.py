@@ -310,7 +310,13 @@ class Master(object):
                     client.purge_results(jobs=task)
                     continue
 
-                chunk = ar.get()
+                try:
+                    chunk = ar.get()
+
+                except Exception as e:
+                    _logger.debug("ar.get(): %s", e)
+                    continue
+
                 if chunk is None:
                     _logger.debug('getResults: ar.get() returned None')
                     continue
