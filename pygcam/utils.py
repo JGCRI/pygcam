@@ -109,21 +109,20 @@ def getRegionList(workspace=None):
 
     version = parse_version_info()
 
-    dataDir = getParam('GCAM.DataDir') or 'gcam-data-system'
-
     if version > VersionInfo(5, 0, 0):
-        relpath = pathjoin('input', dataDir, '_common', 'mappings', 'GCAM_region_names.csv')
-    else:
         # input/gcamdata/inst/extdata/common/GCAM_region_names.csv
-        relpath = pathjoin('input', dataDir, 'inst', 'extdata', 'common', 'GCAM_region_names.csv')
+        relpath = pathjoin('input', 'gcamdata', 'inst', 'extdata', 'common', 'GCAM_region_names.csv')
+        skiprows = 6
+    else:
+        relpath = pathjoin('input', 'gcam-data-system', '_common', 'mappings', 'GCAM_region_names.csv')
+        skiprows = 3
 
     workspace = workspace or getParam('GCAM.RefWorkspace')
     path = pathjoin(workspace, relpath) if workspace else None
 
     if path and os.path.lexists(path):
         _logger.debug("Reading region names from %s", path)
-        # 3 => this is a GCAM data system input file, which has a different format
-        df = readCachedCsv(path, skiprows=3)
+        df = readCachedCsv(path, skiprows=skiprows)
         regions = list(df.region)
         setRegions(regions)
         _logger.debug("Regions: %s", regions)
