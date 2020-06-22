@@ -308,6 +308,10 @@ class Master(object):
         try:
             if not ar.ready():
                 return
+        except ipp.EngineError as e:
+            # Raised if an engine dies, e.g., walltime expired.
+            _logger.warning('processTask: %s', e)
+            return
         except KeyError:  # stale message id can trigger KeyError
             return
 
