@@ -292,65 +292,66 @@ class Master(object):
         self.client.resubmit(task)
         self.setRunStatus(context, RUN_QUEUED)
 
+    def processTask(self, client, task, results):
+        workerResult = None
+
+        try:
+            ar = client.get_result(task, block=False, owner=False)
+        except ipp.EngineError as e:
+            # Raised if an engine dies, e.g., walltime expired.
+            _logger.warning('processTask: %s', e)
+            return
+        except Exception as e:
+            _logger.debug('processTask: client.get_result() failed: %s', e)
+            return
+
+        try:
+            if not ar.ready():
+                return
+        except KeyError:  # stale message id can trigger KeyError
+            return
+
+        try:
+            chunk = ar.get()
+        except Exception as e:
+            _logger.debug("processTask: ar.get() error: %s", e)
+            return
+
+        if chunk is None:
+            _logger.debug('processTask: ar.get() returned None')
+            return
+
+        try:
+            workerResult = chunk[0]
+            context = workerResult.context
+            status = context.status
+
+            if status == ENG_TERMINATE:
+                if ar.engine_id is not None:
+                    _logger.info("Terminating engine %s: insufficient time remaining", ar.engine_id)
+                    client.shutdown(ar.engine_id)
+                    sleep(2)
+                    self.resubmit(task, context, "engine terminated")
+
+            elif status == RUN_KILLED:
+                self.resubmit(task, context, "run killed")
+
+            else:
+                results.append(workerResult)
+
+        except Exception as e:
+            _logger.warning('processTask: %s', e)
+            _logger.debug('processTask: type(chunk)=%s; type(workerResult)=%s', type(chunk), type(workerResult))
+
     def getResults(self, tasks):
         if not tasks:
             return None
 
         client = self.client
         results = []
-        workerResult = chunk = None
 
         for task in tasks:
-            try:
-                # owner (bool [default: True]) - Whether this AsyncResult should own the result.
-                # If so, calling ar.get() will remove data from the client's result and metadata
-                # cache. There should only be one owner of any given msg_id.
-                ar = client.get_result(task, block=False, owner=False)
-
-                try:
-                    if not ar.ready():
-                        continue
-
-                except KeyError:        # stale message id can trigger KeyError
-                    client.purge_results(jobs=task)
-                    continue
-
-                try:
-                    chunk = ar.get()
-
-                except Exception as e:
-                    _logger.debug("ar.get(): %s", e)
-                    continue
-
-                if chunk is None:
-                    _logger.debug('getResults: ar.get() returned None')
-                    continue
-
-                workerResult = chunk[0]
-                context = workerResult.context
-                status = context.status
-
-                if status == ENG_TERMINATE:
-                    if ar.engine_id is not None:
-                        _logger.info("Terminating engine %s: insufficient time remaining", ar.engine_id)
-                        client.shutdown(ar.engine_id)
-                        sleep(2)
-                        self.resubmit(task, context, "engine terminated")
-
-                elif status == RUN_KILLED:
-                    self.resubmit(task, context, "run killed")
-
-                else:
-                    results.append(workerResult)
-
-            except ipp.EngineError as e:
-                # Raised if an engine dies, e.g., walltime expired.
-                _logger.warning('getResults: %s', e)
-
-            except Exception as e:
-                _logger.warning('getResults: %s', e)
-                _logger.debug('getResults: type(chunk)=%s; type(workerResult)=%s', type(chunk), type(workerResult))
-
+            self.processTask(client, task, results)
             client.purge_results(jobs=task)
 
         return results
