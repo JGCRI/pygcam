@@ -308,17 +308,16 @@ class Master(object):
         try:
             if not ar.ready():
                 return
-        except ipp.EngineError as e:
-            # Raised if an engine dies, e.g., walltime expired.
-            _logger.warning('processTask: %s', e)
-            return
         except KeyError:  # stale message id can trigger KeyError
+            return
+        except Exception as e:
+            _logger.warning('processTask: ar.ready(): %s', e)
             return
 
         try:
             chunk = ar.get()
         except Exception as e:
-            _logger.debug("processTask: ar.get() error: %s", e)
+            _logger.debug("processTask: ar.get(): %s", e)
             return
 
         if chunk is None:
