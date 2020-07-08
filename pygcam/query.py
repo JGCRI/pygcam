@@ -13,11 +13,11 @@ from semver import VersionInfo
 
 from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
-from .constants import NUM_AEZS, GCAM_32_REGIONS
-from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError, FileMissingError
+from .constants import NUM_AEZS
+from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser, Query
-from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, saveToFile,
+from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, saveToFile, getRegionList,
                     getExeDir, writeXmldbDriverProperties, digitColumns)
 from .temp_file import TempFile, getTempFile
 
@@ -498,8 +498,8 @@ def _createBatchCommandElement(scenario, queryName, queryPath, outputDir=None, t
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
-    # set default here so sphinx doc doesn't list all 32 regions
-    regions = regions or GCAM_32_REGIONS
+    # set default here so sphinx doc doesn't list all regions
+    regions = regions or getRegionList()
 
     delete = not noDelete
 
@@ -812,7 +812,7 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb='',
     basename = os.path.basename(queryName)
     mainPart, extension = os.path.splitext(basename)   # strip extension, if any
 
-    regions = regions or GCAM_32_REGIONS # set default here so it doesn't mess up doc for this method
+    regions = regions or getRegionList() # set default here so it doesn't mess up doc for this method
 
     delete = not noDelete
 
@@ -1012,7 +1012,7 @@ def queryMain(args):
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     queryFile   = args.queryXmlFile
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
-    regions     = args.regions.split(',') if args.regions else GCAM_32_REGIONS
+    regions     = args.regions.split(',') if args.regions else getRegionList()
     _logger.debug("Regions: %s", regions)
 
     queryNames  = args.queryName

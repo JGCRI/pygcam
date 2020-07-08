@@ -1,10 +1,10 @@
 '''
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2020 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 #
-# Constants shared across modules.
-# Note that GCAM_32_REGIONS can be set from the data system, but then it's constant. ;~)
+# Constants shared across modules. Note: use utils.getRegionList() rather than the
+# hard-coded 32 regions to insulate against failures with different aggregations.
 #
 
 # TBD: move to gcamtool package
@@ -64,9 +64,4 @@ GCAM_USA_STATES = [
     'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VT', 'WA', 'WI', 'WV',
     'WY'
 ]
-
-# So it's not exactly constant after all...
-def setRegions(regionList):
-    global GCAM_32_REGIONS
-    GCAM_32_REGIONS = regionList
 

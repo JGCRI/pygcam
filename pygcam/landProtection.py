@@ -14,10 +14,10 @@ import sys
 from lxml import etree as ET
 
 from .config import getParam, parse_version_info, pathjoin
-from .constants import UnmanagedLandClasses, GCAM_32_REGIONS
+from .constants import UnmanagedLandClasses
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, flatten
+from .utils import mkdirs, flatten, getRegionList
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
@@ -145,7 +145,7 @@ class Group(object):
         Generate built-in 'global' region
         '''
         group = ET.Element('group', name='Global')
-        for name in GCAM_32_REGIONS:
+        for name in getRegionList():
             reg = ET.SubElement(group, 'region')
             reg.text = name
 

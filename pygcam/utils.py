@@ -96,14 +96,14 @@ def getRegionList(workspace=None):
 
     :param workspace: the path to a ``Main_User_Workspace`` directory that
       has the file
-      ``input/gcam-data-system/_common/mappings/GCAM_region_names.csv``,
+      ``input/gcamdata/inst/extdata/common/GCAM_region_names.csv``,
       or ``None``, in which case the value of config variable
       ``GCAM.SourceWorkspace`` (if defined) is used. If `workspace` is
       empty or ``None``, and the config variable ``GCAM.SourceWorkspace`` is
       empty (the default value), the built-in default 32-region list is returned.
     :return: a list of strings with the names of the defined regions
     """
-    from .constants import setRegions, GCAM_32_REGIONS
+    from .constants import GCAM_32_REGIONS
     from .csvCache import readCachedCsv
     from semver import VersionInfo
 
@@ -124,11 +124,10 @@ def getRegionList(workspace=None):
         _logger.debug("Reading region names from %s", path)
         df = readCachedCsv(path, skiprows=skiprows)
         regions = list(df.region)
-        setRegions(regions)
         _logger.debug("Regions: %s", regions)
 
     else:
-        _logger.debug("Path %s not found; Using built-in region names", path)
+        _logger.info("Path %s not found; Using built-in region names", path)
         regions = GCAM_32_REGIONS
 
     return regions

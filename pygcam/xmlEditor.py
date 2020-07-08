@@ -28,13 +28,13 @@ from lxml import etree as ET
 from semver import VersionInfo
 
 from .config import getParam, getParamAsBoolean, parse_version_info, unixPath, pathjoin
-from .constants import LOCAL_XML_NAME, DYN_XML_NAME, GCAM_32_REGIONS
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException, PygcamException
 from .log import getLogger
 from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
 from .utils import (coercible, mkdirs, printSeries, symlinkOrCopyFile, removeTreeSafely,
-                    removeFileOrTree, pushd, splitAndStrip)
+                    removeFileOrTree, pushd, splitAndStrip, getRegionList)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
@@ -1282,7 +1282,7 @@ class XMLEditor(object):
 
     @callableMethod
     def taxCarbon(self, value, startYear=2020, endYear=2100, timestep=5,
-                  rate=0.05, regions=GCAM_32_REGIONS, market='global'):
+                  rate=0.05, regions=None, market='global'):
         '''
         Generate an XML file defining a global carbon tax starting
         at `value` and increasing by `rate` annually. Generate values
@@ -1296,7 +1296,7 @@ class XMLEditor(object):
            at 10 year time-steps.
         :param rate: (float) annual rate of increase. Default is 0.05.
         :param regions: (list(str)) the regions for which to create a C tax market.
-             Default is all 32 GCAM regions.
+             Default is all defined GCAM regions.
         :param market: (str) the name of the market to create. Default is 'global'.
         :return: none
         '''

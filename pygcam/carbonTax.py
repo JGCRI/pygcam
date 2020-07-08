@@ -2,7 +2,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from pygcam.constants import GCAM_32_REGIONS
+from pygcam.utils import getRegionList
 
 fixedTaxTemplate = '                <fixedTax year="{year}">{tax}</fixedTax>'
 
@@ -38,7 +38,7 @@ def _futureValuePairs(value, years, rate):
 
     return pairs
 
-def genCarbonTax(value, years, rate, regions=GCAM_32_REGIONS, market='global'):
+def genCarbonTax(value, years, rate, regions=None, market='global'):
     '''
     Generate the text of an XML file defining a global carbon tax starting
     at `value` and increasing by `rate` annually. Generate values
@@ -51,6 +51,8 @@ def genCarbonTax(value, years, rate, regions=GCAM_32_REGIONS, market='global'):
     :return: (str) the contents of the XML file
     '''
     regionList = []
+    regions = regions or getRegionList()
+
     firstRegion = regions[0]
     for region in regions[1:]:
         regionList.append(regionTemplate.format(region=region, market=market))
@@ -67,7 +69,7 @@ def genCarbonTax(value, years, rate, regions=GCAM_32_REGIONS, market='global'):
     return fileText
 
 def genCarbonTaxFile(filename, value, startYear=2020, endYear=2100, timestep=5, rate=0.05,
-                     regions=GCAM_32_REGIONS, market='global'):
+                     regions=None, market='global'):
     '''
     Generate an XML file defining a global carbon tax starting
     at `value` and increasing by `rate` annually. Generate values
@@ -83,6 +85,7 @@ def genCarbonTaxFile(filename, value, startYear=2020, endYear=2100, timestep=5, 
     :param rate: (float) annual rate of increase
     :return: none
     '''
+    regions = regions or getRegionList()
     years = list(range(startYear, endYear + timestep, timestep))
     text = genCarbonTax(value, years, rate, regions=regions, market=market)
     with open(filename, 'w') as f:
