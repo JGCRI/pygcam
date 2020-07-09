@@ -137,47 +137,6 @@ class McsData(object):
 
         return series
 
-    # Deprecated?
-    # def getResults(self, simId, scenarioList, resultList=None, limit=None):
-    #     '''
-    #     Get the results for the given result names, or, if none are
-    #     specified, for the results identified when at instantiation.
-    #     Results are cached and thus read only once from the database.
-    #
-    #     :param scenarioList: (iterable of str) the scenarios for which
-    #        to get results
-    #     :param resultList: (iterable of str) the (scalar) results to read
-    #     :return: (DataFrame) rows contain result name, scenario name, and value
-    #     '''
-    #
-    #     db = self.db
-    #     resultDict = {}
-    #     key = None
-    #
-    #     if resultList is None and limit is None:
-    #         key = ('getResults', simId, frozenset(scenarioList))
-    #         cached = getFromCache(key)
-    #         if cached is not None:
-    #             return cached
-    #
-    #     resultList = resultList or db.getOutputs()
-    #     scenarioList = scenarioList or db.scenariosWithResults(simId)
-    #
-    #     for scenario in scenarioList:
-    #         resultDF = resultDict.get(scenario)
-    #
-    #         for resultName in resultList:
-    #             # returns DF with 'trialNum' as index, 'value' holds float value
-    #             if resultDF is None or resultName not in resultDF.columns:
-    #                 values = self.getOutValues(simId, scenario, resultName, limit=limit)
-    #                 if values is not None:
-    #                     resultDF[resultName] = values
-    #
-    #         resultDict[scenario] = resultDF
-    #
-    #     self.resultDict = resultDict
-    #     return storeInCache(key, resultDict)
-
     def projectChooser(self):
         layout = dcc.Dropdown(id='project-chooser',
                               options=[{'label':name, 'value':name} for name in self.projects],
@@ -651,26 +610,28 @@ class McsData(object):
                         # marks={percentile: str(percentile) + '%' for percentile in range(0, 101, 10)},
                         # updatemode='drag', # too slow redrawing parcoords
                         value=[0, 100]),
-                ], style={'width': '350',
-                          'display': 'inline-block'}),
+                ], style={'width': '350px',
+                          'display': 'inline-block'
+                         }
+                ),
 
                 # gap between slider and button
                 html.Div(' ',
-                         style={'width': 10, 'display': 'inline-block'}),
+                         style={'width': '10px', 'display': 'inline-block'}),
 
                 html.Div([
                     html.Button('Reset',
                                 id='dist-slider-reset-button',
                                 style=getStyle('Button')
                                 )
-                ], style={'width': '55',
+                ], style={'width': '55px',
                           'display': 'inline-block'})
 
-            ], style={'margin-left': 10}),
+            ], style={'margin-left': '10px'}),
 
             html.Div(
                 dcc.Graph(id='distribution'),
-                style={'margin-top': 20}),
+                style={'margin-top': '20px'}),
 
             dcc.Checklist(
                 id='dist-options',
@@ -678,7 +639,8 @@ class McsData(object):
                          {'label': 'Mean', 'value': 'mean'},
                          {'label': 'Median', 'value': 'median'}],
                 value=['kde'],
-                labelStyle={'display': 'inline-block', 'margin': '6px'})
+                labelStyle={'display': 'inline-block',
+                            'margin': '6px'})
         ]
 
         return layout
@@ -880,7 +842,8 @@ def main(args):
     flaskLog.setLevel(level)
     _setup_werkzeug_log(level, args.host, args.port)
 
-    # app.config.supress_callback_exceptions = True
+    # app.config.suppress_callback_exceptions = True
+    app.css.config.serve_locally = False
     app.css.append_css({"external_url": "https://fonts.googleapis.com/css?family=Dosis:regular,bold|Lato"})
     app.css.append_css({"external_url": "https://codepen.io/plevin/pen/MvpeNV.css"})
 
