@@ -264,7 +264,7 @@ class McsData(object):
         layout = dcc.Checklist(
             id='multi-output-chooser',
             options=options,
-            values=outputs, # pre-select everything
+            value=outputs, # pre-select everything
             labelStyle={'display': 'inline-block', 'margin': '6px'})
 
         return layout
@@ -677,7 +677,7 @@ class McsData(object):
                 options=[{'label': 'KDE', 'value': 'kde'},
                          {'label': 'Mean', 'value': 'mean'},
                          {'label': 'Median', 'value': 'median'}],
-                values=['kde'],
+                value=['kde'],
                 labelStyle={'display': 'inline-block', 'margin': '6px'})
         ]
 
@@ -873,7 +873,7 @@ def _setup_werkzeug_log(level, host, port):
 
 
 def main(args):
-    app = dash.Dash(name='mcs-explorer', csrf_protect=False)
+    app = dash.Dash(name='mcs-explorer')
 
     level = getParam('Flask.LogLevel')
     flaskLog = app.server.logger
@@ -997,7 +997,7 @@ def main(args):
                    Input('scenario-chooser', 'value'),
                    Input('output-chooser', 'value'),
                    Input('dist-slider', 'value'),
-                   Input('dist-options', 'values'),
+                   Input('dist-options', 'value'),
                    Input('distribution', 'selectedData'),
                    ])
     def showDistribution(project, simId, scenario, outputName, sliderInfo, distOptions, selectedData):
@@ -1080,7 +1080,7 @@ def main(args):
                   [Input('scatterplot-button', 'n_clicks')],
                   [State('sim-chooser', 'value'),
                    State('scenario-chooser', 'value'),
-                   State('multi-output-chooser', 'values'),
+                   State('multi-output-chooser', 'value'),
                    State('input-chooser', 'value')])
     def showScatterMatrix(nclicks, simId, scenario, outputs, inputs):
         inputs = inputs or data.paraCoordsVars
