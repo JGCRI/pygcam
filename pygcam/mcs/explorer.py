@@ -9,7 +9,7 @@ import pandas as pd
 import os
 import plotly.figure_factory as ff
 import plotly.graph_objs as go
-import plotly.tools as tools
+import plotly.subplots as subplots
 from scipy import stats
 
 from pygcam.log import getLogger
@@ -552,10 +552,17 @@ class McsData(object):
 
         numIns  = len(inputs)
         numOuts = len(outputs)
-        fig = tools.make_subplots(rows=numOuts, cols=numIns,
-                                  vertical_spacing=0.01,
-                                  shared_xaxes=True,
-                                  shared_yaxes=True)
+        fig = subplots.make_subplots(rows=numOuts, cols=numIns,
+                                     vertical_spacing=0.01,
+                                     shared_xaxes=True,
+                                     shared_yaxes=True,
+                                     column_titles=inputs,
+                                     row_titles=outputs,
+                                     )
+
+        for ann in fig['layout']['annotations']:
+            ann['font'] = dict(size=10)
+
         layout = fig['layout']
         for row, output in enumerate(outputs):
             yAxisNum = row + 1
@@ -574,14 +581,14 @@ class McsData(object):
                                 color=getColor('ScatterPoints'))
                 )
 
-                fig.append_trace(trace, row+1, col+1)
+                fig.add_trace(trace, row+1, col+1)
 
                 # Compute the names of the corresponding axes
-                xaxis = "xaxis{}".format(xAxisNum)
-                yaxis = "yaxis{}".format(yAxisNum)
+                # xaxis = "xaxis{}".format(xAxisNum)
+                # yaxis = "yaxis{}".format(yAxisNum)
 
-                layout[xaxis].update(title=input,  showgrid=False, zeroline=False)
-                layout[yaxis].update(title=output, showgrid=False, zeroline=False)
+        fig.update_xaxes(showgrid=False, zeroline=False)
+        fig.update_yaxes(showgrid=False, zeroline=False)
 
         layout.update(margin=dict(l=50, r=30, t=30, b=30),
                       height=140 * numOuts + 20,
@@ -775,7 +782,7 @@ class McsData(object):
                                         id='scatterplot-button',
                                         style=getStyle('Button')
                                         )
-                        ], style={'margin': 5}),
+                        ], style={'margin': '5px'}),
 
                         html.Div([
                             dcc.Graph(id='scatter-matrix')
