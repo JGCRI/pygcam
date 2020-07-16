@@ -5,16 +5,22 @@ import os
 import numpy as np
 import pandas as pd
 
-from SALib.analyze.delta import analyze as delta_analyzer
-from SALib.analyze.dgsm import analyze as dgsm_analyzer
+try:
+    from SALib.analyze.delta import analyze as delta_analyzer
+    from SALib.analyze.dgsm import analyze as dgsm_analyzer
 
-from SALib.analyze import fast, morris, sobol
-from SALib.sample import saltelli, fast_sampler
-from SALib.sample import morris as morris_sampler
-from SALib.sample.latin import sample as latin_sampler
-from SALib.sample.finite_diff import sample as finite_diff_sampler
+    from SALib.analyze import fast, morris, sobol
+    from SALib.sample import saltelli, fast_sampler
+    from SALib.sample import morris as morris_sampler
+    from SALib.sample.latin import sample as latin_sampler
+    from SALib.sample.finite_diff import sample as finite_diff_sampler
 
-from SALib.test_functions import Ishigami
+    from SALib.test_functions import Ishigami
+except:
+    print("WARNING: Failed to import from SALib; dummy function names defined. SALib features are unusable.")
+    delta_analyzer = dgsm_analyzer = None
+    fast = morris = sobol = Ishigami = None
+    morris_sampler = latin_sampler = finite_diff_sampler = None
 
 # TBD: Save data compressed (opt), with zlib or gzip pkgs.
 
@@ -401,7 +407,7 @@ class LatinSampler(SensitivityAnalysis):
 
 class Delta(LatinSampler):
     """
-    Provides an interface to SALib's Delta moment-independent measure 
+    Provides an interface to SALib's Delta moment-independent measure
     sampling and analysis methods.
     """
     def __init__(self, pkgPath, problemFile=None, inputsFile=None, resultsFile=None):
@@ -415,7 +421,7 @@ class Delta(LatinSampler):
 
 class DGSM(LatinSampler):
     """
-    Provides an interface to SALib's Derivative-based Global Sensitivity 
+    Provides an interface to SALib's Derivative-based Global Sensitivity
     Measure (DGSM) sampling and analysis methods.
     """
     def __init__(self, pkgPath, problemFile=None, inputsFile=None, resultsFile=None):

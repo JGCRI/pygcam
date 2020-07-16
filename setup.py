@@ -38,13 +38,13 @@ common_deps = [
 
     # GUI requirements
     'flask>=1.0.2',
-    'dash>=0.28.2',
-    'dash-core-components>=0.32.0',
-    'dash-html-components>=0.13.2',
-    'dash-renderer>=0.14.1',
+    'dash>=1.4.1',
+    'dash-core-components>=1.3.1',
+    'dash-html-components>=1.0.1',
+    'dash-renderer>=1.1.2',
 
     # MCS requirements
-    'salib>=1.1.3',
+    # 'salib>=1.1.3',
     'scipy>=1.1.0',
     'sqlalchemy>=1.2.12',
 ]

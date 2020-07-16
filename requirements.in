@@ -13,7 +13,6 @@ numexpr
 numpy
 pandas
 python-dateutil
-SALib
 scipy
 seaborn
 semver
