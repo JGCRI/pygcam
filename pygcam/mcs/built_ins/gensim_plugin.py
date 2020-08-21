@@ -204,7 +204,8 @@ def runStaticSetup(runWorkspace, project, groupName):
     toolArgs = ['+P', projectName, '--mcs=gensim', 'run', '-s', 'setup',
                 '-S', scenariosArg, '--sandboxDir=' + sandboxDir]
 
-    if useGroupDir:
+    # if useGroupDir:
+    if groupName:
         toolArgs += ['-g', groupName]
 
     _logger.debug('Running: %s', 'gt ' + ' '.join(toolArgs))
