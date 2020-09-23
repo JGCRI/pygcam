@@ -1260,7 +1260,7 @@ class XMLEditor(object):
                 landXmlFiles.append(landFileAbs)
                 self.updateScenarioComponent(fileTag, landFileRel)
 
-        # TBD: revisit this; it's a bit of a hack for Oct 16 deliverable
+        # TBD: revisit this; it's a bit of a hack for Oct 16, 2019(?) deliverable
         scenarioFile = pathname = getParam('GCAM.LandProtectionXmlFile')
         if self.mcsMode == 'trial':
             basename = os.path.basename(pathname)

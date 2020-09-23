@@ -66,7 +66,7 @@ def setJavaPath(exeDir):
     if not IsWindows:
         return
 
-    javaHome = os.environ.get('JAVA_HOME', None)
+    javaHome = getParam('GCAM.JavaHome') or os.environ.get('JAVA_HOME', None)
 
     if not javaHome:
         # Use WriteLocalBaseXDB (4.2) or XMLDBDriver (>= 4.3) to print the java.home property
@@ -77,8 +77,10 @@ def setJavaPath(exeDir):
             if versionInfo > VersionInfo(4, 2, 0):
                 classpath = getParam('GCAM.MI.ClassPath')
                 command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
+                msg_cmd = 'XMLDBDriver --print-java-home'
             else:
                 command = 'java WriteLocalBaseXDB'
+                msg_cmd = command
 
             try:
                 output = subprocess.check_output(str(command), shell=True)
@@ -89,7 +91,7 @@ def setJavaPath(exeDir):
         os.environ['JAVA_HOME'] = javaHome
 
         if not javaHome:
-            raise PygcamException("JAVA_HOME not set and failed to read java home directory from WriteLocalBaseXDB")
+            raise PygcamException("JAVA_HOME not set and failed to read java home directory from '%s'" % msg_cmd)
 
     if not os.path.isdir(javaHome):
         raise PygcamException('Java home (%s) is not a directory' % javaHome)
