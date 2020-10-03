@@ -162,7 +162,7 @@ def genLinkedBioCarbonPolicyFile(filename, market='global', regions=None, forTax
     :param forCap: (bool) True if the linked policy should apply to a CO2 cap
     :return: none
     """
-    regions = regions or GCAM_32_REGIONS
+    regions = regions or getRegionList()
 
     first = True
     parts = [header]

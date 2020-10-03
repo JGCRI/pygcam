@@ -476,6 +476,7 @@ def chartGCAM(args, num=None, negate=False):
             if sumYears:
                 # create a new value column by summing year columns
                 valueCol = '_total_'
+                df = df.copy()
                 df[valueCol] = df[yearCols].sum(axis=1)
 
             plotStackedBarsScalar(df, indexCol, columns, valueCol, box=box, zeroLine=zeroLine,

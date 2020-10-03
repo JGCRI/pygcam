@@ -617,7 +617,7 @@ def protectLandTree(tree, scenarioName):
 
     scenario = Scenario.getScenario(scenarioName)
     if not scenario:
-        raise FileFormatError("Scenario '%s' was not found" % scenarioName)
+        raise FileFormatError("Protection scenario '%s' was not found" % scenarioName)
 
     prot_dict = defaultdict(list)
 
