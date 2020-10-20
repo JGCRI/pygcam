@@ -89,6 +89,9 @@ def basinsByISO():
 
     return result
 
+# Cache result of determining regions
+_RegionList = None
+
 def getRegionList(workspace=None):
     """
     Set the list of the defined region names from the data system, if possible,
@@ -107,6 +110,11 @@ def getRegionList(workspace=None):
     from .csvCache import readCachedCsv
     from semver import VersionInfo
 
+    global _RegionList
+
+    if _RegionList:
+        return _RegionList
+
     version = parse_version_info()
 
     if version > VersionInfo(5, 0, 0):
@@ -118,18 +126,53 @@ def getRegionList(workspace=None):
         skiprows = 3
 
     workspace = workspace or getParam('GCAM.RefWorkspace')
-    path = pathjoin(workspace, relpath) if workspace else None
 
-    if path and os.path.lexists(path):
-        _logger.debug("Reading region names from %s", path)
-        df = readCachedCsv(path, skiprows=skiprows)
-        regions = list(df.region)
-        _logger.debug("Regions: %s", regions)
+    # new stuff
+    if getParamAsBoolean('Test.RegionDiscovery'):
+        configFile = getParam('GCAM.RefConfigFile')
+        if not os.path.lexists(configFile):
+            _logger.error("GCAM reference config file '{}' not found.".format(configFile))
+            return
+
+        parser = ET.XMLParser(remove_blank_text=True)
+        tree   = ET.parse(configFile, parser)
+
+        def _xmlpath(tag):
+            elt = tree.find('//ScenarioComponents/Value[@name="{}"]'.format(tag))
+            return None if elt is None else pathjoin(workspace, 'exe', elt.text, abspath=True)
+
+        interestUSA    = _xmlpath('interest_usa')
+        interestGlobal = _xmlpath('interest_rate')
+
+        if interestGlobal and os.path.lexists(interestGlobal):
+            tree = ET.parse(interestGlobal, parser)
+            regionsGlobal = tree.xpath('//region/@name')
+        else:
+            _logger.error("GCAM input file '{}' not found.".format(interestGlobal))
+            return
+
+        if interestUSA and os.path.lexists(interestUSA):
+            tree = ET.parse(interestUSA, parser)
+            regionsUSA = tree.xpath('//region/@name')
+        else:
+            regionsUSA = []
+
+        regions = regionsGlobal + regionsUSA
 
     else:
-        _logger.info("Path %s not found; Using built-in region names", path)
-        regions = GCAM_32_REGIONS
+        path = pathjoin(workspace, relpath) if workspace else None
 
+        if path and os.path.lexists(path):
+            _logger.debug("Reading region names from %s", path)
+            df = readCachedCsv(path, skiprows=skiprows)
+            regions = list(df.region)
+
+        else:
+            _logger.info("Path %s not found; Using built-in region names", path)
+            regions = GCAM_32_REGIONS
+
+    _logger.debug("Regions: %s", regions)
+    _RegionList = regions
     return regions
 
 def queueForStream(stream):
