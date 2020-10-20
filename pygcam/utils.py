@@ -141,19 +141,20 @@ def getRegionList(workspace=None):
             elt = tree.find('//ScenarioComponents/Value[@name="{}"]'.format(tag))
             return None if elt is None else pathjoin(workspace, 'exe', elt.text, abspath=True)
 
-        interestUSA    = _xmlpath('interest_usa')
-        interestGlobal = _xmlpath('interest_rate')
+        xml_USA    = _xmlpath('socio_usa')
+        xml_global = _xmlpath('socioeconomics')
 
-        if interestGlobal and os.path.lexists(interestGlobal):
-            tree = ET.parse(interestGlobal, parser)
+        if xml_global and os.path.lexists(xml_global):
+            tree = ET.parse(xml_global, parser)
             regionsGlobal = tree.xpath('//region/@name')
         else:
-            _logger.error("GCAM input file '{}' not found.".format(interestGlobal))
+            _logger.error("GCAM input file '{}' not found.".format(xml_global))
             return
 
-        if interestUSA and os.path.lexists(interestUSA):
-            tree = ET.parse(interestUSA, parser)
+        if xml_USA and os.path.lexists(xml_USA):
+            tree = ET.parse(xml_USA, parser)
             regionsUSA = tree.xpath('//region/@name')
+            regionsUSA = sorted(set(regionsUSA) - set(['USA']))  # avoid including "USA" in both sublists
         else:
             regionsUSA = []
 
