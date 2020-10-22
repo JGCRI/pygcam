@@ -12,6 +12,14 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="statesType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="only"/>
+            <xs:enumeration value="together"/>
+            <xs:enumeration value="none"/>
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:element name='projects'>
         <xs:complexType>
             <xs:choice maxOccurs='unbounded'>
@@ -152,6 +160,7 @@
             <xs:attribute name='name' use='required' type='xs:string'/>
             <xs:attribute name='saveAs' type='xs:string'/>
             <xs:attribute name='useDefault' type='xs:boolean'/>
+            <xs:attribute name='states' type="statesType" default="none"/>
         </xs:complexType>
     </xs:element>
 

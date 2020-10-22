@@ -541,7 +541,9 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
         by a colon (on Unix) or a semi-colon (on Windows)
     :param outputDir: (str) the directory in which to write the .CSV
         with query results, default is value of GCAM.OutputDir.
-    :param regions: (iterable of str) the regions you want to include in the query
+    :param regions: (iterable of str) the regions you want to include in the query. If not
+        specified here, the value appearing in the <Query states="xxx"> statement is used
+        to return the indicated region names.
     :param regionMap: (dict-like) keys are the names of regions that should be rewritten.
         The value is the name of the aggregate region to map into.
     :param rewriteParser: (RewriteSetParser instance) parsed representation of
@@ -565,9 +567,16 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
 
             if not rewriteParser:
                 raise PygcamException("No rewriteParser defined. Pass filename as argument to query sub-command or define GCAM.RewriteSetsFile")
+
+            # Regions specified on command-line override <Query states="xxx"> spec.
+            # We use 'regs' to avoid overwriting 'regions' inside the loop, since it
+            # doubles as an indicator of regions specified on the command-line.
+            regs = regions or getRegionList(states=obj.states)
+
         else:
             # Deprecated? Old style, simple list of query names.
             queryName = obj
+            regs      = regions
             rewriters = None
             saveAs    = None
 
@@ -580,7 +589,7 @@ def createBatchFile(scenario, queries, xmldb='', queryPath=None, outputDir=None,
 
         # Extracts the named query into a temp file and returns XML text referencing the file.
         command = _createBatchCommandElement(scenario, queryName, queryPath, outputDir=outputDir,
-                                             xmldb=xmldb, regions=regions, regionMap=regionMap,
+                                             xmldb=xmldb, regions=regs, regionMap=regionMap,
                                              rewriters=rewriters, rewriteParser=rewriteParser,
                                              tmpFiles=tmpFiles, noDelete=noDelete, saveAs=saveAs)
         commands.append(command)
@@ -1012,7 +1021,7 @@ def queryMain(args):
     queryPath   = args.queryPath or getParam('GCAM.QueryPath')
     queryFile   = args.queryXmlFile
     regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
-    regions     = args.regions.split(',') if args.regions else getRegionList()
+    regions     = args.regions.split(',') if args.regions else None
     _logger.debug("Regions: %s", regions)
 
     queryNames  = args.queryName

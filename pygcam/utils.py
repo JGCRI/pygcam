@@ -89,34 +89,56 @@ def basinsByISO():
 
     return result
 
-# Cache result of determining regions
+# Cache results of determining regions
 _RegionList = None
+_StateList  = None
+_RegWorkspace = None
 
-def getRegionList(workspace=None):
+# Options for the states keyword to getRegionsList
+StateOptions = ('together',     # return states and global regions in one list
+                'only',         # return states only, excluding global regions
+                'none')         # return only global regions
+
+def getRegionList(workspace=None, states='together'):
     """
     Set the list of the defined region names from the data system, if possible,
     otherwise use the built-in list of 32 regions.
 
-    :param workspace: the path to a ``Main_User_Workspace`` directory that
+    :param workspace: (str) the path to a ``Main_User_Workspace`` directory that
       has the file
       ``input/gcamdata/inst/extdata/common/GCAM_region_names.csv``,
       or ``None``, in which case the value of config variable
       ``GCAM.SourceWorkspace`` (if defined) is used. If `workspace` is
       empty or ``None``, and the config variable ``GCAM.SourceWorkspace`` is
       empty (the default value), the built-in default 32-region list is returned.
+    :param states: (str) One of {'together', 'only', 'none'}. Default is 'together'.
     :return: a list of strings with the names of the defined regions
     """
     from .constants import GCAM_32_REGIONS
     from .csvCache import readCachedCsv
     from semver import VersionInfo
 
-    global _RegionList
+    global _RegionList, _StateList
 
-    if _RegionList:
+    if states not in StateOptions:
+        raise PygcamException('Called getRegionList with unrecognized value ({}) for "state" argument. Must be one of {}.'.format(states, StateOptions))
+
+    # Decache if called with different workspace
+    if _RegWorkspace and workspace != _RegWorkspace:
+        _RegionList = _StateList = None
+
+    if _RegionList and states == 'none':
         return _RegionList
+
+    if _RegionList and _StateList and states == 'together':
+        return _RegionList + _StateList
+
+    if _StateList and states == 'only':
+        return _StateList
 
     version = parse_version_info()
 
+    # Deprecated (probably). Need to test that the subsequent code handles all require cases
     if version > VersionInfo(5, 0, 0):
         # input/gcamdata/inst/extdata/common/GCAM_region_names.csv
         relpath = pathjoin('input', 'gcamdata', 'inst', 'extdata', 'common', 'GCAM_region_names.csv')
@@ -146,34 +168,42 @@ def getRegionList(workspace=None):
 
         if xml_global and os.path.lexists(xml_global):
             tree = ET.parse(xml_global, parser)
-            regionsGlobal = tree.xpath('//region/@name')
+            _RegionList = tree.xpath('//region/@name')
         else:
             _logger.error("GCAM input file '{}' not found.".format(xml_global))
             return
 
-        if xml_USA and os.path.lexists(xml_USA):
+        if xml_USA:
+            if not os.path.lexists(xml_USA):
+                _logger.error("GCAM input file '{}' not found.".format(xml_USA))
+                return
+
             tree = ET.parse(xml_USA, parser)
-            regionsUSA = tree.xpath('//region/@name')
-            regionsUSA = sorted(set(regionsUSA) - set(['USA']))  # avoid including "USA" in both sublists
-        else:
-            regionsUSA = []
+            _StateList = tree.xpath('//region/@name')
+            _StateList = sorted(set(_StateList) - {'USA'})  # don't include "USA" in list of states
 
-        regions = regionsGlobal + regionsUSA
-
-    else:
+    else: # Deprecated (probably) -- see note above.
         path = pathjoin(workspace, relpath) if workspace else None
 
         if path and os.path.lexists(path):
             _logger.debug("Reading region names from %s", path)
             df = readCachedCsv(path, skiprows=skiprows)
-            regions = list(df.region)
+            _RegionList = list(df.region)
 
         else:
             _logger.info("Path %s not found; Using built-in region names", path)
-            regions = GCAM_32_REGIONS
+            _RegionList = GCAM_32_REGIONS
 
-    _logger.debug("Regions: %s", regions)
-    _RegionList = regions
+    _StateList = _StateList or []
+
+    if states == 'together':
+        regions = _RegionList + _StateList
+    elif states == 'only':
+        regions = _StateList
+    elif states == 'none':
+        regions = _RegionList
+
+    _logger.debug("getRegionList returning: %s", regions)
     return regions
 
 def queueForStream(stream):

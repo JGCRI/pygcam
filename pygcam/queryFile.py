@@ -21,6 +21,7 @@ class Query(object):
         self.saveAs = node.get('saveAs', self.name)
         self.delete = getBooleanXML(node.get('delete', '1'))
         self.useDefault = useDefault = getBooleanXML(node.get('useDefault', '1'))
+        self.states = node.get('states', 'none')
 
         # see if the user provided the attribute, or we defaulted to 1
         explicitUseDefault = node.get('useDefault', None) and useDefault
