@@ -95,12 +95,12 @@ _StateList  = None
 _RegWorkspace = None
 
 # Options for the states keyword to getRegionsList
-StateOptions = ('together',     # return states and global regions in one list
-                'USA',          # return states and USA  region only
+StateOptions = ('withGlobal',   # return states and global regions
+                'withUSA',      # return states and USA region only
                 'only',         # return states only, excluding global regions
                 'none')         # return only global regions
 
-def getRegionList(workspace=None, states='together'):
+def getRegionList(workspace=None, states='withGlobal'):
     """
     Set the list of the defined region names from the data system, if possible,
     otherwise use the built-in list of 32 regions.
@@ -131,13 +131,13 @@ def getRegionList(workspace=None, states='together'):
     if _RegionList and states == 'none':
         return _RegionList
 
-    if _RegionList and _StateList and states == 'together':
-        return _RegionList + _StateList
-
     if _StateList and states == 'only':
         return _StateList
 
-    if _StateList and states == 'USA':
+    if _RegionList and _StateList and states == 'withGlobal':
+        return _RegionList + _StateList
+
+    if _StateList and states == 'withUSA':
         return _StateList + ['USA']
 
     version = parse_version_info()
@@ -200,11 +200,11 @@ def getRegionList(workspace=None, states='together'):
 
     _StateList = _StateList or []
 
-    if states == 'together':
+    if states == 'withGlobal':
         regions = _RegionList + _StateList
     elif states == 'only':
         regions = _StateList
-    elif states == 'USA':
+    elif states == 'withUSA':
         regions = _StateList + ['USA']
     elif states == 'none':
         regions = _RegionList
