@@ -96,6 +96,7 @@ _RegWorkspace = None
 
 # Options for the states keyword to getRegionsList
 StateOptions = ('together',     # return states and global regions in one list
+                'USA',          # return states and USA  region only
                 'only',         # return states only, excluding global regions
                 'none')         # return only global regions
 
@@ -135,6 +136,9 @@ def getRegionList(workspace=None, states='together'):
 
     if _StateList and states == 'only':
         return _StateList
+
+    if _StateList and states == 'USA':
+        return _StateList + ['USA']
 
     version = parse_version_info()
 
@@ -200,6 +204,8 @@ def getRegionList(workspace=None, states='together'):
         regions = _RegionList + _StateList
     elif states == 'only':
         regions = _StateList
+    elif states == 'USA':
+        regions = _StateList + ['USA']
     elif states == 'none':
         regions = _RegionList
 

@@ -14,9 +14,10 @@
 
     <xs:simpleType name="statesType">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="only"/>
-            <xs:enumeration value="together"/>
-            <xs:enumeration value="none"/>
+            <xs:enumeration value="only"/>          <!-- apply query only to US states -->
+            <xs:enumeration value="together"/>      <!-- apply query to US states and all global regions -->
+            <xs:enumeration value="USA"/>           <!-- apply query to US states and USA region only -->
+            <xs:enumeration value="none"/>          <!-- apply query to global regions but not to US states -->
         </xs:restriction>
     </xs:simpleType>
 
