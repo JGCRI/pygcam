@@ -22,7 +22,7 @@
             <xs:enumeration value="none"/>          <!-- apply query to global regions but not to US states -->
             <xs:enumeration value="only"/>          <!-- apply query only to US states -->
             <xs:enumeration value="withGlobal"/>    <!-- apply query to US states and all global regions -->
-            <xs:enumeration value="withUSA          <!-- apply query to US states and USA region only -->
+            <xs:enumeration value="withUSA"/>       <!-- apply query to US states and USA region only -->
         </xs:restriction>
     </xs:simpleType>
 
