@@ -139,7 +139,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
 
 def plotTornado(data, colname='value', labelsize=9, title=None, color=None, height=0.8,
                 maxVars=DEFAULT_MAX_TORNADO_VARS, rlabels=None, xlabel='Contribution to variance', figsize=None,
-                show=True, filename=None, extra=None, extraColor='grey', extraLoc='right'):
+                show=True, filename=None, extra=None, extraColor='grey', extraLoc='right', importanceCSV=None):
     '''
     :param data: A sorted DataFrame or Series indexed by variable name, with
                  column named 'value' and if rlabels is set, a column of that
@@ -157,6 +157,7 @@ def plotTornado(data, colname='value', labelsize=9, title=None, color=None, heig
     :param extra: Extra text to display in a lower corner of the plot (see extraLoc)
     :param extraColor: (str) color for extra text
     :param extraLoc: (str) location of extra text, i.e., 'right', or 'left'.
+    :param importanceCSV: (str) None, or the name of a file into which to save CSV data used to plot the tornado.
     :return: nothing
     '''
     count, cols = data.shape
@@ -181,6 +182,9 @@ def plotTornado(data, colname='value', labelsize=9, title=None, color=None, heig
 
     # if it's a dataframe, we expect to find the data in the value column
     values = data if isinstance(data, pd.Series) else data[colname]
+
+    if importanceCSV:
+        values.to_csv(importanceCSV)
 
     if color is None:
         color = sns.color_palette("deep", 1)
