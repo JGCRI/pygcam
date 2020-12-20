@@ -37,7 +37,8 @@ Release Notes
 
 Version 1.10.0 (20 Dec 2020)
 ----------------------------
-* Fixed long-standing bug in "init" sub-command
+* Fixed long-standing bug in "init" sub-command. Note that this also fixed a problem with the generated
+  documentation at pygcam.readthedocs.org that prevented the sub-command docs from generating correctly.
 * Numerous internal improvements to Monte Carlo / cluster management subsystem
 * The XML <query> element now takes an optional "states" parameter to set the default scope of queries.
   The old default behavior is unchanged: the query is run on the 32 global GCAM regions.
