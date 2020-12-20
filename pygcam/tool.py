@@ -14,7 +14,6 @@ from semver import VersionInfo
 import subprocess
 import sys
 
-from .built_ins import BuiltinSubcommands
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
                      usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
@@ -115,6 +114,7 @@ class GcamTool(object):
 
         # load all built-in sub-commands
         if loadBuiltins:
+            from .built_ins import BuiltinSubcommands
             for item in BuiltinSubcommands:
                 self.instantiatePlugin(item)
 
