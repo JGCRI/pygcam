@@ -34,6 +34,29 @@ Who do I talk to?
 Release Notes
 ==============
 
+
+Version 1.10.0 (20 Dec 2020)
+----------------------------
+* Fixed long-standing bug in "init" sub-command
+* Numerous internal improvements to Monte Carlo / cluster management subsystem
+* The XML <query> element now takes an optional "states" parameter to set the default scope of queries.
+  The old default behavior is unchanged: the query is run on the 32 global GCAM regions.
+
+  The full set of options is:
+    'withGlobal'   # return states and global regions in one list
+    'withUSA'      # return states and USA region only
+    'only'         # return states only, excluding the 32 global regions
+    'none'         # return only global regions, i.e., no states
+
+* New "region discovery" feature looks to the XML files in use to see if you're running GCAM-USA.
+  This hasn't been tested on all recent versions of GCAM. To disable it, set the config variable:
+
+    GCAM.RegionDiscovery = False
+
+* User can now set location of JAVA home directory using config variable "GCAM.JavaHome"
+
+* Updated version of Dash and modified code as necessary for compatibility
+
 Version 1.9.0 (16 Mar 2020)
 ---------------------------
 * "transport" command and function "transportTechEfficiency"

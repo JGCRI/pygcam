@@ -153,8 +153,7 @@ def getRegionList(workspace=None, states='withGlobal'):
 
     workspace = workspace or getParam('GCAM.RefWorkspace')
 
-    # new stuff
-    if getParamAsBoolean('Test.RegionDiscovery'):
+    if getParamAsBoolean('GCAM.RegionDiscovery'):   # True by default, but can be disabled by setting to False
         configFile = getParam('GCAM.RefConfigFile')
         if not os.path.lexists(configFile):
             _logger.error("GCAM reference config file '{}' not found.".format(configFile))
