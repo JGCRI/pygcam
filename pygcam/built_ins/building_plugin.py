@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """
-.. "new" sub-command (creates a new project)
-
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
 .. Copyright (c) 2016  Richard Plevin
@@ -15,9 +13,10 @@ _logger = getLogger(__name__)
 def get_re_techs(tech_cols, params, region):
     return [tech for tech in tech_cols if params.loc[region, tech] == 1]
 
+# TBD: Move this to new xmlUtils.py
+# TBD: Save region and input to the tuple in all cases. Ignore on receipt!
 def element_path(elt, withInput):
-    d = {'input' : elt.attrib['name']}
-
+    input = elt.attrib['name']
     sector = subsector = technology = None
 
     for node in elt.iterancestors():    # walk up the hierarchy
@@ -28,45 +27,30 @@ def element_path(elt, withInput):
             pass
 
         elif tag == 'location-info':
-            d['sector'] = sector = attr['sector-name']
-            d['subsector'] = subsector = attr['subsector-name']
+            sector = attr['sector-name']
+            subsector = attr['subsector-name']
 
         elif tag == 'supplysector':
-            d['sector'] = sector = attr['name']
+            sector = attr['name']
 
         elif tag in ('stub-technology', 'technology'):
-            d['technology'] = technology = attr['name']
+            technology = attr['name']
 
-        elif tag == 'subsector':
-            d['subsector'] = subsector = attr['name']
+        elif tag in ('subsector', 'tranSubsector'):
+            subsector = attr['name']
 
         elif tag in ('global-technology-database', 'region'):
             break
 
-    return (sector, subsector, technology, d['input']) if withInput else (sector, subsector, technology)
-
-def validate_years(years):
-    pair = years.split('-')
-    if len(pair) != 2:
-        return None
-
-    (first, last) = pair
-    if not (first.isdigit() and last.isdigit()):
-        return None
-
-    first = int(first)
-    last  = int(last)
-
-    if not (first < last):
-        return None
-
-    return [i for i in range(first, last+1, 5)]
+    return (sector, subsector, technology) + ((input,) if withInput else ())
+    # return (region, sector, subsector, technology, input)
 
 def save_bldg_techs(f, args, years, xml_file, xpath, which, withInput):
     from ..config import getParam
     from ..utils import pathjoin
     from ..XMLFile import XMLFile
 
+    # TBD: inflexible. Create config param for this, let user override
     gcamDir = getParam('GCAM.RefWorkspace', section=args.projectName)
     pathname = pathjoin(gcamDir, 'input', 'gcamdata', 'xml', xml_file)
 
@@ -146,7 +130,7 @@ class BuildingCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        from ..utils import pathjoin
+        from ..utils import pathjoin, validate_years
         from ..config import getParam
 
         outputFile = args.outputFile or (ELEC_OUTPUT_FILE if args.electricOnly else TECH_OUTPUT_FILE)
