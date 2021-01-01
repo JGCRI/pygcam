@@ -260,14 +260,18 @@ def _addRegionMap(regionMap, rewriteList):
         levelElt.append(rewrite)
 
 def _addRewrites(levelElt, rewriteSet):
+    from semver import VersionInfo
 
     def _appendRewrite(From, to):
         'Helper function to reduce redundancy'
         node = ET.Element('rewrite', attrib={'from': From, 'to': to})
         levelElt.append(node)
 
-    byAEZ = rewriteSet.byAEZ
-    byBasin = rewriteSet.byBasin
+    version = parse_version_info()
+
+    gcam5 = (version > VersionInfo(5, 0, 0))
+    byBasin = gcam5 and rewriteSet.byBasin
+    byAEZ   = not gcam5 and rewriteSet.byAEZ
 
     for rewrite in rewriteSet.rewrites:
         From = rewrite.From             # "from" is a keyword, thus "From"
