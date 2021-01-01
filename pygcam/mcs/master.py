@@ -172,7 +172,7 @@ class Master(object):
         for eid, qs in iteritems(qstatus):
             for key, count in iteritems(qs):
                 if count < 0 or count > 100:
-                    _logger.debug("qstatus['%s'] = %s", key, count)
+                    _logger.debug("Engine id %s qstatus['%s'] = %s", eid, key, count)
                 totals[key] += count
 
         return totals
