@@ -830,17 +830,17 @@ def runBatchQuery(scenario, queryName, queryPath, outputDir, xmldb='',
     delete = not noDelete
 
     # Look for both the literal name as given as well as the name with "-" and "_" replaced with " "
-    filename = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap,
-                                      rewriteSetList=rewriters, rewriteParser=rewriteParser,
-                                      delete=delete)
-    if not filename:
+    queryFile = _findOrCreateQueryFile(basename, queryPath, regions, regionMap=regionMap,
+                                       rewriteSetList=rewriters, rewriteParser=rewriteParser,
+                                       delete=delete)
+    if not queryFile:
         raise PygcamException("runBatchQuery: file for query '%s' was not found." % basename)
 
     if not csvFile:
         csvFile = "%s-%s.csv" % (saveAs or mainPart, scenario)    # compute default filename
         csvFile = csvFile.replace(' ', '_')                       # eliminate spaces for convenience
 
-    csvPath = runModelInterface(scenario, filename, outputDir, csvFile, xmldb=xmldb,
+    csvPath = runModelInterface(scenario, outputDir, csvFile, queryFile=queryFile, xmldb=xmldb,
                                 miLogFile=miLogFile, noDelete=noDelete, noRun=noRun)
     return csvPath
 
