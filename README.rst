@@ -34,6 +34,9 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.10.1 (22 Jan 2021)
+----------------------------
+* Fixed bug in query.runBatchQuery() reported by user huanglin6385. (Thanks!)
 
 Version 1.10.0 (20 Dec 2020)
 ----------------------------
