@@ -34,6 +34,10 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.10.2 (25 Jan 2021)
+----------------------------
+* Updated default files in system.cfg for GCAM 5.3
+
 Version 1.10.1 (22 Jan 2021)
 ----------------------------
 * Fixed bug in query.runBatchQuery() reported by user huanglin6385. (Thanks!)
