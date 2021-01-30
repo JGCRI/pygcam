@@ -21,7 +21,8 @@ _logger = getLogger(__name__)
 
 PROGRAM = os.path.basename(__file__)
 
-_VersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
+_PathVersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
+_VersionFlagPattern = re.compile('GCAM version (\d+(\.\d+)+)')
 
 def getGcamVersion(exeDir):
     '''
@@ -34,7 +35,7 @@ def getGcamVersion(exeDir):
     if not os.path.lexists(exePath):
         gcamDir = os.path.dirname(exeDir)
         _logger.info("GCAM not found at %s; extracting version from path", gcamDir)
-        m = re.match(_VersionPattern, gcamDir)
+        m = re.match(_PathVersionPattern, gcamDir)
         if m:
             return m.group(1)
         else:
@@ -43,20 +44,18 @@ def getGcamVersion(exeDir):
     setJavaPath(exeDir)
     with pushd(exeDir):
         try:
-            cmd = [exePath, '--versionID']
+            cmd = [exePath, '--version']
             versionStr = subprocess.check_output(cmd, shell=False).strip().decode('utf-8')
 
         except subprocess.CalledProcessError:
             raise ConfigFileError(
-                "Attempt to run '%s --versionID' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber manually" % exePath)
+                "Attempt to run '%s --version' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber manually" % exePath)
 
-    prefix = 'gcam-v'
-    if not versionStr.startswith(prefix):
-        raise ConfigFileError('GCAM --versionID "%s" is not the correct format. Should start with "gcam-v"',
-                              versionStr)
-
-    versionNum = versionStr[len(prefix):]
-    return versionNum
+    m = re.match(_VersionFlagPattern, versionStr)
+    if m:
+        return m.group(1)
+    else:
+        raise ConfigFileError('GCAM --version returned "%s", which is not the expected format. Should start with "GCAM version "')
 
 def setJavaPath(exeDir):
     '''
