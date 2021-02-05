@@ -105,13 +105,13 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                   }
 
 class Master(object):
-    idleEngines = set()
 
     def __init__(self, args):
         self.args = args
         self.db = getDatabase(checkInit=False)
         self.client = None
         self.finished = False
+        self.idleEngines = set()
 
         projectName = args.projectName
 
@@ -178,14 +178,29 @@ class Master(object):
         return totals
 
     def shutdownIdleEngines(self):
-        qstatus = self.client.queue_status()
+        client = self.client
+        qstatus = client.queue_status()
 
         if qstatus.pop(u'unassigned') > 0:
             # some tasks are not yet assigned to engines => not idle
             return
 
-        engineCount = len(qstatus)
-        if engineCount == 0:
+        # TBD: iterate over client.ids instead?
+        # From http://python.6.x6.nabble.com/IPython-User-IPython-parallel-shutdown-unused-engines-td5053278.html#a5053309
+        # # get queue status
+        # qs = client.queue_status()
+        #
+        # # identify idle engines
+        # idle = []
+        # for eid in client.ids:
+        #     if qs[eid]['queue'] + qs[eid]['tasks'] == 0:
+        #         idle.append(eid)
+        #
+        # # shut them down
+        # dv = rc.direct_view(idle)
+        # dv.shutdown()
+
+        if len(client.ids) == 0:
             _logger.info("No engines are running")
             return
 
@@ -202,7 +217,12 @@ class Master(object):
                 _logger.info('Shutting down %d idle engines', len(newlyIdle))
 
                 try:
-                    self.client.shutdown(targets=list(newlyIdle), block=False)
+                    client.shutdown(targets=list(newlyIdle), block=False)
+
+                    # TBD?
+                    # dv = client.direct_view(list(newlyIdle))
+                    # dv.shutdown(block=False)
+
                 except Exception as e:
                     _logger.debug("shutdownIdleEngines: %s", e)
                     # ignore the error
@@ -553,7 +573,11 @@ class Master(object):
 
         asyncResults = []
 
-        view = None if runLocal else self.client.load_balanced_view() # retries=2)
+        # Use "self.client[:]" for a direct view rather than load-balanced view
+        # This should pack nodes rather than spreading the load, which makes it easier
+        # to shutdown idle nodes, rather than having nodes running only a single task.
+        view = None if runLocal else self.client[:]
+        # view = None if runLocal else self.client.load_balanced_view() # retries=2)
 
         db = getDatabase()
         exps = {e.expName: e.parent for e in db.getExps()}
