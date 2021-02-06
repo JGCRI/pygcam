@@ -576,8 +576,8 @@ class Master(object):
         # Use "self.client[:]" for a direct view rather than load-balanced view
         # This should pack nodes rather than spreading the load, which makes it easier
         # to shutdown idle nodes, rather than having nodes running only a single task.
-        #view = None if runLocal else self.client[:]
-        view = None if runLocal else self.client.load_balanced_view()
+        view = None if runLocal else self.client.direct_view()
+        #view = None if runLocal else self.client.load_balanced_view()
 
         db = getDatabase()
         exps = {e.expName: e.parent for e in db.getExps()}
