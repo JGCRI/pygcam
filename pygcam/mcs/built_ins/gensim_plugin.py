@@ -445,7 +445,7 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-D', '--desc', type=str, default='',
                             help=clean_help('A brief (<= 256 char) description the simulation.'))
 
-        parser.add_argument('-e', '--exportVars', default='',
+        parser.add_argument('-e', '--exportVars', default='', metavar="CSVFILE",
                             help=clean_help('Export variable and distribution info in a tab-delimited file with the given name and exit.'))
 
         parser.add_argument('-g', '--groupName', default='',
