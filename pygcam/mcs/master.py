@@ -185,47 +185,52 @@ class Master(object):
             # some tasks are not yet assigned to engines => not idle
             return
 
-        # TBD: iterate over client.ids instead?
-        # From http://python.6.x6.nabble.com/IPython-User-IPython-parallel-shutdown-unused-engines-td5053278.html#a5053309
-        # # get queue status
-        # qs = client.queue_status()
-        #
-        # # identify idle engines
-        # idle = []
-        # for eid in client.ids:
-        #     if qs[eid]['queue'] + qs[eid]['tasks'] == 0:
-        #         idle.append(eid)
-        #
-        # # shut them down
-        # dv = rc.direct_view(idle)
-        # dv.shutdown()
-
         if len(client.ids) == 0:
             _logger.info("No engines are running")
             return
 
-        # Shutdown idle engines if there are no unassigned tasks
-        idleEngines = set([eid for eid, qs in iteritems(qstatus) if
-                isinstance(eid, string_types) and eid.isdigit() and (qs[u'tasks'] + qs[u'queue']) == 0])
+        # From http://python.6.x6.nabble.com/IPython-User-IPython-parallel-shutdown-unused-engines-td5053278.html#a5053309
+        idle = []
+        for eid in client.ids:
+            if qstatus[eid]['queue'] + qstatus[eid]['tasks'] == 0:
+                idle.append(eid)
 
-        if idleEngines:
-            newlyIdle = idleEngines.difference(self.idleEngines)
-            self.idleEngines = self.idleEngines.union(idleEngines)
+        if len(idle):
+            _logger.info('Shutting down %d idle engines', len(idle))
+            _logger.debug('Idle engines: %s', idle)
+            dv = client.direct_view(idle)
 
-            if newlyIdle:
-                _logger.debug('Idle engines: %s', newlyIdle)
-                _logger.info('Shutting down %d idle engines', len(newlyIdle))
+            try:
+                dv.shutdown(block=False)
 
-                try:
-                    client.shutdown(targets=list(newlyIdle), block=False)
+            except Exception as e:
+                # report it, then ignore the error
+                _logger.debug("shutdownIdleEngines: %s", e)
 
-                    # TBD?
-                    # dv = client.direct_view(list(newlyIdle))
-                    # dv.shutdown(block=False)
 
-                except Exception as e:
-                    _logger.debug("shutdownIdleEngines: %s", e)
-                    # ignore the error
+        # Deprecated: this wasn't working.
+        # # Shutdown idle engines if there are no unassigned tasks
+        # idleEngines = set([eid for eid, qs in iteritems(qstatus) if
+        #         isinstance(eid, string_types) and eid.isdigit() and (qs[u'tasks'] + qs[u'queue']) == 0])
+        #
+        # if idleEngines:
+        #     newlyIdle = idleEngines.difference(self.idleEngines)
+        #     self.idleEngines = self.idleEngines.union(idleEngines)
+        #
+        #     if newlyIdle:
+        #         _logger.debug('Idle engines: %s', newlyIdle)
+        #         _logger.info('Shutting down %d idle engines', len(newlyIdle))
+        #
+        #         try:
+        #             client.shutdown(targets=list(newlyIdle), block=False)
+        #
+        #             # TBD?
+        #             # dv = client.direct_view(list(newlyIdle))
+        #             # dv.shutdown(block=False)
+        #
+        #         except Exception as e:
+        #             _logger.debug("shutdownIdleEngines: %s", e)
+        #             # ignore the error
 
     def createRuns(self, simId, scenario, trialNums):
         '''

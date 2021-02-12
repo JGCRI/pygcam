@@ -86,7 +86,7 @@ class SandboxCommand(SubcommandABC):
                             the deletion occurs first.'''))
 
         parser.add_argument('--delete', action='store_true',
-                            help=clean_help('''Delete the identified sandbox' If used with --create, the
+                            help=clean_help('''Delete the identified sandbox. If used with --create, the
                             deletion occurs first.'''))
 
         parser.add_argument('--recreate', action='store_true',
