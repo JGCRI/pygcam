@@ -383,8 +383,8 @@ class XMLDataFile(XMLTrialData):
         if pathname in cls.cache:
             return cls.cache[pathname]
 
-        df = pd.read_table(pathname, sep='\t', index_col=0)
-        df.reset_index(inplace=True)
+        #df = pd.read_table(pathname, sep='\t', index_col=0)
+        df = pd.read_csv(pathname, index_col=False)
         cls.cache[pathname] = df
         return df
 
@@ -536,8 +536,8 @@ class XMLParameter(XMLWrapper):
 
         children = [elt for elt in element.getchildren() if elt.tag is not ET.Comment]
         maxChildren = 4
-        assert len(children) <= maxChildren, \
-            "<Parameter> cannot have more than %d children. (The XMLSchema is broken.)" % maxChildren
+        if len(children) > maxChildren:
+            raise PygcamMcsSystemError("<Parameter> cannot have more than {} children. (code/schema mismatch)".format(maxChildren))
 
         for elt in children:
             tag = elt.tag
@@ -551,21 +551,25 @@ class XMLParameter(XMLWrapper):
             elif tag == DESC_ELT_NAME:
                 self.desc = elt.text
 
-            # XMLSchema ensures that the only other tag is Distribution
-            # TBD: test for DISTRIBUTION_ELT_NAME explicitly
-            else:
+            elif tag == DISTRO_ELT_NAME:
                 self.child = elt[0]
                 childName = self.child.tag
 
-                # Handle the two special cases:
+                # Handle the two special cases within Distribution element:
                 if childName == PYTHON_FUNC_ELT:
                     cls = XMLPythonFunc
+                    elt = self.child
                 elif childName == DATAFILE_ELT:
                     cls = XMLDataFile
+                    elt = self.child
                 else:
                     cls = XMLDistribution   # child provides distro parameters
 
                 self.dataSrc = cls(elt, self)
+
+            else:
+                # XMLSchema should make this impossible; if it occurs, the XML schema is incorrect.
+                raise PygcamMcsSystemError("Unknown child element of <Parameter>: '{}' (code/schema mismatch)".format(tag))
 
     @classmethod
     def saveInstance(cls, obj):
