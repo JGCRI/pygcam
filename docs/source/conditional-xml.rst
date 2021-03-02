@@ -10,6 +10,9 @@ This feature allows you to choose among different modes of running your
 project based on the value of a configuration variable.  For example,
 you might use different options in your project or scenario XML files depending
 on whether you are running individual GCAM scenarios or a Monte Carlo Simulation.
+Note that you can set configuration variables in ~/.pygcam.cfg, or as environment
+variables, which are imported into the configuration variable space with a leading
+``$`` to distinguish them from "normal" configuration variables.
 
 The individual file types supporting Conditional XML describe the elements that
 can be made conditional. This file serves to consolidate the documentation of
@@ -23,10 +26,10 @@ takes no attributes. It must contain:
 
 * Exactly one of ``<TEST>``, ``<AND>``, or ``<OR>``.
 
-* Exactly one ``<THEN>`` element, which contains XML to insert if the test
+* Exactly one ``<THEN>`` ... ``</THEN>`` element, which contains XML to insert if the test
   evaluates to True
 
-* An optional ``<ELSE>`` element, which can contain XML to insert if the
+* An optional ``<ELSE>`` ... ``</ELSE>`` element, which can contain XML to insert if the
   test evaluates to False.
 
 Example

@@ -789,6 +789,7 @@ class XMLEditor(object):
         """
         xmlFileRel, xmlFileAbs = self.getLocalCopy(tag)
         xmlEdit(xmlFileAbs, [(xpath, str(value))])
+        self.updateScenarioComponent(tag, xmlFileRel)
 
     def updateConfigComponent(self, group, name, value=None, writeOutput=None, appendScenarioName=None):
         """
