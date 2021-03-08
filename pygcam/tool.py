@@ -377,9 +377,12 @@ class GcamTool(object):
             logFile = os.path.normpath(pathjoin(logDir, logFile))
             mkdirs(os.path.dirname(logFile))
 
+        # default is 'afterok', but user might want to use 'after' to run even if baseline fails
+        depFlag = getParam('SLURM.DependencyFlag')
+        format = "-w 'done(%s)'" if batchSystem == 'LSF' else "-d {}:%s".format(depFlag)    # i.e., '-d afterok:%s' or '-d after:%s'
+
         # TBD: make this an expression eval'd with s.format(jobID=dependsOn)
         # TBD: to support other syntaxes
-        format = "-w 'done(%s)'" if batchSystem == 'LSF' else "-d afterok:%s"
         dependencies = format % dependsOn if dependsOn else ''
 
         scriptCommand = "gt " + ' '.join(shellArgs)
