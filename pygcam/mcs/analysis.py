@@ -374,7 +374,7 @@ def plotSensitivityResults(varName, data, filename=None, extra=None, maxVars=Non
         print(data.to_string(columns=['spearman', 'value'], float_format="{:4.2f}".format))
 
     title = 'Sensitivity of %s' % varName
-    plotTornado(data, title=title, show=False, filename=filename, extra=extra, maxVars=maxVars)
+    plotTornado(data, title=title, show=False, filename=filename, extra=extra, maxVars=maxVars) #, importanceCSV="importance.csv")
 
 # Deprecated?
 def plotGroupSensitivityResults(varName, data, filename=None, extra=None, maxVars=None, printIt=True):
@@ -464,6 +464,7 @@ def plotOutputDistribution(simId, expName, resultSeries, resultName, xlabel, tri
 def readParameterValues(simId, trials):
     def makeKey(paramName, row, col):
         return paramName
+        # row & col were used in GTAP MCS only...
         #return "%s[%d][%d]" % (paramName, row, col) if row or col else paramName
 
     db = getDatabase()

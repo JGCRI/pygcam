@@ -12,12 +12,78 @@ from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
+def genFullFactorialData(trials, paramFileObj, args):
+    from numpy import linspace
+    import pandas as pd
+    from itertools import product
+    from ..error import PygcamMcsUserError
+
+    # any of the discrete distributions
+    supported_distros = ['Constant', 'Binary', 'Integers', 'Grid', 'Sequence']
+
+    N = 1        # the number of trials req'd for full factorial
+    var_names = []    # variable names
+    var_values = []   # variable values
+
+    for elt in paramFileObj.tree.iterfind('//Parameter'):
+        name = elt.get('name')
+        distElt = elt.find('Distribution')
+        distSpec = distElt[0]   # should have only one child as per schema
+        distName = distSpec.tag
+
+        # These 3 distro forms specify min and max values, which we use with SALib
+        if distName not in supported_distros:
+            raise PygcamMcsUserError("Found '{}' distribution; must be one of {} for use with SALib.".format(distName, supported_distros))
+
+        # Count the elements in each discrete distro
+        attrib = distSpec.attrib
+
+        if distName == 'Constant':
+            value = float(attrib['value'])
+            count = 1
+
+        elif distName == 'Binary':
+            values = [0, 1]
+            count = 2
+
+        elif distName == 'Integers':
+            # <Integers min='1' max='3'>
+            min = int(min)
+            max = int(max)
+            count = max - min + 1
+            values = list(range(min, max + 1))
+
+        elif distName == 'Grid':
+            # <Grid min=1 max=10 count=5>
+            min   = int(attrib['min'])
+            max   = int(attrib['max'])
+            count = int(attrib['count'])
+            values = linspace(min, max, count)
+
+        elif distName == 'Sequence':
+            # <Sequence values="1, 2, 3">
+            values = attrib['values']
+            values = [float(item) for item in values.split(',')]
+            count = len(values)
+
+        var_names.append(name)
+        var_values.append(values)
+        N *= count
+
+    # User can specify exact multiples of N trials
+    if trials % N != 0:
+        raise PygcamMcsUserError("Trial count {} is not an exact multiple of the number of full-factorial combinations ({})".format(trials, N))
+
+    inputsDF = pd.DataFrame(list(product(*var_values)), columns=var_names)
+    return inputsDF
+
+
 def genSALibData(trials, method, paramFileObj, args):
     from ..error import PygcamMcsUserError
     from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
     from pygcam.utils import ensureExtension, removeTreeSafely, mkdirs
 
-    SupportedDistros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
+    supported_distros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
 
     outFile = args.outFile or os.path.join(getSimDir(args.simId), 'data.sa')
     outFile = ensureExtension(outFile, '.sa')
@@ -48,7 +114,7 @@ def genSALibData(trials, method, paramFileObj, args):
             distName = distSpec.tag
 
             # These 3 distro forms specify min and max values, which we use with SALib
-            legal = SupportedDistros + ['Linked']
+            legal = supported_distros + ['Linked']
             if distName not in legal:
                 raise PygcamMcsUserError("Found '%s' distribution; must be one of %s for use with SALib." % (distName, legal))
 
@@ -115,6 +181,9 @@ def genTrialData(simId, trials, paramFileObj, args):
 
         paramNames = [obj.getParameter().getName() for obj in rvList]
         trialData = lhs(rvList, trials, corrMat=corrMatrix, columns=paramNames, skip=linked)
+
+    elif method == 'full-factorial':
+        trialData = genFullFactorialData(trials, paramFileObj, args)
     else:
         # SALib methods
         trialData = genSALibData(trials, method, paramFileObj, args)
@@ -122,7 +191,7 @@ def genTrialData(simId, trials, paramFileObj, args):
     linkedDistro.storeTrialData(trialData)  # stores trial data in class so its ppf() can access linked values
     lhsAmend(trialData, linked, trials, shuffle=False)
 
-    if method == 'montecarlo':
+    if method in ('montecarlo', 'full-factorial'):
         writeTrialDataFile(simId, trialData)
 
     df = DataFrame(data=trialData)
@@ -451,7 +520,7 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-g', '--groupName', default='',
                             help=clean_help('''The name of a scenario group to process.'''))
 
-        parser.add_argument('-m', '--method', choices=['montecarlo', 'sobol', 'fast', 'morris'],
+        parser.add_argument('-m', '--method', choices=['montecarlo', 'sobol', 'fast', 'morris', 'full-factorial'],
                             default='montecarlo',
                             help=clean_help('''Use the specified method to generate trial data. Default is "montecarlo".'''))
 
