@@ -26,6 +26,9 @@ by the pygcam library. Project-specific features can be added via
    :ref:`sandbox <sandbox>`,
    :ref:`transport <transport>`
 
+.. seealso::
+    :doc:`Sub-commands <mcs/commands>` supporting Monte Carlo simulation
+
 The sub-commands support all the major workflow setups, including
 
   * Modify XML files and configuration.xml to set up a modeling experiment
