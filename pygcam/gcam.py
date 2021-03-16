@@ -110,6 +110,49 @@ def setJavaPath(exeDir):
     os.environ['CLASSPATH'] = classpath = envClasspath + ';' + javaBinServer + ';' + miClasspath
     _logger.debug('CLASSPATH=%s', classpath)
 
+def _wrapperFilter(line):
+    """
+    Default filter for GCAM wrapper. Return True if process should be terminated.
+
+    :param line: (str) a single line of text emitted by GCAM to stdout.
+    :return: (GcamError or None): If not None, caller raises the given error
+        and terminates the GCAM process.
+    """
+    modelDidNotSolve = 'Model did not solve'
+    pattern = re.compile('(.*(BaseXException|%s).*)' % modelDidNotSolve)
+
+    match = re.search(pattern, line)
+
+    if match:
+        msg = 'GCAM error: ' + match.group(0)
+        if match.group(1) == modelDidNotSolve:
+            raise GcamSolverError(msg)
+        else:
+            raise GcamError(msg)
+
+def _loadWrapperFilter(spec):
+    """
+    Load a user's GCAM output filter function from the specification given in
+    configuration parameter GCAM.WrapperFilterFunction.
+    :param spec: (str) of the form /path/to/moduleDirectory:module.functionName
+    :return: the function
+    """
+    try:
+        modPath, dotSpec = spec.split(';', 1)
+    except (ValueError, Exception):
+        raise ConfigFileError('GCAM.WrapperFilterFunction should be of the form "/path/to/moduleDirectory:module.functionName", got "{}"'.format(spec))
+
+    try:
+        import sys
+        from .utils import importFromDotSpec
+        sys.path.insert(0, modPath)
+        func = importFromDotSpec(dotSpec)
+
+    except PygcamException as e:
+        raise ConfigFileError("Can't load wrapper filter function '%s' from '%s': %s" % (dotSpec, modPath, e))
+
+    return func
+
 def _gcamWrapper(args):
     try:
         _logger.debug('Starting gcam with wrapper')
@@ -120,10 +163,11 @@ def _gcamWrapper(args):
         msg = 'gcamWrapper failed to run command: {} ({})'.format(' '.join(args), e)
         raise PygcamException(msg)
 
-    modelDidNotSolve = 'Model did not solve'
-    pattern = re.compile('(.*(BaseXException|%s).*)' % modelDidNotSolve)
+    filterSpec = getParam('GCAM.WrapperFilterFunction')
+    wrapperFilter = _loadWrapperFilter(filterSpec) if filterSpec else _wrapperFilter
 
     gcamOut = gcamProc.stdout
+
     while True:
         line = gcamOut.readline().decode('utf-8')
         if line == '':
@@ -131,14 +175,10 @@ def _gcamWrapper(args):
 
         _logger.info(line.rstrip())          # see if this ends up in worker.log
 
-        match = re.search(pattern, line)
-        if match:
+        error = wrapperFilter(line)
+        if error:
             gcamProc.terminate()
-            msg = 'GCAM error: ' + match.group(0)
-            if match.group(1) == modelDidNotSolve:
-                raise GcamSolverError(msg)
-            else:
-                raise GcamError(msg)
+            raise error
 
     _logger.debug('gcamWrapper found EOF. Waiting for GCAM to exit...')
     status = gcamProc.wait()

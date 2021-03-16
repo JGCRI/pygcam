@@ -662,7 +662,8 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
     :return: (module) a reference to the loaded module, if loaded, else None.
     :raises: PygcamException
     """
-    from imp import load_source, load_compiled  # lazy import to speed startup
+    # imp is deprecated in Python3; use importlib instead
+    from imp import load_source  # lazy import to speed startup
 
     # Extract the module name from the module path
     modulePath = unixPath(modulePath)
