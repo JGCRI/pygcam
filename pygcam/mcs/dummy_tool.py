@@ -16,8 +16,8 @@ PROGRAM = 'gt'
 
 class DummyTool(GcamTool):
 
-    def __init__(self, loadPlugins=False, loadBuiltins=False):
-        super(DummyTool, self).__init__(loadPlugins=loadPlugins, loadBuiltins=loadBuiltins)
+    def __init__(self):
+        super(DummyTool, self).__init__(loadPlugins=False, loadBuiltins=False)
 
 
 def getMainParser():

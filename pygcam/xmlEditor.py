@@ -1697,7 +1697,7 @@ class XMLEditor(object):
         :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
             for transportation, this should be passed as subsectorTag='tranSubsector'
         :param subsector: (str) the name of a sub-sector
-         :param stubTechnologies: (str) the name of a technology to apply function to; if absent,
+        :param stubTechnologies: (str) the name of a technology to apply function to; if absent,
             the function is applied at the subsector level (optional)
         :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for
             certain sectors it may be 'technology'
@@ -1777,7 +1777,7 @@ class XMLEditor(object):
         :param subsectorTag: (str) the tag for the subsector level. Default is 'subsector', but
             for transportation, this should be passed as subsectorTag='tranSubsector'
         :param subsector: (str) the name of a sub-sector
-         :param stubTechnology: (str) the name of a technology to apply function to; if absent,
+        :param stubTechnology: (str) the name of a technology to apply function to; if absent,
             the function is applied at the subsector level (optional)
         :param technologyTag: (str) the tag for the technology level. Default is 'stub-technology', but for
             certain sectors it may be 'technology'
@@ -1834,10 +1834,10 @@ class XMLEditor(object):
     def insertSubsectorParameter(self, regions, supplysector, subsector, nodeName, attributeName,
                                  attributeValue, nodeValue, supplysectorTag='supplysector',
                                  subsectorTag='subsector', configFileTag=ENERGY_TRANSFORMATION_TAG):
-
         """
         Insert a parameter for a given region/supplysector/subsector/stub-technology/period.
         **Callable from XML setup files.**
+
         :param regions: (str or None) If a string, the GCAM region(s) to operate on. If None,
             the function is applied to all regions. Arg can be comma-delimited list of regions.
         :param supplysector: (str) the name of a supply sector
@@ -1848,17 +1848,17 @@ class XMLEditor(object):
         :param subsector: (str) the name of a sub-sector
         :param nodeName: (str) defines the name of the node to insert.
         :param attributeName: (str) defines any attributes that need to be added (e.g. @name) (optional)
-        :param attributeValue: (str) defines any attributevalues that need to be added (e.g. name="coal") (optional)
+        :param attributeValue: (str) defines any attribute values that need to be added (e.g. name="coal") (optional)
         :param nodeValue: (string or float) values to insert into the node
         :param configFileTag: (str) the 'name' of a <File> element in the <ScenarioComponents>
-           section of a config file. This determines which file is edited, so it must correspond to
-           the indicated sector(s). Default is 'energy_transformation'.
+            section of a config file. This determines which file is edited, so it must correspond to
+            the indicated sector(s). Default is 'energy_transformation'.
         :return: none
         """
-        from .utils import printSeries
 
         _logger.info("Insert nodes and attributes for (%r, %r, %r) for %r",
                      regions, supplysector, subsector, self.name)
+        # from .utils import printSeries
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
         xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
