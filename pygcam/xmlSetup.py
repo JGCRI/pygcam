@@ -570,26 +570,19 @@ def createXmlEditorSubclass(setupFile, mcsMode=None, cleanXML=True):
 
     return XmlEditorSubclass
 
-
-def scenarioEditor(scenario):
+def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode=None,
+                   groupName='', srcGroupDir='', subdir =''):
     setupXml = getParam('GCAM.ScenarioSetupFile')
     editorClass = createXmlEditorSubclass(setupXml, cleanXML=False)
-
-    # we don't need to specify any of these for real since we're just getting the config file
-    baseline = ''
-    xmlSrcDir = ''
-    refWorkspace = ''
-    groupName = ''
-    srcGroupDir = ''
-    subdir = ''
 
     xmlOutputRoot = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, normpath=True)
 
     editor = editorClass(baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace,
-                         groupName, srcGroupDir, subdir, cleanXML=False)
+                         groupName, srcGroupDir, subdir, cleanXML=False, mcsMode=mcsMode)
     return editor
 
 def scenarioConfigPath(scenario):
+    # We don't need to specify most of the keyword args when we're just getting the config file
     editor = scenarioEditor(scenario)
     path = editor.cfgPath()
     return path

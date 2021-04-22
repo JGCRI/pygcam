@@ -1124,8 +1124,13 @@ class XMLEditor(object):
         :return: none
         :raises: SetupException
         """
-        value = coercible(yearOrPeriod, int)
-        stopPeriod = value if 1 < value < 1000 else 1 + (value - 2000)//5
+        yearOrPeriod = coercible(yearOrPeriod, int)
+
+        if yearOrPeriod > 1970:
+            from .utils import model_years
+            # convert period to year based on defined model years
+            years = model_years()
+            stopPeriod = years.index(yearOrPeriod) + 1
 
         self.updateConfigComponent('Ints', 'stop-period', stopPeriod)
 

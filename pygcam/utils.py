@@ -211,6 +211,47 @@ def getRegionList(workspace=None, states='withGlobal'):
     _logger.debug("getRegionList returning: %s", regions)
     return regions
 
+def model_years():
+    """
+    Return the defined model years by parsing xml/modeltime.xml. This is used
+    by the setup plugin to convert years to model period for setting the stop year.
+
+    :return: (list of int) the defined model years.
+    """
+    # Parse xml/modeltime.xml to get active model periods. It looks like this
+    # for a case with non-standard model years:
+    # <scenario>
+    #     <modeltime>
+    #         <start-year time-step="15">1975</start-year>
+    #         <final-calibration-year>2000</final-calibration-year>
+    #         <end-year>2100</end-year>
+    #         <inter-year dummy-tag="1" time-step="10">1990</inter-year>
+    #         <inter-year dummy-tag="2" time-step="1">2000</inter-year>
+    #         <inter-year dummy-tag="3" time-step="5">2020</inter-year>
+    #     </modeltime>
+    # </scenario>
+    filename = pathjoin(getParam('GCAM.RefWorkspace'), 'input/gcamdata/xml/modeltime.xml')
+    tree = ET.parse(filename, ET.XMLParser(remove_blank_text=True, remove_comments=True))
+    root = tree.getroot()
+
+    elt = root.find('.//start-year')
+    start_tup = (int(elt.text), int(elt.attrib['time-step']))
+
+    inter_year_elts = root.findall('.//inter-year')
+    inter_year_tups = sorted([(int(elt.text), int(elt.attrib['time-step'])) for elt in inter_year_elts])
+
+    elt = root.find('.//end-year')
+    end_tup = (int(elt.text) + 1, 0)     # +1 so range() includes the final year; step of 0 is ignored
+
+    tups = [start_tup] + inter_year_tups + [end_tup]
+
+    years = []
+    for i, (start, step) in enumerate(tups[:-1]):
+        next_start = tups[i+1][0]
+        years.extend(range(start, next_start, step))
+
+    return years
+
 def queueForStream(stream):
     """
     Create a thread to read from a non-socket file descriptor and

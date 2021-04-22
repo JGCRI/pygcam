@@ -1,6 +1,12 @@
-#
-# Signal handling
-#
+'''
+.. Signal Handling
+
+.. Adapted from pygcam.
+   Added to opgee on 3/29/21.
+
+.. Copyright (c) 2016-2021 Richard Plevin
+   See the https://opensource.org/licenses/MIT for license details.
+'''
 import signal
 from .windows import IsWindows
 
@@ -41,7 +47,7 @@ def raiseSignalException(signum, _frame):
     if not IsWindows and signum == signal.SIGALRM:
         raise AlarmSignalException(signum)
 
-    elif signum == signal.SIGTERM:      # TBD: this is sent by SLURM. Same for PBS??
+    elif signum == signal.SIGTERM:      # this is sent by SLURM to kill engines
         raise TimeoutSignalException(signum)
 
     elif signum == signal.SIGINT:       # control-c by user
