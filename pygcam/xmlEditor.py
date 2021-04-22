@@ -1130,7 +1130,7 @@ class XMLEditor(object):
             from .utils import model_years
             # convert period to year based on defined model years
             years = model_years()
-            stopPeriod = years.index(yearOrPeriod) + 1
+            stopPeriod = years.index(yearOrPeriod)
 
         self.updateConfigComponent('Ints', 'stop-period', stopPeriod)
 
