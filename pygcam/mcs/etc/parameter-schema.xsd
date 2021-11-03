@@ -40,8 +40,8 @@
     <xs:simpleType name="NumericSequence">
         <!-- Allow fully specified vars as in pkg.mod1.mod2.var -->
         <xs:restriction base="xs:string">
-            <!-- handle four variants, plus commas: .12, 12., 1.2, 12 -->
-            <xs:pattern value="(\d*\.\d+|\d+\.\d*|\d+)( *, *((\d*\.\d+)|(\d+\.\d*)|(\d+)))*"/>
+            <!-- handle four variants, plus commas: .12, 12., 1.2, 12, with optional negative signs -->
+            <xs:pattern value="-?(\d*\.\d+|\d+\.\d*|\d+)( *, *-?((\d*\.\d+)|(\d+\.\d*)|(\d+)))*"/>
         </xs:restriction>
     </xs:simpleType>
 
