@@ -1026,7 +1026,7 @@ class XMLEditor(object):
 
         :param tag: (str) the tag identifying a scenario component
         :param xpath: (str) an XPath query to run against the file indicated by `tag`
-        :param value: (float) a value to multiply results of the `xpath` query by.
+        :param value: (float) a value to add to the results of the `xpath` query.
         :return: none
         """
         _logger.info("add: tag='{}', xpath='{}', value={}".format(tag, xpath, value))
@@ -2054,11 +2054,65 @@ class XMLEditor(object):
         policyMarketXml(policyName, region, sector, subsector, technology, years,
                         marketType=marketType, pathname=pathname)
 
+    # class variable used by next method only
+    _writePolicyConstraintFile_cache = {}
+
     @callableMethod
     def writePolicyConstraintFile(self, filename, policyName, region, targets, market=None, minPrice=None,
-                                  policyElement=DEFAULT_POLICY_ELT, policyType=DEFAULT_POLICY_TYPE):
+                                  policyElement=DEFAULT_POLICY_ELT, policyType=DEFAULT_POLICY_TYPE,
+                                  csvPath=None, scenario=None):
+        """
+        Generate XML constraint file from the parameters given.
+
+        :param filename: (str) the name of the XML file to create in the local-xml/{scenario} directory.
+        :param policyName: (str) the name of the policy, i.e., <policy-portfolio-standard name="{policyName}">
+        :param region: (str) the region to on which apply to the constraints
+        :param targets: iterable of (year, value) pairs, where year can be an int or a string of the
+            form "y1-y2" indicating a year range sharing the same value.
+        :param market: (str) the name of the market; default is the region name
+        :param minPrice: (int or float) if not None, a <min-price> element is created with the value, using
+            the first year in `targets` and fillout="1".
+        :param policyElement: (str) Defaults to "policy-portfolio-standard"
+        :param policyType: (str) Either "subsidy" or "tax"
+        :param csvPath: (str with pathname) the path to a file containing a 'Scenario' column and year
+            columns with constraint values. Used to construct `targets` only if `targets` is None.
+        :param scenario: (str) the name of the scenario to extract from the `csvFile`. Used only if
+            `targets` is None.
+        :return: none
+        """
         pathname = pathjoin(self.scenario_dir_abs, filename)
-        policyConstraintsXml(policyName, region, expandYearRanges(targets), market=market, minPrice=minPrice,
+
+        if targets:
+            targets = expandYearRanges(targets)
+
+        elif csvPath and scenario:
+            # extract the constraints from the CSV file
+            import pandas as pd
+
+            # check cache for data
+            df = self._writePolicyConstraintFile_cache.get(csvPath)
+
+            if df is None:
+                df = pd.read_csv(csvPath)
+
+                if not 'Scenario' in df.columns:
+                    raise SetupException(f"writePolicyConstraintFile: {csvPath} does not contain a 'Scenario' column")
+
+                df.set_index('Scenario', inplace=True)
+
+                self._writePolicyConstraintFile_cache[csvPath] = df     # save processed dataframe to cache
+
+            try:
+                row = df.loc[scenario]
+            except KeyError:
+                raise SetupException(f"writePolicyConstraintFile: {csvPath} does not contain scenario '{scenario}'")
+
+            targets = [(year, value) for year, value in row.iteritems() if not pd.isna(value)]
+            _logger.debug(f"Extracted targets for scenario '{scenario}': {targets}")
+        else:
+            raise SetupException("writePolicyConstraintFile: must specify targets or both csvPath and scenario")
+
+        policyConstraintsXml(policyName, region, targets, market=market, minPrice=minPrice,
                              policyElement=policyElement, policyType=policyType, pathname=pathname)
 
     @callableMethod

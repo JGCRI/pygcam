@@ -425,7 +425,7 @@ def get_electricity_tech_df(useGcamUSA):
 def read_state_names():
     global States
 
-    xmlfile = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcamdata', 'xml', 'socioeconomics_USA.xml')
+    xmlfile = pathjoin(getParam('GCAM.RefWorkspace'), 'input', 'gcamdata', 'xml', 'socioeconomics_USA.xml') # TBD: ref_pathname('socioeconomics_USA.xml')
     tree = XMLFile(xmlfile).getTree()
     States = tree.xpath('//region/@name')
 

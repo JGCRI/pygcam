@@ -164,15 +164,6 @@ class XMLConfigFile(XMLFile):
         if newValue:
             elt.text = str(newValue)    # in case it was passed as numeric or bool
 
-    def getComponentPathname(self, name):
-        pathname = self.getConfigValue(name, COMPONENTS_GROUP)
-        if not pathname:
-            raise PygcamMcsUserError('getComponentPathname: a file with tag "%s" was not found' % name)
-        return pathname
-
-    def updateComponentPathname(self, name, pathname):
-        self.updateConfigElement(name, COMPONENTS_GROUP, newValue=pathname)
-
     def addConfigElement(self, name, group, value):
         '''
         Append a new element with the given name and value to the given group.
@@ -192,3 +183,32 @@ class XMLConfigFile(XMLFile):
             raise PygcamMcsUserError('deleteConfigElement: element "%s" was not found in group %s' % (name, group))
 
         groupElt.remove(elt)
+
+    def getComponentPathname(self, name):
+        pathname = self.getConfigValue(name, COMPONENTS_GROUP)
+        if not pathname:
+            raise PygcamMcsUserError('getComponentPathname: a file with tag "%s" was not found' % name)
+        return pathname
+
+    def updateComponentPathname(self, name, pathname):
+        self.updateConfigElement(name, COMPONENTS_GROUP, newValue=pathname)
+
+    def addComponentPathname(self, name, pathname):
+        return self.addConfigElement(name, COMPONENTS_GROUP, pathname)
+
+    def insertComponentPathname(self, name, pathname, after):
+        groupElt = self.getConfigGroup(COMPONENTS_GROUP)
+
+        afterNode = groupElt.find('Value[@name="{}"]'.format(after))
+        if afterNode is None:
+            raise PygcamMcsUserError("Can't insert {} after {}, as the latter doesn't exist".format(name, after))
+
+        index = groupElt.index(afterNode) + 1
+
+        node = ET.Element('Value')
+        node.set('name', name)
+        node.text = pathname
+        groupElt.insert(index, node)
+
+    def deleteComponent(self, name):
+        return self.deleteConfigElement(name, COMPONENTS_GROUP)

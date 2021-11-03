@@ -376,8 +376,24 @@ class Function(ConfigAction):
         if not method:
             raise SetupException("<function name='%s'>: function doesn't exist or is not callable from XML" % name)
 
-        args = "(%s)" % self.formattedContent if self.formattedContent else "()"
+        args = "(%s)" % self.formattedContent.strip() if self.formattedContent else "()"
         codeStr = "editor.%s%s" % (name, args)
+
+        ######################
+        # TBD: debugging only
+        DEBUG = False
+        if DEBUG:
+            if codeStr.startswith("editor.writePolicyConstraintFile('base-1-"):
+                # TBD: Call it directly so we can debug
+                editor.writePolicyConstraintFile('base-1-constraints.xml', 'Corn Ethanol', 'USA', None, minPrice=-100,
+                                                 csvPath="/Users/rjp/repos/gcam-mcs/analyses/series46/etc/shock_permanence_runs.csv",
+                                                 scenario="base-1")
+            elif codeStr.startswith("editor.writePolicyMarketFile('base-1"):
+                editor.writePolicyMarketFile('base-1-market.xml', 'Corn Ethanol', 'USA', 'ethanol', 'corn ethanol',
+                                             'corn ethanol', range(2020, 2061, 5))
+            return
+        ######################
+
         try:
             eval(codeStr)
         except SyntaxError as e:

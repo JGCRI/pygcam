@@ -89,7 +89,7 @@ def policyConstraintsXml(policyName, region, targets, market=None, minPrice=None
     xmlArgs['policyName']    = policyName
     xmlArgs['region']        = region
     xmlArgs['market']        = market or region
-    xmlArgs['minPrice']      = '<min-price year="1975" fillout="1">{}</min-price>'.format(minPrice) if minPrice != None else ''
+    xmlArgs['minPrice']      = '<min-price year="2020" fillout="1">{}</min-price>'.format(minPrice) if minPrice != None else ''
 
     # Generate annual XML for <constraint year="{year}">{level}</constraint>
     constraints = [_yearConstraintTemplate.format(year=year, level=level) for year, level in targets]
@@ -104,7 +104,6 @@ def policyConstraintsXml(policyName, region, targets, market=None, minPrice=None
         return xml
 
 
-
 # Example:
 # policyMarketXml('Corn-Etoh-Floor', 'USA', 'ethanol', 'corn ethanol', 'corn ethanol', list(range(2010, 2051, 10)), pathname="/tmp/mkt.xml")
-# policyConstraintsXml('Corn-Etoh-Floor', [(2015, 1.6), (2020, 2.0)], 'USA', minPrice=-100, pathname="/tmp/con.xml")
+# policyConstraintsXml('Corn-Etoh-Floor', 'USA', [(2015, 1.6), (2020, 2.0)], 'USA', minPrice=-100, pathname="/tmp/con.xml")
