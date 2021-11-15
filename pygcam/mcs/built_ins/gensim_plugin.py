@@ -451,6 +451,7 @@ def driver(args, tool):
     from ..error import PygcamMcsUserError
     from ..util import saveDict
 
+    # TBD: set the config variable if the argument is given since to avoid inconsistency
     paramFile = args.paramFile or getParam('MCS.ParametersFile')
 
     if args.exportVars:

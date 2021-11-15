@@ -27,7 +27,7 @@ _policyMarketTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
 </scenario>
 '''
 
-_yearConstraintTemplate = '''        <constraint year="{year}">{level}</constraint>'''
+_yearConstraintTemplate = '''        <constraint year="{year}">{level:.3f}</constraint>''' # show 3 digits after decimal
 
 _policyConstraintTemplate = '''<?xml version="1.0" encoding="UTF-8"?>
 
