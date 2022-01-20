@@ -26,7 +26,7 @@ _VersionFlagPattern = re.compile('GCAM version (\d+(\.\d+)+)')
 
 def getGcamVersion(exeDir):
     '''
-    Try to get GCAM version by running gcam with --versionID flag, but if that
+    Try to get GCAM version by running gcam with --version flag, but if that
     fails, try to extract it from the path.
     '''
     exeName = getParam('GCAM.Executable')

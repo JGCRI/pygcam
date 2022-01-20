@@ -7,7 +7,7 @@ import os
 from pygcam.config import getParam, setParam, pathjoin
 from pygcam.log import getLogger
 from pygcam.utils import mkdirs, getResource
-from ..context import getSimDir
+from ..context import Context, getSimDir
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -72,7 +72,7 @@ def genFullFactorialData(trials, paramFileObj, args):
 
     # User can specify exact multiples of N trials
     if trials % N != 0:
-        raise PygcamMcsUserError("Trial count {} is not an exact multiple of the number of full-factorial combinations ({})".format(trials, N))
+        raise PygcamMcsUserError(f"Trial count {trials} is not an exact multiple of the number of full-factorial combinations ({N})")
 
     inputsDF = pd.DataFrame(list(product(*var_values)), columns=var_names)
     return inputsDF
@@ -95,7 +95,7 @@ def genSALibData(trials, method, paramFileObj, args):
             removeTreeSafely(backupFile)
 
         elif os.path.lexists(backupFile):
-            raise PygcamMcsUserError("Refusing to delete '%s' since it's not a file package." % backupFile)
+            raise PygcamMcsUserError(f"Refusing to delete '{backupFile}' since it's not a file package.")
 
         os.rename(outFile, backupFile)
 
@@ -116,7 +116,7 @@ def genSALibData(trials, method, paramFileObj, args):
             # These 3 distro forms specify min and max values, which we use with SALib
             legal = supported_distros + ['Linked']
             if distName not in legal:
-                raise PygcamMcsUserError("Found '%s' distribution; must be one of %s for use with SALib." % (distName, legal))
+                raise PygcamMcsUserError(f"Found '{distName}' distribution; must be one of {legal} for use with SALib.")
 
             if distName == 'Linked':        # TBD: ignore these and figure it out when loading the file?
                 linked.append((name, distSpec.get('parameter')))
@@ -140,7 +140,7 @@ def genSALibData(trials, method, paramFileObj, args):
                 minValue = -value
                 maxValue =  value
 
-            f.write("%s,%f,%f\n" % (name, minValue, maxValue))
+            f.write(f"{name},{minValue},{maxValue}\n")
 
     methods = (Sobol, FAST, Morris) # , MonteCarlo)
     methodMap = {cls.__name__.lower(): cls for cls in methods}
@@ -232,7 +232,7 @@ def saveTrialData(df, simId, start=0):
     # SALib methods may not create exactly the number of trials requested
     # so we update the database to set the record straight.
     db.updateSimTrials(simId, trials)
-    _logger.info('Saved %d trials for simId %d', trials, simId)
+    _logger.info(f'Saved {trials} trials for simId {simId}')
 
 
 def runStaticSetup(runWorkspace, project, groupName):
@@ -277,12 +277,12 @@ def runStaticSetup(runWorkspace, project, groupName):
     if groupName:
         toolArgs += ['-g', groupName]
 
-    _logger.debug('Running: %s', 'gt ' + ' '.join(toolArgs))
+    cmd = 'gt ' + ' '.join(toolArgs)
+    _logger.debug(f'Running: {cmd}')
     status = pygcam.tool.main(argv=toolArgs, raiseError=True)
 
     if status != 0:
-        msg = '"gt setup" exited with status %d' % status
-        raise GcamToolError(msg)
+        raise GcamToolError(f'"gt setup" exited with status {status}')
 
     return status
 
@@ -290,7 +290,6 @@ def genSimulation(simId, trials, paramPath, args):
     '''
     Generate a simulation based on the given parameters.
     '''
-    from ..context import Context
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
     from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
@@ -349,9 +348,10 @@ def genSimulation(simId, trials, paramPath, args):
     if args.dataFile:
         from pandas import read_table
         df = read_table(args.dataFile, sep=',', index_col='trialNum')
-        _logger.info("Loaded data for %d trials from %s", df.shape[0], args.dataFile)
+        rows = df.shape[0]
+        _logger.info(f"Loaded data for {rows} trials from {args.dataFile}")
     else:
-        _logger.info("Generating %d trials to %r", trials, simDir)
+        _logger.info(f"Generating {trials} trials to {simDir}")
         df = genTrialData(simId, trials, paramFileObj, args)
 
     # Save generated values to the database for post-processing
@@ -415,32 +415,104 @@ def _simplifyDistro(dataSrc):
                 argDict['max']  = value
 
 
-def _exportVars(paramFile, outputFile):
+def _plot_values(values, paramName, plotsDir, bins=250, context='paper'):
+    import seaborn as sns
+
+    outfile = f"{plotsDir}/{paramName}.pdf"
+
+    with sns.plotting_context(context):
+        ax = sns.distplot(values, kde=False, bins=bins, color='navy')
+        fig = ax.get_figure()
+        fig.savefig(outfile, bbox_inches='tight')
+        return ax
+
+# TBD: move this where gensim writes out the modified XML
+# from pygcam.project import Project
+# from pygcam.mcs.XMLConfigFile import XMLConfigFile
+# from pygcam.XMLFile import XMLFile
+#
+# projectName = getParam('GCAM.ProjectName')
+# project = Project.readProjectFile(projectName, groupName=args.groupName)
+# groupName  = args.groupName or project.scenarioSetup.defaultGroup
+#
+# ctx = Context(simId=args.simId, groupName=groupName, scenario=baseline)
+# configFile = XMLConfigFile(ctx)
+#
+# sandboxDir = getParam('GCAM.SandboxDir')
+# exe_dir = pathjoin(sandboxDir, baseline, 'exe', abspath=True)
+
+# comp_name = p.parent.getComponentName()     # either *.xml or the name of a config file component
+# xml_path = configFile.getComponentPathname(comp_name)
+# with pushd(exe_dir):
+#     xml_file_obj = XMLFile(xml_path) # loads target file
+#
+# tree = xml_file_obj.getTree()
+# found = tree.xpath(xpath)
+# count = len(found)
+#
+# if plotsDir:
+#     # TBD: run query and produce array of values
+#     values = None
+#     _plot_values(values, pname, plotsDir)
+
+
+def _exportVars(paramFile, args):
     import re
     from itertools import chain
+    from pygcam.utils import mkdirs
     from pygcam.mcs.XMLParameterFile import XMLDistribution, XMLParameterFile
+
+    outputFile = args.exportVars
+    plotsDir   = args.paramPlots
+    mkdirs(plotsDir)
 
     paramFileObj = XMLParameterFile(paramFile)
     params = list(chain.from_iterable(map(lambda x: x.parameters.values(), paramFileObj.inputFiles.values())))
 
-    def getDistStr(dataSrc):
+    distDict = {p.name : p for p in params if isinstance(p.dataSrc, XMLDistribution)}
+
+    def getDistStr(dataSrc, withArgNames=False):
         _simplifyDistro(dataSrc)
-        argStr = ', '.join(['{}={}'.format(name, value) for name, value in dataSrc.argDict.items()])
-        distro = '{}({})'.format(dataSrc.distroName.capitalize(), argStr)
+        # TBD: decide whether to include name arguments on Triangles or just tuple of values
+        if withArgNames:
+            argStr = ', '.join([f'{name}={value}' for name, value in dataSrc.argDict.items()])
+        else:
+            argStr = ', '.join([f'{value}' for _, value in dataSrc.argDict.items()])
+
+        distroName = dataSrc.distroName.capitalize()
+        distro = f'{distroName}({argStr})'
         return distro
 
-    distDict = {p.name : (getDistStr(p.dataSrc), p.dataSrc.modDict, p.desc) for p in params if isinstance(p.dataSrc, XMLDistribution)}
+    # Sort by name, within sorted categories
+    tuples = [(p.category, pname, p) for pname, p in distDict.items()]
+    sorted_params = sorted(tuples, key=lambda x: (x[0], x[1]))
 
-    keys = sorted(distDict.keys(), key=str.casefold) # case insensitive sort
+    def clean(s):
+        s = re.sub('^\s+', '', s)   # remove leading whitespace
+        s = re.sub('\s+$', '', s)   #   and trailing whitespace
+        s = re.sub('\s+', ' ', s)   # replace multiples with one space
+        return s
 
-    _logger.info("Writing %s", outputFile)
-    with open(outputFile, 'w') as f:
-        f.write("Name\tDistribution\tApplication\tDescription\n")
+    _logger.info(f"Writing '{outputFile}'")
+    with open(outputFile, 'w', newline='') as f:
+        import csv
 
-        for name in keys:
-            dist, modDict, desc = distDict[name]
-            desc = re.sub('\s+', ' ', desc)
-            f.write("{}\t{}\t{}\t{}\n".format(name, dist, modDict['apply'], desc))
+        writer = csv.writer(f)
+        writer.writerow(['Category', 'Name', 'Distribution', 'Application', 'Description', 'XPath', 'Evidence', 'Rationale', 'Notes'])
+
+        for category, pname, p in sorted_params:
+            dist = getDistStr(p.dataSrc)
+            modDict = p.dataSrc.modDict
+            apply = modDict['apply']
+            xpath = p.query.xpath
+
+            desc      = clean(p.desc)
+            evidence  = clean(p.evidence)
+            rationale = clean(p.rationale)
+            notes     = clean(p.notes)
+
+            writer.writerow([category, pname, dist, apply, desc, xpath, evidence, rationale, notes])
+
 
 def driver(args, tool):
     '''
@@ -455,7 +527,7 @@ def driver(args, tool):
     paramFile = args.paramFile or getParam('MCS.ParametersFile')
 
     if args.exportVars:
-        _exportVars(paramFile, args.exportVars)
+        _exportVars(paramFile, args)
         return
 
     simId  = args.simId
@@ -470,8 +542,7 @@ def driver(args, tool):
     if runRoot:
         # TBD: write this to config file under [project] section
         setParam('MCS.Root', runRoot, section=projectName)
-        _logger.info('Please add "MCS.Root = %s" to your .pygcam.cfg file in the [%s] section.',
-                     runRoot, projectName)
+        _logger.info(f'Please add "MCS.Root = {runRoot}" to your .pygcam.cfg file in the [{projectName}] section.')
 
     runDir = getParam('MCS.RunDir', section=projectName)
 
@@ -495,7 +566,7 @@ def driver(args, tool):
     if trials:
         # Save a copy of the arguments used to create this simulation
         simDir = getSimDir(simId)
-        argSaveFile = '%s/gcamGenSimArgs.txt' % simDir
+        argSaveFile = f'{simDir}/gcamGenSimArgs.txt'
         saveDict(vars(args), argSaveFile)
 
 
@@ -516,7 +587,8 @@ class GensimCommand(McsSubcommandABC):
                             help=clean_help('A brief (<= 256 char) description the simulation.'))
 
         parser.add_argument('-e', '--exportVars', default='', metavar="CSVFILE",
-                            help=clean_help('Export variable and distribution info in a tab-delimited file with the given name and exit.'))
+                            help=clean_help('''Export variable and distribution info in a tab-delimited file with 
+                                the given name and exit.'''))
 
         parser.add_argument('-g', '--groupName', default='',
                             help=clean_help('''The name of a scenario group to process.'''))
@@ -534,15 +606,20 @@ class GensimCommand(McsSubcommandABC):
                             the chosen method's sampling method. If an outFile is not specified, a package
                             of the name 'data.sa' is created in the simulation run-time directory.'''))
 
+        paramFile = getParam('MCS.ParametersFile')
         parser.add_argument('-p', '--paramFile', default=None,
-                            help=clean_help('''Specify an XML file containing parameter definitions.
+                            help=clean_help(f'''Specify an XML file containing parameter definitions.
                             Defaults to the value of config parameter MCS.ParametersFile
-                            (currently %s)''' % getParam('MCS.ParametersFile')))
+                            (currently '{paramFile}')'''))
+
+        parser.add_argument('-P', '--paramPlots', default='', metavar="DIRECTORY",
+                            help=clean_help('''Export plots of values returned by XPath queries for each parameter 
+                                defined by --paramFile or config variable MCS.ParametersFile.'''))
 
         runRoot = getParam('MCS.Root')
         parser.add_argument('-r', '--runRoot', default=None,
-                            help=clean_help('''Root of the run-time directory for running user programs. Defaults to
-                            value of config parameter MCS.Root (currently %s)''' % runRoot))
+                            help=clean_help(f'''Root of the run-time directory for running user programs. Defaults to
+                            value of config parameter MCS.Root (currently '{runRoot}')'''))
 
         parser.add_argument('-S', '--calcSecondOrder', action='store_true',
                             help=clean_help('''For Sobol method only -- calculate second-order sensitivities.'''))

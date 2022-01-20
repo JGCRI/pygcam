@@ -41,20 +41,24 @@ class XMLConfigFile(XMLFile):
     '''
     instances = {}  # XMLConfigFile instances keyed by scenario name
 
-    def __init__(self, context, useCopy=False):
+    def __init__(self, context, useCopy=False, useRefConfig=False):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
-        self.context = context = copy(context)
-
-        if useCopy:
-            path = self.getBackupPath()
+        if useRefConfig:
+            from ..config import getParam
+            path = getParam('GCAM.RefConfigFile')
         else:
-            path = getSimConfigFile(context)
-            self.copyOriginal() # make a copy of the config file for use by runsim
+            self.context = context = copy(context)
 
-        # Default writePath is where we were read from.
-        self.writePath = path
+            if useCopy:
+                path = self.getBackupPath()
+            else:
+                path = getSimConfigFile(context)
+                self.copyOriginal() # make a copy of the config file for use by runsim
+
+            # Default writePath is where we were read from.
+            self.writePath = path
 
         super(XMLConfigFile, self).__init__(path)
 

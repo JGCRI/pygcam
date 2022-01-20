@@ -1137,7 +1137,7 @@ class XMLEditor(object):
 
     @callableMethod
     def setupSolver(self, solutionTolerance=None, broydenTolerance=None,
-                    maxModelCalcs=None, maxIterations=None, year=2015):
+                    maxModelCalcs=None, maxIterations=None, year=2020):
         """
         Set the model solution tolerance to the given values for the solver
         "driver" (`solutionTolerance`) and, optionally for the Broyden component

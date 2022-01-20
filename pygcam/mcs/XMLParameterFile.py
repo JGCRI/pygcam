@@ -30,6 +30,10 @@ PARAMLIST_ELT_NAME   = 'ParameterList'
 PARAM_ELT_NAME       = 'Parameter'
 QUERY_ELT_NAME       = 'Query'
 DESC_ELT_NAME        = 'Description'
+CATEGORY_ELT_NAME    = 'Category'
+NOTES_ELT_NAME       = 'Notes'
+EVIDENCE_ELT_NAME    = 'Evidence'
+RATIONALE_ELT_NAME   = 'Rationale'
 CORRELATION_ELT_NAME = 'Correlation'
 WITH_ELT_NAME        = 'With'
 DISTRO_ELT_NAME      = 'Distribution'
@@ -532,28 +536,43 @@ class XMLParameter(XMLWrapper):
         self.query   = None  # XMLQuery instance
         self.dataSrc = None  # A subclass of XMLTrialData instance
         self.parent  = None
-        self.desc    = ''    # documentation
+
+        # documentation fields
+        self.desc      = ''
+        self.evidence  = ''
+        self.rationale = ''
+        self.category  = ''
+        self.notes     = ''
 
         children = [elt for elt in element.getchildren() if elt.tag is not ET.Comment]
-        maxChildren = 4
-        assert len(children) <= maxChildren, \
-            "<Parameter> cannot have more than %d children. (The XMLSchema is broken.)" % maxChildren
 
         for elt in children:
             tag = elt.tag
+            text = elt.text
 
             if tag == QUERY_ELT_NAME:
                 self.query = XMLQuery(elt)
 
+            elif tag == DESC_ELT_NAME:
+                self.desc = text
+
+            elif tag == EVIDENCE_ELT_NAME:
+                self.evidence = text
+
+            elif tag == RATIONALE_ELT_NAME:
+                self.rationale = text
+
+            elif tag == CATEGORY_ELT_NAME:
+                self.category = text
+
+            elif tag == NOTES_ELT_NAME:
+                self.notes = text
+
             elif tag == CORRELATION_ELT_NAME:
                 XMLCorrelation.createCorrelations(elt, self)
 
-            elif tag == DESC_ELT_NAME:
-                self.desc = elt.text
-
             # XMLSchema ensures that the only other tag is Distribution
-            # TBD: test for DISTRIBUTION_ELT_NAME explicitly
-            else:
+            elif tag == DISTRO_ELT_NAME:
                 self.child = elt[0]
                 childName = self.child.tag
 
@@ -567,11 +586,15 @@ class XMLParameter(XMLWrapper):
 
                 self.dataSrc = cls(elt, self)
 
+            else:
+                # Schema validation should prevent this; just an extra precaution.
+                raise PygcamMcsUserError(f"Unexpected sub-element of <Parameter>: <{tag}>")
+
     @classmethod
     def saveInstance(cls, obj):
         name = obj.getName()
         if name in cls.instances:
-            raise PygcamMcsUserError("Error: attempt to redefine parameter '%s'" % name)
+            raise PygcamMcsUserError(f"Error: attempt to redefine parameter '{name}'")
 
         cls.instances[name] = obj
 

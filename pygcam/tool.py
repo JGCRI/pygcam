@@ -286,7 +286,7 @@ class GcamTool(object):
             else:
                 versionNum = getGcamVersion(exeDir)
 
-                # cache version number so we don't have to run 'gcam.exe --versionID' every time
+                # cache version number so we don't have to run 'gcam.exe --version' every time
                 with open(versionFile, 'w') as f:
                     f.write(versionNum + '\n')
 
