@@ -497,7 +497,7 @@ def _exportVars(paramFile, args):
     with open(outputFile, 'w', newline='') as f:
         import csv
 
-        writer = csv.writer(f)
+        writer = csv.writer(f, dialect='unix')
         writer.writerow(['Category', 'Name', 'Distribution', 'Application', 'Description', 'XPath', 'Evidence', 'Rationale', 'Notes'])
 
         for category, pname, p in sorted_params:
