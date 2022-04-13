@@ -27,6 +27,9 @@ class DiffCommand(SubcommandABC):
         parser.add_argument('-i', '--interpolate', action="store_true",
                             help=clean_help("Interpolate (linearly) annual values between timesteps."))
 
+        parser.add_argument('-l', '--splitLand', action="store_true",
+                            help=clean_help("Split 'Landleaf' or 'land_allocation' column to create 'land_use' and 'basin' columns in output CSV"))
+
         parser.add_argument('-o', '--outFile', default='differences.csv',
                             help=clean_help('''The name of the ".csv" or ".xlsx" file containing the differences
                             between each scenario and the reference. Default is "differences.csv".'''))

@@ -20,12 +20,12 @@ Also see project2.xml, which offers a slightly more complex example.
       not set (or set to any other value) the step is run for all scenarios.
        -->
       <step name="setup" runFor="baseline">
-        @setup -b {baseline} -g {scenarioGroup} -S {scenarioSubdir} -w {scenarioDir}
-        -p {endYear} -y {years}
+        @setup -b "{baseline}" -g "{scenarioGroup}" -S "{scenarioSubdir}" -w "{scenarioDir}"
+               -p {endYear} -y {years}
       </step>
-      <step name="gcam"  runFor="baseline">@gcam -s {baseline} -S {projectXmlDir} </step>
+      <step name="gcam"  runFor="baseline">@gcam -s "{baseline}" -S "{projectXmlDir}" </step>
       <step name="query" runFor="baseline">
-        @query -o {batchDir} -w {scenarioDir} -s {scenario} -q "{queryXmlFile}"
+        @query -o "{batchDir}" -w "{scenarioDir}" -s "{scenario}" -q "{queryXmlFile}"
       </step>
 
       <!--
@@ -33,8 +33,8 @@ Also see project2.xml, which offers a slightly more complex example.
         allow baseline results to be used in constraints
       -->
       <step name="setup" runFor="policy">
-            @setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir}
-            -w {scenarioDir} -p {endYear} -y {years}
+            @setup -b "{baseline}" -s "{scenario}" -g {scenarioGroup} -S "{scenarioSubdir}"
+                   -w "{scenarioDir}" -p {endYear} -y {years}
       </step>
       <step name="gcam"  runFor="policy">@gcam -s {scenario} -S {projectXmlDir}</step>
       <step name="query" runFor="policy">
@@ -45,15 +45,15 @@ Also see project2.xml, which offers a slightly more complex example.
         Compute and plot differences between query results for policy and baseline scenarios
       -->
       <step name="diff"  runFor="policy">
-        @diff -D {sandboxDir} -y {years} -q {queryXmlFile} {baseline} {scenario}
+        @diff -D "{sandboxDir}" -y {years} -q "{queryXmlFile}" "{baseline}" "{scenario}"
       </step>
       <step name="plotDiff" runFor="policy">
-        @chart {diffPlotArgs} --reference {baseline} --scenario {scenario} --fromFile {diffPlots}
+        @chart {diffPlotArgs} --reference "{baseline}" --scenario "{scenario}" --fromFile "{diffPlots}"
       </step>
 
       <!-- Generate an XLSX workbook from all CSV query result files -->
       <step name="xlsx"  runFor="policy">
-        @diff -D {diffsDir} -c -y {years} -o diffs.xlsx {diffsDir}/*.csv
+        @diff -D "{diffsDir}" -c -y {years} -o diffs.xlsx {diffsDir}/*.csv
       </step>
     </steps>
 
@@ -69,7 +69,7 @@ Also see project2.xml, which offers a slightly more complex example.
 
     <vars>
       <!-- common arguments for 'diffPlots' -->
-      <var name="diffPlotArgs" eval="1">-D {diffsDir} --outputDir figures --years {years} --label --ygrid --zeroLine</var>
+      <var name="diffPlotArgs" eval="1">-D "{diffsDir}" --outputDir figures --years {years} --label --ygrid --zeroLine</var>
     </vars>
 
     <tmpFile varName="diffPlots">

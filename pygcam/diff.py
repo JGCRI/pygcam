@@ -13,18 +13,22 @@ from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, 
 _logger = getLogger(__name__)
 
 
-def computeDifference(df1, df2, resetIndex=True, dropna=True, asPercentChange=False):
+def computeDifference(df1, df2, resetIndex=True, dropna=True,
+                      asPercentChange=False, splitLand=False):
     """
     Compute the difference between two DataFrames.
 
     :param df1: a pandas DataFrame instance
-    :param obj2: a pandas DataFrame instance
+    :param df2: a pandas DataFrame instance
     :param resetIndex: (bool) if True (the default), the index in the DataFrame
       holding the computed difference is reset so that data in non-year columns
       appear in individual columns. Otherwise, the index in the returned
       DataFrame is based on all non-year columns.
     :param dropna: (bool) if True, drop rows with NaN values after computing difference
     :param asPercentChange: (bool) if True, compute percent change rather than difference.
+    :param splitLand: (bool) whether to split 'Landleaf' column (if present) to create two
+      new columns, 'land_use' and 'basin'. Ignored if `resetIndex` is False.
+
     :return: a pandas DataFrame with the difference in all the year columns, computed
       as (df2 - df1) if asPercentChange is False, otherwise as (df2 - df1)/df1.
     """
@@ -60,7 +64,42 @@ def computeDifference(df1, df2, resetIndex=True, dropna=True, asPercentChange=Fa
         diff.dropna(inplace=True)
 
     if resetIndex:
+        LAND_LEAF = 'LandLeaf'
+        LAND_ALLOC = 'land_allocation'
+        LAND_USE = 'land_use'
+        BASIN = 'basin'
+        IRR_LEVEL = 'irr_level'
+        IRR_TYPE  = 'irr_type'
+        SOIL_TYPE  = 'soil_type'
+
         diff.reset_index(inplace=True)      # convert multi-index back to regular column values
+
+        # Only split 'Landleaf' / 'land_allocation' if we're resetting the index
+        if splitLand and LAND_LEAF in nonYearCols or LAND_ALLOC in nonYearCols:
+            # avoid overwriting existing columns of the target names
+            dupes = {LAND_USE, BASIN}.intersection(set(diff.columns))
+            if dupes:
+                _logger.warning(f"Ignoring request to split {LAND_LEAF} column. Target column(s) {dupes} already exist.")
+                return diff
+
+            land_col = LAND_LEAF if LAND_LEAF in nonYearCols else LAND_ALLOC
+            splits = diff[land_col].str.split('_', expand=True)
+            cols = splits.shape[1]
+            if cols < 2:
+                _logger.warning(f"Ignoring request to split {land_col} column. Expected split to produce at least 2 columns; got {cols}")
+                return diff
+
+            loc = len(nonYearCols)
+            if cols > 4:
+                diff.insert(loc, SOIL_TYPE, splits[4])
+                diff.loc[diff[SOIL_TYPE].isnull(), SOIL_TYPE] = 'Mineral'
+            if cols > 3:
+                diff.insert(loc, IRR_LEVEL, splits[3])
+            if cols > 2:
+                diff.insert(loc, IRR_TYPE, splits[2])
+
+            diff.insert(loc, BASIN, splits[1])
+            diff.insert(loc, LAND_USE, splits[0])
 
     return diff
 
@@ -70,7 +109,7 @@ def _label(referenceFile, otherFile, asPercentChange=False):
     return label.format(other=otherFile, ref=referenceFile)
 
 def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False,
-                    years=None, startYear=0, asPercentChange=False):
+                    years=None, startYear=0, asPercentChange=False, splitLand=False):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -100,14 +139,15 @@ def writeDiffsToCSV(outFile, referenceFile, otherFiles, skiprows=1, interpolate=
             otherDF   = readCsv(otherFile, skiprows=skiprows, interpolate=interpolate,
                                 years=years, startYear=startYear)
 
-            diff = computeDifference(refDF, otherDF, asPercentChange=asPercentChange)
+            diff = computeDifference(refDF, otherDF, asPercentChange=asPercentChange,
+                                     splitLand=splitLand)
             csvText = diff.to_csv(index=None)
             label = _label(referenceFile, otherFile, asPercentChange=asPercentChange)
             f.write("%s\n%s" % (label, csvText))    # csvText has "\n" already
 
 
 def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate=False,
-                     years=None, startYear=0, asPercentChange=False):
+                     years=None, startYear=0, asPercentChange=False, splitLand=False):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -146,7 +186,8 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
             sheetName = 'Diff%d' % sheetNum
             sheetNum += 1
 
-            diff = computeDifference(refDF, otherDF, asPercentChange=asPercentChange)
+            diff = computeDifference(refDF, otherDF, asPercentChange=asPercentChange,
+                                     splitLand=splitLand)
             diff.to_excel(writer, index=None, sheet_name=sheetName, startrow=2, startcol=0)
 
             worksheet = writer.sheets[sheetName]
@@ -165,7 +206,7 @@ def writeDiffsToXLSX(outFile, referenceFile, otherFiles, skiprows=1, interpolate
 
 
 def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, interpolate=False,
-                     years=None, startYear=0, asPercentChange=False):
+                     years=None, startYear=0, asPercentChange=False, splitLand=False):
     """
     Compute the differences between the data in a reference .CSV file and one or more other
     .CSV files as (other - reference), optionally interpolating annual values between
@@ -185,11 +226,14 @@ def writeDiffsToFile(outFile, referenceFile, otherFiles, ext='csv', skiprows=1, 
        results.
     :param startYear: (int) the year at which to begin interpolation, if interpolate is True.
        Defaults to the first year in `years`.
+    :param asPercentChange: (bool) whether to write diffs as percent change from baseline
+    :param splitLand: (bool) whether to split 'Landleaf' column (if present) to create two
+        new columns, 'land_use' and 'basin'.
     :return: none
     """
     writer = writeDiffsToCSV if ext == '.csv' else writeDiffsToXLSX
     writer(outFile, referenceFile, otherFiles, skiprows=skiprows, interpolate=interpolate,
-           years=years, startYear=startYear, asPercentChange=asPercentChange)
+           years=years, startYear=startYear, asPercentChange=asPercentChange, splitLand=splitLand)
 
 
 def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', createDir=False,
@@ -238,6 +282,7 @@ def diffMain(args):
     convertOnly = args.convertOnly
     skiprows    = args.skiprows
     interpolate = args.interpolate
+    splitLand   = args.splitLand
     groupSum    = args.groupSum
     sum         = args.sum
     queryFile   = args.queryFile
@@ -280,7 +325,7 @@ def diffMain(args):
 
             writeDiffsToFile(outFile, baselineFile, [policyFile], ext='.csv', skiprows=skiprows,
                              interpolate=interpolate, years=years, startYear=startYear,
-                             asPercentChange=asPercentChange)
+                             splitLand=splitLand, asPercentChange=asPercentChange)
     else:
         csvFiles = [ensureCSV(f) for f in args.csvFiles]
         referenceFile = csvFiles[0]
@@ -307,5 +352,5 @@ def diffMain(args):
 
         writeDiffsToFile(outFile, referenceFile, otherFiles, ext=ext, skiprows=skiprows,
                          interpolate=interpolate, years=years, startYear=startYear,
-                         asPercentChange=asPercentChange)
+                         splitLand=splitLand, asPercentChange=asPercentChange)
 

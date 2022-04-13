@@ -226,15 +226,15 @@ class InitCommand(SubcommandABC):
                            Mutually exclusive with -c / --create-project option.'''))
 
         parser.add_argument('-g', '--gcamDir',
-                            help=clean_help('''The directory that is a GCAM v4.x or v5.x
+                            help=clean_help('''The directory that is a GCAM v5.x or 4.x
                             workspace. Sets config var GCAM.RefWorkspace. By default,
-                            looks for gcam-v5.1.2 (then v4.4.1) in ~, ~/GCAM, and ~/gcam,
+                            looks for gcam-v5.4 (then known older versions) in ~, ~/GCAM, and ~/gcam,
                             ~/Documents/GCAM, and ~/Documents/gcam,  
                             where "~" indicates your home directory.'''))
 
         parser.add_argument('--overwrite', action='store_true',
                             help=clean_help('''Overwrite an existing config file. (Makes
-                            a backup first in ~/.pygcam.cfg~.)'''))
+                            a backup first in ~/.pygcam.cfg~).'''))
 
         parser.add_argument('-P', '--defaultProject',
                             help=clean_help('''Set the value of config var GCAM.DefaultProject to

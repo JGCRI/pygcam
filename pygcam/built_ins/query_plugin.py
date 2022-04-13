@@ -47,6 +47,10 @@ class QueryCommand(SubcommandABC):
                             help=clean_help('''The scenario group directory name, if any. Used with to compute default
                             for --workspace argument.'''))
 
+        parser.add_argument('-l', '--splitLand', action='store_true',
+                            help=clean_help('''Split the Landleaf column into "land_use" and "basin" columns and add 
+                            these to the output CSV'''))
+
         parser.add_argument('-n', '--noRun', action="store_true",
                             help=clean_help("Show the command to be run, but don't run it"))
 
