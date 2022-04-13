@@ -64,7 +64,7 @@ def genRankValues(params, trials, corrMat):
     vdwScores = stats.norm().ppf(strata)
 
     S = np.zeros((trials, params))
-    for i in xrange(params):
+    for i in range(params):
         np.random.shuffle(vdwScores)
         S[:, i] = vdwScores
 
@@ -75,7 +75,7 @@ def genRankValues(params, trials, corrMat):
     final = np.dot(np.dot(S, np.linalg.inv(Q).T), P.T)
 
     ranks = np.zeros((trials, params), dtype='i')
-    for i in xrange(params):
+    for i in range(params):
         ranks[:, i] = stats.rankdata(final[:, i])
 
     return ranks

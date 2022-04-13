@@ -293,7 +293,7 @@ class InitCommand(SubcommandABC):
             raise(e)
 
         # initialize configuration file
-        versionNum = getGcamVersion(pathjoin(gcamDir, 'exe'))
+        versionNum = getGcamVersion(pathjoin(gcamDir, 'exe'), preferPath=True)
         text = Template.format(dfltProject=dfltProject, gcamDir=gcamDir, versionNum=versionNum,
                                projectRoot=projectDir, sandboxRoot=sandboxDir)
 

@@ -24,11 +24,19 @@ PROGRAM = os.path.basename(__file__)
 _PathVersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
 _VersionFlagPattern = re.compile('GCAM version (\d+(\.\d+)+)')
 
-def getGcamVersion(exeDir):
+def getGcamVersion(exeDir, preferPath=False):
     '''
     Try to get GCAM version by running gcam with --version flag, but if that
     fails, try to extract it from the path.
     '''
+    if preferPath:
+        # See if the version is explicit in the path, e.g., "...-v5.1.3"
+        gcamDir = os.path.dirname(exeDir)
+        m = re.match(_PathVersionPattern, gcamDir)
+        if m:
+            return m.group(1)
+
+    # Try to run GCAM to have it report the version
     exeName = getParam('GCAM.Executable')
     exePath = pathjoin(exeDir, exeName)
 

@@ -1,3 +1,4 @@
+from .batch_plugin import BatchCommand
 from .building_plugin import BuildingCommand
 from .buildingElec_plugin import BuildingElecCommand
 from .transport_plugin import TransportCommand
@@ -20,8 +21,9 @@ from .compare_plugin import CompareCommand
 from .zev_plugin import ZEVCommand
 from.industry_plugin import IndustryCommand
 
-BuiltinSubcommands = [BuildingCommand, BuildingElecCommand, ChartCommand, CompareCommand,
-                      ConfigCommand, DiffCommand, GcamCommand, GUICommand, IndustryCommand,
+BuiltinSubcommands = [BatchCommand, BuildingCommand, BuildingElecCommand,
+                      ChartCommand, CompareCommand, ConfigCommand,
+                      DiffCommand, GcamCommand, GUICommand, IndustryCommand,
                       InitCommand, MCSCommand, ModelInterfaceCommand, NewProjectCommand,
-                      ProtectLandCommand, QueryCommand, RESCommand, RunCommand, SandboxCommand,
-                      SetupCommand, TransportCommand, ZEVCommand]
+                      ProtectLandCommand, QueryCommand, RESCommand, RunCommand,
+                      SandboxCommand, SetupCommand, TransportCommand, ZEVCommand]

@@ -77,7 +77,7 @@ class QueryCommand(SubcommandABC):
 
         parser.add_argument('-s', '--scenario', default='Reference',
                             help=clean_help('''The scenario to run the query/queries for (default is "Reference")
-                                    Note that this must refers to a scenarios in the XML database.'''))
+                                    Note that this must refer to a scenario in the XML database.'''))
 
         parser.add_argument('-S', '--rewriteSetsFile',
                             help=clean_help('''An XML file defining query maps by name (default taken from

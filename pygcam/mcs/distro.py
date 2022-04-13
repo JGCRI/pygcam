@@ -83,6 +83,7 @@ def lognormalRv(logMean, logStd):
     sigma = math.sqrt(math.log(logVar / mSqrd + 1))
     return lognormalRvForNormal(mu, sigma)
 
+# TBD: poorly documented... is this the 95% CI (2.5% to 97.5%?) or the 90% CI (5% to 95%)?
 def lognormalRvFor95th(lo, hi):
     '''
     Define a lognormal RV by its 95% CI.
@@ -93,7 +94,24 @@ def lognormalRvFor95th(lo, hi):
     sigma = (hi - mu) / 1.96  # 95th percentile of normal is (+/- 1.96) * sigma
     return lognormalRvForNormal(mu, sigma)
 
+# TBD: UNTESTED!
+def lognormalRvForIQR(q1, q3):
+    '''
+    Define a lognormal RV by its Q1 and Q3 values
+    '''
+    q1 = math.log(float(q1))
+    q3 = math.log(float(q3))
+    mu = (q1 + q3) / 2.0
+    iqr = q3 - q1
+    sigma = iqr / 1.34896
+    return lognormalRvForNormal(mu, sigma)
+
+
 def logfactor(factor):
+    """
+    Define a lognormal distribution assuming the 2.5% and 97.5% values
+    are 1/factor and factor, respectively.
+    """
     if factor < 1.0:
         raise PygcamMcsUserError("LogFactor 'factor' must be >= 1; a value of %f was given." % factor)
 
@@ -173,6 +191,20 @@ class sequence():
         arr = np.array(seq[:n])
         return arr
 
+class Empirical():
+    """
+    Create an empirical distribution and ppf from an array of observations.
+    """
+    def __init__(self, values):
+        self.values = sorted(values)
+        self.count = len(values)
+
+    def ppf(self, q):
+        values = self.values
+        n = len(values)
+        result = [values[int(n * percentile)] for percentile in q]
+        return result
+
 class GridRV(object):
     '''
     Return an object that behaves like an RV in that it returns N values when
@@ -198,7 +230,7 @@ class GridRV(object):
         count  = values.shape[0]
         reps   = 1 if n <= count else np.ceil(float(n) / count)
         tiled  = np.tile(values, reps)[:n]
-        np.random.shuffle(tiled)
+        np.random.shuffle(tiled)                # TBD: might be redundant as shuffle is called from LHS
         # _logger.debug("tiled=%s", tiled)
         return tiled
 
