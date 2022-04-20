@@ -23,7 +23,7 @@ Also see project2.xml, which offers a slightly more complex example.
         @setup -b "{baseline}" -g "{scenarioGroup}" -S "{scenarioSubdir}" -w "{scenarioDir}"
                -p {endYear} -y {years}
       </step>
-      <step name="gcam"  runFor="baseline">@gcam -s "{baseline}" -S "{projectXmlDir}" </step>
+      <step name="gcam"  runFor="baseline">@gcam -s "{baseline}" -S "{projectXmlDir}"</step>
       <step name="query" runFor="baseline">
         @query -o "{batchDir}" -w "{scenarioDir}" -s "{scenario}" -q "{queryXmlFile}"
       </step>
@@ -36,9 +36,9 @@ Also see project2.xml, which offers a slightly more complex example.
             @setup -b "{baseline}" -s "{scenario}" -g {scenarioGroup} -S "{scenarioSubdir}"
                    -w "{scenarioDir}" -p {endYear} -y {years}
       </step>
-      <step name="gcam"  runFor="policy">@gcam -s {scenario} -S {projectXmlDir}</step>
+      <step name="gcam"  runFor="policy">@gcam -s "{scenario}" -S "{projectXmlDir}"</step>
       <step name="query" runFor="policy">
-        @query -o {batchDir} -w {scenarioDir} -s {scenario} -q "{queryXmlFile}"
+        @query -o {batchDir} -w "{scenarioDir}" -s "{scenario}" -q "{queryXmlFile}"
       </step>
 
       <!--

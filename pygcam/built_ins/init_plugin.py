@@ -10,7 +10,7 @@ import os
 import six
 from six.moves import input
 
-from ..config import getHomeDir, pathjoin, unixPath
+from ..config import getConfig, getHomeDir, pathjoin, unixPath
 from ..subcommand import SubcommandABC, clean_help
 
 class AbortInput(Exception):
@@ -301,6 +301,9 @@ class InitCommand(SubcommandABC):
             f.write(text)
 
         print("Created %s with contents:\n\n%s" % (configPath, text))
+
+        # reload the config info in case we use it below
+        getConfig(reload=False)
 
         for path in (projectDir, sandboxDir):
             if not os.path.isdir(path):

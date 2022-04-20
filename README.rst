@@ -34,6 +34,31 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.11 (20 Apr 2022)
+----------------------------
+* Updated default files in system.cfg, Darwin.cfg (macOS) and Windows.cfg for GCAM 5.4
+* Fixed error in "gt init" subcommand
+* Various updates to MCS runtime system
+  * Added support for empirical distributions provide in CSV file
+  * Allow user to override the SLURM "afterok" specifier, i.e., to use "after", meaning run
+    policies even if baseline fails. Set using config parameter "SLURM.DependencyFlag".
+  * Added support for full-factorial simulations. All parameters must be defined using
+    distributions with fixed boundaries, i.e., 'Constant', 'Binary', 'Integers', 'Grid', or
+    'Sequence'.
+  * Updated docs to add reference to MCS subcommands on "gcamtool" page.
+  * Added XML schema elements for distribution metadata for parameters.xml file.
+  * Added option to gensim subcommand to generate CSV with metadata and distributions
+* Updated executable name in Windows to "gcam.exe" and macOS to "Release/gcam".
+* Added support for custom GCAM wrapper filter function to process lines of output from
+  GCAM, settable in config file as "GCAM.WrapperFilterFunction", which must be of the
+  format: GCAM.WrapperFilterFunction = /path/to/moduleDirectory:module.functionName
+* Added model_years() function to utils to retrieve list of model years defined in
+  modeltime.xml, and modified setup step to use model_years()
+* Created new subcommand "gt batch" to run batch query files directly.
+* Added support for splitting LandLeaf and land_allocation columns into land_use,
+  basin, irrigation, and soil type info.
+* Added quotes around file and directory arguments in example project.xml
+
 Version 1.10.2 (25 Jan 2021)
 ----------------------------
 * Updated default files in system.cfg for GCAM 5.3
