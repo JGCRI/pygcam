@@ -64,6 +64,12 @@ def uniformFactor(factor):
 
     return uniformMinMax(1 - factor, 1 + factor)
 
+def uniformLogfactor(logfactor):
+    if logfactor < 1.0:
+        raise PygcamMcsUserError("Uniform logfactor must be > 1.0; %f was given" % logfactor)
+
+    return uniformMinMax(1.0/logfactor, logfactor)
+
 #
 # Various ways to specify a lognormal random variable:
 #
@@ -303,6 +309,9 @@ class DistroGen(object):
 
         # factor=0.2 means Uniform(min=0.8, max=1.2); used with apply="multiply"
         cls('uniform', uniformFactor)
+
+        # logfactor=3 means Uniform(1/3, 3); used with apply="multiply"
+        cls('uniform', uniformLogfactor)
 
         # LogUniform distribution from 1/n to n, e.g., factor=3 => uniform(1/3, 3)
         cls('loguniform', lambda factor: uniformMinMax(min=1 / factor, max=factor))

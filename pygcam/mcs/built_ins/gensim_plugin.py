@@ -388,31 +388,51 @@ def _newsim(runWorkspace, trials):
 
 def _simplifyDistro(dataSrc):
     '''
-    Convert triangle distros declared with logfactor, factor, or range to min/mode/max
-    format for documentation purposes.
+    Convert uniform and triangle distros declared with logfactor, factor, or range to
+    min/mode/max format for documentation purposes.
     '''
-    if dataSrc.distroName == 'triangle':
-        argDict = dataSrc.argDict
-        keys = list(argDict.keys())
-        if len(keys) == 1:
-            key = keys[0]
-            value = argDict[key]
-            del argDict[key]
+    name = dataSrc.distroName
+    if not name in ('triangle', 'uniform'):
+        return
 
-            if key == 'factor':
-                argDict['min']  = 1 - value
-                argDict['mode'] = 1
-                argDict['max']  = 1 + value
+    argDict = dataSrc.argDict
+    keys = list(argDict.keys())
 
-            elif key == 'logfactor':
-                argDict['min']  = round(1.0/value, 3)
-                argDict['mode'] = 1
-                argDict['max']  = value
+    if len(keys) > 1:
+        return
 
-            elif key == 'range':
-                argDict['min']  = -value
-                argDict['mode'] = 0
-                argDict['max']  = value
+    key = keys[0]
+    value = argDict[key]
+    del argDict[key]
+
+    if name == 'triangle':
+        if key == 'factor':
+            argDict['min']  = 1 - value
+            argDict['mode'] = 1
+            argDict['max']  = 1 + value
+
+        elif key == 'logfactor':
+            argDict['min']  = round(1.0/value, 3)
+            argDict['mode'] = 1
+            argDict['max']  = value
+
+        elif key == 'range':
+            argDict['min']  = -value
+            argDict['mode'] = 0
+            argDict['max']  = value
+
+    elif name == 'uniform':
+        if key == 'factor':
+            argDict['min']  = 1 - value
+            argDict['max']  = 1 + value
+
+        elif key == 'logfactor':
+            argDict['min']  = round(1.0/value, 3)
+            argDict['max']  = value
+
+        elif key == 'range':
+            argDict['min']  = -value
+            argDict['max']  = value
 
 
 def _plot_values(values, paramName, plotsDir, bins=250, context='paper'):
@@ -464,7 +484,8 @@ def _exportVars(paramFile, args):
 
     outputFile = args.exportVars
     plotsDir   = args.paramPlots
-    mkdirs(plotsDir)
+    if plotsDir:
+        mkdirs(plotsDir)
 
     paramFileObj = XMLParameterFile(paramFile)
     params = list(chain.from_iterable(map(lambda x: x.parameters.values(), paramFileObj.inputFiles.values())))
