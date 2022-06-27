@@ -34,6 +34,11 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.11.1 (27 Jun 2022)
+----------------------------
+* Updated system.cfg to include input files for GCAM 5.4 and 6.0.
+* Note that pygcam has still not been tested against GCAM 6.0.
+
 Version 1.11 (20 Apr 2022)
 ----------------------------
 * Updated default files in system.cfg, Darwin.cfg (macOS) and Windows.cfg for GCAM 5.4
