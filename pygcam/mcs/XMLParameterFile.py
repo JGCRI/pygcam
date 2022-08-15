@@ -21,6 +21,7 @@ from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecErr
 from .util import mkdirs, loadObjectFromPath
 from .XML import XMLWrapper, findAndSave, getBooleanXML
 from .XMLConfigFile import XMLConfigFile
+from .XMLResultFile import XMLColumn, XMLConstraint, CONSTRAINT_ELT_NAME
 
 _logger = getLogger(__name__)
 
@@ -29,6 +30,7 @@ INFILE_ELT_NAME      = 'InputFile'
 PARAMLIST_ELT_NAME   = 'ParameterList'
 PARAM_ELT_NAME       = 'Parameter'
 QUERY_ELT_NAME       = 'Query'
+CSV_QUERY_ELT_NAME   = 'CsvQuery'
 DESC_ELT_NAME        = 'Description'
 CATEGORY_ELT_NAME    = 'Category'
 NOTES_ELT_NAME       = 'Notes'
@@ -100,7 +102,7 @@ class XMLCorrelation(XMLWrapper):
 
         corrMat = np.zeros((count, count), dtype=float)
 
-        for i in xrange(count):
+        for i in range(count):
             corrMat[i][i] = 1.0  # diagonal must be 1
 
         for corr in cls.instances:
@@ -187,6 +189,52 @@ class XMLQuery(XMLWrapper):
         found = tree.xpath(xpath)
         return found
 
+
+class CSVQuery(XMLWrapper):
+    """Wraps a <CsvQuery> element, which holds CSV query information."""
+    def __init__(self, element):
+        super(XMLQuery, self).__init__(element)
+
+        columnElt = element.find('Column')  # required by schema
+        self.column = XMLColumn(columnElt)
+
+        # Create the "where" clause to use with a DataFrame.query() on the results we'll read in
+        self.constraints = [XMLConstraint(item) for item in element.iterfind(CONSTRAINT_ELT_NAME)]
+        constraintStrings = list(filter(None, map(XMLConstraint.asString, self.constraints)))
+        self.whereClause = ' and '.join(constraintStrings)
+        self.matchConstraints = list(filter(lambda constraint: constraint.op in XMLConstraint.strMatch, self.constraints))
+
+    def stringMatch(self, df):
+        """
+        Handle any string matching constraints since these can't be handled in a df.query()
+        """
+        for constraint in self.matchConstraints:
+            df = constraint.stringMatch(df)
+
+        return df
+
+    def select_indices(self, item_name, df):
+        # apply (in)equality constraints
+        selected = df.query(self.whereClause) if self.whereClause else df
+
+        # apply string matching constraints
+        selected = self.stringMatch(selected)
+
+        count = len(selected)
+        if count == 0:
+            raise PygcamMcsUserError(f"DataFrame query for '{item_name}' matched no items")
+
+        _logger.debug(f"Matched {count} rows from DataFrame for '{item_name}'")
+        return selected.index
+
+    def runQuery(self, tree):
+        """
+        Run a query on a CSV file to find the element in the given column that
+        meets the given constraints.
+        """
+        xpath = self.getXPath()
+        found = tree.xpath(xpath)
+        return found
 
 class XMLTrialData(XMLWrapper):
     """
@@ -373,6 +421,14 @@ class XMLDataFile(XMLTrialData):
     A single data file can hold vectors of values for multiple Parameters; this
     way the file is loaded only once. This can be used to load pre-generated
     trial data, e.g. exported from other software.
+
+    Two different file formats are recognized. If the filename ends in '.tsv',
+    the file is assumed to be tab-delimited and the first column is treated as the
+    index, though the numbering is reset. If the filename doesn't end in '.tsv',
+    it's assumed to be a CSV file with no index present, just data columns.
+
+    The reason for this difference is to support the legacy approach (.tsv) as
+    well as a new approach.
     """
     cache = OrderedDict()
 
@@ -387,8 +443,11 @@ class XMLDataFile(XMLTrialData):
         if pathname in cls.cache:
             return cls.cache[pathname]
 
-        df = pd.read_table(pathname, sep='\t', index_col=0)
-        df.reset_index(inplace=True)
+        if pathname.endswith('.tsv'):
+            df = pd.read_table(pathname, sep='\t', index_col=0)
+            df.reset_index(inplace=True)
+        else:
+            df = pd.read_csv(pathname, index_col=False)
         cls.cache[pathname] = df
         return df
 
@@ -410,7 +469,8 @@ class XMLDataFile(XMLTrialData):
         count  = len(args[0])
 
         if name not in self.df:
-            raise PygcamMcsUserError("Variable '%s' was not found in '%s'" % self.getFilename())
+            filename = self.getFilename()
+            raise PygcamMcsUserError(f"Variable '{name}' was not found in '{filename}'")
 
         vector = self.df[name]
 
@@ -571,20 +631,25 @@ class XMLParameter(XMLWrapper):
             elif tag == CORRELATION_ELT_NAME:
                 XMLCorrelation.createCorrelations(elt, self)
 
-            # XMLSchema ensures that the only other tag is Distribution
             elif tag == DISTRO_ELT_NAME:
                 self.child = elt[0]
                 childName = self.child.tag
+
+                src_elt = elt # for all but XMLDataFile
 
                 # Handle the two special cases:
                 if childName == PYTHON_FUNC_ELT:
                     cls = XMLPythonFunc
                 elif childName == DATAFILE_ELT:
                     cls = XMLDataFile
+                    src_elt = self.child
                 else:
                     cls = XMLDistribution   # child provides distro parameters
 
-                self.dataSrc = cls(elt, self)
+                self.dataSrc = cls(src_elt, self)
+
+            elif tag == CSV_QUERY_ELT_NAME:
+                self.query = CSVQuery(elt)
 
             else:
                 # Schema validation should prevent this; just an extra precaution.
@@ -788,6 +853,9 @@ class XMLInputFile(XMLWrapper):
     different versions of the file for this name in different scenarios. Each instance
     of XMLInputFile holds a set of XMLRelFile instances which each represent an actual
     GCAM input file. Each of these may be referenced from multiple scenarios.
+
+    Also supports generating trial data to be used with CSV files in the GCAM data system.
+    In this case use <InputFile name="whatever" type="csv">
     """
 
     # Maps a relative filename to an XMLRelFile objects that holds the parsed XML.
@@ -812,6 +880,7 @@ class XMLInputFile(XMLWrapper):
         self.xmlFiles = []
         self.writeFuncs = OrderedDict()    # keyed by funcRef; values are loaded fn objects
         self.writeFuncDir = None
+        self.fileType = element.get('type', 'xml')
 
         # User can define functions to call before writing modified XML files.
         # Write function specification is of the form "myPackage.myModule.myFunc".
@@ -874,6 +943,9 @@ class XMLInputFile(XMLWrapper):
         """
         import copy
 
+        if self.fileType != 'xml':
+            return
+
         compName = self.getComponentName()  # an identifier in the config file, e.g., "land2"
 
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
@@ -908,6 +980,9 @@ class XMLInputFile(XMLWrapper):
         Run the queries for all the parameters in this <InputFile> on each of
         the physical XMLRelFiles associated with this XMLInputFile.
         """
+        if self.fileType != 'xml':
+            return
+
         for param in self.parameters.values():
             if not param.isActive():
                 continue
