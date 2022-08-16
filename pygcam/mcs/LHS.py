@@ -128,7 +128,8 @@ def lhs(paramList, trials, corrMat=None, columns=None, skip=None):
 
         if corrMat is None:
             # Sequence is a special case for which we don't shuffle (and we ignore stratified sampling)
-            if param.param.dataSrc.distroName != 'sequence':
+            dataSrc = param.param.dataSrc
+            if hasattr(dataSrc, 'distroName') and dataSrc.distroName != 'sequence':
                 np.random.shuffle(values)  # randomize the stratified samples
         else:
             indices = ranks[:, i] - 1  # make them 0-relative

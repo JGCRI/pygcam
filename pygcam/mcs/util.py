@@ -13,7 +13,7 @@ from inspect import stack, getargspec
 
 from pygcam.config import getParam, getParamAsInt
 from pygcam.log import getLogger
-from pygcam.utils import mkdirs, createTrialString, chunkify
+from pygcam.utils import mkdirs
 
 from .constants import COMMENT_CHAR
 from .context import getSimDir
@@ -428,3 +428,26 @@ def getRunQueryDir():
 
     path = os.path.join(workspace, QueryDirName)
     return path
+
+def hardlink_directory_contents(src_dir, dst_dir):
+    """
+    Recursively hard link all files in the source directory ``src_dir`` in the
+    destination directory ``dst_dir``. Subdirectories are created in the same
+    relative location in ``dst_dir``, and all files are linked.
+
+    :param src_dir: (str or pathlib.Path) the directory to create links to
+    :param dst_dir: (str or pathlib.Path) the directory in which to create links
+    :return: none
+    """
+    mkdirs(dst_dir)
+
+    src_dir_len = len(src_dir)
+
+    for item in os.scandir(src_dir):
+        rel_path = item.path[src_dir_len:]
+        dst_abs_path = dst_dir + rel_path
+
+        if item.is_dir():
+            hardlink_directory_contents(item.path, dst_abs_path)
+        else:
+            os.link(item.path, dst_abs_path, follow_symlinks=True)
