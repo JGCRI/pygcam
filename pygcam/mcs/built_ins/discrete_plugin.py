@@ -1,7 +1,7 @@
 # Copyright (c) 2016 Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.log import getLogger
+from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC
 
 from ..error import DistributionSpecError
@@ -28,7 +28,6 @@ def getDiscreteDistFromData(data, bins=30):
     """
     import numpy as np
     from math import ceil, floor
-    from six import iteritems
     from ..error import DistributionSpecError
 
     if bins <= 0 or int(bins) != bins:
@@ -48,7 +47,7 @@ def getDiscreteDistFromData(data, bins=30):
     if binSize * bins == dataRange:
         binSize += 1
     size = 0
-    for key, cnt in iteritems(data):
+    for key, cnt in data.items():
         dataArray[int(floor((key - minData) / binSize))] += cnt  # divide by size so results sum to 1
         size += cnt
 

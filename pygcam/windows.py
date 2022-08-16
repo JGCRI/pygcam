@@ -3,7 +3,6 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from __future__ import print_function
 import os
 import platform
 from errno import EEXIST
@@ -16,7 +15,7 @@ if IsWindows:
 
     import ctypes
     import win32file
-    from pygcam.error import PygcamException
+    from .error import PygcamException
 
     # From http://stackoverflow.com/questions/8231719/how-to-check-whether-a-file-is-open-and-the-open-status-in-python
     _sopen = ctypes.cdll.msvcrt._sopen
@@ -135,7 +134,7 @@ if IsWindows:
             if csl(dst, src, flags) == 0:
                 raise ctypes.WinError()
         except Exception as e:
-            from pygcam.log import getLogger
+            from .log import getLogger
             _logger = getLogger(__name__)
 
             if getParamAsBoolean('GCAM.SymlinkWarning'):
@@ -248,14 +247,6 @@ if IsWindows:
 
     REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
 
-    # def islinkWindows(path):
-    #     """ Windows islink implementation. """
-    #     import six
-    #
-    #     if not os.path.lexists(path):
-    #         return False
-    #
-    #     return win32file.GetFileAttributesW(six.u(path)) & REPARSE_FOLDER == REPARSE_FOLDER
 
     def islinkWindows2(path):
         if not os.path.lexists(path):
@@ -277,7 +268,7 @@ if IsWindows:
                                            FILE_FLAG_BACKUP_SEMANTICS,
                                            None)
         if reparse_point_handle == INVALID_HANDLE_VALUE:
-            from pygcam.log import getLogger
+            from .log import getLogger
             _logger = getLogger(__name__)
             _logger.info("Can't readlink: %s", path)
             raise ctypes.WinError()

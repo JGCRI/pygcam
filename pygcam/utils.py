@@ -262,7 +262,7 @@ def queueForStream(stream):
        presumably a pipe from a subprocess
     :return: (int) a file descriptor for the socket to read from.
     """
-    from six.moves.queue import Queue
+    from queue import Queue
     from threading import Thread
 
     def enqueue(stream, queue):

@@ -9,12 +9,9 @@
 '''
 This module includes contributions by Sam Fendell and Ryan Jones.
 '''
-from __future__ import print_function
 from collections import Iterable
 from contextlib import contextmanager
 from datetime import datetime
-from six import string_types, iteritems, MAXSIZE
-from six.moves import xrange
 import sys
 
 from sqlalchemy import create_engine, Table, Column, String, Float, text, MetaData, event
@@ -22,10 +19,9 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, load_only
 from sqlalchemy.orm.exc import NoResultFound
-#from sqlalchemy.pool import QueuePool
 
-from pygcam.config import getSection, getParam, getParamAsBoolean
-from pygcam.log import getLogger
+from ..config import getSection, getParam, getParamAsBoolean
+from ..log import getLogger
 
 from . import util as U
 from .constants import RegionMap
@@ -129,7 +125,7 @@ def parseSqlScript(filename=None, text=None):
       rather than the filename
     :return: (list of str) the individual statements
     '''
-    from six.moves import StringIO
+    from io import StringIO
 
     if not (filename or text):
         raise PygcamMcsSystemError('Called parseSqlScript with neither filename nor text')
@@ -569,7 +565,7 @@ class CoreDatabase(object):
 
         session = self.Session()
 
-        limit = MAXSIZE if limit is None or limit <= 0 else limit
+        limit = sys.maxsize if limit is None or limit <= 0 else limit
 
         # This is essentially this query, but with "JOIN xx ON" syntax generated:
         #   select r.trialNum, v.value from run r, outvalue v, experiment e, output o
@@ -761,10 +757,10 @@ class CoreDatabase(object):
     def getRunsWithStatus(self, simId, expList, statusList):
         # Allow expList and statusList to be a single string,
         # which we convert to lists
-        if isinstance(expList, string_types):
+        if isinstance(expList, str):
             expList = [expList]
 
-        if isinstance(statusList, string_types):
+        if isinstance(statusList, str):
             statusList = [statusList]
 
         session = self.Session()
@@ -791,7 +787,7 @@ class CoreDatabase(object):
         '''
         from .context import Context
 
-        if isinstance(statusList, string_types):
+        if isinstance(statusList, str):
             statusList = [statusList]
 
         if len(statusList) == 0:
@@ -848,7 +844,7 @@ class CoreDatabase(object):
         :return: (list of int) trial numbers of missing trials
         """
         count = self.getTrialCount(simId)
-        possible = set(xrange(count))
+        possible = set(range(count))
 
         df = self.getRunInfo(simId, scenario, includeSucceededRuns=True, asDataFrame=True)
         present = set() if df is None else set(df.trialNum)
@@ -1121,7 +1117,7 @@ class GcamDatabase(CoreDatabase):
         # TBD: read region map from file identified in config file, or use default values
         # For now, use default mapping
         with self.sessionScope() as session:
-            for name, regId in iteritems(regionMap):
+            for name, regId in regionMap.items():
                 self.addRegion(regId, name, session=session)
 
     def addRegion(self, regionId, name, session=None):
@@ -1236,7 +1232,7 @@ class GcamDatabase(CoreDatabase):
 
         ts = TimeSeries(runId=runId, outputId=outputId, regionId=regionId, units=units)
 
-        for name, value in iteritems(values):  # Set the values for "year" columns
+        for name, value in values.items():  # Set the values for "year" columns
             setattr(ts, name, value)
 
         sess.add(ts)

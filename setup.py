@@ -1,4 +1,3 @@
-import sys
 from pygcam.version import VERSION
 
 # Build the full version with MCS on when running on ReadTheDocs.
@@ -14,42 +13,25 @@ from pygcam.version import VERSION
 
 from setuptools import setup
 
-py2_deps = [
-    'configparser>=3.5.0',     # backport of python 3.5 version
-    'futures>=3.2.0',
-    'ipython<6.0',
-    'tornado<6.0',
-]
-
-py3_deps = [
-    'ipython>=6.5',
-    'tornado>=5.1',
-]
-
-common_deps = [
-    'future>=0.16.0',
-    'lxml>=4.2.5',
-    'numpy>=1.15.2',
-    'pandas>=0.23.3',
-    'seaborn>=0.9.0',
-    'semver>=2.8.1',
-    'six>=1.11.0',
-    'sphinx-argparse>=0.2.1',
-
-    # GUI requirements
-    'flask>=1.0.2',
-    'dash>=1.4.1',
-    'dash-core-components>=1.3.1',
-    'dash-html-components>=1.0.1',
-    'dash-renderer>=1.1.2',
-
-    # MCS requirements
+requirements = [
+    'dash',
+    'flask',
+    'ipython',
+    'ipyparallel',
+    'lxml',
+    'matplotlib',
+    'numpy',
+    'pandas',
+    'plotly',
+    'requests',
+    'scipy',
+    'seaborn',
+    'semver',
+    'sphinx-argparse',
+    'sphinx-rtd-theme',
     # 'salib>=1.1.3',
-    'scipy>=1.1.0',
-    'sqlalchemy>=1.2.12',
+    'sqlalchemy',
 ]
-
-requirements = common_deps + (py3_deps if sys.version_info.major == 3 else py2_deps)
 
 long_description = '''
 pygcam
@@ -96,7 +78,7 @@ Who do I talk to?
 setup(
     name='pygcam',
     version=VERSION,
-    description='Python (2 and 3) library and scripts for interfacing with GCAM',
+    description='Python 3 library and scripts for interfacing with GCAM',
     platforms=['Windows', 'MacOS', 'Linux'],
 
     packages=['pygcam'],

@@ -2,13 +2,11 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from __future__ import print_function
 import os
 import sys
 import platform
 import re
 from pkg_resources import resource_string
-from six import iteritems
 
 if sys.version_info.major == 2:
     from backports import configparser
@@ -352,7 +350,7 @@ def readConfigFiles(allowMissing=False):
     _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER', 'unknown'))
 
     # Create vars from environment variables as '$' + variable name, as in the shell
-    for name, value in iteritems(os.environ):
+    for name, value in os.environ.items():
         value = value.replace(r'%', r'%%')
         _ConfigParser.set(DEFAULT_SECTION, '$' + name, value)
 

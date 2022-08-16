@@ -7,7 +7,7 @@ def driver(args, tool):
     """
     Start ipyparallel engines.
     """
-    from pygcam.config import getParam
+    from ...config import getParam
     from ..master import startEngines, templatePath
 
     scheduler = getParam('IPP.Scheduler')
@@ -21,7 +21,7 @@ class EngineCommand(McsSubcommandABC):
         super(EngineCommand, self).__init__('engine', subparsers, kwargs)
 
     def addArgs(self, parser):
-        from pygcam.config import getParam #, getParamAsInt
+        from ...config import getParam #, getParamAsInt
 
         # defaultQueue     = getParam('IPP.Queue')
         defaultProfile   = getParam('IPP.Profile')

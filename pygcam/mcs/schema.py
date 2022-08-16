@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import (Column, Integer, String, Float, Boolean,
                         ForeignKey, DateTime, UniqueConstraint, Index)
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
-from pygcam.log import getLogger
+from ..log import getLogger
 
 _logger = getLogger(__name__)
 

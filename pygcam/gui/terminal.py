@@ -1,8 +1,7 @@
-from __future__ import print_function
 import subprocess as subp
 import time
 
-from pygcam.log import getLogger
+from ..log import getLogger
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, Event

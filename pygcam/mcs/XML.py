@@ -8,7 +8,7 @@
 # Note: Useful doc: http://infohost.nmt.edu/tcc/help/pubs/pylxml/web/index.html
 
 from lxml import etree as ET
-from pygcam.log import getLogger
+from ..log import getLogger
 from .error import PygcamMcsUserError, PygcamMcsSystemError
 
 _logger = getLogger(__name__)

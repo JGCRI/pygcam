@@ -4,19 +4,19 @@ import os
 import time
 import ipyparallel as ipp
 
-from pygcam.config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
-from pygcam.error import GcamError, GcamSolverError
-from pygcam.log import getLogger, configureLogs
-from pygcam.signals import (catchSignals, TimeoutSignalException, UserInterruptException)
-from pygcam.utils import mkdirs
+from ..config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
+from ..error import GcamError, GcamSolverError
+from ..log import getLogger, configureLogs
+from ..signals import (catchSignals, TimeoutSignalException, UserInterruptException)
+from ..utils import mkdirs
 
-from pygcam.mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
-from pygcam.mcs.context import Context
-from pygcam.mcs.error import PygcamMcsUserError, GcamToolError
-from pygcam.mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
+from ..mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
+from ..mcs.context import Context
+from ..mcs.error import PygcamMcsUserError, GcamToolError
+from ..mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
-from pygcam.mcs.util import readTrialDataFile, symlink
-from pygcam.mcs.XMLParameterFile import XMLParameter, XMLParameterFile, decache
+from ..mcs.util import readTrialDataFile, symlink
+from ..mcs.XMLParameterFile import XMLParameter, XMLParameterFile, decache
 
 _logger = getLogger(__name__)
 
@@ -31,7 +31,7 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     run "gt +P {project} --mcs=trial run -s {step[,step,...]} -S {scenarioName} ..."
     For Monte Carlo trials.
     """
-    import pygcam.tool
+    from ..tool import main as tool_main
 
     runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
 
@@ -46,7 +46,7 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
 
     command = 'gt ' + ' '.join(toolArgs)
     _logger.debug('Running: %s', command)
-    status = pygcam.tool.main(argv=toolArgs, raiseError=True)
+    status = tool_main(argv=toolArgs, raiseError=True)
     msg = '"%s" exited with status %d' % (command, status)
 
     if status != 0 and raiseError:
@@ -56,7 +56,7 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     return status
 
 def _readParameterInfo(context, paramPath):
-    from pygcam.xmlSetup import ScenarioSetup
+    from ..xmlSetup import ScenarioSetup
 
     scenarioFile  = getParam('GCAM.ScenarioSetupFile')
     scenarioSetup = ScenarioSetup.parse(scenarioFile)
@@ -345,13 +345,13 @@ def runTrial(context, argDict):
     return result
 
 
-if __name__ == '__main__':
-    context = Context(runId=1001, simId=1, trialNum=2, scenario='baseline',
-                      projectName='paper1', groupName='mcs', store=False)
-
-    argDict = {'runLocal': True,
-               'noGCAM': False,
-               'noBatchQueries': False,
-               'noPostProcessor': False}
-    result = runTrial(context, argDict)
-    print(result)
+# if __name__ == '__main__':
+#     context = Context(runId=1001, simId=1, trialNum=2, scenario='baseline',
+#                       projectName='paper1', groupName='mcs', store=False)
+#
+#     argDict = {'runLocal': True,
+#                'noGCAM': False,
+#                'noBatchQueries': False,
+#                'noPostProcessor': False}
+#     result = runTrial(context, argDict)
+#     print(result)

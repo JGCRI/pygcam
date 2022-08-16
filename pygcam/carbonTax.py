@@ -1,8 +1,8 @@
 '''
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from pygcam.utils import getRegionList
+from .utils import getRegionList
 
 fixedTaxTemplate = '                <fixedTax year="{year}">{tax}</fixedTax>'
 

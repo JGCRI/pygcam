@@ -1,14 +1,13 @@
-from __future__ import print_function
 from collections import OrderedDict
 
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-from pygcam.tool import GcamTool
-from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
-from pygcam.gui.actions import actionTable, getActionInstance
+from ..tool import GcamTool
+from ..log import getLogger
+from ..subcommand import SubcommandABC
+from ..gui.actions import actionTable, getActionInstance
 
 _logger = getLogger(__name__)
 

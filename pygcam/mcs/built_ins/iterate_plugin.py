@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.log import getLogger
+from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -13,8 +13,7 @@ def driver(args, tool):
     scenario, simDir, trialDir, and scenarioDir.
     """
     from subprocess import call
-    from six.moves import xrange
-    from pygcam.config import getSection
+    from ...config import getSection
 
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
@@ -34,7 +33,7 @@ def driver(args, tool):
     else:
         db = getDatabase()
         count = db.getTrialCount(simId)
-        trials = xrange(count)
+        trials = range(count)
 
     # TBD: Add groupName
     context = Context(projectName=projectName, simId=simId, scenario=scenario)

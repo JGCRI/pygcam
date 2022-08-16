@@ -6,7 +6,6 @@
 .. Copyright (c) 2015 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-from __future__ import print_function
 from copy import copy
 import glob
 import os
@@ -385,7 +384,7 @@ class Project(XMLFile):
 
     @classmethod
     def defaultGroupName(cls):
-        from pygcam.config import getParam
+        from .config import getParam
         projectName = getParam('GCAM.ProjectName')
         obj = cls.readProjectFile(projectName)
         return obj.scenarioSetup.defaultGroup

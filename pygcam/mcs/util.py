@@ -1,19 +1,17 @@
 # @author: Richard Plevin
 # @author: Sam Fendell
 #
-# Copyright (c) 2012-2015. The Regents of the University of California (Regents)
+# Copyright (c) 2012-2022. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
 # TBD: eliminate redundancies with pygcam
 
-from __future__ import with_statement, print_function
-
 import os
 from inspect import stack, getargspec
 
-from pygcam.config import getParam, getParamAsInt
-from pygcam.log import getLogger
-from pygcam.utils import mkdirs
+from ..config import getParam, getParamAsInt
+from ..log import getLogger
+from ..utils import mkdirs
 
 from .constants import COMMENT_CHAR
 from .context import getSimDir
@@ -357,6 +355,23 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
+def createTrialString(lst):
+    '''
+    Assemble a list of numbers into a compact list using hyphens to identify ranges.
+    This reverses the operation of parseTrialString
+    '''
+    from itertools import groupby   # lazy import
+    from operator  import itemgetter
+
+    lst = sorted(set(lst))
+    ranges = []
+    for _, g in groupby(enumerate(lst), lambda i, x: i - x):
+        group = map(lambda x: str(itemgetter(1)(x)), g)
+        if group[0] == group[-1]:
+            ranges.append(group[0])
+        else:
+            ranges.append(group[0] + '-' + group[-1])
+    return TRIAL_STRING_DELIMITER.join(ranges)
 
 def saveDict(d, filename):
     with open(filename, 'w') as f:

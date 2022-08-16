@@ -1,5 +1,4 @@
-from __future__ import print_function
-from pygcam.matplotlibFix import plt
+from ..matplotlibFix import plt
 
 import pandas as pd
 from pandas.plotting import parallel_coordinates

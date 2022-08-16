@@ -1,7 +1,7 @@
-# Copyright (c) 2017  Richard Plevin
+# Copyright (c) 2017-2022 Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.subcommand import SubcommandABC, clean_help
+from ...subcommand import SubcommandABC, clean_help
 
 class McsSubcommandABC(SubcommandABC):
     def __init__(self, name, subparsers, kwargs, label=None, guiSuppress=False):
@@ -10,7 +10,7 @@ class McsSubcommandABC(SubcommandABC):
         if help:
             if not help.startswith(prefix):
                 help = prefix + help
-                
+
             kwargs['help'] = clean_help(help)
 
         super(McsSubcommandABC, self).__init__(name, subparsers, kwargs, group='mcs',

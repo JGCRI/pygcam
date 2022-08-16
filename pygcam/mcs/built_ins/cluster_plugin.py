@@ -28,7 +28,7 @@ class ClusterCommand(McsSubcommandABC):
         super(ClusterCommand, self).__init__('cluster', subparsers, kwargs)
 
     def addArgs(self, parser):
-        from pygcam.config import getParam, getParamAsFloat, getParamAsInt
+        from ...config import getParam, getParamAsFloat, getParamAsInt
 
         defaultProfile     = getParam('IPP.Profile')
         defaultClusterId   = getParam('IPP.ClusterId')

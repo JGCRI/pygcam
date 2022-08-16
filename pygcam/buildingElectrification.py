@@ -1,4 +1,4 @@
-from pygcam.log import getLogger
+from .log import getLogger
 
 _logger = getLogger(__name__)
 
@@ -28,7 +28,7 @@ SecondaryInput_template = """
 Subsector_template = """
         <subsector name="{subsector}">{technologyElts}
         </subsector>"""
-        
+
 Technology_template = """
           <stub-technology name="{technology}">{periodElts}
           </stub-technology>"""
@@ -122,18 +122,18 @@ def generate_building_elec_xml(csv_path, xml_path):
 
                 subsector_elts = []
                 for (subsector, technology_dict) in subsector_dict.items():
-                    
+
                     technology_elts=[]
                     for (technology, period_dict) in technology_dict.items():
-                        
+
                         period_elts = []
                         for (year, coefficient) in period_dict.items():
                             policy = "BuildingElec-{}-{}-{}".format(market, technology, year)
                             secondaryInput = SecondaryInput_template.format(policy=policy) if subsector == 'electricity' else ''
-                            period_elts.append(emit_supply_year(market, year, policy, coefficient, secondaryInput))    
+                            period_elts.append(emit_supply_year(market, year, policy, coefficient, secondaryInput))
 
                             policy_elts[policy] = emit_policy_year(market, year, policy)   # avoids duplicates since policy name is reused
-                            
+
                         technology_elts.append(emit_technology(technology,period_elts))
 
                     subsector_elts.append(emit_subsector(subsector, technology_elts))
@@ -144,9 +144,9 @@ def generate_building_elec_xml(csv_path, xml_path):
 
         f.write(emit_policy_file(region_elts))
 
-if __name__ == '__main__':
-    dir_path = '/tmp/'
-    csv_path = dir_path + 'building-elec-template.csv'
-    xml_path = dir_path + 'building-elec-policy.xml'
-
-    generate_building_elec_xml(csv_path, xml_path)
+# if __name__ == '__main__':
+#     dir_path = '/tmp/'
+#     csv_path = dir_path + 'building-elec-template.csv'
+#     xml_path = dir_path + 'building-elec-policy.xml'
+#
+#     generate_building_elec_xml(csv_path, xml_path)

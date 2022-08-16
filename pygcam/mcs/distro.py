@@ -3,7 +3,7 @@
 # @author: Rich Plevin
 # @author: Sam Fendell
 #
-# Copyright (c) 2012-2015. The Regents of the University of California (Regents)
+# Copyright (c) 2012-2022. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 '''
 This module is based on code originally developed by Sam Fendell.
@@ -15,7 +15,7 @@ from inspect import getargspec
 import numpy as np
 from scipy.stats import lognorm, triang, uniform, norm, rv_discrete
 
-from pygcam.log import getLogger
+from ..log import getLogger
 from .error import PygcamMcsUserError
 
 _logger = getLogger(__name__)

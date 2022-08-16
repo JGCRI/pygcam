@@ -1,15 +1,12 @@
-# Copyright (c) 2016  Richard Plevin
+# Copyright (c) 2016-2022  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
-
-from __future__ import print_function
-
-from pygcam.log import getLogger
+from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
 def driver(args, tool):
-    from pygcam.project import Project
+    from ...project import Project
     from ..master import Master, pidFileExists, startCluster, getTrialsToRedo
     from ..Database import getDatabase
     from ..util import parseTrialString
@@ -64,8 +61,8 @@ class RunSimCommand(McsSubcommandABC):
         super(RunSimCommand, self).__init__('runsim', subparsers, kwargs)
 
     def addArgs(self, parser):
-        from pygcam.config import getParam, getParamAsInt, getParamAsFloat
-        from pygcam.utils import ParseCommaList
+        from ...config import getParam, getParamAsInt, getParamAsFloat
+        from ...utils import ParseCommaList
 
         defaultProfile    = getParam('IPP.Profile')
         defaultClusterId  = getParam('IPP.ClusterId')
@@ -182,7 +179,7 @@ class RunSimCommand(McsSubcommandABC):
 
         if args.statuses:
             from ..Database import RUN_STATUSES
-            from pygcam.error import CommandlineError
+            from ...error import CommandlineError
 
             statusSet = set(args.statuses)
             known = set(RUN_STATUSES)

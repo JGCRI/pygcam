@@ -1,13 +1,13 @@
 '''
 .. The "gt" (gcamtool) commandline program
 
-.. Copyright (c) 2017 Richard Plevin
+.. Copyright (c) 2017-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-from pygcam.config import getParam, getParamAsInt
-from pygcam.utils import mkdirs
-from pygcam.project import Project
+from ..config import getParam, getParamAsInt
+from ..utils import mkdirs
+from ..project import Project
 from .error import PygcamMcsUserError
 
 # def _getJobNum():

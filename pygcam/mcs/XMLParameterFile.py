@@ -1,6 +1,7 @@
 # Created on July 5, 2013
 #
-# Copyright (c) 2013-2017. The Regents of the University of California (Regents).
+# Copyright (c) 2013-2022. The Regents of the University of California (Regents)
+# and Richard Plevin.
 # See the file COPYRIGHT.txt for details.
 
 from collections import OrderedDict, defaultdict

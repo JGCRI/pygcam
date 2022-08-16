@@ -8,7 +8,7 @@ Copyright (c) 2014 Ryan Jones and Richard Plevin.
 See the file COPYRIGHT.txt for details.
 """
 import numpy as np
-from pygcam.matplotlibFix import plt
+from ..matplotlibFix import plt
 import pandas as pd
 import seaborn as sns
 

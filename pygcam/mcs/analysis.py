@@ -1,17 +1,15 @@
-# Copyright (c) 2012-2015. The Regents of the University of California (Regents)
+# Copyright (c) 2012-2022. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 import os
 import numpy as np
-from pygcam.matplotlibFix import plt
+from ..matplotlibFix import plt
 
 import pandas as pd
 import seaborn as sns
-from six import iteritems
-from six.moves import xrange
 
-from pygcam.config import getParam, getParamAsBoolean
-from pygcam.log import getLogger
-from pygcam.utils import mkdirs
+from ..config import getParam, getParamAsBoolean
+from ..log import getLogger
+from ..utils import mkdirs
 
 from .error import PygcamMcsSystemError, PygcamMcsUserError
 from .Database import getDatabase, Input
@@ -23,11 +21,10 @@ DEFAULT_MAX_TORNADO_VARS = 15
 
 def makePlotPath(value, simId):
     plotDir = getParam('MCS.PlotDir')
-    subDir  = os.path.join(plotDir, "s%d" % simId)
+    subDir  = os.path.join(plotDir, f"s{simId}")
     mkdirs(subDir)
     plotType = getParam('MCS.PlotType')
-    path = os.path.join(subDir, "%s.%s" % (value, plotType))
-    #print "Plot path: ", path
+    path = os.path.join(subDir, f"{value}.{plotType}")
     return path
 
 def printExtraText(fig, text, loc='top', color='lightgrey', weight='ultralight', fontsize='xx-small'):
@@ -275,7 +272,7 @@ def plotConvergence(simId, expName, paramName, values, show=True, save=False):
         dataList.insert(0,0)
 
     labelsize=12
-    for key, values in iteritems(results):
+    for key, values in results.items():
         plt.clf()   # clear previous figure
         ax = plt.gca()
         ax.tick_params(axis='x', labelsize=labelsize)
@@ -434,7 +431,7 @@ def plotInputDistributions(simId, inputDF):
     showKDE   = False
     showShade = getParamAsBoolean('MCS.PlotShowShading')
 
-    for heading, series in iteritems(inputDF):
+    for heading, series in inputDF.items():
         plotHistogram(series, showCI=False,
                       xlabel='Parameter value', ylabel='Probability density',
                       title='Distribution for values of %s' % heading,
@@ -471,7 +468,7 @@ def readParameterValues(simId, trials):
 
     paramTuples = db.getParameters()        # Returns paramName, row, col
     paramNames  = [makeKey(*tup) for tup in paramTuples]   # names like "foo[1][14]"
-    inputDF     = pd.DataFrame(index=xrange(trials), columns=paramNames, dtype=float)
+    inputDF     = pd.DataFrame(index=range(trials), columns=paramNames, dtype=float)
     _logger.debug("Found %d distinct parameter names" % len(paramNames))
 
     paramValues = db.getParameterValues(simId, asDataFrame=False)
@@ -596,8 +593,8 @@ def saveForEMA(simId, expNames, resultNames, inputDF, filename):
         # [('A', [('', '<i8')]), ('B', [('', '<i8')]), ('C', [('', '<f8')])]
         # So, map(lambda dt: (dt[0], dt[1].descr[0][1]), dtypes.items()) produces:
         # [('A', '<i8'), ('B', '<i8'), ('C', '<f8')]
-        tuples = [(dt[0], dt[1].descr[0][1]) for dt in iteritems(dtypes)]
-        tuples = map(lambda dt: (dt[0], dt[1].descr[0][1]), iteritems(dtypes))
+        tuples = [(dt[0], dt[1].descr[0][1]) for dt in dtypes.items()]
+        tuples = map(lambda dt: (dt[0], dt[1].descr[0][1]), dtypes.items())
         strings = ["{},{}".format(name, dtype) for name, dtype in tuples]
         fileText = "\n".join(strings) + '\n'
         add_file(z, fileText, 'experiments metadata.csv')
@@ -614,7 +611,7 @@ def saveForEMA(simId, expNames, resultNames, inputDF, filename):
         for expName in expNames:
             for resultName in resultNames:
                 outValueDF = db.getOutValues(simId, expName, resultName) # cols are trialNum and value; might need to do outValueDF[resultName].to_csv
-                allTrialsDF = pd.DataFrame(index=xrange(rows))           # ensure that all trials are represented (with NA if need be)
+                allTrialsDF = pd.DataFrame(index=range(rows))           # ensure that all trials are represented (with NA if need be)
                 allTrialsDF[resultName] = outValueDF[resultName]
                 fileText = allTrialsDF.to_csv(None, header=False, index=False)
                 fname = "{}-{}.csv".format(resultName, expName)
@@ -774,7 +771,7 @@ class Analysis(object):
         inputDF = self.getInputs()
         simId = self.simId
 
-        for heading, series in iteritems(inputDF):
+        for heading, series in inputDF.items():
             plotHistogram(series, showCI=False,
                           xlabel='Parameter value', ylabel='Probability density',
                           title='Distribution for values of %s' % heading,

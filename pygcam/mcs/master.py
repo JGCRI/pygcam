@@ -1,16 +1,14 @@
 """
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016  Richard Plevin
+.. Copyright (c) 2016-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 #
 # Generate template batch files, then launch ipyparallel
 # controller and engines using the values in the template.
 #
-from __future__ import division, print_function
 import copy
-from six import iteritems, string_types
 import os
 import stat
 import sys
@@ -169,8 +167,8 @@ class Master(object):
         unassigned = qstatus.pop(u'unassigned')
         totals = dict(queue=0, completed=0, tasks=0, unassigned=unassigned)
 
-        for eid, qs in iteritems(qstatus):
-            for key, count in iteritems(qs):
+        for eid, qs in qstatus.items():
+            for key, count in qs.items():
                 if count < 0 or count > 100:
                     _logger.debug("Engine id %s qstatus['%s'] = %s", eid, key, count)
                 totals[key] += count
@@ -207,30 +205,6 @@ class Master(object):
                 # report it, then ignore the error
                 _logger.debug("shutdownIdleEngines: %s", e)
 
-
-        # Deprecated: this wasn't working.
-        # # Shutdown idle engines if there are no unassigned tasks
-        # idleEngines = set([eid for eid, qs in iteritems(qstatus) if
-        #         isinstance(eid, string_types) and eid.isdigit() and (qs[u'tasks'] + qs[u'queue']) == 0])
-        #
-        # if idleEngines:
-        #     newlyIdle = idleEngines.difference(self.idleEngines)
-        #     self.idleEngines = self.idleEngines.union(idleEngines)
-        #
-        #     if newlyIdle:
-        #         _logger.debug('Idle engines: %s', newlyIdle)
-        #         _logger.info('Shutting down %d idle engines', len(newlyIdle))
-        #
-        #         try:
-        #             client.shutdown(targets=list(newlyIdle), block=False)
-        #
-        #             # TBD?
-        #             # dv = client.direct_view(list(newlyIdle))
-        #             # dv.shutdown(block=False)
-        #
-        #         except Exception as e:
-        #             _logger.debug("shutdownIdleEngines: %s", e)
-        #             # ignore the error
 
     def createRuns(self, simId, scenario, trialNums):
         '''
@@ -780,7 +754,7 @@ def _saveBatchFiles(numTrials, argDict):
 
 
 def _clusterCommand(cmd):
-    from pygcam.utils import shellCommand
+    from ..utils import shellCommand
 
     status = shellCommand(cmd, shell=True, raiseError=False)
 
@@ -801,7 +775,7 @@ def startEngines(numTrials, batchTemplate):
     Uses the batch file created when the cluster was started, so it has
     the profile, cluster-id, and ntasks-per-node already set.
     """
-    from pygcam.utils import shellCommand
+    from ..utils import shellCommand
 
     tasksPerNode = getParamAsInt('IPP.TasksPerNode')
     maxEngines   = getParamAsInt('IPP.MaxEngines')
@@ -903,7 +877,7 @@ def startCluster(**kwargs):
 
 
 def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None):
-    from pygcam.utils import shellCommand
+    from ..utils import shellCommand
 
     # This allows user to pass empty string (e.g., -c='') to override default
     cluster_id = getParam('IPP.ClusterId') if cluster_id is None else cluster_id

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
@@ -12,12 +11,12 @@ import plotly.graph_objs as go
 import plotly.subplots as subplots
 from scipy import stats
 
-from pygcam.log import getLogger
-from pygcam.mcs.analysis import getCorrDF
-from pygcam.config import getConfig, DEFAULT_SECTION, getParam, setParam, setSection, getSections
-from pygcam.mcs.Database import getDatabase
-from pygcam.gui.widgets import dataStore
-from pygcam.gui.styles import getColor, getStyle, updateStyle, getFont
+from ..log import getLogger
+from ..mcs.analysis import getCorrDF
+from ..config import getConfig, DEFAULT_SECTION, getParam, setParam, setSection, getSections
+from ..mcs.Database import getDatabase
+from ..gui.widgets import dataStore
+from ..gui.styles import getColor, getStyle, updateStyle, getFont
 
 _logger = getLogger(__name__)
 

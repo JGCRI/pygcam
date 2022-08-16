@@ -4,7 +4,6 @@
 .. Copyright (c) 2016-2017 Richard Plevin and UC Regents
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from __future__ import print_function
 import argparse
 from glob import glob
 import os

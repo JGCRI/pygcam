@@ -7,8 +7,6 @@
 
 # Dummy "gt" to tie together pygcam.mcs plugins to generate documentation.
 
-from __future__ import print_function
-
 from ..config import getConfig, setUsingMCS
 from ..tool import GcamTool
 

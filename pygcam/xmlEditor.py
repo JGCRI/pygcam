@@ -23,7 +23,6 @@ import glob
 import os
 import re
 import shutil
-import six
 from lxml import etree as ET
 from semver import VersionInfo
 
@@ -347,7 +346,7 @@ def expandYearRanges(seq):
 
     for year, value in seq:
         value = float(value)
-        if isinstance(year, six.string_types) and '-' in year:
+        if isinstance(year, str) and '-' in year:
             m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
             if not m:
                 raise SetupException('Unrecognized year range specification: {}'.format(year))
@@ -1520,7 +1519,7 @@ class XMLEditor(object):
         filenameRel, filenameAbs = self.getLocalCopy(configFileTag)
 
         def listifyString(value, aliasForNone=None):
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 value = [value]
 
             # Treat "global" as not restricting by region
@@ -2107,7 +2106,7 @@ class XMLEditor(object):
             except KeyError:
                 raise SetupException(f"writePolicyConstraintFile: {csvPath} does not contain scenario '{scenario}'")
 
-            targets = [(year, value) for year, value in row.iteritems() if not pd.isna(value)]
+            targets = [(year, value) for year, value in row.items() if not pd.isna(value)]
             _logger.debug(f"Extracted targets for scenario '{scenario}': {targets}")
         else:
             raise SetupException("writePolicyConstraintFile: must specify targets or both csvPath and scenario")

@@ -2,16 +2,13 @@
 Timeseries plotting functions. (Modified to compute confidence interval directly,
 i.e., without bootstrapping.)
 """
-from __future__ import division
 import numpy as np
 import pandas as pd
 
 # "interpolate" conflicts with keyword to tsplot, so rename on import to defeat warning
 from scipy import stats, interpolate as interp
 
-from pygcam.matplotlibFix import mpl, plt
-
-from seaborn.external.six import string_types
+from ..matplotlibFix import mpl, plt
 
 from seaborn import utils
 from seaborn.palettes import color_palette
@@ -176,7 +173,7 @@ def tsplot(data, time=None, unit=None, condition=None, value=None,
                                  cond=conds))
 
     # Set up the err_style and ci arguments for teh loop below
-    if isinstance(err_style, string_types):
+    if isinstance(err_style, str):
         err_style = [err_style]
     elif err_style is None:
         err_style = []

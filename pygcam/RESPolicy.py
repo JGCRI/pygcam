@@ -565,8 +565,8 @@ def read_csv(pathname):
     return df
 
 def res_from_csv(csv_path, useGcamUSA):
-    from pygcam.temp_file import getTempFile
-    from pygcam.error import FileFormatError
+    from .temp_file import getTempFile
+    from .error import FileFormatError
 
     xml_path = getTempFile(suffix='.xml', delete=True)
 

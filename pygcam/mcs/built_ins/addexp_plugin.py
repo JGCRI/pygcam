@@ -2,7 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 #
 
-from pygcam.log import getLogger
+from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC
 
 _logger = getLogger(__name__)

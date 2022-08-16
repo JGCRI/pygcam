@@ -2,8 +2,8 @@
 # See the https://opensource.org/licenses/MIT for license details.
 import os
 from .McsSubcommandABC import McsSubcommandABC, clean_help
-from pygcam.error import CommandlineError
-from pygcam.log import getLogger
+from ...error import CommandlineError
+from ...log import getLogger
 
 _logger = getLogger(__name__)
 

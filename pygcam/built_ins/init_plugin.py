@@ -4,11 +4,8 @@
 .. Copyright (c) 2017 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from __future__ import print_function
 import itertools
 import os
-import six
-from six.moves import input
 
 from ..config import getConfig, getHomeDir, pathjoin, unixPath
 from ..subcommand import SubcommandABC, clean_help
@@ -126,8 +123,7 @@ def askDir(msg, default=''):
     is_cygwin = isCygwin()
 
     completer = PathCompleter(only_directories=True, expanduser=True)
-    msg     = six.u(msg) + u' '
-    default = six.u(default)
+    msg += ' '
     path = None
 
     while not path:

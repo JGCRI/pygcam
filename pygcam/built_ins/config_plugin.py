@@ -1,10 +1,9 @@
 '''
 .. codeauthor:: Richard Plevin
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from __future__ import print_function
 from ..error import PygcamException, CommandlineError
 from ..subcommand import SubcommandABC, clean_help
 

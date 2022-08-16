@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Richard Plevin
+# Copyright (c) 2017-2022 Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
 from .McsSubcommandABC import McsSubcommandABC

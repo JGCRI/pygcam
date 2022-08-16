@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.log import getLogger
+from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -18,7 +18,7 @@ def driver(args, tool):
     '''
     import shutil
 
-    from pygcam.config import getParam
+    from ...config import getParam
     from ..Database import getDatabase
     from ..error import PygcamMcsSystemError
 

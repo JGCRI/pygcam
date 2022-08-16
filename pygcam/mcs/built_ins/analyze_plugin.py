@@ -1,7 +1,7 @@
 # Copyright (c) 2016  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-from pygcam.log import getLogger
+from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -16,7 +16,7 @@ def driver(args, tool):
 
     if args.timeseries:
         import pandas as pd
-        from pygcam.config import getParam
+        from ...config import getParam
         from ..Database import getDatabase
         from ..timeseriesPlot import plotTimeSeries, plotForcingSubplots
         from ..util import stripYearPrefix

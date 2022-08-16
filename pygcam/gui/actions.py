@@ -1,9 +1,8 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from six.moves import shlex_quote
-
-from pygcam.log import getLogger
+import shlex
+from ..log import getLogger
 
 _logger = getLogger(__name__)
 
@@ -168,10 +167,10 @@ class ActionInfo(object):
             arg = self.option   # just the flag itself
 
         elif self.option[0] not in ('-', '+'):
-            arg = shlex_quote(self.value)   # positional; just the value
+            arg = shlex.quote(self.value)   # positional; just the value
 
         elif self.value:
-            arg = "%s %s" % (self.option, shlex_quote(self.value))
+            arg = "%s %s" % (self.option, shlex.quote(self.value))
 
         return arg
 

@@ -4,11 +4,9 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-from __future__ import print_function
 import copy
 import os
 from semver import VersionInfo
-import six
 import sys
 
 from lxml import etree as ET
@@ -229,7 +227,7 @@ def _makeRegionXpath(regions):
     if not regions:
         return ""
 
-    if isinstance(regions, six.string_types):
+    if isinstance(regions, str):
         regions = [regions]
 
     patterns = map(lambda s: "@name='%s'" % s, regions)
@@ -239,7 +237,7 @@ def _makeRegionXpath(regions):
     return xpath
 
 def _makeLandClassXpath(landClasses, protected=False):
-    if isinstance(landClasses, six.string_types):
+    if isinstance(landClasses, str):
         landClasses = [landClasses]
 
     prefix = 'Protected' if protected else ''

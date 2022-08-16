@@ -2,12 +2,12 @@ import dash
 import flask
 import requests
 
-from pygcam.config import usingMCS
-from pygcam.log import getLogger
-from pygcam.subcommand import SubcommandABC
-from pygcam.tool import GcamTool
-from pygcam.gui.widgets import Page, PageSet, RootPage, GlobalArgsPage
-from pygcam.gui.terminal import Terminal
+from ..config import usingMCS
+from ..log import getLogger
+from ..subcommand import SubcommandABC
+from ..tool import GcamTool
+from ..gui.widgets import Page, PageSet, RootPage, GlobalArgsPage
+from ..gui.terminal import Terminal
 
 _logger = getLogger(__name__)
 

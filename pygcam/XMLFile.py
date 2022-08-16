@@ -1,11 +1,10 @@
-from __future__ import print_function
 from lxml import etree as ET
 import os
 import pkg_resources as pkg
 
-from pygcam.config import getConfigDict, getParam, stringTrue
-from pygcam.log import getLogger
-from pygcam.error import XmlFormatError, PygcamException
+from .config import getConfigDict, getParam, stringTrue
+from .log import getLogger
+from .error import XmlFormatError, PygcamException
 
 _logger = getLogger(__name__)
 

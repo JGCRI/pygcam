@@ -1,12 +1,10 @@
-# Copyright (c) 2016  Richard Plevin
+# Copyright (c) 2016-2022  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 
-# python 3 compatibility version
-from six.moves import xrange
 import os
-from pygcam.config import getParam, setParam, pathjoin
-from pygcam.log import getLogger
-from pygcam.utils import mkdirs, getResource
+from ...config import getParam, setParam, pathjoin
+from ...log import getLogger
+from ...utils import mkdirs, getResource
 from ..context import Context, getSimDir
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
@@ -81,7 +79,7 @@ def genFullFactorialData(trials, paramFileObj, args):
 def genSALibData(trials, method, paramFileObj, args):
     from ..error import PygcamMcsUserError
     from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
-    from pygcam.utils import ensureExtension, removeTreeSafely, mkdirs
+    from ...utils import ensureExtension, removeTreeSafely, mkdirs
 
     supported_distros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
 
@@ -204,7 +202,6 @@ def saveTrialData(df, simId, start=0):
     """
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLRandomVar
-    from six.moves import xrange
 
     trials = df.shape[0]
 
@@ -213,7 +210,7 @@ def saveTrialData(df, simId, start=0):
 
     paramValues = []
 
-    for trial in xrange(trials):
+    for trial in range(trials):
         trialNum = trial + start
 
         # Save all RV values to the database
@@ -241,9 +238,9 @@ def runStaticSetup(runWorkspace, project, groupName):
     This is called from gensim, so we fake the "context" for trial 0, since all
     trials have local-xml symlinked to RunWorkspace's local-xml.
     """
-    import pygcam.tool
-    from pygcam.utils import mkdirs
-    from pygcam.constants import LOCAL_XML_NAME
+    from ... import tool
+    from ...utils import mkdirs
+    from ...constants import LOCAL_XML_NAME
     from ..util import symlink
     from ..error import GcamToolError
 
@@ -279,7 +276,7 @@ def runStaticSetup(runWorkspace, project, groupName):
 
     cmd = 'gt ' + ' '.join(toolArgs)
     _logger.debug(f'Running: {cmd}')
-    status = pygcam.tool.main(argv=toolArgs, raiseError=True)
+    status = tool.main(argv=toolArgs, raiseError=True)
 
     if status != 0:
         raise GcamToolError(f'"gt setup" exited with status {status}')
@@ -293,9 +290,9 @@ def genSimulation(simId, trials, paramPath, args):
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
     from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
-    from pygcam.constants import LOCAL_XML_NAME
-    from pygcam.project import Project
-    from pygcam.xmlSetup import ScenarioSetup
+    from ...constants import LOCAL_XML_NAME
+    from ...project import Project
+    from ...xmlSetup import ScenarioSetup
 
     runInputDir = getParam('MCS.RunInputDir')
     runWorkspace = getParam('MCS.RunWorkspace')
@@ -365,7 +362,7 @@ def _newsim(runWorkspace, trials):
     '''
     Setup the app and run directories for a given user app.
     '''
-    from pygcam.scenarioSetup import copyWorkspace
+    from ...scenarioSetup import copyWorkspace
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
     from ..XMLResultFile import XMLResultFile
@@ -447,9 +444,9 @@ def _plot_values(values, paramName, plotsDir, bins=250, context='paper'):
         return ax
 
 # TBD: move this where gensim writes out the modified XML
-# from pygcam.project import Project
-# from pygcam.mcs.XMLConfigFile import XMLConfigFile
-# from pygcam.XMLFile import XMLFile
+# from ...project import Project
+# from ...mcs.XMLConfigFile import XMLConfigFile
+# from ...XMLFile import XMLFile
 #
 # projectName = getParam('GCAM.ProjectName')
 # project = Project.readProjectFile(projectName, groupName=args.groupName)
@@ -479,8 +476,8 @@ def _plot_values(values, paramName, plotsDir, bins=250, context='paper'):
 def _exportVars(paramFile, args):
     import re
     from itertools import chain
-    from pygcam.utils import mkdirs
-    from pygcam.mcs.XMLParameterFile import XMLDistribution, XMLParameterFile
+    from ...utils import mkdirs
+    from ..XMLParameterFile import XMLDistribution, XMLParameterFile
 
     outputFile = args.exportVars
     plotsDir   = args.paramPlots
@@ -539,7 +536,7 @@ def driver(args, tool):
     '''
     Generate a simulation. Do generic setup, then call genSimulation().
     '''
-    from pygcam.utils import removeTreeSafely
+    from ...utils import removeTreeSafely
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
     from ..util import saveDict
