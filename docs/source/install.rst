@@ -184,13 +184,11 @@ available immediately without requiring reinstallation of ``pygcam``.
    git clone https://github.com/JGCRI/pygcam.git
    cd pygcam
 
-   # Install pygcam in developer mode
-   python setup.py develop
+   # Install pygcam with links back to the source code repo
+   pip install -e .
 
-The ``setup.py`` script uses a Python module called ``setuptools``. On Mac OS X and
-Linux, ``setup.py`` installs ``setuptools`` automatically. Unfortunately, this has
-been less reliable on Windows, so if the commands above fail, you will have to install
-``setuptools``. To install ``setuptools`` manually, run this command in a terminal:
+If the "pip install" command  above fails, you may need to install
+``setuptools`` by running the following command in a terminal:
 
 .. code-block:: bash
 

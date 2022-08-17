@@ -360,13 +360,18 @@ def createTrialString(lst):
     Assemble a list of numbers into a compact list using hyphens to identify ranges.
     This reverses the operation of parseTrialString
     '''
-    from itertools import groupby   # lazy import
+    from itertools import groupby
     from operator  import itemgetter
 
     lst = sorted(set(lst))
     ranges = []
-    for _, g in groupby(enumerate(lst), lambda i, x: i - x):
-        group = map(lambda x: str(itemgetter(1)(x)), g)
+
+    def _group(i, x):
+        return i - x
+
+    for _, g in groupby(enumerate(lst), lambda tup: _group(*tup)):
+        # group = map(lambda x: str(itemgetter(1)(x)), g)
+        group = [str(itemgetter(1)(x)) for x in g]
         if group[0] == group[-1]:
             ranges.append(group[0])
         else:

@@ -477,7 +477,7 @@ def _exportVars(paramFile, args):
     import re
     from itertools import chain
     from ...utils import mkdirs
-    from ..XMLParameterFile import XMLDistribution, XMLParameterFile
+    from ..XMLParameterFile import XMLDistribution, XMLParameterFile, XMLDataFile
 
     outputFile = args.exportVars
     plotsDir   = args.paramPlots
@@ -511,6 +511,9 @@ def _exportVars(paramFile, args):
         s = re.sub('\s+', ' ', s)   # replace multiples with one space
         return s
 
+    # Non-distribution (e.g., parameter files
+    dataFileDict = {p.name : p for p in params if isinstance(p.dataSrc, XMLDataFile)}
+
     _logger.info(f"Writing '{outputFile}'")
     with open(outputFile, 'w', newline='') as f:
         import csv
@@ -530,6 +533,13 @@ def _exportVars(paramFile, args):
             notes     = clean(p.notes)
 
             writer.writerow([category, pname, dist, apply, desc, xpath, evidence, rationale, notes])
+
+        for pname, p in dataFileDict.items():
+            fname = p.dataSrc.filename
+            notes = clean(p.notes)
+            notes = f"{notes} {fname}" if notes else fname
+            writer.writerow([p.category, pname, 'empirical', 'direct', clean(p.desc), p.query.xpath,
+                             clean(p.evidence), clean(p.rationale), notes])
 
 
 def driver(args, tool):

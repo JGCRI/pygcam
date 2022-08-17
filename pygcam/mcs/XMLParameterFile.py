@@ -458,7 +458,7 @@ class XMLDataFile(XMLTrialData):
 
     def __init__(self, element, param):
         super(XMLDataFile, self).__init__(element, param)
-        filename = self.getFilename()
+        self.filename = filename = self.getFilename()
         self.df  = self.getData(filename)
 
     def getFilename(self):
