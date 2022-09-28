@@ -310,12 +310,12 @@ def dirFromNumber(n, prefix="", create=False):
     allows 1000 nodes at each level, accommodating up to 1 million files
     (0 to 999,999) in two levels.
     '''
-    from numpy import log10     # lazy import
+    import math
 
     maxnodes = getParamAsInt('MCS.MaxSimDirs') or 1000
 
     # Require a power of 10
-    log = log10(maxnodes)
+    log = math.log10(maxnodes)
     if log != int(log):
         raise PygcamMcsUserError("MaxSimDirs must be a power of 10 (default value is 1000)")
     log = int(log)

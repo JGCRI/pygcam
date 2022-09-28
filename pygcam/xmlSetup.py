@@ -379,21 +379,6 @@ class Function(ConfigAction):
         args = "(%s)" % self.formattedContent.strip() if self.formattedContent else "()"
         codeStr = "editor.%s%s" % (name, args)
 
-        ######################
-        # TBD: debugging only
-        DEBUG = False
-        if DEBUG:
-            if codeStr.startswith("editor.writePolicyConstraintFile('base-1-"):
-                # TBD: Call it directly so we can debug
-                editor.writePolicyConstraintFile('base-1-constraints.xml', 'Corn Ethanol', 'USA', None, minPrice=-100,
-                                                 csvPath="/Users/rjp/repos/gcam-mcs/analyses/series46/etc/shock_permanence_runs.csv",
-                                                 scenario="base-1")
-            elif codeStr.startswith("editor.writePolicyMarketFile('base-1"):
-                editor.writePolicyMarketFile('base-1-market.xml', 'Corn Ethanol', 'USA', 'ethanol', 'corn ethanol',
-                                             'corn ethanol', range(2020, 2061, 5))
-            return
-        ######################
-
         try:
             eval(codeStr)
         except SyntaxError as e:
@@ -449,7 +434,7 @@ class If(ConfigActionBase):
 
 MCSVALUES_FILE = 'mcsValues.xml'
 
-def createXmlEditorSubclass(setupFile, mcsMode=None, cleanXML=True):
+def createXmlEditorSubclass(setupFile):
     """
     Generate a subclass of the given `superclass` that runs the
     XML setup file given by variable GCAM.ScenarioSetupFile.
@@ -459,7 +444,6 @@ def createXmlEditorSubclass(setupFile, mcsMode=None, cleanXML=True):
     subclassed directly.
 
     :param setupFile: (str) the pathname of an XML setup file
-    :param mcsMode (str) must be 'trial', 'gensim', or None
     :return: (class) A subclass of the given `superclass`
     """
     setupClass = getParam('GCAM.ScenarioSetupClass')
@@ -487,10 +471,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None, cleanXML=True):
                      srcGroupDir, subdir, parent=None, mcsMode=None, cleanXML=True):
             self.parentConfigPath = None
 
-            self.scenarioSetup = scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
-
-            # deprecated
-            # group = scenarioSetup.groupDict[groupName or scenarioSetup.defaultGroup]
+            self.scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
@@ -589,7 +570,7 @@ def createXmlEditorSubclass(setupFile, mcsMode=None, cleanXML=True):
 def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode=None,
                    groupName='', srcGroupDir='', subdir =''):
     setupXml = getParam('GCAM.ScenarioSetupFile')
-    editorClass = createXmlEditorSubclass(setupXml, cleanXML=False)
+    editorClass = createXmlEditorSubclass(setupXml)
 
     xmlOutputRoot = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, normpath=True)
 

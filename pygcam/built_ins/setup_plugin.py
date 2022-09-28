@@ -134,8 +134,8 @@ class SetupCommand(SubcommandABC):
         setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
         if setupXml:
             from ..xmlSetup import createXmlEditorSubclass
-            _logger.debug('Setup using %s, mcsMode=%s', setupXml, mcsMode)
-            scenClass = createXmlEditorSubclass(setupXml, mcsMode=mcsMode)
+            _logger.debug(f'Setup using {setupXml}')
+            scenClass = createXmlEditorSubclass(setupXml)
 
         else:
             # If neither is defined, we assume a custom scenarios.py file is used
@@ -144,12 +144,12 @@ class SetupCommand(SubcommandABC):
                     module = import_module(args.moduleSpec, package=None)
                 else:
                     modulePath = args.modulePath or pathjoin(xmlSourceDir, srcGroupDir, 'scenarios.py')
-                    _logger.debug('Setup using %s', modulePath)
+                    _logger.debug(f'Setup using {modulePath}')
                     module = loadModuleFromPath(modulePath)
 
             except Exception as e:
                 moduleName = args.moduleSpec or modulePath
-                raise SetupException('Failed to load scenarioMapper or ClassMap from module %s: %s' % (moduleName, e))
+                raise SetupException(f'Failed to load scenarioMapper or ClassMap from module {moduleName}: {e}')
 
             try:
                 # First look for a function called scenarioMapper
@@ -163,7 +163,7 @@ class SetupCommand(SubcommandABC):
                     scenClass = classMap[scenario]
 
             except KeyError:
-                raise SetupException('Failed to map scenario "%s" to a class in %s' % (scenario, module.__file__))
+                raise SetupException(f'Failed to map scenario "{scenario}" to a class in {module.__file__}')
 
         subdir = args.subdir or scenario
         refWorkspace  = args.refWorkspace or getParam('GCAM.RefWorkspace')

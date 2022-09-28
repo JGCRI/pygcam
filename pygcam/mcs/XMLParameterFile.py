@@ -733,7 +733,7 @@ class XMLParameter(XMLWrapper):
         This is used by "gensim" to create the CSV file holding the trial data.
         """
         if not self.query:
-            if not self.dataSrc.isTrialFunc():
+            if tree is not None and not self.dataSrc.isTrialFunc():
                 raise PygcamMcsUserError("XMLParameter %s has no <Query> and no trial function" % self.getName())
 
             # trial functions are handled in updateElements()
@@ -745,10 +745,13 @@ class XMLParameter(XMLWrapper):
         else:
             # Query returns a list of Element instances or None
             elements = self.query.runQuery(tree)
-            if elements is None or len(elements) == 0:
-                raise PygcamMcsUserError("XPath query '%s' returned nothing for parameter %s" % (self.query.getXPath(), self.getName()))
+            name = self.getName()
 
-            _logger.debug("Param %s: %d elements found", self.getName(), len(elements))
+            if elements is None or len(elements) == 0:
+                xpath = self.query.getXPath()
+                raise PygcamMcsUserError(f"XPath query '{xpath}' returned nothing for parameter {name}")
+
+            _logger.debug(f"Param {name}: {len(elements)} elements found")
 
         if self.dataSrc.isShared():
             self.rv = XMLRandomVar(None, self)   # Allocate an RV and have all variables share its varNum
@@ -783,7 +786,7 @@ class XMLParameter(XMLWrapper):
         # Update all elements referenced by our list of XMLVariables (or of their subclass, XMLRandomVar)
         for var in self.vars:
             if var.getElement() is None:    # Skip shared RVs, which don't point to an XML element
-                _logger.debug("Skipping shared element for %s", var)
+                _logger.debug(f"Skipping shared element for {var}")
                 continue
 
             originalValue = var.getFloatValue()  # apply factor and delta to cached, original value
@@ -813,8 +816,7 @@ def trialRelativePath(relPath, prefix):
     """
     parentDir = '../'
     if not relPath.startswith(parentDir):
-        raise PygcamMcsUserError("trialRelativePath: expected path starting with '%s', got '%s'" % \
-                                 (parentDir, relPath))
+        raise PygcamMcsUserError(f"trialRelativePath: expected path starting with '{parentDir}', got '{relPath}'")
 
     newPath = os.path.join(prefix, 'trial-xml', relPath[len(parentDir):])
     return newPath
@@ -905,7 +907,7 @@ class XMLInputFile(XMLWrapper):
         try:
             fn = loadObjectFromPath(objname, modulePath)
         except Exception as e:
-            raise PygcamMcsUserError("Failed to load trial function '%s': %s" % (funcRef, e))
+            raise PygcamMcsUserError(f"Failed to load trial function '{funcRef}': {e}")
 
         self.writeFuncs[funcRef] = fn
 
@@ -930,8 +932,7 @@ class XMLInputFile(XMLWrapper):
         """
         eltName = element.get('name')
         compName = self.getComponentName()
-        assert compName == eltName, \
-            "mergeParameters: InputFile name mismatch: %s and %s" % (compName, eltName)
+        assert compName == eltName, f"mergeParameters: InputFile name mismatch: {compName} and {eltName}"
 
         self.findAndSaveParams(element)
 
@@ -1028,7 +1029,7 @@ class XMLInputFile(XMLWrapper):
             try:
                 fn(self, xmlFile, trialDir)     # fn can modify self.tree as needed
             except Exception as e:
-                raise PygcamMcsUserError("Call to user WriteFunc '%s' failed: %s" % (fn, e))
+                raise PygcamMcsUserError(f"Call to user WriteFunc '{fn}' failed: {e}")
 
 
 class XMLParameterFile(XMLFile):
@@ -1053,7 +1054,7 @@ class XMLParameterFile(XMLFile):
         # Match all the Correlation "with" names to actual parameter definitions
         XMLCorrelation.finishSetup()
 
-        _logger.debug("Loaded parameter file: %s", filename)
+        _logger.debug(f"Loaded parameter file: {filename}")
 
     def loadInputFiles(self, context, scenNames, writeConfigFiles=True):
         """
@@ -1100,14 +1101,14 @@ class XMLParameterFile(XMLFile):
 
             if os.path.exists(absPath):
                 # remove it to avoid writing through a symlink to the original file
-                _logger.debug("Removing %s", absPath)
+                _logger.debug(f"Removing {absPath}")
                 os.unlink(absPath)
 
-            _logger.info("XMLParameterFile: writing %s", absPath)
+            _logger.info(f"XMLParameterFile: writing {absPath}")
             xmlFile.tree.write(absPath, xml_declaration=True, pretty_print=True)
 
     def dump(self):
-        print("Parameter file: %s" % self.getFilename())
+        print(f"Parameter file: {self.getFilename()}")
         for obj in self.inputFiles.values():
             obj.dump()
 
