@@ -202,6 +202,7 @@ def fileReader(filename, error=BaseSpecError, fileExtension=None, split=True):
                 line = line.split()
             yield line
 
+# Deprecated?
 def getOptionalArgs(func):
     '''
     Inspects a function to find the names of optional arguments.
@@ -448,6 +449,27 @@ def getRunQueryDir():
 
     path = os.path.join(workspace, QueryDirName)
     return path
+
+def parseExeDir(path, trialNum_only=False):
+    """
+    Parse a path to a trial and scenario's "exe" directory to extract
+    the trial number and scenario name.
+
+    :param path: (str) pathname of an "exe" directory for a trial and scenario
+    :return: (tuple) (simId, trialNum, scenario) unless ``trialNum_only`` is True,
+        in which case only the trial number is returned.
+    """
+    from pathlib import Path
+    parts = Path(path).absolute().parts
+
+    # e.g., "/whatever/mcs/series_61/sims/s001/001/023/base/exe"
+    sim, trial1, trial2, scenario = parts[-5:-1]
+    trialNum = int(trial1 + trial2)
+    if trialNum_only:
+        return trialNum
+
+    simId = int(sim[1:])
+    return (simId, trialNum, scenario)
 
 def hardlink_directory_contents(src_dir, dst_dir):
     """
