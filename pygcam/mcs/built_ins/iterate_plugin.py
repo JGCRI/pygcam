@@ -22,7 +22,6 @@ def driver(args, tool):
 
     simId    = args.simId
     command  = args.command
-    scenario = args.scenario
     noRun    = args.noRun
     trialStr = args.trials
 
@@ -35,38 +34,39 @@ def driver(args, tool):
         count = db.getTrialCount(simId)
         trials = range(count)
 
-    # TBD: Add groupName
-    context = Context(projectName=projectName, simId=simId, scenario=scenario)
-    _logger.info('Running iterator for projectName=%s, simId=%d, scenario=%s, trials=%s, command="%s"',
-                 projectName, simId, scenario, trialStr, command)
+    for scenario in args.scenarios:
+        # TBD: Add groupName
+        context = Context(projectName=projectName, simId=simId, scenario=scenario)
+        _logger.info('Running iterator for projectName=%s, simId=%d, scenario=%s, trials=%s, command="%s"',
+                     projectName, simId, scenario, trialStr, command)
 
-    # Create a dict to pass to str.format. These are constant across trials.
-    argDict = {
-        'projectName' : projectName,
-        'simId'       : args.simId,
-        'scenario'    : args.scenario,
-        'expName'     : args.scenario,
-    }
+        # Create a dict to pass to str.format. These are constant across trials.
+        argDict = {
+            'projectName' : projectName,
+            'simId'       : args.simId,
+            'scenario'    : scenario,
+            'expName'     : scenario,
+        }
 
-    for trialNum in trials:
-        argDict['trialNum'] = context.trialNum = trialNum
-        argDict['expDir']   = argDict['scenarioDir'] = context.getScenarioDir(create=True)
-        argDict['trialDir'] = context.getTrialDir()
-        argDict['simDir']   = context.getSimDir()
+        for trialNum in trials:
+            argDict['trialNum'] = context.trialNum = trialNum
+            argDict['expDir']   = argDict['scenarioDir'] = context.getScenarioDir(create=True)
+            argDict['trialDir'] = context.getTrialDir()
+            argDict['simDir']   = context.getSimDir()
 
-        try:
-            cmd = command.format(**argDict)
-        except Exception as e:
-            raise PygcamMcsUserError("Bad command format: %s" % e)
-
-        if noRun:
-            print(cmd)
-        else:
             try:
-                call(cmd, shell=True)
-
+                cmd = command.format(**argDict)
             except Exception as e:
-                raise PygcamMcsUserError("Failed to run command '%s': %s" % (cmd, e))
+                raise PygcamMcsUserError("Bad command format: %s" % e)
+
+            if noRun:
+                print(cmd)
+            else:
+                try:
+                    call(cmd, shell=True)
+
+                except Exception as e:
+                    raise PygcamMcsUserError("Failed to run command '%s': %s" % (cmd, e))
 
 
 class IterateCommand(McsSubcommandABC):
@@ -81,11 +81,13 @@ class IterateCommand(McsSubcommandABC):
         super(IterateCommand, self).__init__('iterate', subparsers, kwargs)
 
     def addArgs(self, parser):
+        from ...utils import ParseCommaList
+
         parser.add_argument('-c', '--command', type=str, required=True,
                             help=clean_help('''A command string to execute for each trial. The following
                             arguments are available for use in the command string, specified
-                            within curly braces: projectName, simId, trialNum, scenario, expName, 
-                            trialDir, expDir.'''))
+                            within curly braces: projectName, simId, trialNum, scenario, 
+                            trialDir, scenarioDir.'''))
 
         parser.add_argument('-n', '--noRun', action='store_true',
                             help=clean_help("Show the commands that would be executed, but don't run them"))
@@ -93,8 +95,8 @@ class IterateCommand(McsSubcommandABC):
         parser.add_argument('-s', '--simId', type=int, default=1,
                             help=clean_help('The id of the simulation. Default is 1.'))
 
-        parser.add_argument('-S', '--scenario', type=str, default="",
-                            help=clean_help('The name of the scenario'))
+        parser.add_argument('-S', '--scenario', dest='scenarios', type=str, default="", action=ParseCommaList,
+                            help=clean_help('The name of the scenario. May be a comma-delimited list of scenarios.'))
 
         parser.add_argument('-t', '--trials', type=str, default=None,
                              help=clean_help('''Comma separated list of trial or ranges of trials to run. Ex: 1,4,6-10,3.
