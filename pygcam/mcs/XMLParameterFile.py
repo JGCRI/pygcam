@@ -1108,11 +1108,13 @@ class XMLParameterFile(XMLFile):
             inputFile.callFileFunctions(xmlFile, trialDir)
 
             if os.path.exists(absPath):
+                absPath = os.path.normpath(absPath)
+                
                 # remove it to avoid writing through a symlink to the original file
                 _logger.debug(f"Removing {absPath}")
                 os.unlink(absPath)
 
-            _logger.info(f"XMLParameterFile: writing {absPath}")
+            _logger.info(f"Writing {absPath}")
             xmlFile.tree.write(absPath, xml_declaration=True, pretty_print=True)
 
     def dump(self):
