@@ -450,10 +450,11 @@ def getRunQueryDir():
     path = os.path.join(workspace, QueryDirName)
     return path
 
-def parseExeDir(path, trialNum_only=False):
+def parseMcsDir(path, trialNum_only=False):
     """
     Parse a path to a trial and scenario's "exe" directory to extract
-    the trial number and scenario name.
+    the trial number and scenario name. If the pathname doesn't end in
+    "exe", assume it's the parent (scenario) directory.
 
     :param path: (str) pathname of an "exe" directory for a trial and scenario
     :return: (tuple) (simId, trialNum, scenario) unless ``trialNum_only`` is True,
@@ -462,8 +463,13 @@ def parseExeDir(path, trialNum_only=False):
     from pathlib import Path
     parts = Path(path).absolute().parts
 
-    # e.g., "/whatever/mcs/series_61/sims/s001/001/023/base/exe"
-    sim, trial1, trial2, scenario = parts[-5:-1]
+    if parts[-1] == 'exe':
+        # e.g., "/whatever/mcs/series_61/sims/s001/001/023/base/exe"
+        sim, trial1, trial2, scenario = parts[-5:-1]
+    else:
+        # e.g., "/whatever/mcs/series_61/sims/s001/001/023/base"
+        sim, trial1, trial2 = parts[-4:-1]
+
     trialNum = int(trial1 + trial2)
     if trialNum_only:
         return trialNum

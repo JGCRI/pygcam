@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016. The Regents of the University of California (Regents)
+# Copyright (c) 2012-2022. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 import os
 import time
@@ -11,7 +11,6 @@ from ..signals import (catchSignals, TimeoutSignalException, UserInterruptExcept
 from ..utils import mkdirs
 
 from ..mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
-from ..mcs.context import Context
 from ..mcs.error import PygcamMcsUserError, GcamToolError
 from ..mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
@@ -45,9 +44,9 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
                 '--sandboxDir=' + trialDir] + groupArg
 
     command = 'gt ' + ' '.join(toolArgs)
-    _logger.debug('Running: %s', command)
+    _logger.debug(f'Running: {command}')
     status = tool_main(argv=toolArgs, raiseError=True)
-    msg = '"%s" exited with status %d' % (command, status)
+    msg = f'"{command}" exited with status {status}'
 
     if status != 0 and raiseError:
         raise GcamToolError(msg)
@@ -72,12 +71,12 @@ def _applySingleTrialData(df, context, paramFile):
     trialNum = context.trialNum
     trialDir = context.getTrialDir(create=True)
 
-    _logger.info('_applySingleTrialData for %s, %s', context, paramFile.filename)
+    _logger.info(f'_applySingleTrialData for {context}, {paramFile.filename}')
     XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
     paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
 
     linkDest = os.path.join(trialDir, 'local-xml')
-    _logger.info('creating symlink to %s', linkDest)
+    _logger.info(f'creating symlink to {linkDest}')
     symlink('../../../../Workspace/local-xml', linkDest)
 
 
@@ -86,7 +85,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     '''
     Run GCAM in the current working directory and return exit status.
     '''
-    _logger.debug("_runGcamTool: %s", context)
+    _logger.debug(f"_runGcamTool: {context}")
 
     # For running in an ipyparallel engine, forget instances from last run
     decache()
@@ -100,6 +99,11 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     simId = context.simId
     baselineName = context.baseline
     isBaseline = not baselineName
+
+    # Run setup and (optionally) moira before applying trial data
+    # N.B. setup step calls pygcam.setup.setupWorkspace
+    setup_steps = getParam('MCS.SetupSteps')
+    _runPygcamSteps(setup_steps, context)
 
     if isBaseline and not noGCAM:
         paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
@@ -121,12 +125,11 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
         gcamStatus = 0
     else:
         start = time.time()
-
-        # N.B. setup step calls pygcam.setup.setupWorkspace
-        gcamStatus = _runPygcamSteps('setup,prequery,gcam', context)
-
+        gcamStatus = _runPygcamSteps('gcam', context)
         stop = time.time()
-        _logger.info("_runGcamTool: elapsed time: %s", _secondsToStr(stop - start))
+
+        elapsed = _secondsToStr(stop - start)
+        _logger.info(f"_runGcamTool: elapsed time: {elapsed}")
 
     if gcamStatus == 0:
         if not noBatchQueries:
@@ -141,7 +144,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     else:
         status = RUNNER_FAILURE
 
-    _logger.info("_runGcamTool: exiting with status %d", status)
+    _logger.info(f"_runGcamTool: exiting with status {status}")
     return status
 
 
@@ -164,13 +167,12 @@ class WorkerResult(object):
                 if diffResults:
                     self.resultsList += diffResults
 
-            _logger.debug('Worker results saving %s', self.resultsList)
+            _logger.debug(f'Worker results saving {self.resultsList}')
 
 
     def __str__(self):
         c = self.context
-        return "<WorkerResult run=%s sim=%s trial=%s, scenario=%s, status=%s error=%s>" % \
-               (c.runId, c.simId, c.trialNum, c.scenario, c.status, self.errorMsg)
+        return f"<WorkerResult run={c.runId} sim={c.simId} trial={c.trialNum}, scenario={c.scenario}, status={c.status} error={self.errorMsg}>"
 
 
 class Worker(object):
@@ -203,7 +205,7 @@ class Worker(object):
         """
         context = self.context
         runDir = context.getScenarioDir(create=True)
-        _logger.info("runDir is %s", runDir)
+        _logger.info(f"runDir is {runDir}")
         os.chdir(runDir)
 
         trialDir = os.path.dirname(runDir)
@@ -247,7 +249,7 @@ class Worker(object):
         trialNum = context.trialNum
         errorMsg = None
 
-        _logger.info('Running trial %d' % trialNum)
+        _logger.info(f'Running trial {trialNum}')
         try:
             exitCode = _runGcamTool(context, noGCAM=noGCAM,
                                     noBatchQueries=noBatchQueries,
@@ -255,7 +257,7 @@ class Worker(object):
             status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
         except TimeoutSignalException:
-            errorMsg = "Trial %d terminated by system" % trialNum
+            errorMsg = f"Trial {trialNum} terminated by system"
             status = RUN_KILLED
 
         # except AlarmSignalException:
@@ -267,33 +269,33 @@ class Worker(object):
             status = RUN_KILLED
 
         except GcamToolError as e:
-            errorMsg = "%s" % e
+            errorMsg = str(e)
             status = RUN_FAILED
 
         except PygcamMcsUserError as e:
-            errorMsg = "%s" % e
+            errorMsg = str(e)
             status = RUN_FAILED
 
         except GcamSolverError as e:
-            errorMsg = "%s" % e
+            errorMsg = str(e)
             status = RUN_UNSOLVED
 
         except GcamError as e:
-            errorMsg = "%s" % e
+            errorMsg = str(e)
             status = RUN_GCAMERROR
 
         except Exception as e:
-            errorMsg = "%s" % e
+            errorMsg = str(e)
             status = RUN_ABORTED     # run-time error in loaded module
 
         if errorMsg:
-            _logger.error("Trial status: %s: %s", status, errorMsg)
+            _logger.error(f"Trial status: {status}: {errorMsg}")
             if status == RUN_ABORTED and getParamAsBoolean('GCAM.ShowStackTrace'):
                 import traceback
                 errorMsg = traceback.format_exc()
                 _logger.debug(errorMsg)
         else:
-            _logger.info('Trial status: %s', status)
+            _logger.info(f'Trial status: {status}')
 
         self.setStatus(status)
         result = WorkerResult(context, errorMsg)

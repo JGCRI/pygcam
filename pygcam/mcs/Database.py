@@ -9,7 +9,11 @@
 '''
 This module includes contributions by Sam Fendell and Ryan Jones.
 '''
-from collections import Iterable
+try:
+    from collections.abc import Iterable # relocated here in python 3.10
+except ImportError:
+    from collections import Iterable
+
 from contextlib import contextmanager
 from datetime import datetime
 import sys
@@ -241,7 +245,10 @@ class CoreDatabase(object):
             # to see if the "run" table exists. If not, initialize the DB.
             # We don't do this if calling from Runner.py, which requires that
             # the database be set up already.
-            meta = MetaData(bind=engine, reflect=True)
+            # meta = MetaData(bind=engine, reflect=True)        # at some point, pre 1.4.42 this was the way
+            meta = MetaData()
+            meta.reflect(bind=engine)
+
             if 'run' not in meta.tables:
                 self.initDb()
 

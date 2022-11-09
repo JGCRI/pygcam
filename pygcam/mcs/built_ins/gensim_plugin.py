@@ -525,7 +525,7 @@ def _exportVars(paramFile, args):
             dist = getDistStr(p.dataSrc)
             modDict = p.dataSrc.modDict
             apply = modDict['apply']
-            xpath = p.query.xpath
+            xpath = p.query.xpath if p.query else ''
 
             desc      = clean(p.desc)
             evidence  = clean(p.evidence)

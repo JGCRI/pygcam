@@ -13,7 +13,7 @@ import pandas as pd
 
 from ..config import getParam
 from ..log import getLogger
-from ..utils import importFromDotSpec
+from ..utils import importFromDotSpec, pathjoin
 from ..XMLFile import XMLFile
 
 from .Database import getDatabase
@@ -382,7 +382,7 @@ class XMLDistribution(XMLTrialData):
             self.trialFuncDir = getParam('MCS.TrialFuncDir')
 
         modname, objname = funcRef.rsplit('.', 1)
-        modulePath = os.path.join(self.trialFuncDir, modname + '.py')
+        modulePath = pathjoin(self.trialFuncDir, modname + '.py')
         try:
             trialFunc = loadObjectFromPath(objname, modulePath)
         except Exception as e:
@@ -696,6 +696,10 @@ class XMLParameter(XMLWrapper):
         """
         instances = cls.getInstances()
         for param in instances:
+            if isinstance(param.parent, XMLInputFile) and param.parent.fileType != 'xml':
+                _logger.debug(f"Skipping parameter {param.name} (not for XML file)")
+                continue
+
             param.updateElements(simId, trialNum, df)
 
     def getMode(self):
@@ -818,7 +822,7 @@ def trialRelativePath(relPath, prefix):
     if not relPath.startswith(parentDir):
         raise PygcamMcsUserError(f"trialRelativePath: expected path starting with '{parentDir}', got '{relPath}'")
 
-    newPath = os.path.join(prefix, 'trial-xml', relPath[len(parentDir):])
+    newPath = pathjoin(prefix, 'trial-xml', relPath[len(parentDir):])
     return newPath
 
 
@@ -827,15 +831,20 @@ class XMLRelFile(XMLFile):
     A minor extension to XMLFile to store the original relative pathname
     that was indicated in the config file identifying this file.
     """
-    def __init__(self, inputFile, relPath, simId):
-        from .util import getSimLocalXmlDir
+    def __init__(self, inputFile, relPath, context):
+        from .util import getSimLocalXmlDir, getSimDir, dirFromNumber
 
         self.inputFile = inputFile
         self.relPath = relPath
 
-        scenarioDir = getSimLocalXmlDir(simId)
-        absPath = os.path.abspath(os.path.join(scenarioDir, relPath))
+        if relPath.startswith('../../trial-xml'):
+            simDir = getSimDir(context.simId)
+            trialDir = dirFromNumber(context.trialNum, prefix=simDir)
+            absPathRoot = pathjoin(trialDir, context.scenario, 'exe')
+        else:
+            absPathRoot = getSimLocalXmlDir(context.simId)
 
+        absPath = pathjoin(absPathRoot, relPath, abspath=True)
         super(XMLRelFile, self).__init__(absPath)
 
     def getRelPath(self):
@@ -953,7 +962,6 @@ class XMLInputFile(XMLWrapper):
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
 
         ctx = copy.copy(context)
-        simId = context.simId
 
         for scenName in scenNames:
             ctx.setVars(scenario=scenName)
@@ -966,7 +974,7 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                xmlFile = XMLRelFile(self, relPath, simId)
+                xmlFile = XMLRelFile(self, relPath, ctx)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
 

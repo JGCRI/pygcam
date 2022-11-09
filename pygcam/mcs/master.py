@@ -16,7 +16,13 @@ from time import sleep
 from IPython.paths import locate_profile
 
 import ipyparallel as ipp
-from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
+
+try:
+    # Current location
+    from ipyparallel.cluster.app import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
+except:
+    # Prior location
+    from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import Context
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase

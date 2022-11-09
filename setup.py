@@ -24,6 +24,7 @@ requirements = [
     'pandas',
     'plotly',
     'requests',
+    'rpy2',
     'scipy',
     'seaborn',
     'semver',
