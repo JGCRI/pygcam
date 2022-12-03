@@ -130,6 +130,7 @@ class Master(object):
                 Context(projectName=projectName, runId=runId, simId=simId,
                         trialNum=trialNum, scenario=scenario, status=status)
 
+    # TBD: see client.wait_for_engines() method
     def waitForWorkers(self):
         maxTries  = getParamAsInt('IPP.StartupWaitTries')
         seconds   = getParamAsInt('IPP.StartupWaitSecs')
@@ -789,6 +790,7 @@ def startEngines(numTrials, batchTemplate):
     numNodes     = (numEngines // tasksPerNode) + (1 if numEngines % tasksPerNode else 0)
 
     # TBD: use "ipcluster engines" if there's a way to avoid leaving procs running after shutdown
+    # TBD: try using cluster.stop_cluster() instead of stopping engines alone
     # enginesCmd = "ipcluster engines -n %d" % tasksPerNode
     enginesCmd = "sbatch '%s'" % batchTemplate
 
@@ -893,6 +895,7 @@ def stopCluster(profile=None, cluster_id=None, stop_jobs=False, other_args=None)
     template = "ipcluster stop --profile={profile} --cluster-id={cluster_id} {other_args}"
     cmd = template.format(profile=profile, cluster_id=cluster_id, other_args=other_args)
 
+    # TBD: try cluster.stop_cluster()
     # shutdown engines, including those that cluster may not be tracking directly
     try:
         client = ipp.Client(profile=profile, cluster_id=cluster_id, timeout=1)

@@ -697,7 +697,7 @@ class XMLParameter(XMLWrapper):
         instances = cls.getInstances()
         for param in instances:
             if isinstance(param.parent, XMLInputFile) and param.parent.fileType != 'xml':
-                _logger.debug(f"Skipping parameter {param.name} (not for XML file)")
+                _logger.debug(f"Skipping parameter {param.name} (non-XML file)")
                 continue
 
             param.updateElements(simId, trialNum, df)
@@ -853,9 +853,9 @@ class XMLRelFile(XMLFile):
     def getAbsPath(self):
         return self.getFilename()
 
-    def saveSomewhere(self):
-        # Save the modified file somewhere for each trial. Maybe in trial-xml?
-        pass
+    # def saveSomewhere(self):
+    #     # Save the modified file somewhere for each trial. Maybe in trial-xml?
+    #     pass
 
 
 class XMLInputFile(XMLWrapper):
@@ -1107,11 +1107,10 @@ class XMLParameterFile(XMLFile):
             inputFile = xmlFile.inputFile
             inputFile.callFileFunctions(xmlFile, trialDir)
 
+            absPath = os.path.normpath(absPath)
             if os.path.exists(absPath):
-                absPath = os.path.normpath(absPath)
-                
+                #_logger.debug(f"Removing {absPath}")
                 # remove it to avoid writing through a symlink to the original file
-                _logger.debug(f"Removing {absPath}")
                 os.unlink(absPath)
 
             _logger.info(f"Writing {absPath}")

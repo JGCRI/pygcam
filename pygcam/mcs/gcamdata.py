@@ -109,7 +109,7 @@ class GcamDataSystem(object):
         driver_drake = robjects.r["driver_drake"]
         driver_drake(user_modifications=func_names, xml_suffix=self.xml_modifier)
 
-    def trial_sandbox(self, trial_num):
+    def trial_sandbox(self, trial_num, delete=True):
         """
         Return the path to a temporary sandbox directory in which to build dependent
         XML files. A cache of these is maintained so on subsequent calls with the same
@@ -125,7 +125,7 @@ class GcamDataSystem(object):
         gcamdata_dir = self.gcamdata_dir
 
         # temp dir is automatically deleted when app exits
-        trial_sandbox_dir = getTempDir(suffix=f"-trial_{trial_num}")
+        trial_sandbox_dir = getTempDir(suffix=f"-trial_{trial_num}", delete=delete)
         _logger.debug(f"Sandbox is {trial_sandbox_dir}")
 
         # Remember the pathname for subsequent calls

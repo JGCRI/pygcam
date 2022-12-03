@@ -22,6 +22,8 @@ _logger = getLogger(__name__)
 _activeYearStrs = None
 _activeYearInts = None
 
+TRIAL_DATA_CSV = 'trialData.csv'
+
 YEAR_COL_PREFIX = 'y'
 
 def writeTrialDataFile(simId, df):
@@ -29,7 +31,7 @@ def writeTrialDataFile(simId, df):
     Save the trial DataFrame in the file 'trialData.csv' in the simDir.
     '''
     simDir = getSimDir(simId)
-    dataFile = os.path.join(simDir, 'trialData.csv')
+    dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
 
     # If the file exists, rename it trialData.csv-.
     try:
@@ -51,7 +53,7 @@ def readTrialDataFile(simId):
     # If SALib version exists, use it; otherwise use legacy file
     dataFile = os.path.join(simDir, 'data.sa', 'inputs.csv')
     if not os.path.lexists(dataFile):
-        dataFile = os.path.join(simDir, 'trialData.csv')
+        dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
 
     df = pd.read_table(dataFile, sep=',', index_col='trialNum')
     return df

@@ -91,7 +91,7 @@ class XMLFile(object):
             tree = self.tree = ET.parse(filename, parser)
 
         except Exception as e:
-            raise XmlFormatError("Can't read XML file '%s': %s" % (filename, e))
+            raise XmlFormatError(f"Can't read XML file '{filename}': {e}")
 
         if self.conditionalXML:
             self.evaluateConditionals(tree.getroot())
