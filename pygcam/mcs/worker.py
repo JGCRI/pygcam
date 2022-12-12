@@ -103,7 +103,8 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     # Run setup and (optionally) moira before applying trial data
     # N.B. setup step calls pygcam.setup.setupWorkspace
     setup_steps = getParam('MCS.SetupSteps')
-    _runPygcamSteps(setup_steps, context)
+    if setup_steps:
+        _runPygcamSteps(setup_steps, context)
 
     if isBaseline and not noGCAM:
         paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
