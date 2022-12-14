@@ -294,7 +294,7 @@ class Worker(object):
             if status == RUN_ABORTED and getParamAsBoolean('GCAM.ShowStackTrace'):
                 import traceback
                 errorMsg = traceback.format_exc()
-                _logger.debug(errorMsg)
+                _logger.error(errorMsg)
         else:
             _logger.info(f'Trial status: {status}')
 
