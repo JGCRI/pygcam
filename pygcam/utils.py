@@ -23,11 +23,17 @@ from .log import getLogger
 _logger = getLogger(__name__)
 
 def random_sleep(low_secs, high_secs):
-    from random import randint
+    """
+    Sleep a random number of seconds between low_secs and high_secs
+
+    :param low_secs: (float) the minimum number of seconds to sleep
+    :param high_secs: (float) the maximum number of seconds to sleep
+    :return: none
+    """
+    from random import uniform
     from time import sleep
 
-    # Sleep a random number of seconds (between low and high)
-    sleep(randint(low_secs, high_secs))
+    sleep(uniform(low_secs, high_secs))
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists

@@ -206,7 +206,9 @@ class Worker(object):
         """
         from ..utils import random_sleep
 
-        random_sleep(1, 15)     # try to avoid all trials accessing the same file at once
+        max_sleep = getParamAsFloat('MCS.MaxRandomSleep')
+        if max_sleep > 0:
+            random_sleep(0, max_sleep)     # try to avoid all trials accessing the same file at once
 
         context = self.context
         runDir = context.getScenarioDir(create=True)
