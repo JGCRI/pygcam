@@ -162,9 +162,9 @@ class AnalyzeCommand(McsSubcommandABC):
                             help=clean_help('A file into which to export input (trial) data.'))
 
         parser.add_argument('-O', '--resultFile', type=str, default=None,
-                            help=clean_help('''Export all model results to the given file. When used with this option,
-                            the -r (--resultName) and -e (--expName) flags can be comma-delimited lists of
-                            result names and experiment names (scenarios), respectively. The output file,
+                            help=clean_help('''Export all model results to the given file, then exit. When used 
+                            with this option, the -r (--resultName) and -e (--expName) flags can be comma-delimited
+                            lists of result names and experiment names (scenarios), respectively. The output file,
                             in CSV format will have a header (and data in the form) "trialNum,value,expName,resultName"'''))
 
         parser.add_argument('-p', '--plot', action='store_true', default=False,

@@ -398,7 +398,7 @@ def plotGroupSensitivityResults(varName, data, filename=None, extra=None, maxVar
 
     negatives = (totals < 0)
     df['sign'] = 1
-    df.ix[negatives, 'sign'] = -1
+    df.loc[negatives, 'sign'] = -1
 
     df['absval']    = totals * df['sign']
     df['normalize'] = normalizeSeries(df['absval'])
@@ -528,7 +528,7 @@ def exportResults(simId, resultList, expList, exportFile, sep=','):
             # resultDf has 'trialNum' as index, 'value' holds float value
             resultDf = db.getOutValues(simId, expName, resultName)
             if resultDf is None:
-                raise PygcamMcsUserError('No results were found for sim %d, experiment %s, result %s' % (simId, expName, resultName))
+                raise PygcamMcsUserError(f'No results were found for sim {simId}, experiment {expName}, result {resultName}')
 
             # Add columns needed for boxplots
             resultDf['expName'] = expName
@@ -541,7 +541,7 @@ def exportResults(simId, resultList, expList, exportFile, sep=','):
             else:
                 df = pd.concat([df, resultDf])
 
-    _logger.debug("Exporting results to '%s'", exportFile)
+    _logger.info(f"Exporting results to '{exportFile}'")
     df.to_csv(exportFile, sep=sep)
 
 #
@@ -789,7 +789,7 @@ class Analysis(object):
         squared = spearman ** 2
         data['normalized'] = squared / squared.sum()
         data['sign'] = 1
-        data.ix[(data.spearman < 0), 'sign'] = -1
+        data.loc[(data.spearman < 0), 'sign'] = -1
         data['value'] = data.normalized * data.sign     # normalized squares with signs restored
 
         # Sort descending by normalized values (all are positive from squaring)
@@ -841,7 +841,7 @@ class Analysis(object):
         inputDF = inputDF[cols]
 
         # trim down to trials with result (in case of failures)
-        inputDF = inputDF.ix[resultSeries.index]
+        inputDF = inputDF.loc[resultSeries.index]
 
         if normalize or invert:
             inputDF = normalizeDF(inputDF)
@@ -998,7 +998,7 @@ def analyzeSimulationNew(args):
                          simId, trials, inputRows, numResults)
 
         if importance or groups or parallel:
-            inputsWithResults = inputDF.ix[resultDF.index]
+            inputsWithResults = inputDF.loc[resultDF.index]
 
             # Drop any inputs with names ending in '-linked' since these are an artifact
             linked = [s for s in inputsWithResults.columns if s.endswith('-linked')]
@@ -1088,6 +1088,7 @@ def analyzeSimulation(args):
     if resultFile:
         resultList = resultName.split(',')
         exportResults(simId, resultList, expList, resultFile)
+        return
 
     if exportEMA:
         resultList = resultName.split(',')
@@ -1129,7 +1130,8 @@ def analyzeSimulation(args):
             _logger.info("SimID %d has %d trials, %d input rows, and %d results", simId, trials, inputRows, numResults)
 
         if importance or groups:
-            inputsWithResults = inputDF.ix[resultDF.index]
+            # inputsWithResults = inputDF.ix[resultDF.index]
+            inputsWithResults = inputDF.loc[resultDF.index]
 
             # Drop any inputs with names ending in '-linked' since these are an artifact
             # Column names can look like 'foobar[0][34]', so we strip off indexing part.
@@ -1148,7 +1150,7 @@ def analyzeSimulation(args):
             data['normalized'] = normalizeSeries(spearman ** 2)
             data['sign'] = 1
             negatives = (data.spearman < 0)
-            data.ix[negatives, 'sign'] = -1
+            data.loc[negatives, 'sign'] = -1
             data['value'] = data.normalized * data.sign     # normalized squares with signs restored
 
             if importance:

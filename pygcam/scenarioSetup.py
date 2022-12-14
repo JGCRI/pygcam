@@ -67,7 +67,7 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
     # We've removed dstPath unless we're avoiding re-copying srcPath
     if not os.path.lexists(dstPath):
         if copyFiles:
-            _logger.info('Copying %s to %s' % (srcPath, dstPath))
+            _logger.info(f'Copying {srcPath} to {dstPath}')
             copyFileOrTree(srcPath, dstPath)
         else:
             symlinkOrCopyFile(srcPath, dstPath)

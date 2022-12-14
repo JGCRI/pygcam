@@ -40,7 +40,21 @@ wheel:
 clean: clean-html clean-setup clean-requirements
 
 dev:
-	pip install -e
+	pip install -e .
+
+remove-pygcam:
+	conda env remove -n pygcam3
+
+MAC_YML = py3_pygcam_macos.yml
+
+create-pygcam: $(MAC_YML)
+	conda env create -f $(MAC_YML)
+
+install-pygcam:
+	bash -l -c 'conda activate pygcam3 && pip install -e .'
+
+rebuild-pygcam: remove-pygcam create-pygcam install-pygcam
+
 
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)

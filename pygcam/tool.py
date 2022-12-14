@@ -552,7 +552,7 @@ def _main(argv=None):
     # Set specified config vars
     for arg in ns.configVars:
         if not '=' in arg:
-            raise CommandlineError('+s requires an argument of the form variable=value, got "%s"' % arg)
+            raise CommandlineError(f'+s requires an argument of the form variable=value, got "{arg}"')
 
         name, value = arg.split('=')
         setParam(name, value)
@@ -577,6 +577,8 @@ def _main(argv=None):
 
 
 def main(argv=None, raiseError=False):
+    _logger = getLogger(__name__)
+
     try:
         _main(argv)
         return 0
@@ -588,7 +590,6 @@ def main(argv=None, raiseError=False):
         if raiseError:
             raise
 
-        _logger = getLogger(__name__)
         _logger.error("%s: %s" % (PROGRAM, e))
         return e.signum
 
@@ -596,11 +597,12 @@ def main(argv=None, raiseError=False):
         if raiseError:
             raise
 
-        print("%s failed: %s" % (PROGRAM, e))
+        _logger.error(f"{PROGRAM} failed: {e}")
 
         if not getSection() or getParamAsBoolean('GCAM.ShowStackTrace'):
             import traceback
-            traceback.print_exc()
+            errorMsg = traceback.format_exc()
+            _logger.error(errorMsg)
 
     finally:
         from .temp_file import TempFile

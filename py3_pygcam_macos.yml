@@ -1,0 +1,35 @@
+name: pygcam3
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - dash>=2.5.1
+  - flask
+  - ipykernel
+  - ipython
+  - ipyparallel
+  - libxml2
+  - lxml
+  - matplotlib
+  - mkl
+  - numpy
+  - pandas
+  - pathlib2
+  - pip
+  - plotly
+  - prompt_toolkit
+  - python>=3.9.0,<3.10.0
+  - retrying
+  - semver
+  - sphinx>=4.3.0
+  - sphinx-argparse>=0.2.5
+  - sphinx_rtd_theme>=0.5.1
+  - sphinxcontrib-serializinghtml
+  - scipy
+  - seaborn
+  - setuptools
+  - sqlalchemy
+  - sqlite
+  - werkzeug
+  - xlsxwriter
+
