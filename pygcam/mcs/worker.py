@@ -204,6 +204,10 @@ class Worker(object):
 
         :return: (WorkerResult) holds run identification info and completion status
         """
+        from ..utils import random_sleep
+
+        random_sleep(1, 15)     # try to avoid all trials accessing the same file at once
+
         context = self.context
         runDir = context.getScenarioDir(create=True)
         _logger.info(f"runDir is {runDir}")
