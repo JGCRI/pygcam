@@ -362,15 +362,17 @@ def expandYearRanges(seq):
 
     return result
 
-# TBD: maybe xmlSetup should be the only approach rather than supporting original setup subclasses.
-# TBD: this way we can assume scenario definition exists in xml format and create an API to get the
-# TBD: information about any scenario definition from xmlSetup.py.
+# TBD: Currently unused.
 #
-# TBD: The question is whether command-line override capability is required, or if all should be in XML.
-# TBD: Need to think through alternative use cases.
+#   Maybe xmlSetup should be the only approach rather than supporting original setup subclasses.
+#   this way we can assume scenario definition exists in xml format and create an API to get the
+#   information about any scenario definition from xmlSetup.py.
 #
-# TBD: should be no need to pass baseline since this can be inferred from scenario and scenarioGroup.
-# TBD: also can tell if it's a baseline; if not, find and cache ref to baseline
+#   The question is whether command-line override capability is required, or if all should be in XML.
+#   Need to think through alternative use cases.
+#
+#   Should be no need to pass baseline since this can be inferred from scenario and scenarioGroup.
+#   also can tell if it's a baseline; if not, find and cache ref to baseline
 class ScenarioInfo(object):
     def __init__(self, scenarioGroup, scenarioName, scenarioSubdir,
                  xmlSourceDir, xmlGroupSubdir, sandboxRoot, sandboxGroupSubdir):

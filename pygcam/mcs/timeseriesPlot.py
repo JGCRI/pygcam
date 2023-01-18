@@ -27,6 +27,8 @@ def plotForcingSubplots(tsdata, filename=None, ci=95, cum_rf=False, show_figure=
     height = 2.5
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharey=True, figsize=(width, height))
 
+    # sns.lineplot()
+
     def dataForExp(expName):
         df = tsdata.query("expName == '%s'" % expName).copy()
         df.drop(['expName'], axis=1, inplace=True)

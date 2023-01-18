@@ -190,7 +190,7 @@ class AnalyzeCommand(McsSubcommandABC):
                             help=clean_help('''Limit the number of variables displayed on tornado plots to the given value. 
                                     (Default is {}'''.format(DEFAULT_MAX_TORNADO_VARS)))
 
-        parser.add_argument('-x', '--xlabel', dest='xlabel', type=str, default=r'g CO$_2$e MJ$^{-1}$',
+        parser.add_argument('-x', '--xlabel', dest='xlabel', type=str, default='',
                             help=clean_help('Specify a label for the x-axis in the histogram.'))
 
         parser.add_argument('--ymax', type=float, default=None,

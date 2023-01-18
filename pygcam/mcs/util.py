@@ -76,6 +76,25 @@ def createOutputDir(outputDir):
     else:
         mkdirs(outputDir)
 
+# TBD: test this
+def newActiveYears(asInt=False):
+    global _activeYearInts
+    global _activeYearStrs
+
+    # return cached values or compute and cache result
+    if not _activeYearStrs:
+        from ..project import Project, SimpleVariable
+
+        proj_name = getParam('GCAM.ProjectName')
+        proj = Project.readProjectFile(proj_name)
+        d = SimpleVariable.getDict()
+        years = d['years']
+
+        _activeYearInts = [int(y) for y in years]
+        _activeYearStrs = [str(y) for y in years]
+
+    return _activeYearInts if asInt else _activeYearStrs
+
 def activeYears(asInt=False):
     '''
     Convert a string identifying active years into a list of ints or strs. Values must

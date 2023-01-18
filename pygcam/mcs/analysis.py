@@ -74,7 +74,29 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
     color = blue if color is None else color
     count = values.count()
     bins  = count // 10 if count > 150 else (count // 5 if count > 50 else (count // 2 if count > 20 else None))
-    sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'shade': shade})
+
+    # See jupyter NB "Dual distribution plots for series 69 to 2050 and 2060" for fixes for deprecation:
+    #
+    # fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+    # count = values.count() if isinstance(values, pd.Series) else values[0].count()
+    #
+    # bins  = count // 10 if count > 150 else (count // 5 if count > 50 else (count // 2 if count > 20 else None))
+    #
+    # def distplot(values):
+    #     if hist:
+    #         sns.histplot(values, ax=ax, bins=bins, color=color, kde=kde, stat="density",
+    #                      kde_kws=dict(cut=3))
+    #     else:
+    #         sns.kdeplot(values, ax=ax, color=color)
+    #
+    # if isinstance(values, pd.Series):
+    #     distplot(values)
+    # else:
+    #     distplot(values[0])
+    #     distplot(values[1])
+
+    # Use the above instead of this:
+    ax = sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'shade': shade})
 
     #sns.axlabel(xlabel=xlabel, ylabel=ylabel)
     if xlabel:
@@ -85,8 +107,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
     sns.despine()
 
     if title:
-        t = plt.title(title)
-        t.set_y(1.02)
+        ax.set_title(title, pad=10)
 
     printExtraText(fig, extra, color=extraColor, loc=extraLoc)
 
@@ -99,7 +120,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
         ymin, ymax = plt.ylim()
         xmin, xmax = plt.xlim()
         textSize = 9
-        labely   = ymax * 0.95
+        labely   = ymax * 0.8
         deltax   = (xmax-xmin) * 0.01
 
         if showCI:
@@ -120,7 +141,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
         if showMedian:
             color = purple
             median = np.percentile(values, 50)
-            labely = ymax * 0.50
+            labely = ymax * 0.3
             plt.axvline(median, color=color, linestyle='solid', linewidth=2)
             plt.text(median + deltax, labely, 'median=%.2f' % median, color=color, size=textSize, rotation=90)
 
@@ -449,11 +470,14 @@ def plotOutputDistribution(simId, expName, resultSeries, resultName, xlabel, tri
     numValues = resultSeries.count()
 
     db = getDatabase()
-    xlabel = db.getOutputUnits(resultName)
+    xlabel = xlabel or db.getOutputUnits(resultName)
+
+    if xlabel == 'g CO2e/MJ':
+        xlabel = r'g CO$_2$e MJ$^{-1}$'     # use TeX format
 
     plotHistogram(resultSeries, xlabel=xlabel, ylabel='Probability density',
-                  title='Frequency distribution for %s' % resultName,
-                  extra='SimId=%d, Exp=%s, Trials=%d/%d' % (simId, expName, numValues, trials),
+                  title=f'Frequency distribution of {resultName} for {expName}',
+                  extra=f'SimId={simId}, Exp={expName}, Trials={numValues}/{trials}',
                   color=None, hist=showHist, kde=showKDE, shade=showShade,
                   showCI=True, showMean=True, showMedian=True, show=False, filename=filename)
 
@@ -1075,6 +1099,7 @@ def analyzeSimulation(args):
         _logger.info("Each trial has %d parameters", inputCols)
     else:
         inputDF = None
+        inputRows = 0
 
     if inputsFile:
         exportInputs(inputsFile, inputDF)
