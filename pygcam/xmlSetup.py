@@ -516,7 +516,7 @@ def createXmlEditorSubclass(setupFile):
             # Add symlinks to any files that were added in the dynamic setup
             dynDir  = self.scenario_dyn_dir_abs
             scenDir = self.scenario_dir_abs
-            xmlFiles = glob.glob("%s/*.xml" % scenDir)
+            xmlFiles = glob.glob(f"{scenDir}/*.xml")
 
             if xmlFiles:
                 mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
@@ -546,7 +546,7 @@ def createXmlEditorSubclass(setupFile):
                         groupName, baselineName = baselineSource.split('/')
                     except ValueError:
                         raise SetupException(
-                            'baselineSource error: "%s"; should be of the form "groupDir/baselineDir"' % baselineSource)
+                            f'baselineSource error: "{baselineSource}"; should be of the form "groupDir/baselineDir"')
 
                     parentGroup = scenarioSetup.groupDict[groupName]
                     scenario = parentGroup.getFinalScenario(baselineName)
@@ -578,6 +578,7 @@ def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode
                          groupName, srcGroupDir, subdir, cleanXML=False, mcsMode=mcsMode)
     return editor
 
+# TBD: currently unused
 def scenarioConfigPath(scenario):
     # We don't need to specify most of the keyword args when we're just getting the config file
     editor = scenarioEditor(scenario)

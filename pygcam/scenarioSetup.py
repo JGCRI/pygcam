@@ -73,7 +73,7 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
             symlinkOrCopyFile(srcPath, dstPath)
 
 
-def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
+def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
     '''
     Set up a run-time sandbox in which to run GCAM. This involves copying
     from or linking to files and directories in `workspace`, which defaults
@@ -86,11 +86,14 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
        for pygcam-mcs trials.
     :return: none
     '''
-    from semver import VersionInfo
 
+    # TBD: this was not coming into play since srcWorkspace was always defined or mcsMode was None
     if not srcWorkspace:
-        srcWorkspace = getParam('GCAM.RefWorkspace') if mcsMode == 'gensim' \
-            else getParam('GCAM.SandboxRefWorkspace')
+        param_name = 'GCAM.RefWorkspace' if mcsMode == 'gensim' else 'GCAM.SandboxRefWorkspace'
+        srcWorkspace = getParam(param_name)
+
+    if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
+        raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
 
     # MCS "new" sub-command creates its ref workspace; for non-MCS
     # we do it here, on demand, i.e., if it doesn't exist already.
@@ -103,9 +106,6 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
 
     _logger.info("Setting up sandbox '%s'", sandbox)
 
-    if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
-        raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
-
     if forceCreate:
         # avoid deleting the current directory
         with pushd('..'):
@@ -116,10 +116,8 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
     logPath = pathjoin(sandbox, 'exe', 'logs')
     mkdirs(logPath)
 
-    # Need to mkdir("exe/restart") for gcam-v5.1.2 (and beyond?)
-    if parse_version_info() >= VersionInfo(5, 1, 2):
-        restartDir = pathjoin(sandbox, 'exe', 'restart')
-        mkdirs(restartDir)
+    restartDir = pathjoin(sandbox, 'exe', 'restart')
+    mkdirs(restartDir)
 
     filesToCopy, filesToLink = _getFilesToCopyAndLink('GCAM.SandboxFilesToLink')
 
@@ -131,7 +129,7 @@ def createSandbox(sandbox, srcWorkspace=None, forceCreate=False, mcsMode=None):
 
     outputDir = pathjoin(sandbox, 'output')
 
-    if mcsMode:
+    if mcsMode: # i.e., mcsMode is 'trial' or 'gensim'
         from .mcs.util import createOutputDir
         # link {sandbox}/dyn-xml to ../dyn-xml
         dynXmlDir = pathjoin('..', DYN_XML_NAME)

@@ -47,7 +47,8 @@ class GcamCommand(SubcommandABC):
         parser.add_argument('-w', '--workspace',
                             help=clean_help('''Specify the path to the GCAM workspace to use. If it doesn't exist, the
                             named workspace will be created. If not specified on the command-line, the path
-                            constructed as {GCAM.SandboxDir}/{scenario} is used.'''))
+                            constructed as {GCAM.SandboxDir}/{scenario} is used, if scenario is defined. If scenario
+                            is undefined, the workspace defined by config variable 'GCAM.RefWorkspace' is created.'''))
 
         parser.add_argument('-W', '--noWrapper', action='store_true',
                             help=clean_help('''Do not run gcam within a wrapper that detects errors as early as possible

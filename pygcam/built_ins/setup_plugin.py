@@ -123,10 +123,10 @@ class SetupCommand(SubcommandABC):
             workspace = pathjoin(projectDir, groupName, scenario, normpath=True)
 
         mcsMode = tool.getMcsMode()
-        forceCreate = args.forceCreate or bool(mcsMode)
 
-        if not mcsMode or mcsMode == 'trial':
-            createSandbox(workspace, srcWorkspace=args.refWorkspace, forceCreate=forceCreate, mcsMode=mcsMode)
+        if not mcsMode or mcsMode == 'trial':       # i.e., if mcsMode is not 'gensim'
+            forceCreate = args.forceCreate or bool(mcsMode)
+            createSandbox(workspace, args.refWorkspace, forceCreate=forceCreate, mcsMode=mcsMode)
 
         xmlSourceDir = args.xmlSourceDir or getParam('GCAM.XmlSrc')
 

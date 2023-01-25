@@ -60,8 +60,9 @@ def driver(args, tool):
 
     if args.create:
         if execute:
-            _logger.info('Creating ' + sandbox)
-            createSandbox(sandbox)
+            srcWorkspace = getParam('GCAM.RefWorkspace')
+            _logger.info(f"Creating '{sandbox}' from reference workspace '{srcWorkspace}'")
+            createSandbox(sandbox, srcWorkspace)
         else:
             print("Would create", sandbox)
 

@@ -373,65 +373,67 @@ def expandYearRanges(seq):
 #
 #   Should be no need to pass baseline since this can be inferred from scenario and scenarioGroup.
 #   also can tell if it's a baseline; if not, find and cache ref to baseline
-class ScenarioInfo(object):
-    def __init__(self, scenarioGroup, scenarioName, scenarioSubdir,
-                 xmlSourceDir, xmlGroupSubdir, sandboxRoot, sandboxGroupSubdir):
-
-        self.scenarioGroup  = scenarioGroup
-        self.scenarioName   = scenarioName
-        self.scenarioSubdir = scenarioSubdir or scenarioName
-
-        self.xmlSourceDir = xmlSourceDir
-        self.xmlGroupSubdir = xmlGroupSubdir or scenarioGroup
-
-        self.sandboxRoot  = sandboxRoot
-        self.sandboxGroupSubdir = sandboxGroupSubdir or scenarioGroup
-
-        self.isBaseline = False # TBD
-
-        if not self.isBaseline:
-            self.baselineName = 'something'
-            self.baselineInfo = self.fromXmlSetup(scenarioGroup, self.baselineName)
-
-        # TBD: after setting self.x for all x:
-        self.configPath = pathjoin(self.scenarioDir(), 'config.xml', realPath=True)
-
-    @classmethod
-    def fromXmlSetup(cls, scenarioGroup, scenarioName):
-        # TBD: lookup the group and scenario, grab all data and
-        # TBD: return ScenarioInfo(...)
-        pass
-
-    def absPath(self, x):
-        pass
-
-    def relPath(self, y):
-        pass
-
-    def scenarioXmlSourceDir(self, xmlSubdir=True):
-        xmlDir = 'xml' if xmlSubdir else ''
-        return pathjoin(self.xmlSourceDir, self.xmlGroupSubdir, self.scenarioSubdir, xmlDir)
-
-    def scenarioXmlOutputDir(self):
-        return pathjoin(self.xmlOutputDir, self.scenarioGroup, self.scenarioName)
-
-    def scenarioXmlSourceFiles(self):
-        # These two versions handle legacy case with extra 'xml' subdir and new approach, without
-        files = glob.glob(self.scenarioXmlSourceDir(xmlSubdir=False) + '/*.xml')
-        files += glob.glob(self.scenarioXmlSourceDir(xmlSubdir=True) + '/*.xml')
-        return files
-
-    def cfgPath(self):
-        """
-        Compute the name of the GCAM config file for the current scenario.
-
-        :return: (str) the pathname to the XML configuration file.
-        """
-        if not self.configPath:
-            # compute the first time, then cache it
-            self.configPath = unixPath(os.path.realpath(pathjoin(self.scenario_dir_abs, 'config.xml')))
-
-        return self.configPath
+#
+# class ScenarioInfo(object):
+#     def __init__(self, scenarioGroup, scenarioName, scenarioSubdir,
+#                  xmlSourceDir, xmlGroupSubdir, sandboxRoot, sandboxGroupSubdir):
+#
+#         self.scenarioGroup  = scenarioGroup
+#         self.scenarioName   = scenarioName
+#         self.scenarioSubdir = scenarioSubdir or scenarioName
+#
+#         self.xmlSourceDir = xmlSourceDir
+#         self.xmlGroupSubdir = xmlGroupSubdir or scenarioGroup
+#
+#         self.sandboxRoot  = sandboxRoot
+#         self.sandboxGroupSubdir = sandboxGroupSubdir or scenarioGroup
+#
+#         self.isBaseline = False # TBD
+#
+#         if not self.isBaseline:
+#             self.baselineName = 'something'
+#             self.baselineInfo = self.fromXmlSetup(scenarioGroup, self.baselineName)
+#
+#         # TBD: after setting self.x for all x:
+#         self.configPath = pathjoin(self.scenarioDir(), 'config.xml', realPath=True)
+#
+#     @classmethod
+#     def fromXmlSetup(cls, scenarioGroup, scenarioName):
+#         # TBD: lookup the group and scenario, grab all data and
+#         # TBD: return ScenarioInfo(...)
+#         pass
+#
+#     def absPath(self, x):
+#         pass
+#
+#     def relPath(self, y):
+#         pass
+#
+#     def scenarioXmlSourceDir(self, xmlSubdir=True):
+#         xmlDir = 'xml' if xmlSubdir else ''
+#         return pathjoin(self.xmlSourceDir, self.xmlGroupSubdir, self.scenarioSubdir, xmlDir)
+#
+#     def scenarioXmlOutputDir(self):
+#         return pathjoin(self.xmlOutputDir, self.scenarioGroup, self.scenarioName)
+#
+#     def scenarioXmlSourceFiles(self):
+#         # These two versions handle legacy case with extra 'xml' subdir and new approach, without
+#         files = glob.glob(self.scenarioXmlSourceDir(xmlSubdir=False) + '/*.xml')
+#         files += glob.glob(self.scenarioXmlSourceDir(xmlSubdir=True) + '/*.xml')
+#         return files
+#
+#     def cfgPath(self):
+#         """
+#         Compute the name of the GCAM config file for the current scenario.
+#
+#         :return: (str) the pathname to the XML configuration file.
+#         """
+#         if not self.configPath:
+#             # compute the first time, then cache it
+#             # TBD: rationalize this with __init__ setting configPath
+#             self.configPath = pathjoin(self.scenario_dir_abs, 'config.xml', realpath=True)
+#
+#         return self.configPath
 
 class XMLEditor(object):
     '''
@@ -570,7 +572,7 @@ class XMLEditor(object):
         self.recreateDir(dynDir)
 
         scenDir = self.scenario_dir_abs
-        xmlFiles = glob.glob("{}/*.xml".format(scenDir))
+        xmlFiles = glob.glob(f"{scenDir}/*.xml")
 
         # TBD: no need to link or copy if all in one place. [But dyn are per-trial; local are not]
         if xmlFiles:

@@ -198,8 +198,8 @@ def _gcamWrapper(args):
 # We need to find where the Java development kit is installed.
 # This could be the Apple supplied version which was provided up
 # to 1.6 however was dropped subsequently and instead users may
-# have an Oracle provided JDK.  The each take slightly different
-# approaches to where libraries live and how to reference them so
+# have an Oracle provided JDK. They each take slightly different
+# approaches to where libraries live and how to reference them, so
 # we will have to try to detect the appropriate location.
 #
 def linkToMacJava():
@@ -264,11 +264,11 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    workspace = workspace or (pathjoin(getParam('GCAM.SandboxDir'), scenario)
-                                  if scenario else getParam('GCAM.RefWorkspace'))
+    workspace = (workspace or
+                 (pathjoin(getParam('GCAM.SandboxDir'), scenario) if scenario else getParam('GCAM.RefWorkspace')))
 
     if not os.path.lexists(workspace) or forceCreate:
-        createSandbox(workspace, srcWorkspace=refWorkspace, forceCreate=forceCreate)
+        createSandbox(workspace, refWorkspace, forceCreate=forceCreate)
 
     exeDir = getExeDir(workspace, chdir=True)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise

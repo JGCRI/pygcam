@@ -32,6 +32,7 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     """
     from ..tool import main as tool_main
 
+    # TBD: runWorkspace and raiseError keywords are not used currently
     runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
 
     trialDir = context.getTrialDir()
