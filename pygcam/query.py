@@ -534,7 +534,7 @@ def _createJavaCommand(batchFile, miLogFile):
     template = getParam('GCAM.MI.BatchCommand')
     command = template.format(batchFile=batchFile)
     if miLogFile:
-        command += ">> %s 2>&1" % miLogFile
+        command += f'>> "{miLogFile}" 2>&1'
 
     return command
 
