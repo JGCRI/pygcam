@@ -534,7 +534,7 @@ def _createJavaCommand(batchFile, miLogFile):
     template = getParam('GCAM.MI.BatchCommand')
     command = template.format(batchFile=batchFile)
     if miLogFile:
-        command += ">> %s 2>&1" % miLogFile
+        command += f'>> "{miLogFile}" 2>&1'
 
     return command
 
@@ -831,11 +831,7 @@ def runModelInterface(scenario, outputDir, csvFile=None, batchFile=None,
         else:
             _logger.debug(command)
 
-        if getParamAsBoolean('GCAM.MI.UseVirtualBuffer'):   # deprecated as of GCAM 4.3
-            with Xvfb():
-                subprocess.call(command, shell=True)
-        else:
-            subprocess.call(command, shell=True)
+        subprocess.call(command, shell=True)
 
         # The java program always exits with 0 status, but when the query fails,
         # it writes an error message to the CSV file. If this occurs, we delete
