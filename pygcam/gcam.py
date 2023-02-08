@@ -56,7 +56,7 @@ def getGcamVersion(exeDir, preferPath=False):
 
         except subprocess.CalledProcessError:
             raise ConfigFileError(
-                "Attempt to run '%s --version' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber manually" % exePath)
+                f"Attempt to run '{exePath} --version' failed. Versions of GCAM before v5.2 are no longer supported by pygcam")
 
     m = re.match(_VersionFlagPattern, versionStr)
     if m:
@@ -79,28 +79,23 @@ def setJavaPath(exeDir):
         # of the Java Runtime used to run it. Note if the runtime is not 64-bit it will only
         # print an error.
         with pushd(exeDir):
-            versionInfo = parse_version_info()
-            if versionInfo > VersionInfo(4, 2, 0):
-                classpath = getParam('GCAM.MI.ClassPath')
-                command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
-                msg_cmd = 'XMLDBDriver --print-java-home'
-            else:
-                command = 'java WriteLocalBaseXDB'
-                msg_cmd = command
+            classpath = getParam('GCAM.MI.ClassPath')
+            command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
+            msg_cmd = 'XMLDBDriver --print-java-home'
 
             try:
                 output = subprocess.check_output(str(command), shell=True)
                 javaHome = output.decode('utf-8').strip()
             except Exception as e:
-                raise PygcamException("Cannot get java home dir: %s" % e)
+                raise PygcamException(f"Cannot get java home dir: {e}")
 
         os.environ['JAVA_HOME'] = javaHome
 
         if not javaHome:
-            raise PygcamException("JAVA_HOME not set and failed to read java home directory from '%s'" % msg_cmd)
+            raise PygcamException(f"JAVA_HOME not set and failed to read java home directory from '{msg_cmd}'")
 
     if not os.path.isdir(javaHome):
-        raise PygcamException('Java home (%s) is not a directory' % javaHome)
+        raise PygcamException(f'Java home ({javaHome}) is not a directory')
 
     # Update the PATH to be able to find the Java dlls
     # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
@@ -147,7 +142,7 @@ def _loadWrapperFilter(spec):
     try:
         modPath, dotSpec = spec.split(';', 1)
     except (ValueError, Exception):
-        raise ConfigFileError('GCAM.WrapperFilterFunction should be of the form "/path/to/moduleDirectory:module.functionName", got "{}"'.format(spec))
+        raise ConfigFileError(f'GCAM.WrapperFilterFunction should be of the form "/path/to/moduleDirectory:module.functionName", got "{spec}"')
 
     try:
         import sys
@@ -156,7 +151,7 @@ def _loadWrapperFilter(spec):
         func = importFromDotSpec(dotSpec)
 
     except PygcamException as e:
-        raise ConfigFileError("Can't load wrapper filter function '%s' from '%s': %s" % (dotSpec, modPath, e))
+        raise ConfigFileError(f"Can't load wrapper filter function '{dotSpec}' from '{modPath}': {e}")
 
     return func
 
@@ -167,7 +162,8 @@ def _gcamWrapper(args):
                                     stderr=subprocess.STDOUT, close_fds=True)
 
     except Exception as e:
-        msg = 'gcamWrapper failed to run command: {} ({})'.format(' '.join(args), e)
+        joined_args = ' '.join(args)
+        msg = f'gcamWrapper failed to run command: {joined_args} ({e})'
         raise PygcamException(msg)
 
     filterSpec = getParam('GCAM.WrapperFilterFunction')
@@ -214,7 +210,7 @@ def linkToMacJava():
         pass
 
     if not javaHome:
-        raise PygcamException('Could not find Java install location using "%s"' % cmd)
+        raise PygcamException(f'Could not find Java install location using "{cmd}"')
 
     # If javaHome contains "1.6", use the Apple supplied version of java 1.6
     libPath = 'lib-stub' if '1.6' in javaHome else javaHome + '/jre/lib/server'
@@ -230,7 +226,7 @@ def linkToMacJava():
             cmd = "ln -s %s %s" % (libPath, linkName)
             status = subp.call(cmd, shell=True)
             if status != 0:
-                raise PygcamException('Failed to create link using "%s"' % cmd)
+                raise PygcamException(f'Failed to create link using "{cmd}"')
     finally:
         os.chdir(owd)
 
@@ -264,6 +260,7 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     if platform.system() == 'Darwin':
         linkToMacJava()
 
+    # TBD: the else looks wrong here since 'workspace' is what we create.
     workspace = (workspace or
                  (pathjoin(getParam('GCAM.SandboxDir'), scenario) if scenario else getParam('GCAM.RefWorkspace')))
 
@@ -275,9 +272,8 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
 
     version = parse_version_info()
 
-    # These features didn't exist in version 4.2
-    if version > VersionInfo(4, 2, 0) and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
-                                               getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
+    # InMemoryDatabase implies RunQueriesInGCAM
+    if not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or getParamAsBoolean('GCAM.InMemoryDatabase')):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
@@ -290,7 +286,7 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
         configFile = unixPath(configFile or pathjoin(exeDir, 'configuration.xml'), abspath=True)
 
     gcamPath = unixPath(getParam('GCAM.Executable'), abspath=True)
-    gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM (< 4.2) doesn't allow space between -C and filename
+    gcamArgs = [gcamPath, '-C', configFile]  # N.B. GCAM (< 4.2) doesn't allow space between -C and filename
 
     command = ' '.join(gcamArgs)
     if noRun:

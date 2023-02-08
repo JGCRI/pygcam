@@ -303,7 +303,6 @@ def writeSystemDefaultsFile(systemDefaults):
     content += "# User's home directory\nHome = %s\n\n" % getParam('Home', raw=True)
     content += "# Name of gcam executable relative to 'exe' dir\nGCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
     content += "# Location of ModelInterface jar file\nGCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
-    content += "# Whether to use a virtual display when running ModelInterface\nGCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
     content += "# Editor command to invoke by 'gt config -e'\nGCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
 
     if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n' for Windows

@@ -118,7 +118,7 @@ def getRegionList(workspace=None, states='withGlobal'):
     Set the list of the defined region names from the data system, if possible,
     otherwise use the built-in list of 32 regions.
 
-    :param workspace: (str) the path to a ``Main_User_Workspace`` directory that
+    :param workspace: (str) the path to a GCAM workspace directory that
       has the file
       ``input/gcamdata/inst/extdata/common/GCAM_region_names.csv``,
       or ``None``, in which case the value of config variable
@@ -152,17 +152,6 @@ def getRegionList(workspace=None, states='withGlobal'):
 
     if _StateList and states == 'withUSA':
         return _StateList + ['USA']
-
-    version = parse_version_info()
-
-    # Deprecated (probably). Need to test that the subsequent code handles all require cases
-    if version > VersionInfo(5, 0, 0):
-        # input/gcamdata/inst/extdata/common/GCAM_region_names.csv
-        relpath = pathjoin('input', 'gcamdata', 'inst', 'extdata', 'common', 'GCAM_region_names.csv')
-        skiprows = 6
-    else:
-        relpath = pathjoin('input', 'gcam-data-system', '_common', 'mappings', 'GCAM_region_names.csv')
-        skiprows = 3
 
     workspace = workspace or getParam('GCAM.RefWorkspace')
 
@@ -199,6 +188,9 @@ def getRegionList(workspace=None, states='withGlobal'):
             _StateList = sorted(set(_StateList) - {'USA'})  # don't include "USA" in list of states
 
     else: # Deprecated (probably) -- see note above.
+        relpath = 'input/gcamdata/inst/extdata/common/GCAM_region_names.csv'
+        skiprows = 6
+
         path = pathjoin(workspace, relpath) if workspace else None
 
         if path and os.path.lexists(path):

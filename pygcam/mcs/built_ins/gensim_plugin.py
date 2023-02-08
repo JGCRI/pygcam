@@ -373,7 +373,7 @@ def _newsim(runWorkspace, trials):
     srcDir = getParam('GCAM.RefWorkspace')
     dstDir = runWorkspace
 
-    copyWorkspace(dstDir, refWorkspace=srcDir, forceCreate=True, mcsMode=True)
+    copyWorkspace(dstDir, srcDir, forceCreate=True, mcsMode=True)
 
     if trials:
         db = getDatabase()   # ensures database initialization
@@ -551,8 +551,11 @@ def driver(args, tool):
     from ..error import PygcamMcsUserError
     from ..util import saveDict
 
-    # TBD: set the config variable if the argument is given since to avoid inconsistency
-    paramFile = args.paramFile or getParam('MCS.ParametersFile')
+    # Set the config variable if the argument is given to avoid inconsistency
+    if args.paramFile:
+        setParam('MCS.ParametersFile', args.paramFile)
+
+    paramFile = getParam('MCS.ParametersFile')
 
     if args.exportVars:
         _exportVars(paramFile, args)

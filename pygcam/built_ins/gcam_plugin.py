@@ -49,6 +49,8 @@ class GcamCommand(SubcommandABC):
                             named workspace will be created. If not specified on the command-line, the path
                             constructed as {GCAM.SandboxDir}/{scenario} is used, if scenario is defined. If scenario
                             is undefined, the workspace defined by config variable 'GCAM.RefWorkspace' is created.'''))
+                            # TBD: Should this say GCAM.SandboxRefWorkspace rather than GCAM.RefWorkspace?
+                            #   Make this a required parameter? Used on all recent project.xml files.
 
         parser.add_argument('-W', '--noWrapper', action='store_true',
                             help=clean_help('''Do not run gcam within a wrapper that detects errors as early as possible

@@ -264,7 +264,6 @@ class GcamTool(object):
 
     def validateGcamVersion(self):
         from .gcam import getGcamVersion
-        from semver import VersionInfo
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
         exeName = getParam('GCAM.Executable')
@@ -275,28 +274,27 @@ class GcamTool(object):
 
         # Starting with v4.3, gcam reports its version number
         versionCfg = parse_version_info()
-        if versionCfg >= VersionInfo(4, 3, 0):
-            versionFile = pathjoin(exeDir, '.version')
+        versionFile = pathjoin(exeDir, '.version')
 
-            # Check for cached version info
-            if os.path.lexists(versionFile):
-                with open(versionFile, 'r') as f:
-                    versionNum = f.readline().strip()
-            else:
-                versionNum = getGcamVersion(exeDir)
+        # Check for cached version info
+        if os.path.lexists(versionFile):
+            with open(versionFile, 'r') as f:
+                versionNum = f.readline().strip()
+        else:
+            versionNum = getGcamVersion(exeDir)
 
-                # cache version number so we don't have to run 'gcam.exe --version' every time
-                with open(versionFile, 'w') as f:
-                    f.write(versionNum + '\n')
+            # cache version number so we don't have to run 'gcam.exe --version' every time
+            with open(versionFile, 'w') as f:
+                f.write(versionNum + '\n')
 
-            versionExe = parse_version_info(versionNum)
-            if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
-                # use only major.minor to identify GCAM version
-                versionNum = "{}.{}".format(versionExe.major, versionExe.minor)
-                setParam('GCAM.VersionNumber', versionNum)
+        versionExe = parse_version_info(versionNum)
+        if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
+            # use only major.minor to identify GCAM version
+            versionNum = "{}.{}".format(versionExe.major, versionExe.minor)
+            setParam('GCAM.VersionNumber', versionNum)
 
-                log = getLogger(__name__)
-                log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
+            log = getLogger(__name__)
+            log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
 
         setInputFilesByVersion()
 
@@ -474,19 +472,6 @@ def _setDefaultProject(argv):
     if section:
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
-
-    # Set the data dir based on the version of the model used in this project
-    version = parse_version_info()
-
-    v_5_1_0 = VersionInfo(5, 1, 0)
-
-    dataDir = "gcamdata" if version >= v_5_1_0 else "gcam-data-system"
-    setParam('GCAM.DataDir', dataDir, section=section)
-
-    # ModelInterface was also relocated in v5.1, so we compute the path when setting the project
-    subdir = 'output/modelinterface' if version >= v_5_1_0 else 'input/gcam-data-system/_common/ModelInterface/src'
-    setParam('GCAM.MI.Subdir', subdir )
-
 
 def _saveDirMap():
     dirMapFile = os.getenv('DIRMAP_PATH')

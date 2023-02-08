@@ -259,19 +259,3 @@ class McsValues(XMLFile):
             return None
 
         return regionMap.get(paramName, default)
-
-if __name__ == '__main__':
-    pathname = '../tests/data/xml/Conditional.xml'
-    pathname = '/Users/rjp/bitbucket/paper1/etc/project.xml'
-    varDict  = {'bar': 'bar', 'foo': 'foo', 'baz': 20, 'mcsMode': True}
-    _logger.setLevel('INFO')
-
-    print('varDict=%s' % varDict)
-
-    xml = XMLFile(pathname, varDict=varDict, schemaPath='etc/project-schema.xsd')
-    root = xml.getRoot()
-
-    xml.evaluateConditionals(root)
-
-    print("Result:")
-    ET.dump(root)

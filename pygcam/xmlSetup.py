@@ -55,6 +55,8 @@ def iterateList(scenarioSetup, cls, node, expandFunc, iterators):
 #
 class ScenarioSetup(object):
 
+    documentCache = {}  # parsed XML files are cached here
+
     def __init__(self, node):
         self.name = node.get('name', '')    # unused currently
         self.defaultGroup = node.get('defaultGroup')
@@ -86,8 +88,6 @@ class ScenarioSetup(object):
             return self.iteratorDict[name]
         except KeyError:
             raise SetupException("Iterator '%s' is not defined" % name)
-
-    documentCache = {}
 
     @classmethod
     def parse(cls, filename):
@@ -270,8 +270,8 @@ class ScenarioGroup(object):
 
     def writeXML(self, stream, indent=0):
         stream.write('\n')
-        stream.write(_tab * indent + '<scenarioGroup name="%s" useGroupDir="%s" srcGroupDir="%s">\n' % \
-                     (self.name, int(self.useGroupDir), self.srcGroupDir))
+        text = f'<scenarioGroup name="{self.name}" useGroupDir="{int(self.useGroupDir)}" srcGroupDir="{self.srcGroupDir}">\n'
+        stream.write(_tab * indent + text)
 
         for obj in self.finalDict.values():
             obj.writeXML(stream, indent + 1)
@@ -282,14 +282,14 @@ class Scenario(object):
     def __init__(self, node):
         self.node = node
         self.name = node.get('name')
-        self.isBaseline = getBooleanXML(node.get('baseline', default=0))
+        self.isBaseline = getBooleanXML(node.get('baseline', default='0'))
         self.isActive   = getBooleanXML(node.get('active',   default='1'))
         self.iteratorName = node.get('iterator')
         self.actions = [_classForNode(item) for item in node]
         self.subdir = node.get('subdir', default=self.name)
 
     def __str__(self):
-        return "<scenario name='%s'>" % self.name
+        return f"<scenario name='{self.name}'>"
 
     def run(self, editor, directoryDict, dynamic=False):
         for action in self.actions:
@@ -302,8 +302,8 @@ class Scenario(object):
             action.formatContent(templateDict)
 
     def writeXML(self, stream, indent=0):
-        stream.write(_tab * indent + '<scenario name="%s" baseline="%s">\n' % \
-                     (self.name, int(self.isBaseline)))
+        text = f'<scenario name="{self.name}" baseline="{int(self.isBaseline)}">\n'
+        stream.write(_tab * indent + text)
 
         for obj in self.actions:
             obj.writeXML(stream, indent + 1)
@@ -333,7 +333,7 @@ class ConfigAction(ConfigActionBase):
     def __str__(self):
         tag = self.tag
         content = self.formattedContent or self.content
-        return "<%s name='%s'>%s</%s>" % (tag, self.name, content, tag)
+        return f"<{tag} name='{self.name}'>{content}</{tag}>"
 
     def run(self, editor, directoryDict, dynamic=False):
         if self.dynamic == dynamic:
@@ -348,8 +348,8 @@ class Insert(ConfigAction):
     def __str__(self):
         tag = self.tag
         content = self.formattedContent or self.content
-        after = " after='%s'" % self.after if self.after else ''
-        return "<%s name='%s'%s>%s</%s>" % (tag, self.name, after, content, tag)
+        after = f" after='{self.after}'" if self.after else ''
+        return f"<{tag} name='{self.name}'{after}>{content}</{tag}>"
 
     def _run(self, editor):
         editor.insertScenarioComponent(self.name, self.formattedContent, self.after)
@@ -367,7 +367,7 @@ class Delete(ConfigAction):
         editor.deleteScenarioComponent(self.name)
 
     def __str__(self):
-        return "<%s name='%s'/>" % (self.tag, self.name)
+        return f"<{self.tag} name='{self.name}'/>"
 
 class Function(ConfigAction):
     def _run(self, editor):
@@ -377,17 +377,17 @@ class Function(ConfigAction):
             raise SetupException("<function name='%s'>: function doesn't exist or is not callable from XML" % name)
 
         args = "(%s)" % self.formattedContent.strip() if self.formattedContent else "()"
-        codeStr = "editor.%s%s" % (name, args)
+        codeStr = f"editor.{name}{args}"
 
         try:
             eval(codeStr)
         except SyntaxError as e:
-            raise SetupException("Failed to evaluate expression %s: %s" % (codeStr, e))
+            raise SetupException(f"Failed to evaluate expression {codeStr}: {e}")
 
     def __str__(self):
         tag = self.tag
         content = self.formattedContent or self.content
-        return "<%s name='%s' dynamic='%s'>%s</%s>" % (tag, self.name, self.dynamic, content, tag)
+        return f"<{tag} name='{self.name}' dynamic='{self.dynamic}'>{content}</{tag}>"
 
 class If(ConfigActionBase):
     def __init__(self, node):
@@ -402,7 +402,7 @@ class If(ConfigActionBase):
     def __str__(self):
         value1 = self.formattedValue1 or self.value1
         value2 = self.formattedValue2 or self.value2
-        return "<%s value1='%s' value2='%s' matches='%s'/>" % (self.tag, value1, value2, self.matches)
+        return f"<{self.tag} value1='{value1}' value2='{value2}' matches='{self.matches}'/>"
 
     def writeXML(self, stream, indent=0):
         # deprecated
@@ -451,7 +451,7 @@ def createXmlEditorSubclass(setupFile):
         try:
             modPath, dotSpec = setupClass.split(';', 1)
         except Exception:
-            raise SetupException('GCAM.ScenarioSetupClass should be of the form "/path/to/moduleDirectory:module.ClassName", got "%s"' % setupClass)
+            raise SetupException(f'GCAM.ScenarioSetupClass should be of the form "/path/to/moduleDirectory:module.ClassName", got "{setupClass}"')
 
         try:
             from .utils import importFromDotSpec
@@ -459,7 +459,7 @@ def createXmlEditorSubclass(setupFile):
             superclass = importFromDotSpec(dotSpec)
 
         except PygcamException as e:
-            raise SetupException("Can't load setup class '%s' from '%s': %s" % (dotSpec, modPath, e))
+            raise SetupException(f"Can't load setup class '{dotSpec}' from '{modPath}': {e}")
 
         # check that superclass inherits from or is an XMLEditor
         assert issubclass(superclass, XMLEditor), 'GCAM.ScenarioSetupClass must be a subclass of pygcam.XMLEditor'
@@ -478,8 +478,8 @@ def createXmlEditorSubclass(setupFile):
                 # TBD: test this in FCIP case where baseline builds on FuelShock
                 baselineSubdir = None
                 baseXmlOutputRoot = pathjoin(os.path.dirname(xmlOutputRoot), baseline)
-                parent = XMLEditor(baseline, None, baseXmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
-                                   srcGroupDir, baselineSubdir)
+                parent = XMLEditor(baseline, None, baseXmlOutputRoot, xmlSrcDir, refWorkspace,
+                                   groupName, srcGroupDir, baselineSubdir)
 
             super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
                                                     refWorkspace, groupName, srcGroupDir, subdir,
@@ -489,6 +489,7 @@ def createXmlEditorSubclass(setupFile):
             # Read shocks from mcsValues.xml if present
             #if self.parent and mcsMode:
             if mcsMode == 'trial':
+                # TBD: simplify using ScenarioInfo and DirectoryPath
                 # ../../trial-xml/local-xml/base-0/mcsValues.xml
                 self.trial_xml_abs = pathjoin(self.xmlOutputRoot, '../trial-xml', normpath=True)
                 self.trial_xml_rel = pathjoin('../..', 'trial-xml')
@@ -500,6 +501,7 @@ def createXmlEditorSubclass(setupFile):
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
                                   'baselineDir': self.baseline_dir_rel}
 
+        #
         def setupDynamic(self, args):
             self.groupName = args.group
 
@@ -517,6 +519,9 @@ def createXmlEditorSubclass(setupFile):
             dynDir  = self.scenario_dyn_dir_abs
             scenDir = self.scenario_dir_abs
             xmlFiles = glob.glob(f"{scenDir}/*.xml")
+
+            # TBD: This appears to be redundant with code in XMLEditor.setupDynamic, but this version
+            #  skips files that already exist, so it's probably just a NO-OP.
 
             if xmlFiles:
                 mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
@@ -567,6 +572,7 @@ def createXmlEditorSubclass(setupFile):
 
     return XmlEditorSubclass
 
+
 def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode=None,
                    groupName='', srcGroupDir='', subdir =''):
     setupXml = getParam('GCAM.ScenarioSetupFile')
@@ -578,13 +584,6 @@ def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode
                          groupName, srcGroupDir, subdir, cleanXML=False, mcsMode=mcsMode)
     return editor
 
-# TBD: currently unused
-def scenarioConfigPath(scenario):
-    # We don't need to specify most of the keyword args when we're just getting the config file
-    editor = scenarioEditor(scenario)
-    path = editor.cfgPath()
-    return path
-
 def scenarioXML(scenario, tag, groupName=None):
     editor = scenarioEditor(scenario)
     path = editor.componentPath(tag)
@@ -592,3 +591,9 @@ def scenarioXML(scenario, tag, groupName=None):
     absPath = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, 'exe', path, abspath=True)
     return absPath
 
+# TBD: currently unused
+# def scenarioConfigPath(scenario):
+#     # We don't need to specify most of the keyword args when we're just getting the config file
+#     editor = scenarioEditor(scenario)
+#     path = editor.cfgPath()
+#     return path

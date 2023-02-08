@@ -36,16 +36,22 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
 
     trialDir = context.getTrialDir()
-    groupArg = ['-g', context.groupName] if context.groupName else []
 
     # N.B. MCS.RunWorkspace is the RefWorkspace for trial sandboxes
-    toolArgs = ['+P', context.projectName, '--mcs=trial',
-                '--set=GCAM.SandboxRefWorkspace=' + runWorkspace,
-                'run', '-s', steps, '-S', context.scenario,
-                '--sandboxDir=' + trialDir] + groupArg
+    toolArgs = ['--projectName', context.projectName,
+                '--mcs', 'trial',
+                '--set', f'GCAM.SandboxRefWorkspace={runWorkspace}',
+                'run',
+                '--step', steps,
+                '--scenario', context.scenario,
+                '--sandboxDir', trialDir]
+
+    if context.groupName:
+        toolArgs.extend(['--group', context.groupName])
 
     command = 'gt ' + ' '.join(toolArgs)
     _logger.debug(f'Running: {command}')
+
     status = tool_main(argv=toolArgs, raiseError=True)
     msg = f'"{command}" exited with status {status}'
 
@@ -78,6 +84,9 @@ def _applySingleTrialData(df, context, paramFile):
 
     linkDest = os.path.join(trialDir, 'local-xml')
     _logger.info(f'creating symlink to {linkDest}')
+
+    # TBD: centralize the creation of these paths (e.g., in ScenarioInfo class)
+    #  For example, the number of ".." elements depends on whether groups are in use.
     symlink('../../../../Workspace/local-xml', linkDest)
 
 
@@ -108,7 +117,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
         _runPygcamSteps(setup_steps, context)
 
     if isBaseline and not noGCAM:
-        paramPath = getParam('MCS.ParametersFile')      # TBD: gensim has optional override of param file. Keep it?
+        paramPath = getParam('MCS.ParametersFile')
         paramFile = _readParameterInfo(context, paramPath)
 
         df = readTrialDataFile(simId)

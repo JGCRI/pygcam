@@ -296,6 +296,7 @@ def unProtectLand(tree, landClasses=None, otherArable=False, regions=None):
             parent = landNode.getparent()
             parent.remove(landNode)
 
+# Deprecated
 def createProtected(tree, fraction, landClasses=None, otherArable=False,
                     regions=None, unprotectFirst=False):
     """
@@ -396,12 +397,9 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
 
 # TBD: NEEDS TESTING
 def _landXmlPaths(workspace):
-    version = parse_version_info()
-    landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml'] \
-        if version >= VersionInfo(5, 1, 0) else ['land2.xml', 'land3.xml']
+    landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml']
 
-    subdir = 'aglu-xml' if version < (5, 1, 0) else ''
-    xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml', subdir)
+    xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml')
     paths = [pathjoin(xmlDir, fname) for fname in landXmlFiles]
     return paths
 

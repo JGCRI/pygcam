@@ -55,11 +55,8 @@ def findGCAM():
 
     home = getHomeDir()
 
-    # TBD: drop support for v4?
-    withReleasePackages = ['gcam-v6.0', 'gcam-v5.4', 'gcam-v5.3', 'gcam-v5.2',
-                           'gcam-v5.1.3', 'gcam-v5.1.2', 'gcam-v5.1.1',
-                           'gcam-v4.4.1', 'gcam-v4.4']
-    versions = withReleasePackages + ['gcam-v4.3']
+    withReleasePackages = ['gcam-v6.0', 'gcam-v5.4', 'gcam-v5.3', 'gcam-v5.2']
+    versions = withReleasePackages
     dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
     system = platform.system()

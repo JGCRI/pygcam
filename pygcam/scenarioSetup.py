@@ -88,9 +88,9 @@ def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
     '''
 
     # TBD: this was not coming into play since srcWorkspace was always defined or mcsMode was None
-    if not srcWorkspace:
-        param_name = 'GCAM.RefWorkspace' if mcsMode == 'gensim' else 'GCAM.SandboxRefWorkspace'
-        srcWorkspace = getParam(param_name)
+    # if not srcWorkspace:
+    #     param_name = 'GCAM.RefWorkspace' if mcsMode == 'gensim' else 'GCAM.SandboxRefWorkspace'
+    #     srcWorkspace = getParam(param_name)
 
     if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
         raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
@@ -98,7 +98,7 @@ def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
     # MCS "new" sub-command creates its ref workspace; for non-MCS
     # we do it here, on demand, i.e., if it doesn't exist already.
     if not mcsMode:
-        copyWorkspace(srcWorkspace, forceCreate=forceCreate)
+        copyWorkspace(srcWorkspace, getParam('GCAM.RefWorkspace'), forceCreate=forceCreate)
 
     if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
         # Not prohibited; just a disk-hogging, suboptimal choice
@@ -153,7 +153,7 @@ def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
     _remakeSymLink(localXmlDir, localXmlLink)
 
 
-def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=False):
+def copyWorkspace(newWorkspace, refWorkspace, forceCreate=False, mcsMode=False):
     '''
     Create a copy of a reference workspace by linking to or copying files from
     `refWorkspace`, which defaults to the value of config parameter
@@ -161,16 +161,13 @@ def copyWorkspace(newWorkspace, refWorkspace=None, forceCreate=False, mcsMode=Fa
     for a Monte Carlo simulation or a non-MCS project.
 
     :param newWorkspace: (str) the directory to create
-    :param refWorkspace: (str) the workspace to link to or copy from (defaults
-       to the value of config parameter GCAM.RefWorkspace)
+    :param refWorkspace: (str) the workspace to link to or copy from
     :param forceCreate: (bool) if True, delete and recreate the sandbox
     :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
     :return: none
     '''
     version = getParam('GCAM.VersionNumber')
     _logger.info("Setting up GCAM workspace '%s' for GCAM %s", newWorkspace, version)
-
-    refWorkspace = refWorkspace or getParam('GCAM.RefWorkspace')
 
     if os.path.lexists(newWorkspace) and os.path.samefile(newWorkspace, refWorkspace):
         raise SetupException("run workspace is the same as reference workspace; no setup performed")
