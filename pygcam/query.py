@@ -523,9 +523,6 @@ BatchCommandElement = """
         </command>
 """
 
-#
-# TBD: use new (in 4.3) -l flag to MI to route output to log file.
-#
 def _createJavaCommand(batchFile, miLogFile):
     # javaLibPathArg = '-Djava.library.path="%s"' % javaLibPath if javaLibPath else ""
     # command = 'java %s %s -jar "%s" -b "%s" %s' % (javaArgs, javaLibPathArg, jarFile, batchFile, redirect)
@@ -534,7 +531,7 @@ def _createJavaCommand(batchFile, miLogFile):
     template = getParam('GCAM.MI.BatchCommand')
     command = template.format(batchFile=batchFile)
     if miLogFile:
-        command += f'>> "{miLogFile}" 2>&1'
+        command += f' -l "{miLogFile}"'
 
     return command
 
