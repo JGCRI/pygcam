@@ -37,7 +37,7 @@ def genFullFactorialData(trials, paramFileObj, args):
         attrib = distSpec.attrib
 
         if distName == 'Constant':
-            value = float(attrib['value'])
+            values = [float(attrib['value'])]
             count = 1
 
         elif distName == 'Binary':
@@ -46,8 +46,8 @@ def genFullFactorialData(trials, paramFileObj, args):
 
         elif distName == 'Integers':
             # <Integers min='1' max='3'>
-            min = int(min)
-            max = int(max)
+            min   = int(attrib['min'])
+            max   = int(attrib['max'])
             count = max - min + 1
             values = list(range(min, max + 1))
 
@@ -60,9 +60,12 @@ def genFullFactorialData(trials, paramFileObj, args):
 
         elif distName == 'Sequence':
             # <Sequence values="1, 2, 3">
-            values = attrib['values']
-            values = [float(item) for item in values.split(',')]
+            v_str = attrib['values']
+            values = [float(item) for item in v_str.split(',')]
             count = len(values)
+
+        else:
+            raise PygcamMcsUserError(f"Distribution name '{distName}' is not allowed with full factorial")
 
         var_names.append(name)
         var_values.append(values)
