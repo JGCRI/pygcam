@@ -78,80 +78,82 @@ def genFullFactorialData(trials, paramFileObj, args):
     inputsDF = pd.DataFrame(list(product(*var_values)), columns=var_names)
     return inputsDF
 
-
-def genSALibData(trials, method, paramFileObj, args):
-    from ..error import PygcamMcsUserError
-    from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
-    from ...utils import ensureExtension, removeTreeSafely, mkdirs
-
-    supported_distros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
-
-    outFile = args.outFile or os.path.join(getSimDir(args.simId), 'data.sa')
-    outFile = ensureExtension(outFile, '.sa')
-
-    if os.path.lexists(outFile):
-        # Attempt to mv an existing version of the file to the same name with '~'
-        backupFile = outFile + '~'
-        if os.path.isdir(backupFile):
-            removeTreeSafely(backupFile)
-
-        elif os.path.lexists(backupFile):
-            raise PygcamMcsUserError(f"Refusing to delete '{backupFile}' since it's not a file package.")
-
-        os.rename(outFile, backupFile)
-
-    mkdirs(outFile)
-
-    linked = []
-
-    problemFile = pathjoin(outFile, DFLT_PROBLEM_FILE)
-    with open(problemFile, 'w') as f:
-        f.write('name,low,high\n')
-
-        for elt in paramFileObj.tree.iterfind('//Parameter'):
-            name = elt.get('name')
-            distElt = elt.find('Distribution')
-            distSpec = distElt[0]   # should have only one child as per schema
-            distName = distSpec.tag
-
-            # These 3 distro forms specify min and max values, which we use with SALib
-            legal = supported_distros + ['Linked']
-            if distName not in legal:
-                raise PygcamMcsUserError(f"Found '{distName}' distribution; must be one of {legal} for use with SALib.")
-
-            if distName == 'Linked':        # TBD: ignore these and figure it out when loading the file?
-                linked.append((name, distSpec.get('parameter')))
-                continue
-
-            # Parse out the various forms: (max, min), (factor), (range), and factor for LogUniform
-            attrib = distSpec.attrib
-            if 'min' in attrib and 'max' in attrib:
-                minValue = float(attrib['min'])
-                maxValue = float(attrib['max'])
-            elif 'factor' in attrib:
-                value = float(attrib['factor'])
-                if distName == 'LogUniform':
-                    minValue = 1/value
-                    maxValue = value
-                else:
-                    minValue = 1 - value
-                    maxValue = 1 + value
-            elif 'range' in attrib:
-                value = float(attrib['range'])
-                minValue = -value
-                maxValue =  value
-
-            f.write(f"{name},{minValue},{maxValue}\n")
-
-    methods = (Sobol, FAST, Morris) # , MonteCarlo)
-    methodMap = {cls.__name__.lower(): cls for cls in methods}
-
-    cls = methodMap[method]
-    sa = cls(outFile)
-
-    # saves to input.csv in file package
-    sa.sample(trials=trials, calc_second_order=args.calcSecondOrder)
-    return sa.inputsDF
+#
+# Deprecated
+#
+# def genSALibData(trials, method, paramFileObj, args):
+#     from ..error import PygcamMcsUserError
+#     from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
+#     from ...utils import ensureExtension, removeTreeSafely, mkdirs
+#
+#     supported_distros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
+#
+#     outFile = args.outFile or os.path.join(getSimDir(args.simId), 'data.sa')
+#     outFile = ensureExtension(outFile, '.sa')
+#
+#     if os.path.lexists(outFile):
+#         # Attempt to mv an existing version of the file to the same name with '~'
+#         backupFile = outFile + '~'
+#         if os.path.isdir(backupFile):
+#             removeTreeSafely(backupFile)
+#
+#         elif os.path.lexists(backupFile):
+#             raise PygcamMcsUserError(f"Refusing to delete '{backupFile}' since it's not a file package.")
+#
+#         os.rename(outFile, backupFile)
+#
+#     mkdirs(outFile)
+#
+#     linked = []
+#
+#     problemFile = pathjoin(outFile, DFLT_PROBLEM_FILE)
+#     with open(problemFile, 'w') as f:
+#         f.write('name,low,high\n')
+#
+#         for elt in paramFileObj.tree.iterfind('//Parameter'):
+#             name = elt.get('name')
+#             distElt = elt.find('Distribution')
+#             distSpec = distElt[0]   # should have only one child as per schema
+#             distName = distSpec.tag
+#
+#             # These 3 distro forms specify min and max values, which we use with SALib
+#             legal = supported_distros + ['Linked']
+#             if distName not in legal:
+#                 raise PygcamMcsUserError(f"Found '{distName}' distribution; must be one of {legal} for use with SALib.")
+#
+#             if distName == 'Linked':        # TBD: ignore these and figure it out when loading the file?
+#                 linked.append((name, distSpec.get('parameter')))
+#                 continue
+#
+#             # Parse out the various forms: (max, min), (factor), (range), and factor for LogUniform
+#             attrib = distSpec.attrib
+#             if 'min' in attrib and 'max' in attrib:
+#                 minValue = float(attrib['min'])
+#                 maxValue = float(attrib['max'])
+#             elif 'factor' in attrib:
+#                 value = float(attrib['factor'])
+#                 if distName == 'LogUniform':
+#                     minValue = 1/value
+#                     maxValue = value
+#                 else:
+#                     minValue = 1 - value
+#                     maxValue = 1 + value
+#             elif 'range' in attrib:
+#                 value = float(attrib['range'])
+#                 minValue = -value
+#                 maxValue =  value
+#
+#             f.write(f"{name},{minValue},{maxValue}\n")
+#
+#     methods = (Sobol, FAST, Morris) # , MonteCarlo)
+#     methodMap = {cls.__name__.lower(): cls for cls in methods}
+#
+#     cls = methodMap[method]
+#     sa = cls(outFile)
+#
+#     # saves to input.csv in file package
+#     sa.sample(trials=trials, calc_second_order=args.calcSecondOrder)
+#     return sa.inputsDF
 
 
 def genTrialData(simId, trials, paramFileObj, args):
@@ -160,6 +162,7 @@ def genTrialData(simId, trials, paramFileObj, args):
     by parsing parameters.xml. Return a DataFrame of values.
     """
     from pandas import DataFrame
+    from ..error import PygcamMcsUserError
     from ..distro import linkedDistro
     from ..LHS import lhs, lhsAmend
     from ..XMLParameterFile import XMLRandomVar, XMLCorrelation
@@ -186,8 +189,9 @@ def genTrialData(simId, trials, paramFileObj, args):
     elif method == 'full-factorial':
         trialData = genFullFactorialData(trials, paramFileObj, args)
     else:
-        # SALib methods
-        trialData = genSALibData(trials, method, paramFileObj, args)
+        raise PygcamMcsUserError(f"'{method}' is not a supported method of simulation data generation")
+        # # SALib methods are deprecated
+        # trialData = genSALibData(trials, method, paramFileObj, args)
 
     linkedDistro.storeTrialData(trialData)  # stores trial data in class so its ppf() can access linked values
     lhsAmend(trialData, linked, trials, shuffle=False)
@@ -627,18 +631,23 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-g', '--groupName', default='',
                             help=clean_help('''The name of a scenario group to process.'''))
 
-        parser.add_argument('-m', '--method', choices=['montecarlo', 'sobol', 'fast', 'morris', 'full-factorial'],
+        # methods = ['montecarlo', 'sobol', 'fast', 'morris', 'full-factorial']
+        methods = ['montecarlo', 'full-factorial']
+        parser.add_argument('-m', '--method', choices=methods,
                             default='montecarlo',
-                            help=clean_help('''Use the specified method to generate trial data. Default is "montecarlo".'''))
+                            help=clean_help('''Use the specified method to generate trial data. Default is "montecarlo".
+                                Note that in the only supported distribution types for the 'full-factorial' method, are: 
+                                Constant, Binary, Integer, Grid, and Sequence'''))
 
-        parser.add_argument('-o', '--outFile',
-                            help=clean_help('''For methods other than "montecarlo". The path to a "package 
-                            directory" into which SALib-related data are stored.
-                            If the filename does not end in '.sa', this extension is added. The file
-                            'problem.csv' within the package directory will contain the parameter specs in
-                            SALib format. The file inputs.csv is also generated in the file package using
-                            the chosen method's sampling method. If an outFile is not specified, a package
-                            of the name 'data.sa' is created in the simulation run-time directory.'''))
+        # Deprecated
+        # parser.add_argument('-o', '--outFile',
+        #                     help=clean_help('''For methods other than "montecarlo". The path to a "package
+        #                     directory" into which SALib-related data are stored.
+        #                     If the filename does not end in '.sa', this extension is added. The file
+        #                     'problem.csv' within the package directory will contain the parameter specs in
+        #                     SALib format. The file inputs.csv is also generated in the file package using
+        #                     the chosen method's sampling method. If an outFile is not specified, a package
+        #                     of the name 'data.sa' is created in the simulation run-time directory.'''))
 
         paramFile = getParam('MCS.ParametersFile')
         parser.add_argument('-p', '--paramFile', default=None,
@@ -655,8 +664,9 @@ class GensimCommand(McsSubcommandABC):
                             help=clean_help(f'''Root of the run-time directory for running user programs. Defaults to
                             value of config parameter MCS.Root (currently '{runRoot}')'''))
 
-        parser.add_argument('-S', '--calcSecondOrder', action='store_true',
-                            help=clean_help('''For Sobol method only -- calculate second-order sensitivities.'''))
+        # Deprecated
+        # parser.add_argument('-S', '--calcSecondOrder', action='store_true',
+        #                     help=clean_help('''For Sobol method only -- calculate second-order sensitivities.'''))
 
         parser.add_argument('-s', '--simId', type=int, default=1,
                             help=clean_help('The id of the simulation. Default is 1.'))
