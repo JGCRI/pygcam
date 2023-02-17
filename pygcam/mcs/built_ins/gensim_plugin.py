@@ -367,15 +367,12 @@ def genSimulation(simId, trials, paramPath, args):
 
 def _newsim(runWorkspace, trials):
     '''
-    Setup the app and run directories for a given user app.
+    Copies reference workspace to MCS.RunWorkspace and, if ``trials``
+    is non-zero, ensures database initialization.
     '''
     from ...scenarioSetup import copyWorkspace
     from ..Database import getDatabase
-    from ..error import PygcamMcsUserError
     from ..XMLResultFile import XMLResultFile
-
-    if not runWorkspace:
-        raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
 
     srcDir = getParam('GCAM.RefWorkspace')
     dstDir = runWorkspace
@@ -588,6 +585,8 @@ def driver(args, tool):
         removeTreeSafely(runDir, ignore_errors=False)
 
     runWorkspace = getParam('MCS.RunWorkspace')
+    if not runWorkspace:
+        raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
 
     if not os.path.exists(runWorkspace):
         _newsim(runWorkspace, trials)

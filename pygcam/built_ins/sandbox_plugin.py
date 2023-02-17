@@ -4,7 +4,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016  Richard Plevin
+.. Copyright (c) 2016-2023  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC, clean_help
@@ -34,7 +34,7 @@ def driver(args, tool):
     sandboxProjectDir = getParam('GCAM.SandboxProjectDir')
     sandbox = pathjoin(sandboxProjectDir, args.groupDir, args.scenario)
 
-    # handle ~ in pathname
+    # handle '~' in pathname
     sandbox = pathjoin(sandbox, expanduser=True, abspath=True, normpath=True)
 
     if args.path:
@@ -46,7 +46,7 @@ def driver(args, tool):
         args.delete = args.create = True
 
     if args.delete:
-        _logger.info('Removing ' + sandbox)
+        _logger.info(f"Removing '{sandbox}'")
         try:
             if execute:
                 if os.path.islink(sandbox):
@@ -54,9 +54,9 @@ def driver(args, tool):
                 else:
                     removeTreeSafely(sandbox)
             else:
-                print("Would remove", sandbox)
+                print(f"Would remove sandbox '{sandbox}'")
         except Exception as e:
-            _logger.warn("Can't remove '%s': %s" % (sandbox, e))
+            _logger.warn(f"Can't remove sandbox '{sandbox}': {e}")
 
     if args.create:
         if execute:
@@ -64,16 +64,17 @@ def driver(args, tool):
             _logger.info(f"Creating '{sandbox}' from reference workspace '{srcWorkspace}'")
             createSandbox(sandbox, srcWorkspace)
         else:
-            print("Would create", sandbox)
+            print(f"Would create sandbox '{sandbox}'")
 
     if args.run:
-        cmdStr = 'cd ' + sandbox + '; ' + args.run
+        cmdStr = f"cd '{sandbox}'; {args.run}"
+
         if execute:
             _logger.info(cmdStr)
             os.chdir(sandbox)
             subprocess.call(args.run, shell=True)
         else:
-            print("Would run:", cmdStr)
+            print(f"Would run: '{cmdStr}'")
 
 class SandboxCommand(SubcommandABC):
     def __init__(self, subparsers):

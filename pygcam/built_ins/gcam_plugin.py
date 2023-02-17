@@ -3,7 +3,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2015-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from ..subcommand import SubcommandABC, clean_help
@@ -14,28 +14,16 @@ class GcamCommand(SubcommandABC):
         super(GcamCommand, self).__init__('gcam', subparsers, kwargs, group='project', label='GCAM')
 
     def addArgs(self, parser):
-        # parser.add_argument('-c', '--copyWorkspace', action='store_true',
-        #                     help=clean_help('''Create a copy of the source workspace in the location specified
-        #                     by GCAM.'''))
-
         parser.add_argument('-C', '--configFile',
                             help=clean_help('''Specify the one or more GCAM configuration filenames, separated by commas.
                             If multiple configuration files are given, the are run in succession in the
                             same "job" on the cluster.'''))
-
-        parser.add_argument('-f', '--forceCreate', action='store_true',
-                            help=clean_help('''Re-create the workspace, even if it already exists.'''))
 
         parser.add_argument('-g', '--groupDir', default='',
                             help=clean_help('The scenario group directory name, if any.'))
 
         parser.add_argument('-n', '--noRun', action='store_true',
                             help=clean_help('''Don't run GCAM; just print the command that would be run.'''))
-
-        parser.add_argument('-r', '--refWorkspace',
-                            help=clean_help('''The reference workspace to use to create the new sandbox. This is
-                            used only if the indicated or implied workspace doesn't exist. Defaults
-                            to the value of GCAM.RefWorkspace.'''))
 
         parser.add_argument('-s', '--scenario', default='',
                             help=clean_help('''The scenario to run.'''))
@@ -44,17 +32,24 @@ class GcamCommand(SubcommandABC):
                             help=clean_help('''Specify the directory holding scenario files. Default is the value of
                             config variable GCAM.ScenariosDir, if set, otherwise it's the current directory.'''))
 
+        # TBD: We now require that the workspace exist. Make this a required parameter?
         parser.add_argument('-w', '--workspace',
                             help=clean_help('''Specify the path to the GCAM workspace to use. If it doesn't exist, the
-                            named workspace will be created. If not specified on the command-line, the path
-                            constructed as {GCAM.SandboxDir}/{scenario} is used, if scenario is defined. If scenario
-                            is undefined, the workspace defined by config variable 'GCAM.RefWorkspace' is created.'''))
-                            # TBD: Should this say GCAM.SandboxRefWorkspace rather than GCAM.RefWorkspace?
-                            #   Make this a required parameter? Used on all recent project.xml files.
+                            named workspace an exception is raised. If not specified on the command-line, the path
+                            constructed as {GCAM.SandboxDir}/{scenario} is used, if scenario is defined.'''))
 
         parser.add_argument('-W', '--noWrapper', action='store_true',
                             help=clean_help('''Do not run gcam within a wrapper that detects errors as early as possible
                             and terminates the model run. By default, the wrapper is used.'''))
+
+        # Deprecated
+        # parser.add_argument('-f', '--forceCreate', action='store_true',
+        #                     help=clean_help('''Re-create the workspace, even if it already exists.'''))
+        # parser.add_argument('-r', '--refWorkspace',
+        #                     help=clean_help('''The reference workspace to use to create the new sandbox.
+        #                     This is used only if the indicated or implied workspace doesn't exist. Defaults
+        #                     to the value of GCAM.RefWorkspace.'''))
+
         return parser
 
     def run(self, args, tool):

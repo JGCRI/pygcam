@@ -7,9 +7,8 @@
 import os
 import re
 import subprocess
-from semver import VersionInfo
 
-from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
+from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
 from .log import getLogger
 from .scenarioSetup import createSandbox
@@ -230,24 +229,21 @@ def linkToMacJava():
     finally:
         os.chdir(owd)
 
-def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, groupDir='',
-            configFile=None, forceCreate=False, noRun=False, noWrapper=False):
+def runGCAM(scenario, workspace=None, scenariosDir=None, groupDir='', configFile=None,
+            noRun=False, noWrapper=False):
+            # refWorkspace=None, forceCreate=False,
     """
-
     :param scenario: (str) the scenario to run
     :param workspace: (str) path to the workspace to run in, or None, in which
        case the model is run in {GCAM.SandboxDir}/{scenario} if scenario is given
        otherwise, the default scenario in the configuration.xml in the GCAM.RefWorkspace
        is run.
-    :param refWorkspace: (str) a workspace to copy files from to create the sandbox,
-       if the workspace is not given, or doesn't exist.
     :param scenariosDir: (str) the directory in which the config.xml file for the
        given scenario is found. Defaults to GCAM.ScenariosDir, if given, or "."
     :param groupDir: (str) the name of the scenario group if group sub-directories
        are to be used when computing the location of the scenario's config.xml.
     :param configFile: (str) if scenario is not given, the name of a configuration
        file to run. If scenario is given, this parameter is ignored.
-    :param forceCreate: (bool) if True, recreate the sandbox even if it already exists.
     :param noRun: (bool) if True, don't run the model, just create the sandbox and
        display the command that would be executed.
     :param noWrapper: (bool) if True, don't run GCAM inside a "wrapper" that reads
@@ -255,28 +251,36 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     :return: none
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
+    #     :param refWorkspace: (str) a workspace to copy files from to create the sandbox,
+    #        if the workspace is not given, or doesn't exist.
+    #     :param forceCreate: (bool) if True, recreate the sandbox even if it already exists.
+
     import platform
 
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    # TBD: the else looks wrong here since 'workspace' is what we create.
-    workspace = (workspace or
-                 (pathjoin(getParam('GCAM.SandboxDir'), scenario) if scenario else getParam('GCAM.RefWorkspace')))
+    if not (workspace or scenario):
+        raise PygcamException("runGCAM: must pass either workspace or scenario")
 
-    if not os.path.lexists(workspace) or forceCreate:
-        createSandbox(workspace, refWorkspace, forceCreate=forceCreate)
+    workspace = workspace or pathjoin(getParam('GCAM.SandboxDir'), scenario)
+
+    if not os.path.lexists(workspace):
+        raise PygcamException(f"Sandbox '{workspace}' does not exist.")
+
+    # Deprecated: the sandbox should have to exist. Setup does that.
+    # if not os.path.lexists(workspace) or forceCreate:
+    #     createSandbox(workspace, refWorkspace, forceCreate=forceCreate)
 
     exeDir = getExeDir(workspace, chdir=True)
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
-
-    version = parse_version_info()
 
     # InMemoryDatabase implies RunQueriesInGCAM
     if not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or getParamAsBoolean('GCAM.InMemoryDatabase')):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
+    # TBD: centralize the calculation of configuration file path in a function
     if scenario:
         # Translate scenario name into config file path, assuming that for scenario
         # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
@@ -302,6 +306,8 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
 
 
 def gcamMain(args):
-    runGCAM(args.scenario, workspace=args.workspace, refWorkspace=args.refWorkspace,
+    runGCAM(args.scenario, workspace=args.workspace,
+            # refWorkspace=args.refWorkspace,
             scenariosDir=args.scenariosDir, groupDir=args.groupDir, configFile=args.configFile,
-            forceCreate=args.forceCreate, noRun=args.noRun, noWrapper=args.noWrapper)
+            # forceCreate=args.forceCreate,
+            noRun=args.noRun, noWrapper=args.noWrapper)

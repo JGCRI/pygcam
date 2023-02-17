@@ -64,7 +64,7 @@ def getSimDir(simId, create=False):
 
     return simDir
 
-
+# TBD: change name to McsContext and use Context for the main GCAM directory / config file context?
 class Context(object):
 
     __slots__ = ['runId', 'simId', 'trialNum', 'scenario',

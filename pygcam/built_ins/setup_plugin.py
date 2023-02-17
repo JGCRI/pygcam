@@ -80,7 +80,7 @@ class SetupCommand(SubcommandABC):
                             help=clean_help('''Identify the scenario to run.
                             Note: at least one of --baseline (-b) / --scenario (-s) must be used.'''))
 
-        # TBD: is this really used?
+        # TBD: is this really used? Probably can be deprecated.
         parser.add_argument('-S', '--subdir', default="",
                             help=clean_help('A sub-directory to use instead of scenario name'))
 
