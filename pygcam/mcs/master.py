@@ -24,7 +24,7 @@ except:
     # Prior location
     from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
-from .context import Context
+from .context import McsContext
 from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
@@ -128,8 +128,8 @@ class Master(object):
             for row in rows:
                 assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
                 runId, simId, trialNum, status = row
-                Context(projectName=projectName, runId=runId, simId=simId,
-                        trialNum=trialNum, scenario=scenario, status=status)
+                McsContext(projectName=projectName, runId=runId, simId=simId,
+                           trialNum=trialNum, scenario=scenario, status=status)
 
     # TBD: see client.wait_for_engines() method
     def waitForWorkers(self):
@@ -221,7 +221,7 @@ class Master(object):
         :param simId: (int) simulation ID
         :param scenario: (str) scenario name
         :param trialNums: (list of int) trial numbers
-        :return: list of Context instances
+        :return: list of McsContext instances
         '''
         db = self.db
         session = db.Session()
@@ -253,9 +253,9 @@ class Master(object):
         finally:
             db.endSession(session)
 
-        contexts = [Context(projectName=projectName, runId=r.runId, simId=simId,
-                            trialNum=r.trialNum, scenario=scenario, groupName=groupName,
-                            baseline=baseline, status=r.status) for r in runs]
+        contexts = [McsContext(projectName=projectName, runId=r.runId, simId=simId,
+                               trialNum=r.trialNum, scenario=scenario, groupName=groupName,
+                               baseline=baseline, status=r.status) for r in runs]
         return contexts
 
     def setRunStatuses(self, pairs):
@@ -279,7 +279,7 @@ class Master(object):
 
         status = status or context.status
 
-        cached = Context.getRunInfo(context.runId)
+        cached = McsContext.getRunInfo(context.runId)
         if cached:
             # _logger.debug('setRunStatus: cache hit: %s', cached)
 

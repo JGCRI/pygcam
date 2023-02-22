@@ -197,7 +197,7 @@ class Worker(object):
         """
         Initialize a Worker instance
 
-        :param context: (Context) description of trial to run
+        :param context: (McsContext) description of trial to run
         :param argDict: (dict) various args passed from command-line
         """
         getConfig()
@@ -257,7 +257,7 @@ class Worker(object):
         Run a single Monte Carlo trial.
 
         :return: (WorkerResult) Contains execution status, one of {'succeeded', 'failed', 'alarmed', 'aborted', 'killed'},
-           as well as Context, any error message, and a list of results to post to the database.
+           as well as McsContext, any error message, and a list of results to post to the database.
         """
         context = self.context
         argDict = self.argDict
@@ -329,7 +329,7 @@ def runTrial(context, argDict):
     Remotely-callable function providing an interface to the Worker
     class.
 
-    :param context: (Context) information describing the run
+    :param context: (McsContext) information describing the run
     :param argDict: (dict) with bool values for keys 'runLocal',
         'noGCAM', 'noBatchQueries', and 'noPostProcessor'
     :return: (WorkerResult) run identification info and completion status
@@ -368,7 +368,7 @@ def runTrial(context, argDict):
 
 
 # if __name__ == '__main__':
-#     context = Context(runId=1001, simId=1, trialNum=2, scenario='baseline',
+#     context = McsContext(runId=1001, simId=1, trialNum=2, scenario='baseline',
 #                       projectName='paper1', groupName='mcs', store=False)
 #
 #     argDict = {'runLocal': True,

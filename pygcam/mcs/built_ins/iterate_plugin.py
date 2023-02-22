@@ -17,7 +17,7 @@ def driver(args, tool):
 
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
-    from ..context import Context
+    from ..context import McsContext
     from .. import util as U
 
     simId    = args.simId
@@ -36,7 +36,7 @@ def driver(args, tool):
 
     for scenario in args.scenarios:
         # TBD: Add groupName
-        context = Context(projectName=projectName, simId=simId, scenario=scenario)
+        context = McsContext(projectName=projectName, simId=simId, scenario=scenario)
         _logger.info('Running iterator for projectName=%s, simId=%d, scenario=%s, trials=%s, command="%s"',
                      projectName, simId, scenario, trialStr, command)
 

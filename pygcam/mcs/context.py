@@ -1,6 +1,4 @@
 '''
-.. The "gt" (gcamtool) commandline program
-
 .. Copyright (c) 2017-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
@@ -8,6 +6,8 @@ import os
 from ..config import getParam, getParamAsInt
 from ..utils import mkdirs
 from ..project import Project
+from ..context import Context
+
 from .error import PygcamMcsUserError
 
 # def _getJobNum():
@@ -64,42 +64,28 @@ def getSimDir(simId, create=False):
 
     return simDir
 
-# class Context(object):
-#     pass
 
-# class McsContext(Context):
-#     pass
+class McsContext(Context):
 
-# TBD: change name to McsContext and use Context for the main GCAM directory / config file context?
-class Context(object):
+    __slots__ = 'runId', 'simId', 'trialNum', 'status'      # in addition to those declared in Context class...
 
-    __slots__ = ['runId', 'simId', 'trialNum', 'scenario',
-                 'baseline', 'groupName', 'projectName',
-                 'useGroupDir', 'status']
+    instances = {}      # McsContext instances keyed by runId
 
-    instances = {}      # Context instances keyed by runId
+    def __init__(self, projectName=None, scenario=None, baseline=None, groupName=None,
+                 runId=None, simId=None, trialNum=None, status=None, store=True):
 
-    def __init__(self, runId=None, projectName=None, simId=None, trialNum=None,
-                 scenario=None, baseline=None, groupName=None, status=None,
-                 store=True):
-        self.runId     = runId
-        self.simId     = simId
-        self.trialNum  = trialNum
-        self.scenario  = scenario
-        self.baseline  = baseline
-        self.status    = status
+        super().__init__(projectName=projectName, scenario=scenario, baseline=baseline, groupName=groupName)
 
-        self.projectName = projectName = projectName or getParam('GCAM.DefaultProject')
-        project = Project.readProjectFile(projectName)
-
-        self.groupName = groupName or project.scenarioSetup.defaultGroup
-        self.useGroupDir = project.scenarioGroup.useGroupDir
+        self.runId = runId
+        self.simId = simId
+        self.trialNum = trialNum
+        self.status = status
 
         if store and runId:
             self.saveRunInfo()
 
     def saveRunInfo(self):
-        Context.instances[self.runId] = self
+        McsContext.instances[self.runId] = self
         return self
 
     @classmethod
@@ -108,30 +94,20 @@ class Context(object):
 
     def __str__(self):
         idTail = str(id(self))[-6:] # show last 6 digits only; enough to distinguish objs
-        return f"<McsClass id={idTail} prj={self.projectName} scn={self.scenario} grp={self.groupName} use={self.useGroupDir} sim={self.simId} trl={self.trialNum} run={self.runId} sta={self.status}>"
+        return f"<McsClass id={idTail} scn={self.scenario} grp={self.groupName} use={self.useGroupDir} sim={self.simId} trl={self.trialNum} run={self.runId} sta={self.status}>"
 
-    def setVars(self, projectName=None, simId=None, trialNum=None, scenario=None,
-                baseline=None, groupName=None, status=None):
-        '''
-        Set elements of a context structure for all args that are not None.
-        '''
-        if projectName:
-            self.projectName = projectName
+    def setVars(self, projectName=None, scenario=None, baseline=None, groupName=None,
+                simId=None, trialNum=None, status=None):
+        """
+        Set instance vars of an McsContext for all args that are not None.
+        """
+        super().setVars(projectName=projectName, scenario=scenario, baseline=baseline, groupName=groupName)
 
         if simId is not None:
             self.simId = int(simId)
 
         if trialNum is not None:
             self.trialNum = int(trialNum)
-
-        if scenario:
-            self.scenario = scenario
-
-        if baseline:
-            self.baseline = baseline
-
-        if groupName:
-            self.groupName = groupName
 
         if status:
             self.status = status
@@ -174,7 +150,3 @@ class Context(object):
     @property
     def groupDir(self):
         return self.groupName if self.useGroupDir else ''
-
-if __name__ == '__main__':
-    c = Context()
-    print(c)

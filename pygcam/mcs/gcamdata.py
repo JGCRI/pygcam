@@ -234,10 +234,10 @@ class GcamDataSystem(object):
             files.
         :return: none
         """
-        from pygcam.mcs.context import Context
+        from pygcam.mcs.context import McsContext
         from pygcam.mcs.XMLConfigFile import XMLConfigFile
 
-        ctx = Context(simId=self.sim_id, scenario=self.scenario)
+        ctx = McsContext(simId=self.sim_id, scenario=self.scenario)
         scen_config = XMLConfigFile(ctx)
         scen_config_path = scen_config.getFilename()
         _logger.debug(f"Updating config file '{scen_config_path}'")

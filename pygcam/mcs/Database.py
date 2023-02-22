@@ -127,7 +127,7 @@ RUN_FAILURES  = [RUN_FAILED, RUN_KILLED, RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
 RUN_STATUSES  = [RUN_NEW, RUN_QUEUED, RUN_RUNNING, RUN_SUCCEEDED] + RUN_FAILURES
 
 
-# TBD: maybe drop this and store it from Context instead
+# TBD: maybe drop this and store it from McsContext instead
 def beforeSavingRun(_mapper, _connection, run):
     '''
     Before inserting/updating a Run instance, set numerical status and
@@ -822,9 +822,9 @@ class CoreDatabase(object):
         By default, returns tuples of (runId, trialNum) for the given scenario that have
         any of the statuses in statusList (which can be a single status string or a list
         of strings.) If groupName or projectName are not None, results are converted to
-        a list of Context instances.
+        a list of McsContext instances.
         '''
-        from .context import Context
+        from .context import McsContext
 
         if isinstance(statusList, str):
             statusList = [statusList]
@@ -837,15 +837,15 @@ class CoreDatabase(object):
             # expId = self.getExpId(scenario, session=session)
             # query = session.query(Run.runId, Run.trialNum).filter_by(simId=simId, expId=expId).filter(Run.status.in_(statusList))
 
-            # Return all data required to create Context (except projectName and groupName)
+            # Return all data required to create McsContext (except projectName and groupName)
             query = session.query(Run.runId, Run.simId, Run.trialNum, Run.status).filter_by(simId=simId).filter(Run.status.in_(statusList))
             query = query.add_columns(Experiment.expName, Experiment.parent).join(Experiment).filter_by(expName=scenario)
 
             rslt = query.order_by(Run.trialNum).all()
 
         if groupName or projectName:
-            rslt = [Context(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], scenario=r[4],
-                            baseline=r[5], groupName=groupName, projectName=projectName) for r in rslt]
+            rslt = [McsContext(runId=r[0], simId=r[1], trialNum=r[2], status=r[3], scenario=r[4],
+                               baseline=r[5], groupName=groupName, projectName=projectName) for r in rslt]
         return rslt
 
     def createSim(self, trials, description, simId=None):

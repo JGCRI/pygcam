@@ -5,7 +5,7 @@ import os
 from ...config import getParam, setParam, pathjoin
 from ...log import getLogger
 from ...utils import mkdirs, getResource
-from ..context import Context, getSimDir
+from ..context import McsContext, getSimDir
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -335,7 +335,7 @@ def genSimulation(simId, trials, paramPath, args):
     filecopy(userResultFile, simResultFile)
 
     paramFileObj = XMLParameterFile(paramPath)
-    context = Context(projectName=args.projectName, simId=simId, groupName=groupName)
+    context = McsContext(projectName=args.projectName, simId=simId, groupName=groupName)
     paramFileObj.loadInputFiles(context, scenarioNames, writeConfigFiles=True)
 
     # Define the experiments (scenarios) in the database
@@ -456,7 +456,7 @@ def _plot_values(values, paramName, plotsDir, bins=250, context='paper'):
 # project = Project.readProjectFile(projectName, groupName=args.groupName)
 # groupName  = args.groupName or project.scenarioSetup.defaultGroup
 #
-# ctx = Context(simId=args.simId, groupName=groupName, scenario=baseline)
+# ctx = McsContext(simId=args.simId, groupName=groupName, scenario=baseline)
 # configFile = XMLConfigFile(ctx)
 #
 # sandboxDir = getParam('GCAM.SandboxDir')
