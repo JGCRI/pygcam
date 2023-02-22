@@ -20,20 +20,59 @@ import sys
 
 from sqlalchemy import create_engine, Table, Column, String, Float, text, MetaData, event
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from sqlalchemy.orm import sessionmaker, load_only
-from sqlalchemy.orm.exc import NoResultFound
-
-from ..config import getSection, getParam, getParamAsBoolean
-from ..log import getLogger
 
 from . import util as U
-from .constants import RegionMap
+from ..config import getSection, getParam, getParamAsBoolean
 from .error import PygcamMcsUserError, PygcamMcsSystemError
+from ..log import getLogger
 from .schema import (ORMBase, Run, Sim, Input, Output, InValue, OutValue, Experiment,
-                     Program, Code, Region, TimeSeries)
+                     Program, Code, TimeSeries)
+from ..utils import pygcam_version
 
 _logger = getLogger(__name__)
+
+if pygcam_version < (2, 0, 0):
+    # Deprecated once TimeSeries uses region name rather than id
+    # Default region map for GCAM v4 through v6 (so far.)
+    RegionMap = {
+        'Multiple': -1,
+        'global': 0,
+        'USA': 1,
+        'Africa_Eastern': 2,
+        'Africa_Northern': 3,
+        'Africa_Southern': 4,
+        'Africa_Western': 5,
+        'Australia_NZ': 6,
+        'Brazil': 7,
+        'Canada': 8,
+        'Central America and Caribbean': 9,
+        'Central Asia': 10,
+        'China': 11,
+        'EU-12': 12,
+        'EU-15': 13,
+        'Europe_Eastern': 14,
+        'Europe_Non_EU': 15,
+        'European Free Trade Association': 16,
+        'India': 17,
+        'Indonesia': 18,
+        'Japan': 19,
+        'Mexico': 20,
+        'Middle East': 21,
+        'Pakistan': 22,
+        'Russia': 23,
+        'South Africa': 24,
+        'South America_Northern': 25,
+        'South America_Southern': 26,
+        'South Asia': 27,
+        'South Korea': 28,
+        'Southeast Asia': 29,
+        'Taiwan': 30,
+        'Argentina': 31,
+        'Colombia': 32
+    }
+
 
 def usingSqlite():
     '''
@@ -63,13 +102,6 @@ def sqlite_FK_pragma(dbapi_connection, connection_record):
     # pd.read_sql_table('data', engine, index_col='id')
     # pd.read_sql_table('data', engine, parse_dates=['Date'])
     # pd.read_sql_table('data', engine, parse_dates={'Date': '%Y-%m-%d'})
-
-
-RegionAliases = {
-    'all regions':   'global',
-    'rest of world': 'multiple',
-    'row':           'multiple'
-}
 
 # The name of the program as stored in the "program" table
 GCAM_PROGRAM = 'gcam'
@@ -956,10 +988,11 @@ class GcamDatabase(CoreDatabase):
         self.outputIds = None                # output IDs by name
         self.canonicalRegionMap = {}
 
-        # Cache these to avoid database access in saveResults loop
-        for regionName, regionId in RegionMap.items():
-            canonName = canonicalizeRegion(regionName)
-            self.canonicalRegionMap[canonName] = regionId
+        if pygcam_version < (2, 0, 0):
+            # Cache these to avoid database access in saveResults loop
+            for regionName, regionId in RegionMap.items():
+                canonName = canonicalizeRegion(regionName)
+                self.canonicalRegionMap[canonName] = regionId
 
     @classmethod
     def getDatabase(cls, checkInit=True):
@@ -985,7 +1018,7 @@ class GcamDatabase(CoreDatabase):
         if args and args.empty:
             return
 
-        self.addRegions(RegionMap)
+        #self.addRegions(RegionMap)
 
     def startDb(self, checkInit=True):
         super(GcamDatabase, self).startDb(checkInit=checkInit)
@@ -1120,22 +1153,24 @@ class GcamDatabase(CoreDatabase):
 
             self._yearColsAdded = True
 
-    def addRegions(self, regionMap):
-        # TBD: read region map from file identified in config file, or use default values
-        # For now, use default mapping
-        with self.sessionScope() as session:
-            for name, regId in regionMap.items():
-                self.addRegion(regId, name, session=session)
+    # Deprecated
+    # def addRegions(self, regionMap):
+    #     # TBD: read region map from file identified in config file, or use default values
+    #     # For now, use default mapping
+    #     with self.sessionScope() as session:
+    #         for name, regId in regionMap.items():
+    #             self.addRegion(regId, name, session=session)
+    #
+    # def addRegion(self, regionId, name, session=None):
+    #     sess = session or self.Session()
+    #     obj = Region(regionId=regionId, displayName=name, canonName=canonicalizeRegion(name))
+    #     sess.add(obj)
+    #
+    #     if session:
+    #         sess.commit()
+    #         self.endSession(sess)
 
-    def addRegion(self, regionId, name, session=None):
-        sess = session or self.Session()
-        obj = Region(regionId=regionId, displayName=name, canonName=canonicalizeRegion(name))
-        sess.add(obj)
-
-        if session:
-            sess.commit()
-            self.endSession(sess)
-
+    # Deprecated: used only when pygcam_version < (2, 0, 0)
     def getRegionId(self, name):
         canonName = canonicalizeRegion(name)
         regionId = self.canonicalRegionMap[canonName]
@@ -1223,7 +1258,8 @@ class GcamDatabase(CoreDatabase):
             self.commitWithRetry(sess)
             self.endSession(sess)
 
-    def saveTimeSeries(self, runId, regionId, paramName, values, units=None, session=None):
+    # TBD: test this for pygcam_version before and after 2.0.0
+    def saveTimeSeries(self, runId, region, paramName, values, units=None, session=None):
         sess = session or self.Session()
 
         programId = self.getProgramId(GCAM_PROGRAM)
@@ -1237,7 +1273,10 @@ class GcamDatabase(CoreDatabase):
 
         outputId = row.outputId
 
-        ts = TimeSeries(runId=runId, outputId=outputId, regionId=regionId, units=units)
+        if pygcam_version < (2, 0, 0):
+            ts = TimeSeries(runId=runId, outputId=outputId, regionId=region, units=units)
+        else:
+            ts = TimeSeries(runId=runId, outputId=outputId, regionName=region, units=units)
 
         for name, value in values.items():  # Set the values for "year" columns
             setattr(ts, name, value)
@@ -1270,10 +1309,6 @@ class GcamDatabase(CoreDatabase):
             return rslt
 
 
-# Single instance of the class. Use 'getDatabase' constructor
-# to ensure that this instance is returned if already created.
-_DbInstance = None
-
 def getDatabase(checkInit=True):
     '''
     Return the instantiated CoreDatabase, or created one and return it.
@@ -1298,8 +1333,14 @@ def canonicalizeRegion(name):
        changed to spaces. (The use of underscores is inconsistent and thus hard
        to remember, e.g., 'South America_Northern')
     '''
+    region_aliases = {
+        'all regions': 'global',
+        'rest of world': 'multiple',
+        'row': 'multiple'
+    }
+
     name = name.lower()
-    if name in RegionAliases:
-        name = RegionAliases[name]
+    if name in region_aliases:
+        name = region_aliases[name]
 
     return name.replace('_', ' ')

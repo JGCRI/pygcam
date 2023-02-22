@@ -58,11 +58,17 @@ def getSimDir(simId, create=False):
     if not simsDir:
         raise PygcamMcsUserError("Missing required config parameter 'RunSimsDir'")
 
-    simDir = os.path.join(simsDir, 's%03d' % simId)  # name is of format ".../s001/"
+    simDir = os.path.join(simsDir, f's{simId:03d}')  # name is of format ".../s001/"
     if create:
         mkdirs(simDir)
 
     return simDir
+
+# class Context(object):
+#     pass
+
+# class McsContext(Context):
+#     pass
 
 # TBD: change name to McsContext and use Context for the main GCAM directory / config file context?
 class Context(object):
@@ -102,10 +108,7 @@ class Context(object):
 
     def __str__(self):
         idTail = str(id(self))[-6:] # show last 6 digits only; enough to distinguish objs
-
-        return "<Context id=%s prj=%s scn=%s grp=%s use=%s sim=%s trl=%s run=%s sta=%s>" % \
-               (idTail, self.projectName, self.scenario, self.groupName, self.useGroupDir,
-                self.simId, self.trialNum, self.runId, self.status)
+        return f"<McsClass id={idTail} prj={self.projectName} scn={self.scenario} grp={self.groupName} use={self.useGroupDir} sim={self.simId} trl={self.trialNum} run={self.runId} sta={self.status}>"
 
     def setVars(self, projectName=None, simId=None, trialNum=None, scenario=None,
                 baseline=None, groupName=None, status=None):

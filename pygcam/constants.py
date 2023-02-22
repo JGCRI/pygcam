@@ -12,6 +12,12 @@ LOCAL_XML_NAME = 'local-xml'
 DYN_XML_NAME   = 'dyn-xml'
 XML_SRC_NAME   = 'xmlsrc'
 
+# Common directory and filenames
+CONFIG_XML = "config.xml"
+SCENARIOS_XML = "scenarios.xml"
+PROJECT_XML = "project.xml"
+QUERY_DIRNAME  = "queries"
+
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 

@@ -10,12 +10,15 @@ from ..log import getLogger, configureLogs
 from ..signals import (catchSignals, TimeoutSignalException, UserInterruptException)
 from ..utils import mkdirs
 
-from ..mcs.constants import RUNNER_SUCCESS, RUNNER_FAILURE
 from ..mcs.error import PygcamMcsUserError, GcamToolError
 from ..mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
 from ..mcs.util import readTrialDataFile, symlink
 from ..mcs.XMLParameterFile import XMLParameter, XMLParameterFile, decache
+
+# Status codes for invoked programs
+RUNNER_SUCCESS = 0
+RUNNER_FAILURE = -1
 
 _logger = getLogger(__name__)
 

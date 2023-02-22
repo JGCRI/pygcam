@@ -11,7 +11,7 @@ import sys
 
 from lxml import etree as ET
 
-from .config import getParam, parse_version_info, pathjoin
+from .config import getParam, parse_gcam_version, pathjoin
 from .constants import UnmanagedLandClasses
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
@@ -315,7 +315,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
            protecting.
     :return: None
     """
-    version = parse_version_info()
+    version = parse_gcam_version()
     if version >= VersionInfo(5, 0, 0):
         raise PygcamException("Called landProtection.createProtected on GCAM version >= 5.0. Use landProtectionUpdate.protectLand instead.")
 

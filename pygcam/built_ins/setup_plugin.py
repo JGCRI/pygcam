@@ -62,8 +62,11 @@ class SetupCommand(SubcommandABC):
                             subdir is defined) or "{xmlsrc}/scenarios.py" (if subdir is undefined) under the
                             current ProjectRoot.'''))
 
-        parser.add_argument('-p', '--stop', type=int, metavar='period-or-year', dest='stopPeriod',
-                            help=clean_help('The number of the GCAM period or the year to stop after'))
+        parser.add_argument('-p', '--stopYear', type=int,
+                            help=clean_help('The year after which to stop running GCAM'))
+
+        parser.add_argument('--stopPeriod', type=int,
+                            help=clean_help('DEPRECATED: please use --stopYear instead.'))
 
         parser.add_argument('-r', '--refWorkspace', default="",
                             help=clean_help('''A reference workspace to use instead of the value of 
@@ -114,6 +117,7 @@ class SetupCommand(SubcommandABC):
         return parser   # for auto-doc generation
 
     def create_sandbox(self, args, workspace, mcsMode):
+        from ..config import getParam
         from ..scenarioSetup import createSandbox
 
         if not mcsMode or mcsMode == 'trial':       # i.e., if mcsMode is not 'gensim'
@@ -196,7 +200,10 @@ class SetupCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..config import getParam, pathjoin
-        from ..error import SetupException
+        from ..error import CommandlineError
+
+        if args.stopPeriod is not None:
+            raise CommandlineError("The --stopPeriod parameter has been deprecated. Please use --stopYear instead.")
 
         if args.createSandbox == 'no' and args.runScenarioSetup == 'no':
             _logger.error("Specified both --createSandbox='no' and --runScenarioSetup='no' so there's nothing to do.")
@@ -204,7 +211,7 @@ class SetupCommand(SubcommandABC):
 
         scenario = args.scenario or args.baseline
         if not scenario:
-            raise SetupException('At least one of --baseline (-b) / --scenario (-s) must be used.')
+            raise CommandlineError('At least one of --baseline (-b) / --scenario (-s) must be used.')
 
         if args.workspace:
             workspace = args.workspace

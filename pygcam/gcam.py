@@ -9,9 +9,9 @@ import re
 import subprocess
 
 from .config import getParam, getParamAsBoolean, pathjoin, unixPath
+from .constants import CONFIG_XML
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
 from .log import getLogger
-from .scenarioSetup import createSandbox
 from .utils import writeXmldbDriverProperties, getExeDir, pushd
 from .windows import IsWindows
 
@@ -280,17 +280,18 @@ def runGCAM(scenario, workspace=None, scenariosDir=None, groupDir='', configFile
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    # TBD: centralize the calculation of configuration file path in a function
-    if scenario:
-        # Translate scenario name into config file path, assuming that for scenario
-        # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
-        scenariosDir = unixPath(scenariosDir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
-        configFile   = pathjoin(scenariosDir, groupDir, scenario, "config.xml")
-    else:
-        configFile = unixPath(configFile or pathjoin(exeDir, 'configuration.xml'), abspath=True)
+    configFile = config_path(scenario, workspace=workspace, scenarios_dir=scenariosDir,
+                group_dir=groupDir, config_file=configFile)
+    # if scenario:
+    #     # Translate scenario name into config file path, assuming that for scenario
+    #     # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
+    #     scenariosDir = unixPath(scenariosDir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
+    #     configFile   = pathjoin(scenariosDir, groupDir, scenario, CONFIG_XML)
+    # else:
+    #     configFile = unixPath(configFile or pathjoin(exeDir, 'configuration.xml'), abspath=True)
 
     gcamPath = unixPath(getParam('GCAM.Executable'), abspath=True)
-    gcamArgs = [gcamPath, '-C', configFile]  # N.B. GCAM (< 4.2) doesn't allow space between -C and filename
+    gcamArgs = [gcamPath, '-C', configFile]
 
     command = ' '.join(gcamArgs)
     if noRun:
@@ -298,16 +299,27 @@ def runGCAM(scenario, workspace=None, scenariosDir=None, groupDir='', configFile
     else:
         _logger.info('Running: %s', command)
 
-        noWrapper = IsWindows or noWrapper     # never use the wrapper on Windows
+        noWrapper = IsWindows or noWrapper     # don't use the wrapper on Windows
         exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else _gcamWrapper(gcamArgs)
 
         if exitCode != 0:
             raise ProgramExecutionError(command, exitCode)
 
+# TBD: Move this to utils.py? gcam_context.py?
+def config_path(scenario, workspace=None, scenarios_dir=None, group_dir='', config_file=None):
+    if scenario:
+        # Translate scenario name into config file path, assuming that for scenario
+        # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
+        scenarios_dir = unixPath(scenarios_dir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
+        cfg_path = pathjoin(scenarios_dir, group_dir, scenario, CONFIG_XML)
+    else:
+        cfg_path = unixPath(config_file or pathjoin(getExeDir(workspace), 'configuration.xml'), abspath=True)
+
+    return cfg_path
 
 def gcamMain(args):
     runGCAM(args.scenario, workspace=args.workspace,
-            # refWorkspace=args.refWorkspace,
             scenariosDir=args.scenariosDir, groupDir=args.groupDir, configFile=args.configFile,
-            # forceCreate=args.forceCreate,
             noRun=args.noRun, noWrapper=args.noWrapper)
+            # refWorkspace=args.refWorkspace,
+            # forceCreate=args.forceCreate,

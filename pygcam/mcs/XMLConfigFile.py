@@ -4,6 +4,7 @@ from copy import copy
 import os
 from lxml import etree as ET
 
+from ..config import getParam, pathjoin
 from ..log import getLogger
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError
@@ -18,22 +19,35 @@ INTS_GROUP    = 'Ints'
 BOOLS_GROUP   = 'Bools'
 DOUBLES_GROUP = 'Doubles'
 
+# TBD: these two functions might be moved to .util as well. Or perhaps mcs.context.py
 def getSimScenarioDir(context):
     from .util import getSimLocalXmlDir
 
     localXmlDir = getSimLocalXmlDir(context.simId)
-    scenDir = os.path.join(localXmlDir, context.groupDir, context.scenario)
+    scenDir = pathjoin(localXmlDir, context.groupDir, context.scenario)
     return scenDir
 
 def getSimConfigFile(context):
     """
     Returns the path to sim's copy of the config.xml file for the given scenario.
     """
-    from .util import ConfigFileName
+    from ..constants import CONFIG_XML
+
     scenDir = getSimScenarioDir(context)
-    configFile = os.path.join(scenDir, ConfigFileName)
+    configFile = pathjoin(scenDir, CONFIG_XML)
     return configFile
 
+# TBD: Create a version of this that works for non-MCS cases? Could
+#   have a superclass for non-MCS with a subclass, say McsConfigFile,
+#   that adds stuff for MCS case.
+#  class ConfigFile(XMLFile):
+#     ivars: project name, scenario name, baseline name, group name, use_group_dir
+#  class McsConfigFile(ConfigFile):
+#     adds ivars: run_id, sim_id, trial_num, and status
+#     adds sim-specific methods
+#
+# TBD: Note that the functions here seem to duplicate some of XMLEditor. Why?
+#
 # TBD: create interface to load "most local" version of config file.
 class XMLConfigFile(XMLFile):
     '''
@@ -45,12 +59,12 @@ class XMLConfigFile(XMLFile):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
+        self.writePath = None
+        self.context = context = copy(context)
+
         if useRefConfig:
-            from ..config import getParam
             path = getParam('GCAM.RefConfigFile')
         else:
-            self.context = context = copy(context)
-
             if useCopy:
                 path = self.getBackupPath()
             else:
@@ -85,7 +99,6 @@ class XMLConfigFile(XMLFile):
     def writeAll(cls, context):
         """
         Write all configuration files to disk.
-        :return:
         """
         for cfg in cls.instances.values():
             configPath = getSimConfigFile(cfg.context)
@@ -102,8 +115,8 @@ class XMLConfigFile(XMLFile):
         backupPath = self.getBackupPath()
 
         # Copy only if the backupPath doesn't exist or is older than configPath
-        if not os.path.exists(backupPath) or \
-               os.path.getctime(backupPath) < os.path.getctime(configPath):
+        if (not os.path.exists(backupPath) or
+            os.path.getctime(backupPath) < os.path.getctime(configPath)):
             _logger.debug('Copying to %s', backupPath)
             shutil.copy2(configPath, backupPath)
 
@@ -136,7 +149,7 @@ class XMLConfigFile(XMLFile):
         Find the config file component with the specified tag and return
         the corresponding Element.
         '''
-        xpath = '//Configuration/%s/Value[@name="%s"]' % (group, name)
+        xpath = f'//Configuration/{group}/Value[@name="{name}"]'
         found = self.tree.xpath(xpath)
         return None if len(found) == 0 else found[0]
 
@@ -145,9 +158,9 @@ class XMLConfigFile(XMLFile):
         return None if elt is None else elt.text
 
     def getConfigGroup(self, group):
-        groupElt = self.tree.xpath('//Configuration/%s' % group)
+        groupElt = self.tree.xpath(f'//Configuration/{group}')
         if groupElt is None:
-            raise PygcamMcsUserError('getConfigGroup: group "%s" was not found' % group)
+            raise PygcamMcsUserError(f'getConfigGroup: group "{group}" was not found')
 
         return groupElt[0]
 
@@ -160,7 +173,7 @@ class XMLConfigFile(XMLFile):
 
         elt = self.getConfigElement(name, group)
         if elt is None:
-            raise PygcamMcsUserError('updateConfigElement: element "%s" was not found in group %s' % (name, group))
+            raise PygcamMcsUserError(f'updateConfigElement: element "{name}" was not found in group {group}')
 
         if newName:
             elt.set('Name', newName)
@@ -184,14 +197,14 @@ class XMLConfigFile(XMLFile):
         groupElt = self.getConfigGroup(group)
         elt = self.getConfigElement(name, group)
         if elt is None:
-            raise PygcamMcsUserError('deleteConfigElement: element "%s" was not found in group %s' % (name, group))
+            raise PygcamMcsUserError(f'deleteConfigElement: element "{name}" was not found in group {group}')
 
         groupElt.remove(elt)
 
     def getComponentPathname(self, name):
         pathname = self.getConfigValue(name, COMPONENTS_GROUP)
         if not pathname:
-            raise PygcamMcsUserError('getComponentPathname: a file with tag "%s" was not found' % name)
+            raise PygcamMcsUserError(f'getComponentPathname: a file with tag "{name}" was not found')
         return pathname
 
     def updateComponentPathname(self, name, pathname):
@@ -203,9 +216,9 @@ class XMLConfigFile(XMLFile):
     def insertComponentPathname(self, name, pathname, after):
         groupElt = self.getConfigGroup(COMPONENTS_GROUP)
 
-        afterNode = groupElt.find('Value[@name="{}"]'.format(after))
+        afterNode = groupElt.find(f'Value[@name="{after}"]')
         if afterNode is None:
-            raise PygcamMcsUserError("Can't insert {} after {}, as the latter doesn't exist".format(name, after))
+            raise PygcamMcsUserError(f"Can't insert {name} after {after}, as the latter doesn't exist")
 
         index = groupElt.index(afterNode) + 1
 

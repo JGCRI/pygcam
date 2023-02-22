@@ -196,7 +196,9 @@ class DiscreteCommand(McsSubcommandABC):
         self.group = None   # don't display this for now
 
     def addArgs(self, parser):
-        from ..constants import DEFAULT_BINS, DEFAULT_TRUNCATE, COUNT_TITLE
+        DEFAULT_BINS = 30
+        DEFAULT_TRUNCATE = 3
+        COUNT_TITLE = 'count'
 
         parser.add_argument('-i', '--inputFile', required=True,
                             help='Path to input .csv file being converted.')

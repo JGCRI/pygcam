@@ -26,7 +26,7 @@ import shutil
 from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean, unixPath, pathjoin
-from .constants import LOCAL_XML_NAME, DYN_XML_NAME
+from .constants import LOCAL_XML_NAME, DYN_XML_NAME, CONFIG_XML
 from .error import SetupException, PygcamException
 from .gcam_context import makeDirPath, gcam_path, GcamPath
 from .log import getLogger
@@ -498,8 +498,8 @@ class XMLEditor(object):
         self.updateConfigComponent('Strings', 'scenarioName', self.name)
 
         # For the following configuration file settings, no action is taken when value is None
-        if args.stopPeriod is not None:
-            self.setStopPeriod(args.stopPeriod)
+        if args.stopYear is not None:
+            self.setStopYear(args.stopYear)
 
         # For the following boolean arguments, we first check if there is any value. If
         # not, no change is made. If a value is given, the parameter is set accordingly.
@@ -546,9 +546,18 @@ class XMLEditor(object):
         """
         if not self.configPath:
             # compute the first time, then cache it
-            self.configPath = pathjoin(self.scenario_dir_abs, 'config.xml', realpath=True)
+            self.configPath = pathjoin(self.scenario_dir_abs, CONFIG_XML, realpath=True)
 
         return self.configPath
+
+    def cachedConfig(self, edited=None):
+        path = self.cfgPath()
+        item = CachedFile.getFile(path)
+
+        if edited is not None:
+            item.edited = edited
+
+        return item
 
     def componentPath(self, tag, configPath=None):
         configPath = configPath or self.cfgPath()
@@ -641,7 +650,7 @@ class XMLEditor(object):
 
         _logger.debug("Update <%s><Value %s>%s</Value>", group, textArgs, '...' if value is None else value)
 
-        cfg = self.cfgPath()
+        item = self.cachedConfig()
 
         prefix = f"//{group}/Value[@name='{name}']"
         pairs = []
@@ -655,7 +664,7 @@ class XMLEditor(object):
         if appendScenarioName is not None:
             pairs.append((prefix + "/@append-scenario-name", int(appendScenarioName)))
 
-        xmlEdit(cfg, pairs)
+        xmlEdit(item, pairs)
 
     @callableMethod
     def setClimateOutputInterval(self, years):
@@ -683,9 +692,7 @@ class XMLEditor(object):
         :param newstr: (str) the replacement string
         :return: none
         """
-        cfg = self.cfgPath()
-        item = CachedFile.getFile(cfg)
-        item.setEdited()
+        item = self.cachedConfig(edited=True)
 
         _logger.info("stringReplace('%s', '%s', '%s')", xpath, oldstr, newstr)
 
@@ -708,9 +715,7 @@ class XMLEditor(object):
         :param value: the new value to set for the identified element
         :return: none
         """
-        cfg = self.cfgPath()
-        item = CachedFile.getFile(cfg)
-        item.setEdited()
+        item = self.cachedConfig(edited=True)
 
         _logger.info("setConfigValue('%s', '%s', '%s')", section, name, value)
 
@@ -739,10 +744,7 @@ class XMLEditor(object):
 
         _logger.info("Add ScenarioComponent name='%s', xmlfile='%s'", name, xmlfile)
 
-        cfg = self.cfgPath()
-        item = CachedFile.getFile(cfg)
-        item.setEdited()
-
+        item = self.cachedConfig(edited=True)
         elt = item.tree.find('//ScenarioComponents')
         node = ET.SubElement(elt, 'Value')
         node.set('name', name)
@@ -766,10 +768,7 @@ class XMLEditor(object):
 
         _logger.info("Insert ScenarioComponent name='%s', xmlfile='%s' after value '%s'", name, xmlfile, after)
 
-        cfg = self.cfgPath()
-        item = CachedFile.getFile(cfg)
-        item.setEdited()
-
+        item = self.cachedConfig(edited=True)
         elt = item.tree.find('//ScenarioComponents')
         afterNode = elt.find('Value[@name="%s"]' % after)
         if afterNode is None:
@@ -806,8 +805,7 @@ class XMLEditor(object):
         :return: none
         """
         _logger.info("Delete ScenarioComponent name='%s' for scenario", name)
-        cfg = self.cfgPath()
-        item = CachedFile.getFile(cfg)
+        item = self.cachedConfig()
 
         elt = item.tree.find("//ScenarioComponents")
         valueNode = elt.find(f"Value[@name='{name}']")
@@ -831,9 +829,8 @@ class XMLEditor(object):
         xmlfile = unixPath(xmlfile) # TBD: delete after switching to GcamPaths
 
         _logger.debug("Rename ScenarioComponent name='%s', xmlfile='%s'", name, xmlfile)
-        cfg = self.cfgPath()
-
-        xmlEdit(cfg, [(f"//ScenarioComponents/Value[text()='{xmlfile.rel}']/@name", name)])
+        item = self.cachedConfig()
+        xmlEdit(item, [(f"//ScenarioComponents/Value[text()='{xmlfile.rel}']/@name", name)])
 
     @callableMethod
     def multiply(self, tag, xpath, value):
@@ -892,7 +889,7 @@ class XMLEditor(object):
         """
         _logger.info("Add market constraint: %s %s for %s", target, policy, self.name)
 
-        cfg = self.cfgPath()
+        item = self.cachedConfig(edited=True)
 
         basename = target + '-' + policy	# e.g., biodiesel-subsidy
 
@@ -912,7 +909,7 @@ class XMLEditor(object):
 
         # If we've already added files for policy/constraint on this target,
         # we replace the old values with new ones. Otherwise, we add them.
-        addOrUpdate = self.updateScenarioComponent if xmlSel(cfg, xpath) else self.addScenarioComponent
+        addOrUpdate = self.updateScenarioComponent if xmlSel(item, xpath) else self.addScenarioComponent
         addOrUpdate(policyTag, policyXML)
         addOrUpdate(constraintTag, constraintXML)
 
@@ -929,10 +926,7 @@ class XMLEditor(object):
         :return: none
         """
         _logger.info("Delete market constraint: %s %s for %s", target, policy, self.name)
-        cfg = self.cfgPath()
-
-        # if policy == "subsidy":
-        #     policy = "subs"	# use shorthand in filename
+        item = self.cachedConfig()
 
         policyTag     = target + "-" + policy
         constraintTag = target + "-constraint"
@@ -940,7 +934,7 @@ class XMLEditor(object):
         # See if element exists in config file (-Q => quiet; just report exit status)
         xpath = f'//ScenarioComponents/Value[@name="{policyTag}"]'
 
-        if xmlSel(cfg, xpath):
+        if xmlSel(item, xpath):
             # found it; delete the elements
             self.deleteScenarioComponent(policyTag)
             self.deleteScenarioComponent(constraintTag)

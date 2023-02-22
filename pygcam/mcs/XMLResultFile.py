@@ -14,6 +14,7 @@ from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
 from .Database import getDatabase
 from .XML import XMLWrapper, findAndSave, getBooleanXML
+from ..utils import pygcam_version
 
 _logger = getLogger(__name__)
 
@@ -300,7 +301,7 @@ def extractResult(context, scenario, outputDef, type):
 
     queryResult = getCachedFile(csvPath)
     _logger.debug("queryResult:\n%s", queryResult.df)
- 
+
     paramName   = outputDef.name
     whereClause = outputDef.whereClause
     _logger.debug("whereClause: %s", whereClause)
@@ -404,18 +405,18 @@ def saveResults(context, resultList):
     db.commitWithRetry(session)
 
     for resultDict in resultList:
-        paramName  = resultDict['paramName']
-        value      = resultDict['value']
-        regionName = resultDict['regionName']
-        regionId = db.getRegionId(regionName)
+        paramName = resultDict['paramName']
+        value = resultDict['value']
 
         # Save the values to the database
         try:
             if resultDict['isScalar']:
                 db.setOutValue(runId, paramName, value, session=session)  # TBD: need regionId?
             else:
+                regionName = resultDict['regionName']
                 units = resultDict['units']
-                db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
+                region = regionName if pygcam_version >= (2, 0, 0) else db.getRegionId(regionName)
+                db.saveTimeSeries(runId, region, paramName, value, units=units, session=session)
 
         except Exception as e:
             session.rollback()

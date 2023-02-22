@@ -112,7 +112,7 @@ def _translatePath(value):
 
     return value
 
-def parse_version_info(vers=None):
+def parse_gcam_version(vers=None):
     import semver
 
     vers = vers or getParam('GCAM.VersionNumber')
@@ -133,7 +133,7 @@ def setInputFilesByVersion():
     '''
     from semver import VersionInfo
 
-    vers = parse_version_info()
+    vers = parse_gcam_version()
 
     major = str(vers.major)                     # e.g., "5"
     minor = '{}.{}'.format(major, vers.minor)   # e.g., "5.1"

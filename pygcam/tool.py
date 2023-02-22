@@ -15,7 +15,7 @@ import sys
 
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
-                     usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
+                     usingMCS, savePathMap, parse_gcam_version, setInputFilesByVersion)
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -273,7 +273,7 @@ class GcamTool(object):
             raise ConfigFileError('GCAM executable "%s" was not found.' % exePath)
 
         # Starting with v4.3, gcam reports its version number
-        versionCfg = parse_version_info()
+        versionCfg = parse_gcam_version()
         versionFile = pathjoin(exeDir, '.version')
 
         # Check for cached version info
@@ -287,7 +287,7 @@ class GcamTool(object):
             with open(versionFile, 'w') as f:
                 f.write(versionNum + '\n')
 
-        versionExe = parse_version_info(versionNum)
+        versionExe = parse_gcam_version(versionNum)
         if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
             # use only major.minor to identify GCAM version
             versionNum = "{}.{}".format(versionExe.major, versionExe.minor)

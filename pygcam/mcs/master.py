@@ -30,6 +30,7 @@ from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
 from ..config import getParam, getParamAsInt
 from ..log import getLogger
+from ..utils import pygcam_version
 
 # Exit values for Master.processTrials()
 CONTINUE = 1
@@ -406,9 +407,9 @@ class Master(object):
                     if resultDict['isScalar']:
                         db.setOutValue(runId, paramName, value, session=session)
                     else:
-                        regionId = db.getRegionId(regionName)   # cached; not a DB query
+                        region = regionName if pygcam_version >= (2, 0, 0) else db.getRegionId(regionName)   # cached; not a DB query
                         units = resultDict['units']
-                        db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
+                        db.saveTimeSeries(runId, region, paramName, value, units=units, session=session)
 
             db.commitWithRetry(session)
 

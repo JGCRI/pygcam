@@ -11,16 +11,20 @@ import os
 from lxml import etree as ET
 import pkgutil
 import re
+import semver
 import shutil
 import subprocess
 import sys
 from contextlib import contextmanager
 
-from .config import getParam, getParamAsBoolean, pathjoin, unixPath, parse_version_info
+from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .error import PygcamException, FileFormatError
 from .log import getLogger
+from .version import VERSION
 
 _logger = getLogger(__name__)
+
+pygcam_version = semver.parse_version_info(VERSION)
 
 def random_sleep(low_secs, high_secs):
     """

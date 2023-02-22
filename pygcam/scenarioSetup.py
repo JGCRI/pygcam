@@ -6,7 +6,7 @@
 '''
 import os
 
-from .config import getParam, getParamAsBoolean, pathjoin, parse_version_info
+from .config import getParam, getParamAsBoolean, pathjoin, parse_gcam_version
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
 from .log import getLogger
@@ -86,11 +86,9 @@ def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
        for pygcam-mcs trials.
     :return: none
     '''
-
-    # TBD: this was not coming into play since srcWorkspace was always defined or mcsMode was None
-    # if not srcWorkspace:
-    #     param_name = 'GCAM.RefWorkspace' if mcsMode == 'gensim' else 'GCAM.SandboxRefWorkspace'
-    #     srcWorkspace = getParam(param_name)
+    if not srcWorkspace:
+        param_name = 'GCAM.RefWorkspace' if mcsMode == 'gensim' else 'GCAM.SandboxRefWorkspace'
+        srcWorkspace = getParam(param_name)
 
     if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
         raise SetupException("The run sandbox is the same as the run workspace; no setup performed")

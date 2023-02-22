@@ -2,7 +2,7 @@ import glob
 import os
 
 from .config import getParam, pathjoin, unixPath
-from .constants import LOCAL_XML_NAME
+from .constants import LOCAL_XML_NAME, CONFIG_XML
 from .error import SetupException
 from .log import getLogger
 
@@ -119,9 +119,9 @@ class GcamContext(object):
         self.scenario_dir = self.gcam_path(self.local_xml.rel, self.xmlGroupSubdir, scenario, create=createDirs)
 
         # TBD: This produces, e.g., '/Users/rjp/ws/group1/policy/local-xml/group1/policy/config.xml'. Simplify dir structure.
-        # self.scenarioConfigPath = pathjoin(self.scenario_dir.abs, 'config.xml')
+        # self.scenarioConfigPath = pathjoin(self.scenario_dir.abs, CONFIG_XML)
         # TBD: Maybe store in exe dir, i.e., '.../ws/group1/policy/exe/config.xml' rather than storing in sandbox_dir/Workspace?
-        self.scenarioConfigPath = pathjoin(self.sandboxExeDir, 'config.xml')
+        self.scenarioConfigPath = pathjoin(self.sandboxExeDir, CONFIG_XML)
 
     # TBD: lookup the group and scenario, grab all data and return GcamContext(...)
     @classmethod

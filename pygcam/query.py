@@ -12,7 +12,7 @@ from lxml import etree as ET
 from semver import VersionInfo
 
 from .Xvfb import Xvfb
-from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
+from .config import getParam, getParamAsBoolean, parse_gcam_version, pathjoin, unixPath
 from .constants import NUM_AEZS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
@@ -267,7 +267,7 @@ def _addRewrites(levelElt, rewriteSet):
         node = ET.Element('rewrite', attrib={'from': From, 'to': to})
         levelElt.append(node)
 
-    version = parse_version_info()
+    version = parse_gcam_version()
 
     gcam5 = (version > VersionInfo(5, 0, 0))
     byBasin = gcam5 and rewriteSet.byBasin
@@ -1104,7 +1104,7 @@ def queryMain(args):
     noDelete    = args.noDelete
     prequery    = args.prequery
     versionNum  = getParam('GCAM.VersionNumber')
-    versionInfo = parse_version_info()
+    versionInfo = parse_gcam_version()
     inMemory        = versionInfo > v_4_2_0 and getParamAsBoolean('GCAM.InMemoryDatabase')
     internalQueries = versionInfo > v_4_2_0 and (inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM'))
     batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')

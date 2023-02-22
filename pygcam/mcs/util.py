@@ -1,19 +1,19 @@
 # @author: Richard Plevin
 # @author: Sam Fendell
 #
-# Copyright (c) 2012-2022. The Regents of the University of California (Regents)
+# Copyright (c) 2012-2023. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
 
-# TBD: eliminate redundancies with pygcam
+# TBD: eliminate redundancies with pygcam.utils
 
 import os
-from inspect import stack, getargspec
+from inspect import stack
 
 from ..config import getParam, getParamAsInt
+from ..constants import SCENARIOS_XML
 from ..log import getLogger
 from ..utils import mkdirs
 
-from .constants import COMMENT_CHAR
 from .context import getSimDir
 from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
 
@@ -22,8 +22,11 @@ _logger = getLogger(__name__)
 _activeYearStrs = None
 _activeYearInts = None
 
+PARAMETERS_XML = "parameters.xml"
+RESULTS_XML    = "results.xml"
 TRIAL_DATA_CSV = 'trialData.csv'
 
+COMMENT_CHAR = '#'
 YEAR_COL_PREFIX = 'y'
 
 def writeTrialDataFile(simId, df):
@@ -50,14 +53,16 @@ def readTrialDataFile(simId):
 
     simDir = getSimDir(simId)
 
+    # deprecated
     # If SALib version exists, use it; otherwise use legacy file
-    dataFile = os.path.join(simDir, 'data.sa', 'inputs.csv')
-    if not os.path.lexists(dataFile):
-        dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
+    # dataFile = os.path.join(simDir, 'data.sa', 'inputs.csv')
+    # if not os.path.lexists(dataFile):
+    #     dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
+
+    dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
 
     df = pd.read_table(dataFile, sep=',', index_col='trialNum')
     return df
-    # return df.as_matrix()
 
 def createOutputDir(outputDir):
     from ..utils import removeFileOrTree
@@ -155,27 +160,22 @@ def tail(filename, count):
     :return: a list of the lines read
     '''
     from subprocess import check_output
-    pipe = None
 
+    cmd = f"tail -n {count} '{filename}'"
     try:
-        cmd = 'tail -n %d %s' % (count, filename)
         lines = check_output(cmd, shell=True).decode('utf-8')
+        return lines
 
     except Exception as e:
-        msg = "Failed run 'tail' on file '%s': %s" % (filename, e)
-        raise PygcamMcsSystemError(msg)
-    finally:
-        if pipe:
-            pipe.close()
+        raise PygcamMcsSystemError(f'Shell command failed: "{cmd}" : {e}')
 
-    return lines
 
 def computeLogPath(simId, scenario, logDir, trials):
     trialMin = min(trials)
     trialMax = max(trials)
-    trialRange = trialMin if trialMin == trialMax else "%d-%d" % (trialMin, trialMax)
-    jobName  = "%s-s%d-%s" % (scenario, simId, trialRange)   # for displaying in job queue
-    logFile  = "%s-%s.out" % (scenario, trialRange)          # for writing diagnostic output
+    trialRange = trialMin if trialMin == trialMax else f"{trialMin}-{trialMax}"
+    jobName  = f"{scenario}-s{simId}-{trialRange}"   # for displaying in job queue
+    logFile  = f"{scenario}-{trialRange}.out"        # for writing diagnostic output
     logPath  = os.path.join(logDir, logFile)
     return logPath, logFile, jobName
 
@@ -211,7 +211,7 @@ def fileReader(filename, error=BaseSpecError, fileExtension=None, split=True):
 
     if fileExtension:
         if not checkSuffix(filename, fileExtension):
-            raise error('Wrong file extension. Should be "%s"' % fileExtension)
+            raise error(f'Wrong file extension. Should be "{fileExtension}"')
 
     with open(filename, 'r') as f:
         for lineNum, line in enumerate(f):
@@ -223,19 +223,7 @@ def fileReader(filename, error=BaseSpecError, fileExtension=None, split=True):
                 line = line.split()
             yield line
 
-# Deprecated?
-def getOptionalArgs(func):
-    '''
-    Inspects a function to find the names of optional arguments.
-    Used in distrogen to generate distrogens from a single function.
-
-    func is a function object.
-    Returns a tuple of strings of the optional argument names.
-    '''
-    args, _, _, defaults = getargspec(func)
-    args = args[-len(defaults):]
-    return args
-
+# TBD: Another version exists in pygcam.utils. Compare and reconcile these.
 def loadModuleFromPath(modulePath):
     '''
     The load a module from a '.py' or '.pyc' file from a path that ends in the
@@ -269,7 +257,7 @@ def loadModuleFromPath(modulePath):
         _logger.error(errorString)
         raise PygcamMcsUserError(errorString)
 
-
+# TBD: Should be moved to pygcam.utils as well as a partner to the fn above.
 def loadObjectFromPath(objName, modulePath, required=True):
     '''
     Load a module and return a reference to a named object in that module.
@@ -284,6 +272,7 @@ def loadObjectFromPath(objName, modulePath, required=True):
 
     raise PygcamMcsUserError("Module '%s' has no object named '%s'" % (modulePath, objName))
 
+# TBD: move these to pygcam.utils (or create pygcam.file_utils?) and reconcile any duplicates
 #
 # File and directory utilities for navigating the run-time structure
 #
@@ -297,7 +286,7 @@ def symlink(src, dst):
     try:
         os.symlink(src, dst)
     except Exception:
-        print("Can't symlink %s to %s" % (src, dst))
+        print(f"Can't symlink '{src}' to '{dst}'")
         raise
 
 def rename(direc, src, dest):
@@ -351,20 +340,13 @@ def dirFromNumber(n, prefix="", create=False):
 
     return directory
 
-def findParamData(paramList, name):
-    '''
-    Convenience method mostly used in testing.
-    Finds a param from a given list of Parameter instances with given name.
-    '''
-    items = [x for x in paramList if x.name == name]
-    return items[0].data
-
 TRIAL_STRING_DELIMITER = ','
 
 def parseTrialString(string):
     '''
     Converts a comma-separated list of ranges into a list of numbers.
     Ex. 1,3,4-6,2 becomes [1,3,4,5,6,2]. Duplicates are deleted.
+    See also createTrialString() below.
     '''
     rangeStrs = string.split(TRIAL_STRING_DELIMITER)
     res = set()
@@ -379,8 +361,8 @@ def parseTrialString(string):
 
 def createTrialString(lst):
     '''
-    Assemble a list of numbers into a compact list using hyphens to identify ranges.
-    This reverses the operation of parseTrialString
+    Assemble a list of numbers into a compact list using hyphens to identify
+    ranges. This reverses the operation of parseTrialString()
     '''
     from itertools import groupby
     from operator  import itemgetter
@@ -405,12 +387,6 @@ def saveDict(d, filename):
         for key, value in d.items():
             f.write('%s=%s\n' % (key, value))
 
-def fullClassname(obj):
-    module = obj.__class__.__module__
-    if module is None or module == str.__class__.__module__:
-        return obj.__class__.__name__
-    return module + '.' + obj.__class__.__name__
-
 def isdebugging():
   for frame in stack():
     if frame[1].endswith("pydevd.py"):
@@ -418,12 +394,8 @@ def isdebugging():
   return False
 
 # Basenames of common files and dirs
-ConfigFileName    = "config.xml"
-ScenarioFileName  = "scenarios.xml"
-ParameterFileName = "parameters.xml"
-ResultFileName    = "results.xml"
-QueryDirName      = "queries"
 
+# TBD: move to constants.py (local-xml is probably a duplicate)
 SimAppXmlDirName   = "app-xml"
 SimLocalXmlDirName = "local-xml"
 
@@ -440,19 +412,20 @@ def getSimParameterFile(simId):
     """
     Returns the path to sim's copy of the parameters.xml file.
     """
-    return getSimXmlFile(simId, ParameterFileName)
+    return getSimXmlFile(simId, PARAMETERS_XML)
 
+# TBD: unused
 def getSimScenarioFile(simId):
     """
     Returns the path to sim's copy of the scenarios.xml file.
     """
-    return getSimXmlFile(simId, ScenarioFileName)
+    return getSimXmlFile(simId, SCENARIOS_XML)
 
 def getSimResultFile(simId):
     """
     Returns the path to sim's copy of the results.xml file.
     """
-    return getSimXmlFile(simId, ResultFileName)
+    return getSimXmlFile(simId, RESULTS_XML)
 
 def getSimLocalXmlDir(simId):
     """
@@ -460,15 +433,6 @@ def getSimLocalXmlDir(simId):
     """
     simDir = getSimDir(simId)
     path = os.path.join(simDir, SimLocalXmlDirName)
-    return path
-
-def getRunQueryDir():
-    """
-    Returns the path to sim's copy of the scenarios.xml file.
-    """
-    workspace = getParam('MCS.RunWorkspace')
-
-    path = os.path.join(workspace, QueryDirName)
     return path
 
 def parseMcsDir(path, trialNum_only=False):
