@@ -14,7 +14,7 @@ def driver(args, tool):
     import subprocess
     from ..config import getParam, pathjoin
     from ..error import FileFormatError
-    from ..utils import mkdirs
+    from ..file_utils import mkdirs
     from ..XMLFile import XMLFile
 
     xmlStarlet = getParam('GCAM.XmlStarlet')

@@ -85,23 +85,25 @@ class ConfigCommand(SubcommandABC):
     def run(self, args, tool):
         import re
         import subprocess
-        from ..config import getParam, _ConfigParser, USR_CONFIG_FILE
+        from ..config import getParam, _ConfigParser, USR_CONFIG_FILE, pathjoin
 
         if args.edit:
-            cmd = '%s %s/%s' % (getParam('GCAM.TextEditor'), getParam('Home'), USR_CONFIG_FILE)
+            editor = getParam('GCAM.TextEditor')
+            cfg_path = pathjoin(getParam('Home'), USR_CONFIG_FILE)
+            cmd = f"{editor} '{cfg_path}'"
             print(cmd)
             exitStatus = subprocess.call(cmd, shell=True)
             if exitStatus != 0:
-                raise PygcamException("TextEditor command '%s' exited with status %s\n" % (cmd, exitStatus))
+                raise PygcamException(f"TextEditor command '{cmd}' exited with status {exitStatus}\n")
             return
 
         section = 'DEFAULT' if args.useDefault else args.projectName
 
         if not section:
-            raise CommandlineError("Project was not specifed and GCAM.DefaultProject is not set")
+            raise CommandlineError("Project was not specified and GCAM.DefaultProject is not set")
 
         if section != 'DEFAULT' and not _ConfigParser.has_section(section):
-            raise CommandlineError("Unknown configuration file section '%s'" % section)
+            raise CommandlineError(f"Unknown configuration file section '{section}'")
 
         if args.test:
             self.testConfig(section)
@@ -121,7 +123,7 @@ class ConfigCommand(SubcommandABC):
             if pattern.match(name):
                 # getParam does path translation for docker, if required
                 value = getParam(name, section=section, raiseError=False)
-                print("%25s = %s" % (name, value))
+                print(f"{name:25s} = {value}")
 
 
 PluginClass = ConfigCommand

@@ -16,10 +16,10 @@ import sys
 from lxml import etree as ET
 
 from .config import getParam, setParam, getConfigDict, unixPath, pathjoin
-from .constants import LOCAL_XML_NAME, XML_SRC_NAME
+from .constants import LOCAL_XML_NAME, XML_SRC_NAME, QRESULTS_DIRNAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
-from .utils import flatten, shellCommand, getBooleanXML, simpleFormat, QueryResultsDir
+from .utils import flatten, shellCommand, getBooleanXML, simpleFormat
 from .temp_file import getTempFile
 from .XMLFile import XMLFile
 from .xmlSetup import ScenarioSetup
@@ -598,7 +598,7 @@ class Project(XMLFile):
             argDict['sandboxDir']     = sandboxDir
             argDict['scenarioDir']    = scenarioDir = pathjoin(sandboxDir, scenarioName)
             argDict['diffsDir']       = pathjoin(scenarioDir, 'diffs')
-            argDict['batchDir']       = pathjoin(scenarioDir, QueryResultsDir)
+            argDict['batchDir']       = pathjoin(scenarioDir, QRESULTS_DIRNAME)
             # set in case it wasn't already
             setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
 

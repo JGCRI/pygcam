@@ -9,7 +9,7 @@ import seaborn as sns
 
 from ..config import getParam, getParamAsBoolean
 from ..log import getLogger
-from ..utils import mkdirs
+from ..file_utils import mkdirs
 
 from .error import PygcamMcsSystemError, PygcamMcsUserError
 from .Database import getDatabase, Input

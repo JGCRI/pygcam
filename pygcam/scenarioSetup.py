@@ -10,7 +10,7 @@ from .config import getParam, getParamAsBoolean, pathjoin, parse_gcam_version
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
 from .log import getLogger
-from .utils import copyFileOrTree, removeFileOrTree, mkdirs, symlinkOrCopyFile, removeTreeSafely, pushd
+from .file_utils import pushd, symlinkOrCopyFile, copyFileOrTree, removeTreeSafely, removeFileOrTree, mkdirs
 
 _logger = getLogger(__name__)
 

@@ -12,7 +12,8 @@ import sys
 from .config import getParam, getParamAsBoolean, pathjoin
 from .error import PygcamException, SetupException
 from .log import getLogger
-from .utils import getBooleanXML, symlinkOrCopyFile, splitAndStrip
+from .utils import getBooleanXML, splitAndStrip
+from .file_utils import symlinkOrCopyFile
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 from .XMLFile import XMLFile, McsValues
 

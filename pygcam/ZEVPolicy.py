@@ -122,7 +122,7 @@ BtuToMJ = 1.055
 def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outputRatio):
     import os
     import pandas as pd
-    from .utils import mkdirs
+    from .file_utils import mkdirs
     from .RESPolicy import write_xml
     from .xmlSetup import scenarioXML
 

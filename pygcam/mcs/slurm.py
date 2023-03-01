@@ -6,7 +6,6 @@
 import io
 import pandas as pd
 import re
-import subprocess
 import types
 
 from ..mcs.error import PygcamMcsException
@@ -84,6 +83,8 @@ class Slurm(object):
         :param jobs: (str or iterable of str) a jobId or sequence of jobIds
         :return: none
         """
+        from ..utils import shellCommand
+
         if isinstance(jobs, (list, tuple, set, types.GeneratorType)):
             jobStr = ' '.join(jobs)
         else:
@@ -92,9 +93,7 @@ class Slurm(object):
         command = "scancel " + jobStr
         _logger.debug(command)
 
-        exitStatus = subprocess.call(command, shell=True)
-        if exitStatus != 0:
-            raise PygcamMcsException("Command failed: %s; exit status %s\n" % (command, exitStatus))
+        shellCommand(command, shell=True)   # raises error if cmd fails
 
     def sbatch(self, script, queue):
         """
@@ -102,6 +101,8 @@ class Slurm(object):
 
         :return: (int) jobId or -1 if shell command failed
         """
+        import subprocess
+
         command = "sbatch %s" % (script)
 
         # Run the sbatch command, parse the jobId if command succeeds

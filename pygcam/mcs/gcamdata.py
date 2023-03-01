@@ -4,12 +4,10 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import shutil
 
-from pygcam.log import getLogger
-from pygcam.config import getParam
-from pygcam.utils import pushd
-from pygcam.mcs.util import parseTrialString, parseMcsDir
-
-from pygcam.mcs.context import getSimDir, dirFromNumber
+from ..log import getLogger
+from ..config import getParam
+from ..file_utils import pushd
+from .util import parseTrialString, parseMcsDir, getSimDir, dirFromNumber
 
 _logger = getLogger(__name__)
 

@@ -2,9 +2,11 @@ import os
 import shutil
 from unittest import TestCase
 
+from pygcam.constants import QRESULTS_DIRNAME
 from pygcam.query import readCsv, readQueryResult
 from pygcam.diff import computeDifference
-from pygcam.utils import QueryResultsDir, mkdirs
+from pygcam.file_utils import mkdirs
+
 
 class TestDiffCmd(TestCase):
     def setUp(self):
@@ -28,7 +30,7 @@ class TestDiffCmd(TestCase):
             pass
 
     def getFilename(self, scenario):
-        return os.path.join(self.ws, scenario, QueryResultsDir)
+        return os.path.join(self.ws, scenario, QRESULTS_DIRNAME)
 
     def readPurposeGrown(self, scenario):
         batchDir = self.getFilename(scenario)

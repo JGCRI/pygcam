@@ -7,7 +7,8 @@ import os
 from .config import pathjoin
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs, ensureCSV, QueryResultsDir
+from .constants import QRESULTS_DIRNAME
+from .file_utils import ensureCSV, mkdirs
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
@@ -269,7 +270,7 @@ def queryCsvPathname(query, scenario, workingDir='.'):
         and policy sandboxes.
     :return: (str) the pathname of the CSV file
     """
-    pathname = pathjoin(workingDir, scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
+    pathname = pathjoin(workingDir, scenario, QRESULTS_DIRNAME, f'{query}-{scenario}.csv')
     return pathname
 
 def diffMain(args):
@@ -301,9 +302,6 @@ def diffMain(args):
             raise CommandlineError("When --queryFile is specified, 2 positional arguments--the baseline and policy names--are required.")
 
         baseline, policy = args.csvFiles
-
-        # def makePath(query, scenario):
-        #     return pathjoin(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
 
         mainPart, extension = os.path.splitext(queryFile)
 

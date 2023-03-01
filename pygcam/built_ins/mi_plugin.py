@@ -34,10 +34,11 @@ class ModelInterfaceCommand(SubcommandABC):
 
     def run(self, args, tool):
         import os
-        from ..utils import shellCommand, pushd
-        from ..xmlEditor import xmlEdit
         from ..config import getParam
+        from ..file_utils import pushd
         from ..log import getLogger
+        from ..xmlEditor import xmlEdit
+        from ..utils import shellCommand
 
         _logger = getLogger(__name__)
 

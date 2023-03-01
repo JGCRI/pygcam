@@ -16,7 +16,8 @@ def driver(args, tool):
     import re
     import shutil
     from ..config import getParam, USR_CONFIG_FILE, pathjoin, unixPath
-    from ..utils import mkdirs, copyResource, getResource
+    from ..utils import copyResource, getResource
+    from ..file_utils import mkdirs
     from ..error import CommandlineError
     from ..log import getLogger
 

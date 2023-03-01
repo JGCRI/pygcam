@@ -12,13 +12,12 @@ from lxml import etree as ET
 import pkgutil
 import re
 import semver
-import shutil
 import subprocess
 import sys
-from contextlib import contextmanager
 
 from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .error import PygcamException, FileFormatError
+from .file_utils import deleteFile
 from .log import getLogger
 from .version import VERSION
 
@@ -41,7 +40,7 @@ def random_sleep(low_secs, high_secs):
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists
-# TBD: Use this where relevant
+# TBD: Use this in all relevant cmd-line cases
 #
 class ParseCommaList(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
@@ -120,26 +119,28 @@ StateOptions = ('withGlobal',   # return states and global regions
 def getRegionList(workspace=None, states='withGlobal'):
     """
     Set the list of the defined region names from the data system, if possible,
-    otherwise use the built-in list of 32 regions.
+    otherwise use the built-in list of 32 regions. If config variable
+    "GCAM.RegionDiscovery" is True (the default) then the reference configuration
+    file is consulted L file is read to see whether the tag "socioeconomics"
+    or "socio_usa" is defined, and the XML file indicated there is parsed to
+    extract region names. If "GCAM.RegionDiscovery" is False, the built-in list
+    of 32 regions is used.
 
-    :param workspace: (str) the path to a GCAM workspace directory that
-      has the file
-      ``input/gcamdata/inst/extdata/common/GCAM_region_names.csv``,
-      or ``None``, in which case the value of config variable
-      ``GCAM.SourceWorkspace`` (if defined) is used. If `workspace` is
-      empty or ``None``, and the config variable ``GCAM.SourceWorkspace`` is
-      empty (the default value), the built-in default 32-region list is returned.
+    :param workspace: (str) The workspace to use as the base for interpreting
+      relative pathnames in the reference configuration file. If ``workspace``
+      is ``None``, the value of config variable "GCAM.RefWorkspace" is used.
     :param states: (str) One of {'together', 'only', 'none'}. Default is 'together'.
+      Defines which regions to return: "together" means combine states and global
+      regions (but drop USA from list of states); "only" means return only the
+      states; "none" means return only the global regions (no states).
     :return: a list of strings with the names of the defined regions
     """
-    from .constants import GCAM_32_REGIONS
     from .csvCache import readCachedCsv
-    from semver import VersionInfo
 
     global _RegionList, _StateList
 
     if states not in StateOptions:
-        raise PygcamException('Called getRegionList with unrecognized value ({}) for "state" argument. Must be one of {}.'.format(states, StateOptions))
+        raise PygcamException(f'Called getRegionList with unrecognized value ({states}) for "state" argument. Must be one of {StateOptions}.')
 
     # Decache if called with different workspace
     if _RegWorkspace and workspace != _RegWorkspace:
@@ -162,14 +163,14 @@ def getRegionList(workspace=None, states='withGlobal'):
     if getParamAsBoolean('GCAM.RegionDiscovery'):   # True by default, but can be disabled by setting to False
         configFile = getParam('GCAM.RefConfigFile')
         if not os.path.lexists(configFile):
-            _logger.error("GCAM reference config file '{}' not found.".format(configFile))
+            _logger.error(f"GCAM reference config file '{configFile}' not found.")
             return
 
         parser = ET.XMLParser(remove_blank_text=True)
         tree   = ET.parse(configFile, parser)
 
         def _xmlpath(tag):
-            elt = tree.find('//ScenarioComponents/Value[@name="{}"]'.format(tag))
+            elt = tree.find(f'//ScenarioComponents/Value[@name="{tag}"]')
             return None if elt is None else pathjoin(workspace, 'exe', elt.text, abspath=True)
 
         xml_USA    = _xmlpath('socio_usa')
@@ -179,12 +180,12 @@ def getRegionList(workspace=None, states='withGlobal'):
             tree = ET.parse(xml_global, parser)
             _RegionList = tree.xpath('//region/@name')
         else:
-            _logger.error("GCAM input file '{}' not found.".format(xml_global))
+            _logger.error(f"GCAM input file '{xml_global}' not found.")
             return
 
         if xml_USA:
             if not os.path.lexists(xml_USA):
-                _logger.error("GCAM input file '{}' not found.".format(xml_USA))
+                _logger.error(f"GCAM input file '{xml_USA}' not found.")
                 return
 
             tree = ET.parse(xml_USA, parser)
@@ -203,6 +204,8 @@ def getRegionList(workspace=None, states='withGlobal'):
             _RegionList = list(df.region)
 
         else:
+            from .constants import GCAM_32_REGIONS
+
             _logger.info("Path %s not found; Using built-in region names", path)
             _RegionList = GCAM_32_REGIONS
 
@@ -219,47 +222,6 @@ def getRegionList(workspace=None, states='withGlobal'):
 
     _logger.debug("getRegionList returning: %s", regions)
     return regions
-
-def model_years():
-    """
-    Return the defined model years by parsing xml/modeltime.xml. This is used
-    by the setup plugin to convert years to model period for setting the stop year.
-
-    :return: (list of int) the defined model years.
-    """
-    # Parse xml/modeltime.xml to get active model periods. It looks like this
-    # for a case with non-standard model years:
-    # <scenario>
-    #     <modeltime>
-    #         <start-year time-step="15">1975</start-year>
-    #         <final-calibration-year>2000</final-calibration-year>
-    #         <end-year>2100</end-year>
-    #         <inter-year dummy-tag="1" time-step="10">1990</inter-year>
-    #         <inter-year dummy-tag="2" time-step="1">2000</inter-year>
-    #         <inter-year dummy-tag="3" time-step="5">2020</inter-year>
-    #     </modeltime>
-    # </scenario>
-    filename = pathjoin(getParam('GCAM.RefWorkspace'), 'input/gcamdata/xml/modeltime.xml')
-    tree = ET.parse(filename, ET.XMLParser(remove_blank_text=True, remove_comments=True))
-    root = tree.getroot()
-
-    elt = root.find('.//start-year')
-    start_tup = (int(elt.text), int(elt.attrib['time-step']))
-
-    inter_year_elts = root.findall('.//inter-year')
-    inter_year_tups = sorted([(int(elt.text), int(elt.attrib['time-step'])) for elt in inter_year_elts])
-
-    elt = root.find('.//end-year')
-    end_tup = (int(elt.text) + 1, 0)     # +1 so range() includes the final year; step of 0 is ignored
-
-    tups = [start_tup] + inter_year_tups + [end_tup]
-
-    years = []
-    for i, (start, step) in enumerate(tups[:-1]):
-        next_start = tups[i+1][0]
-        years.extend(range(start, next_start, step))
-
-    return years
 
 def queueForStream(stream):
     """
@@ -325,21 +287,6 @@ def simpleFormat(s, varDict):
     except KeyError as e:
         raise FileFormatError('Unknown parameter %s in project XML template string' % e)
 
-@contextmanager
-def pushd(directory):
-    """
-    Context manager that changes to the given directory and then
-    returns to the original directory. Usage is ``with pushd('/foo/bar'): ...``
-
-    :param directory: (str) a directory to chdir to temporarily
-    :return: none
-    """
-    owd = os.getcwd()
-    try:
-        os.chdir(directory)
-        yield directory
-    finally:
-        os.chdir(owd)
 
 def getResource(relpath):
     """
@@ -433,112 +380,6 @@ def writeXmldbDriverProperties(outputDir='.', inMemory=True, filterFile='', batc
     with open(path, 'w') as f:
         f.write(content)
 
-def deleteFile(filename):
-    """
-    Delete the given `filename`, but ignore errors, like "rm -f"
-
-    :param filename: (str) the file to remove
-    :return: none
-    """
-    try:
-        os.remove(filename)
-    except:
-        pass    # ignore errors, like "rm -f"
-
-# used only in gcamtool modules
-def symlinkOrCopyFile(src, dst):
-    """
-    Symlink a file unless GCAM.CopyAllFiles is True, in which case, copy the file.
-
-    :param src: (str) filename of original file
-    :param dst: (dst) filename of copy
-    :return: none
-    """
-    if getParamAsBoolean('GCAM.CopyAllFiles'):
-        copyFileOrTree(src, dst)
-    else:
-        os.symlink(src, dst)
-
-def copyFileOrTree(src, dst):
-    """
-    Copy src to dst, where the two can both be files or directories.
-    If `src` and `dst` are directories, `dst` must not exist yet.
-
-    :param src: (str) path to a source file or directory
-    :param dst: (str) path to a destination file or directory.
-    :return: none
-    """
-    if getParamAsBoolean('GCAM.CopyAllFiles') and src[0] == '.':   # convert relative paths
-        src = pathjoin(os.path.dirname(dst), src, normpath=True)
-
-    if os.path.islink(src):
-        src = os.readlink(src)
-
-    if os.path.isdir(src):
-        removeTreeSafely(dst)
-        shutil.copytree(src, dst)
-    else:
-        shutil.copy2(src, dst)
-
-# used only in gcamtool modules
-# TBD: rename to removeTree
-def removeTreeSafely(path, ignore_errors=True):
-    if not os.path.lexists(path):
-        return
-
-    refWorkspace = os.path.realpath(getParam('GCAM.RefWorkspace'))
-    thisPath = os.path.realpath(path)
-    if os.path.commonprefix((refWorkspace, thisPath)) == refWorkspace:
-        raise PygcamException("Refusing to delete %s, which is part of the reference workspace" % path)
-
-    _logger.debug("shutil.rmtree('%s')", thisPath)
-    shutil.rmtree(thisPath, ignore_errors=ignore_errors)
-
-def removeFileOrTree(path, raiseError=True):
-    """
-    Remove a file or an entire directory tree. Handles removal of symlinks
-    on Windows, as these are treated differently in that system.
-
-    :param path: (str) the pathname of a file or directory.
-    :param raiseError: (bool) if True, re-raise any error that occurs
-       during the file operations, else errors are ignored.
-    :return: none
-    """
-    from .windows import removeSymlink
-
-    if not os.path.lexists(path):
-        return
-
-    try:
-        if os.path.islink(path):
-            # Windows treats links to files and dirs differently.
-            # NB: if not on Windows, just calls os.remove()
-            removeSymlink(path)
-        else:
-            if os.path.isdir(path):
-                removeTreeSafely(path)
-            else:
-                os.remove(path)
-    except Exception as e:
-        if raiseError:
-            raise
-
-def systemOpenFile(path):
-    """
-    Ask the operating system to open a file at the given pathname.
-
-    :param path: (str) the pathname of a file to open
-    :return: none
-    """
-    import platform
-    from subprocess import call
-
-    if platform.system() == 'Windows':
-        call(['start', os.path.abspath(path)], shell=True)
-    else:
-        # "-g" => don't bring app to the foreground
-        call(['open', '-g', path], shell=False)
-
 def coercible(value, type, raiseError=True):
     """
     Attempt to coerce a value to `type` and raise an error on failure.
@@ -559,24 +400,22 @@ def coercible(value, type, raiseError=True):
 
     return value
 
-
-
 def shellCommand(command, shell=True, raiseError=True):
     """
     Run a shell command and optionally raise PygcamException error.
 
-    :param command: the command to run, with arguments. This can be expressed
-      either as a string or as a list of strings.
+    :param command: (str or list of str) the command to run, with arguments.
     :param shell: if True, run `command` in a shell, otherwise run it directly.
-    :param raiseError: if True, raise `ToolError` on command failure.
+    :param raiseError: if True, raise `PygcamException` on command failure.
+
     :return: exit status of executed command
-    :raises: ToolError
+    :raises: PygcamException
     """
     _logger.info(command)
     exitStatus = subprocess.call(command, shell=shell)
     if exitStatus != 0:
         if raiseError:
-            raise PygcamException("\n*** Command failed: %s\n*** Command exited with status %s\n" % (command, exitStatus))
+            raise PygcamException(f"\n*** Command failed: '{command}'\n*** Exit status {exitStatus}\n")
 
     return exitStatus
 
@@ -592,37 +431,6 @@ def flatten(listOfLists):
 
     return list(chain.from_iterable(listOfLists))
 
-def ensureExtension(filename, ext):
-    """
-    Force a filename to have the given extension, `ext`, adding it to
-    any other extension, if present. That is, if `filename` is ``foo.bar``,
-    and `ext` is ``baz``, the result will be ``foo.bar.baz``.
-    If `ext` doesn't start with a ".", one is added.
-
-    :param filename: filename
-    :param ext: the desired filename extension
-    :return: filename with extension `ext`
-    """
-    mainPart, extension = os.path.splitext(filename)
-    ext = ext if ext[0] == '.' else '.' + ext
-
-    if not extension:
-        filename = mainPart + ext
-    elif extension != ext:
-        filename += ext
-
-    return filename
-
-def ensureCSV(file):
-    """
-    Ensure that the file has a '.csv' extension by replacing or adding
-    the extension, as required.
-
-    :param file: (str) a filename
-    :return: (str) the filename with a '.csv' extension.
-    """
-    return ensureExtension(file, '.csv')
-
 def getYearCols(years, timestep=5):
     """
     Generate a list of names of year columns in GCAM result files from a
@@ -635,33 +443,22 @@ def getYearCols(years, timestep=5):
     try:
         yearRange = [int(x) for x in years.split('-')]
         if not len(yearRange) == 2:
-            raise Exception
+            raise Exception # trigger the "except" clause below
     except:
-        raise Exception('Years must be specified as two years separated by a hyphen, as in "2020-2050"')
+        raise PygcamException(f'Years must be specified as two years separated by a hyphen, as in "2020-2050", got "{years}"')
 
     cols = [str(y) for y in range(yearRange[0], yearRange[1]+1, timestep)]
     return cols
 
-def saveToFile(txt, dirname='', filename=''):
-    """
-    Save the given text to a file in the given directory.
+def getExeDir(workspace, chdir=False):
+    # expanduser => handle leading tilde in pathname
+    exeDir = pathjoin(workspace, 'exe', expanduser=True, abspath=True)
 
-    :param txt: (str) the text to save
-    :param dirname: (str) path to a directory
-    :param filename: (str) the name of the file to create
+    if chdir:
+        _logger.info("cd %s", exeDir)
+        os.chdir(exeDir)
 
-    :return: none
-    """
-    if dirname:
-        mkdirs(dirname)
-
-    pathname = pathjoin(dirname, filename)
-
-    _logger.debug("Writing %s", pathname)
-    with open(pathname, 'w') as f:
-        f.write(txt)
-
-QueryResultsDir = 'queryResults'
+    return exeDir
 
 def getBatchDir(scenario, resultsDir):
     """
@@ -672,34 +469,9 @@ def getBatchDir(scenario, resultsDir):
         results directory should be created
     :return: (str) the pathname to the batch results directory
     """
-    pathname = pathjoin(resultsDir, scenario, QueryResultsDir)
+    from .constants import QRESULTS_DIRNAME
+    pathname = pathjoin(resultsDir, scenario, QRESULTS_DIRNAME)
     return pathname
-
-
-def mkdirs(newdir, mode=0o770):
-    """
-    Try to create the full path `newdir` and ignore the error if it already exists.
-
-    :param newdir: the directory to create (along with any needed parent directories)
-    :return: nothing
-    """
-    from errno import EEXIST
-
-    try:
-        os.makedirs(newdir, mode)
-    except OSError as e:
-        if e.errno != EEXIST:
-            raise
-
-def getExeDir(workspace, chdir=False):
-    # handle ~ in pathname
-    exeDir = pathjoin(workspace, 'exe', expanduser=True, abspath=True)
-
-    if chdir:
-        _logger.info("cd %s", exeDir)
-        os.chdir(exeDir)
-
-    return exeDir
 
 def loadModuleFromPath(modulePath, raiseOnError=True):
     """
@@ -735,7 +507,6 @@ def loadModuleFromPath(modulePath, raiseOnError=True):
 
     return module
 
-
 def importFrom(modname, objname, asTuple=False):
     """
     Import `modname` and return reference to `objname` within the module.
@@ -750,7 +521,6 @@ def importFrom(modname, objname, asTuple=False):
     module = import_module(modname, package=None)
     obj    = getattr(module, objname)
     return ((module, obj) if asTuple else obj)
-
 
 def importFromDotSpec(spec):
     """
@@ -768,19 +538,6 @@ def importFromDotSpec(spec):
 
     except ImportError:
         raise PygcamException("Can't import '%s' from '%s'" % (objname, modname))
-
-# Deprecated?
-def readScenarioName(configFile):
-    """
-    Read the file `configFile` and extract the scenario name.
-
-    :param configFile: (str) the path to a GCAM configuration file
-    :return: (str) the name of the scenario defined in `configFile`
-    """
-    parser = ET.XMLParser(remove_blank_text=True)
-    tree   = ET.parse(configFile, parser)
-    scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
-    return scenarioName.text
 
 def printSeries(series, label, header='', asStr=False):
     """
@@ -809,3 +566,17 @@ def printSeries(series, label, header='', asStr=False):
         return s
     else:
         print(s)
+
+
+# Deprecated?
+# def readScenarioName(configFile):
+#     """
+#     Read the file `configFile` and extract the scenario name.
+#
+#     :param configFile: (str) the path to a GCAM configuration file
+#     :return: (str) the name of the scenario defined in `configFile`
+#     """
+#     parser = ET.XMLParser(remove_blank_text=True)
+#     tree   = ET.parse(configFile, parser)
+#     scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
+#     return scenarioName.text

@@ -2,10 +2,12 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 import os
-from ...config import getParam, setParam, pathjoin
+from ...config import getParam, setParam
 from ...log import getLogger
-from ...utils import mkdirs, getResource
-from ..context import McsContext, getSimDir
+from ...utils import getResource
+from ...file_utils import mkdirs
+from ..context import McsContext
+from ..util import getSimDir
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -550,7 +552,7 @@ def driver(args, tool):
     '''
     Generate a simulation. Do generic setup, then call genSimulation().
     '''
-    from ...utils import removeTreeSafely
+    from ...file_utils import removeTreeSafely
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
     from ..util import saveDict

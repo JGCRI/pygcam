@@ -17,6 +17,7 @@ CONFIG_XML = "config.xml"
 SCENARIOS_XML = "scenarios.xml"
 PROJECT_XML = "project.xml"
 QUERY_DIRNAME  = "queries"
+QRESULTS_DIRNAME = 'queryResults'
 
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']

@@ -352,7 +352,7 @@ class GcamTool(object):
     @staticmethod
     def runBatch2(shellArgs, jobName='gt', queueName=None, logFile=None, minutes=None,
                   dependsOn=None, run=True):
-        from .utils import mkdirs
+        from .file_utils import mkdirs
 
         _logger = getLogger(__name__)
 

@@ -6,19 +6,18 @@
 """
 import os
 import re
-import subprocess
 
 from lxml import etree as ET
 from semver import VersionInfo
 
-from .Xvfb import Xvfb
 from .config import getParam, getParamAsBoolean, parse_gcam_version, pathjoin, unixPath
 from .constants import NUM_AEZS
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser, Query
-from .utils import (mkdirs, deleteFile, ensureExtension, ensureCSV, saveToFile, getRegionList,
-                    getExeDir, writeXmldbDriverProperties, digitColumns)
+from .utils import (getRegionList, shellCommand,  getExeDir, writeXmldbDriverProperties,
+                    digitColumns)
+from .file_utils import deleteFile, ensureExtension, ensureCSV, saveToFile, mkdirs
 from .temp_file import TempFile, getTempFile
 
 _logger = getLogger(__name__)
@@ -828,7 +827,7 @@ def runModelInterface(scenario, outputDir, csvFile=None, batchFile=None,
         else:
             _logger.debug(command)
 
-        subprocess.call(command, shell=True)
+        shellCommand(command, shell=True)
 
         # The java program always exits with 0 status, but when the query fails,
         # it writes an error message to the CSV file. If this occurs, we delete

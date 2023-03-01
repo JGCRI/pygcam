@@ -12,7 +12,8 @@ from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .constants import CONFIG_XML
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
 from .log import getLogger
-from .utils import writeXmldbDriverProperties, getExeDir, pushd
+from .utils import writeXmldbDriverProperties, getExeDir
+from .file_utils import pushd
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -229,6 +230,8 @@ def linkToMacJava():
     finally:
         os.chdir(owd)
 
+
+
 def runGCAM(scenario, workspace=None, scenariosDir=None, groupDir='', configFile=None,
             noRun=False, noWrapper=False):
             # refWorkspace=None, forceCreate=False,
@@ -282,13 +285,6 @@ def runGCAM(scenario, workspace=None, scenariosDir=None, groupDir='', configFile
 
     configFile = config_path(scenario, workspace=workspace, scenarios_dir=scenariosDir,
                 group_dir=groupDir, config_file=configFile)
-    # if scenario:
-    #     # Translate scenario name into config file path, assuming that for scenario
-    #     # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
-    #     scenariosDir = unixPath(scenariosDir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
-    #     configFile   = pathjoin(scenariosDir, groupDir, scenario, CONFIG_XML)
-    # else:
-    #     configFile = unixPath(configFile or pathjoin(exeDir, 'configuration.xml'), abspath=True)
 
     gcamPath = unixPath(getParam('GCAM.Executable'), abspath=True)
     gcamArgs = [gcamPath, '-C', configFile]

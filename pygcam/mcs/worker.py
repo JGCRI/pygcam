@@ -8,7 +8,7 @@ from ..config import getConfig, getParam, setParam, getParamAsFloat, getParamAsB
 from ..error import GcamError, GcamSolverError
 from ..log import getLogger, configureLogs
 from ..signals import (catchSignals, TimeoutSignalException, UserInterruptException)
-from ..utils import mkdirs
+from ..file_utils import mkdirs
 
 from ..mcs.error import PygcamMcsUserError, GcamToolError
 from ..mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,

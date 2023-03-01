@@ -39,36 +39,39 @@ class TestLandProtection(unittest.TestCase):
             xpath = _makeLandClassXpath(value)
             self.assertEqual(xpath, expected, 'Expected\n\t%s\ngot\n\t%s' % (expected, xpath))
 
-    def test_createProtected_land_2(self):
-        protectedFraction = 0.9
-        classes = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland']
-        regions = ['Brazil', 'USA']
+    # deprecated post GCAMv5.0
+    # def test_createProtected_land_2(self):
+    #     protectedFraction = 0.9
+    #     classes = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland']
+    #     regions = ['Brazil', 'USA']
+    #
+    #     xmlDir = os.path.join('data', 'xml')
+    #
+    #     for num in (2, 3):
+    #         infile   = os.path.join(xmlDir, 'partial_land_input_%d.xml' % num)
+    #         outfile  = os.path.join(xmlDir, 'changed_land_input_%d.xml' % num)
+    #         testfile = os.path.join(xmlDir, 'expected_land_input_%d.xml' % num)
+    #
+    #         protectLand(infile, outfile, protectedFraction, landClasses=classes, regions=regions)
+    #         self.assertFilesEqual(outfile, testfile)
 
-        xmlDir = os.path.join('data', 'xml')
-
-        for num in (2, 3):
-            infile   = os.path.join(xmlDir, 'partial_land_input_%d.xml' % num)
-            outfile  = os.path.join(xmlDir, 'changed_land_input_%d.xml' % num)
-            testfile = os.path.join(xmlDir, 'expected_land_input_%d.xml' % num)
-
-            protectLand(infile, outfile, protectedFraction, landClasses=classes, regions=regions)
-            self.assertFilesEqual(outfile, testfile)
-
-    def test_protection_scenario(self):
+    # TBD: needs to be updated
+    # deprecated post v5.0
+    def _test_protection_scenario(self):
         scenarioName = 'test'
         xmlDir = os.path.join('data', 'xml')
         tmpDir = os.path.join('data', 'tmp')
 
         scenarioFile = os.path.join(xmlDir, 'protection.xml')
 
-        xmlFiles = map(lambda num: os.path.join(xmlDir, 'partial_land_input_%d.xml' % num), (2, 3))
+        xmlFiles = [os.path.join(xmlDir, f'partial_land_input_{num}.xml') for num in (2, 3)]
 
         runProtectionScenario(scenarioName, outputDir=tmpDir, scenarioFile=scenarioFile,
                               xmlFiles=xmlFiles, inPlace=False)
 
         for num in (2, 3):
-            outfile  = os.path.join(tmpDir, 'partial_land_input_%d.xml' % num)
-            testfile = os.path.join(xmlDir, 'test_scenario_land_input_%d.xml' % num)
+            outfile  = os.path.join(tmpDir, f'partial_land_input_{num}.xml')
+            testfile = os.path.join(xmlDir, f'test_scenario_land_input_{num}.xml')
 
             self.assertFilesEqual(outfile, testfile)
 

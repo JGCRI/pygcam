@@ -15,7 +15,8 @@ from .config import getParam, parse_gcam_version, pathjoin
 from .constants import UnmanagedLandClasses
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, flatten, getRegionList
+from .utils import flatten, getRegionList
+from .file_utils import mkdirs
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
@@ -124,7 +125,7 @@ class LandProtection(object):
                 backupFile = outfile + '~'
                 os.rename(outfile, backupFile)
             except Exception as e:
-                PygcamException('Failed to create backup file "%s": %s', backupFile, e)
+                PygcamException(f'Failed to create backup file "{backupFile}": {e}')
 
         _logger.info("Writing '%s'...", outfile)
         tree.write(outfile, xml_declaration=True, pretty_print=True)
@@ -230,9 +231,9 @@ def _makeRegionXpath(regions):
     if isinstance(regions, str):
         regions = [regions]
 
-    patterns = map(lambda s: "@name='%s'" % s, regions)
+    patterns = map(lambda s: f"@name='{s}'", regions)
     regionPattern = ' or '.join(patterns)
-    xpath = "//region[%s]" % regionPattern
+    xpath = f"//region[{regionPattern}]"
     _logger.debug('regionXpath: ' + xpath)
     return xpath
 
@@ -241,9 +242,9 @@ def _makeLandClassXpath(landClasses, protected=False):
         landClasses = [landClasses]
 
     prefix = 'Protected' if protected else ''
-    patterns = ['starts-with(@name, "%s%s")' % (prefix, s) for s in landClasses]
+    patterns = [f'starts-with(@name, "{prefix}{s}")' for s in landClasses]
     landPattern = ' or '.join(patterns)
-    xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
+    xpath = f".//UnmanagedLandLeaf[{landPattern}]"
     _logger.debug('landClassXpath: ' + xpath)
     return xpath
 
@@ -285,7 +286,7 @@ def unProtectLand(tree, landClasses=None, otherArable=False, regions=None):
 
             for alloc in protectedAllocs:
                 year = alloc.get('year')
-                xpath = prefix + '//%s[@year="%s"]' % (alloc.tag, year)
+                xpath = f'{prefix}//{alloc.tag}[@year="{year}"]'
                 unprotectedAlloc = landRoot.find(xpath)
                 originalArea = float(unprotectedAlloc.text) + float(alloc.text)
                 unprotectedAlloc.text = str(originalArea)

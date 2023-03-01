@@ -5,11 +5,11 @@ db = getDatabase(checkInit=False)
 
 simId = 1
 df = db.getRunInfo(simId, 'baseline', includeSucceededRuns=False, asDataFrame=True)
-print df
+print(df)
 
 missing = db.getMissingTrials(simId, 'baseline')
 s = createTrialString(missing)
-print "Missing trials:", s
+print("Missing trials:", s)
 
 from pygcam.mcs.master import listTrialsToRedo
 

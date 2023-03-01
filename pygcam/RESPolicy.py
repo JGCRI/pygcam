@@ -703,7 +703,8 @@ def create_subsector_dict(useGcamUSA):
 def resPolicyMain(args):
     import os
     from .error import CommandlineError
-    from .utils import mkdirs, is_abspath, get_path
+    from .utils import is_abspath, get_path
+    from .file_utils import mkdirs
 
     scenario   = args.scenario
     inputFile  = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these

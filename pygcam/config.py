@@ -1,17 +1,12 @@
 '''
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import configparser
 import os
-import sys
 import platform
-import re
 from pkg_resources import resource_string
-
-if sys.version_info.major == 2:
-    from backports import configparser
-else:
-    import configparser
+import re
 
 from .error import ConfigFileError, PygcamException
 DEFAULT_SECTION = 'DEFAULT'
@@ -324,6 +319,15 @@ def setMacJavaVars():
         os.environ['JAVA_LIB'] = javaLib
         setParam('$JAVA_LIB', javaLib)
 
+def readConfigFile(path_or_stream):
+    # N.B. doesn't handle Path-like objs but we aren't using them here
+    if isinstance(path_or_stream, (str, bytes)):
+        with open(path_or_stream) as f:
+            _ConfigParser.read_file(f)
+    else:
+        # test code passes a StringIO instance to set up test environment
+        _ConfigParser.read_file(path_or_stream)
+
 def readConfigFiles(allowMissing=False):
     """
     Read the pygcam configuration files, starting with ``pygcam/etc/system.cfg``,
@@ -366,25 +370,24 @@ def readConfigFiles(allowMissing=False):
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:
         try:
-            with open(siteConfig) as f:
-               _ConfigParser.read_file(f)
+            readConfigFile(siteConfig)
+
         except Exception as e:
-            print("WARNING: Failed to read site config file: %s" % e)
+            print(f"WARNING: Failed to read site config file '{siteConfig}': {e}")
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = userConfigPath()
 
     # os.path.exists doesn't always work on Windows, so just try opening it.
     try:
-        with open(usrConfigPath) as f:
-           _ConfigParser.read_file(f)
+        readConfigFile(usrConfigPath)
 
     except IOError:
         if not allowMissing:
             if not os.path.lexists(usrConfigPath):
-                raise ConfigFileError("Missing configuration file %s" % usrConfigPath)
+                raise ConfigFileError(f"Missing user config file '{usrConfigPath}'")
             else:
-                raise ConfigFileError("Can't read configuration file %s" % usrConfigPath)
+                raise ConfigFileError(f"Can't read user config file '{usrConfigPath}'")
 
     try:
         # Write the system defaults to ~/.pygcam.defaults if necessary
@@ -393,7 +396,7 @@ def readConfigFiles(allowMissing=False):
             writeSystemDefaultsFile(systemDefaults)
     except Exception as e:
         if not allowMissing:
-            raise ConfigFileError("Failed to write %s: %s" % (defaultsPath, e))
+            raise ConfigFileError(f"Failed to write {defaultsPath}: {e}")
 
     # Dynamically set (if not defined) GCAM.ProjectName in each section, holding the
     # section (i.e., project) name. If user has set this, the value is unchanged.
@@ -456,7 +459,6 @@ def getParam(name, section=None, raw=False, raiseError=True):
        that variable names are case-insensitive. Note that environment
        variables are available using the '$' prefix as in a shell.
        To access the value of environment variable FOO, use getParam('$FOO').
-
     :param section: (str) the name of the section to read from, which
       defaults to the value used in the first call to ``getConfig``,
       ``readConfigFiles``, or any of the ``getParam`` variants.
@@ -478,13 +480,13 @@ def getParam(name, section=None, raw=False, raiseError=True):
 
     except configparser.NoSectionError:
         if raiseError:
-            raise PygcamException('getParam: unknown section "%s"' % section)
+            raise PygcamException(f'getParam: unknown section "{section}"')
         else:
             return None
 
     except configparser.NoOptionError:
         if raiseError:
-            raise PygcamException('getParam: unknown variable "%s"' % name)
+            raise PygcamException(f'getParam: unknown variable "{name}"')
         else:
             return None
 
@@ -507,7 +509,7 @@ def stringTrue(value, raiseError=True):
         return False
 
     if raiseError:
-        msg = 'Unrecognized boolean value: "{}". Must one of {}'.format(value, _True + _False)
+        msg = f'Unrecognized boolean value: "{value}". Must one of {_True + _False}'
         raise ConfigFileError(msg)
     else:
         return None
@@ -533,7 +535,7 @@ def getParamAsBoolean(name, section=None):
     result = stringTrue(value, raiseError=False)
 
     if result is None:
-        msg = 'The value of variable "{}", {}, could not converted to boolean.'.format(name, value)
+        msg = f'The value of variable "{name}", {value}, could not converted to boolean.'
         raise ConfigFileError(msg)
 
     return result

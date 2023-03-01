@@ -23,13 +23,14 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from sqlalchemy.orm import sessionmaker, load_only
 
-from . import util as U
 from ..config import getSection, getParam, getParamAsBoolean
-from .error import PygcamMcsUserError, PygcamMcsSystemError
+from ..file_utils import mkdirs
 from ..log import getLogger
+from ..utils import pygcam_version
+
+from .error import PygcamMcsUserError, PygcamMcsSystemError
 from .schema import (ORMBase, Run, Sim, Input, Output, InValue, OutValue, Experiment,
                      Program, Code, TimeSeries)
-from ..utils import pygcam_version
 
 _logger = getLogger(__name__)
 
@@ -354,7 +355,7 @@ class CoreDatabase(object):
         if usingSqlite():
             # Make sure required directory exists
             dbDir = getParam('MCS.RunDbDir')
-            U.mkdirs(dbDir)
+            mkdirs(dbDir)
             return
 
         if usingPostgres() and getParam('MCS.Postgres.CreateDbExe'):

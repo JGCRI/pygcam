@@ -19,7 +19,8 @@ from .config import pathjoin, unixPath
 from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
-from .utils import systemOpenFile, digitColumns
+from .utils import digitColumns
+from .file_utils import systemOpenFile
 
 _logger = getLogger(__name__)
 

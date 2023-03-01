@@ -116,7 +116,7 @@ def askDir(msg, default=''):
         # prompt_toolkit 2
         from prompt_toolkit.completion import PathCompleter
 
-    from ..utils import mkdirs
+    from ..file_utils import mkdirs
 
     is_cygwin = isCygwin()
 
@@ -167,6 +167,7 @@ def rerunForCygwin(args):
     A bit of an unfortunate work-around, but it works.
     """
     import subprocess as subp
+    from ..utils import shellCommand
 
     os.environ['PYTHONUNBUFFERED'] = '1'
 
@@ -192,9 +193,7 @@ def rerunForCygwin(args):
     if args.sandboxDir:
         argList += ['-s', args.sandboxDir]
 
-    command = ' '.join(argList)
-    # print('Re-running for cygwin: %s' % command)
-    subp.call(argList, shell=False)
+    shellCommand(argList, shell=False)
 
 
 class InitCommand(SubcommandABC):
@@ -248,7 +247,8 @@ class InitCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..config import USR_CONFIG_FILE
-        from ..utils import deleteFile, mkdirs
+        from ..file_utils import mkdirs
+        from ..file_utils import deleteFile
         from ..gcam import getGcamVersion
 
         # Detect cygwin terminals, which quite lamely cannot handle interactive input

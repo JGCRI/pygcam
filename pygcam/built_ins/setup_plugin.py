@@ -101,7 +101,7 @@ class SetupCommand(SubcommandABC):
 
         parser.add_argument('-x', '--xmlSourceDir',
                             help=clean_help('''The location of the xmlsrc directory. 
-                                 Defaults to the value of config parameter "GCAM.XmlSrcDir".'''))
+                                 Defaults to the value of config parameter "GCAM.ProjectXmlSrc".'''))
 
         parser.add_argument('-X', '--xmlOutputRoot',
                             help=clean_help('''The root directory into which to generate XML files.'''))
@@ -142,7 +142,7 @@ class SetupCommand(SubcommandABC):
         else:
             workspace = pathjoin(projectDir, groupName, scenario, normpath=True)
 
-        xmlSourceDir = args.xmlSourceDir or getParam('GCAM.XmlSrcDir')
+        xmlSourceDir = args.xmlSourceDir or getParam('GCAM.ProjectXmlSrc')
 
         # If a setup XML file is defined, use the defined (or default) XMLEditor subclass
         setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')

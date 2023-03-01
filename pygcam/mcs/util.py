@@ -12,9 +12,8 @@ from inspect import stack
 from ..config import getParam, getParamAsInt
 from ..constants import SCENARIOS_XML
 from ..log import getLogger
-from ..utils import mkdirs
+from ..file_utils import mkdirs
 
-from .context import getSimDir
 from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
 
 _logger = getLogger(__name__)
@@ -28,6 +27,47 @@ TRIAL_DATA_CSV = 'trialData.csv'
 
 COMMENT_CHAR = '#'
 YEAR_COL_PREFIX = 'y'
+
+def dirFromNumber(n, prefix="", create=False):
+    '''
+    Compute a directory name using a 2-level directory structure that
+    allows 1000 nodes at each level, accommodating up to 1 million files
+    (0 to 999,999) in two levels.
+    '''
+    import math
+
+    maxnodes = getParamAsInt('MCS.MaxSimDirs') or 1000
+
+    # Require a power of 10
+    log = math.log10(maxnodes)
+    if log != int(log):
+        raise PygcamMcsUserError("MaxSimDirs must be a power of 10 (default value is 1000)")
+    log = int(log)
+
+    level1 = n // maxnodes
+    level2 = n % maxnodes
+
+    directory = os.path.join(prefix, str(level1).zfill(log), str(level2).zfill(log))
+    if create:
+        mkdirs(directory)
+
+    return directory
+
+def getSimDir(simId, create=False):
+    '''
+    Return and optionally create the path to the top-level simulation
+    directory for the given simulation number, based on the SimsDir
+    parameter specified in the config file.
+    '''
+    simsDir = getParam('MCS.RunSimsDir')
+    if not simsDir:
+        raise PygcamMcsUserError("Missing required config parameter 'MCS.RunSimsDir'")
+
+    simDir = os.path.join(simsDir, f's{simId:03d}')  # name is of format ".../s001/"
+    if create:
+        mkdirs(simDir)
+
+    return simDir
 
 def writeTrialDataFile(simId, df):
     '''
@@ -65,7 +105,7 @@ def readTrialDataFile(simId):
     return df
 
 def createOutputDir(outputDir):
-    from ..utils import removeFileOrTree
+    from ..file_utils import removeFileOrTree
     from ..temp_file import getTempDir
 
     removeFileOrTree(outputDir, raiseError=False)
@@ -91,7 +131,7 @@ def newActiveYears(asInt=False):
         from ..project import Project, SimpleVariable
 
         proj_name = getParam('GCAM.ProjectName')
-        proj = Project.readProjectFile(proj_name)
+        Project.readProjectFile(proj_name)
         d = SimpleVariable.getDict()
         years = d['years']
 

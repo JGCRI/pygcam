@@ -9,7 +9,8 @@ from .config import pathjoin
 from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
-from .utils import mkdirs, getBatchDir, getYearCols, printSeries
+from .utils import getBatchDir, getYearCols, printSeries
+from .file_utils import mkdirs
 
 _logger = getLogger(__name__)
 
