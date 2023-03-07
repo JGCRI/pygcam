@@ -301,7 +301,7 @@ def genSimulation(simId, trials, paramPath, args):
     from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
     from ...constants import LOCAL_XML_NAME
     from ...project import Project
-    from ...xmlSetup import ScenarioSetup
+    from ...xmlScenario import XMLScenario
 
     runInputDir = getParam('MCS.RunInputDir')
     runWorkspace = getParam('MCS.RunWorkspace')
@@ -326,9 +326,9 @@ def genSimulation(simId, trials, paramPath, args):
 
     # TBD: Use pygcam scenario def and copy pygcam files, too
     scenarioFile = getParam('GCAM.ScenarioSetupFile')
-    scenarioSetup = ScenarioSetup.parse(scenarioFile)
-    scenarioNames = scenarioSetup.scenariosInGroup(groupName)
-    baseline      = scenarioSetup.baselineForGroup(groupName)
+    xmlScenario = XMLScenario.get_instance(scenarioFile)
+    scenarioNames = xmlScenario.scenariosInGroup(groupName)
+    baseline      = xmlScenario.baselineForGroup(groupName)
 
     # Copy the user's results.xml file to {simDir}/app-xml
     userResultFile = getParam('MCS.ResultsFile')

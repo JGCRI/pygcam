@@ -1,5 +1,5 @@
 """
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
 
    See the https://opensource.org/licenses/MIT for license details.
 """
@@ -21,27 +21,26 @@
 #
 import glob
 import os
-import re
 import shutil
 from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean, unixPath, pathjoin
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME, CONFIG_XML
 from .error import SetupException, PygcamException
-from .gcam_context import makeDirPath, gcam_path, GcamPath
+from .file_utils import (pushd, symlinkOrCopyFile, removeTreeSafely, removeFileOrTree,
+                         mkdirs, copyIfMissing)
 from .log import getLogger
 from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
-from .utils import (coercible, mkdirs, printSeries, symlinkOrCopyFile, removeTreeSafely,
-                    removeFileOrTree, pushd, splitAndStrip, getRegionList)
+from .sandbox import makeDirPath, gcam_path, GcamPath
+from .utils import (coercible, printSeries, splitAndStrip, getRegionList)
+from .xml_edit import CachedFile, xmlSel, xmlIns, xmlEdit, expandYearRanges
+
+_logger = getLogger(__name__)
 
 # Names of key scenario components in reference GCAM 4.3 configuration.xml file
 ENERGY_TRANSFORMATION_TAG = "energy_transformation"
 SOLVER_TAG = "solver"
-
-AttributePattern = re.compile(r'(.*)/@([-\w]*)$')
-
-_logger = getLogger(__name__)
 
 # methods callable from <function name="x">args</function> in
 # XML scenario setup scripts.
@@ -55,296 +54,6 @@ def callableMethod(func):
 def getCallableMethod(name):
     return CallableMethods.get(name)
 
-#
-# Copy src file to dst only if it doesn't already exist.
-#
-def copyIfMissing(src, dst, makedirs=False):
-    """
-    Copy file `src` to `dst`, but only if `dst` doesn't already exist.
-
-    :param src: (str) pathname of the file to copy
-    :param dst: (str) pathname of the copy to create
-    :param makedirs: if True, make any missing directories
-    :return: none
-    """
-    if not os.path.lexists(dst):
-        parentDir = os.path.dirname(dst)
-        if makedirs and not os.path.isdir(parentDir):
-            _logger.debug("mkdir '%s'", parentDir)
-            os.makedirs(parentDir, 0o755)
-
-        _logger.info("Copy %s\n      to %s", src, dst)
-        shutil.copy(src, dst)
-        os.chmod(dst, 0o644)
-
-class CachedFile(object):
-    parser = ET.XMLParser(remove_blank_text=True)
-
-    # Store parsed XML trees here and use with xmlSel/xmlEdit if useCache is True
-    cache = {}
-
-    def __init__(self, filename):
-        self.filename = filename = os.path.realpath(filename)
-        self.edited = False
-
-        _logger.debug("CachedFile: reading '%s'", filename)
-        self.tree = ET.parse(filename, self.parser)
-        self.cache[filename] = self
-
-    @classmethod
-    def getFile(cls, obj):
-        if isinstance(obj, CachedFile):
-            return obj
-
-        # realpath => operate on canonical pathnames
-        filename = obj.abs if isinstance(obj, GcamPath) else os.path.realpath(obj)
-
-        try:
-            item = cls.cache[filename]
-        except KeyError:
-            item = CachedFile(filename)
-
-        return item
-
-    def setEdited(self):
-        self.edited = True
-
-    def write(self):
-        _logger.info("CachedFile: writing '%s'", self.filename)
-        self.tree.write(self.filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
-        self.edited = False
-
-    def decache(self):
-        if self.edited:
-            self.write()
-
-    @classmethod
-    def decacheAll(cls):
-        for item in cls.cache.values():
-            item.decache()
-
-    def __str__(self):
-        return f"<CachedFile '{self.filename}' edited:{self.edited}>"
-
-def xmlSel(obj, xpath, asText=False):
-    """
-    Return True if the XML component identified by the xpath argument
-    exists in `filename`. Useful for deciding whether to edit or
-    insert an XML element.
-
-    :param obj: (CachedFile, GcamPath, or str) the file to edit
-    :param xpath: (str) the xml element(s) to search for
-    :param asText: (str) if True, return the text of the node, if found, else None
-    :return: (bool) True if found, False otherwise. (see asText)
-    """
-    item = CachedFile.getFile(obj)
-
-    result = item.tree.find(xpath)
-    if asText:
-        return result.text if result is not None else None
-
-    return (result is not None)
-
-# TBD: Allow first arg to be a CachedFile to skip additional lookup step?
-def xmlIns(obj, xpath, elt):
-    """
-    Insert the element `elt` as a child to the node found with `xpath`.
-
-    :param obj: (CachedFile, GcamPath, or str) the file to edit
-    :param xpath: (str) the xml element(s) to search for
-    :param elt: (etree.Element) the node to insert
-    :return: none
-    """
-    item = CachedFile.getFile(obj)
-    item.setEdited()
-
-    parentElt = item.tree.find(xpath)
-    if parentElt is None:
-        raise SetupException(f"xmlIns: failed to find parent element at {xpath} in {item.filename}")
-
-    parentElt.append(elt)
-
-#
-# xmlEdit can set a value, multiply a value in the XML by a constant,
-# or add a constant to the value in the XML. These funcs handle each
-# operation, allowing the logic to be outside the loop, which might
-# iterate over thousands of elements.
-#
-def _set(elt, value):
-    elt.text = str(value)
-
-def _multiply(elt, value):
-    elt.text = str(float(elt.text) * value)
-
-def _add(elt, value):
-    elt.text = str(float(elt.text) + value)
-
-_editFunc = {'set'      : _set,
-             'multiply' : _multiply,
-             'add'      : _add}
-
-# TBD: Allow first arg to be a CachedFile to skip additional lookup step?
-def xmlEdit(obj, pairs, op='set', useCache=True):
-    """
-    Edit the XML file `filename` in place, applying the values to the given xpaths
-    in the list of pairs.
-
-    :param obj: (CachedFile, GcamPath, or str) the file to edit
-    :param pairs: (iterable of (xpath, value) pairs) In each pair, the xpath selects
-      elements or attributes to update with the given values.
-    :param op: (str) Operation to perform. Must be in ('set', 'multiply', 'add').
-      Note that 'multiply' and 'add' are *not* available for xpaths selecting
-      attributes rather than node values. For 'multiply'  and 'add', the value
-      should be passed as a float. For 'set', it can be a float or a string.
-    :param useCache: (bool) if True, the etree is sought first in the XmlCache. This
-      avoids repeated parsing, but the file is always written (eventually) if updated
-      by this function.
-    :return: True on success, else False
-    """
-    legalOps = _editFunc.keys()
-
-    if op not in legalOps:
-        raise PygcamException(f'xmlEdit: unknown operation "{op}". Must be one of {legalOps}')
-
-    modFunc = _editFunc[op]
-
-    item = CachedFile.getFile(obj)
-    tree = item.tree
-
-    updated = False
-
-    # if at least one xpath is found, update and write file
-    for xpath, value in pairs:
-        attr = None
-
-        # If it's an attribute update, extract the attribute
-        # and use the rest of the xpath to select the elements.
-        match = re.match(AttributePattern, xpath)
-        if match:
-            attr = match.group(2)
-            xpath = match.group(1)
-
-        elts = tree.xpath(xpath)
-        if len(elts):
-            updated = True
-            if attr:                # conditional outside loop since there may be many elements
-                value = str(value)
-                for elt in elts:
-                    elt.set(attr, value)
-            else:
-                for elt in elts:
-                    modFunc(elt, value)
-
-    if updated:
-        if useCache:
-            item.setEdited()
-        else:
-            item.write()
-
-    return updated
-
-def extractStubTechnology(region, srcFile, dstFile, sector, subsector, technology,
-                          sectorElement='supplysector', fromRegion=False):
-    """
-    Extract a definition from the global-technology-database based on `sector`, `subsector`,
-    and `technology`, defined in `srcFile` and create a new file, `dstFile` with the extracted
-    bit as a stub-technology definition for the given region. If `fromRegion` is True,
-    extract the stub-technology from the regional definition, rather than from the
-    global-technology-database.
-
-    :param region: (str) the name of the GCAM region for which to copy the technology
-    :param srcFile: (str) the pathname of a source XML file with a global-technology-database
-    :param dstFile: (str) the pathname of the file to create
-    :param sector: (str) the name of a GCAM sector
-    :param subsector: (str) the name of a GCAM subsector within `sector`
-    :param technology: (str) the name of a GCAM technology within `sector` and `subsector`
-    :param sectorElement: (str) the name of the XML element to create (or search for, if `fromRegion`
-        is True) between the ``<region>`` and ``<subsector>`` XML elements. Defaults to 'supplysector'.
-    :param fromRegion: (bool) if True, the definition is extracted from a regional definition
-        rather than from the global-technology-database.
-    :return: True on success, else False
-    """
-    _logger.info("Extract stub-technology for %s (%s) to %s", technology, region if fromRegion else 'global', dstFile)
-
-    if fromRegion:
-        xpath = "//region[@name='%s']/%s[@name='%s']/subsector[@name='%s']/stub-technology[@name='%s']" % \
-                (region, sectorElement, sector, subsector, technology)
-    else:
-        xpath = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
-                (sector, subsector, technology)
-
-    # Read the srcFile to extract the required elements
-    parser = ET.XMLParser(remove_blank_text=True)
-    tree = ET.parse(srcFile, parser)
-
-    # Rename technology => stub-technology (for global-tech-db case)
-    elts = tree.xpath(xpath)
-    if len(elts) != 1:
-        raise PygcamException(f'XPath "{xpath}" failed')
-
-    technologyElt = elts[0]
-    technologyElt.tag = 'stub-technology'       # no-op if fromRegion == True
-
-    # Surround the extracted XML with the necessary hierarchy
-    scenarioElt  = ET.Element('scenario')
-    worldElt     = ET.SubElement(scenarioElt, 'world')
-    regionElt    = ET.SubElement(worldElt, 'region', attrib={'name' : region})
-    sectorElt    = ET.SubElement(regionElt, sectorElement, attrib={'name' : sector})
-    subsectorElt = ET.SubElement(sectorElt, 'subsector', attrib={'name' : subsector})
-    subsectorElt.append(technologyElt)
-
-    # Workaround for parsing error: explicitly name shutdown deciders
-    elts = scenarioElt.xpath("//phased-shutdown-decider|profit-shutdown-decider")
-    for elt in elts:
-        parent = elt.getparent()
-        parent.remove(elt)
-
-    _logger.info("Writing '%s'", dstFile)
-    newTree = ET.ElementTree(scenarioElt)
-    newTree.write(dstFile, xml_declaration=True, pretty_print=True)
-
-    return True
-
-def expandYearRanges(seq):
-    """
-    Expand a sequence of (year, value) tuples, or a dict keyed by
-    year, where the year argument may be a string containing identifying
-    range of values with an optional "step" value indicated after a ":".
-    The default step is 5 years. For example, "2015-2030" expands to
-    (2015, 2020, 2025, 2030), and "2015-2020:1" expands to
-    (2015, 2016, 2017, 2018, 2019, 2020). When a range is given, the
-    tuple is replaced with a sequence of tuples naming each year explicitly.
-    Typical usage is ``for year, price in expandYearRanges(values): ...``.
-
-    :param seq: (tuple, list, dict) The sequence of (year, value) tuples,
-        or any object with an items() method that returns (year, value) pairs.
-    :return:
-        A list of tuples with the expanded sequence.
-    """
-    result = []
-    try:
-        seq = list(seq.items())     # convert dict or Series to list of pairs
-    except:                         # or quietly fail, and just use 'seq' as is
-        pass
-
-    for year, value in seq:
-        value = float(value)
-        if isinstance(year, str) and '-' in year:
-            m = re.search('^(\d{4})-(\d{4})(:(\d+))?$', year)
-            if not m:
-                raise SetupException(f'Unrecognized year range specification: {year}')
-
-            startYear = int(m.group(1))
-            endYear   = int(m.group(2))
-            stepStr = m.group(4)
-            step = int(stepStr) if stepStr else 5
-            expanded = [[y, value] for y in range(startYear, endYear+step, step)]
-            result.extend(expanded)
-        else:
-            result.append((int(year), value))
-
-    return result
-
 
 class XMLEditor(object):
     """
@@ -352,13 +61,22 @@ class XMLEditor(object):
     subclass this. Represents the information required to set up a scenario, i.e.,
     to generate and/or copy the required XML files into the XML output dir.
     """
-    # TBD: init should take a GcamContext describing the scenario and assoc'd dirs.
-    # def __init__(self, context, mcsMode=None, cleanXML=True):
+
+    # TBD: init should take a Sandbox describing the scenario and assoc'd dirs. For now,
+    #   we create the Sandbox object here to avoid having to change all subclasses.
+    #   ----
+    #   def __init__(self, sandbox, mcsMode=None, cleanXML=True):
 
     def __init__(self, baseline, scenario, xmlOutputRoot, xmlSourceDir, refWorkspace,
                  groupDir, srcGroupDir, subdir, parent=None, mcsMode=None, cleanXML=True):
 
-        # TBD: much of this is farmed out to GcamContext instead
+        # TBD: much of this is farmed out to Sandbox instead
+        from .sandbox import Sandbox
+        self.sandbox = Sandbox(baseline, scenario, scenarioGroup=None,
+                               projectXmlSrc=xmlSourceDir, xmlGroupSubdir=None,
+                               sandboxGroupSubdir=srcGroupDir, refWorkspace=refWorkspace,
+                               createDirs=True)
+
         self.name = name = scenario or baseline # if no scenario stated, assume baseline
         self.baseline = baseline
         self.scenario = scenario
@@ -389,7 +107,7 @@ class XMLEditor(object):
         self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
         self.dyn_xml_rel   = pathjoin("..", DYN_XML_NAME)   # TBD eliminate?
 
-        self.trial_xml_rel = self.trial_xml_abs = None      # used by MCS only
+        self.trial_xml_rel = self.trial_xml_abs = None      # used by MCS only TBD: use GcamPath
 
         self.scenario_dir_abs = makeDirPath(self.local_xml_abs, groupDir, name, create=True)
         self.scenario_dir_rel = pathjoin(self.local_xml_rel, groupDir, name)
@@ -402,7 +120,7 @@ class XMLEditor(object):
         self.scenario_dyn_dir_rel = pathjoin(self.dyn_xml_rel, groupDir, name)
 
         # Store commonly-used paths
-        gcam_xml = pathjoin('input', getParam('GCAM.DataDir'), 'xml')
+        gcam_xml = 'input/gcamdata/xml'
         self.gcam_prefix_abs = pathjoin(refWorkspace, gcam_xml)
         self.gcam_prefix_rel = pathjoin('../', gcam_xml)
 
@@ -463,14 +181,15 @@ class XMLEditor(object):
     def setupStatic(self, args):
         """
         Create static XML files in local-xml. By "static", we mean files whose contents are
-        independent of baseline results. In comparison, policy scenarios may generate dynamic
-        XML files whose contents are computed from baseline results.
+        constant, independent of baseline results. In comparison, policy scenarios may generate
+        dynamic XML files whose contents are computed from baseline results. While static XML
+        files can be shared across trials in an MCS, dynamic XMLs are distinct by trial.
 
         :param args: (argparse.Namespace) arguments passed from the top-level call to setup
             sub-command.
         :return: none
         """
-        _logger.info("Generating local-xml for scenario %s", self.name)
+        _logger.info("Generating %s for scenario %s", LOCAL_XML_NAME, self.name)
 
         scenDir = self.scenario_dir_abs
         mkdirs(scenDir)
@@ -568,7 +287,7 @@ class XMLEditor(object):
 
         return pathname
 
-    def getLocalCopy(self, configTag):
+    def getLocalCopy(self, configTag, gp=None):
         """
         Get the filename for the most local version (in terms of scenario hierarchy)
         of the XML file identified in the configuration file with ``configTag``, and
@@ -576,33 +295,46 @@ class XMLEditor(object):
         first step in the XMLEditor methods that modify XML file content.
 
         :param configTag: (str) the configuration file tag (name="xxx") of an XML file
-        :return: (str, str) a tuple of the relative and absolute path of the
-          local (i.e., within the current scenario) copy of the file.
+        :param gp: (bool) whether to return the result as a GcamPath instance. If false,
+            (the default) return a tuple of the relative and absolute pathnames.
+        :return: (GcamPath) a GcamPath instance
         """
+        sbx = self.sandbox
+
         pathname = self.componentPath(configTag)
         srcAbsPath = pathjoin(self.sandboxExeDir, pathname, abspath=True)
+
+        srcPath = GcamPath(sbx.sandboxExeDir, pathname)     # TBD: compare to above
+
+        if not srcPath.lexists():
+            pass
 
         # TBD: test this
         if not os.path.lexists(srcAbsPath):
             _logger.debug("Didn't find %s; checking reference files", srcAbsPath)
             # look to sandbox workspace if not found locally
-            refWorkspace  = getParam('GCAM.SandboxRefWorkspace')
-            refConfigFile = getParam('GCAM.RefConfigFile')
+            sboxWorkspace = getParam('GCAM.SandboxRefWorkspace')
+            refConfigFile = getParam('GCAM.RefConfigFile')  # main RefWorkspace, not SandboxRefWorkspace
+
+            assert sbx.refWorkspace == sboxWorkspace        # TBD: remove after testing
 
             pathname = self.componentPath(configTag, configPath=refConfigFile)
-            srcAbsPath = pathjoin(refWorkspace, 'exe', pathname, abspath=True)
+            srcAbsPath = pathjoin(sboxWorkspace, 'exe', pathname, abspath=True)
+
+            srcPath = GcamPath(sbx.sandboxWorkspaceExeDir, pathname)
 
         suffix = os.path.basename(srcAbsPath)
+        suffix2 = srcPath.basename()
+        assert suffix == suffix2    # TBD: remove after testing
+
+
         dstAbsPath = pathjoin(self.scenario_dir_abs, suffix)
         dstRelPath = pathjoin(self.scenario_dir_rel, suffix)
 
+        # copyIfMissing(sbx.scenario_dir.abs, dstAbsPath, makedirs=True)
         copyIfMissing(srcAbsPath, dstAbsPath, makedirs=True)
 
-        # TBD: return a GcamPath instance that holds both of these
-        gp = GcamPath(self.sandboxExeDir, pathname)
-        # return gp
-
-        return dstRelPath, dstAbsPath
+        return GcamPath(self.sandboxExeDir, pathname)
 
     @callableMethod
     def replaceValue(self, tag, xpath, value):
@@ -615,14 +347,10 @@ class XMLEditor(object):
         :param value: the value to use in place of that found by the xpath.
             (the value is converted to string, so you can pass ints or floats.)
         """
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(tag)
-        xmlEdit(xmlFileAbs, [(xpath, str(value))])
-        self.updateScenarioComponent(tag, xmlFileRel)
-
-        # TBD: use GcamPath
-        # xmlFile = self.getLocalCopy(tag)
-        # xmlEdit(xmlFile, [(xpath, str(value))])
-        # self.updateScenarioComponent(tag, xmlFile)
+        # use GcamPath
+        xmlFile = self.getLocalCopy(tag, gp=True)
+        xmlEdit(xmlFile, [(xpath, str(value))])
+        self.updateScenarioComponent(tag, xmlFile)
 
     def updateConfigComponent(self, group, name, value=None, writeOutput=None, appendScenarioName=None):
         """
@@ -845,10 +573,10 @@ class XMLEditor(object):
         """
         _logger.info("multiply: tag='%s', xpath='%s', value=%s", tag, xpath, value)
 
-        fileRel, fileAbs = self.getLocalCopy(tag) # TBD: convert to GcamPath
+        xml_file = self.getLocalCopy(tag, gp=True)
 
-        xmlEdit(fileAbs, [(xpath, value)], op='multiply')
-        self.updateScenarioComponent(tag, fileRel)
+        xmlEdit(xml_file, [(xpath, value)], op='multiply')
+        self.updateScenarioComponent(tag, xml_file)
 
     @callableMethod
     def add(self, tag, xpath, value):
@@ -863,10 +591,10 @@ class XMLEditor(object):
         """
         _logger.info(f"add: tag='{tag}', xpath='{xpath}', value={value}")
 
-        fileRel, fileAbs = self.getLocalCopy(tag) # TBD: convert to GcamPath
+        xml_file = self.getLocalCopy(tag, gp=True)
 
-        xmlEdit(fileAbs, [(xpath, value)], op='add')
-        self.updateScenarioComponent(tag, fileRel)
+        xmlEdit(xml_file, [(xpath, value)], op='add')
+        self.updateScenarioComponent(tag, xml_file)
 
     # TBD dynamic keyword might still be useful if subdir e.g. local-xml/dynamic but
     #  policy file would be in local-xml anyway
@@ -999,7 +727,7 @@ class XMLEditor(object):
         maxModelCalcs = coercibleAndPositive('maxModelCalcs', maxModelCalcs, int)
         maxIterations = coercibleAndPositive('maxIterations', maxIterations, int)
 
-        solverFileRel, solverFileAbs = self.getLocalCopy(SOLVER_TAG)
+        xml_file = self.getLocalCopy(SOLVER_TAG, gp=True)
 
         prefix = f"//scenario/user-configurable-solver[@year={year}]/"
         pairs = []
@@ -1016,9 +744,9 @@ class XMLEditor(object):
         if maxIterations:
             pairs.append((prefix + 'broyden-solver-component/max-iterations', maxIterations))
 
-        xmlEdit(solverFileAbs, pairs)
+        xmlEdit(xml_file, pairs)
 
-        self.updateScenarioComponent("solver", solverFileRel)
+        self.updateScenarioComponent("solver", xml_file)
 
     @callableMethod
     def dropLandProtection(self, dropEmissions=True):
@@ -1055,11 +783,11 @@ class XMLEditor(object):
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
         for num in [2, 3]:
             fileTag  = 'land' + str(num)
-            landFileRel, landFileAbs = self.getLocalCopy(fileTag)
+            landFile = self.getLocalCopy(fileTag, gp=True)
 
-            protectLand(landFileAbs, landFileAbs, fraction, landClasses=landClasses,
+            protectLand(landFile.abs, landFile.abs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
-            self.updateScenarioComponent(fileTag, landFileRel)
+            self.updateScenarioComponent(fileTag, landFile)
 
     # TBD: test
     @callableMethod
@@ -1085,17 +813,17 @@ class XMLEditor(object):
         for prefix in ('', 'protected_'):
             for num in [2, 3]:
                 fileTag = f'{prefix}land{num}'
-                landFileRel, landFileAbs = self.getLocalCopy(fileTag)
+                landFile = self.getLocalCopy(fileTag, gp=True)
 
-                landXmlFiles.append(landFileAbs)
-                self.updateScenarioComponent(fileTag, landFileRel)
+                landXmlFiles.append(landFile.abs)
+                self.updateScenarioComponent(fileTag, landFile)
 
         # TBD: revisit this; it's a bit of a hack for Oct 16, 2019(?) deliverable
         scenarioFile = pathname = getParam('GCAM.LandProtectionXmlFile')
         if self.mcsMode == 'trial':
             basename = os.path.basename(pathname)
             scenario = self.scenario or self.baseline
-            scenarioFile = unixPath(pathjoin(self.trial_xml_abs, 'local-xml',
+            scenarioFile = unixPath(pathjoin(self.trial_xml_abs, LOCAL_XML_NAME,
                                              self.groupDir, scenario, basename))
 
         runProtectionScenario(scenarioName, scenarioFile=scenarioFile, inPlace=True,
@@ -1139,7 +867,7 @@ class XMLEditor(object):
 
         # TBD: use GcamPath
         # TBD: need to generalize this since any modification can be per-trial or universal
-        dirRel, dirAbs = self.getScenarioOrTrialDirs(subdir='local-xml')
+        dirRel, dirAbs = self.getScenarioOrTrialDirs(subdir=LOCAL_XML_NAME)
 
         fileRel = pathjoin(dirRel, filename)
         fileAbs = pathjoin(dirAbs, filename)
@@ -1175,7 +903,7 @@ class XMLEditor(object):
 
         # TBD: use GcamPath
         # TBD: need to generalize this since any modification can be per-trial or universal
-        dirRel, dirAbs = self.getScenarioOrTrialDirs(subdir='local-xml')
+        dirRel, dirAbs = self.getScenarioOrTrialDirs(subdir=LOCAL_XML_NAME)
 
         fileRel = pathjoin(dirRel, filename)
         fileAbs = pathjoin(dirAbs, filename)
@@ -1197,17 +925,15 @@ class XMLEditor(object):
         :return: none
         """
         tag = 'socioeconomics'
-        # path = self.componentPath(tag)
-        # fileRel, fileAbs = self.getLocalCopy(path)
-        fileRel, fileAbs = self.getLocalCopy(tag) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(tag, gp=True)
 
         prefix = f'//region[@name="{region}"]/demographics/populationMiniCAM'
         pairs = []
         for year, pop in expandYearRanges(values):
             pairs.append((f'{prefix}[@year="{year}"]/totalPop', int(round(pop))))
 
-        xmlEdit(fileAbs, pairs)
-        self.updateScenarioComponent(tag, fileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(tag, xml_file)
 
     @callableMethod
     def freezeRegionPopulation(self, region, year, endYear=2100):
@@ -1215,9 +941,9 @@ class XMLEditor(object):
         Freeze population after `year` at the value for that year.
         """
         tag = 'socioeconomics'
-        fileRel, fileAbs = self.getLocalCopy(tag) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(tag, gp=True)
 
-        item = CachedFile.getFile(fileAbs)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         xpath = f'//region[@name="{region}"]/demographics/populationMiniCAM[@year="{year}"]/totalPop'
@@ -1258,19 +984,16 @@ class XMLEditor(object):
         msg = f"Set non-energy-cost of {technology} for {self.name} to:"
         _logger.info(printSeries(values, technology, header=msg, asStr=True))
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
 
         prefix = '//global-technology-database/location-info[@sector-name="%s" and @subsector-name="%s"]/technology[@name="%s"]' % \
                  (sector, subsector, technology)
         suffix = '/minicam-non-energy-input[@name="non-energy"]/input-cost'
 
-        pairs = []
-        for year, price in expandYearRanges(values):
-            pairs.append((f'{prefix}/period[@year="{year}"]{suffix}', price))
+        pairs = [(f'{prefix}/period[@year="{year}"]{suffix}', price) for year, price in expandYearRanges(values)]
 
-        xmlEdit(enTransFileAbs, pairs)
-
-        self.updateScenarioComponent(ENERGY_TRANSFORMATION_TAG, enTransFileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(ENERGY_TRANSFORMATION_TAG, xml_file)
 
     # TBD: Test
     @callableMethod
@@ -1294,19 +1017,16 @@ class XMLEditor(object):
         """
         _logger.info("Set shutdown rate for (%s, %s) to %s for %s", sector, technology, values, self.name)
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
 
         prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
 
-        pairs = []
+        pairs = [(f"{prefix}/period[@year='{year}']/phased-shutdown-decider/shutdown-rate", coercible(value, float))
+                    for year, value in expandYearRanges(values)]
 
-        for year, value in expandYearRanges(values):
-            pairs.append((f"{prefix}/period[@year='{year}']/phased-shutdown-decider/shutdown-rate",
-                         coercible(value, float)))
-
-        xmlEdit(enTransFileAbs, pairs)
-        self.updateScenarioComponent(ENERGY_TRANSFORMATION_TAG, enTransFileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(ENERGY_TRANSFORMATION_TAG, xml_file)
 
     #
     # //region[@name=""]/energy-final-demand[@name=""]/price-elasticity[@year=""]
@@ -1346,7 +1066,7 @@ class XMLEditor(object):
         """
         _logger.info("Set price-elasticity for (%s, %s) to %s for %s", regions, sectors, values, self.name)
 
-        filenameRel, filenameAbs = self.getLocalCopy(configFileTag) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
         def listifyString(value, aliasForNone=None):
             if isinstance(value, str):
@@ -1371,12 +1091,11 @@ class XMLEditor(object):
 
         prefix = regionExpr + f'/energy-final-demand[{nameExpression(sectors)}]'
 
-        pairs = []
-        for year, value in expandYearRanges(values):
-            pairs.append((f'{prefix}/price-elasticity[@year="{year}"]', coercible(value, float)))
+        pairs = [(f'{prefix}/price-elasticity[@year="{year}"]', coercible(value, float))
+                    for year, value in expandYearRanges(values)]
 
-        xmlEdit(filenameAbs, pairs)
-        self.updateScenarioComponent(configFileTag, filenameRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     @callableMethod
     def setInterpolationFunction(self, regions, supplysector, subsector, fromYear, toYear,
@@ -1421,9 +1140,9 @@ class XMLEditor(object):
         toYear = str(toYear)
         fromYear = str(fromYear)
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
-        item = CachedFile.getFile(xmlFileAbs)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         # convert to a list; if no regions given, get list of regions in this file
@@ -1509,8 +1228,7 @@ class XMLEditor(object):
                 args.append((interp_rule + '/@delete', "1"))        # TBD: not sure this is correct
 
         xmlEdit(item, args)
-
-        self.updateScenarioComponent(configFileTag, xmlFileRel)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     @callableMethod
     def insertStubTechRetirement(self, regions, supplysector, subsector, stubTechnologies, type,
@@ -1546,9 +1264,9 @@ class XMLEditor(object):
         _logger.info("Insert shutdown functions for (%r, %r, %r, %r) for %r",
                      regions, supplysector, subsector, stubTechnologies, self.name)
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
-        item = CachedFile.getFile(xmlFileAbs)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         # convert to a list; if no region given, get list of regions in this file
@@ -1591,7 +1309,7 @@ class XMLEditor(object):
                         args.append((half_life, coercible(halflife, float)))
 
         xmlEdit(item, args)
-        self.updateScenarioComponent(configFileTag, xmlFileRel)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     @callableMethod
     def insertStubTechParameter(self, regions, supplysector, subsector, stubTechnology, nodeName,
@@ -1632,9 +1350,9 @@ class XMLEditor(object):
         _logger.info("Insert nodes and attributes for (%r, %r, %r, %r) for %r",
                      regions, supplysector, subsector, stubTechnology, self.name)
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag) # TBD: use GcamPath
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
-        item = CachedFile.getFile(xmlFileAbs)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         # convert to a list; if no region given, get list of regions in this file
@@ -1660,7 +1378,7 @@ class XMLEditor(object):
                 args.append((parameter, coercible(value, float)))
 
         xmlEdit(item, args)
-        self.updateScenarioComponent(configFileTag, xmlFileRel)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     @callableMethod
     def insertSubsectorParameter(self, regions, supplysector, subsector, nodeName, attributeName,
@@ -1693,9 +1411,9 @@ class XMLEditor(object):
         # from .utils import printSeries
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
-        item = CachedFile.getFile(xmlFileAbs)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         # convert to a list; if no region given, get list of regions in this file
@@ -1717,7 +1435,7 @@ class XMLEditor(object):
             args.append((parameter, coercible(nodeValue, float)))
 
         xmlEdit(item, args)
-        self.updateScenarioComponent(configFileTag, xmlFileRel)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     @callableMethod
     def setRegionalShareWeights(self, regions, sector, subsector, values,
@@ -1756,9 +1474,9 @@ class XMLEditor(object):
                      regions, sector, subsector, stubTechnology, self.name)
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
-        item = CachedFile.getFile(xmlFileAbs)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         # convert to a list; if no regions given, get list of regions in this file
@@ -1795,7 +1513,7 @@ class XMLEditor(object):
                 args.append((share_weight, coercible(value, float)))
 
         xmlEdit(item, args)
-        self.updateScenarioComponent(configFileTag, xmlFileRel)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     # TBD: Test
     @callableMethod
@@ -1823,16 +1541,15 @@ class XMLEditor(object):
         _logger.info("Set global-technology-database share-weights for (%s, %s) to %s for %s",
                      sector, technology, values, self.name)
 
-        enTransFileRel, enTransFileAbs = self.getLocalCopy(configFileTag)
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
         prefix = f"//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']"
 
-        pairs = []
-        for year, value in expandYearRanges(values):
-            pairs.append((f"{prefix}/period[@year={year}]/share-weight", coercible(value, float)))
+        pairs = [(f"{prefix}/period[@year={year}]/share-weight", coercible(value, float))
+                 for year, value in expandYearRanges(values)]
 
-        xmlEdit(enTransFileAbs, pairs)
-        self.updateScenarioComponent(configFileTag, enTransFileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     # TBD: test
     @callableMethod
@@ -1857,26 +1574,23 @@ class XMLEditor(object):
         _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s",
                      energyInput, technology, subsector, values)
 
-        enTransFileRel, enTransFileAbs = \
-            self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
+        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
 
-        prefix = "//global-technology-database/location-info[@subsector-name='%s']/technology[@name='%s']" % \
-                 (subsector, technology)
+        prefix = f"//global-technology-database/location-info[@subsector-name='{subsector}']/technology[@name='{technology}']"
         suffix = f"minicam-energy-input[@name='{energyInput}']/coefficient"
 
-        pairs = []
-        for year, coef in expandYearRanges(values):
-            pairs.append((f"{prefix}/period[@year='{year}']/{suffix}", coef))
+        pairs = [(f"{prefix}/period[@year='{year}']/{suffix}", coef) for year, coef in expandYearRanges(values)]
 
-        xmlEdit(enTransFileAbs, pairs)
-        self.updateScenarioComponent("energy_transformation", enTransFileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent("energy_transformation", xml_file)
 
     @callableMethod
     def writePolicyMarketFile(self, filename, policyName, region, sector, subsector, technology, years,
                               marketType=DEFAULT_MARKET_TYPE):
-        pathname = pathjoin(self.scenario_dir_abs, filename)
+        pathname = pathjoin(self.scenario_dir_abs, filename)        # TBD: pathjoin(self.sandbox.scenario_dir.abs, filename)
         policyMarketXml(policyName, region, sector, subsector, technology, years,
                         marketType=marketType, pathname=pathname)
+
 
     # class variable used by next method only
     _writePolicyConstraintFile_cache = {}
@@ -1966,17 +1680,16 @@ class XMLEditor(object):
         _logger.info("Set Non-CO2 emissions for (%s, %s, %s, %s, %s) to %s for %s",
                      region, sector, subsector, stubTechnology, species, values, self.name)
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(configFileTag)
+        xml_file = self.getLocalCopy(configFileTag, gp=True)
 
         # //region[@name='USA']/supplysector[@name='N fertilizer']/subsector[@name='gas']/stub-technology[@name='gas']/period[@year='2005']/Non-CO2[@name='CH4']/input-emissions
+        # NOTE: the following uses '%s' since the list comprehension immediately below substitutes in the year.
         xpath = f"//region[@name='{region}']/supplysector[@name='{sector}']/subsector[@name='{subsector}']/stub-technology[@name='{stubTechnology}']/period[@year='%s']/Non-CO2[@name='{species}']/input-emissions"
 
-        pairs = []
-        for year, value in expandYearRanges(values):
-            pairs.append((xpath % year, coercible(value, float)))
+        pairs = [(xpath % year, coercible(value, float)) for year, value in expandYearRanges(values)]
 
-        xmlEdit(xmlFileAbs, pairs)
-        self.updateScenarioComponent(configFileTag, xmlFileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(configFileTag, xml_file)
 
     @callableMethod
     def transportTechEfficiency(self, csvFile, xmlTag='transportation'):
@@ -1988,8 +1701,8 @@ class XMLEditor(object):
         df = pd.read_csv(csvPath)
         year_cols = [col for col in df.columns if col.isdigit()]
 
-        xmlFileRel, xmlFileAbs = self.getLocalCopy(xmlTag)
-        item = CachedFile.getFile(xmlFileAbs)
+        xml_file = self.getLocalCopy(xmlTag, gp=True)
+        item = CachedFile.getFile(xml_file)
         tree = item.tree
 
         xml_template = "//region[@name='{region}']/supplysector[@name='{sector}']/tranSubsector[@name='{subsector}']/stub-technology[@name='{technology}']/"
@@ -2009,11 +1722,10 @@ class XMLEditor(object):
                 elts = tree.xpath(xpath)
 
                 if elts is None:
-                    raise SetupException(f'XPath query {xpath} on file "{xmlFileAbs}" failed to find an element')
+                    raise SetupException(f'XPath query {xpath} on file "{xml_file.abs}" failed to find an element')
 
                 if len(elts) != 1:
-                    raise SetupException(
-                        f'XPath query {xpath} on file "{xmlFileAbs}" returned multiple elements')
+                    raise SetupException(f'XPath query {xpath} on file "{xml_file.abs}" returned multiple elements')
 
                 elt = elts[0]
                 old_value = float(elt.text)
@@ -2023,8 +1735,8 @@ class XMLEditor(object):
                 new_value = old_value / (1 + improvement)
                 pairs.append((xpath, new_value))
 
-        xmlEdit(xmlFileAbs, pairs)
-        self.updateScenarioComponent(xmlTag, xmlFileRel)
+        xmlEdit(xml_file, pairs)
+        self.updateScenarioComponent(xmlTag, xml_file)
 
     @callableMethod
     def buildingTechEfficiency(self, csvFile, xmlTag='building_update',
@@ -2074,9 +1786,9 @@ class XMLEditor(object):
             raise SetupException(f"buildingTechEfficiency: mode must be either 'add' or 'mult'; got '{mode}'")
 
         def runForFile(tag, which):
-            fileRel, fileAbs = self.getLocalCopy(tag)
-            fileObj = CachedFile.getFile(fileAbs)
-            tree = fileObj.tree
+            xml_file = self.getLocalCopy(tag, gp=True)
+            item = CachedFile.getFile(xml_file)
+            tree = item.tree
 
             if which == 'GCAM-USA':
                 xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
@@ -2100,10 +1812,10 @@ class XMLEditor(object):
                     elts = tree.xpath(xpath)
 
                     if elts is None:
-                        raise SetupException(f'XPath query "{xpath}" on file "{fileAbs}" failed to find an element')
+                        raise SetupException(f'XPath query "{xpath}" on file "{xml_file.abs}" failed to find an element')
 
                     if len(elts) != 1:
-                        raise SetupException(f'XPath query "{xpath}" on file "{fileAbs}" returned multiple elements')
+                        raise SetupException(f'XPath query "{xpath}" on file "{xml_file.abs}" returned multiple elements')
 
                     elt = elts[0]
                     old_value = float(elt.text)
@@ -2119,9 +1831,9 @@ class XMLEditor(object):
             runForFile('building', 'GCAM-32')
 
         if 'GCAM-USA' in which_values:
-            runForFile('bld_usa',  'GCAM-USA')
+            runForFile('bld_usa', 'GCAM-USA')
 
-        xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
+        xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)   # TBD: update to use Scenario object and GcamPath
         xmlRel = pathjoin(self.scenario_dir_rel, xmlFile)
 
         scenarioElt = ET.Element('scenario')
@@ -2243,9 +1955,10 @@ class XMLEditor(object):
             raise SetupException(f"industryTechEfficiency: mode must be either 'add' or 'mult'; got '{mode}'")
 
         def runForFile(tag, which):
-            fileRel, fileAbs = self.getLocalCopy(tag)
-            fileObj = CachedFile.getFile(fileAbs)
-            tree = fileObj.tree
+            xml_file = self.getLocalCopy(tag, gp=True)
+            item = CachedFile.getFile(xml_file)
+            tree = item.tree
+
             xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
 #            if which == 'GCAM-USA':
 #                xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
@@ -2269,13 +1982,13 @@ class XMLEditor(object):
                     elts = tree.xpath(xpath)
 
                     if elts is None:
-                        raise SetupException(f'XPath query {xpath} on file "{fileAbs}" failed to find an element')
+                        raise SetupException(f'XPath query {xpath} on file "{xml_file.abs}" failed to find an element')
 
                     if len(elts) == 0:
-                        raise SetupException(f'XPath query {xpath} on file "{fileAbs}" returned zero elements')
+                        raise SetupException(f'XPath query {xpath} on file "{xml_file.abs}" returned zero elements')
 
                     if len(elts) != 1:
-                        raise SetupException(f'XPath query {xpath} on file "{fileAbs}" returned multiple elements')
+                        raise SetupException(f'XPath query {xpath} on file "{xml_file.abs}" returned multiple elements')
 
                     elt = elts[0]
                     old_value = float(elt.text)

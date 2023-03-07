@@ -10,7 +10,7 @@ import os
 from inspect import stack
 
 from ..config import getParam, getParamAsInt
-from ..constants import SCENARIOS_XML
+from ..constants import SCENARIOS_XML, LOCAL_XML_NAME, APP_XML_NAME
 from ..log import getLogger
 from ..file_utils import mkdirs
 
@@ -433,18 +433,12 @@ def isdebugging():
       return True
   return False
 
-# Basenames of common files and dirs
-
-# TBD: move to constants.py (local-xml is probably a duplicate)
-SimAppXmlDirName   = "app-xml"
-SimLocalXmlDirName = "local-xml"
-
 def getSimXmlFile(simId, filename):
     """
     Returns the path to a file in the sim's XML dir, e.g., {simDir}/app-xml/foo.xml
     """
     simDir = getSimDir(simId)
-    xmlDir = os.path.join(simDir, SimAppXmlDirName)
+    xmlDir = os.path.join(simDir, APP_XML_NAME)
     path = os.path.join(xmlDir, filename)
     return path
 
@@ -455,11 +449,11 @@ def getSimParameterFile(simId):
     return getSimXmlFile(simId, PARAMETERS_XML)
 
 # TBD: unused
-def getSimScenarioFile(simId):
-    """
-    Returns the path to sim's copy of the scenarios.xml file.
-    """
-    return getSimXmlFile(simId, SCENARIOS_XML)
+# def getSimScenarioFile(simId):
+#     """
+#     Returns the path to sim's copy of the scenarios.xml file.
+#     """
+#     return getSimXmlFile(simId, SCENARIOS_XML)
 
 def getSimResultFile(simId):
     """
@@ -472,7 +466,7 @@ def getSimLocalXmlDir(simId):
     Returns the path to sim's local-xml dir.
     """
     simDir = getSimDir(simId)
-    path = os.path.join(simDir, SimLocalXmlDirName)
+    path = os.path.join(simDir, LOCAL_XML_NAME)
     return path
 
 def parseMcsDir(path, trialNum_only=False):

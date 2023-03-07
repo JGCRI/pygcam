@@ -22,7 +22,7 @@ from .log import getLogger
 from .utils import flatten, shellCommand, getBooleanXML, simpleFormat
 from .temp_file import getTempFile
 from .XMLFile import XMLFile
-from .xmlSetup import ScenarioSetup
+from .xmlScenario import XMLScenario
 
 _logger = getLogger(__name__)
 
@@ -334,7 +334,7 @@ class Project(XMLFile):
             raise FileFormatError("%s: <project> must define at most one <scenariosFile> element" % xmlFile)
         filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenarioSetupFile')
         setupFile = pathjoin(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
-        self.scenarioSetup = ScenarioSetup.parse(setupFile)
+        self.scenarioSetup = XMLScenario(setupFile)
 
         filename = getParam('GCAM.ScenarioSetupOutputFile')
         if filename:

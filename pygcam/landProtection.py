@@ -85,7 +85,7 @@ class LandProtection(object):
 
         scenario = Scenario.getScenario(scenarioName)
         if not scenario:
-            raise FileFormatError("Scenario '%s' was not found" % scenarioName)
+            raise FileFormatError(f"Scenario '{scenarioName}' was not found")
 
         # Iterate over all definitions for this scenario, applying the protections
         # incrementally to the tree representing the XML file that was read in.
@@ -280,7 +280,7 @@ def unProtectLand(tree, landClasses=None, otherArable=False, regions=None):
         for node in protectedNodes:
             name = node.get('name')
             unProtectedName = name[len("Protected"):]
-            prefix = './/UnmanagedLandLeaf[@name="%s"]' % unProtectedName
+            prefix = f'.//UnmanagedLandLeaf[@name="{unProtectedName}"]'
 
             protectedAllocs = node.xpath(".//allocation|.//landAllocation")
 
@@ -350,7 +350,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
             node = nodes[0]
             regNodes = list(node.iterancestors(tag='region'))
             region = regNodes[0].get('name')
-            raise FileFormatError('Error: Land class %s is already protected in region %s' % (node.tag, region))
+            raise FileFormatError(f'Error: Land class {node.tag} is already protected in region {region}')
 
         nodes = landRoot.xpath(unmgdXpath)
 
@@ -361,7 +361,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
             newName = 'Protected' + node.get('name')
             new.set('name', newName)
             landnode.set('name', newName)
-            landnode.set('fraction', "%.4f" %fraction)
+            landnode.set('fraction', f"{fraction:.4f}")
             landnode.append(new)
 
             originalAreas = node.xpath(allocXpath)
@@ -400,7 +400,7 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
 def _landXmlPaths(workspace):
     landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml']
 
-    xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml')
+    xmlDir = pathjoin(workspace, 'input', 'gcamdata', 'xml')
     paths = [pathjoin(xmlDir, fname) for fname in landXmlFiles]
     return paths
 
@@ -448,7 +448,7 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
 
         # check that we're not clobbering the input file
         if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
-            raise CommandlineError("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
+            raise CommandlineError(f"Attempted to overwrite '{inFile}' but --inPlace was not specified.")
 
         landProtection.protectLand(inFile, outFile, scenarioName, unprotectFirst=unprotectFirst)
 
@@ -474,8 +474,7 @@ def protectLandMain(args):
     # Process instructions from protection XML file
     if scenarioName:
         if not scenarioFile:
-            raise CommandlineError('Scenario "%s" was specified, but a scenario file was not identified',
-                                   scenarioName)
+            raise CommandlineError(f'Scenario "{scenarioName}" was specified, but a scenario file was not identified')
         runProtectionScenario(scenarioName, outDir, workspace=workspace,
                               scenarioFile=scenarioFile, xmlFiles=xmlFiles, inPlace=args.inPlace)
         return
@@ -576,7 +575,7 @@ def _landtype_basin_pairs(reg_dict):
 def _cache_land_nodes(tree, regions):
     d = {}
     for reg in regions:
-        nodes = tree.xpath('//region[@name="{}"]//UnmanagedLandLeaf'.format(reg))
+        nodes = tree.xpath(f'//region[@name="{reg}"]//UnmanagedLandLeaf')
         d[reg] = {eltname(node) : node for node in nodes}
     return d
 
@@ -589,7 +588,7 @@ def _protect_land(tree, prot_dict):
         for (landtype, basin, prot_frac) in prot_tups:
             for (l, b) in land_basin_pairs:
                 if landtype == l and (basin == b or not basin):
-                    _logger.debug("Processing {}, {}, {}".format(reg, landtype, b))
+                    _logger.debug(f"Processing {reg}, {landtype}, {b}")
                     total = _get_total_area(reg_dict, landtype, b)
                     prot_vals   = total * prot_frac
                     unprot_vals = total - prot_vals
@@ -614,7 +613,7 @@ def protectLandTree(tree, scenarioName):
 
     scenario = Scenario.getScenario(scenarioName)
     if not scenario:
-        raise FileFormatError("Protection scenario '%s' was not found" % scenarioName)
+        raise FileFormatError(f"Protection scenario '{scenarioName}' was not found")
 
     prot_dict = defaultdict(list)
 

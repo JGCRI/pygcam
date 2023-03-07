@@ -32,8 +32,9 @@ def element_path(elt):
 def zevPolicyMain(args):
     import pandas as pd
     from .error import CommandlineError
-    from .xmlSetup import scenarioXML
-    from .utils import validate_years, get_path
+    from .xmlScenario import scenarioXML
+    from .utils import validate_years
+    from .file_utils import get_path
 
     years = validate_years(args.years)
     if years is None:
@@ -124,7 +125,7 @@ def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outp
     import pandas as pd
     from .file_utils import mkdirs
     from .RESPolicy import write_xml
-    from .xmlSetup import scenarioXML
+    from .xmlScenario import scenarioXML
 
     df = pd.read_csv(csvPath, index_col=None)
 

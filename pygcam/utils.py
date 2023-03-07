@@ -73,19 +73,6 @@ def validate_years(years):
 
     return [i for i in range(first, last+1, 5)]
 
-def is_abspath(pathname):
-    """
-    Return True if pathname is an absolute pathname, else False.
-    """
-    return bool(re.match(r"^([/\\])|([a-zA-Z]:)", pathname))
-
-def get_path(pathname, defaultDir):
-    """
-    Return pathname if it's an absolute pathname, otherwise return
-    the path composed of pathname relative to the given defaultDir.
-    """
-    return pathname if is_abspath(pathname) else pathjoin(defaultDir, pathname)
-
 # For gcam 5, read the map of river basins to countries (and other info)
 def readBasinMap():
     from .query import readCsv

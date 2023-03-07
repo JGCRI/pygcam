@@ -24,6 +24,7 @@ class RESCommand(SubcommandABC):
                             If a CSV file is given, it is converted to an intermediate RES policy XML 
                             file before translation to GCAM-readable input.'''))
 
+        # TODO: might need to change the path referenced in the help
         parser.add_argument('-o', '--outputXML', default=None,
                             help=clean_help('''The directory into which to write the modified files.
                                     Default is the value of configuration file parameter 

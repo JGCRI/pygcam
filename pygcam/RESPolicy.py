@@ -703,8 +703,8 @@ def create_subsector_dict(useGcamUSA):
 def resPolicyMain(args):
     import os
     from .error import CommandlineError
-    from .utils import is_abspath, get_path
-    from .file_utils import mkdirs
+    from .file_utils import mkdirs, is_abspath, get_path
+    from .constants import LOCAL_XML_NAME
 
     scenario   = args.scenario
     inputFile  = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these
@@ -712,10 +712,11 @@ def resPolicyMain(args):
     useGcamUSA = args.GCAM_USA
 
     if not scenario and not (outputXML and is_abspath(outputXML)):
-        raise CommandlineError("outputXML ({}) is not an absolute pathname; a scenario must be specified".format(outputXML))
+        raise CommandlineError(f"outputXML ({outputXML}) is not an absolute pathname; a scenario must be specified")
 
-    inPath   = get_path(inputFile, pathjoin(getParam("GCAM.ProjectDir"), "etc"))
-    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
+    inPath   = get_path(inputFile, getParam("GCAM.ProjectEtc"))
+    # TBD: get this path using context to allow for group subdirs
+    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), LOCAL_XML_NAME, scenario))
 
     isCSV = (re.match('.*\.csv$', inPath, re.IGNORECASE) is not None)
 
@@ -726,7 +727,7 @@ def resPolicyMain(args):
 
     if args.display:
         if not isCSV:
-            raise CommandlineError("When using -d/--display, the input file must be in CSV format: '{}'.".format(inPath))
+            raise CommandlineError(f"When using -d/--display, the input file must be in CSV format: '{inPath}'.")
 
         validate(scenario, inPath, useGcamUSA)
         return  # exit

@@ -117,7 +117,6 @@ class SetupCommand(SubcommandABC):
         return parser   # for auto-doc generation
 
     def create_sandbox(self, args, workspace, mcsMode):
-        from ..config import getParam
         from ..scenarioSetup import createSandbox
 
         if not mcsMode or mcsMode == 'trial':       # i.e., if mcsMode is not 'gensim'
@@ -147,7 +146,7 @@ class SetupCommand(SubcommandABC):
         # If a setup XML file is defined, use the defined (or default) XMLEditor subclass
         setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
         if setupXml:
-            from ..xmlSetup import createXmlEditorSubclass
+            from ..xmlScenario import createXmlEditorSubclass
             _logger.debug(f'Setup using {setupXml}')
             scenClass = createXmlEditorSubclass(setupXml)
 

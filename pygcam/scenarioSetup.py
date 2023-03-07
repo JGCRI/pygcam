@@ -1,18 +1,19 @@
-'''
+"""
 .. Support for 'setup' sub-command, which sets up / customizes GCAM project's XML files.
 
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-'''
+"""
 import os
 
-from .config import getParam, getParamAsBoolean, pathjoin, parse_gcam_version
+from .config import getParam, getParamAsBoolean, pathjoin
 from .constants import LOCAL_XML_NAME, DYN_XML_NAME
 from .error import SetupException
 from .log import getLogger
 from .file_utils import pushd, symlinkOrCopyFile, copyFileOrTree, removeTreeSafely, removeFileOrTree, mkdirs
 
 _logger = getLogger(__name__)
+
 
 def _getFilesToCopyAndLink(linkParam):
     reqFiles = getParam('GCAM.RequiredFiles')
@@ -37,10 +38,10 @@ def _remakeSymLink(source, linkname):
     symlinkOrCopyFile(source, linkname)
 
 def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
-    '''
+    """
     Create a link (or copy) in the new workspace to the
     equivalent file in the given source workspace.
-    '''
+    """
     # Set automatically on Windows for users without symlink permission
     copyFiles = copyFiles or getParamAsBoolean('GCAM.CopyAllFiles')
     linkFiles = not copyFiles
@@ -72,9 +73,11 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstWorkspace, copyFiles=False):
         else:
             symlinkOrCopyFile(srcPath, dstPath)
 
-
+#
+# Called only from setup_plugin.py
+#
 def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
-    '''
+    """
     Set up a run-time sandbox in which to run GCAM. This involves copying
     from or linking to files and directories in `workspace`, which defaults
     to the value of config parameter GCAM.SandboxRefWorkspace.
@@ -85,7 +88,7 @@ def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
     :param mcsMode: ('gensim', 'trial', or None) perform setup appropriate
        for pygcam-mcs trials.
     :return: none
-    '''
+    """
     if not srcWorkspace:
         param_name = 'GCAM.RefWorkspace' if mcsMode == 'gensim' else 'GCAM.SandboxRefWorkspace'
         srcWorkspace = getParam(param_name)
@@ -150,9 +153,11 @@ def createSandbox(sandbox, srcWorkspace, forceCreate=False, mcsMode=None):
     localXmlLink = pathjoin(sandbox, LOCAL_XML_NAME)
     _remakeSymLink(localXmlDir, localXmlLink)
 
-
+#
+# Called only from setup_plugin.py and gensim_plugin.py
+#
 def copyWorkspace(newWorkspace, refWorkspace, forceCreate=False, mcsMode=False):
-    '''
+    """
     Create a copy of a reference workspace by linking to or copying files from
     `refWorkspace`, which defaults to the value of config parameter
     GCAM.RunWorkspace. The copied workspace is the basis for creating sandboxes
@@ -163,7 +168,7 @@ def copyWorkspace(newWorkspace, refWorkspace, forceCreate=False, mcsMode=False):
     :param forceCreate: (bool) if True, delete and recreate the sandbox
     :param mcsMode: (bool) if True, perform setup appropriate for gcammcs trials.
     :return: none
-    '''
+    """
     version = getParam('GCAM.VersionNumber')
     _logger.info("Setting up GCAM workspace '%s' for GCAM %s", newWorkspace, version)
 
@@ -208,7 +213,7 @@ def copyWorkspace(newWorkspace, refWorkspace, forceCreate=False, mcsMode=False):
     for filename in filesToLink:
         _workspaceLinkOrCopy(filename, refWorkspace, newWorkspace, copyFiles=False)
 
-    for filename in ['local-xml', 'dyn-xml']:
+    for filename in [LOCAL_XML_NAME, DYN_XML_NAME]:
         dirname = pathjoin(newWorkspace, filename)
         mkdirs(dirname)
 

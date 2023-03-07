@@ -14,7 +14,6 @@ import stat
 import sys
 from time import sleep
 from IPython.paths import locate_profile
-
 import ipyparallel as ipp
 
 try:

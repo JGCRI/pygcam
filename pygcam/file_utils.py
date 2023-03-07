@@ -201,3 +201,37 @@ def mkdirs(newdir, mode=0o770):
     except OSError as e:
         if e.errno != EEXIST:
             raise
+
+def is_abspath(pathname):
+    """
+    Return True if pathname is an absolute pathname, else False.
+    """
+    import re
+    return bool(re.match(r"^([/\\])|([a-zA-Z]:)", pathname))
+
+def get_path(pathname, defaultDir):
+    """
+    Return pathname if it's an absolute pathname, otherwise return
+    the path composed of pathname relative to the given defaultDir.
+    """
+    return pathname if is_abspath(pathname) else pathjoin(defaultDir, pathname)
+
+
+def copyIfMissing(src, dst, makedirs=False):
+    """
+    Copy file `src` to `dst`, but only if `dst` doesn't already exist.
+
+    :param src: (str) pathname of the file to copy
+    :param dst: (str) pathname of the copy to create
+    :param makedirs: if True, make any missing directories
+    :return: none
+    """
+    if not os.path.lexists(dst):
+        parentDir = os.path.dirname(dst)
+        if makedirs and not os.path.isdir(parentDir):
+            _logger.debug("mkdir '%s'", parentDir)
+            os.makedirs(parentDir, 0o755)
+
+        _logger.info("Copy %s\n      to %s", src, dst)
+        shutil.copy(src, dst)
+        os.chmod(dst, 0o644)

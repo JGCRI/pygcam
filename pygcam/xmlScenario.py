@@ -10,6 +10,7 @@ import os
 import sys
 
 from .config import getParam, getParamAsBoolean, pathjoin
+from .constants import LOCAL_XML_NAME
 from .error import PygcamException, SetupException
 from .log import getLogger
 from .utils import getBooleanXML, splitAndStrip
@@ -34,7 +35,7 @@ def iterateList(scenarioSetup, cls, node, expandFunc, iterators):
     """
     Recursively evaluate iterators for generalized nested loop, adding
     values to the templateDict in scenarioSetup. Expand ScenarioGroup
-    at the inner-most loop, when recursion ends.
+    at the innermost loop, when recursion ends.
     """
     iterName = iterators[0]
     otherIters = iterators[1:]
@@ -51,26 +52,47 @@ def iterateList(scenarioSetup, cls, node, expandFunc, iterators):
             expandFunc(obj)
 
 #
-# Classes to parse and run scenario setup files.
+# Classes to parse and run scenario setup file (scenarios.xml).
 # (See pygcam/etc/scenarios-schema.xsd).
 #
-class ScenarioSetup(object):
+# TBD: rename this ScenarioXML or XMLScenario (like XMLResultFile, XMLConfigFile, ...)
+#   Filename should be xmlScenario.py, aligned with main exported class.
+class XMLScenario(object):
 
     documentCache = {}  # parsed XML files are cached here
 
-    def __init__(self, node):
-        self.name = node.get('name', '')    # unused currently
-        self.defaultGroup = node.get('defaultGroup')
+    @classmethod
+    def get_instance(cls, filename):
+        if filename in cls.documentCache:
+            _logger.debug('Found scenario file "%s" in cache', filename)
+            obj = cls.documentCache[filename]
+        else:
+            obj = XMLScenario(filename)
+            cls.documentCache[filename] = obj      # cache it
+
+        return obj
+
+    def __init__(self, filename):
+        """
+        Parse an XML file with query descriptions.
+        :param filename: (str) the name of the XML file to read
+        :return: a QueryFile instance.
+        """
+        xmlFile = XMLFile(filename, schemaPath='etc/scenarios-schema.xsd', conditionalXML=True)
+        root = xmlFile.getRoot()
+
+        self.name = root.get('name', '')    # unused currently
+        self.defaultGroup = root.get('defaultGroup')
 
         # These serve as a no-op on the build-out pass. The directory vars are
         # converted when the scenario is run and the directories are known.
         self.templateDict = {'scenarioDir' : '{scenarioDir}',
                              'baselineDir' : '{baselineDir}'}
 
-        self.iterators = [Iterator(item) for item in node.findall('iterator')]
+        self.iterators = [Iterator(item) for item in root.findall('iterator')]
         self.iteratorDict = {obj.name : obj for obj in self.iterators}
 
-        templateGroups = [ScenarioGroup(item) for item in node.findall('scenarioGroup')]
+        templateGroups = [ScenarioGroup(item) for item in root.findall('scenarioGroup')]
 
         # Create a dict of expanded groups for lookup
         self.groupDict = OrderedDict()
@@ -89,23 +111,6 @@ class ScenarioSetup(object):
             return self.iteratorDict[name]
         except KeyError:
             raise SetupException("Iterator '%s' is not defined" % name)
-
-    @classmethod
-    def parse(cls, filename):
-        """
-        Parse an XML file with query descriptions.
-        :param filename: (str) the name of the XML file to read
-        :return: a QueryFile instance.
-        """
-        if filename in cls.documentCache:
-            _logger.debug('Found scenario file "%s" in cache', filename)
-            return cls.documentCache[filename]
-
-        xmlFile = XMLFile(filename, schemaPath='etc/scenarios-schema.xsd', conditionalXML=True)
-        obj = cls(xmlFile.getRoot())
-
-        cls.documentCache[filename] = obj      # cache it
-        return obj
 
     def writeXML(self, stream, indent=0):
         stream.write(_tab * indent + '<setup>\n')
@@ -472,7 +477,7 @@ def createXmlEditorSubclass(setupFile):
                      srcGroupDir, subdir, parent=None, mcsMode=None, cleanXML=True):
             self.parentConfigPath = None
 
-            self.scenarioSetup = ScenarioSetup.parse(setupFile) #if parent else None
+            self.scenarioSetup = XMLScenario.get_instance(setupFile) #if parent else None
 
             # if not a baseline, create a baseline instance as our parent
             if scenario:
@@ -496,7 +501,7 @@ def createXmlEditorSubclass(setupFile):
                 self.trial_xml_rel = pathjoin('../..', 'trial-xml')
 
                 scenName = self.parent.name if self.parent else self.name
-                self.paramFile = pathjoin(self.trial_xml_abs, 'local-xml', self.groupDir,
+                self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, self.groupDir,
                                           scenName, MCSVALUES_FILE, normpath=True)
 
             self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
@@ -579,16 +584,20 @@ def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode
     setupXml = getParam('GCAM.ScenarioSetupFile')
     editorClass = createXmlEditorSubclass(setupXml)
 
+    # TBD: path creation should run through Sandbox or Context class
     xmlOutputRoot = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, normpath=True)
 
     editor = editorClass(baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace,
                          groupName, srcGroupDir, subdir, cleanXML=False, mcsMode=mcsMode)
     return editor
 
+# Currently used only by ZEVPolicy.py
 def scenarioXML(scenario, tag, groupName=None):
     editor = scenarioEditor(scenario)
     path = editor.componentPath(tag)
     groupName = groupName or ''
+
+    # TBD: path creation should run through Sandbox or Context class
     absPath = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, 'exe', path, abspath=True)
     return absPath
 

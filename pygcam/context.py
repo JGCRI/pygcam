@@ -1,18 +1,17 @@
-import os
-from .config import getParam
-from .utils import mkdirs
+from .config import getParam, pathjoin
+from .file_utils import mkdirs
 from .project import Project
 
 class Context(object):
     __slots__ = 'scenario', 'baseline', 'groupName', 'projectName', 'useGroupDir'
 
     def __init__(self, projectName=None, scenario=None, baseline=None, groupName=None):
-        self.scenario  = scenario
-        self.baseline  = baseline
+        self.scenario = scenario
+        self.baseline = baseline
 
-        self.projectName = projectName = projectName or getParam('GCAM.DefaultProject')
+        self.projectName = projectName = projectName or getParam('GCAM.ProjectName')
+
         project = Project.readProjectFile(projectName)
-
         self.groupName = groupName or project.scenarioSetup.defaultGroup
         self.useGroupDir = project.scenarioGroup.useGroupDir
 
@@ -40,27 +39,26 @@ class Context(object):
         if groupName:
             self.groupName = groupName
 
-
-    # TBD: update these for non-MCS
-
+    # TBD: Should this be consolidated here or in Sandbox?
+    #      Perhaps Sandbox.__init__() should take a Context instance?
     def getScenarioDir(self, create=False):
         '''
         Return and optionally create the path to the directory for a given experiment.
         '''
-        trialDir = self.getTrialDir(create=False)
-        scenarioDir = os.path.join(trialDir, self.scenario)
+        sandbox_root = getParam('GCAM.SandboxRoot')
+        scenarioDir = pathjoin(sandbox_root, self.groupDir, self.scenario)
         if create:
             mkdirs(scenarioDir)
 
         return scenarioDir
 
     def getQueryResultsDir(self):
-        trialDir = self.getTrialDir()
-        result = os.path.join(trialDir, self.scenario, 'queryResults')
+        scenarioDir = self.getScenarioDir()
+        result = pathjoin(scenarioDir, 'queryResults')
         return result
 
     def getDiffsDir(self):
-        trialDir = self.getTrialDir()
-        result = os.path.join(trialDir, self.scenario, 'diffs')
+        scenarioDir = self.getScenarioDir()
+        result = pathjoin(scenarioDir, 'diffs')
         return result
 

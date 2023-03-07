@@ -6,10 +6,9 @@
 # Constants shared across modules. Note: use utils.getRegionList() rather than the
 # hard-coded 32 regions to insulate against failures with different aggregations.
 #
-
-# TBD: move to gcamtool package
 LOCAL_XML_NAME = 'local-xml'
 DYN_XML_NAME   = 'dyn-xml'
+APP_XML_NAME   = 'app-xml'
 XML_SRC_NAME   = 'xmlsrc'
 
 # Common directory and filenames

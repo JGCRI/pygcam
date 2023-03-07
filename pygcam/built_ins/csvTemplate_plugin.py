@@ -152,7 +152,8 @@ class CsvTemplateCommand(SubcommandABC):
 
 
     def run(self, args, tool):
-        from ..utils import pathjoin, validate_years, get_path
+        from ..file_utils import get_path
+        from ..utils import pathjoin, validate_years
         from ..config import getParam
         from ..error import CommandlineError
 

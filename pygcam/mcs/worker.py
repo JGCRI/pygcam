@@ -5,6 +5,7 @@ import time
 import ipyparallel as ipp
 
 from ..config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
+from ..constants import LOCAL_XML_NAME
 from ..error import GcamError, GcamSolverError
 from ..log import getLogger, configureLogs
 from ..signals import (catchSignals, TimeoutSignalException, UserInterruptException)
@@ -65,11 +66,11 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     return status
 
 def _readParameterInfo(context, paramPath):
-    from ..xmlSetup import ScenarioSetup
+    from ..xmlScenario import XMLScenario
 
     scenarioFile  = getParam('GCAM.ScenarioSetupFile')
-    scenarioSetup = ScenarioSetup.parse(scenarioFile)
-    scenarioNames = scenarioSetup.scenariosInGroup(context.groupName)
+    xmlScenario = XMLScenario.get_instance(scenarioFile)
+    scenarioNames = xmlScenario.scenariosInGroup(context.groupName)
 
     paramFile = XMLParameterFile(paramPath)
     paramFile.loadInputFiles(context, scenarioNames, writeConfigFiles=False)
@@ -85,12 +86,14 @@ def _applySingleTrialData(df, context, paramFile):
     XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
     paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
 
-    linkDest = os.path.join(trialDir, 'local-xml')
+    # TBD: move these bits to McsSandbox's create_dir_struction()
+
+    linkDest = os.path.join(trialDir, LOCAL_XML_NAME)
     _logger.info(f'creating symlink to {linkDest}')
 
     # TBD: centralize the creation of these paths (e.g., in ScenarioInfo class)
     #  For example, the number of ".." elements depends on whether groups are in use.
-    symlink('../../../../Workspace/local-xml', linkDest)
+    symlink(f'../../../../Workspace/{LOCAL_XML_NAME}', linkDest)
 
 
 def _runGcamTool(context, noGCAM=False, noBatchQueries=False,

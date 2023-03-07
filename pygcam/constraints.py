@@ -71,19 +71,20 @@ def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, grou
                         policySrcDir=None): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
     constraintFile = basename + '-constraint.xml'
-    policyFile     = basename + '.xml'
+    #policyFile = basename + '.xml'
 
     fullDirname = pathjoin(dirname, groupName, scenario)
     mkdirs(fullDirname)
 
     pathname = pathjoin(fullDirname, constraintFile)
     _logger.debug("Generating constraint file: %s", pathname)
+
     with open(pathname, 'w') as f:
         f.write(xml)
 
     # TBD: test this
-    prefix = '../../../' if groupName else '../../'
-    localxml = prefix + LOCAL_XML_NAME
+    # prefix = '../../../' if groupName else '../../'
+    # localxml = prefix + LOCAL_XML_NAME
 
     # ToDo: replace subdir with groupDir?
     #source   = pathjoin(localxml, subdir, scenario, policyFile)

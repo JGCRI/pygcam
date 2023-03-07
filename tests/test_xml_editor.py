@@ -1,5 +1,5 @@
 import pytest
-from pygcam.xmlEditor import extractStubTechnology
+from pygcam.sectorEditors import extractStubTechnology
 from pygcam.xml_edit import xmlSel, xmlEdit
 
 cfg_path = './data/xml/configuration_ref.xml'
