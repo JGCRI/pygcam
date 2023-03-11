@@ -1,5 +1,4 @@
-# @author: Richard Plevin
-# @author: Sam Fendell
+# Author: Richard Plevin
 #
 # Copyright (c) 2012-2023. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
@@ -9,10 +8,9 @@
 import os
 from inspect import stack
 
-from ..config import getParam, getParamAsInt
-from ..constants import SCENARIOS_XML, LOCAL_XML_NAME, APP_XML_NAME
+from ..config import getParam, getParamAsInt, pathjoin, mkdirs
+from ..constants import LOCAL_XML_NAME, APP_XML_NAME
 from ..log import getLogger
-from ..file_utils import mkdirs
 
 from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
 
@@ -47,12 +45,12 @@ def dirFromNumber(n, prefix="", create=False):
     level1 = n // maxnodes
     level2 = n % maxnodes
 
-    directory = os.path.join(prefix, str(level1).zfill(log), str(level2).zfill(log))
-    if create:
-        mkdirs(directory)
+    directory = pathjoin(prefix, str(level1).zfill(log), str(level2).zfill(log), create=create)
 
     return directory
 
+# TBD: rationalize this with McsSandbox.
+#  Change to pass in Context? Or create McsSandbox from McsContext?
 def getSimDir(simId, create=False):
     '''
     Return and optionally create the path to the top-level simulation
@@ -63,18 +61,20 @@ def getSimDir(simId, create=False):
     if not simsDir:
         raise PygcamMcsUserError("Missing required config parameter 'MCS.RunSimsDir'")
 
-    simDir = os.path.join(simsDir, f's{simId:03d}')  # name is of format ".../s001/"
-    if create:
-        mkdirs(simDir)
+    # name is of format ".../s001/"
+    simDir = pathjoin(simsDir, f's{simId:03d}', create=create)
 
     return simDir
+
+def trialDataFile(simId):
+    simDir = getSimDir(simId)
+    return pathjoin(simDir, TRIAL_DATA_CSV)
 
 def writeTrialDataFile(simId, df):
     '''
     Save the trial DataFrame in the file 'trialData.csv' in the simDir.
     '''
-    simDir = getSimDir(simId)
-    dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
+    dataFile = trialDataFile(simId)
 
     # If the file exists, rename it trialData.csv-.
     try:
@@ -84,42 +84,15 @@ def writeTrialDataFile(simId, df):
 
     df.to_csv(dataFile, index_label='trialNum')
 
-
 def readTrialDataFile(simId):
     """
     Load trial data (e.g., saved by writeTrialDataFile) and return a DataFrame
     """
     import pandas as pd
 
-    simDir = getSimDir(simId)
-
-    # deprecated
-    # If SALib version exists, use it; otherwise use legacy file
-    # dataFile = os.path.join(simDir, 'data.sa', 'inputs.csv')
-    # if not os.path.lexists(dataFile):
-    #     dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
-
-    dataFile = os.path.join(simDir, TRIAL_DATA_CSV)
-
+    dataFile = trialDataFile(simId)
     df = pd.read_table(dataFile, sep=',', index_col='trialNum')
     return df
-
-def createOutputDir(outputDir):
-    from ..file_utils import removeFileOrTree
-    from ..temp_file import getTempDir
-
-    removeFileOrTree(outputDir, raiseError=False)
-    tempOutputDir = getParam('MCS.TempOutputDir')
-
-    if tempOutputDir:
-        # We create this on /scratch which is purged automatically.
-        newDir = getTempDir(suffix='', tmpDir=tempOutputDir, delete=False)
-        mkdirs(newDir)
-        _logger.debug("Creating '%s' link to %s" % (outputDir, newDir))
-        symlink(newDir, outputDir)
-
-    else:
-        mkdirs(outputDir)
 
 # TBD: test this
 def newActiveYears(asInt=False):
@@ -216,7 +189,7 @@ def computeLogPath(simId, scenario, logDir, trials):
     trialRange = trialMin if trialMin == trialMax else f"{trialMin}-{trialMax}"
     jobName  = f"{scenario}-s{simId}-{trialRange}"   # for displaying in job queue
     logFile  = f"{scenario}-{trialRange}.out"        # for writing diagnostic output
-    logPath  = os.path.join(logDir, logFile)
+    logPath  = pathjoin(logDir, logFile)
     return logPath, logFile, jobName
 
 def sign(number):
@@ -270,7 +243,7 @@ def loadModuleFromPath(modulePath):
     module name, i.e., from "foo/bar/Baz.py", the module name is 'Baz'.
     '''
     import sys
-    from imp import load_source, load_compiled  # lazy import to speed startup
+    from imp import load_source  # lazy import to speed startup
 
     # Extract the module name from the module path
     base       = os.path.basename(modulePath)
@@ -312,48 +285,6 @@ def loadObjectFromPath(objName, modulePath, required=True):
 
     raise PygcamMcsUserError("Module '%s' has no object named '%s'" % (modulePath, objName))
 
-# TBD: move these to pygcam.utils (or create pygcam.file_utils?) and reconcile any duplicates
-#
-# File and directory utilities for navigating the run-time structure
-#
-def rmlink(path):
-    if os.path.lexists(path) and os.path.islink(path):
-        os.remove(path)
-
-def symlink(src, dst):
-    rmlink(dst)
-    _logger.debug('ln -s %s %s', src, dst)
-    try:
-        os.symlink(src, dst)
-    except Exception:
-        print(f"Can't symlink '{src}' to '{dst}'")
-        raise
-
-def rename(direc, src, dest):
-    old = os.path.join(direc, src)
-    new = os.path.join(direc, dest)
-    os.rename(old, new)
-
-def filecopy(src, dst, removeDst=True):
-    'Copy src file to dst, optionally removing dst first to avoid writing through symlinks'
-    from shutil import copy2        # equivalent to "cp -p"
-
-    _logger.debug("copyfile(%s,%s,%s)" % (src, dst, removeDst))
-    if removeDst and os.path.islink(dst):
-        os.remove(dst)
-
-    copy2(src, dst)
-
-def copyfiles(files, dstdir, removeDst=True):
-    '''
-    :param files: a list of files to copy
-    :param dstdir: the directory to copy to
-    :param removeDst: if True-like, remove destination file before copying
-    :return: nothing
-    '''
-    mkdirs(dstdir)
-    for f in files:
-        filecopy(f, dstdir, removeDst=removeDst)
 
 def dirFromNumber(n, prefix="", create=False):
     '''
@@ -374,10 +305,7 @@ def dirFromNumber(n, prefix="", create=False):
     level1 = n // maxnodes
     level2 = n % maxnodes
 
-    directory = os.path.join(prefix, str(level1).zfill(log), str(level2).zfill(log))
-    if create:
-        mkdirs(directory)
-
+    directory = pathjoin(prefix, str(level1).zfill(log), str(level2).zfill(log), create=create)
     return directory
 
 TRIAL_STRING_DELIMITER = ','
@@ -433,13 +361,14 @@ def isdebugging():
       return True
   return False
 
+# TBD: the following should be subsumed by McsSandbox
+
 def getSimXmlFile(simId, filename):
     """
     Returns the path to a file in the sim's XML dir, e.g., {simDir}/app-xml/foo.xml
     """
     simDir = getSimDir(simId)
-    xmlDir = os.path.join(simDir, APP_XML_NAME)
-    path = os.path.join(xmlDir, filename)
+    path = pathjoin(simDir, APP_XML_NAME, filename)
     return path
 
 def getSimParameterFile(simId):
@@ -466,7 +395,7 @@ def getSimLocalXmlDir(simId):
     Returns the path to sim's local-xml dir.
     """
     simDir = getSimDir(simId)
-    path = os.path.join(simDir, LOCAL_XML_NAME)
+    path = pathjoin(simDir, LOCAL_XML_NAME)
     return path
 
 def parseMcsDir(path, trialNum_only=False):

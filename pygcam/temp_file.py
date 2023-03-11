@@ -2,7 +2,7 @@ import os
 from tempfile import mkstemp, mkdtemp
 
 from .error import PygcamException
-from .config import getParam
+from .config import getParam, mkdirs
 from .file_utils import removeFileOrTree
 
 def getTempFile(suffix='', tmpDir=None, text=True, delete=True):
@@ -66,8 +66,6 @@ class TempFile(object):
             rather than a temporary file.
         :return: none
         """
-        from .file_utils import mkdirs
-
         self.suffix = suffix
         self.delete = delete
         self.fd = None

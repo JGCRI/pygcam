@@ -1,11 +1,12 @@
-# Copyright (c) 2016-2022  Richard Plevin
+# Copyright (c) 2016-2023  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
+
 from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
-def driver(args, tool):
+def driver(args):
     from ...project import Project
     from ..master import Master, pidFileExists, startCluster, getTrialsToRedo
     from ..Database import getDatabase
@@ -187,6 +188,7 @@ class RunSimCommand(McsSubcommandABC):
 
             unknown = statusSet - known
             if unknown:
-                raise CommandlineError("Unknown status code(s): %s" % ', '.join(map(repr, unknown)))
+                status_codes = ', '.join(map(repr, unknown))
+                raise CommandlineError(f"Unknown status code(s): {status_codes}")
 
-        driver(args, tool)
+        driver(args)

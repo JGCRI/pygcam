@@ -437,6 +437,7 @@ def getYearCols(years, timestep=5):
     cols = [str(y) for y in range(yearRange[0], yearRange[1]+1, timestep)]
     return cols
 
+# TBD: use Sandbox instead
 def getExeDir(workspace, chdir=False):
     # expanduser => handle leading tilde in pathname
     exeDir = pathjoin(workspace, 'exe', expanduser=True, abspath=True)
@@ -447,6 +448,7 @@ def getExeDir(workspace, chdir=False):
 
     return exeDir
 
+# TBD: use Sandbox instead
 def getBatchDir(scenario, resultsDir):
     """
     Get the name of the directory holding batch query results..

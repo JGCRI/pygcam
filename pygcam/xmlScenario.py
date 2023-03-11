@@ -1,16 +1,19 @@
-'''
+"""
 .. Created on: 8/21/16
 
-.. Copyright (c) 2016 Richard Plevin
+.. Classes to parse and run scenario setup file (scenarios.xml).
+   See also pygcam/etc/scenarios-schema.xsd.
+
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-'''
+"""
 from collections import OrderedDict
 import glob
 import os
 import sys
 
 from .config import getParam, getParamAsBoolean, pathjoin
-from .constants import LOCAL_XML_NAME
+from .constants import LOCAL_XML_NAME, McsMode
 from .error import PygcamException, SetupException
 from .log import getLogger
 from .utils import getBooleanXML, splitAndStrip
@@ -51,14 +54,11 @@ def iterateList(scenarioSetup, cls, node, expandFunc, iterators):
             obj = cls(node)
             expandFunc(obj)
 
-#
-# Classes to parse and run scenario setup file (scenarios.xml).
-# (See pygcam/etc/scenarios-schema.xsd).
-#
-# TBD: rename this ScenarioXML or XMLScenario (like XMLResultFile, XMLConfigFile, ...)
-#   Filename should be xmlScenario.py, aligned with main exported class.
-class XMLScenario(object):
 
+class XMLScenario(object):
+    """
+    Top-level class for reading and parsing scenarios.xml file.
+    """
     documentCache = {}  # parsed XML files are cached here
 
     @classmethod
@@ -166,7 +166,7 @@ class XMLScenario(object):
         _logger.debug('Running %s setup for scenario %s', 'dynamic' if dynamic else 'static', scenario.name)
         scenario.run(editor, directoryDict, dynamic=dynamic)
 
-# Iterators for float and int that *included* the stop value.
+# Iterators for float and int that *include* the stop value.
 # That is, terminal condition is "<= stop", not "< stop" as
 # with the standard Python range() function.
 def frange(start, stop, step=1.0):
@@ -241,7 +241,7 @@ class ScenarioGroup(object):
         try:
             return self.finalDict[name]
         except KeyError:
-            raise PygcamException('Scenario "%s" was not found in group "%s"' % (name, self.name))
+            raise PygcamException(f'Scenario "{name}" was not found in group "{self.name}"')
 
     def scenarioNames(self):
         return self.finalDict.keys()
@@ -260,7 +260,7 @@ class ScenarioGroup(object):
             scenario.formatContent(templateDict)
             if scenario.isBaseline:
                 if self.baseline:
-                    raise SetupException('Group %s declares multiple baselines' % self.name)
+                    raise SetupException(f'Group {self.name} declares multiple baselines')
                 self.baseline = name
 
         for templateScenario in self.templateScenarios:
@@ -380,9 +380,9 @@ class Function(ConfigAction):
         name = self.name
         method = getCallableMethod(name)
         if not method:
-            raise SetupException("<function name='%s'>: function doesn't exist or is not callable from XML" % name)
+            raise SetupException(f"<function name='{name}'>: function doesn't exist or is not callable from XML")
 
-        args = "(%s)" % self.formattedContent.strip() if self.formattedContent else "()"
+        args = f"({self.formattedContent.strip()})" if self.formattedContent else "()"
         codeStr = f"editor.{name}{args}"
 
         try:
@@ -468,9 +468,12 @@ def createXmlEditorSubclass(setupFile):
             raise SetupException(f"Can't load setup class '{dotSpec}' from '{modPath}': {e}")
 
         # check that superclass inherits from or is an XMLEditor
-        assert issubclass(superclass, XMLEditor), 'GCAM.ScenarioSetupClass must be a subclass of pygcam.XMLEditor'
+        if not issubclass(superclass, XMLEditor):
+            raise SetupException(f"GCAM.ScenarioSetupClass {superclass} is not a subclass of pygcam.XMLEditor")
     else:
         superclass = XMLEditor
+
+    # TBD: pass pathname computations to Sandbox argument
 
     class XmlEditorSubclass(superclass):
         def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
@@ -484,6 +487,7 @@ def createXmlEditorSubclass(setupFile):
                 # TBD: test this in FCIP case where baseline builds on FuelShock
                 baselineSubdir = None
                 baseXmlOutputRoot = pathjoin(os.path.dirname(xmlOutputRoot), baseline)
+
                 parent = XMLEditor(baseline, None, baseXmlOutputRoot, xmlSrcDir, refWorkspace,
                                    groupName, srcGroupDir, baselineSubdir)
 
@@ -493,8 +497,7 @@ def createXmlEditorSubclass(setupFile):
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
-            #if self.parent and mcsMode:
-            if mcsMode == 'trial':
+            if mcsMode == McsMode.TRIAL:
                 # TBD: simplify using ScenarioInfo and DirectoryPath
                 # ../../trial-xml/local-xml/base-0/mcsValues.xml
                 self.trial_xml_abs = pathjoin(self.xmlOutputRoot, '../trial-xml', normpath=True)
@@ -513,7 +516,7 @@ def createXmlEditorSubclass(setupFile):
 
             super(XmlEditorSubclass, self).setupDynamic(args)
 
-            if self.mcsMode == 'trial':             # TBD: was just "if self.mcsMode" -- test this
+            if self.mcsMode == McsMode.TRIAL: # TBD: was just "if self.mcsMode" -- test this
                 paramFile = self.paramFile
                 if paramFile and os.path.lexists(paramFile):
                     self.mcsValues = McsValues(paramFile)

@@ -11,12 +11,11 @@ import sys
 
 from lxml import etree as ET
 
-from .config import getParam, parse_gcam_version, pathjoin
+from .config import getParam, parse_gcam_version, pathjoin, mkdirs
 from .constants import UnmanagedLandClasses
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
 from .utils import flatten, getRegionList
-from .file_utils import mkdirs
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)

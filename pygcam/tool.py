@@ -9,13 +9,14 @@ from glob import glob
 import os
 import pipes
 import re
-from semver import VersionInfo
 import subprocess
 import sys
 
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
-                     usingMCS, savePathMap, parse_gcam_version, setInputFilesByVersion)
+                     usingMCS, savePathMap, parse_gcam_version, setInputFilesByVersion,
+                     mkdirs)
+from .constants import McsMode
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -168,7 +169,8 @@ class GcamTool(object):
                             help=clean_help('''Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)'''))
 
-        parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'],
+
+        parser.add_argument('+M', '--mcs', dest='mcsMode', choices=McsMode.values(),
                             help=clean_help('''Used only when running gcamtool from pygcam-mcs.'''))
 
         parser.add_argument('+P', '--projectName', metavar='name', default=getParam('GCAM.DefaultProject'),
@@ -352,7 +354,6 @@ class GcamTool(object):
     @staticmethod
     def runBatch2(shellArgs, jobName='gt', queueName=None, logFile=None, minutes=None,
                   dependsOn=None, run=True):
-        from .file_utils import mkdirs
 
         _logger = getLogger(__name__)
 
@@ -371,8 +372,8 @@ class GcamTool(object):
 
         if logFile:
             logDir = getParam('GCAM.BatchLogDir')
-            logFile = os.path.normpath(pathjoin(logDir, logFile))
-            mkdirs(os.path.dirname(logFile))
+            mkdirs(logDir)
+            logFile = pathjoin(logDir, logFile, normpath=True)
 
         # default is 'afterok', but user might want to use 'after' to run even if baseline fails
         depFlag = getParam('SLURM.DependencyFlag')
@@ -528,7 +529,7 @@ def _main(argv=None):
     parser.add_argument('+B', '--showBatch', action="store_true")
     parser.add_argument('+P', '--projectName', dest='projectName', metavar='name')
     parser.add_argument('+s', '--set', dest='configVars', action='append', default=[])
-    parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'])
+    parser.add_argument('+M', '--mcs', dest='mcsMode', choices=McsMode.values())
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 

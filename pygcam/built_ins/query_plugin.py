@@ -55,7 +55,7 @@ class QueryCommand(SubcommandABC):
                             help=clean_help("Show the command to be run, but don't run it"))
 
         parser.add_argument('-o', '--outputDir',
-                             help=clean_help('Where to output the result (default taken from config parameter "GCAM.OutputDir")'))
+                             help=clean_help('Where to output the result (default taken from config parameter "GCAM.QueryOutputDir")'))
 
         parser.add_argument('-p', '--prequery', action="store_true",
                             help=clean_help('''Generate the XMLDBDriver.properties file and associated batch file to be

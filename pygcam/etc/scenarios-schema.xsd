@@ -78,7 +78,7 @@
             <xs:attribute name='active' type='xs:boolean' default='true'/>      <!-- TBD: drop this? -->
             <xs:attribute name='baseline' type='xs:boolean'/>
             <xs:attribute name='iterator' type='xs:string'/>
-            <xs:attribute name='subdir' type='xs:string'/>                      <!-- TBD-->
+            <!-- xs:attribute name='subdir' type='xs:string' -->   <!-- Dropped support for this attribute -->
 
         </xs:complexType>
     </xs:element>

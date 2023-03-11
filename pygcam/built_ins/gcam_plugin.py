@@ -28,15 +28,16 @@ class GcamCommand(SubcommandABC):
         parser.add_argument('-s', '--scenario', default='',
                             help=clean_help('''The scenario to run.'''))
 
+        # Deprecated? Is this used or needed? Can use config var
         parser.add_argument('-S', '--scenariosDir', default='',
                             help=clean_help('''Specify the directory holding scenario files. Default is the value of
                             config variable GCAM.ScenariosDir, if set, otherwise it's the current directory.'''))
 
-        # TBD: We now require that the workspace exist. Make this a required parameter?
-        parser.add_argument('-w', '--workspace',
-                            help=clean_help('''Specify the path to the GCAM workspace to use. If it doesn't exist, the
-                            named workspace an exception is raised. If not specified on the command-line, the path
-                            constructed as {GCAM.SandboxDir}/{scenario} is used, if scenario is defined.'''))
+        parser.add_argument('-w', '--sandbox',
+                            help=clean_help('''Specify the path to the GCAM sandbox to use. If the named workspace 
+                            doesn't exist, an exception is raised. If not specified on the command-line, the path
+                            constructed as {GCAM.SandboxDir}/{optional-groupdir}/{scenario} is used, if scenario 
+                            is defined.'''))
 
         parser.add_argument('-W', '--noWrapper', action='store_true',
                             help=clean_help('''Do not run gcam within a wrapper that detects errors as early as possible
@@ -53,5 +54,15 @@ class GcamCommand(SubcommandABC):
         return parser
 
     def run(self, args, tool):
-        from ..gcam import gcamMain
-        gcamMain(args)
+        from ..gcam import runGCAM
+
+        # TBD: something like this
+        # from ..sandbox import Sandbox
+        # baseline = None
+        # sbx = Sandbox(baseline, args.scenario, sandbox=args.sandbox, sandboxSubdir=args.groupDir)
+        # runGCAM(sbx, scenariosDir=args.scenariosDir, configFile=args.configFile,
+        #         noRun=args.noRun, noWrapper=args.noWrapper)
+
+        runGCAM(args.scenario, sandbox=args.sandbox, scenariosDir=args.scenariosDir,
+                groupDir=args.groupDir, configFile=args.configFile,
+                noRun=args.noRun, noWrapper=args.noWrapper)

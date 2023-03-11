@@ -8,8 +8,7 @@
 .. Copyright (c) 2019  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
-import os
-from ..config import getParam
+from ..config import getParam, pathjoin
 from ..XMLFile import XMLFile
 from ..subcommand import SubcommandABC, clean_help
 from ..log import getLogger
@@ -47,7 +46,7 @@ def element_path(elt):
 
 def save_transport_techs(f, args, years):
     gcamDir = getParam('GCAM.RefWorkspace')
-    pathname = os.path.join(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
+    pathname = pathjoin(gcamDir, 'input', 'gcamdata', 'xml', 'transportation_UCD_CORE.xml')
     _logger.info("Reading {}".format(pathname))
 
     xml = XMLFile(pathname)

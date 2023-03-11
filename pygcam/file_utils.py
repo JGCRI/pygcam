@@ -2,7 +2,7 @@ import os
 import shutil
 from contextlib import contextmanager
 
-from .config import getParamAsBoolean, pathjoin, getParam
+from .config import getParamAsBoolean, pathjoin, getParam, mkdirs
 from .error import PygcamException
 from .log import getLogger
 
@@ -38,6 +38,18 @@ def deleteFile(filename):
         pass    # ignore errors, like "rm -f"
 
 
+def symlink(src, dst):
+    if os.path.lexists(dst) and os.path.islink(dst):
+        os.remove(dst)
+
+    _logger.debug('ln -s %s %s', src, dst)
+    try:
+        os.symlink(src, dst)
+    except Exception:
+        _logger.warn(f"Can't symlink '{src}' to '{dst}'")
+        raise
+
+
 def symlinkOrCopyFile(src, dst):
     """
     Symlink a file unless GCAM.CopyAllFiles is True, in which case, copy the file.
@@ -49,7 +61,7 @@ def symlinkOrCopyFile(src, dst):
     if getParamAsBoolean('GCAM.CopyAllFiles'):
         copyFileOrTree(src, dst)
     else:
-        os.symlink(src, dst)
+        symlink(src, dst)
 
 
 def copyFileOrTree(src, dst):
@@ -155,7 +167,6 @@ def ensureExtension(filename, ext):
 
     return filename
 
-
 def ensureCSV(file):
     """
     Ensure that the file has a '.csv' extension by replacing or adding
@@ -165,7 +176,6 @@ def ensureCSV(file):
     :return: (str) the filename with a '.csv' extension.
     """
     return ensureExtension(file, '.csv')
-
 
 def saveToFile(txt, dirname='', filename=''):
     """
@@ -185,22 +195,6 @@ def saveToFile(txt, dirname='', filename=''):
     _logger.debug("Writing %s", pathname)
     with open(pathname, 'w') as f:
         f.write(txt)
-
-
-def mkdirs(newdir, mode=0o770):
-    """
-    Try to create the full path `newdir` and ignore the error if it already exists.
-
-    :param newdir: the directory to create (along with any needed parent directories)
-    :return: nothing
-    """
-    from errno import EEXIST
-
-    try:
-        os.makedirs(newdir, mode)
-    except OSError as e:
-        if e.errno != EEXIST:
-            raise
 
 def is_abspath(pathname):
     """
@@ -235,3 +229,31 @@ def copyIfMissing(src, dst, makedirs=False):
         _logger.info("Copy %s\n      to %s", src, dst)
         shutil.copy(src, dst)
         os.chmod(dst, 0o644)
+
+def rename(direc, src, dest):
+    old = pathjoin(direc, src)
+    new = pathjoin(direc, dest)
+    os.rename(old, new)
+
+
+def filecopy(src, dst, removeDst=True):
+    'Copy src file to dst, optionally removing dst first to avoid writing through symlinks'
+    from shutil import copy2        # equivalent to "cp -p"
+
+    _logger.debug("copyfile(%s,%s,%s)" % (src, dst, removeDst))
+    if removeDst and os.path.islink(dst):
+        os.remove(dst)
+
+    copy2(src, dst)
+
+
+def copyfiles(files, dstdir, removeDst=True):
+    '''
+    :param files: a list of files to copy
+    :param dstdir: the directory to copy to
+    :param removeDst: if True-like, remove destination file before copying
+    :return: nothing
+    '''
+    mkdirs(dstdir)
+    for f in files:
+        filecopy(f, dstdir, removeDst=removeDst)

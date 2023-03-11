@@ -53,7 +53,7 @@ def test_sandbox():
     cfg_text = f"""[{project_name}]
         GCAM.ProjectRoot = {project_root}
         GCAM.ProjectName = {project_name}
-        GCAM.ProjectXmlSrc = {project_root}/{project_name}/xmlsrc
+        GCAM.ProjectXmlsrc = {project_root}/{project_name}/xmlsrc
         GCAM.SandboxRoot = {sandbox_root}
         GCAM.SandboxProjectDir = {sandbox_root}/{project_name}
         GCAM.RefWorkspace = {ref_workspace}
@@ -64,19 +64,24 @@ def test_sandbox():
     setSection(project_name)
 
     # With group dir
-    sandbox = Sandbox(baseline, scenario, scenarioGroup=group_name, useGroupDir=True,
-                      projectXmlSrc=None, xmlGroupSubdir=None,
-                      sandboxRoot=None, sandboxGroupSubdir=None, createDirs=False)
+    sbx = Sandbox(baseline, scenario, scenarioGroup=group_name, useGroupDir=True,
+                  projectXmlsrc=None, xmlsrcSubdir=None,
+                  sandboxRoot=None, sandboxSubdir=None, createDirs=False)
 
-    assert sandbox.sandboxWorkspace == f"{sandbox_root}/{project_name}/Workspace"
-    assert sandbox.sandboxExePath == f"{sandbox_root}/{project_name}/{group_name}/{scenario}/exe/gcam.exe"
-    assert gcam_path(sandbox.scenario_xml_dir) == f"{sandbox_root}/{project_name}/{group_name}/{scenario}/input/gcamdata/xml"
+    assert sbx.sandbox_workspace == f"{sandbox_root}/{project_name}/Workspace"
+    assert sbx.sandbox_exe_path == f"{sandbox_root}/{project_name}/{group_name}/{scenario}/exe/gcam.exe"
+    assert gcam_path(sbx.scenario_gcam_xml_dir) == f"{sandbox_root}/{project_name}/{group_name}/{scenario}/input/gcamdata/xml"
+
+    xmlsrc = getParam('GCAM.ProjectXmlsrc')
+    assert sbx.scenario_xmlsrc_dir == f"{xmlsrc}/{group_name}/{scenario}"
 
     # Without group dir
-    sandbox = Sandbox(baseline, scenario, scenarioGroup=group_name, useGroupDir=False,
-                      projectXmlSrc=None, xmlGroupSubdir=None,
-                      sandboxRoot=None, sandboxGroupSubdir=None, createDirs=False)
+    sbx = Sandbox(baseline, scenario, scenarioGroup=group_name, useGroupDir=False,
+                  projectXmlsrc=None, xmlsrcSubdir=None,
+                  sandboxRoot=None, sandboxSubdir=None, createDirs=False)
 
-    assert sandbox.sandboxExePath == f"{sandbox_root}/{project_name}/{scenario}/exe/gcam.exe"
-    assert gcam_path(sandbox.scenario_xml_dir) == f"{sandbox_root}/{project_name}/{scenario}/input/gcamdata/xml"
+    assert sbx.sandbox_exe_path == f"{sandbox_root}/{project_name}/{scenario}/exe/gcam.exe"
+    assert gcam_path(sbx.scenario_gcam_xml_dir) == f"{sandbox_root}/{project_name}/{scenario}/input/gcamdata/xml"
+
+    assert sbx.scenario_xmlsrc_dir == f"{xmlsrc}/{scenario}"       # without group name
 

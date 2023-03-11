@@ -11,7 +11,7 @@ import numpy as np
 import os
 import pandas as pd
 
-from ..config import getParam
+from ..config import getParam, mkdirs
 from ..log import getLogger
 from ..utils import importFromDotSpec, pathjoin
 from ..XMLFile import XMLFile
@@ -20,7 +20,6 @@ from .Database import getDatabase
 from .distro import DistroGen
 from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecError
 from .util import loadObjectFromPath
-from ..file_utils import mkdirs
 from .XML import XMLWrapper, findAndSave, getBooleanXML
 from .XMLConfigFile import XMLConfigFile
 from .XMLResultFile import XMLColumn, XMLConstraint, CONSTRAINT_ELT_NAME

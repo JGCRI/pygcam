@@ -73,8 +73,7 @@ def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, grou
     constraintFile = basename + '-constraint.xml'
     #policyFile = basename + '.xml'
 
-    fullDirname = pathjoin(dirname, groupName, scenario)
-    mkdirs(fullDirname)
+    fullDirname = pathjoin(dirname, groupName, scenario, create=True)
 
     pathname = pathjoin(fullDirname, constraintFile)
     _logger.debug("Generating constraint file: %s", pathname)

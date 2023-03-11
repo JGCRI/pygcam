@@ -5,7 +5,7 @@ from copy import deepcopy
 import re
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
-from .config import pathjoin, getParam
+from .config import pathjoin, getParam, mkdirs
 from .log import getLogger
 from .XMLFile import XMLFile
 
@@ -703,7 +703,7 @@ def create_subsector_dict(useGcamUSA):
 def resPolicyMain(args):
     import os
     from .error import CommandlineError
-    from .file_utils import mkdirs, is_abspath, get_path
+    from .file_utils import is_abspath, get_path
     from .constants import LOCAL_XML_NAME
 
     scenario   = args.scenario

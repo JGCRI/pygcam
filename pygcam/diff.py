@@ -4,11 +4,11 @@
   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-from .config import pathjoin
+from .config import pathjoin, mkdirs
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
 from .constants import QRESULTS_DIRNAME
-from .file_utils import ensureCSV, mkdirs
+from .file_utils import ensureCSV
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)

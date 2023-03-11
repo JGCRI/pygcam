@@ -48,7 +48,7 @@ def flipCorrSign(df, colNames, corrDF):
     for name in colNames:
         if corrDF.spearman[name] < 0:
             df[name] = 1 - df[name]
-            df.rename(columns={name: "(1 - %s)" % name}, inplace=True)
+            df.rename(columns={name: f"(1 - {name})"}, inplace=True)
     return df
 
 def categorizeCI(count, inputDF, title=None, addCount=False):

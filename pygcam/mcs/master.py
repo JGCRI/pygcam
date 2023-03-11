@@ -108,6 +108,7 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                              'controller' : _lsfControllerBatchTemplate},
                   }
 
+# Instantiated only from runsim_plugin.py
 class Master(object):
 
     def __init__(self, args):
@@ -117,7 +118,7 @@ class Master(object):
         self.finished = False
         self.idleEngines = set()
 
-        projectName = args.projectName
+        projectName = args.projectName      # "global" argument added in tool.py
 
         # cache run definitions from the database and amend as necessary when creating runs
         for scenario in args.scenarios:
@@ -684,7 +685,7 @@ def listTrialsToRedo(db, simId, scenarios, statuses):
 
 def templatePath(scheduler, profile, clusterId, process):
     profileDir = locate_profile(profile)
-    basename = '%s_%s_%s.template' % (scheduler, clusterId, process)
+    basename = f'{scheduler}_{clusterId}_{process}.template'
     filename = os.path.join(profileDir, basename)
     return filename
 
@@ -745,7 +746,7 @@ def _saveBatchFiles(numTrials, argDict):
 
     # N.B. process is 'controller' or 'engine'
     for process, template in templates.items():
-        cmd_argv = [sys.executable, "-m", "ipyparallel.%s" % process]
+        cmd_argv = [sys.executable, "-m", f"ipyparallel.{process}"]
         text = template % ' '.join(map(pipes.quote, cmd_argv))  # insert command line
         text = text.format(**defaults)   # insert other parameters
 
@@ -771,7 +772,7 @@ def _clusterCommand(cmd):
             ALREADY_STARTED: 'Cluster already started',
             NO_CLUSTER:      'No cluster found',
         }
-        msg = statusStrings.get(status, 'Exit status: %d' % status)
+        msg = statusStrings.get(status, f'Exit status: {status}')
         _logger.warning(msg)
 
     return status

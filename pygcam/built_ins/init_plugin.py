@@ -7,7 +7,7 @@
 import itertools
 import os
 
-from ..config import getConfig, getHomeDir, pathjoin, unixPath
+from ..config import getConfig, getHomeDir, pathjoin, unixPath, mkdirs, USR_CONFIG_FILE
 from ..subcommand import SubcommandABC, clean_help
 
 class AbortInput(Exception):
@@ -115,8 +115,6 @@ def askDir(msg, default=''):
     except Exception:
         # prompt_toolkit 2
         from prompt_toolkit.completion import PathCompleter
-
-    from ..file_utils import mkdirs
 
     is_cygwin = isCygwin()
 
@@ -246,8 +244,6 @@ class InitCommand(SubcommandABC):
         return parser
 
     def run(self, args, tool):
-        from ..config import USR_CONFIG_FILE
-        from ..file_utils import mkdirs
         from ..file_utils import deleteFile
         from ..gcam import getGcamVersion
 

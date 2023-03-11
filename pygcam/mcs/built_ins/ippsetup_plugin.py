@@ -101,9 +101,10 @@ class IppSetupCommand(McsSubcommandABC):
     def run(self, args, tool):
         from IPython.paths import get_ipython_dir
         import subprocess as subp
+        from ...config import pathjoin
 
         minutes = args.minutes
-        walltime = '%d:%02d:00' % (minutes/60, minutes%60)
+        walltime = f'{minutes // 60 :02d}:{minutes % 60 :02d}:00'
 
         formatDict = {'account'  : args.account,
                       'engines'  : args.engines,
@@ -114,21 +115,21 @@ class IppSetupCommand(McsSubcommandABC):
         profile = args.profile
 
         ipythonDir = get_ipython_dir()
-        profileDir = os.path.join(ipythonDir, 'profile_' + profile)
+        profileDir = pathjoin(ipythonDir, 'profile_' + profile)
 
         if os.path.isdir(profileDir):
-            raise CommandlineError('Ipython profile directory "%s" already exists. Delete it or choose another name.' % profileDir)
+            raise CommandlineError(f'Ipython profile directory "{profileDir}" already exists. Delete it or choose another name.')
 
         cmd = 'ipython profile create --parallel ' + profile
-        _logger.info('Running command: %s', cmd)
+        _logger.info(f'Running command: {cmd}')
         subp.call(cmd, shell=True)
 
         for basename, tuples in FileChanges.items():
-            pathname = os.path.join(profileDir, basename)
+            pathname = pathjoin(profileDir, basename)
             backup   = pathname + '~'
 
             if not os.path.isfile(pathname):
-                raise CommandlineError('Missing configuration file: "%s"' % pathname)
+                raise CommandlineError(f'Missing configuration file: "{pathname}"')
 
             _logger.info('Editing config file: %s', pathname)
             os.rename(pathname, backup)

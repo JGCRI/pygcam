@@ -2,17 +2,23 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 import os
-from ...config import getParam, setParam
+
+from ...config import getParam, setParam, pathjoin, mkdirs
+from ...constants import LOCAL_XML_NAME, McsMode
+from ...file_utils import symlink, filecopy
 from ...log import getLogger
 from ...utils import getResource
-from ...file_utils import mkdirs
+
 from ..context import McsContext
-from ..util import getSimDir
+from ..util import (getSimDir, writeTrialDataFile, getSimParameterFile,
+                    getSimResultFile, saveDict)
+
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
-def genFullFactorialData(trials, paramFileObj, args):
+
+def genFullFactorialData(trials, paramFileObj):
     from numpy import linspace
     import pandas as pd
     from itertools import product
@@ -80,83 +86,6 @@ def genFullFactorialData(trials, paramFileObj, args):
     inputsDF = pd.DataFrame(list(product(*var_values)), columns=var_names)
     return inputsDF
 
-#
-# Deprecated
-#
-# def genSALibData(trials, method, paramFileObj, args):
-#     from ..error import PygcamMcsUserError
-#     from ..sensitivity import DFLT_PROBLEM_FILE, Sobol, FAST, Morris # , MonteCarlo
-#     from ...utils import ensureExtension, removeTreeSafely, mkdirs
-#
-#     supported_distros = ['Uniform', 'LogUniform', 'Triangle', 'Linked']
-#
-#     outFile = args.outFile or os.path.join(getSimDir(args.simId), 'data.sa')
-#     outFile = ensureExtension(outFile, '.sa')
-#
-#     if os.path.lexists(outFile):
-#         # Attempt to mv an existing version of the file to the same name with '~'
-#         backupFile = outFile + '~'
-#         if os.path.isdir(backupFile):
-#             removeTreeSafely(backupFile)
-#
-#         elif os.path.lexists(backupFile):
-#             raise PygcamMcsUserError(f"Refusing to delete '{backupFile}' since it's not a file package.")
-#
-#         os.rename(outFile, backupFile)
-#
-#     mkdirs(outFile)
-#
-#     linked = []
-#
-#     problemFile = pathjoin(outFile, DFLT_PROBLEM_FILE)
-#     with open(problemFile, 'w') as f:
-#         f.write('name,low,high\n')
-#
-#         for elt in paramFileObj.tree.iterfind('//Parameter'):
-#             name = elt.get('name')
-#             distElt = elt.find('Distribution')
-#             distSpec = distElt[0]   # should have only one child as per schema
-#             distName = distSpec.tag
-#
-#             # These 3 distro forms specify min and max values, which we use with SALib
-#             legal = supported_distros + ['Linked']
-#             if distName not in legal:
-#                 raise PygcamMcsUserError(f"Found '{distName}' distribution; must be one of {legal} for use with SALib.")
-#
-#             if distName == 'Linked':        # TBD: ignore these and figure it out when loading the file?
-#                 linked.append((name, distSpec.get('parameter')))
-#                 continue
-#
-#             # Parse out the various forms: (max, min), (factor), (range), and factor for LogUniform
-#             attrib = distSpec.attrib
-#             if 'min' in attrib and 'max' in attrib:
-#                 minValue = float(attrib['min'])
-#                 maxValue = float(attrib['max'])
-#             elif 'factor' in attrib:
-#                 value = float(attrib['factor'])
-#                 if distName == 'LogUniform':
-#                     minValue = 1/value
-#                     maxValue = value
-#                 else:
-#                     minValue = 1 - value
-#                     maxValue = 1 + value
-#             elif 'range' in attrib:
-#                 value = float(attrib['range'])
-#                 minValue = -value
-#                 maxValue =  value
-#
-#             f.write(f"{name},{minValue},{maxValue}\n")
-#
-#     methods = (Sobol, FAST, Morris) # , MonteCarlo)
-#     methodMap = {cls.__name__.lower(): cls for cls in methods}
-#
-#     cls = methodMap[method]
-#     sa = cls(outFile)
-#
-#     # saves to input.csv in file package
-#     sa.sample(trials=trials, calc_second_order=args.calcSecondOrder)
-#     return sa.inputsDF
-
 
 def genTrialData(simId, trials, paramFileObj, args):
     """
@@ -168,7 +97,6 @@ def genTrialData(simId, trials, paramFileObj, args):
     from ..distro import linkedDistro
     from ..LHS import lhs, lhsAmend
     from ..XMLParameterFile import XMLRandomVar, XMLCorrelation
-    from ..util import writeTrialDataFile
 
     rvList = XMLRandomVar.getInstances()
 
@@ -189,11 +117,9 @@ def genTrialData(simId, trials, paramFileObj, args):
         trialData = lhs(rvList, trials, corrMat=corrMatrix, columns=paramNames, skip=linked)
 
     elif method == 'full-factorial':
-        trialData = genFullFactorialData(trials, paramFileObj, args)
+        trialData = genFullFactorialData(trials, paramFileObj)
     else:
         raise PygcamMcsUserError(f"'{method}' is not a supported method of simulation data generation")
-        # # SALib methods are deprecated
-        # trialData = genSALibData(trials, method, paramFileObj, args)
 
     linkedDistro.storeTrialData(trialData)  # stores trial data in class so its ppf() can access linked values
     lhsAmend(trialData, linked, trials, shuffle=False)
@@ -248,9 +174,6 @@ def runStaticSetup(runWorkspace, project, groupName):
     trials have local-xml symlinked to RunWorkspace's local-xml.
     """
     from ... import tool
-    from ...utils import mkdirs
-    from ...constants import LOCAL_XML_NAME
-    from ..util import symlink
     from ..error import GcamToolError
 
     projectName = project.projectName
@@ -263,20 +186,17 @@ def runStaticSetup(runWorkspace, project, groupName):
 
     # create symlinks from all the scenarios' local-xml dirs to shared one
     # under {projectName}/Workspace
-    sandboxDir = os.path.join(runWorkspace, groupSubdir)
-    mkdirs(sandboxDir)
+    sandboxDir = pathjoin(runWorkspace, groupSubdir, create=True)
 
-    wsXmlDir = os.path.join(runWorkspace, LOCAL_XML_NAME)
-    mkdirs(wsXmlDir)
+    wsXmlDir = pathjoin(runWorkspace, LOCAL_XML_NAME, create=True)
 
     for scenario in scenarios:
-        dirname = os.path.join(sandboxDir, scenario)
-        mkdirs(dirname)
-        linkname  = os.path.join(dirname, LOCAL_XML_NAME)
+        dirname = pathjoin(sandboxDir, scenario, create=True)
+        linkname  = pathjoin(dirname, LOCAL_XML_NAME)
         symlink(wsXmlDir, linkname)
 
     # N.B. RunWorkspace for gensim is pygcam's RefWorkspace
-    toolArgs = ['+P', projectName, '--mcs=gensim', 'run', '-s', 'setup',
+    toolArgs = ['+P', projectName, f'--mcs={McsMode.GENSIM.value}', 'run', '-s', 'setup',
                 '-S', scenariosArg, '--sandboxDir=' + sandboxDir]
 
     # if useGroupDir:
@@ -298,7 +218,6 @@ def genSimulation(simId, trials, paramPath, args):
     '''
     from ..Database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
-    from ..util import getSimParameterFile, getSimResultFile, symlink, filecopy
     from ...constants import LOCAL_XML_NAME
     from ...project import Project
     from ...xmlScenario import XMLScenario
@@ -308,12 +227,12 @@ def genSimulation(simId, trials, paramPath, args):
 
     # Add symlink to workspace's input dir so we can find XML files using rel paths in config files
     simDir = getSimDir(simId, create=True)
-    simInputDir = os.path.join(simDir, 'input')
+    simInputDir = pathjoin(simDir, 'input')
     symlink(runInputDir, simInputDir)
 
     # Ditto for workspace's local-xml
-    workspaceLocalXml = os.path.join(runWorkspace, LOCAL_XML_NAME)
-    simLocalXmlDir = os.path.join(simDir, LOCAL_XML_NAME)
+    workspaceLocalXml = pathjoin(runWorkspace, LOCAL_XML_NAME)
+    simLocalXmlDir = pathjoin(simDir, LOCAL_XML_NAME)
     symlink(workspaceLocalXml, simLocalXmlDir)
 
     projectName = getParam('GCAM.ProjectName')
@@ -372,14 +291,11 @@ def _newsim(runWorkspace, trials):
     Copies reference workspace to MCS.RunWorkspace and, if ``trials``
     is non-zero, ensures database initialization.
     '''
-    from ...scenarioSetup import copyWorkspace
+    from ..mcsSandbox import copyRefWorkspace
     from ..Database import getDatabase
     from ..XMLResultFile import XMLResultFile
 
-    srcDir = getParam('GCAM.RefWorkspace')
-    dstDir = runWorkspace
-
-    copyWorkspace(dstDir, srcDir, forceCreate=True, mcsMode=True)
+    copyRefWorkspace(runWorkspace, forceCreate=True, mcs=True)
 
     if trials:
         db = getDatabase()   # ensures database initialization
@@ -482,7 +398,7 @@ def _plot_values(values, paramName, plotsDir, bins=250, context='paper'):
 def _exportVars(paramFile, args):
     import re
     from itertools import chain
-    from ...utils import mkdirs
+    from ...file_utils import mkdirs
     from ..XMLParameterFile import XMLDistribution, XMLParameterFile, XMLDataFile
 
     outputFile = args.exportVars
@@ -548,14 +464,13 @@ def _exportVars(paramFile, args):
                              clean(p.evidence), clean(p.rationale), notes])
 
 
-def driver(args, tool):
+def driver(args):
     '''
     Generate a simulation. Do generic setup, then call genSimulation().
     '''
     from ...file_utils import removeTreeSafely
     from ..Database import getDatabase
     from ..error import PygcamMcsUserError
-    from ..util import saveDict
 
     # Set the config variable if the argument is given to avoid inconsistency
     if args.paramFile:
@@ -574,6 +489,10 @@ def driver(args, tool):
     if trials < 0:
         raise PygcamMcsUserError("Trials argument is required: must be an integer >= 0")
 
+    # TBD: use McsSandbox instance
+    #  from ..mcs_sandbox import McsSandbox
+    #  sbx = McsSandbox(simId, trials, projectName, WHAT ELSE?)
+
     projectName = args.projectName
     runRoot = args.runRoot
     if runRoot:
@@ -591,7 +510,7 @@ def driver(args, tool):
         raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
 
     if not os.path.exists(runWorkspace):
-        _newsim(runWorkspace, trials)
+        _newsim(runWorkspace, trials)       # creates a new database
 
     # Called with trials == 0 when setting up a local run directory on /scratch
     if trials:
@@ -632,23 +551,12 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-g', '--groupName', default='',
                             help=clean_help('''The name of a scenario group to process.'''))
 
-        # methods = ['montecarlo', 'sobol', 'fast', 'morris', 'full-factorial']
         methods = ['montecarlo', 'full-factorial']
         parser.add_argument('-m', '--method', choices=methods,
                             default='montecarlo',
                             help=clean_help('''Use the specified method to generate trial data. Default is "montecarlo".
                                 Note that in the only supported distribution types for the 'full-factorial' method, are: 
                                 Constant, Binary, Integer, Grid, and Sequence'''))
-
-        # Deprecated
-        # parser.add_argument('-o', '--outFile',
-        #                     help=clean_help('''For methods other than "montecarlo". The path to a "package
-        #                     directory" into which SALib-related data are stored.
-        #                     If the filename does not end in '.sa', this extension is added. The file
-        #                     'problem.csv' within the package directory will contain the parameter specs in
-        #                     SALib format. The file inputs.csv is also generated in the file package using
-        #                     the chosen method's sampling method. If an outFile is not specified, a package
-        #                     of the name 'data.sa' is created in the simulation run-time directory.'''))
 
         paramFile = getParam('MCS.ParametersFile')
         parser.add_argument('-p', '--paramFile', default=None,
@@ -665,10 +573,6 @@ class GensimCommand(McsSubcommandABC):
                             help=clean_help(f'''Root of the run-time directory for running user programs. Defaults to
                             value of config parameter MCS.Root (currently '{runRoot}')'''))
 
-        # Deprecated
-        # parser.add_argument('-S', '--calcSecondOrder', action='store_true',
-        #                     help=clean_help('''For Sobol method only -- calculate second-order sensitivities.'''))
-
         parser.add_argument('-s', '--simId', type=int, default=1,
                             help=clean_help('The id of the simulation. Default is 1.'))
 
@@ -680,5 +584,5 @@ class GensimCommand(McsSubcommandABC):
         return parser   # for auto-doc generation
 
 
-    def run(self, args, tool):
-        driver(args, tool)
+    def run(self, args, _tool):
+        driver(args)

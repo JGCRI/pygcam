@@ -1,15 +1,14 @@
 # Copyright (c) 2012-2022. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
-import os
 import numpy as np
+
 from ..matplotlibFix import plt
 
 import pandas as pd
 import seaborn as sns
 
-from ..config import getParam, getParamAsBoolean
+from ..config import getParam, getParamAsBoolean, pathjoin
 from ..log import getLogger
-from ..file_utils import mkdirs
 
 from .error import PygcamMcsSystemError, PygcamMcsUserError
 from .Database import getDatabase, Input
@@ -21,10 +20,10 @@ DEFAULT_MAX_TORNADO_VARS = 15
 
 def makePlotPath(value, simId):
     plotDir = getParam('MCS.PlotDir')
-    subDir  = os.path.join(plotDir, f"s{simId}")
-    mkdirs(subDir)
+    subDir  = pathjoin(plotDir, f"s{simId}", create=True)
+
     plotType = getParam('MCS.PlotType')
-    path = os.path.join(subDir, f"{value}.{plotType}")
+    path = pathjoin(subDir, f"{value}.{plotType}")
     return path
 
 def printExtraText(fig, text, loc='top', color='lightgrey', weight='ultralight', fontsize='xx-small'):
@@ -558,7 +557,7 @@ def exportResults(simId, resultList, expList, exportFile, sep=','):
             resultDf['expName'] = expName
             resultDf['resultName'] = resultName
 
-            resultDf.rename(columns = {resultName:'value'}, inplace=True)
+            resultDf.rename(columns = {resultName: 'value'}, inplace=True)
 
             if df is None:
                 df = resultDf
@@ -875,7 +874,7 @@ class Analysis(object):
                 # flip neg. correlated values to reduce line crossings
                 if corrDF.spearman[name] < 0:
                     inputDF[name] = 1 - inputDF[name]
-                    inputDF.rename(columns={name: "(1 - %s)" % name}, inplace=True)
+                    inputDF.rename(columns={name: f"(1 - {name})"}, inplace=True)
             cols = inputDF.columns
 
         # optionally quantize inputs into the given number of bins

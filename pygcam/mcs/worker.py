@@ -4,17 +4,18 @@ import os
 import time
 import ipyparallel as ipp
 
-from ..config import getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean
+from ..config import (getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean,
+                      pathjoin)
 from ..constants import LOCAL_XML_NAME
 from ..error import GcamError, GcamSolverError
 from ..log import getLogger, configureLogs
-from ..signals import (catchSignals, TimeoutSignalException, UserInterruptException)
-from ..file_utils import mkdirs
+from ..signals import catchSignals, TimeoutSignalException, UserInterruptException
+from ..file_utils import symlink
 
 from ..mcs.error import PygcamMcsUserError, GcamToolError
 from ..mcs.Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                                  RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
-from ..mcs.util import readTrialDataFile, symlink
+from ..mcs.util import readTrialDataFile
 from ..mcs.XMLParameterFile import XMLParameter, XMLParameterFile, decache
 
 # Status codes for invoked programs
@@ -35,15 +36,15 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     For Monte Carlo trials.
     """
     from ..tool import main as tool_main
+    from ..constants import McsMode
 
     # TBD: runWorkspace and raiseError keywords are not used currently
     runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
 
     trialDir = context.getTrialDir()
-
     # N.B. MCS.RunWorkspace is the RefWorkspace for trial sandboxes
     toolArgs = ['--projectName', context.projectName,
-                '--mcs', 'trial',
+                '--mcs', McsMode.TRIAL.value,
                 '--set', f'GCAM.SandboxRefWorkspace={runWorkspace}',
                 'run',
                 '--step', steps,
@@ -86,9 +87,9 @@ def _applySingleTrialData(df, context, paramFile):
     XMLParameter.applyTrial(simId, trialNum, df)   # Update all parameters as required
     paramFile.writeLocalXmlFiles(trialDir)         # N.B. creates trial-xml subdir
 
-    # TBD: move these bits to McsSandbox's create_dir_struction()
+    # TBD: move these bits to McsSandbox's create_dir_structure()
 
-    linkDest = os.path.join(trialDir, LOCAL_XML_NAME)
+    linkDest = pathjoin(trialDir, LOCAL_XML_NAME)       # does this require subdir?
     _logger.info(f'creating symlink to {linkDest}')
 
     # TBD: centralize the creation of these paths (e.g., in ScenarioInfo class)
@@ -116,8 +117,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     baselineName = context.baseline
     isBaseline = not baselineName
 
-    # Run setup and (optionally) moira before applying trial data
-    # N.B. setup step calls pygcam.setup.setupWorkspace
+    # Run setup steps before applying trial data
     setup_steps = getParam('MCS.SetupSteps')
     if setup_steps:
         _runPygcamSteps(setup_steps, context)
@@ -214,6 +214,9 @@ class Worker(object):
         self.argDict  = argDict
         self.runLocal = argDict.get('runLocal', False)
 
+        # TBD: create McsSandbox from context and use it for all paths
+        # self.sbx = McsSandbox(context)
+
     def runTrial(self):
         """
         Run a single trial on the current engine using the local Worker.
@@ -232,11 +235,10 @@ class Worker(object):
         os.chdir(runDir)
 
         trialDir = os.path.dirname(runDir)
-        logDir = os.path.join(trialDir, 'log')
-        mkdirs(logDir)
+        logDir = pathjoin(trialDir, 'log', create=True)
 
         if not self.runLocal:
-            logFile = os.path.join(logDir, context.scenario + '.log')
+            logFile = pathjoin(logDir, context.scenario + '.log')
             setParam('GCAM.LogFile', logFile)
             setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
             configureLogs(force=True)

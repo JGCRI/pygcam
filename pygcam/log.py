@@ -13,7 +13,7 @@
 """
 import os
 import logging
-from .config import getParam, getParamAsBoolean, configLoaded
+from .config import getParam, getParamAsBoolean, configLoaded, mkdirs
 
 PKGNAME = __name__.split('.')[0]
 
@@ -94,24 +94,10 @@ def parseLevels(levelStr=None):
 
     return result
 
-#
-# Copied here from utils.py to avoid an import loop
-#
-def _mkdirs(newdir, mode=0o770):
-    """
-    Try to create the full path `newdir` and ignore the error if it already exists.
-    """
-    from errno import EEXIST
-
-    try:
-        os.makedirs(newdir, mode)
-    except OSError as e:
-        if e.errno != EEXIST:
-            raise
 
 def _addHandler(logger, formatStr, logFile=None):
     if logFile:
-        _mkdirs(os.path.dirname(logFile))
+        mkdirs(os.path.dirname(logFile))
 
     handler = logging.FileHandler(logFile, mode='a') if logFile else logging.StreamHandler()
     handler.setFormatter(logging.Formatter(formatStr))

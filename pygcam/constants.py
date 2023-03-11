@@ -18,6 +18,17 @@ PROJECT_XML = "project.xml"
 QUERY_DIRNAME  = "queries"
 QRESULTS_DIRNAME = 'queryResults'
 
+from enum import Enum
+
+class McsMode(Enum):
+    TRIAL = 'trial'
+    GENSIM = 'gensim'
+
+    @classmethod
+    def values(cls):
+        return [x.value for x in cls.__members__.values()]
+
+
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 

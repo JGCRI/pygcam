@@ -300,7 +300,7 @@ class Project(XMLFile):
     """
     def __init__(self, xmlFile, projectName, groupName=None):
 
-        xmlFile = xmlFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
+        xmlFile = xmlFile or getParam('GCAM.ProjectFile') or DefaultProjectFile
 
         self.projectName = projectName or getParam('GCAM.DefaultProject')
 
@@ -377,8 +377,8 @@ class Project(XMLFile):
 
         # return cached project if already read, otherwise read project.xml
         if not cls.instance or cls.instance.projectName != projectName:
-            projectFile = projectFile or getParam('GCAM.ProjectXmlFile', section=projectName)
-            cls.instance = Project(projectFile, projectName, groupName)
+            projectFile = projectFile or getParam('GCAM.ProjectFile', section=projectName)
+            cls.instance = Project(projectFile, projectName, groupName=groupName)
 
         return cls.instance
 
@@ -533,8 +533,11 @@ class Project(XMLFile):
         argDict['projectSubdir'] = subdir = self.subdir
         argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
         argDict['scenarioGroup'] = scenarioGroupName
-        argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir
-        argDict['projectSrcDir'] = pathjoin('..', XML_SRC_NAME,   srcGroupDir, subdir)
+
+        # TBD: use Sandbox for path calculation
+        # TBD: subdir comes from <project subdir="xx">
+        argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir # TBD: document this
+        argDict['projectSrcDir'] = pathjoin('..', XML_SRC_NAME,   srcGroupDir, subdir)      # TBD: might be unused
         argDict['projectXmlDir'] = pathjoin('..', LOCAL_XML_NAME, groupDir,    subdir)
 
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
@@ -655,7 +658,7 @@ def projectMain(args, tool):
     scenarios = listify(args.scenarios)
     skipScens = listify(args.skipScenarios)
 
-    project = Project(args.projectFile, args.projectName, args.group)
+    project = Project(args.projectFile, args.projectName, groupName=args.group)
 
     groups = project.getKnownGroups() if args.allGroups else [args.group]
 

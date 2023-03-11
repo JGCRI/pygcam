@@ -46,22 +46,45 @@ def unixPath(path, rmFinalSlash=False, abspath=False):
 
     return path
 
-def pathjoin(*elements, **kwargs):
+# Duplicated here from file_utils to avoid an import cycle
+def mkdirs(newdir, mode=0o770):
+    """
+    Try to create the full path `newdir` and ignore the error if it already exists.
+
+    :param newdir: the directory to create (along with any needed parent directories)
+    :return: nothing
+    """
+    from errno import EEXIST
+
+    try:
+        os.makedirs(newdir, mode)
+    except OSError as e:
+        if e.errno != EEXIST:
+            raise
+
+def pathjoin(*elements, expanduser=False, abspath=False, normpath=False,
+             realpath=False, create=False):
     path = os.path.join(*elements)
 
-    if kwargs.get('expanduser'):
+    if expanduser:
         path = os.path.expanduser(path)
 
-    if kwargs.get('abspath'):
+    if abspath:
         path = os.path.abspath(path)
 
-    if kwargs.get('normpath'):
+    if normpath:
         path = os.path.normpath(path)
 
-    if kwargs.get('realpath'):
+    if realpath:
         path = os.path.realpath(path)
 
-    return unixPath(path, rmFinalSlash=True)
+    path = unixPath(path, rmFinalSlash=True)
+
+    if create:
+        mkdirs(path)
+
+    return path
+
 
 def savePathMap(mapString):
     """

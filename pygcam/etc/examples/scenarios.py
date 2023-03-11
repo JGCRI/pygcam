@@ -1,5 +1,5 @@
-import os
 import pandas as pd
+from pygcam.config import pathjoin
 from pygcam.log import getLogger
 from pygcam.xmlEditor import XMLEditor, callableMethod
 
@@ -21,13 +21,13 @@ class MyCustomClass(XMLEditor):
         _logger.debug('Updating energy costs for %s, %s-%s', techs, startYear, endYear)
 
         def getCost(df, tech):
-            query = 'technology=="%s" and year >= %d and year <= %d' % (tech, startYear, endYear)
+            query = f'technology=="{tech}" and year >= {startYear} and year <= {endYear}'
             df = df.query(query)
             df.set_index('year', inplace=True)
             costs = df['input.cost']
             return costs
 
-        filename = os.path.join(self.xmlSourceDir, 'baseline', 'L222.GlobalTechCost_en-Modified.csv')
+        filename = pathjoin(self.xmlSourceDir, 'baseline', 'L222.GlobalTechCost_en-Modified.csv')
         df = pd.read_csv(filename, skiprows=4)
 
         for tech in techs:

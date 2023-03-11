@@ -3,11 +3,12 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from ..log import getLogger
 from ..subcommand import SubcommandABC, clean_help
+from ..constants import McsMode
 
 _logger = getLogger(__name__)
 
@@ -17,6 +18,9 @@ class SetupCommand(SubcommandABC):
 
         super(SetupCommand, self).__init__('setup', subparsers, kwargs, group='project')
 
+    # TBD: current cmd in project.xml:
+    #   @setup -b {baseline} -s {scenario} -g {scenarioGroup} -S {scenarioSubdir} -w {scenarioDir} -p {endYear} -y {shockYear}-{endYear}
+    #   Most of the remaining args may be superfluous.
     def addArgs(self, parser):
         defaultYears = '2015-2100'
 
@@ -51,7 +55,8 @@ class SetupCommand(SubcommandABC):
 
         # mutually exclusive with --moduleSpec and --setupXml
         group2.add_argument('-m', '--modulePath',
-                            help=clean_help('''The path to a scenario definition module. See -M flag for more info.'''))
+                            help=clean_help('''The path to a scenario definition module. See -M/--moduleSpec
+                            flag for more info.'''))
 
         # mutually exclusive with --modulePath and --setupXml
         group2.add_argument('-M', '--moduleSpec',
@@ -68,9 +73,10 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('--stopPeriod', type=int,
                             help=clean_help('DEPRECATED: please use --stopYear instead.'))
 
-        parser.add_argument('-r', '--refWorkspace', default="",
-                            help=clean_help('''A reference workspace to use instead of the value of 
-                                    config variable "GCAM.RefWorkspace".'''))
+        # Deprecated -- set GCAM.RefWorkspace instead
+        # parser.add_argument('-r', '--refWorkspace', default="",
+        #                     help=clean_help('''A reference workspace to use instead of the value of
+        #                             config variable "GCAM.RefWorkspace".'''))
 
         parser.add_argument('-R', '--resultsDir',
                             help=clean_help('The parent directory holding the GCAM output workspaces'))
@@ -84,9 +90,10 @@ class SetupCommand(SubcommandABC):
                             Note: at least one of --baseline (-b) / --scenario (-s) must be used.'''))
 
         # TBD: is this really used? Probably can be deprecated.
-        parser.add_argument('-S', '--subdir', default="",
-                            help=clean_help('A sub-directory to use instead of scenario name'))
+        # parser.add_argument('-S', '--subdir', default="",
+        #                     help=clean_help('A sub-directory to use instead of scenario name'))
 
+        # TBD: candidate for deletion. Just adds complexity and not really needed.
         # mutually exclusive with --moduleSpec and --modulePath
         group2.add_argument('--setupXml',
                             help=clean_help('''An XML scenario definition file. Defaults to the value of
@@ -99,15 +106,17 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-u', '--useGroupDir', action='store_true',
                             help=clean_help('Use the group name as a sub directory below xmlsrc, local-xml, and dyn-xml'))
 
+        # TBD: candidate for deletion
         parser.add_argument('-x', '--xmlSourceDir',
                             help=clean_help('''The location of the xmlsrc directory. 
-                                 Defaults to the value of config parameter "GCAM.ProjectXmlSrc".'''))
+                                 Defaults to the value of config parameter "GCAM.ProjectXmlsrc".'''))
 
+        # TBD: candidate for deletion
         parser.add_argument('-X', '--xmlOutputRoot',
                             help=clean_help('''The root directory into which to generate XML files.'''))
 
-        parser.add_argument('-w', '--workspace', # i.e., sandbox
-                            help=clean_help('''The pathname of the workspace to operate on.'''))
+        parser.add_argument('-w', '--sandbox',  # -w for backwards compatibility
+                            help=clean_help('''The pathname of the sandbox to operate on.'''))
 
         # Deprecated or pass to scenario?
         parser.add_argument('-y', '--years', default=defaultYears,
@@ -116,83 +125,48 @@ class SetupCommand(SubcommandABC):
 
         return parser   # for auto-doc generation
 
-    def create_sandbox(self, args, workspace, mcsMode):
-        from ..scenarioSetup import createSandbox
-
-        if not mcsMode or mcsMode == 'trial':       # i.e., if mcsMode is not 'gensim'
-            forceCreate = args.forceCreate or bool(mcsMode)
-            createSandbox(workspace, args.refWorkspace, forceCreate=forceCreate, mcsMode=mcsMode)
-
-    def run_scenario_setup(self, args, scenario, mcsMode):
+    # TBD: this should take just a Sandbox or McsSandbox as argument
+    #   Perhaps with dynamicOnly=False, staticOnly=False as kwds
+    def run_scenario_setup(self, args, sbx, mcsMode: McsMode):
         """
         Run the setup steps indicated in scenarios.xml.
         """
-        from importlib import import_module
         from ..config import getParam, pathjoin
-        from ..error import SetupException
-        from ..utils import loadModuleFromPath
 
+        scenario = sbx.scenario
+
+        # TBD: read these from sbx
         projectDir = getParam('GCAM.ProjectDir')
+
+        # TBD: get values from sbx rather than args
         groupName = args.group if args.useGroupDir else ''
         srcGroupDir = args.srcGroupDir or groupName
 
-        if args.workspace:
-            workspace = args.workspace
+        if args.sandbox:
+            workspace = args.sandbox
         else:
             workspace = pathjoin(projectDir, groupName, scenario, normpath=True)
 
-        xmlSourceDir = args.xmlSourceDir or getParam('GCAM.ProjectXmlSrc')
+        xmlSourceDir = sbx.projectXmlsrc
 
-        # If a setup XML file is defined, use the defined (or default) XMLEditor subclass
-        setupXml = args.setupXml or getParam('GCAM.ScenarioSetupFile')
-        if setupXml:
-            from ..xmlScenario import createXmlEditorSubclass
-            _logger.debug(f'Setup using {setupXml}')
-            scenClass = createXmlEditorSubclass(setupXml)
+        scenClass = sbx.editor_class(scenario, moduleSpec=args.moduleSpec, modulePath=args.modulePath)
 
-        else:
-            # If neither is defined, we assume a custom scenarios.py file is used
-            try:
-                if args.moduleSpec:
-                    module = import_module(args.moduleSpec, package=None)
-                else:
-                    modulePath = args.modulePath or pathjoin(xmlSourceDir, srcGroupDir, 'scenarios.py')
-                    _logger.debug(f'Setup using {modulePath}')
-                    module = loadModuleFromPath(modulePath)
-
-            except Exception as e:
-                moduleName = args.moduleSpec or modulePath
-                raise SetupException(f'Failed to load scenarioMapper or ClassMap from module {moduleName}: {e}')
-
-            try:
-                # First look for a function called scenarioMapper
-                scenarioMapper = getattr(module, 'scenarioMapper', None)
-                if scenarioMapper:
-                    scenClass = scenarioMapper(scenario)
-
-                else:
-                    # Look for 'ClassMap' in the specified module
-                    classMap = getattr(module, 'ClassMap')
-                    scenClass = classMap[scenario]
-
-            except KeyError:
-                raise SetupException(f'Failed to map scenario "{scenario}" to a class in {module.__file__}')
-
+        # TBD: take these from sbx
         subdir = args.subdir or scenario
-        refWorkspace = args.refWorkspace or getParam('GCAM.RefWorkspace')
         xmlOutputRoot = args.xmlOutputRoot or workspace
 
         # When called in 'trial' mode, we only run dynamic setup.
         # When run in 'gensim' mode, we do only static setup.
-        args.dynamicOnly = args.dynamicOnly or mcsMode == 'trial'
+        args.dynamicOnly = args.dynamicOnly or mcsMode == McsMode.TRIAL
 
-        if mcsMode == 'gensim':
+        if mcsMode == McsMode.GENSIM:
             args.dynamicOnly = False
             args.staticOnly = True
 
         # TBD: Document that all setup classes must conform to this protocol
-        obj = scenClass(args.baseline, args.scenario, xmlOutputRoot, xmlSourceDir,
-                        refWorkspace, groupName, srcGroupDir, subdir, mcsMode=mcsMode)
+        # TBD: scenClass(sbx, mcsMode=mcsMode) ??
+        obj = scenClass(sbx.baseline, scenario, xmlOutputRoot, xmlSourceDir,
+                        sbx.refWorkspace, groupName, srcGroupDir, subdir, mcsMode=mcsMode)
 
         obj.mcsMode = mcsMode  # TBD: redundant, assuming classes properly call super's init.
         obj.setup(args)
@@ -200,6 +174,8 @@ class SetupCommand(SubcommandABC):
     def run(self, args, tool):
         from ..config import getParam, pathjoin
         from ..error import CommandlineError
+        from ..sandbox import Sandbox
+        from ..mcs.mcsSandbox import McsSandbox
 
         if args.stopPeriod is not None:
             raise CommandlineError("The --stopPeriod parameter has been deprecated. Please use --stopYear instead.")
@@ -212,19 +188,24 @@ class SetupCommand(SubcommandABC):
         if not scenario:
             raise CommandlineError('At least one of --baseline (-b) / --scenario (-s) must be used.')
 
-        if args.workspace:
-            workspace = args.workspace
+        if args.sandbox:
+            sandbox = args.sandbox
         else:
             projectDir = getParam('GCAM.ProjectDir')
             groupName = args.group if args.useGroupDir else ''
-            workspace = pathjoin(projectDir, groupName, scenario, normpath=True)
+            sandbox = pathjoin(projectDir, groupName, scenario, normpath=True)
 
         mcsMode = tool.getMcsMode()
 
-        if args.createSandbox == 'yes':
-            self.create_sandbox(args, workspace, mcsMode)
+        sbx_class = Sandbox if mcsMode is None else McsSandbox
+        sbx = sbx_class(args.baseline, scenario, projectName=None,
+                        scenarioGroup=args.group, useGroupDir=args.useGroupDir,
+                        projectXmlSrc=args.xmlSourceDir, createDirs=True)
+
+        if args.createSandbox == 'yes' and mcsMode != McsMode.GENSIM: # mcsMode is None or TRIAL
+            sbx.create_sandbox(scenario, sandbox=sandbox, forceCreate=args.forceCreate, mcsMode=mcsMode)
 
         if args.runScenarioSetup == 'yes':
-            self.run_scenario_setup(args, scenario, mcsMode)
+            self.run_scenario_setup(args, sbx, mcsMode)
 
 

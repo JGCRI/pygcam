@@ -29,7 +29,7 @@ class RunCommand(SubcommandABC):
         parser.add_argument('-f', '--projectFile',
                             help=clean_help('''The XML file describing the project. If set, command-line
                             argument takes precedence. Otherwise, value is taken from config file
-                            variable GCAM.ProjectXmlFile, if defined, otherwise the default
+                            variable GCAM.ProjectFile, if defined, otherwise the default
                             is './project.xml'.'''))
 
         parser.add_argument('-g', '--group',
