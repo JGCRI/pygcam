@@ -4,7 +4,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016  Richard Plevin
+.. Copyright (c) 2016-2023  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from datetime import datetime
@@ -15,9 +15,8 @@ def driver(args, tool):
     import os
     import re
     import shutil
-    from ..config import getParam, USR_CONFIG_FILE, pathjoin, unixPath
+    from ..config import getParam, USR_CONFIG_FILE, pathjoin, unixPath, mkdirs
     from ..utils import copyResource, getResource
-    from ..file_utils import mkdirs
     from ..error import CommandlineError
     from ..log import getLogger
 

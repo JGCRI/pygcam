@@ -128,24 +128,6 @@ def removeFileOrTree(path, raiseError=True):
         if raiseError:
             raise
 
-
-def systemOpenFile(path):
-    """
-    Ask the operating system to open a file at the given pathname.
-
-    :param path: (str) the pathname of a file to open
-    :return: none
-    """
-    import platform
-    from .utils import shellCommand
-
-    if platform.system() == 'Windows':
-        shellCommand(['start', os.path.abspath(path)], shell=True)
-    else:
-        # "-g" => don't bring app to the foreground
-        shellCommand(['open', '-g', path], shell=False)
-
-
 def ensureExtension(filename, ext):
     """
     Force a filename to have the given extension, `ext`, adding it to

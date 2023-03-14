@@ -27,7 +27,7 @@ def projectsWithDatabases():
     withDatabases = []
 
     for project in getSections():
-        dbPath = getParam('MCS.DbPath', section=project, raiseError=False)
+        dbPath = getParam('MCS.SandboxDbPath', section=project, raiseError=False)
         if dbPath and os.path.exists(dbPath):
             withDatabases.append(project)
 

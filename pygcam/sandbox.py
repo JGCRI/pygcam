@@ -28,7 +28,8 @@ def makeDirPath(*elements, require=False, normpath=True, create=False, mode=0o77
     :return: the joined path
     :raises: pygcam.error.SetupException
     """
-    path = pathjoin(*elements, normpath=normpath)
+    non_empty = [e for e in elements if e]
+    path = pathjoin(*non_empty, normpath=normpath)
 
     if (create or require) and not os.path.lexists(path):
         if create:
@@ -121,6 +122,23 @@ class Sandbox(object):
                  projectXmlsrc=None, xmlsrcSubdir=None,
                  sandboxRoot=None, sandboxSubdir=None,
                  parent=None, createDirs=True):
+
+        # TBD: rename sandboxSubdir as project_subdir, an optional directory level above scenario
+        #  group. New sandbox layout for non-MCS is: /project/[proj_subdir]/[scen_group]/scenario
+        #  Alternatively, proj_subdir could be expressed entirely in config vars as with Analysis.
+        #  It would be simpler to rely on config vars rather than lots of custom cmdline args. The
+        #  config vars can always be set on the cmdline (--set Analysis=series_69) if needed.
+        #  -
+        #  This implies defining the set of config vars used to locate sandbox and workspace bits.
+        #  GCAM.ProjectName not used directly, only via GCAM.ProjectDir, GCAM.ProjectEtc
+        #  GCAM.SandboxProjectDir, GCAM.SandboxDir
+        #  -
+        #  Note that the definition below doesn't allow for ScenarioGroup to be used in scenarios.xml
+        #  but *not* in pathname construction.
+        #  GCAM.SandboxDir = %(GCAM.SandboxProjectDir)s/%(GCAM.ScenarioGroup)s
+        #  -
+        #  Maybe simplify option by always using scenario group in dir structure if one is defined.
+        #  This would eliminate the useGroupDir flag, and allow more path construction in config.
 
         self.use_group_dir = useGroupDir
         self.group = scenarioGroup or ''

@@ -19,7 +19,7 @@ DEFAULT_BIN_COUNT = 3
 DEFAULT_MAX_TORNADO_VARS = 15
 
 def makePlotPath(value, simId):
-    plotDir = getParam('MCS.PlotDir')
+    plotDir = getParam('MCS.SandboxPlotDir')
     subDir  = pathjoin(plotDir, f"s{simId}", create=True)
 
     plotType = getParam('MCS.PlotType')

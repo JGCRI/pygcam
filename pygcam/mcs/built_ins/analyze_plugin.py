@@ -37,7 +37,7 @@ def driver(args, tool):
         db = getDatabase()
         trialCount = db.getTrialCount(simId)
 
-        plotDir  = getParam('MCS.PlotDir')
+        plotDir  = getParam('MCS.SandboxPlotDir')
         plotType = getParam('MCS.PlotType')
 
         allResults = db.getTimeSeries(simId, resultName, expList) # , regionName)

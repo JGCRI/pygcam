@@ -24,7 +24,7 @@ def driver(args, tool):
 
     if args.deleteSims:
         # Remove the whole sims dir and remake it
-        runSimsDir = getParam('MCS.RunSimsDir')
+        runSimsDir = getParam('MCS.SandboxSimsDir')
         if os.path.exists(runSimsDir):
             try:
                 shutil.rmtree(runSimsDir)

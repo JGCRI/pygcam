@@ -1,10 +1,10 @@
 '''
-.. Copyright (c) 2019 Richard Plevin
+.. Copyright (c) 2019-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import os
 from .error import PygcamException, FileMissingError
 from .log import getLogger
-import os
 
 _logger = getLogger(__name__)
 

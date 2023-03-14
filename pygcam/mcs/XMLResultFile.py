@@ -195,7 +195,7 @@ class XMLResultFile(XMLFile):
 
     @classmethod
     def addOutputs(cls):
-        resultsFile = getParam('MCS.ResultsFile')
+        resultsFile = getParam('MCS.ProjectResultsFile')
         obj = cls(resultsFile)
         obj.saveOutputDefs()
 

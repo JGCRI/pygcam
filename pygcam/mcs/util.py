@@ -57,9 +57,9 @@ def getSimDir(simId, create=False):
     directory for the given simulation number, based on the SimsDir
     parameter specified in the config file.
     '''
-    simsDir = getParam('MCS.RunSimsDir')
+    simsDir = getParam('MCS.SandboxSimsDir')
     if not simsDir:
-        raise PygcamMcsUserError("Missing required config parameter 'MCS.RunSimsDir'")
+        raise PygcamMcsUserError("Missing required config parameter 'MCS.SandboxSimsDir'")
 
     # name is of format ".../s001/"
     simDir = pathjoin(simsDir, f's{simId:03d}', create=create)

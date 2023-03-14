@@ -15,7 +15,7 @@ import sys
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
                      usingMCS, savePathMap, parse_gcam_version, setInputFilesByVersion,
-                     mkdirs)
+                     mkdirs, userConfigPath)
 from .constants import McsMode
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
@@ -496,8 +496,6 @@ def _showVersion(argv):
         sys.exit(0)
 
 def _main(argv=None):
-    from .config import userConfigPath
-
     configPath = userConfigPath()
     if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
         argSet = set(argv or sys.argv)

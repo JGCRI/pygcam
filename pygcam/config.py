@@ -9,6 +9,7 @@ from pkg_resources import resource_string
 import re
 
 from .error import ConfigFileError, PygcamException
+
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
 USR_DEFAULTS_FILE = '.pygcam.defaults'
@@ -149,8 +150,6 @@ def setInputFilesByVersion():
     "GCAM.InputFiles.5.1.2" is not defined, but "GCAM.InputFiles.5.1" is, we set "GCAM.InputFiles"
     to the value of parameter "GCAM.InputFiles.5.1".
     '''
-    from semver import VersionInfo
-
     vers = parse_gcam_version()
 
     major = str(vers.major)                     # e.g., "5"

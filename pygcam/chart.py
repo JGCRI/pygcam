@@ -20,7 +20,6 @@ from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
 from .utils import digitColumns
-from .file_utils import systemOpenFile
 
 _logger = getLogger(__name__)
 
@@ -56,6 +55,23 @@ def _amendFilename(filename, suffix):
     '''
     base, ext = os.path.splitext(filename)
     return base + '-' + suffix + ext
+
+
+def systemOpenFile(path):
+    """
+    Ask the operating system to open a file at the given pathname.
+
+    :param path: (str) the pathname of a file to open
+    :return: none
+    """
+    import platform
+    from .utils import shellCommand
+
+    if platform.system() == 'Windows':
+        shellCommand(['start', os.path.abspath(path)], shell=True)
+    else:
+        # "-g" => don't bring app to the foreground
+        shellCommand(['open', '-g', path], shell=False)
 
 
 def _finalizeFigure(fig, ax, outFile=None, yFormat=None, sideLabel=False,

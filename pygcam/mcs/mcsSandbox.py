@@ -11,9 +11,11 @@ from ..error import SetupException
 from ..file_utils import (pushd, removeTreeSafely, symlinkOrCopyFile,
                           removeFileOrTree, copyFileOrTree, symlink)
 from ..log import getLogger
-from ..sandbox import Sandbox
+from ..sandbox import Sandbox, makeDirPath
 
-from .context import McsContext
+# Creates a circular import.
+#from .context import McsContext
+
 from .error import PygcamMcsUserError
 
 _logger = getLogger(__name__)
@@ -31,7 +33,7 @@ def _workspaceLinkOrCopy(src, srcWorkspace, dstSandbox, copyFiles=False):
     linkFiles = not copyFiles
 
     if os.path.isabs(src):
-        # if absolute path, append only the basename to the runWorkspace
+        # if absolute path, append only the basename to the sandboxWorkspace
         srcPath = src
         dstPath = pathjoin(dstSandbox, os.path.basename(os.path.normpath(src)))
     else:
@@ -161,6 +163,12 @@ def createOutputDir(outputDir):
     else:
         mkdirs(outputDir)
 
+
+def sandbox_for_mode(baseline, sandbox, mcs_mode, **kwargs):
+    cls = Sandbox if mcs_mode is None else McsSandbox
+    return cls(baseline, sandbox, **kwargs)
+
+
 # TBD: should this be created from, or combined with McsContext?
 class McsSandbox(Sandbox):
     """
@@ -169,8 +177,7 @@ class McsSandbox(Sandbox):
     """
     def __init__(self, baseline, scenario, projectName=None, refWorkspace=None,
                  scenarioGroup=None, useGroupDir=False, projectXmlSrc=None, xmlsrcSubdir=None,
-                 sandboxRoot=None, sandboxSubdir=None, parent=None, createDirs=True,
-                 sim_subdir=None):
+                 sandboxRoot=None, sandboxSubdir=None, parent=None, createDirs=True):
         """
         Create an McsSandbox instance from the given arguments.
 
@@ -188,7 +195,6 @@ class McsSandbox(Sandbox):
         :param sandboxSubdir: (str)
         :param parent: (str)
         :param createDirs: (bool)
-        :param sim_subdir: (str)
         """
         super().__init__(baseline, scenario, projectName=projectName, refWorkspace=refWorkspace,
                          scenarioGroup=scenarioGroup, useGroupDir=useGroupDir,
@@ -197,14 +203,14 @@ class McsSandbox(Sandbox):
                          parent=parent, createDirs=createDirs)
 
         # self.sim_id = sim_id
-        self.sim_subdir = sim_subdir or ''
-        self.mcs_dir = getParam('MCS.RunDir') # default is {MCS.RunRoot}/{GCAM.ProjectName}
+        self.mcs_sandbox_dir = getParam('MCS.SandboxDir') # default is {MCS.RunRoot}/{GCAM.ProjectName}
 
-        self.sim_root = pathjoin(self.mcs_dir, self.sim_subdir)
-        self.db_dir   = pathjoin(self.sim_root, 'db')
+        self.sim_root = makeDirPath(self.mcs_sandbox_dir, scenarioGroup, self.scenario)
+
+        self.db_dir = getParam('MCS.SandboxDbDir')
 
         # {McsRoot}/{ProjectName}/WorkspaceCopy
-        self.workspace_copy_dir = pathjoin(self.mcs_dir, WORKSPACE_COPY_NAME)
+        self.workspace_copy_dir = pathjoin(self.mcs_root, WORKSPACE_COPY_NAME)
 
         # Override superclass setting, which is for non-MCS runs
         self.copy_workspace = getParamAsBoolean("MCS.CopyWorkspace")
@@ -212,10 +218,11 @@ class McsSandbox(Sandbox):
         self.trial_xml_file = None
 
 
-    @classmethod
-    def sandbox_from_context(cls, context: McsContext):
-        # TBD
-        pass
+    # Use of McsContext creates a circular import
+    # @classmethod
+    # def sandbox_from_context(cls, context: McsContext):
+    #     # TBD
+    #     pass
 
     # TBD: rationalize these two methods
     @classmethod
@@ -225,9 +232,9 @@ class McsSandbox(Sandbox):
         directory for the given simulation number, based on the SimsDir
         parameter specified in the config file.
         '''
-        simsDir = getParam('MCS.RunSimsDir')
+        simsDir = getParam('MCS.SandboxSimsDir')
         if not simsDir:
-            raise PygcamMcsUserError("Missing required config parameter 'MCS.RunSimsDir'")
+            raise PygcamMcsUserError("Missing required config parameter 'MCS.SandboxSimsDir'")
 
         # name is of format ".../s001/"
         simDir = pathjoin(simsDir, f's{simId:03d}', create=create)

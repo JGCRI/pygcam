@@ -79,14 +79,14 @@ def usingSqlite():
     '''
     Return True if the DbURL indicates that we're using Sqlite, else return False
     '''
-    url = getParam('MCS.DbURL')
+    url = getParam('MCS.SandboxDbURL')
     return url.lower().startswith('sqlite')
 
 def usingPostgres():
     '''
     Return True if the DbURL indicates that we're using Postgres, else return False
     '''
-    url = getParam('MCS.DbURL')
+    url = getParam('MCS.SandboxDbURL')
     return url.lower().startswith('postgres')
 
 
@@ -256,7 +256,7 @@ class CoreDatabase(object):
         This needs to be called before any database operations can occur. It is called
         in getDatabase() when a new database instance is created.
         '''
-        url  = getParam('MCS.DbURL')
+        url  = getParam('MCS.SandboxDbURL')
         echo = getParamAsBoolean('MCS.EchoSQL')
 
         _logger.info('Starting DB: %s' % url)
@@ -354,7 +354,7 @@ class CoreDatabase(object):
         '''
         if usingSqlite():
             # Make sure required directory exists
-            dbDir = getParam('MCS.RunDbDir')
+            dbDir = getParam('MCS.SandboxDbDir')
             mkdirs(dbDir)
             return
 

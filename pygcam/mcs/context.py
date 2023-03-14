@@ -4,7 +4,6 @@
 '''
 from .util import getSimDir, dirFromNumber
 from ..config import pathjoin, getParam
-from ..file_utils import mkdirs
 from ..project import Project
 
 # def _getJobNum():

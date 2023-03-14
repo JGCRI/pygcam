@@ -222,8 +222,8 @@ def genSimulation(simId, trials, paramPath, args):
     from ...project import Project
     from ...xmlScenario import XMLScenario
 
-    runInputDir = getParam('MCS.RunInputDir')
-    runWorkspace = getParam('MCS.RunWorkspace')
+    runInputDir = getParam('MCS.SandboxInputDir')
+    sandboxWorkspace = getParam('MCS.SandboxWorkspace')
 
     # Add symlink to workspace's input dir so we can find XML files using rel paths in config files
     simDir = getSimDir(simId, create=True)
@@ -231,7 +231,7 @@ def genSimulation(simId, trials, paramPath, args):
     symlink(runInputDir, simInputDir)
 
     # Ditto for workspace's local-xml
-    workspaceLocalXml = pathjoin(runWorkspace, LOCAL_XML_NAME)
+    workspaceLocalXml = pathjoin(sandboxWorkspace, LOCAL_XML_NAME)
     simLocalXmlDir = pathjoin(simDir, LOCAL_XML_NAME)
     symlink(workspaceLocalXml, simLocalXmlDir)
 
@@ -241,7 +241,7 @@ def genSimulation(simId, trials, paramPath, args):
     args.groupName = groupName = args.groupName or project.scenarioSetup.defaultGroup
 
     # Run static setup for all scenarios in the given group
-    runStaticSetup(runWorkspace, project, groupName)
+    runStaticSetup(sandboxWorkspace, project, groupName)
 
     # TBD: Use pygcam scenario def and copy pygcam files, too
     scenarioFile = getParam('GCAM.ScenarioSetupFile')
@@ -250,10 +250,10 @@ def genSimulation(simId, trials, paramPath, args):
     baseline      = xmlScenario.baselineForGroup(groupName)
 
     # Copy the user's results.xml file to {simDir}/app-xml
-    userResultFile = getParam('MCS.ResultsFile')
+    projResultFile = getParam('MCS.ProjectResultsFile')
     simResultFile = getSimResultFile(simId)
     mkdirs(os.path.dirname(simResultFile))
-    filecopy(userResultFile, simResultFile)
+    filecopy(projResultFile, simResultFile)
 
     paramFileObj = XMLParameterFile(paramPath)
     context = McsContext(projectName=args.projectName, simId=simId, groupName=groupName)
@@ -286,16 +286,16 @@ def genSimulation(simId, trials, paramPath, args):
     simParamFile = getSimParameterFile(simId)
     filecopy(paramPath, simParamFile)
 
-def _newsim(runWorkspace, trials):
+def _newsim(sandboxWorkspace, trials):
     '''
-    Copies reference workspace to MCS.RunWorkspace and, if ``trials``
+    Copies reference workspace to MCS.SandboxWorkspace and, if ``trials``
     is non-zero, ensures database initialization.
     '''
     from ..mcsSandbox import copyRefWorkspace
     from ..Database import getDatabase
     from ..XMLResultFile import XMLResultFile
 
-    copyRefWorkspace(runWorkspace, forceCreate=True, mcs=True)
+    copyRefWorkspace(sandboxWorkspace, forceCreate=True, mcs=True)
 
     if trials:
         db = getDatabase()   # ensures database initialization
@@ -474,9 +474,9 @@ def driver(args):
 
     # Set the config variable if the argument is given to avoid inconsistency
     if args.paramFile:
-        setParam('MCS.ParametersFile', args.paramFile)
+        setParam('MCS.ProjectParametersFile', args.paramFile)
 
-    paramFile = getParam('MCS.ParametersFile')
+    paramFile = getParam('MCS.ProjectParametersFile')
 
     if args.exportVars:
         _exportVars(paramFile, args)
@@ -497,17 +497,17 @@ def driver(args):
     runRoot = args.runRoot
     if runRoot:
         # TBD: write this to config file under [project] section
-        setParam('MCS.Root', runRoot, section=projectName)
-        _logger.info(f'Please add "MCS.Root = {runRoot}" to your .pygcam.cfg file in the [{projectName}] section.')
+        setParam('MCS.SandboxRoot', runRoot, section=projectName)
+        _logger.info(f'Please add "MCS.SandboxRoot = {runRoot}" to your .pygcam.cfg file in the [{projectName}] section.')
 
-    runDir = getParam('MCS.RunDir', section=projectName)
+    runDir = getParam('MCS.SandboxDir', section=projectName)
 
     if args.delete:
         removeTreeSafely(runDir, ignore_errors=False)
 
-    runWorkspace = getParam('MCS.RunWorkspace')
+    runWorkspace = getParam('MCS.SandboxWorkspace')
     if not runWorkspace:
-        raise PygcamMcsUserError("MCS.RunWorkspace was not set in the configuration file")
+        raise PygcamMcsUserError("MCS.SandboxWorkspace was not set in the configuration file")
 
     if not os.path.exists(runWorkspace):
         _newsim(runWorkspace, trials)       # creates a new database
@@ -558,20 +558,20 @@ class GensimCommand(McsSubcommandABC):
                                 Note that in the only supported distribution types for the 'full-factorial' method, are: 
                                 Constant, Binary, Integer, Grid, and Sequence'''))
 
-        paramFile = getParam('MCS.ParametersFile')
+        paramFile = getParam('MCS.ProjectParametersFile')
         parser.add_argument('-p', '--paramFile', default=None,
                             help=clean_help(f'''Specify an XML file containing parameter definitions.
-                            Defaults to the value of config parameter MCS.ParametersFile
+                            Defaults to the value of config parameter MCS.ProjectParametersFile
                             (currently '{paramFile}')'''))
 
         parser.add_argument('-P', '--paramPlots', default='', metavar="DIRECTORY",
                             help=clean_help('''Export plots of values returned by XPath queries for each parameter 
-                                defined by --paramFile or config variable MCS.ParametersFile.'''))
+                                defined by --paramFile or config variable MCS.ProjectParametersFile.'''))
 
-        runRoot = getParam('MCS.Root')
+        runRoot = getParam('MCS.SandboxRoot')
         parser.add_argument('-r', '--runRoot', default=None,
                             help=clean_help(f'''Root of the run-time directory for running user programs. Defaults to
-                            value of config parameter MCS.Root (currently '{runRoot}')'''))
+                            value of config parameter MCS.SandboxRoot (currently '{runRoot}')'''))
 
         parser.add_argument('-s', '--simId', type=int, default=1,
                             help=clean_help('The id of the simulation. Default is 1.'))

@@ -30,7 +30,7 @@ def _secondsToStr(t):
     return "%d:%02d:%02d" % (hours, minutes, seconds)
 
 
-def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
+def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
     """
     run "gt +P {project} --mcs=trial run -s {step[,step,...]} -S {scenarioName} ..."
     For Monte Carlo trials.
@@ -38,14 +38,14 @@ def _runPygcamSteps(steps, context, runWorkspace=None, raiseError=True):
     from ..tool import main as tool_main
     from ..constants import McsMode
 
-    # TBD: runWorkspace and raiseError keywords are not used currently
-    runWorkspace = runWorkspace or getParam('MCS.RunWorkspace')
+    # TBD: sandboxWorkspace and raiseError keywords are not used currently
+    sandboxWorkspace = sandboxWorkspace or getParam('MCS.SandboxWorkspace')
 
     trialDir = context.getTrialDir()
-    # N.B. MCS.RunWorkspace is the RefWorkspace for trial sandboxes
+    # N.B. MCS.SandboxWorkspace is the RefWorkspace for trial sandboxes
     toolArgs = ['--projectName', context.projectName,
                 '--mcs', McsMode.TRIAL.value,
-                '--set', f'GCAM.SandboxRefWorkspace={runWorkspace}',
+                '--set', f'GCAM.SandboxRefWorkspace={sandboxWorkspace}',
                 'run',
                 '--step', steps,
                 '--scenario', context.scenario,
@@ -123,7 +123,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
         _runPygcamSteps(setup_steps, context)
 
     if isBaseline and not noGCAM:
-        paramPath = getParam('MCS.ParametersFile')
+        paramPath = getParam('MCS.ProjectParametersFile')
         paramFile = _readParameterInfo(context, paramPath)
 
         df = readTrialDataFile(simId)
