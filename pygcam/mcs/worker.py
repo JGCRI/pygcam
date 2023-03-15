@@ -45,7 +45,7 @@ def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
     # N.B. MCS.SandboxWorkspace is the RefWorkspace for trial sandboxes
     toolArgs = ['--projectName', context.projectName,
                 '--mcs', McsMode.TRIAL.value,
-                '--set', f'GCAM.SandboxRefWorkspace={sandboxWorkspace}',
+                '--set', f'GCAM.SandboxWorkspace={sandboxWorkspace}',
                 'run',
                 '--step', steps,
                 '--scenario', context.scenario,
@@ -69,8 +69,8 @@ def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
 def _readParameterInfo(context, paramPath):
     from ..xmlScenario import XMLScenario
 
-    scenarioFile  = getParam('GCAM.ScenarioSetupFile')
-    xmlScenario = XMLScenario.get_instance(scenarioFile)
+    scenariosFile = getParam('GCAM.ScenariosFile')
+    xmlScenario = XMLScenario.get_instance(scenariosFile)
     scenarioNames = xmlScenario.scenariosInGroup(context.groupName)
 
     paramFile = XMLParameterFile(paramPath)

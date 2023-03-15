@@ -98,12 +98,15 @@ class XMLScenario(object):
         self.groupDict = OrderedDict()
         self.expandGroups(templateGroups)   # saves into groupDict
 
+    def getGroup(self, name=None):
+        return self.groupDict[name or self.defaultGroup]
+
     def scenariosInGroup(self, groupName=None):
-        group = self.groupDict[groupName or self.defaultGroup]
+        group = self.getgroup(groupName)
         return group.scenarioNames()
 
     def baselineForGroup(self, groupName=None):
-        group = self.groupDict[groupName or self.defaultGroup]
+        group = self.getgroup(groupName)
         return group.baseline
 
     def getIterator(self, name):
@@ -160,7 +163,7 @@ class XMLScenario(object):
         :return: none
         """
         self.editor = editor
-        group = self.groupDict[editor.groupName or self.defaultGroup]
+        group = self.getGroup(editor.groupName)
         scenario = group.getFinalScenario(editor.scenario or editor.baseline)
 
         _logger.debug('Running %s setup for scenario %s', 'dynamic' if dynamic else 'static', scenario.name)
@@ -443,7 +446,7 @@ MCSVALUES_FILE = 'mcsValues.xml'
 def createXmlEditorSubclass(setupFile):
     """
     Generate a subclass of the given `superclass` that runs the
-    XML setup file given by variable GCAM.ScenarioSetupFile.
+    XML setup file given by variable GCAM.ScenariosFile.
     If defined, GCAM.ScenarioSetupClass must be of the form:
     "/path/to/module/dir;module.ClassName]". If the variable
     GCAM.ScenarioSetupClass is empty, the class XMLEditor is
@@ -457,7 +460,8 @@ def createXmlEditorSubclass(setupFile):
         try:
             modPath, dotSpec = setupClass.split(';', 1)
         except Exception:
-            raise SetupException(f'GCAM.ScenarioSetupClass should be of the form "/path/to/moduleDirectory:module.ClassName", got "{setupClass}"')
+            raise SetupException(f'GCAM.ScenarioSetupClass should be of the form '
+                                 f'"/path/to/moduleDirectory:module.ClassName", got "{setupClass}"')
 
         try:
             from .utils import importFromDotSpec
@@ -553,7 +557,7 @@ def createXmlEditorSubclass(setupFile):
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this
                 # project, in a different group directory.
-                group = scenarioSetup.groupDict[self.groupName or scenarioSetup.defaultGroup]
+                group = scenarioSetup.getGroup(self.groupName)
                 baselineSource = group.baselineSource
                 if baselineSource:
                     try:
@@ -562,7 +566,7 @@ def createXmlEditorSubclass(setupFile):
                         raise SetupException(
                             f'baselineSource error: "{baselineSource}"; should be of the form "groupDir/baselineDir"')
 
-                    parentGroup = scenarioSetup.groupDict[groupName]
+                    parentGroup = scenarioSetup.getGroup(groupName)
                     scenario = parentGroup.getFinalScenario(baselineName)
                     if scenario.isBaseline:
                         self.parent = XmlEditorSubclass(baselineName, None, self.xmlOutputRoot, self.xmlSourceDir,
@@ -584,7 +588,7 @@ def createXmlEditorSubclass(setupFile):
 
 def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode=None,
                    groupName='', srcGroupDir='', subdir =''):
-    setupXml = getParam('GCAM.ScenarioSetupFile')
+    setupXml = getParam('GCAM.ScenariosFile')
     editorClass = createXmlEditorSubclass(setupXml)
 
     # TBD: path creation should run through Sandbox or Context class

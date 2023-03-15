@@ -7,8 +7,8 @@
 import glob
 import os
 
-from .config import getParam, getParamAsBoolean, pathjoin, unixPath
-from .constants import LOCAL_XML_NAME, DYN_XML_NAME, CONFIG_XML
+from .config import getParam, getParamAsBoolean, setParam, pathjoin, unixPath
+from .constants import LOCAL_XML_NAME, CONFIG_XML
 from .error import SetupException
 from .log import getLogger
 
@@ -113,84 +113,78 @@ def config_path(scenario, sandbox=None, scenarios_dir=None, group_dir='', config
 #   to all scenarios. It could take a baseline, since that's needed by policy scenarios.
 #
 class Sandbox(object):
-    def __init__(self, baseline, scenario, projectName=None, refWorkspace=None,
-                 # Scenario group is used when running scenarios.xml, so we have flag
-                 # to indicate whether to also use this as a subdir above scenarios.
-                 # The <scenarioGroup> element has a "useGroupDir" attribute that sets this
-                 # flag in scenarios.xml.
-                 scenarioGroup=None, useGroupDir=False,
-                 projectXmlsrc=None, xmlsrcSubdir=None,
-                 sandboxRoot=None, sandboxSubdir=None,
-                 parent=None, createDirs=True):
+    def __init__(self, scenario, projectName=None, scenarioGroup=None,
+                 scenariosFile=None, parent=None, createDirs=True):
+        """
+        Create a Sandbox instance from the given arguments.
 
-        # TBD: rename sandboxSubdir as project_subdir, an optional directory level above scenario
-        #  group. New sandbox layout for non-MCS is: /project/[proj_subdir]/[scen_group]/scenario
-        #  Alternatively, proj_subdir could be expressed entirely in config vars as with Analysis.
-        #  It would be simpler to rely on config vars rather than lots of custom cmdline args. The
-        #  config vars can always be set on the cmdline (--set Analysis=series_69) if needed.
-        #  -
-        #  This implies defining the set of config vars used to locate sandbox and workspace bits.
-        #  GCAM.ProjectName not used directly, only via GCAM.ProjectDir, GCAM.ProjectEtc
-        #  GCAM.SandboxProjectDir, GCAM.SandboxDir
-        #  -
-        #  Note that the definition below doesn't allow for ScenarioGroup to be used in scenarios.xml
-        #  but *not* in pathname construction.
-        #  GCAM.SandboxDir = %(GCAM.SandboxProjectDir)s/%(GCAM.ScenarioGroup)s
-        #  -
-        #  Maybe simplify option by always using scenario group in dir structure if one is defined.
-        #  This would eliminate the useGroupDir flag, and allow more path construction in config.
+        :param scenario: (str) the name of a policy scenario
+        :param projectName: (str)
+        :param scenarioGroup: (str) the name of a scenario group defined in scenarios.xml
+        :param useGroupDir: (bool) whether to use the ``scenarioGroup`` as an extra directory
+            level above scenario sandboxes
+        :param parent: (str)
+        :param createDirs: (bool)
+        """
+        from .xmlScenario import XMLScenario
 
-        self.use_group_dir = useGroupDir
-        self.group = scenarioGroup or ''
-        self.scenario = scenario or baseline    # if no scenario stated, assume baseline
-        self.baseline = baseline
-        self.is_baseline = (self.scenario == baseline)
-        self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenarioGroup, baseline)      # TBD
+        # Ensure that GCAM.ScenarioGroup is set since system.cfg uses this in path construction
+        if scenarioGroup:
+            setParam('GCAM.ScenarioGroup', scenarioGroup)
+
         self.project_name = projectName or getParam('GCAM.ProjectName')
+        self.scenarios_file = scenariosFile or getParam('GCAM.ScenariosFile')
+        self.group = scenarioGroup or ''
+
+        scen_xml = XMLScenario.get_instance(self.scenarios_file)
+        group_obj = scen_xml.getGroup(self.group)
+
+        # self.use_group_dir = group_obj.useGroupDir
+        # self.group_subdir = self.group if self.use_group_dir else ''
+
+        self.scenario = scenario
+        scen_obj = group_obj.getFinalScenario(scenario)
+        self.is_baseline = scen_obj.isBaseline
+
+        # TBD
+        # self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenarioGroup, baseline)
         self.parent = parent
+
+        # TBD: need access to project.xml (might have different name)
+        #   and scenarios.xml (again, allow different name?)
 
         self.copy_workspace = getParamAsBoolean("GCAM.CopyWorkspace")
 
-        # self.xmlOutputRoot = xmlOutputRoot # TBD: default was self.dyn_xml_abs a defunct file
-        # self.xmlOutputDir  = None # TBD: what is this used for? Apparently only used for generated xml, e.g., policies in constraints.py
-        #self.scenarioSubdir = scenarioSubdir or scenario   # TBD: Is scenario subdir ever used?
+        self.ref_workspace = getParam("GCAM.RefWorkspace")
+        self.ref_workspace_exe_dir = getParam("GCAM.RefExeDir")
 
-        self.projectXmlsrc  = projectXmlsrc or getParam('GCAM.ProjectXmlsrc')
+        self.sandbox_workspace = getParam('GCAM.SandboxWorkspace')
+        self.sandbox_workspace_exe_dir = getParam('GCAM.SandboxWorkspaceExeDir')
 
-        # If useGroupDir is True, and no specific xmlsrcSubdir or sandboxSubdir are
-        # specified, the scenarioGroup
-        self.xmlsrcSubdir = xmlsrcSubdir or (self.group if useGroupDir else '')
-        self.sandbox_group_subdir = sandboxSubdir or (self.group if useGroupDir else '')
-
-        self.refWorkspace = refWorkspace or getParam("GCAM.RefWorkspace")
-        self.refExeDir = pathjoin(self.refWorkspace, "exe")
-
-        self.sandbox_root = sandboxRoot or getParam('GCAM.SandboxRoot')
-        self.sandbox_workspace = getParam('GCAM.SandboxRefWorkspace')
-        self.sandbox_workspace_exe_dir = makeDirPath(self.sandbox_workspace, 'exe')
-
-        self.sandbox_dir = makeDirPath(self.sandbox_root, self.project_name, self.sandbox_group_subdir, self.scenario)
-        self.sandbox_exe_dir = makeDirPath(self.sandbox_dir, 'exe', create=createDirs)
+        # From system.cfg:
+        # GCAM.SandboxDir = %(GCAM.SandboxProjectDir)s/%(GCAM.ProjectSubdir)s/%(GCAM.ScenarioGroup)s
+        self.sandbox_dir = getParam('GCAM.SandboxDir')
+        self.sandbox_scenario_dir = makeDirPath(self.sandbox_dir, scenario)
+        self.sandbox_exe_dir = makeDirPath(self.sandbox_scenario_dir, 'exe', create=createDirs)
         self.sandbox_exe_path = pathjoin(self.sandbox_exe_dir, getParam('GCAM.Executable'))
 
-        # self.scenarioXmlOutputDir = makeDirPath(self.xmlOutputDir, self.xmlsrcSubdir, scenario, create=createDirs)
-        self.scenario_xmlsrc_dir = makeDirPath(self.projectXmlsrc, self.xmlsrcSubdir, self.scenario, create=createDirs)
+        # The "local-xml" directory is always found at the same level as scenario dirs
+        self.sandbox_local_xml = pathjoin(self.sandbox_scenario_dir, "..", LOCAL_XML_NAME, normpath=True)
+        self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=createDirs)
 
-        # directories accessed from configuration XML files (so we store relative-to-exe and absolute paths
+        self.project_xml_src = getParam('GCAM.ProjectXmlsrc')
+        self.project_scenario_xml_src = pathjoin(self.project_xml_src, scenario)
+
+        # Directories accessed from configuration XML files (so we store relative-to-exe and
+        # absolute paths. Note that gcam_path requires self.sandbox_exe_dir to be set first.
         self.scenario_gcam_xml_dir = self.gcam_path('../input/gcamdata/xml')
 
-        # TBD: this version is to the link in gcam-mcs/base/local-xml, which points to a directory with subdirs "base/local-xml", which is very confusing.
-        # TBD: Does this also need sandbox_group_subdir?
-        self.local_xml = self.gcam_path("..", LOCAL_XML_NAME, create=createDirs)
-
-        # TBD: this produces '.../sandboxes/gcam_mcs/group1/policy/local-xml/group1/policy' with redundant "group1/policy". Eliminate this redudancy.
-        self.scenario_local_xml_dir = self.gcam_path(self.local_xml.rel, self.xmlsrcSubdir, self.scenario, create=createDirs)
-
-        # TBD: This produces, e.g., '/Users/rjp/ws/group1/policy/local-xml/group1/policy/config.xml'. Simplify dir structure.
-        # self.scenario_config_path = pathjoin(self.scenario_dir.abs, CONFIG_XML)
-
-        # TBD: Maybe store in exe dir, i.e., '.../ws/project/group/scenario/exe/config.xml' rather than storing in sandbox_dir/Workspace?
+        # Store scenario config.xml in exe dir, i.e., '.../project/group/scenario/exe/config.xml'
         self.scenario_config_path = pathjoin(self.sandbox_exe_dir, CONFIG_XML)
+
+        # TBD: Alternative
+        # Store scenario config.xml in local-xml/{scenario} dir, i.e., '.../project/group/local-xml/scenario/config.xml'
+        self.scenario_config_path2 = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
 
     @classmethod
     def fromXmlSetup(cls, scenarioGroup, scenario):
@@ -200,7 +194,7 @@ class Sandbox(object):
     def gcam_path(self, *rel_path_elements, create=False):
         """
         Create a GcamPath instance by joining ``rel_path_elements`` into a path relative
-        to the sandbox's "exe" directory.
+        to the sandbox's "exe" directory. N.B. Requires self.sandbox_exe_dir to be set.
 
         :param rel_path_elements: (tuple of str) path elements
         :param create: (bool) if True, create the directory if it doesn't already exist.
@@ -211,7 +205,7 @@ class Sandbox(object):
 
     # TBD: unused...
     def scenario_xmlsrc_files(self):
-        files = glob.glob(self.scenario_xmlsrc_dir + '/*.xml')
+        files = glob.glob(self.project_scenario_xml_src + '/*.xml')
         return files
 
     def cfgPath(self):
@@ -220,7 +214,7 @@ class Sandbox(object):
 
         :return: (str) the pathname to the XML configuration file.
         """
-        return self.scenario_config_path
+        return self.scenario_config_path # self.scenario_config_path2
 
     def create_dir_structure(self):
         """
@@ -232,12 +226,13 @@ class Sandbox(object):
         """
         pass
 
-    def create_sandbox(self, scenario, sandbox=None, forceCreate=False, mcsMode=None):
+    def create_sandbox(self, forceCreate=False):
         """
-        Create a sandbox to run ``scenario`` given the parameters passed in the
-        call to __init__().
+        Set up a run-time sandbox in which to run GCAM. This involves copying
+        from or linking to files and directories in `workspace`, which defaults
+        to the value of config parameter GCAM.SandboxWorkspace.
 
-        :param scenario: (str) The name of a baseline or policy scenario.
+        :param forceCreate: (bool) if True, delete and recreate the sandbox
         :return: nothing
         """
         pass
@@ -246,20 +241,20 @@ class Sandbox(object):
         from importlib import import_module
         from .utils import loadModuleFromPath
 
-        setupXml = getParam('GCAM.ScenarioSetupFile')
+        setupXml = getParam('GCAM.ScenariosFile')
         if setupXml:
             from .xmlScenario import createXmlEditorSubclass
             _logger.debug(f"Setup using '{setupXml}'")
             cls = createXmlEditorSubclass(setupXml)     # uses 'GCAM.ScenarioSetupClass' if defined
             return cls
 
-        # If GCAM.ScenarioSetupFile is not set, we attempt to load xmlsrc/scenarios.py,
+        # If GCAM.ScenariosFile is not set, we attempt to load xmlsrc/scenarios.py,
         # which should contain a "scenarioMapper" dict that yields a subclass of XMLEditor.
         try:
             if moduleSpec:
                 module = import_module(moduleSpec, package=None)
             else:
-                modulePath = modulePath or pathjoin(self.scenario_xmlsrc_dir, 'scenarios.py')
+                modulePath = modulePath or pathjoin(self.project_xml_src, 'scenarios.py')
                 _logger.debug(f'Setup using {modulePath}')
                 module = loadModuleFromPath(modulePath)
 

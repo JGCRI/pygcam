@@ -1,5 +1,7 @@
+import os
 import pytest
-from pygcam.config import setSection, getParam
+from pygcam.config import setSection, getParam, pathjoin
+from pygcam.constants import LOCAL_XML_NAME
 from pygcam.sandbox import Sandbox, GcamPath, gcam_path, makeDirPath
 from .utils_for_testing import load_config_from_string
 
@@ -39,21 +41,23 @@ def test_dir_path():
 
 
 def test_sandbox():
-    baseline = 'base'
-    scenario = 'policy'
+    scenario = 'tax-10'
     group_name = 'group1'
 
-    test_dir = '/tmp/test_gcam_context'
+    tmp_dir = '/tmp/test_gcam_sandbox'
+    sandbox_root = f'{tmp_dir}/sandboxes'
+
     project_name = 'test-project'
-    project_root = f'{test_dir}/projects'
-    sandbox_root = f'{test_dir}/sandboxes'
+    project_root = pathjoin(os.path.dirname(__file__), 'data')
+    project_subdir = 'analysis_22'
+
     ref_workspace = '/Volumes/Plevin1TB/Software/GCAM/6.0/gcam-core'
 
     # Create a config section
     cfg_text = f"""[{project_name}]
         GCAM.ProjectRoot = {project_root}
         GCAM.ProjectName = {project_name}
-        GCAM.ProjectXmlsrc = {project_root}/{project_name}/xmlsrc
+        GCAM.ProjectSubdir = {project_subdir}
         GCAM.SandboxRoot = {sandbox_root}
         GCAM.SandboxProjectDir = {sandbox_root}/{project_name}
         GCAM.RefWorkspace = {ref_workspace}
@@ -64,24 +68,25 @@ def test_sandbox():
     setSection(project_name)
 
     # With group dir
-    sbx = Sandbox(baseline, scenario, scenarioGroup=group_name, useGroupDir=True,
-                  projectXmlsrc=None, xmlsrcSubdir=None,
-                  sandboxRoot=None, sandboxSubdir=None, createDirs=False)
+    # scenario, projectName=None, scenarioGroup=None,
+    #                  scenariosFile=None, parent=None, createDirs=True)
+    sbx = Sandbox(scenario, scenarioGroup=group_name, createDirs=False)
 
-    assert sbx.sandbox_workspace == f"{sandbox_root}/{project_name}/Workspace"
-    assert sbx.sandbox_exe_path == f"{sandbox_root}/{project_name}/{group_name}/{scenario}/exe/gcam.exe"
-    assert gcam_path(sbx.scenario_gcam_xml_dir) == f"{sandbox_root}/{project_name}/{group_name}/{scenario}/input/gcamdata/xml"
+    assert sbx.sandbox_workspace == pathjoin(sandbox_root, project_name, project_subdir, 'Workspace', normpath=True)
+    assert sbx.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "exe/gcam.exe", normpath=True)
+    assert gcam_path(sbx.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "input/gcamdata/xml", normpath=True)
 
     xmlsrc = getParam('GCAM.ProjectXmlsrc')
-    assert sbx.scenario_xmlsrc_dir == f"{xmlsrc}/{group_name}/{scenario}"
+    assert sbx.project_xml_src == xmlsrc
 
-    # Without group dir
-    sbx = Sandbox(baseline, scenario, scenarioGroup=group_name, useGroupDir=False,
-                  projectXmlsrc=None, xmlsrcSubdir=None,
-                  sandboxRoot=None, sandboxSubdir=None, createDirs=False)
+    assert sbx.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name, LOCAL_XML_NAME, scenario, normpath=True)
 
-    assert sbx.sandbox_exe_path == f"{sandbox_root}/{project_name}/{scenario}/exe/gcam.exe"
-    assert gcam_path(sbx.scenario_gcam_xml_dir) == f"{sandbox_root}/{project_name}/{scenario}/input/gcamdata/xml"
+    # group2 sets useGroupDir=False [which is now deprecated, so this test is redundant, but we might reinstate that attribute...]
+    group_name = 'group2'
+    sbx = Sandbox(scenario, scenarioGroup=group_name, createDirs=True) # this one creates the directories; the one above does not
 
-    assert sbx.scenario_xmlsrc_dir == f"{xmlsrc}/{scenario}"       # without group name
+    assert sbx.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "exe/gcam.exe", normpath=True)
+    assert gcam_path(sbx.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "input/gcamdata/xml", normpath=True)
+
+    assert sbx.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name, LOCAL_XML_NAME, scenario, normpath=True)
 

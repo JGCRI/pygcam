@@ -30,7 +30,7 @@ class RESCommand(SubcommandABC):
                                     Default is the value of configuration file parameter 
                                     GCAM.RESImplementationXmlFile. If set to a relative pathname,
                                     it is assumed to be relative to 
-                                    %%(GCAM.SandboxRefWorkspace)s/local-xml/{scenario}, in which
+                                    %%(GCAM.SandboxWorkspace)s/local-xml/{scenario}, in which
                                     case, the "-s/--scenario" argument is required.'''))
 
         parser.add_argument('-S', '--scenario', default=None,

@@ -102,8 +102,8 @@ def driver(args, tool):
             f.write('\n[%s]\n' % projectName)
             f.write('# Added by "new" sub-command %s\n' % datetime.now().ctime())
             f.write('GCAM.ProjectDir = %s\n' % dirName)
-            f.write('GCAM.ScenarioSetupFile = %(GCAM.ProjectDir)s/etc/scenarios.xml\n')
-            f.write('GCAM.RewriteSetsFile   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml\n')
+            f.write('GCAM.ScenariosFile = %(GCAM.ProjectDir)s/etc/scenarios.xml\n')
+            f.write('GCAM.RewriteSetsFile = %(GCAM.ProjectDir)s/etc/rewriteSets.xml\n')
 
 
 class NewProjectCommand(SubcommandABC):

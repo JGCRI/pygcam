@@ -438,7 +438,7 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
 
     landProtection = parseLandProtectionFile(scenarioFile=scenarioFile)
 
-    workspace = workspace or getParam('GCAM.SandboxRefWorkspace')
+    workspace = workspace or getParam('GCAM.SandboxWorkspace')
     xmlFiles = xmlFiles or _landXmlPaths(workspace)
 
     for inFile in xmlFiles:

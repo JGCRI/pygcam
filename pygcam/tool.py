@@ -106,7 +106,6 @@ class GcamTool(object):
         # address re-entry issue
         decacheVariables()
 
-        self.mcsMode = ''
         self.shellArgs = None
 
         self.parser = self.subparsers = None
@@ -202,12 +201,6 @@ class GcamTool(object):
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
-
-    def setMcsMode(self, mode):
-        self.mcsMode = mode
-
-    def getMcsMode(self):
-        return self.mcsMode
 
     def instantiatePlugin(self, pluginClass):
         plugin = pluginClass(self.subparsers)
@@ -531,7 +524,7 @@ def _main(argv=None):
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 
-    tool.setMcsMode(ns.mcsMode)
+    setParam('MCS.Mode', ns.mcsMode or '')
 
     # Set specified config vars
     for arg in ns.configVars:

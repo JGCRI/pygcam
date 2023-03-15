@@ -715,8 +715,9 @@ def resPolicyMain(args):
         raise CommandlineError(f"outputXML ({outputXML}) is not an absolute pathname; a scenario must be specified")
 
     inPath   = get_path(inputFile, getParam("GCAM.ProjectEtc"))
-    # TBD: get this path using context to allow for group subdirs
-    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), LOCAL_XML_NAME, scenario))
+
+    # TBD: get this path using Sandbox class to allow for group subdirs
+    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxWorkspace"), LOCAL_XML_NAME, scenario))
 
     isCSV = (re.match('.*\.csv$', inPath, re.IGNORECASE) is not None)
 

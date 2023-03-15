@@ -19,8 +19,8 @@ from .config import getParam, setParam, getConfigDict, unixPath, pathjoin
 from .constants import LOCAL_XML_NAME, XML_SRC_NAME, QRESULTS_DIRNAME
 from .error import PygcamException, CommandlineError, FileFormatError
 from .log import getLogger
-from .utils import flatten, shellCommand, getBooleanXML, simpleFormat
 from .temp_file import getTempFile
+from .utils import flatten, shellCommand, getBooleanXML, simpleFormat
 from .XMLFile import XMLFile
 from .xmlScenario import XMLScenario
 
@@ -328,11 +328,11 @@ class Project(XMLFile):
         hasDefaults = defaultsNode is not None
 
         # Read referenced scenarios.xml file and add it as a child of projectNode
-        # If no 'scenariosFile' element is found, use the value of GCAM.ScenarioSetupFile
+        # If no 'scenariosFile' element is found, use the value of GCAM.ScenariosFile
         nodes = projectNode.findall('scenariosFile')
         if len(nodes) > 1:
             raise FileFormatError("%s: <project> must define at most one <scenariosFile> element" % xmlFile)
-        filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenarioSetupFile')
+        filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenariosFile')
         setupFile = pathjoin(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
         self.scenarioSetup = XMLScenario(setupFile)
 
@@ -395,7 +395,7 @@ class Project(XMLFile):
         groupName = groupName or self.scenarioSetup.defaultGroup
 
         if groupName not in groupDict:
-            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, self.projectName))
+            raise FileFormatError(f"Group '{groupName}' is not defined for project '{self.projectName}'")
 
         self.scenarioGroupName = groupName
         self.scenarioGroup = scenarioGroup = groupDict[groupName]
@@ -432,7 +432,7 @@ class Project(XMLFile):
                 print('  ' + step.name + label)
 
         if args.vars:
-            varList = ["%15s = %s" % (name, value) for name, value in sorted(self.argDict.items())]
+            varList = [f"{name:>15s} = {value}" for name, value in sorted(self.argDict.items())]
             showList(varList, 'Vars:')
 
         if self.quit:
@@ -489,8 +489,8 @@ class Project(XMLFile):
         unknownArgs = set(userArgs) - set(knownArgs)
         if unknownArgs:
             s = ' '.join(unknownArgs)
-            raise CommandlineError("Requested %s do not exist in project '%s', group '%s': %s" % \
-                                  (argName, self.projectName, self.scenarioGroupName, s))
+            raise CommandlineError(f"Requested {argName} do not exist in project '{self.projectName}', "
+                                   f"group '{self.scenarioGroupName}': {s}")
 
     def sortScenarios(self, scenarioSet):
         """
@@ -517,7 +517,7 @@ class Project(XMLFile):
         scenarioGroupName = self.scenarioGroupName
         groupDir = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
 
-        # Push the groupName back into config system so vars can use it
+        # Set the groupName in the config system so vars can access it
         setParam('GCAM.ScenarioGroup', groupDir, section=projectName)
 
         # Get the text values for all config variables, allowing variables
@@ -648,7 +648,9 @@ _project = None
 
 
 def projectMain(args, tool):
-
+    """
+    Main function for built-in 'run' command
+    """
     def listify(items):
         '''Convert a list of comma-delimited strings to a single list of strings'''
         return flatten(map(lambda s: s.split(','), items)) if items else None
@@ -657,6 +659,8 @@ def projectMain(args, tool):
     skipSteps = listify(args.skipSteps)
     scenarios = listify(args.scenarios)
     skipScens = listify(args.skipScenarios)
+
+    #sbx = Sandbox(args.baseline, args.scenario, scenarioGroup=args.group)
 
     project = Project(args.projectFile, args.projectName, groupName=args.group)
 

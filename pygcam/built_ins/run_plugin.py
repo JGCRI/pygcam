@@ -26,6 +26,7 @@ class RunCommand(SubcommandABC):
                             the scenarios is a baseline, it is queued first and the remaining scenarios
                             are queued as dependent on the completion of the baseline job.'''))
 
+        # Deprecated?
         parser.add_argument('-f', '--projectFile',
                             help=clean_help('''The XML file describing the project. If set, command-line
                             argument takes precedence. Otherwise, value is taken from config file
@@ -79,6 +80,7 @@ class RunCommand(SubcommandABC):
 
         parser.add_argument('--vars', action='store_true', help=clean_help('''List variables and their values'''))
 
+        # TBD: might not need this. Force use of config vars instead.
         parser.add_argument('-x', '--sandboxDir',
                             help=clean_help('''The directory in which to create the run-time sandbox workspace.
                             Defaults to value of {GCAM.SandboxProjectDir}/{scenarioGroup}.'''))

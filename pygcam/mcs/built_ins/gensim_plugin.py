@@ -196,8 +196,8 @@ def runStaticSetup(runWorkspace, project, groupName):
         symlink(wsXmlDir, linkname)
 
     # N.B. RunWorkspace for gensim is pygcam's RefWorkspace
-    toolArgs = ['+P', projectName, f'--mcs={McsMode.GENSIM.value}', 'run', '-s', 'setup',
-                '-S', scenariosArg, '--sandboxDir=' + sandboxDir]
+    toolArgs = ['+P', projectName, '+M', McsMode.GENSIM.value,
+                'run', '-s', 'setup', '-S', scenariosArg, '--sandboxDir=' + sandboxDir]
 
     # if useGroupDir:
     if groupName:
@@ -244,8 +244,8 @@ def genSimulation(simId, trials, paramPath, args):
     runStaticSetup(sandboxWorkspace, project, groupName)
 
     # TBD: Use pygcam scenario def and copy pygcam files, too
-    scenarioFile = getParam('GCAM.ScenarioSetupFile')
-    xmlScenario = XMLScenario.get_instance(scenarioFile)
+    scenariosFile = getParam('GCAM.ScenariosFile')
+    xmlScenario = XMLScenario.get_instance(scenariosFile)
     scenarioNames = xmlScenario.scenariosInGroup(groupName)
     baseline      = xmlScenario.baselineForGroup(groupName)
 
@@ -261,7 +261,7 @@ def genSimulation(simId, trials, paramPath, args):
 
     # Define the experiments (scenarios) in the database
     db = getDatabase()
-    db.addExperiments(scenarioNames, baseline, scenarioFile)
+    db.addExperiments(scenarioNames, baseline, scenariosFile)
 
     if not trials:
         _logger.warn("Simulation meta-data has been copied.")

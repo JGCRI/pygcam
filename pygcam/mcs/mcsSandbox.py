@@ -164,9 +164,9 @@ def createOutputDir(outputDir):
         mkdirs(outputDir)
 
 
-def sandbox_for_mode(baseline, sandbox, mcs_mode, **kwargs):
+def sandbox_for_mode(scenario, mcs_mode, **kwargs):
     cls = Sandbox if mcs_mode is None else McsSandbox
-    return cls(baseline, sandbox, **kwargs)
+    return cls(scenario, **kwargs)
 
 
 # TBD: should this be created from, or combined with McsContext?
@@ -175,31 +175,20 @@ class McsSandbox(Sandbox):
     A subclass of Sandbox that handles the slightly different structure required for
     Monte Carlo simulations. This is used by the gensim and runsim sub-commands.
     """
-    def __init__(self, baseline, scenario, projectName=None, refWorkspace=None,
-                 scenarioGroup=None, useGroupDir=False, projectXmlSrc=None, xmlsrcSubdir=None,
-                 sandboxRoot=None, sandboxSubdir=None, parent=None, createDirs=True):
+    def __init__(self, scenario, projectName=None, scenarioGroup=None,
+                 parent=None, createDirs=True):
         """
         Create an McsSandbox instance from the given arguments.
 
-        :param baseline: (str) the name of a baseline scenario
         :param scenario: (str) the name of a policy scenario
         :param projectName: (str)
-        :param refWorkspace: (str) the reference workspace to use. Defaults to value of
-            config var "GCAM.RefWorkspace".
         :param scenarioGroup: (str) the name of a scenario group defined in scenarios.xml
         :param useGroupDir: (bool) whether to use the ``scenarioGroup`` as an extra directory
             level above scenario sandboxes
-        :param projectXmlSrc: (str)
-        :param xmlsrcSubdir: (str)
-        :param sandboxRoot: (str)
-        :param sandboxSubdir: (str)
         :param parent: (str)
         :param createDirs: (bool)
         """
-        super().__init__(baseline, scenario, projectName=projectName, refWorkspace=refWorkspace,
-                         scenarioGroup=scenarioGroup, useGroupDir=useGroupDir,
-                         projectXmlsrc=projectXmlSrc, xmlsrcSubdir=xmlsrcSubdir,
-                         sandboxRoot=sandboxRoot, sandboxSubdir=sandboxSubdir,
+        super().__init__(scenario, projectName=projectName, scenarioGroup=scenarioGroup,
                          parent=parent, createDirs=createDirs)
 
         # self.sim_id = sim_id
@@ -267,20 +256,16 @@ class McsSandbox(Sandbox):
             # TBD: copy ref workspace to self.workspace_copy_dir
 
 
-    def create_sandbox(self, scenario, sandbox=None, forceCreate=False, mcsMode=None):
+    def create_sandbox(self, forceCreate=False):
         """
         Set up a run-time sandbox in which to run GCAM. This involves copying
         from or linking to files and directories in `workspace`, which defaults
-        to the value of config parameter GCAM.SandboxRefWorkspace.
+        to the value of config parameter GCAM.SandboxWorkspace.
 
         Differs from non-MCS sandbox in terms of directory structure. Trial sandboxes are in
         {McsRoot}/{ProjectName}/{optionalSimSubdir}/sims/sNNN/xxx/yyy/{scenario}
 
-        :param scenario: (str) The name of a baseline or policy scenario.
-        :param sandbox: (str) the directory to create
         :param forceCreate: (bool) if True, delete and recreate the sandbox
-        :param mcsMode: ('gensim', 'trial', or None) perform setup appropriate
-           for pygcam-mcs trials.
         :return: nothing
         """
         from .util import dirFromNumber # TBD: subclass should live in mcs directory once fleshed out
@@ -290,24 +275,27 @@ class McsSandbox(Sandbox):
         trial_num = 0 # TBD: where to get this?
         scenario_dir = dirFromNumber(trial_num, prefix=self.sim_dir, create=True)
 
+        sandbox = 'compute this'
+
+        mcs_mode = getParam('MCS.Mode')
+
         # TBD: take this from Sandbox or McsSandbox, which should set these values in __init__()
-        param_name = 'GCAM.RefWorkspace' if mcsMode == McsMode.GENSIM else 'GCAM.SandboxRefWorkspace'
-        srcWorkspace = self.refWorkspace if mcsMode == McsMode.GENSIM else getParam("GCAM.SandboxRefWorkspace")
+        srcWorkspace = self.ref_workspace if mcs_mode == McsMode.GENSIM else getParam("GCAM.SandboxWorkspace")
 
         if os.path.lexists(sandbox) and os.path.samefile(sandbox, srcWorkspace):
             raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
 
         # MCS "gensim" sub-command creates a shared workspace; for non-MCS we do it here if needed
-        if not mcsMode:
+        if not mcs_mode:
             copyRefWorkspace(srcWorkspace, forceCreate=forceCreate)
 
-        if mcsMode and getParamAsBoolean('GCAM.CopyAllFiles'):
+        if mcs_mode and getParamAsBoolean('GCAM.CopyAllFiles'):
             # Not prohibited; just a disk-hogging, suboptimal choice
             _logger.warn('GCAM.CopyAllFiles = True while running MCS')
 
         _logger.info("Setting up sandbox '%s'", sandbox)
 
-        if forceCreate or mcsMode == McsMode.TRIAL:
+        if forceCreate or mcs_mode == McsMode.TRIAL:
             # avoid deleting the current directory
             with pushd('..'):
                 removeTreeSafely(sandbox, ignore_errors=True)
@@ -328,7 +316,7 @@ class McsSandbox(Sandbox):
 
         outputDir = pathjoin(sandbox, 'output')
 
-        if mcsMode:  # i.e., mcsMode is 'trial' or 'gensim'
+        if mcs_mode:  # i.e., mcs_mode is 'trial' or 'gensim'
             # link {sandbox}/dyn-xml to ../dyn-xml
             dynXmlDir = pathjoin('..', DYN_XML_NAME)
 

@@ -84,7 +84,7 @@ class XMLEditor(object):
         self.xmlOutputRoot = xmlOutputRoot
         self.refWorkspace = refWorkspace
         self.xmlSourceDir = xmlSourceDir
-        self.sandboxExeDir = pathjoin(getParam('GCAM.SandboxRefWorkspace'), 'exe')
+        self.sandboxExeDir = pathjoin(getParam('GCAM.SandboxWorkspace'), 'exe')
         self.parent = parent
         self.mcsMode = mcsMode
         self.mcsValues = None
@@ -314,10 +314,10 @@ class XMLEditor(object):
         if not os.path.lexists(srcAbsPath):
             _logger.debug("Didn't find %s; checking reference files", srcAbsPath)
             # look to sandbox workspace if not found locally
-            sboxWorkspace = getParam('GCAM.SandboxRefWorkspace')
-            refConfigFile = getParam('GCAM.RefConfigFile')  # main RefWorkspace, not SandboxRefWorkspace
+            sboxWorkspace = getParam('GCAM.SandboxWorkspace')
+            refConfigFile = getParam('GCAM.RefConfigFile')  # main RefWorkspace, not SandboxWorkspace
 
-            assert sbx.refWorkspace == sboxWorkspace        # TBD: remove after testing
+            assert sbx.ref_workspace == sboxWorkspace        # TBD: remove after testing
 
             pathname = self.componentPath(configTag, configPath=refConfigFile)
             srcAbsPath = pathjoin(sboxWorkspace, 'exe', pathname, abspath=True)
