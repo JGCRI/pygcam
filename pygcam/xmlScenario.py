@@ -480,8 +480,7 @@ def createXmlEditorSubclass(setupFile):
     # TBD: pass pathname computations to Sandbox argument
 
     class XmlEditorSubclass(superclass):
-        def __init__(self, baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace, groupName,
-                     srcGroupDir, subdir, parent=None, mcsMode=None, cleanXML=True):
+        def __init__(self, sbx, parent=None, cleanXML=True):
             self.parentConfigPath = None
 
             self.scenarioSetup = XMLScenario.get_instance(setupFile) #if parent else None

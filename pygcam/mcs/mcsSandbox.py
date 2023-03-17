@@ -164,7 +164,9 @@ def createOutputDir(outputDir):
         mkdirs(outputDir)
 
 
-def sandbox_for_mode(scenario, mcs_mode, **kwargs):
+def sandbox_for_mode(scenario, **kwargs):
+    mcs_mode = getParam('MCS.Mode')
+
     cls = Sandbox if mcs_mode is None else McsSandbox
     return cls(scenario, **kwargs)
 
@@ -183,10 +185,8 @@ class McsSandbox(Sandbox):
         :param scenario: (str) the name of a policy scenario
         :param projectName: (str)
         :param scenarioGroup: (str) the name of a scenario group defined in scenarios.xml
-        :param useGroupDir: (bool) whether to use the ``scenarioGroup`` as an extra directory
-            level above scenario sandboxes
         :param parent: (str)
-        :param createDirs: (bool)
+        :param createDirs: (bool) whether to create some dirs
         """
         super().__init__(scenario, projectName=projectName, scenarioGroup=scenarioGroup,
                          parent=parent, createDirs=createDirs)

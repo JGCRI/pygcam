@@ -3,11 +3,27 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from abc import ABCMeta, abstractmethod
+import argparse
+from .error import CommandlineError
 
 # Fixes help strings to display properly with sphinx-argparse
 def clean_help(s):
     lines = s.splitlines()
     return ' '.join(map(lambda s: s.strip(), lines))
+
+
+class Deprecate(argparse.Action):
+    """
+    Support for deprecated arguments. Use ``alt_text`` to add to the
+    basic deprecation message, e.g., to suggest alternatives.
+    """
+    def __init__(self, option_strings, dest, alt_text='', **kwargs):
+        super().__init__(option_strings, dest, **kwargs)
+        self.help = f"The {self.option_strings} argument has been deprecated. {alt_text}"
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        raise CommandlineError(self.help)
+
 
 # class OptionInfo(object):
 #     """
@@ -36,7 +52,7 @@ class SubcommandABC(object):
 
     :param name: (str) the name of the sub-command
     :param subparsers: an object returned by argparse's ``parser.add_subparsers()``
-    :param kwargs: (dict) keywords to pass to the the call to argparse's
+    :param kwargs: (dict) keywords to pass to the call to argparse's
        ``subparsers.add_parser(name, **kwargs)``, e.g., to pass `help` or
        `documentation` strings.
     :param group: (str) the name of the GUI group to assign this plug-in to.

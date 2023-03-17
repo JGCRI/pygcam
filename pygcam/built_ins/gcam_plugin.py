@@ -6,7 +6,7 @@
 .. Copyright (c) 2015-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from ..subcommand import SubcommandABC, clean_help
+from ..subcommand import SubcommandABC, clean_help, Deprecate
 
 class GcamCommand(SubcommandABC):
     def __init__(self, subparsers):
@@ -19,6 +19,7 @@ class GcamCommand(SubcommandABC):
                             If multiple configuration files are given, the are run in succession in the
                             same "job" on the cluster.'''))
 
+        # TBD: Change long name to --group
         parser.add_argument('-g', '--groupDir', default='',
                             help=clean_help('The scenario group directory name, if any.'))
 
@@ -44,22 +45,17 @@ class GcamCommand(SubcommandABC):
                             and terminates the model run. By default, the wrapper is used.'''))
 
         # Deprecated
-        # parser.add_argument('-f', '--forceCreate', action='store_true',
-        #                     help=clean_help('''Re-create the workspace, even if it already exists.'''))
-        # parser.add_argument('-r', '--refWorkspace',
-        #                     help=clean_help('''The reference workspace to use to create the new sandbox.
-        #                     This is used only if the indicated or implied workspace doesn't exist. Defaults
-        #                     to the value of GCAM.RefWorkspace.'''))
+        parser.add_argument('-f', '--forceCreate', action=Deprecate)
+        parser.add_argument('-r', '--refWorkspace', action=Deprecate)
 
         return parser
 
     def run(self, args, tool):
         from ..gcam import runGCAM
+        from ..mcs.mcsSandbox import sandbox_for_mode
 
-        # TBD: something like this
-        # from ..sandbox import Sandbox
-        # baseline = None
-        # sbx = Sandbox(baseline, args.scenario, sandbox=args.sandbox, sandboxSubdir=args.groupDir)
+        sbx = sandbox_for_mode(args.scenario, scenarioGroup=args.groupDir)
+        # scenario, projectName=None, scenarioGroup=args.
         # runGCAM(sbx, scenariosDir=args.scenariosDir, configFile=args.configFile,
         #         noRun=args.noRun, noWrapper=args.noWrapper)
 

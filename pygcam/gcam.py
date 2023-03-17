@@ -231,7 +231,7 @@ def linkToMacJava():
         os.chdir(owd)
 
 
-
+# TBD: pass Sandbox instance instead of all the components
 def runGCAM(scenario, sandbox=None, scenariosDir=None, groupDir='', configFile=None,
             noRun=False, noWrapper=False):
             # refWorkspace=None, forceCreate=False,

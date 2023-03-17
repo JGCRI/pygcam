@@ -517,7 +517,7 @@ class Project(XMLFile):
         scenarioGroupName = self.scenarioGroupName
         groupDir = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
 
-        # Set the groupName in the config system so vars can access it
+        # Set the groupName so config vars can access it
         setParam('GCAM.ScenarioGroup', groupDir, section=projectName)
 
         # Get the text values for all config variables, allowing variables
@@ -531,7 +531,7 @@ class Project(XMLFile):
         # Add standard variables for use in step command substitutions
         argDict['project']       = projectName
         argDict['projectSubdir'] = subdir = self.subdir
-        argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
+        argDict['baseline']      = baseline = self.baselineName
         argDict['scenarioGroup'] = scenarioGroupName
 
         # TBD: use Sandbox for path calculation

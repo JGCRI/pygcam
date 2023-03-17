@@ -100,47 +100,36 @@ def config_path(scenario, sandbox=None, scenarios_dir=None, group_dir='', config
 #   (Though this is the method for users to add @callable methods called from scenarios.xml.)
 #   This way we can assume scenario definition exists in xml format and create an API to get the
 #   information about any scenario definition from xmlSetup.py.
-#   -
-#   The question is whether command-line override capability is required, or if all should be in XML.
-#   Need to think through alternative use cases.
-#   -
-#   Should be no need to pass baseline since this can be inferred from scenario and scenarioGroup.
-#   also can tell if it's a baseline; if not, find and cache ref to baseline
-#
-# TBD: other thoughts
-#   -
-#   Perhaps __init__ takes only vars apart from policy scenarios, since the rest would be common
-#   to all scenarios. It could take a baseline, since that's needed by policy scenarios.
-#
+
 class Sandbox(object):
     def __init__(self, scenario, projectName=None, scenarioGroup=None,
-                 scenariosFile=None, parent=None, createDirs=True):
+                 parent=None, createDirs=True):
         """
         Create a Sandbox instance from the given arguments.
 
         :param scenario: (str) the name of a policy scenario
-        :param projectName: (str)
+        :param projectName: (str) the name of the project, defaults to the value of
+            config variable `GCAM.DefaultProject`
         :param scenarioGroup: (str) the name of a scenario group defined in scenarios.xml
         :param useGroupDir: (bool) whether to use the ``scenarioGroup`` as an extra directory
             level above scenario sandboxes
         :param parent: (str)
-        :param createDirs: (bool)
+        :param createDirs: (bool) whether to create some dirs
         """
         from .xmlScenario import XMLScenario
+
+        self.mcs_mode = getParam('MCS.Mode')
 
         # Ensure that GCAM.ScenarioGroup is set since system.cfg uses this in path construction
         if scenarioGroup:
             setParam('GCAM.ScenarioGroup', scenarioGroup)
 
         self.project_name = projectName or getParam('GCAM.ProjectName')
-        self.scenarios_file = scenariosFile or getParam('GCAM.ScenariosFile')
+        self.scenarios_file = getParam('GCAM.ScenariosFile')
         self.group = scenarioGroup or ''
 
         scen_xml = XMLScenario.get_instance(self.scenarios_file)
         group_obj = scen_xml.getGroup(self.group)
-
-        # self.use_group_dir = group_obj.useGroupDir
-        # self.group_subdir = self.group if self.use_group_dir else ''
 
         self.scenario = scenario
         scen_obj = group_obj.getFinalScenario(scenario)
@@ -149,9 +138,6 @@ class Sandbox(object):
         # TBD
         # self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenarioGroup, baseline)
         self.parent = parent
-
-        # TBD: need access to project.xml (might have different name)
-        #   and scenarios.xml (again, allow different name?)
 
         self.copy_workspace = getParamAsBoolean("GCAM.CopyWorkspace")
 
@@ -179,12 +165,8 @@ class Sandbox(object):
         # absolute paths. Note that gcam_path requires self.sandbox_exe_dir to be set first.
         self.scenario_gcam_xml_dir = self.gcam_path('../input/gcamdata/xml')
 
-        # Store scenario config.xml in exe dir, i.e., '.../project/group/scenario/exe/config.xml'
-        self.scenario_config_path = pathjoin(self.sandbox_exe_dir, CONFIG_XML)
-
-        # TBD: Alternative
-        # Store scenario config.xml in local-xml/{scenario} dir, i.e., '.../project/group/local-xml/scenario/config.xml'
-        self.scenario_config_path2 = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
+        # Store scenario config.xml in '.../project/group/local-xml/scenario/config.xml'
+        self.scenario_config_path = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
 
     @classmethod
     def fromXmlSetup(cls, scenarioGroup, scenario):
@@ -244,6 +226,7 @@ class Sandbox(object):
         setupXml = getParam('GCAM.ScenariosFile')
         if setupXml:
             from .xmlScenario import createXmlEditorSubclass
+
             _logger.debug(f"Setup using '{setupXml}'")
             cls = createXmlEditorSubclass(setupXml)     # uses 'GCAM.ScenarioSetupClass' if defined
             return cls
