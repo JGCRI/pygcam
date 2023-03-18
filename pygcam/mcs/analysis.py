@@ -1090,7 +1090,7 @@ def analyzeSimulation(args):
     db = getDatabase()
     trials = db.getTrialCount(simId) if limit <= 0 else limit
     if not trials:
-        raise PygcamMcsUserError('No trials were found for simId %d' % simId)
+        raise PygcamMcsUserError(f'No trials were found for simId {simId}')
 
     # inputs are shared across experiments, so gather these before looping over experiments
     if requireInputs:
