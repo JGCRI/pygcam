@@ -220,7 +220,7 @@ class Sandbox(object):
     def create_sandbox(self, forceCreate=False):
         """
         Set up a run-time sandbox in which to run GCAM. This involves copying
-        from or linking to files and directories in `workspace`, which defaults
+        from or linking to files and directories in sandbox's workspace, which defaults
         to the value of config parameter GCAM.SandboxWorkspace.
 
         :param forceCreate: (bool) if True, delete and recreate the sandbox

@@ -268,7 +268,7 @@ class McsSandbox(Sandbox):
         :param forceCreate: (bool) if True, delete and recreate the sandbox
         :return: nothing
         """
-        from .util import dirFromNumber # TBD: subclass should live in mcs directory once fleshed out
+        from .util import dirFromNumber
 
         # N.B. does not call super().__init__() -- just overrides it
 
