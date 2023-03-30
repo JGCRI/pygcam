@@ -34,7 +34,7 @@ class GcamCommand(SubcommandABC):
                             help=clean_help('''Specify the directory holding scenario files. Default is the value of
                             config variable GCAM.ScenariosDir, if set, otherwise it's the current directory.'''))
 
-        parser.add_argument('-w', '--sandbox',
+        parser.add_argument('-x', '--sandbox',
                             help=clean_help('''Specify the path to the GCAM sandbox to use. If the named workspace 
                             doesn't exist, an exception is raised. If not specified on the command-line, the path
                             constructed as {GCAM.SandboxDir}/{optional-groupdir}/{scenario} is used, if scenario 
@@ -45,6 +45,7 @@ class GcamCommand(SubcommandABC):
                             and terminates the model run. By default, the wrapper is used.'''))
 
         # Deprecated
+        parser.add_argument('-w', '--workspace', action=Deprecate, alt_text="Use -x / --sandbox instead.")
         parser.add_argument('-f', '--forceCreate', action=Deprecate)
         parser.add_argument('-r', '--refWorkspace', action=Deprecate)
 

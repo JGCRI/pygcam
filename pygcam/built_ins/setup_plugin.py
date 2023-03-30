@@ -43,13 +43,6 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-g', '--group',
                             help=clean_help('The scenario group to process. Defaults to the group labeled default="1".'))
 
-        parser.add_argument('-G', '--srcGroupDir',
-                            help="This argument is deprecated.")
-                            # help=clean_help('''A sub-directory under xmlsrc in which to find scenario dirs for this group.
-                            # Use this to consolidate static XML files shared by multiple scenario groups.
-                            # If --useGroupDir is specified, srcGroupDir defaults to the scenario group name.
-                            # Using --srcGroupDir implies --useGroupDir.'''))
-
         # mutually exclusive with --moduleSpec
         group2.add_argument('-m', '--modulePath',
                             help=clean_help('''The path to a scenario definition module. See -M/--moduleSpec
@@ -74,6 +67,7 @@ class SetupCommand(SubcommandABC):
                             help=clean_help('''Whether to run the commands in scenarios.xml for the current scenario.
                             Default is "yes".'''))
 
+        # TBD: Eventually change this to -S for consistency (though -S is deprecated, below.)
         parser.add_argument('-s', '--scenario', required=True,
                             help=clean_help('''Identify the scenario to run.'''))
 
@@ -81,7 +75,7 @@ class SetupCommand(SubcommandABC):
         group1.add_argument('-T', '--staticOnly', action='store_true',
                             help=clean_help('''Generate only static XML for local-xml: don't create dynamic XML.'''))
 
-        # Deprecated?
+        # Deprecated? If not, change to -x for consistency (-x used to be --xmlSourceDir)
         parser.add_argument('-w', '--sandbox',  # -w for backwards compatibility
                             help=clean_help('''The pathname of the sandbox to operate on.'''))
 
@@ -92,6 +86,7 @@ class SetupCommand(SubcommandABC):
 
         # Deprecated arguments
         parser.add_argument('-b', '--baseline', action=Deprecate)
+        parser.add_argument('-G', '--srcGroupDir', action=Deprecate)
         parser.add_argument('-r', '--refWorkspace', action=Deprecate)
         parser.add_argument('-S', '--subdir', action=Deprecate)
         parser.add_argument('--setupXml', action=Deprecate)
@@ -102,14 +97,10 @@ class SetupCommand(SubcommandABC):
 
         return parser   # for auto-doc generation
 
-    # TBD: this should take just a Sandbox or McsSandbox as argument
-    #   Perhaps with dynamicOnly=False, staticOnly=False as kwds
     def run_scenario_setup(self, sbx, args):
         """
         Run the setup steps indicated in scenarios.xml.
         """
-        from ..config import getParam
-
         editor_cls = sbx.editor_class(sbx.scenario, moduleSpec=args.moduleSpec, modulePath=args.modulePath)
 
         # When called in 'trial' mode, we only run dynamic setup.
@@ -124,7 +115,6 @@ class SetupCommand(SubcommandABC):
         obj.setup(args)
 
     def run(self, args, tool):
-        from ..config import getParam
         from ..error import CommandlineError
         from ..mcs.mcsSandbox import sandbox_for_mode
 
@@ -133,7 +123,7 @@ class SetupCommand(SubcommandABC):
 
         sbx = sandbox_for_mode(args.scenario, scenarioGroup=args.group, createDirs=True)
 
-        if args.createSandbox == 'yes' and sbx.mcs_mode != McsMode.GENSIM: # mcs_mode is None or TRIAL
+        if args.createSandbox == 'yes' and sbx.mcs_mode != McsMode.GENSIM:
             sbx.create_sandbox(forceCreate=args.forceCreate)
 
         if args.runScenarioSetup == 'yes':

@@ -1,7 +1,7 @@
 '''
 .. Created on: 2/26/15
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
@@ -29,7 +29,7 @@ def getGcamVersion(exeDir, preferPath=False):
     fails, try to extract it from the path.
     '''
     if preferPath:
-        # See if the version is explicit in the path, e.g., "...-v5.1.3"
+        # See if the version is explicit in the path, e.g., "...-v6.0"
         gcamDir = os.path.dirname(exeDir)
         m = re.match(_PathVersionPattern, gcamDir)
         if m:
@@ -46,7 +46,7 @@ def getGcamVersion(exeDir, preferPath=False):
         if m:
             return m.group(1)
         else:
-            raise PygcamException('Failed to extract version number from path {}'.format(gcamDir))
+            raise PygcamException(f'Failed to extract version number from path {gcamDir}')
 
     setJavaPath(exeDir)
     with pushd(exeDir):
@@ -62,7 +62,7 @@ def getGcamVersion(exeDir, preferPath=False):
     if m:
         return m.group(1)
     else:
-        raise ConfigFileError('GCAM --version returned "%s", which is not the expected format. Should start with "GCAM version "')
+        raise ConfigFileError(f'GCAM --version returned "{versionStr}", which is not the expected format. Should start with "GCAM version "')
 
 def setJavaPath(exeDir):
     '''
@@ -102,14 +102,14 @@ def setJavaPath(exeDir):
     javaBin = pathjoin(javaHome, 'bin')
     javaBinServer = pathjoin(javaBin, 'server')
     envPath = os.environ.get('PATH', '')
-    os.environ['PATH'] = path = envPath + ';' + javaBin + ';' + javaBinServer
+    os.environ['PATH'] = path = f"{envPath};{javaBin};{javaBinServer}"
     _logger.debug('PATH=%s', path)
 
     envClasspath = os.environ.get('CLASSPATH', '')
     envClasspath = ".;" + envClasspath if envClasspath else "."
 
     miClasspath = getParam('GCAM.MI.ClassPath')
-    os.environ['CLASSPATH'] = classpath = envClasspath + ';' + javaBinServer + ';' + miClasspath
+    os.environ['CLASSPATH'] = classpath = f"{envClasspath};{javaBinServer};{miClasspath}"
     _logger.debug('CLASSPATH=%s', classpath)
 
 def _wrapperFilter(line):
@@ -121,7 +121,7 @@ def _wrapperFilter(line):
         and terminates the GCAM process.
     """
     modelDidNotSolve = 'Model did not solve'
-    pattern = re.compile('(.*(BaseXException|%s).*)' % modelDidNotSolve)
+    pattern = re.compile(f'(.*(BaseXException|{modelDidNotSolve}).*)')
 
     match = re.search(pattern, line)
 
@@ -162,8 +162,8 @@ def _gcamWrapper(args):
                                     stderr=subprocess.STDOUT, close_fds=True)
 
     except Exception as e:
-        joined_args = ' '.join(args)
-        msg = f'gcamWrapper failed to run command: {joined_args} ({e})'
+        cmd = ' '.join(args)
+        msg = f'gcamWrapper failed to run command: {cmd} ({e})'
         raise PygcamException(msg)
 
     filterSpec = getParam('GCAM.WrapperFilterFunction')
@@ -223,7 +223,7 @@ def linkToMacJava():
         # Create a symlink to satisfy @rpath searches
         linkName = 'libs/java/lib'
         if not os.path.islink(linkName):
-            cmd = "ln -s %s %s" % (libPath, linkName)
+            cmd = f"ln -s {libPath} {linkName}"
             status = subp.call(cmd, shell=True)
             if status != 0:
                 raise PygcamException(f'Failed to create link using "{cmd}"')
@@ -234,7 +234,6 @@ def linkToMacJava():
 # TBD: pass Sandbox instance instead of all the components
 def runGCAM(scenario, sandbox=None, scenariosDir=None, groupDir='', configFile=None,
             noRun=False, noWrapper=False):
-            # refWorkspace=None, forceCreate=False,
     """
     :param scenario: (str) the scenario to run
     :param sandbox: (str) path to the sandbox to run in, or None, in which
@@ -243,7 +242,7 @@ def runGCAM(scenario, sandbox=None, scenariosDir=None, groupDir='', configFile=N
        is run.
     :param scenariosDir: (str) the directory in which the config.xml file for the
        given scenario is found. Defaults to GCAM.ScenariosDir, if given, or "."
-    :param groupDir: (str) the name of the scenario group if group sub-directories
+    :param groupDir: (str) the name of the scenario group if group subdirectories
        are to be used when computing the location of the scenario's config.xml.
     :param configFile: (str) if scenario is not given, the name of a configuration
        file to run. If scenario is given, this parameter is ignored.

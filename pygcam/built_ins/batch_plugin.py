@@ -1,7 +1,7 @@
 '''
 .. codeauthor:: Richard Plevin
 
-.. Copyright (c) 2022 Richard Plevin
+.. Copyright (c) 2022-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from ..subcommand import SubcommandABC, clean_help
@@ -40,10 +40,9 @@ class BatchCommand(SubcommandABC):
         parser.add_argument('-s', '--scenario',
                             help=clean_help('''The scenario to run the query for'''))
 
-        parser.add_argument('-w', '--workspace', default='',
-                            help=clean_help('''The workspace directory in which to find the XML database.
-                                    Defaults computed as {GCAM.SandboxDir}/{groupDir}/{scenario}.
-                                    Overridden by the -d flag.'''))
+        parser.add_argument('-x', '--sandbox', default='',
+                            help=clean_help('''The sandbox directory in which to find the XML database.
+                            Defaults to value of config variable GCAM.SandboxDir. Overridden by the -d flag.'''))
         return parser
 
     def run(self, args, tool):

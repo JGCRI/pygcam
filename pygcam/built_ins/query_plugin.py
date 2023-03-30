@@ -3,7 +3,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 
 """
@@ -43,6 +43,7 @@ class QueryCommand(SubcommandABC):
                             help=clean_help('''Don't delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.'''))
 
+        # Deprecated. Use config vars instead.
         parser.add_argument('-g', '--groupDir', default='',
                             help=clean_help('''The scenario group directory name, if any. Used with to compute default
                             for --workspace argument.'''))
@@ -87,10 +88,17 @@ class QueryCommand(SubcommandABC):
                             help=clean_help('''An XML file defining query maps by name (default taken from
                             config parameter "GCAM.RewriteSetsFile")'''))
 
-        parser.add_argument('-w', '--workspace', default='',
-                            help=clean_help('''The workspace directory in which to find the XML database.
-                                    Defaults computed as {GCAM.SandboxDir}/{groupDir}/{scenario}.
+        parser.add_argument('-x', '--sandbox', default='',
+                            help=clean_help('''The sandbox directory in which to find the XML database.
+                                    Defaults to value of config variable GCAM.SandboxDir.
                                     Overridden by the -d flag.'''))
+
+        # TBD: change to action='Deprecate'
+        parser.add_argument('-w', '--workspace', default='',
+                            help=clean_help('''[DEPRECATED: Use -x/--sandbox instead] 
+                                The sandbox directory in which to find the XML database.
+                                Defaults computed as {GCAM.SandboxDir}/{groupDir}/{scenario}.
+                                Overridden by the -d flag.'''))
 
         return parser
 

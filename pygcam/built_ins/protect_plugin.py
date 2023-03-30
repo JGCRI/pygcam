@@ -3,7 +3,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC, clean_help
@@ -78,12 +78,11 @@ class ProtectLandCommand(SubcommandABC):
                             help=clean_help('''An XML file defining land-protection scenarios. Default is the value
                             of configuration file parameter GCAM.LandProtectionXmlFile.'''))
 
+        # Deprecated? Could just GCAM.RefWorkspace in all cases
         parser.add_argument('-w', '--workspace', type=str, default=None,
                             help=clean_help('''Specify the path to the GCAM workspace to use. The files in
-                            {workspace}/input/gcam-data-system/xml/aglu-xml/land_input_{2,3}.xml (before GCAM v5.1), or
-                            {workspace}/input/gcamdata/xml/land_input_{2,3,4,5}*.xml (starting in GCAM v5.1)
-                            are used as inputs. Default is value of configuration parameter
-                            GCAM.RefWorkspace.'''))
+                            {workspace}/input/gcamdata/xml/land_input_{2,3,4,5}*.xml are used as inputs. 
+                            Default is value of configuration parameter GCAM.RefWorkspace.'''))
 
         return parser
 

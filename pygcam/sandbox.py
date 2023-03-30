@@ -118,6 +118,8 @@ class Sandbox(object):
         """
         from .xmlScenario import XMLScenario
 
+        self.scenario = scenario
+        self.parent = parent
         self.mcs_mode = getParam('MCS.Mode')
 
         # Ensure that GCAM.ScenarioGroup is set since system.cfg uses this in path construction
@@ -131,13 +133,11 @@ class Sandbox(object):
         scen_xml = XMLScenario.get_instance(self.scenarios_file)
         group_obj = scen_xml.getGroup(self.group)
 
-        self.scenario = scenario
         scen_obj = group_obj.getFinalScenario(scenario)
         self.is_baseline = scen_obj.isBaseline
 
         # TBD
         # self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenarioGroup, baseline)
-        self.parent = parent
 
         self.copy_workspace = getParamAsBoolean("GCAM.CopyWorkspace")
 
@@ -157,6 +157,11 @@ class Sandbox(object):
         # The "local-xml" directory is always found at the same level as scenario dirs
         self.sandbox_local_xml = pathjoin(self.sandbox_scenario_dir, "..", LOCAL_XML_NAME, normpath=True)
         self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=createDirs)
+
+        self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')      # TBD: new subdir under local-xml
+
+        self.sandbox_baseline_xml = (None if self.is_baseline
+                                      else makeDirPath(self.sandbox_local_xml, scen_obj.baseline, create=createDirs))
 
         self.project_xml_src = getParam('GCAM.ProjectXmlsrc')
         self.project_scenario_xml_src = pathjoin(self.project_xml_src, scenario)
@@ -183,6 +188,10 @@ class Sandbox(object):
         :return: a DirectoryPath instance
         """
         rel_path = pathjoin(*rel_path_elements)
+        return GcamPath(self.sandbox_exe_dir, rel_path, create=create)
+
+    def gcam_path_from_abs(self, abs_path, create=False):
+        rel_path = os.path.relpath(abs_path, start=self.sandbox_exe_dir)
         return GcamPath(self.sandbox_exe_dir, rel_path, create=create)
 
     # TBD: unused...

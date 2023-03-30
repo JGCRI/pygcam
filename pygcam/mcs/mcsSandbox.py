@@ -167,7 +167,7 @@ def createOutputDir(outputDir):
 def sandbox_for_mode(scenario, **kwargs):
     mcs_mode = getParam('MCS.Mode')
 
-    cls = Sandbox if mcs_mode is None else McsSandbox
+    cls = McsSandbox if mcs_mode else Sandbox
     return cls(scenario, **kwargs)
 
 

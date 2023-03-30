@@ -163,8 +163,10 @@ class XMLScenario(object):
         :return: none
         """
         self.editor = editor
-        group = self.getGroup(editor.groupName)
-        scenario = group.getFinalScenario(editor.scenario or editor.baseline)
+        sbx = editor.sbx
+
+        group = self.getGroup(sbx.group)
+        scenario = group.getFinalScenario(sbx.scenario or sbx.baseline)
 
         _logger.debug('Running %s setup for scenario %s', 'dynamic' if dynamic else 'static', scenario.name)
         scenario.run(editor, directoryDict, dynamic=dynamic)
@@ -480,79 +482,78 @@ def createXmlEditorSubclass(setupFile):
     # TBD: pass pathname computations to Sandbox argument
 
     class XmlEditorSubclass(superclass):
-        def __init__(self, sbx, parent=None, cleanXML=True):
+        def __init__(self, sbx, cleanXML=True):
             self.parentConfigPath = None
+            self.cleanXML = cleanXML
 
-            self.scenarioSetup = XMLScenario.get_instance(setupFile) #if parent else None
+            self.scenarioSetup = XMLScenario.get_instance(setupFile) # if parent else None
 
-            # if not a baseline, create a baseline instance as our parent
-            if scenario:
+            if not sbx.is_baseline:
                 # TBD: test this in FCIP case where baseline builds on FuelShock
-                baselineSubdir = None
-                baseXmlOutputRoot = pathjoin(os.path.dirname(xmlOutputRoot), baseline)
+                parent = XMLEditor(sbx, cleanXML=cleanXML)
 
-                parent = XMLEditor(baseline, None, baseXmlOutputRoot, xmlSrcDir, refWorkspace,
-                                   groupName, srcGroupDir, baselineSubdir)
-
-            super(XmlEditorSubclass, self).__init__(baseline, scenario, xmlOutputRoot, xmlSrcDir,
-                                                    refWorkspace, groupName, srcGroupDir, subdir,
-                                                    parent=parent, mcsMode=mcsMode, cleanXML=cleanXML)
+            super().__init__(sbx, cleanXML=cleanXML)
             self.paramFile = None
 
             # Read shocks from mcsValues.xml if present
-            if mcsMode == McsMode.TRIAL:
+            if sbx.mcs_mode == McsMode.TRIAL:
                 # TBD: simplify using ScenarioInfo and DirectoryPath
                 # ../../trial-xml/local-xml/base-0/mcsValues.xml
-                self.trial_xml_abs = pathjoin(self.xmlOutputRoot, '../trial-xml', normpath=True)
+                self.trial_xml_abs = pathjoin(sbx.sandbox_local_xml, 'trial-xml', normpath=True)
                 self.trial_xml_rel = pathjoin('../..', 'trial-xml')
 
-                scenName = self.parent.name if self.parent else self.name
-                self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, self.groupDir,
-                                          scenName, MCSVALUES_FILE, normpath=True)
+                scen_name = self.parent.name if self.parent else self.name
+                self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, sbx.group,
+                                          scen_name, MCSVALUES_FILE, normpath=True)
 
-            self.directoryDict = {'scenarioDir': self.scenario_dir_rel,
-                                  'baselineDir': self.baseline_dir_rel}
+            self.directoryDict = {'scenarioDir': self.scenario_dir.rel,
+                                  'baselineDir': self.baseline_dir.rel if self.baseline_dir else None}
 
-        #
         def setupDynamic(self, args):
             self.groupName = args.group
 
             super(XmlEditorSubclass, self).setupDynamic(args)
+            sbx = self.sbx
 
-            if self.mcsMode == McsMode.TRIAL: # TBD: was just "if self.mcsMode" -- test this
+            if sbx.mcs_mode == McsMode.TRIAL: # TBD: was just "if self.mcsMode" -- test this
                 paramFile = self.paramFile
                 if paramFile and os.path.lexists(paramFile):
                     self.mcsValues = McsValues(paramFile)
 
-            assert self.scenarioSetup, "XmlEditorSubclass.setupDynamic() was called without having read an XML scenario file"
+            if not self.scenarioSetup:
+                raise SetupException("XmlEditorSubclass.setupDynamic() was called without having read an XML scenario file")
+
             self.scenarioSetup.run(self, self.directoryDict, dynamic=True)
 
-            # Add symlinks to any files that were added in the dynamic setup
-            dynDir  = self.scenario_dyn_dir_abs
-            scenDir = self.scenario_dir_abs
-            xmlFiles = glob.glob(f"{scenDir}/*.xml")
+            # TBD: Maybe nothing to do here if dyn-xml is merged into local-xml?
 
-            # TBD: This appears to be redundant with code in XMLEditor.setupDynamic, but this version
-            #  skips files that already exist, so it's probably just a NO-OP.
-
-            if xmlFiles:
-                mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
-                _logger.info("%s additional static XML files in %s to %s", mode, scenDir, dynDir)
-                for xml in xmlFiles:
-                    base = os.path.basename(xml)
-                    dst = pathjoin(dynDir, base)
-                    src = pathjoin(scenDir, base)
-                    if not os.path.lexists(dst):
-                        symlinkOrCopyFile(src, dst)
+            # # Add symlinks to any files that were added in the dynamic setup
+            # dynDir  = sbx.sandbox_local_xml # was self.scenario_dyn_dir_abs
+            # scenDir = self.scenario_dir_abs
+            # xmlFiles = glob.glob(f"{scenDir}/*.xml")
+            #
+            # # TBD: This appears to be redundant with code in XMLEditor.setupDynamic, but this version
+            # #  skips files that already exist, so it's probably just a NO-OP.
+            #
+            # if xmlFiles:
+            #     mode = 'Copy' if getParamAsBoolean('GCAM.CopyAllFiles') else 'Link'
+            #     _logger.info("%s additional static XML files in %s to %s", mode, scenDir, dynDir)
+            #     for xml in xmlFiles:
+            #         base = os.path.basename(xml)
+            #         dst = pathjoin(dynDir, base)
+            #         src = pathjoin(scenDir, base)
+            #         if not os.path.lexists(dst):
+            #             symlinkOrCopyFile(src, dst)
 
             CachedFile.decacheAll()
 
         def setupStatic(self, args):
             self.groupName = args.group
             scenarioSetup = self.scenarioSetup
+            sbx = self.sbx
 
             # TBD: test this in FCIP case where baseline builds on FuelShock
-            if not self.parent:
+            if not sbx.parent:
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this
                 # project, in a different group directory.
@@ -568,12 +569,15 @@ def createXmlEditorSubclass(setupFile):
                     parentGroup = scenarioSetup.getGroup(groupName)
                     scenario = parentGroup.getFinalScenario(baselineName)
                     if scenario.isBaseline:
-                        self.parent = XmlEditorSubclass(baselineName, None, self.xmlOutputRoot, self.xmlSourceDir,
-                                                        self.refWorkspace, groupName, group.srcGroupDir, scenario.subdir)
+                        from copy import copy
+                        sbx2 = copy(self.sbx)
+                        sbx2.scenario = scenario
+                        self.parent = XmlEditorSubclass(sbx2, cleanXML=self.cleanXML)
+
             directoryDict = self.directoryDict
 
             # not an "else" since parent may be set in "if" above
-            if self.parent:
+            if sbx.parent:
                 # patch the template dictionary with the dynamically-determined baseline dir
                 directoryDict['baselineDir'] = self.baseline_dir_rel = self.parent.scenario_dir_rel
 
@@ -584,28 +588,11 @@ def createXmlEditorSubclass(setupFile):
 
     return XmlEditorSubclass
 
-
-def scenarioEditor(scenario, baseline='', xmlSrcDir='', refWorkspace='', mcsMode=None,
-                   groupName='', srcGroupDir='', subdir =''):
+# TBD: used only by ZEVPolicy.py
+def scenarioEditor(sbx):
     setupXml = getParam('GCAM.ScenariosFile')
     editorClass = createXmlEditorSubclass(setupXml)
-
-    # TBD: path creation should run through Sandbox or Context class
-    xmlOutputRoot = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, normpath=True)
-
-    editor = editorClass(baseline, scenario, xmlOutputRoot, xmlSrcDir, refWorkspace,
-                         groupName, srcGroupDir, subdir, cleanXML=False, mcsMode=mcsMode)
-    return editor
-
-# Currently used only by ZEVPolicy.py
-def scenarioXML(scenario, tag, groupName=None):
-    editor = scenarioEditor(scenario)
-    path = editor.componentPath(tag)
-    groupName = groupName or ''
-
-    # TBD: path creation should run through Sandbox or Context class
-    absPath = pathjoin(getParam('GCAM.SandboxDir'), groupName, scenario, 'exe', path, abspath=True)
-    return absPath
+    return editorClass(sbx)
 
 # TBD: currently unused
 # def scenarioConfigPath(scenario):

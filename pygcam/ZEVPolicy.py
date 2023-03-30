@@ -29,6 +29,16 @@ def element_path(elt):
     return (d['region'], d['sector'], d['subsector'], d['technology'])
 
 
+def scenarioXML(scenario, tag, groupName=None):
+    from .sandbox import Sandbox    # TBD: doesn't work in MCS currently
+    from .xmlScenario import scenarioEditor
+
+    sbx = Sandbox(scenario, scenarioGroup=groupName, createDirs=True)
+    editor = scenarioEditor(sbx)
+    rel_path = editor.componentPath(tag)
+    abs_path = pathjoin(getParam('GCAM.SandboxExeDir'), rel_path, abspath=True)
+    return abs_path
+
 def zevPolicyMain(args):
     import pandas as pd
     from .error import CommandlineError
