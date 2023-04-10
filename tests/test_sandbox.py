@@ -70,7 +70,7 @@ def test_sandbox():
     # With group dir
     # scenario, projectName=None, scenarioGroup=None,
     #                  scenariosFile=None, parent=None, createDirs=True)
-    sbx = Sandbox(scenario, scenarioGroup=group_name, createDirs=False)
+    sbx = Sandbox(scenario, scenario_group=group_name, create_dirs=False)
 
     assert sbx.sandbox_workspace == pathjoin(sandbox_root, project_name, project_subdir, 'Workspace', normpath=True)
     assert sbx.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "exe/gcam.exe", normpath=True)
@@ -83,7 +83,7 @@ def test_sandbox():
 
     # group2 sets useGroupDir=False [which is now deprecated, so this test is redundant, but we might reinstate that attribute...]
     group_name = 'group2'
-    sbx = Sandbox(scenario, scenarioGroup=group_name, createDirs=True) # this one creates the directories; the one above does not
+    sbx = Sandbox(scenario, scenario_group=group_name, create_dirs=True) # this one creates the directories; the one above does not
 
     assert sbx.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "exe/gcam.exe", normpath=True)
     assert gcam_path(sbx.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "input/gcamdata/xml", normpath=True)

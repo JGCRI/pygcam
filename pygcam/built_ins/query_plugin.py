@@ -7,7 +7,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 
 """
-from ..subcommand import SubcommandABC, clean_help
+from ..subcommand import SubcommandABC, clean_help, Deprecate
 
 class QueryCommand(SubcommandABC):
 
@@ -43,10 +43,8 @@ class QueryCommand(SubcommandABC):
                             help=clean_help('''Don't delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.'''))
 
-        # Deprecated. Use config vars instead.
-        parser.add_argument('-g', '--groupDir', default='',
-                            help=clean_help('''The scenario group directory name, if any. Used with to compute default
-                            for --workspace argument.'''))
+        parser.add_argument('-g', '--group',
+                            help=clean_help('''The name of a scenario group, if not the default one.'''))
 
         parser.add_argument('-l', '--splitLand', action='store_true',
                             help=clean_help('''Split the Landleaf column into "land_use" and "basin" columns and add 

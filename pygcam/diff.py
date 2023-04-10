@@ -4,7 +4,7 @@
   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-from .config import pathjoin, mkdirs
+from .config import pathjoin, mkdirs, getParamAsPath
 from .log import getLogger
 from .error import CommandlineError, FileFormatError
 from .constants import QRESULTS_DIRNAME
@@ -274,8 +274,8 @@ def queryCsvPathname(query, scenario, workingDir='.'):
     return pathname
 
 def diffMain(args):
-    workingDir = args.workingDir
-    mkdirs(workingDir)
+    workingDir = args.workingDir or getParamAsPath('GCAM.SandboxDir')
+    # mkdirs(workingDir)
     os.chdir(workingDir)
 
     _logger.debug('Working dir: %s', workingDir)

@@ -16,8 +16,9 @@ class DiffCommand(SubcommandABC):
                     as the reference file whose time-series data is subtracted from that of each other
                     file. If missing, ".csv" suffixes are added to all arguments (the ".csv" is optional).'''))
 
-        parser.add_argument('-D', '--workingDir', default='.',
-                            help=clean_help('''The directory to change to before performing any operations'''))
+        parser.add_argument('-D', '--workingDir',
+                            help=clean_help('''The directory to change to before performing any operations.
+                            Defaults to value of config variable GCAM.SandboxDir.'''))
 
         parser.add_argument('-g', '--groupSum', default="",
                             help=clean_help('''Group data for each timestep (or interpolated annual values) by the

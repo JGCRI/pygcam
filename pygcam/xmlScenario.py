@@ -8,16 +8,14 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from collections import OrderedDict
-import glob
 import os
 import sys
 
-from .config import getParam, getParamAsBoolean, pathjoin
+from .config import getParam, getParamAsPath, pathjoin
 from .constants import LOCAL_XML_NAME, McsMode
 from .error import PygcamException, SetupException
 from .log import getLogger
 from .utils import getBooleanXML, splitAndStrip
-from .file_utils import symlinkOrCopyFile
 from .xmlEditor import XMLEditor, getCallableMethod, CachedFile
 from .XMLFile import XMLFile, McsValues
 
@@ -62,7 +60,8 @@ class XMLScenario(object):
     documentCache = {}  # parsed XML files are cached here
 
     @classmethod
-    def get_instance(cls, filename):
+    def get_instance(cls, filename=None):
+        filename = filename or getParamAsPath('GCAM.ScenariosFile')
         if filename in cls.documentCache:
             _logger.debug('Found scenario file "%s" in cache', filename)
             obj = cls.documentCache[filename]
@@ -102,11 +101,11 @@ class XMLScenario(object):
         return self.groupDict[name or self.defaultGroup]
 
     def scenariosInGroup(self, groupName=None):
-        group = self.getgroup(groupName)
+        group = self.getGroup(groupName)
         return group.scenarioNames()
 
     def baselineForGroup(self, groupName=None):
-        group = self.getgroup(groupName)
+        group = self.getGroup(groupName)
         return group.baseline
 
     def getIterator(self, name):
@@ -165,7 +164,7 @@ class XMLScenario(object):
         self.editor = editor
         sbx = editor.sbx
 
-        group = self.getGroup(sbx.group)
+        group = self.getGroup(sbx.scenario_group)
         scenario = group.getFinalScenario(sbx.scenario or sbx.baseline)
 
         _logger.debug('Running %s setup for scenario %s', 'dynamic' if dynamic else 'static', scenario.name)
@@ -503,7 +502,7 @@ def createXmlEditorSubclass(setupFile):
                 self.trial_xml_rel = pathjoin('../..', 'trial-xml')
 
                 scen_name = self.parent.name if self.parent else self.name
-                self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, sbx.group,
+                self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, sbx.scenario_group,
                                           scen_name, MCSVALUES_FILE, normpath=True)
 
             self.directoryDict = {'scenarioDir': self.scenario_dir.rel,
@@ -553,6 +552,7 @@ def createXmlEditorSubclass(setupFile):
             sbx = self.sbx
 
             # TBD: test this in FCIP case where baseline builds on FuelShock
+            # TBD: move baselineSource logic into ScenarioGroup so it can be shared with Sandbox
             if not sbx.parent:
                 # Before calling setupStatic, we set the parent if there is
                 # a declared baseline source. This assumes it is in this
@@ -579,7 +579,8 @@ def createXmlEditorSubclass(setupFile):
             # not an "else" since parent may be set in "if" above
             if sbx.parent:
                 # patch the template dictionary with the dynamically-determined baseline dir
-                directoryDict['baselineDir'] = self.baseline_dir_rel = self.parent.scenario_dir_rel
+
+                directoryDict['baselineDir'] = self.baseline_dir_rel = sbx.parent_scenario_path.rel
 
             super(XmlEditorSubclass, self).setupStatic(args)
 

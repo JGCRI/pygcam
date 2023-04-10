@@ -26,7 +26,7 @@ _PathPattern = None     # compiled regex matching any mapped paths
 
 # The unixPath and pathjoin funcs are here rather than in utils.py
 # since this functionality is needed here and this avoids import loops.
-def unixPath(path, rmFinalSlash=False, abspath=False):
+def unixPath(path, rmFinalSlash=False, abspath=False, normpath=False):
     """
     Convert a path to use Unix-style slashes, optionally
     removing the final slash, if present.
@@ -38,6 +38,9 @@ def unixPath(path, rmFinalSlash=False, abspath=False):
     """
     if abspath:
         path = os.path.abspath(path)
+
+    if normpath:
+        path = os.path.normpath(path)
 
     if PlatformName == 'Windows':
         path = path.replace('\\', '/')
@@ -591,3 +594,16 @@ def getParamAsFloat(name, section=None):
     value = getParam(name, section=section)
     return float(value)
 
+def getParamAsPath(name, section=None):
+    """
+    Get the value of the configuration parameter `name` as a
+    UNIX path. Calls :py:func:`getConfig` if needed.
+
+    :param name: (str) the name of a configuration parameters.
+    :param section: (str) the name of the section to read from, which
+      defaults to the value used in the first call to ``getConfig``,
+      ``readConfigFiles``, or any of the ``getParam`` variants.
+    :return: (str) the path
+    """
+    value = getParam(name, section=section)
+    return unixPath(value, normpath=True)

@@ -30,7 +30,7 @@ def _secondsToStr(t):
     return "%d:%02d:%02d" % (hours, minutes, seconds)
 
 
-def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
+def _runPygcamSteps(steps, sim, context, raiseError=True):
     """
     run "gt +P {project} --mcs=trial run -s {step[,step,...]} -S {scenarioName} ..."
     For Monte Carlo trials.
@@ -38,14 +38,12 @@ def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
     from ..tool import main as tool_main
     from ..constants import McsMode
 
-    # TBD: sandboxWorkspace and raiseError keywords are not used currently
-    sandboxWorkspace = sandboxWorkspace or getParam('MCS.SandboxWorkspace')
-
     trialDir = context.getTrialDir()
-    # N.B. MCS.SandboxWorkspace is the RefWorkspace for trial sandboxes
+
+    # N.B. sim.sandbox_workspace is the reference workspace for trial sandboxes
     toolArgs = ['--projectName', context.projectName,
                 '--mcs', McsMode.TRIAL.value,
-                '--set', f'GCAM.SandboxWorkspace={sandboxWorkspace}',
+                '--set', f"GCAM.SandboxWorkspace={sim.sandbox_workspace}",
                 'run',
                 '--step', steps,
                 '--scenario', context.scenario,
@@ -57,7 +55,7 @@ def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
     command = 'gt ' + ' '.join(toolArgs)
     _logger.debug(f'Running: {command}')
 
-    status = tool_main(argv=toolArgs, raiseError=True)
+    status = tool_main(argv=toolArgs, raiseError=True, sim=sim)
     msg = f'"{command}" exited with status {status}'
 
     if status != 0 and raiseError:
@@ -66,7 +64,7 @@ def _runPygcamSteps(steps, context, sandboxWorkspace=None, raiseError=True):
     _logger.info("_runSteps: " + msg)
     return status
 
-def _readParameterInfo(context, paramPath):
+def _readParameterInfo(sim, context, paramPath):
     from ..xmlScenario import XMLScenario
 
     scenariosFile = getParam('GCAM.ScenariosFile')
@@ -74,7 +72,7 @@ def _readParameterInfo(context, paramPath):
     scenarioNames = xmlScenario.scenariosInGroup(context.groupName)
 
     paramFile = XMLParameterFile(paramPath)
-    paramFile.loadInputFiles(context, scenarioNames, writeConfigFiles=False)
+    paramFile.loadInputFiles(sim, context, scenarioNames, writeConfigFiles=False)
     paramFile.runQueries()
     return paramFile
 
@@ -97,7 +95,7 @@ def _applySingleTrialData(df, context, paramFile):
     symlink(f'../../../../Workspace/{LOCAL_XML_NAME}', linkDest)
 
 
-def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
+def _runGcamTool(sim, context, noGCAM=False, noBatchQueries=False,
                 noPostProcessor=False):
     '''
     Run GCAM in the current working directory and return exit status.
@@ -120,13 +118,13 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
     # Run setup steps before applying trial data
     setup_steps = getParam('MCS.SetupSteps')
     if setup_steps:
-        _runPygcamSteps(setup_steps, context)
+        _runPygcamSteps(setup_steps, sim, context)
 
     if isBaseline and not noGCAM:
         paramPath = getParam('MCS.ProjectParametersFile')
-        paramFile = _readParameterInfo(context, paramPath)
+        paramFile = _readParameterInfo(sim, context, paramPath)
 
-        df = readTrialDataFile(simId)
+        df = readTrialDataFile(sim)
         columns = df.columns
 
         # add data for linked columns if not present
@@ -142,7 +140,7 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
         gcamStatus = 0
     else:
         start = time.time()
-        gcamStatus = _runPygcamSteps('gcam', context)
+        gcamStatus = _runPygcamSteps('gcam', sim, context)
         stop = time.time()
 
         elapsed = _secondsToStr(stop - start)
@@ -150,12 +148,12 @@ def _runGcamTool(context, noGCAM=False, noBatchQueries=False,
 
     if gcamStatus == 0:
         if not noBatchQueries:
-            _runPygcamSteps('query', context)
+            _runPygcamSteps('query', sim, context)
 
         if not noPostProcessor:
             steps = getParam('MCS.PostProcessorSteps')     # e.g., "diff,CI"
             if steps:
-                _runPygcamSteps(steps, context)
+                _runPygcamSteps(steps, sim, context)
 
         status = RUNNER_SUCCESS
     else:
@@ -264,8 +262,12 @@ class Worker(object):
         :return: (WorkerResult) Contains execution status, one of {'succeeded', 'failed', 'alarmed', 'aborted', 'killed'},
            as well as McsContext, any error message, and a list of results to post to the database.
         """
+        from .simulation import Simulation
+
         context = self.context
         argDict = self.argDict
+
+        sim = Simulation.from_context(context)
 
         noGCAM          = argDict.get('noGCAM', False)
         noBatchQueries  = argDict.get('noBatchQueries', False)
@@ -276,7 +278,7 @@ class Worker(object):
 
         _logger.info(f'Running trial {trialNum}')
         try:
-            exitCode = _runGcamTool(context, noGCAM=noGCAM,
+            exitCode = _runGcamTool(sim, context, noGCAM=noGCAM,
                                     noBatchQueries=noBatchQueries,
                                     noPostProcessor=noPostProcessor)
             status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED

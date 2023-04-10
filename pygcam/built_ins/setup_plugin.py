@@ -38,7 +38,8 @@ class SetupCommand(SubcommandABC):
                             help=clean_help('''Generate only dynamic XML for dyn-xml: don't create static XML.'''))
 
         parser.add_argument('-f', '--forceCreate', action='store_true',
-                            help=clean_help('''Re-create the workspace, even if it already exists.'''))
+                            help=clean_help('''Re-create the sandbox, even if it already exists. 
+                            Implies --createSandbox.'''))
 
         parser.add_argument('-g', '--group',
                             help=clean_help('The scenario group to process. Defaults to the group labeled default="1".'))
@@ -118,13 +119,18 @@ class SetupCommand(SubcommandABC):
         from ..error import CommandlineError
         from ..mcs.mcsSandbox import sandbox_for_mode
 
+        if args.forceCreate:
+            args.createSandbox = 'yes'  # implied argument
+
         if args.createSandbox == 'no' and args.runScenarioSetup == 'no':
             raise CommandlineError("Specified both --createSandbox='no' and --runScenarioSetup='no' so there's nothing to do.")
 
-        sbx = sandbox_for_mode(args.scenario, scenarioGroup=args.group, createDirs=True)
+        # don't bother creating if forceCreate, which removes the directory before recreating it
+        create_dirs = not args.forceCreate
+        sbx = sandbox_for_mode(args.scenario, scenario_group=args.group, create_dirs=create_dirs)
 
         if args.createSandbox == 'yes' and sbx.mcs_mode != McsMode.GENSIM:
-            sbx.create_sandbox(forceCreate=args.forceCreate)
+            sbx.create_sandbox(force_create=args.forceCreate)
 
         if args.runScenarioSetup == 'yes':
             self.run_scenario_setup(sbx, args)

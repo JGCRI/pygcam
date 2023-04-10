@@ -33,7 +33,7 @@ def scenarioXML(scenario, tag, groupName=None):
     from .sandbox import Sandbox    # TBD: doesn't work in MCS currently
     from .xmlScenario import scenarioEditor
 
-    sbx = Sandbox(scenario, scenarioGroup=groupName, createDirs=True)
+    sbx = Sandbox(scenario, scenario_group=groupName, create_dirs=True)
     editor = scenarioEditor(sbx)
     rel_path = editor.componentPath(tag)
     abs_path = pathjoin(getParam('GCAM.SandboxExeDir'), rel_path, abspath=True)

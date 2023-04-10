@@ -6,6 +6,7 @@ from lxml import etree as ET
 
 from ..config import getParam, pathjoin
 from ..log import getLogger
+from .simulation import Simulation
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError
 
@@ -18,24 +19,6 @@ STRINGS_GROUP = 'Strings'
 INTS_GROUP    = 'Ints'
 BOOLS_GROUP   = 'Bools'
 DOUBLES_GROUP = 'Doubles'
-
-# TBD: these two functions might be moved to .util as well. Or perhaps mcs.context.py
-def getSimScenarioDir(context):
-    from .util import getSimLocalXmlDir
-
-    localXmlDir = getSimLocalXmlDir(context.simId)
-    scenDir = pathjoin(localXmlDir, context.groupDir, context.scenario)
-    return scenDir
-
-def getSimConfigFile(context):
-    """
-    Returns the path to sim's copy of the config.xml file for the given scenario.
-    """
-    from ..constants import CONFIG_XML
-
-    scenDir = getSimScenarioDir(context)
-    configFile = pathjoin(scenDir, CONFIG_XML)
-    return configFile
 
 # TBD: Create a version of this that works for non-MCS cases? Could
 #   have a superclass for non-MCS with a subclass, say McsConfigFile,
@@ -61,6 +44,7 @@ class XMLConfigFile(XMLFile):
         '''
         self.writePath = None
         self.context = context = copy(context)
+        self.sim = Simulation.from_context(context)
 
         if useRefConfig:
             path = getParam('GCAM.RefConfigFile')
@@ -68,8 +52,8 @@ class XMLConfigFile(XMLFile):
             if useCopy:
                 path = self.getBackupPath()
             else:
-                path = getSimConfigFile(context)
-                self.copyOriginal() # make a copy of the config file for use by runsim
+                path = self.sim.scenario_config_file(context)
+                self.copyOriginal(path) # make a copy of the config file for use by runsim
 
             # Default writePath is where we were read from.
             self.writePath = path
@@ -96,22 +80,21 @@ class XMLConfigFile(XMLFile):
             return obj
 
     @classmethod
-    def writeAll(cls, context):
+    def writeAll(cls, sim):
         """
         Write all configuration files to disk.
         """
         for cfg in cls.instances.values():
-            configPath = getSimConfigFile(cfg.context)
+            configPath = sim.scenario_config_file(cfg.context)
             cfg.write(path=configPath)
 
-    def copyOriginal(self):
+    def copyOriginal(self, configPath):
         '''
         Copy config file to xxx/config-original.xml if config.xml is
         newer, so runsim can use the original to generate XML files.
         '''
         import shutil
 
-        configPath = getSimConfigFile(self.context)
         backupPath = self.getBackupPath()
 
         # Copy only if the backupPath doesn't exist or is older than configPath
@@ -121,7 +104,7 @@ class XMLConfigFile(XMLFile):
             shutil.copy2(configPath, backupPath)
 
     def getBackupPath(self):
-        pathname = getSimConfigFile(self.context)
+        pathname = self.sim.scenario_config_file(self.context)
         basename, ext = os.path.splitext(pathname)
         return basename + '-original' + ext       # i.e., [path...]/config-original.xml
 

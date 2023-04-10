@@ -7,15 +7,16 @@
 import glob
 import os
 
-from .config import getParam, getParamAsBoolean, setParam, pathjoin, unixPath
+from .config import getParam, getParamAsBoolean, getParamAsPath, setParam, pathjoin, unixPath, mkdirs
 from .constants import LOCAL_XML_NAME, CONFIG_XML
 from .error import SetupException
+from .file_utils import removeTreeSafely, removeFileOrTree, copyFileOrTree, symlinkOrCopyFile
 from .log import getLogger
 
 _logger = getLogger(__name__)
 
 
-def makeDirPath(*elements, require=False, normpath=True, create=False, mode=0o775):
+def makeDirPath(*elements, require=False, normpath=True, create=False):
     """
     Join the tuple of elements to create a path to a directory,
     optionally checking that it exists or creating intermediate
@@ -23,8 +24,8 @@ def makeDirPath(*elements, require=False, normpath=True, create=False, mode=0o77
 
     :param elements: a tuple of pathname elements to join
     :param require: if True, raise an error if the path doesn't exist
+    :param normpath: if True, normalize the path
     :param create: if True, create the path if it doesn't exist
-    :param mode: file mode used when making directories
     :return: the joined path
     :raises: pygcam.error.SetupException
     """
@@ -34,7 +35,7 @@ def makeDirPath(*elements, require=False, normpath=True, create=False, mode=0o77
     if (create or require) and not os.path.lexists(path):
         if create:
             _logger.debug(f"Creating directory '{path}'")
-            os.makedirs(path, mode)
+            mkdirs(path)
         elif require:
             raise SetupException(f"Required path '{path}' does not exist.")
 
@@ -80,19 +81,117 @@ def gcam_path(obj, abs=True):
 
     return obj  # just return the object
 
-# TBD: Make this a method of Sandbox
-def config_path(scenario, sandbox=None, scenarios_dir=None, group_dir='', config_file=None):
-    from .utils import getExeDir
 
-    if scenario:
-        # Translate scenario name into config file path, assuming that for scenario
-        # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
-        scenarios_dir = unixPath(scenarios_dir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
-        cfg_path = pathjoin(scenarios_dir, group_dir, scenario, CONFIG_XML)
+def workspaceLinkOrCopy(src, srcWorkspace, dstSandbox, copyFiles=False):
+    """
+    Create a link (or copy) in the new workspace to the
+    equivalent file in the given source workspace.
+    """
+    # Set automatically on Windows for users without symlink permission
+    copyFiles = copyFiles or getParamAsBoolean('GCAM.CopyAllFiles')
+    linkFiles = not copyFiles
+
+    if os.path.isabs(src):
+        # if absolute path, append only the basename to the sandboxWorkspace
+        srcPath = src
+        dstPath = pathjoin(dstSandbox, os.path.basename(os.path.normpath(src)))
     else:
-        cfg_path = unixPath(config_file or pathjoin(getExeDir(sandbox), 'configuration.xml'), abspath=True)
+        # if relative path, append the whole thing to both workspaces
+        srcPath = pathjoin(srcWorkspace, src)
+        dstPath = pathjoin(dstSandbox, src)
 
-    return cfg_path
+    # Ensure that parent directory exists
+    parent = os.path.dirname(dstPath)
+    mkdirs(parent)
+
+    # If dstPath is a link, we always remove it and either recreate
+    # the link or copy the files as required. If dstPath isn't a
+    # link, we remove it only if we are replacing it with a link.
+    if os.path.lexists(dstPath) and (linkFiles or os.path.islink(dstPath)):
+        removeFileOrTree(dstPath)
+
+    # We've removed dstPath unless we're avoiding re-copying srcPath
+    if not os.path.lexists(dstPath):
+        if copyFiles:
+            _logger.info(f'Copying {srcPath} to {dstPath}')
+            copyFileOrTree(srcPath, dstPath)
+        else:
+            symlinkOrCopyFile(srcPath, dstPath)
+
+
+def getFilesToCopyAndLink(linkParam):
+    reqFiles = getParam('GCAM.RequiredFiles')
+    allFiles = set(reqFiles.split())
+
+    # Subtract from the set of all files the ones to link
+    toLink = getParam(linkParam)
+    filesToLink = toLink.split()
+    filesToLinkSet = set(filesToLink)
+
+    unknownFiles = filesToLinkSet - allFiles
+    if unknownFiles:
+        _logger.warn('Ignoring unknown files specified in %s: %s' % (linkParam, list(unknownFiles)))
+        filesToLinkSet -= unknownFiles
+
+    # Copy everything that is not in the filesToLinkSet
+    filesToCopy = list(allFiles - filesToLinkSet)
+    return filesToCopy, filesToLink
+
+
+def copy_ref_workspace(ref_workspace, new_workspace,
+                       force_create=False, files_to_link_param=None):
+    """
+    Copy/link the reference workspace to the given sandbox Workspace directory.
+
+    :return: nothing
+    """
+    sandbox_workspace = new_workspace
+    sandbox_workspace_exists = os.path.lexists(sandbox_workspace)
+
+    if sandbox_workspace_exists and os.path.samefile(sandbox_workspace, ref_workspace):
+        raise SetupException("Sandbox Workspace is the same as reference workspace; no setup performed")
+
+    semaphore_file = pathjoin(sandbox_workspace, '.creation_semaphore')
+
+    try:
+        os.remove(semaphore_file)
+        force_create = True  # if we can remove it, last attempt failed
+    except OSError as e:
+        import errno
+        if e.errno != errno.ENOENT:  # ENOENT => no such file exists
+            raise
+
+    if sandbox_workspace_exists and not force_create:
+        _logger.debug("Sandbox workspace already exists and force_create is False")
+        return
+
+    version = getParam('GCAM.VersionNumber')
+    _logger.info("Setting up GCAM workspace '%s' for GCAM %s", sandbox_workspace, version)
+
+    if force_create:
+        _logger.info("Removing workspace '%s'", sandbox_workspace)
+        removeTreeSafely(sandbox_workspace, ignore_errors=True)
+
+    mkdirs(sandbox_workspace)
+    open(semaphore_file, 'w').close()  # create empty semaphore file
+
+
+    # Allows override from McsSandbox when calling super().__init__()
+    files_to_link_param = files_to_link_param or 'GCAM.WorkspaceFilesToLink'
+    filesToCopy, filesToLink = getFilesToCopyAndLink(files_to_link_param)
+
+    for filename in filesToCopy:
+        workspaceLinkOrCopy(filename, ref_workspace, sandbox_workspace, copyFiles=True)
+
+    for filename in filesToLink:
+        workspaceLinkOrCopy(filename, ref_workspace, sandbox_workspace, copyFiles=False)
+
+    # for filename in ['local-xml', 'dyn-xml']:
+    #     dirname = pathjoin(sandbox_workspace, filename)
+    #     mkdirs(dirname)
+
+    # if successful, remove semaphore
+    os.remove(semaphore_file)
 
 # TBD: incomplete
 #   -
@@ -102,79 +201,117 @@ def config_path(scenario, sandbox=None, scenarios_dir=None, group_dir='', config
 #   information about any scenario definition from xmlSetup.py.
 
 class Sandbox(object):
-    def __init__(self, scenario, projectName=None, scenarioGroup=None,
-                 parent=None, createDirs=True):
+    def __init__(self, scenario, projectName=None, scenario_group=None,
+                 parent=None, create_dirs=True, copy_workspace=False):
         """
         Create a Sandbox instance from the given arguments.
 
         :param scenario: (str) the name of a policy scenario
         :param projectName: (str) the name of the project, defaults to the value of
             config variable `GCAM.DefaultProject`
-        :param scenarioGroup: (str) the name of a scenario group defined in scenarios.xml
-        :param useGroupDir: (bool) whether to use the ``scenarioGroup`` as an extra directory
-            level above scenario sandboxes
-        :param parent: (str)
-        :param createDirs: (bool) whether to create some dirs
+        :param scenario_group: (str) the name of a scenario group defined in scenarios.xml
+        :param parent: (Sandbox) Sandbox parent scenario, generally a baseline in the same group
+        :param create_dirs: (bool) whether to create some dirs
+        :param copy_workspace: (bool) if True, copy the entire reference workspace without
+            using symlinks. This may provide performance benefits on some cluster file systems.
         """
         from .xmlScenario import XMLScenario
 
         self.scenario = scenario
         self.parent = parent
         self.mcs_mode = getParam('MCS.Mode')
+        self.project_name = projectName or getParam('GCAM.ProjectName')
 
         # Ensure that GCAM.ScenarioGroup is set since system.cfg uses this in path construction
-        if scenarioGroup:
-            setParam('GCAM.ScenarioGroup', scenarioGroup)
+        if scenario_group:
+            setParam('GCAM.ScenarioGroup', scenario_group)
 
-        self.project_name = projectName or getParam('GCAM.ProjectName')
         self.scenarios_file = getParam('GCAM.ScenariosFile')
-        self.group = scenarioGroup or ''
+        self.scenario_group = scenario_group or ''
 
         scen_xml = XMLScenario.get_instance(self.scenarios_file)
-        group_obj = scen_xml.getGroup(self.group)
+        group_obj = scen_xml.getGroup(self.scenario_group)
+        self.baseline = group_obj.baseline
 
         scen_obj = group_obj.getFinalScenario(scenario)
         self.is_baseline = scen_obj.isBaseline
 
+
+        if not (self.parent or self.is_baseline):
+            # TBD: Modify to support out-of-scenario-group parent after groupSource
+            #      logic is moved to ScenarioGroup (see xmlScenario.py)
+            # Create Sandbox (or McsSandbox) for baseline scenario so we can grab it's config.xml
+            self.parent = self.__class__(self.baseline,
+                                         projectName=projectName,
+                                         scenario_group=scenario_group)
+
         # TBD
-        # self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenarioGroup, baseline)
+        # self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenario_group, baseline)
 
-        self.copy_workspace = getParamAsBoolean("GCAM.CopyWorkspace")
+        # TBD: not yet implemented.
+        self.copy_workspace = copy_workspace or getParamAsBoolean("GCAM.CopyWorkspace")
 
-        self.ref_workspace = getParam("GCAM.RefWorkspace")
-        self.ref_workspace_exe_dir = getParam("GCAM.RefExeDir")
+        self.ref_workspace = getParamAsPath('GCAM.RefWorkspace')
+        self.ref_workspace_exe_dir = getParamAsPath("GCAM.RefExeDir")
 
-        self.sandbox_workspace = getParam('GCAM.SandboxWorkspace')
-        self.sandbox_workspace_exe_dir = getParam('GCAM.SandboxWorkspaceExeDir')
+        self.sandbox_workspace = getParamAsPath('GCAM.SandboxWorkspace')
+        self.sandbox_workspace_exe_dir = getParamAsPath('GCAM.SandboxWorkspaceExeDir')
 
-        # From system.cfg:
-        # GCAM.SandboxDir = %(GCAM.SandboxProjectDir)s/%(GCAM.ProjectSubdir)s/%(GCAM.ScenarioGroup)s
-        self.sandbox_dir = getParam('GCAM.SandboxDir')
-        self.sandbox_scenario_dir = makeDirPath(self.sandbox_dir, scenario)
-        self.sandbox_exe_dir = makeDirPath(self.sandbox_scenario_dir, 'exe', create=createDirs)
-        self.sandbox_exe_path = pathjoin(self.sandbox_exe_dir, getParam('GCAM.Executable'))
+        # The following are set in self.update_dependent_paths()
+        self.sandbox_dir = None
+        self.sandbox_scenario_dir = None
+        self.sandbox_exe_dir = None
+        self.sandbox_exe_path = None
+        self.sandbox_output_dir = None
+        self.sandbox_xml_db = None
+        self.sandbox_query_results_dir = None
+        self.sandbox_diffs_dir = None
+        self.sandbox_local_xml = None
+        self.sandbox_scenario_xml = None
+        self.sandbox_dynamic_xml = None
+        self.sandbox_baseline_xml = None
 
-        # The "local-xml" directory is always found at the same level as scenario dirs
-        self.sandbox_local_xml = pathjoin(self.sandbox_scenario_dir, "..", LOCAL_XML_NAME, normpath=True)
-        self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=createDirs)
+        self.update_dependent_paths(getParamAsPath('GCAM.SandboxDir'), scenario,
+                                    create_dirs=create_dirs)
 
-        self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')      # TBD: new subdir under local-xml
-
-        self.sandbox_baseline_xml = (None if self.is_baseline
-                                      else makeDirPath(self.sandbox_local_xml, scen_obj.baseline, create=createDirs))
-
-        self.project_xml_src = getParam('GCAM.ProjectXmlsrc')
+        self.project_xml_src = getParamAsPath('GCAM.ProjectXmlsrc')
         self.project_scenario_xml_src = pathjoin(self.project_xml_src, scenario)
 
         # Directories accessed from configuration XML files (so we store relative-to-exe and
         # absolute paths. Note that gcam_path requires self.sandbox_exe_dir to be set first.
         self.scenario_gcam_xml_dir = self.gcam_path('../input/gcamdata/xml')
 
+        parent = self.parent
+        self.parent_scenario_path = self.gcam_path_from_abs(parent.sandbox_scenario_dir) if parent else None
+
+    def update_dependent_paths(self, sandbox_dir, scenario, create_dirs=True):
+        self.sandbox_dir = sandbox_dir
+        self.sandbox_scenario_dir = makeDirPath(self.sandbox_dir, scenario)
+        self.sandbox_exe_dir = makeDirPath(self.sandbox_scenario_dir, 'exe', create=create_dirs)
+        self.sandbox_exe_path = pathjoin(self.sandbox_exe_dir, getParam('GCAM.Executable'))
+
+        self.sandbox_output_dir = pathjoin(self.sandbox_scenario_dir, 'output')
+        self.sandbox_xml_db = pathjoin(self.sandbox_output_dir, getParam('GCAM.DbFile'))
+
+        self.sandbox_query_results_dir = pathjoin(self.sandbox_scenario_dir, 'queryResults')
+
+        self.sandbox_diffs_dir = pathjoin(self.sandbox_scenario_dir, 'diffs')
+
+        # The "local-xml" directory is always found at the same level as scenario dirs
+        self.sandbox_local_xml = pathjoin(self.sandbox_scenario_dir, "..", LOCAL_XML_NAME, normpath=True)
+        self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=create_dirs)
+
+        self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')      # TBD: new subdir under local-xml
+
+        self.sandbox_baseline_xml = (None if self.is_baseline
+                                      else makeDirPath(self.sandbox_local_xml, self.baseline,
+                                                       create=create_dirs))
+
         # Store scenario config.xml in '.../project/group/local-xml/scenario/config.xml'
         self.scenario_config_path = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
 
     @classmethod
-    def fromXmlSetup(cls, scenarioGroup, scenario):
+    def fromXmlSetup(cls, scenario_group, scenario):
         # TBD: lookup the group and scenario, grab all data and return Sandbox(...)
         return ''
 
@@ -199,15 +336,42 @@ class Sandbox(object):
         files = glob.glob(self.project_scenario_xml_src + '/*.xml')
         return files
 
-    def cfgPath(self):
+    def config_path(self):
         """
         Compute the name of the GCAM config file for the current scenario.
 
         :return: (str) the pathname to the XML configuration file.
         """
-        return self.scenario_config_path # self.scenario_config_path2
+        return self.scenario_config_path
 
-    def create_dir_structure(self):
+    def copy_ref_workspace(self, force_create=False, files_to_link_param=None):
+        """
+        Convenience method just calls global function with instance vars.
+
+        :return: nothing
+        """
+        copy_ref_workspace(self.ref_workspace, self.sandbox_workspace,
+                           force_create=force_create,
+                           files_to_link_param=files_to_link_param)
+
+    def copy_sandbox_workspace(self):
+        """
+        Copy/link the sandbox's Workspace copy to the given sandbox scenario directory.
+
+        :return: nothing
+        """
+        sandbox_workspace = self.sandbox_workspace
+        sandbox_scenario_dir = self.sandbox_scenario_dir
+
+        filesToCopy, filesToLink = getFilesToCopyAndLink('GCAM.SandboxFilesToLink')
+
+        for filename in filesToCopy:
+            workspaceLinkOrCopy(filename, sandbox_workspace, sandbox_scenario_dir, copyFiles=True)
+
+        for filename in filesToLink:
+            workspaceLinkOrCopy(filename, sandbox_workspace, sandbox_scenario_dir, copyFiles=False)
+
+    def create_dir_structure(self, force_create=False):
         """
         Create the directories required in the runtime structure for non-MCS GCAM runs.
         Optionally, this includes a local copy of the full reference workspace, to
@@ -215,18 +379,30 @@ class Sandbox(object):
 
         :return: nothing
         """
-        pass
+        self.copy_ref_workspace(force_create=force_create)
+        self.copy_sandbox_workspace()
 
-    def create_sandbox(self, forceCreate=False):
+        def create_subdirs(parent, *children):
+            for child in children:
+                pathjoin(parent, child, create=True)
+
+        create_subdirs(self.sandbox_scenario_dir, 'output')
+        create_subdirs(self.sandbox_exe_dir, 'restart', 'logs')
+
+    def create_sandbox(self, force_create=False):
         """
         Set up a run-time sandbox in which to run GCAM. This involves copying
         from or linking to files and directories in sandbox's workspace, which defaults
         to the value of config parameter GCAM.SandboxWorkspace.
 
-        :param forceCreate: (bool) if True, delete and recreate the sandbox
+        :param force_create: (bool) if True, delete and recreate the sandbox
         :return: nothing
         """
-        pass
+        if force_create:
+            _logger.debug(f"Removing sandbox '{self.sandbox_scenario_dir}' before recreating")
+            removeTreeSafely(self.sandbox_scenario_dir)
+
+        self.create_dir_structure()
 
     def editor_class(self, scenario, moduleSpec=None, modulePath=None):
         from importlib import import_module

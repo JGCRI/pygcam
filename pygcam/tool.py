@@ -127,6 +127,14 @@ class GcamTool(object):
         if loadPlugins:
             self._cachePlugins()
 
+        self.sim = None     # used to transmit path info for MCS-related commands
+
+    def set_sim(self, sim):
+        self.sim = sim
+
+    def get_sim(self):
+        return self.sim
+
     def addParsers(self):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
 
@@ -293,13 +301,14 @@ class GcamTool(object):
 
         setInputFilesByVersion()
 
-    def run(self, args=None, argList=None):
+    def run(self, args=None, argList=None, sim=None):
         """
         Parse the script's arguments and invoke the run() method of the
         designated sub-command.
 
         :param args: an argparse.Namespace of parsed arguments
         :param argList: (list of str) argument list to parse (when called recursively)
+        :param sim: (Simulation) passed by MCS commands, ignored otherwise
         :return: none
         """
         from .utils import getRegionList
@@ -418,9 +427,9 @@ class GcamTool(object):
         import platform
 
         system = platform.system()
-        if system in ['Windows']: # , 'Darwin']:
+        if system in ['Windows', 'Darwin']:
             system = 'Mac OS X' if system == 'Darwin' else system
-            raise CommandlineError('Batch commands are not supported on %s' % system)
+            raise CommandlineError(f'Batch commands are not supported on {system}')
 
         shellArgs = [pipes.quote(arg) for arg in shellArgs]
         args = self.parser.parse_args(args=shellArgs)
@@ -488,7 +497,7 @@ def _showVersion(argv):
         print(VERSION)
         sys.exit(0)
 
-def _main(argv=None):
+def _main(argv=None, sim=None):
     configPath = userConfigPath()
     if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
         argSet = set(argv or sys.argv)
@@ -510,6 +519,8 @@ def _main(argv=None):
 
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
+
+    tool.set_sim(sim)
 
     # This parser handles only --batch, --showBatch, --projectName, --set, and --mcs
     # args. If --batch is given, we need to create a script and call the
@@ -553,11 +564,11 @@ def _main(argv=None):
         tool.run(args=args)
 
 
-def main(argv=None, raiseError=False):
+def main(argv=None, raiseError=False, sim=None):
     _logger = getLogger(__name__)
 
     try:
-        _main(argv)
+        _main(argv=argv, sim=sim)
         return 0
 
     except CommandlineError as e:

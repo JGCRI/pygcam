@@ -945,6 +945,7 @@ class XMLInputFile(XMLWrapper):
 
         self.findAndSaveParams(element)
 
+    # TBD: use Simulation instead of context?
     def loadFiles(self, context, scenNames, writeConfigFiles=True):
         """
         Find the distinct pathnames associated with our component name. Each scenario
@@ -1064,7 +1065,7 @@ class XMLParameterFile(XMLFile):
 
         _logger.debug(f"Loaded parameter file: {filename}")
 
-    def loadInputFiles(self, context, scenNames, writeConfigFiles=True):
+    def loadInputFiles(self, sim, context, scenNames, writeConfigFiles=True):
         """
         Load the input files, for each scenario in scenNames. Scenarios are
         found in {simDir}/{scenName}.
@@ -1075,7 +1076,7 @@ class XMLParameterFile(XMLFile):
         if writeConfigFiles:
             # Writes all modified configs. Config files' XML trees are updated
             # as InputFile elements are processed.
-            XMLConfigFile.writeAll(context)
+            XMLConfigFile.writeAll(sim)
 
     def getFilename(self):
         return self.filename

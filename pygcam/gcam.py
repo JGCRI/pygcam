@@ -12,7 +12,7 @@ from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
 from .file_utils import pushd
 from .log import getLogger
-from .sandbox import config_path
+from .sandbox import Sandbox
 from .utils import writeXmldbDriverProperties, getExeDir
 from .windows import IsWindows
 
@@ -23,6 +23,7 @@ PROGRAM = os.path.basename(__file__)
 _PathVersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
 _VersionFlagPattern = re.compile('GCAM version (\d+(\.\d+)+)')
 
+# TBD: update this to use Sandbox
 def getGcamVersion(exeDir, preferPath=False):
     '''
     Try to get GCAM version by running gcam with --version flag, but if that
@@ -231,19 +232,11 @@ def linkToMacJava():
         os.chdir(owd)
 
 
-# TBD: pass Sandbox instance instead of all the components
-def runGCAM(scenario, sandbox=None, scenariosDir=None, groupDir='', configFile=None,
-            noRun=False, noWrapper=False):
+def runGCAM(sbx : Sandbox, noRun=False, noWrapper=False):
     """
+    :param sbx: (Sandbox) contains file and directory information
     :param scenario: (str) the scenario to run
-    :param sandbox: (str) path to the sandbox to run in, or None, in which
-       case the model is run in {GCAM.SandboxDir}/{scenario} if scenario is given
-       otherwise, the default scenario in the configuration.xml in the GCAM.RefWorkspace
-       is run.
-    :param scenariosDir: (str) the directory in which the config.xml file for the
-       given scenario is found. Defaults to GCAM.ScenariosDir, if given, or "."
-    :param groupDir: (str) the name of the scenario group if group subdirectories
-       are to be used when computing the location of the scenario's config.xml.
+    :param group: (str) the name of the scenario group to use
     :param configFile: (str) if scenario is not given, the name of a configuration
        file to run. If scenario is given, this parameter is ignored.
     :param noRun: (bool) if True, don't run the model, just create the sandbox and
@@ -253,29 +246,18 @@ def runGCAM(scenario, sandbox=None, scenariosDir=None, groupDir='', configFile=N
     :return: none
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
-    #     :param refWorkspace: (str) a workspace to copy files from to create the sandbox,
-    #        if the sandbox is not given, or doesn't exist.
-    #     :param forceCreate: (bool) if True, recreate the sandbox even if it already exists.
-
     import platform
 
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    if not (sandbox or scenario):
-        raise PygcamException("runGCAM: must pass either sandbox or scenario")
-
     # TBD: Compute this in Sandbox as {GCAM.SandboxDir}/{optional-groupdir}/{scenario}
-    sandbox = sandbox or pathjoin(getParam('GCAM.SandboxDir'), scenario)
+    sandbox_scenario_dir = sbx.sandbox_scenario_dir
 
-    if not os.path.lexists(sandbox):
-        raise PygcamException(f"Sandbox '{sandbox}' does not exist.")
+    if not os.path.lexists(sandbox_scenario_dir):
+        raise PygcamException(f"Sandbox '{sandbox_scenario_dir}' does not exist.")
 
-    # Deprecated: the sandbox should have to exist. Setup does that.
-    # if not os.path.lexists(sandbox) or forceCreate:
-    #     createSandbox(sandbox, refWorkspace, forceCreate=forceCreate)
-
-    exeDir = getExeDir(sandbox, chdir=True)
+    exeDir = sbx.sandbox_exe_dir
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
 
     # InMemoryDatabase implies RunQueriesInGCAM
@@ -283,20 +265,17 @@ def runGCAM(scenario, sandbox=None, scenariosDir=None, groupDir='', configFile=N
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    configFile = config_path(scenario, sandbox=sandbox, scenarios_dir=scenariosDir,
-                group_dir=groupDir, config_file=configFile)
+    gcam_args = [sbx.sandbox_exe_path, '-C', sbx.scenario_config_path]
 
-    gcamPath = unixPath(getParam('GCAM.Executable'), abspath=True)
-    gcamArgs = [gcamPath, '-C', configFile]
-
-    command = ' '.join(gcamArgs)
+    command = ' '.join(gcam_args)
     if noRun:
         print(command)
     else:
         _logger.info('Running: %s', command)
 
         noWrapper = IsWindows or noWrapper     # don't use the wrapper on Windows
-        exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else _gcamWrapper(gcamArgs)
+        with pushd(exeDir):
+            exitCode = subprocess.call(gcam_args, shell=False) if noWrapper else _gcamWrapper(gcam_args)
 
         if exitCode != 0:
             raise ProgramExecutionError(command, exitCode)

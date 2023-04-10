@@ -118,7 +118,7 @@ class Master(object):
         self.finished = False
         self.idleEngines = set()
 
-        projectName = args.projectName      # "global" argument added in tool.py
+        projectName = args.projectName      # "global" projectName argument added in tool.py
 
         # cache run definitions from the database and amend as necessary when creating runs
         for scenario in args.scenarios:

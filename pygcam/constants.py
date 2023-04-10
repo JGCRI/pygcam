@@ -10,6 +10,8 @@ LOCAL_XML_NAME = 'local-xml'
 DYN_XML_NAME   = 'dyn-xml'
 APP_XML_NAME   = 'app-xml'
 XML_SRC_NAME   = 'xmlsrc'
+PARAMETERS_XML = "parameters.xml"
+RESULTS_XML    = "results.xml"
 
 # Common directory and filenames
 CONFIG_XML = "config.xml"

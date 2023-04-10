@@ -21,7 +21,7 @@ _activeYearInts = None
 
 PARAMETERS_XML = "parameters.xml"
 RESULTS_XML    = "results.xml"
-TRIAL_DATA_CSV = 'trialData.csv'
+TRIAL_DATA_CSV = 'trialData.csv'        # Deprecated; moved to mcsSandbox
 
 COMMENT_CHAR = '#'
 YEAR_COL_PREFIX = 'y'
@@ -66,15 +66,16 @@ def getSimDir(simId, create=False):
 
     return simDir
 
+# TBD: used only by 2 funcs below
 def trialDataFile(simId):
     simDir = getSimDir(simId)
     return pathjoin(simDir, TRIAL_DATA_CSV)
 
-def writeTrialDataFile(simId, df):
+def writeTrialDataFile(sim, df):
     '''
     Save the trial DataFrame in the file 'trialData.csv' in the simDir.
     '''
-    dataFile = trialDataFile(simId)
+    dataFile = trialDataFile(sim.sim_id)
 
     # If the file exists, rename it trialData.csv-.
     try:
@@ -84,13 +85,13 @@ def writeTrialDataFile(simId, df):
 
     df.to_csv(dataFile, index_label='trialNum')
 
-def readTrialDataFile(simId):
+def readTrialDataFile(sim):
     """
     Load trial data (e.g., saved by writeTrialDataFile) and return a DataFrame
     """
     import pandas as pd
 
-    dataFile = trialDataFile(simId)
+    dataFile = trialDataFile(sim.sim_id)
     df = pd.read_table(dataFile, sep=',', index_col='trialNum')
     return df
 

@@ -272,7 +272,7 @@ def simpleFormat(s, varDict):
         result = re.sub(pat, lookup, s)
         return result
     except KeyError as e:
-        raise FileFormatError('Unknown parameter %s in project XML template string' % e)
+        raise FileFormatError(f'Unknown parameter {e} in project XML template string: {s}')
 
 
 def getResource(relpath):

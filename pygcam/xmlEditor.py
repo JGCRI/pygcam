@@ -66,14 +66,15 @@ class XMLEditor(object):
         self.sbx = sbx
         self.name = scenario = sbx.scenario
         self.setupArgs = None
-        self.configPath = None
+        self.config_path = None
 
         self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
         self.trial_xml_rel = self.trial_xml_abs = None      # used by MCS only TBD: use GcamPath
 
-        self.scenario_dir_rel = self.scenario_dir_abs = "DEPRECATED"
-        self.scenario_dir = sbx.gcam_path_from_abs(sbx.sandbox_scenario_xml)
-        self.baseline_dir = sbx.gcam_path_from_abs(sbx.sandbox_baseline_xml) if sbx.sandbox_baseline_xml else None
+        #self.scenario_dir_rel = self.scenario_dir_abs =
+        # TBD: rename self.scenario_dir -> self.scenario_xml_dir
+        self.scenario_dir = sbx.gcam_path_from_abs(sbx.sandbox_scenario_xml, create=True)
+        self.baseline_dir = sbx.gcam_path_from_abs(sbx.sandbox_baseline_xml, create=True) if sbx.sandbox_baseline_xml else None
 
         # Store commonly-used paths
         # TBD: add climate and policy subdirs?
@@ -158,14 +159,14 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
-        configPath = self.cfgPath()
+        self.config_path = config_path = sbx.config_path()
 
         parent = sbx.parent
-        parentConfigPath = parent.cfgPath() if parent else getParam('GCAM.RefConfigFile')
+        parentConfigPath = parent.config_path() if parent else getParam('GCAM.RefConfigFile')
 
-        _logger.info("Copy %s\n      to %s", parentConfigPath, configPath)
-        shutil.copy(parentConfigPath, configPath)
-        os.chmod(configPath, 0o664)
+        _logger.info("Copy %s\n      to %s", parentConfigPath, config_path)
+        shutil.copy(parentConfigPath, config_path)
+        os.chmod(config_path, 0o664)
 
         # set the scenario name
         self.updateConfigComponent('Strings', 'scenarioName', self.name)
@@ -212,16 +213,7 @@ class XMLEditor(object):
         CachedFile.decacheAll()
 
     def cfgPath(self):
-        """
-        Compute the name of the GCAM config file for the current scenario.
-
-        :return: (str) the pathname to the XML configuration file.
-        """
-        if not self.configPath:
-            # compute the first time, then cache it
-            self.configPath = pathjoin(self.scenario_dir_abs, CONFIG_XML, realpath=True)
-
-        return self.configPath
+        return self.config_path
 
     def cachedConfig(self, edited=None):
         path = self.cfgPath()
@@ -253,10 +245,10 @@ class XMLEditor(object):
             (the default) return a tuple of the relative and absolute pathnames.
         :return: (GcamPath) a GcamPath instance
         """
-        sbx = self.sandbox
+        sbx = self.sbx
 
         pathname = self.componentPath(configTag)
-        srcAbsPath = pathjoin(self.sandboxExeDir, pathname, abspath=True)
+        srcAbsPath = pathjoin(sbx.sandbox_exe_dir, pathname, abspath=True)
 
         srcPath = GcamPath(sbx.sandbox_exe_dir, pathname)     # TBD: compare to above
 
@@ -281,14 +273,14 @@ class XMLEditor(object):
         suffix2 = srcPath.basename()
         assert suffix == suffix2    # TBD: remove after testing
 
-
-        dstAbsPath = pathjoin(self.scenario_dir_abs, suffix)
-        dstRelPath = pathjoin(self.scenario_dir_rel, suffix)
+        # TBD: Use GcamPath
+        dstAbsPath = pathjoin(self.scenario_dir.abs, suffix)
+        dstRelPath = pathjoin(self.scenario_dir.rel, suffix)
 
         # copyIfMissing(sbx.scenario_dir.abs, dstAbsPath, makedirs=True)
         copyIfMissing(srcAbsPath, dstAbsPath, makedirs=True)
 
-        return GcamPath(self.sandboxExeDir, pathname)
+        return GcamPath(sbx.sandbox_exe_dir, pathname)
 
     @callableMethod
     def replaceValue(self, tag, xpath, value):

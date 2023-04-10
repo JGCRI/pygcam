@@ -18,8 +18,9 @@ from ..project import Project
 #     return jobNum
 
 class McsContext(object):
-    __slots__ = ('scenario', 'baseline', 'groupName', 'projectName', 'useGroupDir',
-                 'runId', 'simId', 'trialNum', 'status')
+    __slots__ = ('projectName', 'scenario', 'baseline', 'groupName',
+                 'groupDir', 'useGroupDir', 'runId', 'simId', 'trialNum',
+                 'status')
 
     instances = {}      # McsContext instances keyed by runId
 

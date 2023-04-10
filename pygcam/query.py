@@ -9,7 +9,7 @@ import re
 
 from lxml import etree as ET
 
-from .config import getParam, getParamAsBoolean, mkdirs, pathjoin, unixPath
+from .config import getParam, getParamAsPath, getParamAsBoolean, mkdirs, pathjoin, unixPath
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser, Query
@@ -1071,25 +1071,30 @@ def queryMain(args):
     # :param args:
     # :return: none
     # """
-    miLogFile   = getParam('GCAM.MI.LogFile')
-    outputDir   = args.outputDir or getParam('GCAM.QueryOutputDir')
-    groupDir    = args.groupDir
-    scenario    = args.scenario
-    sandbox     = args.workspace or pathjoin(getParam('GCAM.SandboxDir'), groupDir, scenario)
-    xmldb       = args.xmldb     or pathjoin(sandbox, 'output', getParam('GCAM.DbFile'))
-    queryPath   = args.queryPath or getParam('GCAM.QueryPath')
-    queryFile   = args.queryXmlFile
-    regionFile  = args.regionMap or getParam('GCAM.RegionMapFile')
-    regions     = args.regions.split(',') if args.regions else None
+    from .mcs.mcsSandbox import sandbox_for_mode
+
+    miLogFile  = getParam('GCAM.MI.LogFile')
+    outputDir  = args.outputDir or getParamAsPath('GCAM.QueryOutputDir')
+    scenario   = args.scenario
+
+    sbx = sandbox_for_mode(args.scenario, scenarioGroup=args.group)
+
+    sandbox_dir = sbx.sandbox_scenario_dir
+    xmldb = sbx.sandbox_xml_db
+    queryPath  = args.queryPath or getParam('GCAM.QueryPath')
+    queryFile  = args.queryXmlFile
+    regionFile = args.regionMap or getParam('GCAM.RegionMapFile')
+    regions    = args.regions.split(',') if args.regions else None
+
     _logger.debug("Regions: %s", regions)
 
     queryNames  = args.queryName
     noDelete    = args.noDelete
     prequery    = args.prequery
 
-    inMemory        = getParamAsBoolean('GCAM.InMemoryDatabase')
+    inMemory = getParamAsBoolean('GCAM.InMemoryDatabase')
     internalQueries = inMemory or getParamAsBoolean('GCAM.RunQueriesInGCAM')
-    batchMultiple   = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
+    batchMultiple = internalQueries or getParamAsBoolean('GCAM.BatchMultipleQueries')
 
     rewriteSetsFile = args.rewriteSetsFile or getParam('GCAM.RewriteSetsFile')
     batchFileIn  = args.batchFile
@@ -1130,19 +1135,18 @@ def queryMain(args):
     # using an in-memory database, GCAM runs the queries for us, so here we
     # just create the XMLDBDriver.properties and batch files and return.
     if args.prequery:
-        exeDir = getExeDir(sandbox, chdir=True)
-        batchFile = createBatchFile(scenario, queries, queryPath=queryPath, outputDir=outputDir,
-                                    regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
-                                    batchFileIn=batchFileIn, batchFileOut=batchFileOut,
-                                    tmpFiles=False, noDelete=noDelete) \
-            if batchMultiple else ''
+        exeDir = getExeDir(sandbox_dir, chdir=True)
+        batchFile = createBatchFile(
+            scenario, queries, queryPath=queryPath, outputDir=outputDir,
+            regions=regions, regionMap=regionMap, rewriteParser=rewriteParser,
+            batchFileIn=batchFileIn, batchFileOut=batchFileOut,
+            tmpFiles=False, noDelete=noDelete
+        ) if batchMultiple else ''
 
         filterFile = getParam('GCAM.FilterFile')
         writeXmldbDriverProperties(inMemory=inMemory, outputDir=exeDir, filterFile=filterFile,
                                    batchFile=batchFile, batchLog='logs/batch-query.log')
         return
-
-    xmldb = unixPath(xmldb, abspath=True)
 
     if miLogFile:
         miLogFile = pathjoin(outputDir, miLogFile, abspath=True)
