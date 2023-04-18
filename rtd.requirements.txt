@@ -9,7 +9,7 @@ ipyparallel==6.2.2
 lxml==4.2.5
 matplotlib==2.2.3
 numexpr==2.6.8
-numpy==1.15.2
+numpy==1.22.0
 pandas==0.23.4
 python-dateutil==2.7.3
 scipy==1.1.0
