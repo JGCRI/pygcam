@@ -14,7 +14,7 @@ def driver(args):
 
     if not (args.runLocal or args.redoListOnly):
         # If the pid file doesn't exist, we assume the cluster is
-        # not running and we run it with the given profile and
+        # not running, and we run it with the given profile and
         # cluster ID, relying on the config file for other parameters.
         # To specify other params, use "gt cluster start" instead.
         if pidFileExists(args.profile, args.clusterId):

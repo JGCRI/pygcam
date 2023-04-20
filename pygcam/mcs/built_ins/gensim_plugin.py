@@ -10,8 +10,7 @@ from ...log import getLogger
 from ...project import Project
 from ...sandbox import copy_ref_workspace
 
-from ..context import McsContext
-from ..util import writeTrialDataFile, saveDict
+from ..util import saveDict
 
 from ..simulation import Simulation
 from .McsSubcommandABC import McsSubcommandABC, clean_help
@@ -127,7 +126,7 @@ def genTrialData(sim : Simulation, paramFileObj, method):
     lhsAmend(trialData, linked, trials, shuffle=False)
 
     if method in ('montecarlo', 'full-factorial'):
-        writeTrialDataFile(sim, trialData)
+        sim.writeTrialDataFile(trialData)
 
     df = DataFrame(data=trialData)
     return df
@@ -169,7 +168,7 @@ def saveTrialData(sim : Simulation, df, start=0):
     db.updateSimTrials(simId, trials)
     _logger.info(f'Saved {trials} trials for simId {simId}')
 
-
+# Deprecated? Or may need to be called by runsim
 def runStaticSetup(sim : Simulation, project : Project):
     """
     Run the --staticOnly setup in the MCS copy of the workspace, for all scenarios.
@@ -199,20 +198,23 @@ def runStaticSetup(sim : Simulation, project : Project):
     #     linkname  = pathjoin(dirname, LOCAL_XML_NAME)
     #     symlink(wsXmlDir, linkname)
 
-    # N.B. RunWorkspace for gensim is pygcam's RefWorkspace
-    toolArgs = ['+P', projectName, '+M', McsMode.GENSIM.value,
-                'run', '-s', 'setup2', '-S', scenarios_arg,         # TBD: switch back to "setup" when pygcam 2.0 is released
-                '--sandbox=' + sim.sandbox_dir]
+     # N.B. RunWorkspace for gensim is pygcam's RefWorkspace
+    toolArgs = ['--projectName', projectName,
+                '--mcs', McsMode.GENSIM.value,
+                'run',
+                '--step', 'setup2',    # TBD: switch back to "setup" when pygcam 2.0 is released
+                '--scenario', scenarios_arg,
+                '--sandboxDir', sim.sim_local_xml]
 
     if sim.scenario_group:
-        toolArgs += ['-g', sim.scenario_group]
+        toolArgs.extend(['-g', sim.scenario_group])
 
-    cmd = 'gt ' + ' '.join(toolArgs)
-    _logger.debug(f'Running: {cmd}')
+    command = 'gt ' + ' '.join(toolArgs)
+    _logger.debug(f'Running: {command}')
     status = tool.main(argv=toolArgs, raiseError=True, sim=sim)
 
     if status != 0:
-        raise GcamToolError(f'"gt setup" exited with status {status}')
+        raise GcamToolError(f'"{command}" exited with status {status}')
 
     return status
 
@@ -231,9 +233,10 @@ def genSimulation(sim : Simulation, data_file, method):
 
     project = Project.readProjectFile(sim.project_name, groupName=sim.scenario_group)
 
-    # TBD: not sure this is needed in gensim
+    # TBD: Should not be needed here. Setup must be run *after* datasystem runs (optional)
+    #  to generate the base XML files the setup operates on.
     # Run static setup for all scenarios in the given group
-    runStaticSetup(sim, project)
+    # runStaticSetup(sim, project)
 
     group_name = sim.scenario_group or project.scenarioSetup.defaultGroup
 

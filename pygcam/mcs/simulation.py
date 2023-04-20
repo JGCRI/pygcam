@@ -5,7 +5,6 @@ from ..log import getLogger
 from ..xmlScenario import XMLScenario
 
 from .context import McsContext
-from .error import PygcamMcsUserError
 
 _logger = getLogger(__name__)
 
@@ -14,16 +13,18 @@ ARGS_SAVE_FILE = 'gensim-args.txt'
 
 class Simulation(object):
     def __init__(self, project_name=None, group=None, sim_id=1, run_root=None,
-                 trial_count=None, trial_str=None, param_file=None):
+                 trial_count=None, trial_str=None, param_file=None, context=None):
+        self.context = context
         self.sim_id = sim_id
         self.trial_count = trial_count
         self.trial_str = trial_str
         self.project_name = project_name or getParam('GCAM.ProjectName')
-        self.scenario_group = group or getParam('GCAM.ScenarioGroup')
+        self.scenario_group = group or '' # getParam('GCAM.ScenarioGroup')
         self.scenarios_file = getParamAsPath('GCAM.ScenariosFile')
         self.run_root = run_root or getParamAsPath('MCS.SandboxRoot')
         self.param_file = param_file or getParamAsPath('MCS.ProjectParametersFile')
         self.sandbox_workspace_input_dir = getParamAsPath('MCS.SandboxWorkspaceInputDir')
+        self.group_subdir = ''
 
         self.project_results_file = getParamAsPath('MCS.ProjectResultsFile')
 
@@ -34,12 +35,15 @@ class Simulation(object):
         if param_file:
             setParam('MCS.ProjectParametersFile', param_file)
 
+        self.project_parameters_file = getParamAsPath('MCS.ProjectParametersFile')
+
         if project_name:
             # N.B. GCAM.DefaultProject is set in tool.py from global +P/--project arg
             setParam('GCAM.ProjectName', project_name)
 
         if group and group_obj.useGroupDir:
-            setParam('GCAM.ScenarioGroup', group)
+            # setParam('GCAM.ScenarioSubdir', group)   # this is set in project.py
+            self.group_subdir = group
 
         if run_root:
             setParam('MCS.SandboxRoot', run_root)
@@ -54,14 +58,10 @@ class Simulation(object):
         self.sandbox_dir = getParamAsPath('MCS.SandboxDir')
 
         sandbox_sims_dir = getParamAsPath('MCS.SandboxSimsDir')
-        if not sandbox_sims_dir:
-            raise PygcamMcsUserError("Missing required config parameter 'MCS.SandboxSimsDir'")
-
         self.sim_dir = sim_dir = pathjoin(sandbox_sims_dir, f's{self.sim_id:03d}', create=True)
 
         self.trial_data_file = pathjoin(sim_dir, TRIAL_DATA_CSV)
         self.args_save_file  = pathjoin(sim_dir, ARGS_SAVE_FILE)
-        # self.sim_input_dir   = pathjoin(sim_dir, 'input')                       # TBD: should be inside scenario dir
         self.sim_local_xml   = pathjoin(sim_dir, LOCAL_XML_NAME, create=True)
         self.sim_app_xml     = pathjoin(sim_dir, APP_XML_NAME, create=True)
 
@@ -74,17 +74,48 @@ class Simulation(object):
 
     @classmethod
     def from_context(cls, ctx : McsContext):
-        sim = cls(project_name=ctx.projectName, group=ctx.groupName, sim_id=ctx.simId)
+        sim = cls(project_name=ctx.projectName, group=ctx.groupName, sim_id=ctx.simId, context=ctx)
         return sim
+
+    # TBD: may not need trial_num arg
+    def trial_dir(self, context=None, trial_num=None, create=False) -> str:
+        """
+        Get the trial directory for the given trial number (from ``context``).
+
+        :param context: (McsContext) information describing this trial
+        :param trial_num: (int) optional trial number to use instead of ``context``.
+        :param create: (bool) whether to create directories
+        :return: (str) the pathname of the trial directory
+        """
+        from .util import dirFromNumber
+
+        if trial_num is None:
+            ctx = context or self.context
+            trial_num = ctx.trialNum
+
+        trial_dir = dirFromNumber(trial_num, prefix=self.sim_dir, create=create)
+        return trial_dir
+
+    def trial_scenario_dir(self, context, scenario=None, create=False):
+        trial_dir = self.trial_dir(context=context, create=create)
+        path = pathjoin(trial_dir, self.group_subdir, scenario or context.scenario)
+        return path
 
     # TBD: if we need a second local-xml under the trial rather than just the
     #  one under the sim. Though, we might just create baseline and policy
     #  folders under trial-xml and avoid some confusion.
-    def trial_local_xml(self, context):
-        pass
+    def trial_local_xml(self, context=None, create=False):
+        """
+        Requires self.context to be set before calling this without passing a ``context``.
+        """
+        context = context or self.context
+        trial_dir = self.trial_dir(context=context, create=create)
+        local_xml = pathjoin(trial_dir, LOCAL_XML_NAME, create=create)
+        return local_xml
 
-    def scenario_local_xml(self, context):
-        path = pathjoin(self.sim_local_xml, context.scenario)
+    def scenario_local_xml(self, context=None, create=False):
+        context = context or self.context
+        path = pathjoin(self.sim_local_xml, context.scenario, create=create)
         return path
 
     def scenario_config_file(self, context):

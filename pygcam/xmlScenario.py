@@ -336,7 +336,7 @@ class ConfigActionBase(object):
 
 class ConfigAction(ConfigActionBase):
     def __init__(self, node):
-        super(ConfigAction, self).__init__(node)
+        super().__init__(node)
         self.name = node.get('name')
         self.dynamic = getBooleanXML(node.get('dynamic', '0'))
 
@@ -352,7 +352,7 @@ class ConfigAction(ConfigActionBase):
 
 class Insert(ConfigAction):
     def __init__(self, node):
-        super(Insert, self).__init__(node)
+        super().__init__(node)
         self.after = node.get('after')
 
     def __str__(self):
@@ -401,7 +401,7 @@ class Function(ConfigAction):
 
 class If(ConfigActionBase):
     def __init__(self, node):
-        super(If, self).__init__(node)
+        super().__init__(node)
         self.value1 = node.get('value1')
         self.value2 = node.get('value2')
         self.matches = getBooleanXML(node.get('matches', '1'))
@@ -511,7 +511,7 @@ def createXmlEditorSubclass(setupFile):
         def setupDynamic(self, args):
             self.groupName = args.group
 
-            super(XmlEditorSubclass, self).setupDynamic(args)
+            super().setupDynamic(args)
             sbx = self.sbx
 
             if sbx.mcs_mode == McsMode.TRIAL: # TBD: was just "if self.mcsMode" -- test this
@@ -582,7 +582,7 @@ def createXmlEditorSubclass(setupFile):
 
                 directoryDict['baselineDir'] = self.baseline_dir_rel = sbx.parent_scenario_path.rel
 
-            super(XmlEditorSubclass, self).setupStatic(args)
+            super().setupStatic(args)
 
             scenarioSetup.run(self, directoryDict, dynamic=False)
             CachedFile.decacheAll()

@@ -175,16 +175,16 @@ class ActionInfo(object):
 
 class StoreAction(ActionInfo):
     def __init__(self, pageId, action, default):
-        super(StoreAction, self).__init__(pageId, action, default)
+        super().__init__(pageId, action, default)
 
 class StoreConst(ActionInfo):
     def __init__(self, pageId, action, const, default):
-        super(StoreConst, self).__init__(pageId, action, default)
+        super().__init__(pageId, action, default)
         self.const = const
 
 class AppendAction(ActionInfo):
     def __init__(self, pageId, action, default):
-        super(AppendAction, self).__init__(pageId, action, default)
+        super().__init__(pageId, action, default)
 
 
 def getActionInstance(pageId, action):

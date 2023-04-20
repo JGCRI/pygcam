@@ -301,14 +301,13 @@ class GcamTool(object):
 
         setInputFilesByVersion()
 
-    def run(self, args=None, argList=None, sim=None):
+    def run(self, args=None, argList=None):
         """
         Parse the script's arguments and invoke the run() method of the
         designated sub-command.
 
         :param args: an argparse.Namespace of parsed arguments
         :param argList: (list of str) argument list to parse (when called recursively)
-        :param sim: (Simulation) passed by MCS commands, ignored otherwise
         :return: none
         """
         from .utils import getRegionList

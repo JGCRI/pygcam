@@ -3,7 +3,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 from .util import getSimDir, dirFromNumber
-from ..config import pathjoin, getParam
+from ..config import getParam
 from ..project import Project
 
 # def _getJobNum():
@@ -55,7 +55,7 @@ class McsContext(object):
 
     def __str__(self):
         idTail = str(id(self))[-6:] # show last 6 digits only; enough to distinguish objs
-        return f"<McsClass id={idTail} scn={self.scenario} grp={self.groupName} use={self.useGroupDir} sim={self.simId} trl={self.trialNum} run={self.runId} sta={self.status}>"
+        return f"<{self.__class__.__name__} id={idTail} scn={self.scenario} grp={self.groupName} use={self.useGroupDir} sim={self.simId} trl={self.trialNum} run={self.runId} sta={self.status}>"
 
     # TBD: not sure we should be setting anything but status here
     def setVars(self, projectName=None, scenario=None, baseline=None, groupName=None,
@@ -97,23 +97,3 @@ class McsContext(object):
         simDir = getSimDir(self.simId, create=False)
         trialDir = dirFromNumber(self.trialNum, prefix=simDir, create=create)
         return trialDir
-
-    def getScenarioDir(self, create=False):
-        '''
-        Return and optionally create the path to the directory for a given experiment.
-        '''
-        trialDir = self.getTrialDir(create=False)
-        scenarioDir = pathjoin(trialDir, self.scenario, create=create)
-
-        return scenarioDir
-
-    def getQueryResultsDir(self):
-        scenarioDir = self.getScenarioDir()
-        result = pathjoin(scenarioDir, 'queryResults')
-        return result
-
-    def getDiffsDir(self):
-        scenarioDir = self.getScenarioDir()
-        result = pathjoin(scenarioDir, 'diffs')
-        return result
-

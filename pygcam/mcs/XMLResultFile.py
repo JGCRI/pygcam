@@ -8,7 +8,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from ..config import getParam
+from ..config import getParam, pathjoin
 from ..log import getLogger
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
@@ -36,7 +36,7 @@ class XMLConstraint(XMLWrapper):
     strMatch = ['startswith', 'endswith', 'contains']
 
     def __init__(self, element):
-        super(XMLConstraint, self).__init__(element)
+        super().__init__(element)
         self.column = element.get('column')
         self.op = element.get('op')
         self.value = element.get('value')
@@ -80,7 +80,7 @@ class XMLConstraint(XMLWrapper):
 
 class XMLColumn(XMLWrapper):
     def __init__(self, element):
-        super(XMLColumn, self).__init__(element)
+        super().__init__(element)
 
 
 class XMLResult(XMLWrapper):
@@ -88,7 +88,7 @@ class XMLResult(XMLWrapper):
     Represents a single Result (model output) from the results.xml file.
     '''
     def __init__(self, element):
-        super(XMLResult, self).__init__(element)
+        super().__init__(element)
         self.name = element.get('name')
         self.type = element.get('type', DEFAULT_RESULT_TYPE)
         self.desc = element.get('desc')
@@ -140,7 +140,7 @@ class XMLResult(XMLWrapper):
         mainPart, extension = os.path.splitext(basename)
         middle =  scenario if type == RESULT_TYPE_SCENARIO else ("%s-%s" % (scenario, baseline))
         csvFile = "%s-%s.csv" % (mainPart, middle)
-        csvPath = os.path.abspath(os.path.join(outputDir, csvFile))
+        csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
         return csvPath
 
     def columnName(self):
@@ -151,7 +151,6 @@ class XMLResultFile(XMLFile):
     """
     XMLResultFile manipulation class.
     """
-
     cache = {}
 
     @classmethod
@@ -164,7 +163,7 @@ class XMLResultFile(XMLFile):
             return obj
 
     def __init__(self, filename):
-        super(XMLResultFile, self).__init__(filename, load=True, schemaPath='mcs/etc/results-schema.xsd')
+        super().__init__(filename, load=True, schemaPath='mcs/etc/results-schema.xsd')
         root = self.tree.getroot()
 
         self.results = OrderedDict()    # the parsed fileNodes, keyed by filename
@@ -283,19 +282,19 @@ def getCachedFile(csvPath, loader=QueryResult, desc="query result"):
 
     return result
 
-def getOutputDir(trialDir, scenario, type):
-    subDir = 'queryResults' if type == RESULT_TYPE_SCENARIO else 'diffs'
-    return os.path.join(trialDir, scenario, subDir)
-
 
 def extractResult(context, scenario, outputDef, type):
     from .util import activeYears, YEAR_COL_PREFIX
+    from .util2 import sim_and_sbx_from_context
 
     _logger.debug("Extracting result for {}, name={}".format(context, outputDef.name))
 
-    trialDir = context.getTrialDir()
+    sim, sbx = sim_and_sbx_from_context(context)
+    trial_scenario_dir = sim.trial_scenario_dir(context, scenario=scenario)
 
-    outputDir = getOutputDir(trialDir, scenario, type)
+    subDir = 'queryResults' if type == RESULT_TYPE_SCENARIO else 'diffs'
+    outputDir = pathjoin(trial_scenario_dir, subDir)
+
     baseline = None if type == RESULT_TYPE_SCENARIO else context.baseline
     csvPath = outputDef.csvPathname(scenario, outputDir=outputDir, baseline=baseline, type=type)
 

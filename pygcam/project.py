@@ -105,7 +105,7 @@ class _TmpFile(_TmpFileBase):
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        super(_TmpFile, self).__init__(node)
+        super().__init__(node)
 
         self.replace = getBooleanXML(node.get('replace', '0'))
         self.eval    = getBooleanXML(node.get('eval',    '1'))    # convert {args} before writing file
@@ -153,7 +153,7 @@ class Queries(_TmpFileBase):
     Actual reading/processing of contents is handled in queryFile.py.
     """
     def __init__(self, node):
-        super(Queries, self).__init__(node)
+        super().__init__(node)
         self.tree = ET.ElementTree(node)
         self.setInstance(self.varName, self)      # replace default with our own definition
 
@@ -275,7 +275,7 @@ class Variable(SimpleVariable):
         name     = node.get('name')
         evaluate = getBooleanXML(node.get('eval', 0))
 
-        super(Variable, self).__init__(name, node.text, evaluate=evaluate)
+        super().__init__(name, node.text, evaluate=evaluate)
 
     @classmethod
     def evaluateVars(cls, argDict):
@@ -306,7 +306,7 @@ class Project(XMLFile):
         if not self.projectName:
             raise CommandlineError("No project name specified and no default project set")
 
-        super(Project, self).__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
+        super().__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
 
         self.scenarioGroupName = groupName
 
@@ -519,8 +519,8 @@ class Project(XMLFile):
         scenarioGroupName = self.scenarioGroupName
 
         if self.scenarioGroup.useGroupDir:
-            # Set the groupName so config vars can access it
-            setParam('GCAM.ScenarioGroup', scenarioGroupName, section=projectName)
+            # Set the group subdir so config vars can access it
+            setParam('GCAM.ScenarioSubdir', scenarioGroupName, section=projectName)
 
         # Get the final value text for all config vars and allowing project
         # variables to override them.

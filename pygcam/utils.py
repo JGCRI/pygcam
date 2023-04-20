@@ -47,7 +47,7 @@ class ParseCommaList(argparse.Action):
         if nargs is not None:
             raise ValueError("nargs not allowed with " % option_strings)
 
-        super(ParseCommaList, self).__init__(option_strings, dest, **kwargs)
+        super().__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, values.split(','))

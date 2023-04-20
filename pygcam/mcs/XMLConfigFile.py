@@ -4,11 +4,11 @@ from copy import copy
 import os
 from lxml import etree as ET
 
-from ..config import getParam, pathjoin
+from ..config import getParam
 from ..log import getLogger
 from .simulation import Simulation
 from ..XMLFile import XMLFile
-from .error import PygcamMcsUserError
+from .error import PygcamMcsUserError, PygcamMcsSystemError
 
 _logger = getLogger(__name__)
 
@@ -38,25 +38,26 @@ class XMLConfigFile(XMLFile):
     '''
     instances = {}  # XMLConfigFile instances keyed by scenario name
 
-    def __init__(self, context, useCopy=False, useRefConfig=False):
+    def __init__(self, sim, useCopy=False, useRefConfig=False):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
         self.writePath = None
-        self.context = context = copy(context)
-        self.sim = Simulation.from_context(context)
+        #self.context = copy(sim.context)   # TBD: any need to copy this?
+        self.sim = sim
 
-        if useRefConfig:
-            path = getParam('GCAM.RefConfigFile')
-        else:
-            if useCopy:
-                path = self.getBackupPath()
-            else:
-                path = self.sim.scenario_config_file(context)
-                self.copyOriginal(path) # make a copy of the config file for use by runsim
+        original_path = (getParam('GCAM.RefConfigFile') if useRefConfig
+                         else sim.scenario_config_file(self.sim.context))
 
-            # Default writePath is where we were read from.
-            self.writePath = path
+        backup_path = self.getBackupPath()
+
+        # If no backup, or it's outdated, make a copy of the config file for use by runsim
+        self.copyOriginal(original_path)
+
+        path = backup_path if useCopy else original_path
+
+        # Default writePath is where we were read from.
+        self.writePath = path
 
         super(XMLConfigFile, self).__init__(path)
 
@@ -65,17 +66,17 @@ class XMLConfigFile(XMLFile):
         cls.instances = {}
 
     @classmethod
-    def getConfigForScenario(cls, context, useCopy=False):
+    def getConfigForScenario(cls, sim, scenario, useCopy=False):
         '''
         Return the path to the run-tree version of the config file
         for the given scenario.
         '''
-        key = (context.scenario, useCopy)
+        key = (scenario, useCopy)
         try:
             return cls.instances[key]
 
         except KeyError:
-            obj = XMLConfigFile(context, useCopy=useCopy)
+            obj = XMLConfigFile(sim, useCopy=useCopy)
             cls.instances[key] = obj
             return obj
 
@@ -95,6 +96,9 @@ class XMLConfigFile(XMLFile):
         '''
         import shutil
 
+        if not os.path.exists(configPath):
+            raise PygcamMcsSystemError(f"XMLConfigFile: file '{configPath}' does not exist.")
+
         backupPath = self.getBackupPath()
 
         # Copy only if the backupPath doesn't exist or is older than configPath
@@ -104,7 +108,7 @@ class XMLConfigFile(XMLFile):
             shutil.copy2(configPath, backupPath)
 
     def getBackupPath(self):
-        pathname = self.sim.scenario_config_file(self.context)
+        pathname = self.sim.scenario_config_file(self.sim.context)
         basename, ext = os.path.splitext(pathname)
         return basename + '-original' + ext       # i.e., [path...]/config-original.xml
 

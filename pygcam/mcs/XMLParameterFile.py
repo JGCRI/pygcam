@@ -16,9 +16,11 @@ from ..log import getLogger
 from ..utils import importFromDotSpec, pathjoin
 from ..XMLFile import XMLFile
 
+from .context import McsContext
 from .Database import getDatabase
 from .distro import DistroGen
 from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecError
+from .simulation import Simulation
 from .util import loadObjectFromPath
 from .XML import XMLWrapper, findAndSave, getBooleanXML
 from .XMLConfigFile import XMLConfigFile
@@ -74,7 +76,7 @@ class XMLCorrelation(XMLWrapper):
         cls.instances = []
 
     def __init__(self, element, param, target):
-        super(XMLCorrelation, self).__init__(element)
+        super().__init__(element)
         self.param = param
         self.paramName = self.param.getName()
         self.otherName = target.get('name')
@@ -176,7 +178,7 @@ class XMLCorrelation(XMLWrapper):
 class XMLQuery(XMLWrapper):
     """Wraps a <Query> element, which holds an xpath expression."""
     def __init__(self, element):
-        super(XMLQuery, self).__init__(element)
+        super().__init__(element)
         self.xpath = element.text.strip()
 
     def getXPath(self):
@@ -194,7 +196,7 @@ class XMLQuery(XMLWrapper):
 class CSVQuery(XMLWrapper):
     """Wraps a <CsvQuery> element, which holds CSV query information."""
     def __init__(self, element):
-        super(XMLQuery, self).__init__(element)
+        super().__init__(element)
 
         columnElt = element.find('Column')  # required by schema
         self.column = XMLColumn(columnElt)
@@ -243,7 +245,7 @@ class XMLTrialData(XMLWrapper):
     trial data, i.e., XMLDistribution, XMLDataFile, or XMLPythonFunc
     """
     def __init__(self, element, param):
-        super(XMLTrialData, self).__init__(element)
+        super().__init__(element)
         self.param = param
         self.rv    = None
 
@@ -302,7 +304,7 @@ class XMLDistribution(XMLTrialData):
         cls.trialFuncDir = None
 
     def __init__(self, element, param):
-        super(XMLDistribution, self).__init__(element, param)
+        super().__init__(element, param)
 
         self.argDict  = {}
         self.modDict = defaultdict(lambda: None)
@@ -399,7 +401,7 @@ class XMLPythonFunc(XMLTrialData):
     The XMLSchema ensures the format is pkg.mod.submod.func or a legal variant.
     """
     def __init__(self, element, param):
-        super(XMLPythonFunc, self).__init__(element, param)
+        super().__init__(element, param)
         self.func = importFromDotSpec(element.text)
 
     def ppf(self, *args):
@@ -457,7 +459,7 @@ class XMLDataFile(XMLTrialData):
         cls.cache = OrderedDict()
 
     def __init__(self, element, param):
-        super(XMLDataFile, self).__init__(element, param)
+        super().__init__(element, param)
         self.filename = filename = self.getFilename()
         self.df  = self.getData(filename)
 
@@ -491,7 +493,7 @@ class XMLVariable(XMLWrapper):
     to provide a ppf() function for generating samples.
     """
     def __init__(self, element, param, varNum=None):
-        super(XMLVariable, self).__init__(element)
+        super().__init__(element)
         self.param       = param
         self.paramPath   = None
         self.storedValue = None      # cached float value
@@ -561,7 +563,7 @@ class XMLRandomVar(XMLVariable):
         cls.instances = []
 
     def __init__(self, element, param):
-        super(XMLRandomVar, self).__init__(element, param)
+        super().__init__(element, param)
         self.saveInstance(self)
 
     def ppf(self, *args):
@@ -583,7 +585,7 @@ class XMLParameter(XMLWrapper):
     instances = OrderedDict()
 
     def __init__(self, element, tree=None):
-        super(XMLParameter, self).__init__(element)
+        super().__init__(element)
         self.tree = tree
         self.active = getBooleanXML(element.get('active', '1'))
 
@@ -831,21 +833,18 @@ class XMLRelFile(XMLFile):
     A minor extension to XMLFile to store the original relative pathname
     that was indicated in the config file identifying this file.
     """
-    def __init__(self, inputFile, relPath, context):
-        from .util import getSimLocalXmlDir, getSimDir, dirFromNumber
-
+    def __init__(self, sim : Simulation, context : McsContext, inputFile, relPath):
         self.inputFile = inputFile
         self.relPath = relPath
 
         if relPath.startswith('../../trial-xml'):
-            simDir = getSimDir(context.simId)
-            trialDir = dirFromNumber(context.trialNum, prefix=simDir)
-            absPathRoot = pathjoin(trialDir, context.scenario, 'exe')
+            trial_dir = sim.trial_dir(context=context)
+            absPathRoot = pathjoin(trial_dir, context.scenario, 'exe')
         else:
-            absPathRoot = getSimLocalXmlDir(context.simId)
+            absPathRoot = sim.sim_local_xml
 
         absPath = pathjoin(absPathRoot, relPath, abspath=True)
-        super(XMLRelFile, self).__init__(absPath)
+        super().__init__(absPath)
 
     def getRelPath(self):
         return self.relPath
@@ -885,7 +884,7 @@ class XMLInputFile(XMLWrapper):
         cls.xmlFileMap = OrderedDict()
 
     def __init__(self, element):
-        super(XMLInputFile, self).__init__(element)
+        super().__init__(element)
         self.parameters = OrderedDict()
         self.element = element
         self.pathMap = defaultdict(set)
@@ -945,8 +944,7 @@ class XMLInputFile(XMLWrapper):
 
         self.findAndSaveParams(element)
 
-    # TBD: use Simulation instead of context?
-    def loadFiles(self, context, scenNames, writeConfigFiles=True):
+    def loadFiles(self, sim : Simulation, scenNames, writeConfigFiles=True):
         """
         Find the distinct pathnames associated with our component name. Each scenario
         that refers to this path is stored in a set in self.inputFiles, keyed by pathname.
@@ -962,11 +960,11 @@ class XMLInputFile(XMLWrapper):
 
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
 
-        ctx = copy.copy(context)
+        ctx = copy.copy(sim.context)
 
         for scenName in scenNames:
             ctx.setVars(scenario=scenName)
-            configFile = XMLConfigFile.getConfigForScenario(ctx, useCopy=useCopy)
+            configFile = XMLConfigFile.getConfigForScenario(sim, scenName, useCopy=useCopy)
 
             # If compName ends in '.xml', assume its value is the full relative path, with
             # substitution for {scenario}, e.g., "../local-xml/{scenario}/mcsValues.xml"
@@ -975,7 +973,7 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                xmlFile = XMLRelFile(self, relPath, ctx)
+                xmlFile = XMLRelFile(sim, ctx, self, relPath)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
 
@@ -1046,7 +1044,7 @@ class XMLParameterFile(XMLFile):
     Represents the overall parameters.xml file.
     """
     def __init__(self, filename):
-        super(XMLParameterFile, self).__init__(filename, schemaPath='mcs/etc/parameter-schema.xsd')
+        super().__init__(filename, schemaPath='mcs/etc/parameter-schema.xsd')
 
         # XMLInputFiles keyed by scenario component name
         inputFiles = self.inputFiles = OrderedDict()
@@ -1065,13 +1063,13 @@ class XMLParameterFile(XMLFile):
 
         _logger.debug(f"Loaded parameter file: {filename}")
 
-    def loadInputFiles(self, sim, context, scenNames, writeConfigFiles=True):
+    def loadInputFiles(self, sim, scenNames, writeConfigFiles=True):
         """
         Load the input files, for each scenario in scenNames. Scenarios are
         found in {simDir}/{scenName}.
         """
         for inputFile in self.inputFiles.values():
-            inputFile.loadFiles(context, scenNames, writeConfigFiles=writeConfigFiles)
+            inputFile.loadFiles(sim, scenNames, writeConfigFiles=writeConfigFiles)
 
         if writeConfigFiles:
             # Writes all modified configs. Config files' XML trees are updated
@@ -1099,6 +1097,7 @@ class XMLParameterFile(XMLFile):
             exeRelPath = xmlFile.getRelPath()
             absPath = trialRelativePath(exeRelPath, trialDir)
 
+            # Deprecated? Unclear that this dir ever needs to be created here
             # Ensure that directories down to basename exist
             dirname = os.path.dirname(absPath)
             mkdirs(dirname)

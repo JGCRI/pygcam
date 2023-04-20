@@ -7,17 +7,13 @@
 import os
 from typing import Union
 
-from ..config import getParam, getParamAsBoolean, setParam, mkdirs, pathjoin
-from ..constants import DYN_XML_NAME, McsMode
+from ..config import getParam, getParamAsBoolean, getParamAsPath, setParam, mkdirs, pathjoin
+from ..constants import McsMode
 from ..error import SetupException
 from ..file_utils import pushd, removeTreeSafely, removeFileOrTree, symlink
 from ..log import getLogger
 from ..sandbox import Sandbox, getFilesToCopyAndLink, workspaceLinkOrCopy
 from ..tool import GcamTool
-
-#from .context import McsContext   # TBD: Circular import. Combine both classes in one file?
-# from .error import PygcamMcsUserError
-# from .simulation import Simulation
 
 _logger = getLogger(__name__)
 
@@ -43,29 +39,24 @@ class McsSandbox(Sandbox):
         """
         # TBD: pass as keyword args to __init__?
         # Set some config parameter values so super().__init__ does the right thing
-        setParam('GCAM.SandboxDir', getParam('MCS.SandboxDir'))
-        setParam('GCAM.SandboxWorkspace', getParam('MCS.SandboxWorkspace'))
+        setParam('GCAM.SandboxDir', getParamAsPath('MCS.SandboxDir'))
+        setParam('GCAM.SandboxWorkspace', getParamAsPath('MCS.SandboxWorkspace'))
 
-        copy_workspace= getParam('MCS.CopyWorkspace')
+        copy_workspace = getParamAsBoolean('MCS.CopyWorkspace')
 
         super().__init__(scenario, projectName=projectName, scenario_group=scenario_group,
                          parent=parent, create_dirs=False, copy_workspace=copy_workspace)
 
         # self.sim_id = sim_id
-        self.sim_root = getParam('MCS.SandboxSimsDir')
-        self.db_dir = getParam('MCS.SandboxDbDir')
+        self.sim_root = getParamAsPath('MCS.SandboxSimsDir')
+        self.db_dir = getParamAsPath('MCS.SandboxDbDir')
 
         self.sim = sim or GcamTool.getInstance().get_sim()
         self.trial_xml_file = None
 
         # Reset dependent pathnames stored by Sandbox superclass
-        self.update_dependent_paths(self.sim.sim_dir, scenario, create_dirs=create_dirs)
-
-    # Use of McsContext creates a circular import
-    # @classmethod
-    # def sandbox_from_context(cls, context: McsContext):
-    #     # TBD
-    #     pass
+        trial_dir = sim.trial_dir(create=True)
+        self.update_dependent_paths(trial_dir, scenario, create_dirs=create_dirs)
 
     def copy_ref_workspace(self, src_workspace, force_create=False):
         if getParamAsBoolean('GCAM.CopyAllFiles'):
@@ -154,7 +145,7 @@ class McsSandbox(Sandbox):
 
         # also makes sandbox and sandbox/exe
         sandbox_scenario_dir = self.sandbox_scenario_dir
-        pathjoin(sandbox_scenario_dir, 'exe', 'logs', create=True)
+        self.logs_dir = pathjoin(sandbox_scenario_dir, 'exe', 'logs', create=True)
         pathjoin(sandbox_scenario_dir, 'exe', 'restart', create=True)
 
         filesToCopy, filesToLink = getFilesToCopyAndLink('GCAM.SandboxFilesToLink')

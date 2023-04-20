@@ -9,7 +9,7 @@ import os
 from inspect import stack
 
 from ..config import getParam, getParamAsInt, pathjoin, mkdirs
-from ..constants import LOCAL_XML_NAME, APP_XML_NAME
+from ..constants import APP_XML_NAME
 from ..log import getLogger
 
 from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
@@ -46,7 +46,6 @@ def dirFromNumber(n, prefix="", create=False):
     level2 = n % maxnodes
 
     directory = pathjoin(prefix, str(level1).zfill(log), str(level2).zfill(log), create=create)
-
     return directory
 
 # TBD: rationalize this with McsSandbox.
@@ -65,35 +64,6 @@ def getSimDir(simId, create=False):
     simDir = pathjoin(simsDir, f's{simId:03d}', create=create)
 
     return simDir
-
-# TBD: used only by 2 funcs below
-def trialDataFile(simId):
-    simDir = getSimDir(simId)
-    return pathjoin(simDir, TRIAL_DATA_CSV)
-
-def writeTrialDataFile(sim, df):
-    '''
-    Save the trial DataFrame in the file 'trialData.csv' in the simDir.
-    '''
-    dataFile = trialDataFile(sim.sim_id)
-
-    # If the file exists, rename it trialData.csv-.
-    try:
-        os.rename(dataFile, dataFile + '-')
-    except:
-        pass
-
-    df.to_csv(dataFile, index_label='trialNum')
-
-def readTrialDataFile(sim):
-    """
-    Load trial data (e.g., saved by writeTrialDataFile) and return a DataFrame
-    """
-    import pandas as pd
-
-    dataFile = trialDataFile(sim.sim_id)
-    df = pd.read_table(dataFile, sep=',', index_col='trialNum')
-    return df
 
 # TBD: test this
 def newActiveYears(asInt=False):
@@ -287,28 +257,6 @@ def loadObjectFromPath(objName, modulePath, required=True):
     raise PygcamMcsUserError("Module '%s' has no object named '%s'" % (modulePath, objName))
 
 
-def dirFromNumber(n, prefix="", create=False):
-    '''
-    Compute a directory name using a 2-level directory structure that
-    allows 1000 nodes at each level, accommodating up to 1 million files
-    (0 to 999,999) in two levels.
-    '''
-    import math
-
-    maxnodes = getParamAsInt('MCS.MaxSimDirs') or 1000
-
-    # Require a power of 10
-    log = math.log10(maxnodes)
-    if log != int(log):
-        raise PygcamMcsUserError("MaxSimDirs must be a power of 10 (default value is 1000)")
-    log = int(log)
-
-    level1 = n // maxnodes
-    level2 = n % maxnodes
-
-    directory = pathjoin(prefix, str(level1).zfill(log), str(level2).zfill(log), create=create)
-    return directory
-
 TRIAL_STRING_DELIMITER = ','
 
 def parseTrialString(string):
@@ -378,12 +326,6 @@ def getSimParameterFile(simId):
     """
     return getSimXmlFile(simId, PARAMETERS_XML)
 
-# TBD: unused
-# def getSimScenarioFile(simId):
-#     """
-#     Returns the path to sim's copy of the scenarios.xml file.
-#     """
-#     return getSimXmlFile(simId, SCENARIOS_XML)
 
 def getSimResultFile(simId):
     """
@@ -391,13 +333,6 @@ def getSimResultFile(simId):
     """
     return getSimXmlFile(simId, RESULTS_XML)
 
-def getSimLocalXmlDir(simId):
-    """
-    Returns the path to sim's local-xml dir.
-    """
-    simDir = getSimDir(simId)
-    path = pathjoin(simDir, LOCAL_XML_NAME)
-    return path
 
 def parseMcsDir(path, trialNum_only=False):
     """

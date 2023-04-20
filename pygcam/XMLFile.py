@@ -223,7 +223,7 @@ class McsValues(XMLFile):
         from collections import defaultdict
 
         _logger.debug('Reading MCS values from %s', filename)
-        super(McsValues, self).__init__(filename, schemaPath='etc/mcsValues-schema.xsd')
+        super().__init__(filename, schemaPath='etc/mcsValues-schema.xsd')
 
         self.regionMap = defaultdict(dict)
         for regNode in self.tree.iterfind('//region'):

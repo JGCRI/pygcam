@@ -5,7 +5,6 @@ from rpy2.robjects.packages import importr
 import shutil
 
 from ..log import getLogger
-from ..config import getParam
 from ..file_utils import pushd
 from .util import parseTrialString, parseMcsDir, getSimDir, dirFromNumber
 
@@ -232,11 +231,9 @@ class GcamDataSystem(object):
             files.
         :return: none
         """
-        from pygcam.mcs.context import McsContext
         from pygcam.mcs.XMLConfigFile import XMLConfigFile
 
-        ctx = McsContext(simId=self.sim.sim_id, scenario=self.scenario)
-        scen_config = XMLConfigFile(ctx)
+        scen_config = XMLConfigFile(self.sim)
         scen_config_path = scen_config.getFilename()
         _logger.debug(f"Updating config file '{scen_config_path}'")
 

@@ -984,7 +984,7 @@ class GcamDatabase(CoreDatabase):
     instance = None     # singleton class
 
     def __init__(self):
-        super(GcamDatabase, self).__init__()
+        super().__init__()
         self.paramIds = {}                   # parameter IDs by name
         self.outputIds = None                # output IDs by name
         self.canonicalRegionMap = {}
@@ -1011,7 +1011,7 @@ class GcamDatabase(CoreDatabase):
 
     def initDb(self, args=None):
         'Add GCAM-specific tables to the database'
-        super(GcamDatabase, self).initDb(args=args)
+        super().initDb(args=args)
 
         self.addYearCols()
         self.addExpCols()
@@ -1022,7 +1022,7 @@ class GcamDatabase(CoreDatabase):
         #self.addRegions(RegionMap)
 
     def startDb(self, checkInit=True):
-        super(GcamDatabase, self).startDb(checkInit=checkInit)
+        super().startDb(checkInit=checkInit)
         self.addYearCols(alterTable=False)
         self.addExpCols(alterTable=False)
 
@@ -1182,8 +1182,8 @@ class GcamDatabase(CoreDatabase):
 
     def createOutput(self, name, program=GCAM_PROGRAM, description=None, unit=None, session=None):
         _logger.debug("createOutput(%s)", name)
-        return super(GcamDatabase, self).createOutput(name, program=program, description=description,
-                                                      unit=unit, session=session)
+        return super().createOutput(name, program=program, description=description,
+                                    unit=unit, session=session)
 
     def saveParameterNames(self, tuples):
         '''
@@ -1246,7 +1246,7 @@ class GcamDatabase(CoreDatabase):
         """
         # _logger.debug("deleteRunResults: deleting results for runId %d, outputIds=%s" % (runId, outputIds))
         sess = session or self.Session()
-        super(GcamDatabase, self).deleteRunResults(runId, outputIds=outputIds, session=sess)
+        super().deleteRunResults(runId, outputIds=outputIds, session=sess)
 
         query = sess.query(TimeSeries).filter_by(runId=runId)
 

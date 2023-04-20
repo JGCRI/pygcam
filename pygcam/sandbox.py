@@ -222,9 +222,10 @@ class Sandbox(object):
         self.mcs_mode = getParam('MCS.Mode')
         self.project_name = projectName or getParam('GCAM.ProjectName')
 
+        # Deprecated?
         # Ensure that GCAM.ScenarioGroup is set since system.cfg uses this in path construction
-        if scenario_group:
-            setParam('GCAM.ScenarioGroup', scenario_group)
+        # if scenario_group:
+        #     setParam('GCAM.ScenarioGroup', scenario_group)
 
         self.scenarios_file = getParam('GCAM.ScenariosFile')
         self.scenario_group = scenario_group or ''
@@ -235,7 +236,6 @@ class Sandbox(object):
 
         scen_obj = group_obj.getFinalScenario(scenario)
         self.is_baseline = scen_obj.isBaseline
-
 
         if not (self.parent or self.is_baseline):
             # TBD: Modify to support out-of-scenario-group parent after groupSource

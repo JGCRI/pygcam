@@ -98,7 +98,7 @@ class Page(object):
 
 class GlobalArgsPage(Page):
     def __init__(self, app, id='globalArgs'):
-        super(GlobalArgsPage, self).__init__(app, id=id, label='Global args', heading='Global arguments')
+        super().__init__(app, id=id, label='Global args', heading='Global arguments')
         self.helpText = 'The options on this page apply to all gt commands'
         tool = GcamTool.getInstance()
         self.actions = actionsFromParser(id, tool.parser)
@@ -165,7 +165,7 @@ class RootPage(PageSet):
         self.navPrefix = 'nav-'  # Root (top-level) menu items (must set after super.__init__)
         default = default or pages[0].id
 
-        super(RootPage, self).__init__('', pages, default)
+        super().__init__('', pages, default)
 
         @app.callback(Output('root-content', 'children'),
                       [Input('url', 'pathname')])
