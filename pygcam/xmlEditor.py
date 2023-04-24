@@ -770,6 +770,8 @@ class XMLEditor(object):
         if self.mcsMode == McsMode.TRIAL:
             basename = os.path.basename(pathname)
             scenario = self.scenario or self.baseline
+
+            # TBD: fix this pathjoin() to use self.sbx instead
             scenarioFile = unixPath(pathjoin(self.trial_xml_abs, LOCAL_XML_NAME,
                                              self.groupDir, scenario, basename))
 

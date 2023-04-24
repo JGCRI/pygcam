@@ -1,6 +1,7 @@
 import os
 from ..config import (getParam, getParamAsPath, setParam, pathjoin)
-from ..constants import LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML, RESULTS_XML
+from ..constants import (LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML,
+                         RESULTS_XML, CONFIG_XML)
 from ..log import getLogger
 from ..xmlScenario import XMLScenario
 
@@ -13,7 +14,7 @@ ARGS_SAVE_FILE = 'gensim-args.txt'
 
 class Simulation(object):
     def __init__(self, project_name=None, group=None, sim_id=1, run_root=None,
-                 trial_count=None, trial_str=None, param_file=None, context=None):
+                 trial_count=None, trial_str=None, param_file=None, context : McsContext=None):
         self.context = context
         self.sim_id = sim_id
         self.trial_count = trial_count
@@ -77,6 +78,9 @@ class Simulation(object):
         sim = cls(project_name=ctx.projectName, group=ctx.groupName, sim_id=ctx.simId, context=ctx)
         return sim
 
+    def set_context(self, ctx : McsContext):
+        self.context = ctx
+
     # TBD: may not need trial_num arg
     def trial_dir(self, context=None, trial_num=None, create=False) -> str:
         """
@@ -97,8 +101,13 @@ class Simulation(object):
         return trial_dir
 
     def trial_scenario_dir(self, context, scenario=None, create=False):
-        trial_dir = self.trial_dir(context=context, create=create)
-        path = pathjoin(trial_dir, self.group_subdir, scenario or context.scenario)
+        dir = self.trial_dir(context=context, create=create)
+        path = pathjoin(dir, self.group_subdir, scenario or context.scenario)
+        return path
+
+    def trial_scenario_exe_dir(self, context, create=False):
+        dir = self.trial_scenario_dir(context, create=create)
+        path = pathjoin(dir, 'exe')
         return path
 
     # TBD: if we need a second local-xml under the trial rather than just the
@@ -113,19 +122,17 @@ class Simulation(object):
         local_xml = pathjoin(trial_dir, LOCAL_XML_NAME, create=create)
         return local_xml
 
-    def scenario_local_xml(self, context=None, create=False):
-        context = context or self.context
-        path = pathjoin(self.sim_local_xml, context.scenario, create=create)
+    def sim_local_xml_scenario(self, scenario, create=False):
+        path = pathjoin(self.sim_local_xml, scenario, create=create)
         return path
 
-    def scenario_config_file(self, context):
+    def scenario_config_file(self, scenario):
         """
         Returns the path to sim's copy of the config.xml file for the given scenario.
+        If ``context`` is None, self.context is used.
         """
-        from ..constants import CONFIG_XML
-
-        scen_dir = self.scenario_local_xml(context)
-        configFile = pathjoin(scen_dir, CONFIG_XML)
+        dir = self.sim_local_xml_scenario(scenario, create=True)
+        configFile = pathjoin(dir, CONFIG_XML)
         return configFile
 
     def create_database(self):

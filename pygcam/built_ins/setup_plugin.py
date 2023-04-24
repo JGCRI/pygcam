@@ -104,13 +104,14 @@ class SetupCommand(SubcommandABC):
         """
         editor_cls = sbx.editor_class(sbx.scenario, moduleSpec=args.moduleSpec, modulePath=args.modulePath)
 
+        # TBD: this seems incorrect now
         # When called in 'trial' mode, we only run dynamic setup.
         # When run in 'gensim' mode, we do only static setup.
-        args.dynamicOnly = args.dynamicOnly or sbx.mcs_mode == McsMode.TRIAL
-
-        if sbx.mcs_mode == McsMode.GENSIM:
-            args.dynamicOnly = False
-            args.staticOnly = True
+        # args.dynamicOnly = args.dynamicOnly or sbx.mcs_mode == McsMode.TRIAL
+        #
+        # if sbx.mcs_mode == McsMode.GENSIM:
+        #     args.dynamicOnly = False
+        #     args.staticOnly = True
 
         obj = editor_cls(sbx)
         obj.setup(args)

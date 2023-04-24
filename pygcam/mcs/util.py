@@ -9,7 +9,6 @@ import os
 from inspect import stack
 
 from ..config import getParam, getParamAsInt, pathjoin, mkdirs
-from ..constants import APP_XML_NAME
 from ..log import getLogger
 
 from .error import BaseSpecError, PygcamMcsUserError, PygcamMcsSystemError
@@ -18,10 +17,6 @@ _logger = getLogger(__name__)
 
 _activeYearStrs = None
 _activeYearInts = None
-
-PARAMETERS_XML = "parameters.xml"
-RESULTS_XML    = "results.xml"
-TRIAL_DATA_CSV = 'trialData.csv'        # Deprecated; moved to mcsSandbox
 
 COMMENT_CHAR = '#'
 YEAR_COL_PREFIX = 'y'
@@ -309,30 +304,6 @@ def isdebugging():
     if frame[1].endswith("pydevd.py"):
       return True
   return False
-
-# TBD: the following should be subsumed by McsSandbox
-
-def getSimXmlFile(simId, filename):
-    """
-    Returns the path to a file in the sim's XML dir, e.g., {simDir}/app-xml/foo.xml
-    """
-    simDir = getSimDir(simId)
-    path = pathjoin(simDir, APP_XML_NAME, filename)
-    return path
-
-def getSimParameterFile(simId):
-    """
-    Returns the path to sim's copy of the parameters.xml file.
-    """
-    return getSimXmlFile(simId, PARAMETERS_XML)
-
-
-def getSimResultFile(simId):
-    """
-    Returns the path to sim's copy of the results.xml file.
-    """
-    return getSimXmlFile(simId, RESULTS_XML)
-
 
 def parseMcsDir(path, trialNum_only=False):
     """

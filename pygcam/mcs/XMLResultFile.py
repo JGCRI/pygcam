@@ -359,31 +359,26 @@ def extractResult(context, scenario, outputDef, type):
 
     return resultDict
 
-def collectResults(context, type):
+def collectResults(sim, context, type):
     '''
     Called by worker to process results, return a list of dicts
     with data the master process can quickly write to the database.
     Returns a list of dicts with results for this trial.
     '''
-    from .util import getSimResultFile
-
     _logger.debug("Collecting results for %s", context)
 
-    baseline = context.baseline
-    scenario = context.scenario
+    if type == RESULT_TYPE_DIFF and not context.baseline:
+        raise PygcamMcsUserError("collectResults: must specify baseline for DIFF results")
 
-    if type == RESULT_TYPE_DIFF and not baseline:
-        raise PygcamMcsUserError("saveResults: must specify baseline for DIFF results")
-
-    resultsFile = getSimResultFile(context.simId)
+    resultsFile = sim.app_xml_results_file()
     rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 
     if not outputDefs:
-        _logger.info('saveResults: No outputs defined for type %s', type)
+        _logger.info('collectResults: No outputs defined for type %s', type)
         return []
 
-    resultList = [extractResult(context, scenario, outputDef, type) for outputDef in outputDefs]
+    resultList = [extractResult(context, context.scenario, outputDef, type) for outputDef in outputDefs]
     return resultList
 
 def saveResults(context, resultList):

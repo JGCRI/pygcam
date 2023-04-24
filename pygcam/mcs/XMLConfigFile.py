@@ -3,9 +3,11 @@
 from copy import copy
 import os
 from lxml import etree as ET
+import shutil
 
 from ..config import getParam
 from ..log import getLogger
+from .mcsSandbox import McsSandbox
 from .simulation import Simulation
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError
@@ -38,23 +40,41 @@ class XMLConfigFile(XMLFile):
     '''
     instances = {}  # XMLConfigFile instances keyed by scenario name
 
-    def __init__(self, sim, useCopy=False, useRefConfig=False):
+    def __init__(self, sim : Simulation, useCopy=False):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
         self.writePath = None
         #self.context = copy(sim.context)   # TBD: any need to copy this?
+
         self.sim = sim
+        ctx = sim.context
 
-        original_path = (getParam('GCAM.RefConfigFile') if useRefConfig
-                         else sim.scenario_config_file(self.sim.context))
+        # TBD
+        #  If config.xml is not found in expected location, copy it from
+        #  either (i) the baseline's config file (error if not found) if
+        #  not a baseline scenario, otherwise (ii) a defined parent scenario,
+        #  or (iii) the reference config file if no parent was identified.
+        #  (Note that 'parent' logic is not currently implemented.)
 
-        backup_path = self.getBackupPath()
+        config_path = sim.scenario_config_file(ctx.scenario)
 
+        if not os.path.exists(config_path):
+
+            if ctx.is_baseline():
+                copy_from = getParam('GCAM.RefConfigFile')
+            else:
+                # TBD: scenario "parent" is not passed through. Read from scenarios.xml?
+                copy_from = sim.scenario_config_file(ctx.baseline)
+
+            _logger.debug(f"XMLConfig copying '{copy_from}' to '{config_path}'")
+            shutil.copy2(copy_from, config_path)
+
+        # TBD: unclear if this is still needed
         # If no backup, or it's outdated, make a copy of the config file for use by runsim
-        self.copyOriginal(original_path)
+        backup_path = self.copyOriginal(config_path)
 
-        path = backup_path if useCopy else original_path
+        path = backup_path if useCopy else config_path
 
         # Default writePath is where we were read from.
         self.writePath = path
@@ -66,7 +86,7 @@ class XMLConfigFile(XMLFile):
         cls.instances = {}
 
     @classmethod
-    def getConfigForScenario(cls, sim, scenario, useCopy=False):
+    def configForScenario(cls, sim, scenario, useCopy=False):
         '''
         Return the path to the run-tree version of the config file
         for the given scenario.
@@ -86,30 +106,29 @@ class XMLConfigFile(XMLFile):
         Write all configuration files to disk.
         """
         for cfg in cls.instances.values():
-            configPath = sim.scenario_config_file(cfg.context)
-            cfg.write(path=configPath)
+            config_path = sim.scenario_config_file(cfg.context.scenario)
+            cfg.write(path=config_path)
 
-    def copyOriginal(self, configPath):
+    def copyOriginal(self, config_path):
         '''
         Copy config file to xxx/config-original.xml if config.xml is
         newer, so runsim can use the original to generate XML files.
         '''
-        import shutil
+        if not os.path.exists(config_path):
+            raise PygcamMcsSystemError(f"XMLConfigFile: file '{config_path}' does not exist.")
 
-        if not os.path.exists(configPath):
-            raise PygcamMcsSystemError(f"XMLConfigFile: file '{configPath}' does not exist.")
+        backup_path = self.getBackupPath(config_path)
 
-        backupPath = self.getBackupPath()
+        # Copy only if the backupPath doesn't exist or is older than config_path
+        if (not os.path.exists(backup_path) or
+            os.path.getctime(backup_path) < os.path.getctime(config_path)):
+            _logger.debug('Copying to %s', backup_path)
+            shutil.copy2(config_path, backup_path)
 
-        # Copy only if the backupPath doesn't exist or is older than configPath
-        if (not os.path.exists(backupPath) or
-            os.path.getctime(backupPath) < os.path.getctime(configPath)):
-            _logger.debug('Copying to %s', backupPath)
-            shutil.copy2(configPath, backupPath)
+        return backup_path
 
-    def getBackupPath(self):
-        pathname = self.sim.scenario_config_file(self.sim.context)
-        basename, ext = os.path.splitext(pathname)
+    def getBackupPath(self, config_path):
+        basename, ext = os.path.splitext(config_path)
         return basename + '-original' + ext       # i.e., [path...]/config-original.xml
 
     def write(self, path=None):
@@ -128,7 +147,7 @@ class XMLConfigFile(XMLFile):
         if os.path.exists(path):        # remove it since it might be a symlink and
             os.unlink(path)             # we don't want to write through to the src
 
-        _logger.debug("XMLConfigFile writing %s", path)
+        _logger.debug("XMLConfigFile writing '%s'", path)
         self.tree.write(path, xml_declaration=True, pretty_print=True)
 
     def getConfigElement(self, name, group):

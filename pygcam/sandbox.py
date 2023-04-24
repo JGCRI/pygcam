@@ -7,7 +7,7 @@
 import glob
 import os
 
-from .config import getParam, getParamAsBoolean, getParamAsPath, setParam, pathjoin, unixPath, mkdirs
+from .config import getParam, getParamAsBoolean, getParamAsPath, pathjoin, unixPath, mkdirs
 from .constants import LOCAL_XML_NAME, CONFIG_XML
 from .error import SetupException
 from .file_utils import removeTreeSafely, removeFileOrTree, copyFileOrTree, symlinkOrCopyFile
@@ -238,18 +238,18 @@ class Sandbox(object):
         self.is_baseline = scen_obj.isBaseline
 
         if not (self.parent or self.is_baseline):
+
             # TBD: Modify to support out-of-scenario-group parent after groupSource
             #      logic is moved to ScenarioGroup (see xmlScenario.py)
+            # self.parent = group_obj.baselineSource if self.is_baseline else None
+
             # Create Sandbox (or McsSandbox) for baseline scenario so we can grab it's config.xml
             self.parent = self.__class__(self.baseline,
                                          projectName=projectName,
                                          scenario_group=scenario_group)
 
-        # TBD
-        # self.baseline_context = None if self.is_baseline else self.fromXmlSetup(scenario_group, baseline)
-
-        # TBD: not yet implemented.
-        self.copy_workspace = copy_workspace or getParamAsBoolean("GCAM.CopyWorkspace")
+        # TBD: not implemented.
+        # self.copy_workspace = copy_workspace or getParamAsBoolean("GCAM.CopyWorkspace")
 
         self.ref_workspace = getParamAsPath('GCAM.RefWorkspace')
         self.ref_workspace_exe_dir = getParamAsPath("GCAM.RefExeDir")
@@ -297,7 +297,8 @@ class Sandbox(object):
 
         self.sandbox_diffs_dir = pathjoin(self.sandbox_scenario_dir, 'diffs')
 
-        # The "local-xml" directory is always found at the same level as scenario dirs
+        # In non-MCS Sandbox, the "local-xml" directory is at the same level as scenario dirs.
+        # In the McsSandbox, "local-xml" is under the sim directory (e.g., sims/s001).
         self.sandbox_local_xml = pathjoin(self.sandbox_scenario_dir, "..", LOCAL_XML_NAME, normpath=True)
         self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=create_dirs)
 
@@ -307,7 +308,8 @@ class Sandbox(object):
                                       else makeDirPath(self.sandbox_local_xml, self.baseline,
                                                        create=create_dirs))
 
-        # Store scenario config.xml in '.../project/group/local-xml/scenario/config.xml'
+        # In non-MCS Sandbox, config.xml is in '.../project/group/local-xml/scenario/config.xml'
+        # In McsSandbox, update_dependent_paths() relocates this to "sims/s{sim_id}/local-xml/config.xml"
         self.scenario_config_path = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
 
     @classmethod

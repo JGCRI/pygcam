@@ -21,6 +21,7 @@ def driver(args, tool):
     from ..mcsSandbox import McsSandbox
     from ..simulation import Simulation
     from .. import util as U
+    from ..util2 import sim_and_sbx_from_context
 
     simId    = args.simId
     command  = args.command
@@ -52,11 +53,8 @@ def driver(args, tool):
         }
 
         for trial_num in trials:
-            sim = Simulation.from_context(ctx)
             ctx.setVars(trialNum=trial_num)
-            sbx = McsSandbox(scenario, sim=sim, projectName=ctx.projectName,
-                             scenario_group=ctx.groupName, parent=ctx.baseline,
-                             create_dirs=False)
+            sim, sbx = sim_and_sbx_from_context(ctx, scenario=scenario, create=False)
 
             argDict['trialNum'] = trial_num
             argDict['scenarioDir'] = sbx.sandbox_scenario_dir

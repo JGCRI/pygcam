@@ -233,7 +233,7 @@ class GcamDataSystem(object):
         """
         from pygcam.mcs.XMLConfigFile import XMLConfigFile
 
-        scen_config = XMLConfigFile(self.sim)
+        scen_config = XMLConfigFile.configForScenario(self.sim, self.scenario)
         scen_config_path = scen_config.getFilename()
         _logger.debug(f"Updating config file '{scen_config_path}'")
 

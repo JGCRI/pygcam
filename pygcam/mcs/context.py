@@ -2,7 +2,6 @@
 .. Copyright (c) 2017-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
-from .util import getSimDir, dirFromNumber
 from ..config import getParam
 from ..project import Project
 
@@ -49,6 +48,9 @@ class McsContext(object):
         McsContext.instances[self.runId] = self
         return self
 
+    def is_baseline(self):
+        return not self.baseline  # no baseline indicated => it's a baseline itself
+
     @classmethod
     def getRunInfo(cls, runId):
         return cls.instances.get(runId, None)
@@ -83,17 +85,3 @@ class McsContext(object):
 
         if status:
             self.status = status
-
-    def getSimDir(self, create=False):
-        '''
-        Return and optionally create the path to the directory for a given sim.
-        '''
-        return getSimDir(self.simId, create=create)
-
-    def getTrialDir(self, create=False):
-        '''
-        Return and optionally create the path to the directory for a given trial.
-        '''
-        simDir = getSimDir(self.simId, create=False)
-        trialDir = dirFromNumber(self.trialNum, prefix=simDir, create=create)
-        return trialDir

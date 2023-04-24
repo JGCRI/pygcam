@@ -164,7 +164,7 @@ class WorkerResult(object):
     '''
     Encapsulates the results returned from a worker task.
     '''
-    def __init__(self, context, errorMsg):
+    def __init__(self, sim, context, errorMsg):
         from .XMLResultFile import collectResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
         self.context  = context
@@ -172,10 +172,10 @@ class WorkerResult(object):
         self.resultsList = []
 
         if context.status == RUN_SUCCEEDED:
-            self.resultsList = collectResults(context, RESULT_TYPE_SCENARIO)
+            self.resultsList = collectResults(sim, context, RESULT_TYPE_SCENARIO)
 
             if context.baseline:  # also save 'diff' results
-                diffResults = collectResults(context, RESULT_TYPE_DIFF)
+                diffResults = collectResults(sim, context, RESULT_TYPE_DIFF)
                 if diffResults:
                     self.resultsList += diffResults
 
@@ -314,7 +314,7 @@ class Worker(object):
             _logger.info(f'Trial status: {status}')
 
         self.setStatus(status)
-        result = WorkerResult(context, errorMsg)
+        result = WorkerResult(self.sim, context, errorMsg)
         return result
 
 

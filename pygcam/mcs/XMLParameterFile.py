@@ -944,7 +944,7 @@ class XMLInputFile(XMLWrapper):
 
         self.findAndSaveParams(element)
 
-    def loadFiles(self, sim : Simulation, scenNames, writeConfigFiles=True):
+    def loadFiles(self, sim : Simulation, scenario_names, writeConfigFiles=True):
         """
         Find the distinct pathnames associated with our component name. Each scenario
         that refers to this path is stored in a set in self.inputFiles, keyed by pathname.
@@ -958,13 +958,15 @@ class XMLInputFile(XMLWrapper):
 
         compName = self.getComponentName()  # an identifier in the config file, e.g., "land2"
 
+        # TBD: need to clarify why this is necessary / useful
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
 
         ctx = copy.copy(sim.context)
+        sim.set_context(ctx)            # TBD: not sure this is necessary
 
-        for scenName in scenNames:
-            ctx.setVars(scenario=scenName)
-            configFile = XMLConfigFile.getConfigForScenario(sim, scenName, useCopy=useCopy)
+        for scenario_name in scenario_names:
+            ctx.setVars(scenario=scenario_name)
+            configFile = XMLConfigFile.configForScenario(sim, scenario_name, useCopy=useCopy)
 
             # If compName ends in '.xml', assume its value is the full relative path, with
             # substitution for {scenario}, e.g., "../local-xml/{scenario}/mcsValues.xml"
@@ -1063,13 +1065,13 @@ class XMLParameterFile(XMLFile):
 
         _logger.debug(f"Loaded parameter file: {filename}")
 
-    def loadInputFiles(self, sim, scenNames, writeConfigFiles=True):
+    def loadInputFiles(self, sim, scenario_names, writeConfigFiles=True):
         """
-        Load the input files, for each scenario in scenNames. Scenarios are
+        Load the input files, for each scenario in scenario_names. Scenarios are
         found in {simDir}/{scenName}.
         """
         for inputFile in self.inputFiles.values():
-            inputFile.loadFiles(sim, scenNames, writeConfigFiles=writeConfigFiles)
+            inputFile.loadFiles(sim, scenario_names, writeConfigFiles=writeConfigFiles)
 
         if writeConfigFiles:
             # Writes all modified configs. Config files' XML trees are updated

@@ -1,16 +1,14 @@
 #! /usr/bin/env python
 '''
 .. Created on 4/26/15
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 
 '''
 from .config import pathjoin
-from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
 from .utils import getBatchDir, getYearCols, printSeries
-from .file_utils import mkdirs
 
 _logger = getLogger(__name__)
 

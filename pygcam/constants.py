@@ -30,6 +30,9 @@ class McsMode(Enum):
     def values(cls):
         return [x.value for x in cls.__members__.values()]
 
+    def __eq__(self, value):
+        return self.value == value
+
 
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']

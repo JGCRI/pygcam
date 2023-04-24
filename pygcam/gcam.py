@@ -265,7 +265,7 @@ def runGCAM(sbx : Sandbox, noRun=False, noWrapper=False):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    gcam_args = [sbx.sandbox_exe_path, '-C', sbx.scenario_config_path]
+    gcam_args = [sbx.sandbox_exe_path, '-C', sbx.config_path()]
 
     command = ' '.join(gcam_args)
     if noRun:
