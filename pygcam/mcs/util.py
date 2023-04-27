@@ -43,8 +43,8 @@ def dirFromNumber(n, prefix="", create=False):
     directory = pathjoin(prefix, str(level1).zfill(log), str(level2).zfill(log), create=create)
     return directory
 
-# TBD: rationalize this with McsSandbox.
-#  Change to pass in Context? Or create McsSandbox from McsContext?
+# TBD: rationalize this with SimFileMapper.
+#  Change to pass in Context? Or create SimFileMapper from McsContext?
 def getSimDir(simId, create=False):
     '''
     Return and optionally create the path to the top-level simulation

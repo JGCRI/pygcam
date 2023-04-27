@@ -11,9 +11,9 @@ from ..log import getLogger, configureLogs
 from ..signals import catchSignals, TimeoutSignalException, UserInterruptException
 
 from .error import PygcamMcsUserError, GcamToolError
-from .Database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
+from .database import (RUN_SUCCEEDED, RUN_FAILED, RUN_KILLED, RUN_ABORTED,
                        RUN_UNSOLVED, RUN_GCAMERROR, RUN_RUNNING)
-from .util2 import sim_and_sbx_from_context
+from .sim_file_mapper import SimFileMapper
 from .XMLParameterFile import XMLParameter, XMLParameterFile, decache
 
 # Status codes for invoked programs
@@ -28,7 +28,7 @@ def _secondsToStr(t):
     hours, minutes   = divmod(minutes, 60)
     return "%d:%02d:%02d" % (hours, minutes, seconds)
 
-def _runPygcamSteps(steps, sim, raiseError=True):
+def _runPygcamSteps(steps, mapper, raiseError=True):
     """
     run "gt +P {project} --mcs=trial run -s {step[,step,...]} -S {scenarioName} ..."
     For Monte Carlo trials.
@@ -36,13 +36,13 @@ def _runPygcamSteps(steps, sim, raiseError=True):
     from .. import tool
     from ..constants import McsMode
 
-    context = sim.context
-    trial_dir = sim.trial_dir(context=context)
+    context = mapper.context
+    trial_dir = mapper.trial_dir()
 
-    # N.B. sim.sandbox_workspace is the reference workspace for trial sandboxes
+    # N.B. mapper.sandbox_workspace is the reference workspace for trial sandboxes
     toolArgs = ['--projectName', context.projectName,
                 '--mcs', McsMode.TRIAL.value,
-                # '--set', f"GCAM.SandboxWorkspace={sim.sandbox_workspace}",
+                # '--set', f"GCAM.SandboxWorkspace={mapper.sandbox_workspace}",
                 'run',
 
                 # eliminate any unwanted blanks between steps
@@ -56,7 +56,7 @@ def _runPygcamSteps(steps, sim, raiseError=True):
     command = 'gt ' + ' '.join(toolArgs)
     _logger.debug(f'Running: {command}')
 
-    status = tool.main(argv=toolArgs, raiseError=True, sim=sim)
+    status = tool.main(argv=toolArgs, mapper=mapper, raiseError=True)
     msg = f'"{command}" exited with status {status}'
 
     if status != 0 and raiseError:
@@ -65,25 +65,25 @@ def _runPygcamSteps(steps, sim, raiseError=True):
     _logger.info(f"_runPygcamSteps: {msg}")
     return status
 
-def _readParameterInfo(sim):
+def _readParameterInfo(mapper):
     from ..xmlScenario import XMLScenario
 
-    xmlScenario = XMLScenario.get_instance(sim.scenarios_file)
-    scenarioNames = xmlScenario.scenariosInGroup(sim.scenario_group)
-
-    paramFile = XMLParameterFile(sim.app_xml_param_file)  # read cached copy from app-xml
-    paramFile.loadInputFiles(sim, scenarioNames, writeConfigFiles=False)
+    paramFile = XMLParameterFile(mapper.get_app_xml_param_file())  # reads cached copy from app-xml
+    # xmlScenario = XMLScenario.get_instance(mapper.get_scenarios_file())
+    # scenarioNames = xmlScenario.scenariosInGroup(mapper.get_scenario_group())
+    # paramFile.loadInputFiles(mapper, scenarioNames, writeConfigFiles=False) # TBD: remove middle arg if this solves the problem
+    paramFile.loadInputFiles(mapper, writeConfigFiles=False)
     paramFile.runQueries()
     return paramFile
 
-def _applySingleTrialData(df, sim, paramFile):
-    context = sim.context
-    trialDir = sim.trial_dir(context=context)
-    trialNum = context.trialNum
+def _applySingleTrialData(df, mapper, paramFile):
+    context = mapper.context
+    trial_num = context.trialNum
+    trial_dir = mapper.trial_dir()
 
     _logger.info(f'_applySingleTrialData for {context}, {paramFile.filename}')
-    XMLParameter.applyTrial(context.simId, trialNum, df)   # Update all stochastic parameters
-    paramFile.writeLocalXmlFiles(trialDir)                 # N.B. creates trial-xml subdir
+    XMLParameter.applyTrial(context.simId, trial_num, df)   # Update all stochastic parameters
+    paramFile.writeLocalXmlFiles(trial_dir)                 # N.B. creates trial-xml subdir
 
     # Deprecated?
     # linkDest = pathjoin(trialDir, LOCAL_XML_NAME)       # does this require subdir?
@@ -91,12 +91,12 @@ def _applySingleTrialData(df, sim, paramFile):
     # symlink(f'../../../../Workspace/{LOCAL_XML_NAME}', linkDest)
 
 
-def _runGcamTool(sim, noGCAM=False, noBatchQueries=False,
+def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
                 noPostProcessor=False):
     '''
     Run GCAM in the current working directory and return exit status.
     '''
-    context = sim.context
+    context = mapper.context
     _logger.debug(f"_runGcamTool: {context}")
 
     # For running in an ipyparallel engine, forget instances from last run
@@ -116,12 +116,12 @@ def _runGcamTool(sim, noGCAM=False, noBatchQueries=False,
     setup_steps = getParam('MCS.SetupSteps')
 
     if setup_steps:
-        _runPygcamSteps(setup_steps, sim)
+        _runPygcamSteps(setup_steps, mapper)
 
     if isBaseline and not noGCAM:
-        paramFile = _readParameterInfo(sim)
+        paramFile = _readParameterInfo(mapper)
 
-        df = sim.readTrialDataFile()
+        df = mapper.readTrialDataFile()
         columns = df.columns
 
         # add data for linked columns if not present
@@ -130,14 +130,14 @@ def _runGcamTool(sim, noGCAM=False, noBatchQueries=False,
             if linkName not in columns:
                 df[linkName] = df[dataCol]
 
-        _applySingleTrialData(df, sim, paramFile)
+        _applySingleTrialData(df, mapper, paramFile)
 
     if noGCAM:
         _logger.info('_runGcamTool: skipping GCAM')
         gcamStatus = 0
     else:
         start = time.time()
-        gcamStatus = _runPygcamSteps('gcam', sim)
+        gcamStatus = _runPygcamSteps('gcam2', mapper)        # TBD: set back to 'gcam' for pygcam 2.0
         stop = time.time()
 
         elapsed = _secondsToStr(stop - start)
@@ -145,12 +145,12 @@ def _runGcamTool(sim, noGCAM=False, noBatchQueries=False,
 
     if gcamStatus == 0:
         if not noBatchQueries:
-            _runPygcamSteps('query', sim)
+            _runPygcamSteps('query', mapper)
 
         if not noPostProcessor:
             steps = getParam('MCS.PostProcessorSteps')     # e.g., "diff,CI"
             if steps:
-                _runPygcamSteps(steps, sim)
+                _runPygcamSteps(steps, mapper)
 
         status = RUNNER_SUCCESS
     else:
@@ -164,7 +164,7 @@ class WorkerResult(object):
     '''
     Encapsulates the results returned from a worker task.
     '''
-    def __init__(self, sim, context, errorMsg):
+    def __init__(self, mapper, context, errorMsg):
         from .XMLResultFile import collectResults, RESULT_TYPE_SCENARIO, RESULT_TYPE_DIFF
 
         self.context  = context
@@ -172,10 +172,10 @@ class WorkerResult(object):
         self.resultsList = []
 
         if context.status == RUN_SUCCEEDED:
-            self.resultsList = collectResults(sim, context, RESULT_TYPE_SCENARIO)
+            self.resultsList = collectResults(mapper, context, RESULT_TYPE_SCENARIO)
 
             if context.baseline:  # also save 'diff' results
-                diffResults = collectResults(sim, context, RESULT_TYPE_DIFF)
+                diffResults = collectResults(mapper, context, RESULT_TYPE_DIFF)
                 if diffResults:
                     self.resultsList += diffResults
 
@@ -209,8 +209,8 @@ class Worker(object):
         self.argDict  = argDict
         self.runLocal = argDict.get('runLocal', False)
 
-        # create McsSandbox from context and use it for all paths
-        self.sim, self.sbx = sim_and_sbx_from_context(ctx)
+        # create SimFileMapper from context and use it for all paths
+        self.mapper = SimFileMapper(ctx)
 
     def runTrial(self):
         """
@@ -224,12 +224,12 @@ class Worker(object):
         if max_sleep > 0:
             random_sleep(0, max_sleep)     # try to avoid all trials accessing the same file at once
 
-        exe_dir = self.sbx.sandbox_exe_dir
+        exe_dir = self.mapper.sandbox_exe_dir
         _logger.info(f"exe_dir is {exe_dir}")
         os.chdir(exe_dir)
 
         if not self.runLocal:
-            log_file = pathjoin(self.sbx.logs_dir, 'pygcam.log')
+            log_file = self.mapper.get_log_file()
             setParam('GCAM.LogFile', log_file)
             setParam('GCAM.LogConsole', 'False')    # avoids duplicate output to file
             configureLogs(force=True)
@@ -267,7 +267,7 @@ class Worker(object):
 
         _logger.info(f'Running trial {trialNum}')
         try:
-            exitCode = _runGcamTool(self.sim, noGCAM=noGCAM,
+            exitCode = _runGcamTool(self.mapper, noGCAM=noGCAM,
                                     noBatchQueries=noBatchQueries,
                                     noPostProcessor=noPostProcessor)
             status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
@@ -314,7 +314,7 @@ class Worker(object):
             _logger.info(f'Trial status: {status}')
 
         self.setStatus(status)
-        result = WorkerResult(self.sim, context, errorMsg)
+        result = WorkerResult(self.mapper, context, errorMsg)
         return result
 
 

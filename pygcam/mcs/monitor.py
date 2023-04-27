@@ -24,14 +24,14 @@ except:
     from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
 from .context import McsContext
-from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
+from .database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
 from ..config import getParam, getParamAsInt
 from ..log import getLogger
 from ..utils import pygcam_version
 
-# Exit values for Master.processTrials()
+# Exit values for Monitor.processTrials()
 CONTINUE = 1
 EXIT = 2
 
@@ -109,7 +109,7 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                   }
 
 # Instantiated only from runsim_plugin.py
-class Master(object):
+class Monitor(object):
 
     def __init__(self, args):
         self.args = args
@@ -646,7 +646,7 @@ class Master(object):
                         asyncResults.append(result)
 
                 except Exception as e:
-                    _logger.error("Exception running 'runTrial': %s", e)
+                    _logger.error(f"Exception running 'runTrial': {e}")
 
             self.setRunStatuses(statusPairs)
 

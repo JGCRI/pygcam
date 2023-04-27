@@ -30,11 +30,11 @@ def element_path(elt):
 
 
 def scenarioXML(scenario, tag, groupName=None):
-    from .sandbox import Sandbox    # TBD: doesn't work in MCS currently
+    from .file_mapper import FileMapper    # TBD: doesn't work in MCS currently
     from .xmlScenario import scenarioEditor
 
-    sbx = Sandbox(scenario, scenario_group=groupName, create_dirs=True)
-    editor = scenarioEditor(sbx)
+    mapper = FileMapper(scenario, scenario_group=groupName, create_dirs=True)
+    editor = scenarioEditor(mapper)
     rel_path = editor.componentPath(tag)
     abs_path = pathjoin(getParam('GCAM.SandboxExeDir'), rel_path, abspath=True)
     return abs_path
@@ -42,7 +42,6 @@ def scenarioXML(scenario, tag, groupName=None):
 def zevPolicyMain(args):
     import pandas as pd
     from .error import CommandlineError
-    from .xmlScenario import scenarioXML
     from .utils import validate_years
     from .file_utils import get_path
 

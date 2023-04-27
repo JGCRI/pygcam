@@ -13,7 +13,7 @@ from scipy import stats
 from ..log import getLogger
 from ..mcs.analysis import getCorrDF
 from ..config import getConfig, DEFAULT_SECTION, getParam, setParam, setSection, getSections
-from ..mcs.Database import getDatabase
+from ..mcs.database import getDatabase
 from ..gui.widgets import dataStore
 from ..gui.styles import getColor, getStyle, updateStyle, getFont
 
@@ -116,7 +116,7 @@ class McsData(object):
             inputsDF[col] = inputsDF[col].apply(round)
 
         numParams = inputsDF.shape[0] * inputsDF.shape[1]
-        _logger.info('%d parameter values read' % numParams)
+        _logger.info('%d parameter values read', numParams)
         return inputsDF
 
     @cached
@@ -148,7 +148,7 @@ class McsData(object):
 
         def simLabel(sim):
             desc  = sim.description or '[no description]'
-            label = "%d. %s (%d trials)" % (sim.simId, desc, sim.trials)
+            label = f"{sim.simId}. {desc} ({sim.trials} trials)"
             return label
 
         options = [{'label':simLabel(sim), 'value':sim.simId} for sim in sims]
@@ -167,7 +167,7 @@ class McsData(object):
         options = [{'label': s, 'value': s} for s in scenarios]
 
         if optionsOnly:
-            _logger.debug("scenarioChooser returning %s" % options)
+            _logger.debug("scenarioChooser returning %s", options)
             return options
 
         layout = dcc.Dropdown(
@@ -176,7 +176,7 @@ class McsData(object):
             value=options[0]['value'] if options else '',
             multi=multi
         )
-        _logger.debug("scenarioChooser returning %s" % layout)
+        _logger.debug("scenarioChooser returning %s", layout)
         return layout
 
     def inputChooser(self, multi=False, optionsOnly=False):
@@ -193,7 +193,7 @@ class McsData(object):
         return layout
 
     def outputChooser(self, simId=None, scenario=None, optionsOnly=False):
-        _logger.debug("outputChooser: simId={}, scenario={}".format(simId, scenario))
+        _logger.debug(f"outputChooser: simId={simId}, scenario={scenario}")
         outputs = self.getOutputsWithValues(simId, scenario) \
             if scenario and (simId is not None) else []
 
@@ -242,7 +242,7 @@ class McsData(object):
                              name=outputName, showlegend=False,)]
             return plotData, title, annotations
 
-        title = 'Distribution of %s for scenario %s' % (outputName, scenario)
+        title = f'Distribution of {outputName} for scenario {scenario}'
 
         bins = min(100, len(values)) or 1 # 1 for corner case of no data; bins must be > 0
 
@@ -274,9 +274,9 @@ class McsData(object):
 
         # TBD: generalize this
         if outputName == 'percent-change':
-            tickvalues = ['%d%%' % int(value) for value in barValues]
+            tickvalues = [f'{int(value)}%' for value in barValues]
         else:
-            tickvalues = ['%.2f' % value for value in barValues]
+            tickvalues = [f'{value:.2f}' for value in barValues]
 
         plotData = [dict(type='bar',
                          x=barValues,
@@ -321,9 +321,9 @@ class McsData(object):
             def notation(x, y, xanchor, color):
                 # TBD: generalize this
                 if outputName == 'percent-change':
-                    text = '%d%%' % x
+                    text = f'{x}%'
                 else:
-                    text = '%.2f' % x
+                    text = f'{x:%.2f}'
 
                 d = dict(x=x, y=y,
                          text=text,
@@ -507,7 +507,7 @@ class McsData(object):
 
         # create a trace for each parameter
         for paramName in params:
-            paramData = df.query('paramName == "%s"' % paramName)
+            paramData = df.query(f'paramName == "{paramName}"')
 
             trace = go.Scatter(x=list(paramData['count']),
                                y=list(paramData['spearman']),
@@ -520,7 +520,7 @@ class McsData(object):
         # I cannot center a narrower plot for reasons I don't understand
         layout = updateStyle('Plot',
                              width=None,
-                             title='Correlation Convergence for %s' % resultName,
+                             title=f'Correlation Convergence for {resultName}',
                              xaxis=dict(range=[CORR_STEP, endX]))
                              # margin=updateStyle('PlotMargin', l=40)
 
@@ -818,7 +818,7 @@ def generateDropdownDefaults(app, ids):
         return current if current in optionValues else optionValues[0]
 
     for id in ids:
-        _logger.debug("Generating default-setting callback for %s" % id)
+        _logger.debug("Generating default-setting callback for %s", id)
         app.callback(Output(id, 'value'),
                      [Input(id, 'options')],
                      state=[State(id, 'value')])(dropdownDefault)
@@ -868,7 +868,7 @@ def main(args):
                    Input('sim-chooser', 'value'),
                    Input('scenario-chooser', 'value')])
     def updateOutputChooser(project, simId, scenario):
-        _logger.debug('updateOutputChooser(%s, %s, %s)' % (project, simId, scenario))
+        _logger.debug('updateOutputChooser(%s, %s, %s)', project, simId, scenario)
         layout = data.outputChooser(simId=simId, scenario=scenario, optionsOnly=True)
         return layout
 
@@ -877,7 +877,7 @@ def main(args):
                    Input('sim-chooser', 'value'),
                    Input('scenario-chooser', 'value')])
     def updateMultiOutputChooser(project, simId, scenario):
-        _logger.debug('updateMultiOutputChooser(%s, %s, %s)' % (project, simId, scenario))
+        _logger.debug('updateMultiOutputChooser(%s, %s, %s)', project, simId, scenario)
         layout = data.multiOutputChooser(simId=simId, scenario=scenario, optionsOnly=True)
         return layout
 
@@ -885,7 +885,7 @@ def main(args):
                   [Input('project-chooser', 'value'),
                    Input('sim-chooser', 'value')])
     def updateScenarioChooser(project, simId):
-        _logger.debug('updateScenarioChooser(%s, %s)' % (project, simId))
+        _logger.debug('updateScenarioChooser(%s, %s)', project, simId)
         layout = data.scenarioChooser(simId, multi=False, optionsOnly=True)
 
         return layout
@@ -893,7 +893,7 @@ def main(args):
     @app.callback(Output('sim-chooser', 'options'),
                   [Input('project-chooser', 'value')])
     def updateSimChooser(project):
-        _logger.debug('updateSimChooser(%s)' % project)
+        _logger.debug('updateSimChooser(%s)', project)
         data.readMetaData(project)
         layout = data.simChooser(optionsOnly=True)
         return layout
@@ -911,7 +911,7 @@ def main(args):
                   [Input('paraCoords', 'figure')])
     def updateParaCoordsVars(figure):
         varNames = data.paraCoordsVars
-        _logger.debug('updateParaCoordsVars vars=%s' % varNames)
+        _logger.debug('updateParaCoordsVars vars=%s', varNames)
         varNamesJSON = json.dumps(varNames)
         return varNamesJSON
 
@@ -919,7 +919,7 @@ def main(args):
                   [Input('paraCoords-vars', 'children')])
     def updateInputChooser(varNamesJSON):
         varNames = json.loads(varNamesJSON)
-        _logger.debug('updateInputChooser(%s)' % varNames)
+        _logger.debug('updateInputChooser(%s)', varNames)
         return varNames
 
     @app.callback(Output('paraCoords', 'figure'),
@@ -949,8 +949,9 @@ def main(args):
                   ])
     def showTornado(project, simId, scenario, resultName,
                     sliderValue, tornadoType, selectedData):
-        _logger.debug('showTornado(%s, %s, %s, %s, %s, %s, %s)' % (
-            project, simId, scenario, resultName, sliderValue, tornadoType, selectedData))
+        _logger.debug('showTornado(%s, %s, %s, %s, %s, %s, %s)',
+                      project, simId, scenario, resultName, sliderValue,
+                      tornadoType, selectedData)
 
         if not (project and scenario and resultName) or simId is None:
             return ''
@@ -969,8 +970,8 @@ def main(args):
                    Input('distribution', 'selectedData'),
                    ])
     def showDistribution(project, simId, scenario, outputName, sliderInfo, distOptions, selectedData):
-        _logger.debug('showDistribution(%s, %s, %s, %s, %s)' % (
-            project, simId, scenario, outputName, selectedData))
+        _logger.debug('showDistribution(%s, %s, %s, %s, %s)',
+                      project, simId, scenario, outputName, selectedData)
 
         # Clear selectedData if context changes
         context = (project, simId, scenario, outputName)
@@ -1029,7 +1030,7 @@ def main(args):
                   [State('sim-chooser', 'value'),
                    State('scenario-chooser', 'value')])
     def showPercentileSlider(resultName, selected, clicks, simId, scenario):
-        _logger.debug('showPercentileSlider(%s, %s, %s)' % (resultName, selected, clicks))
+        _logger.debug('showPercentileSlider(%s, %s, %s)', resultName, selected, clicks)
         if clicks != data.resetSliderButtonClicks:            # recognize a new click
             data.resetSliderButtonClicks = clicks
             return (0, 100)
@@ -1053,7 +1054,7 @@ def main(args):
     def showScatterMatrix(nclicks, simId, scenario, outputs, inputs):
         inputs = inputs or data.paraCoordsVars
         #outputs = outputs or data.getOutputsWithValues(simId, scenario)
-        _logger.debug('showScatterMatrix(%s, %s, %s, %s)' % (simId, scenario, inputs, outputs))
+        _logger.debug('showScatterMatrix(%s, %s, %s, %s)', simId, scenario, inputs, outputs)
 
         if not inputs or not outputs:
             return ''

@@ -16,11 +16,10 @@ from ..log import getLogger
 from ..utils import importFromDotSpec, pathjoin
 from ..XMLFile import XMLFile
 
-from .context import McsContext
-from .Database import getDatabase
+from .database import getDatabase
 from .distro import DistroGen
 from .error import PygcamMcsUserError, PygcamMcsSystemError, DistributionSpecError
-from .simulation import Simulation
+from .sim_file_mapper import SimFileMapper
 from .util import loadObjectFromPath
 from .XML import XMLWrapper, findAndSave, getBooleanXML
 from .XMLConfigFile import XMLConfigFile
@@ -833,15 +832,14 @@ class XMLRelFile(XMLFile):
     A minor extension to XMLFile to store the original relative pathname
     that was indicated in the config file identifying this file.
     """
-    def __init__(self, sim : Simulation, context : McsContext, inputFile, relPath):
+    def __init__(self, mapper : SimFileMapper, inputFile, relPath):
         self.inputFile = inputFile
         self.relPath = relPath
-
-        if relPath.startswith('../../trial-xml'):
-            trial_dir = sim.trial_dir(context=context)
-            absPathRoot = pathjoin(trial_dir, context.scenario, 'exe')
+        if relPath.startswith('../input') or relPath.startswith('../../trial-xml'):
+            absPathRoot = mapper.sandbox_exe_dir
+            #trial_dir = mapper.trial_dir()
         else:
-            absPathRoot = sim.sim_local_xml
+            absPathRoot = mapper.get_sim_local_xml()
 
         absPath = pathjoin(absPathRoot, relPath, abspath=True)
         super().__init__(absPath)
@@ -944,7 +942,8 @@ class XMLInputFile(XMLWrapper):
 
         self.findAndSaveParams(element)
 
-    def loadFiles(self, sim : Simulation, scenario_names, writeConfigFiles=True):
+    # def loadFiles(self, mapper : SimFileMapper, scenario_names, writeConfigFiles=True):
+    def loadFiles(self, mapper : SimFileMapper, writeConfigFiles=True):
         """
         Find the distinct pathnames associated with our component name. Each scenario
         that refers to this path is stored in a set in self.inputFiles, keyed by pathname.
@@ -961,12 +960,16 @@ class XMLInputFile(XMLWrapper):
         # TBD: need to clarify why this is necessary / useful
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
 
-        ctx = copy.copy(sim.context)
-        sim.set_context(ctx)            # TBD: not sure this is necessary
+        # TBD: not sure this is necessary
+        ctx = copy.copy(mapper.context)
+        mapper.set_context(ctx)
 
-        for scenario_name in scenario_names:
+        # for scenario_name in scenario_names:
+        for scenario_name in [mapper.scenario]: # TBD: no need for loop
+            _logger.info(f"loadFiles: comp {compName}, scenario {scenario_name}")
+
             ctx.setVars(scenario=scenario_name)
-            configFile = XMLConfigFile.configForScenario(sim, scenario_name, useCopy=useCopy)
+            configFile = XMLConfigFile.configForScenario(mapper, scenario_name, useCopy=useCopy)   # TBD: use mapper?
 
             # If compName ends in '.xml', assume its value is the full relative path, with
             # substitution for {scenario}, e.g., "../local-xml/{scenario}/mcsValues.xml"
@@ -975,7 +978,7 @@ class XMLInputFile(XMLWrapper):
 
             # If another scenario "registered" this XML file, we don't do so again.
             if not relPath in self.xmlFileMap:
-                xmlFile = XMLRelFile(sim, ctx, self, relPath)
+                xmlFile = XMLRelFile(mapper, self, relPath)
                 self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
                 self.xmlFiles.append(xmlFile)       # per input file in one scenario
 
@@ -1065,18 +1068,20 @@ class XMLParameterFile(XMLFile):
 
         _logger.debug(f"Loaded parameter file: {filename}")
 
-    def loadInputFiles(self, sim, scenario_names, writeConfigFiles=True):
+    # def loadInputFiles(self, mapper, scenario_names, writeConfigFiles=True):
+    def loadInputFiles(self, mapper, writeConfigFiles=True):
         """
         Load the input files, for each scenario in scenario_names. Scenarios are
-        found in {simDir}/{scenName}.
+        found in {simDir}/{scenName}. WHY FOR EACH SCENARIO?
         """
         for inputFile in self.inputFiles.values():
-            inputFile.loadFiles(sim, scenario_names, writeConfigFiles=writeConfigFiles)
+            # inputFile.loadFiles(mapper, scenario_names, writeConfigFiles=writeConfigFiles)
+            inputFile.loadFiles(mapper, writeConfigFiles=writeConfigFiles)
 
         if writeConfigFiles:
             # Writes all modified configs. Config files' XML trees are updated
             # as InputFile elements are processed.
-            XMLConfigFile.writeAll(sim)
+            XMLConfigFile.writeAll(mapper)
 
     def getFilename(self):
         return self.filename

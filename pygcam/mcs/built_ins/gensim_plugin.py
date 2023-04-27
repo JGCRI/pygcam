@@ -5,14 +5,12 @@ import os
 
 from ...config import getParam
 from ...constants import McsMode
-from ...file_utils import filecopy #, symlink
 from ...log import getLogger
 from ...project import Project
-from ...sandbox import copy_ref_workspace
 
+from ..sim_file_mapper import SimFileMapper
 from ..util import saveDict
 
-from ..simulation import Simulation
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -87,7 +85,7 @@ def genFullFactorialData(trials, paramFileObj):
     return inputsDF
 
 
-def genTrialData(sim : Simulation, paramFileObj, method):
+def genTrialData(mapper : SimFileMapper, paramFileObj, method):
     """
     Generate the given number of trials for the given simId, using the objects created
     by parsing parameters.xml. Return a DataFrame of values.
@@ -98,7 +96,7 @@ def genTrialData(sim : Simulation, paramFileObj, method):
     from ..LHS import lhs, lhsAmend
     from ..XMLParameterFile import XMLRandomVar, XMLCorrelation
 
-    trials = sim.trial_count
+    trials = mapper.trial_count
 
     rvList = XMLRandomVar.getInstances()
 
@@ -126,23 +124,22 @@ def genTrialData(sim : Simulation, paramFileObj, method):
     lhsAmend(trialData, linked, trials, shuffle=False)
 
     if method in ('montecarlo', 'full-factorial'):
-        sim.writeTrialDataFile(trialData)
+        mapper.writeTrialDataFile(trialData)
 
     df = DataFrame(data=trialData)
     return df
 
 
-def saveTrialData(sim : Simulation, df, start=0):
+def saveTrialData(mapper : SimFileMapper, df, start=0):
     """
-    Save the trial data in `df` to the SQL database, for the given simId.
+    Save the trial data in `df` to the SQL database, for the given sim_id.
     """
-    from ..Database import getDatabase
+    from ..database import getDatabase
     from ..XMLParameterFile import XMLRandomVar
 
-    simId = sim.sim_id
     trials = df.shape[0]
 
-    # Delete all Trial entries for this simId and this range of trialNums
+    # Delete all Trial entries for this sim_id and this range of trialNums
     db = getDatabase()
 
     paramValues = []
@@ -160,16 +157,18 @@ def saveTrialData(sim : Simulation, df, start=0):
             paramId = db.getParamId(pname)
             paramValues.append((trialNum, paramId, value, varNum))
 
-    # Write the tuples (simId, trialNum, paramId, value) to the database
-    db.saveParameterValues(simId, paramValues)
+    sim_id = mapper.sim_id
+
+    # Write the tuples (sim_id, trialNum, paramId, value) to the database
+    db.saveParameterValues(sim_id, paramValues)
 
     # SALib methods may not create exactly the number of trials requested,
     # so we update the database to set the record straight.
-    db.updateSimTrials(simId, trials)
-    _logger.info(f'Saved {trials} trials for simId {simId}')
+    db.updateSimTrials(sim_id, trials)
+    _logger.info(f'Saved {trials} trials for sim_id {sim_id}')
 
 # Deprecated? Or may need to be called by runsim
-def runStaticSetup(sim : Simulation, project : Project):
+def runStaticSetup(mapper : SimFileMapper, project : Project):
     """
     Run the --staticOnly setup in the MCS copy of the workspace, for all scenarios.
     This is called from gensim, so we fake the "context" for trial 0, since all
@@ -189,7 +188,7 @@ def runStaticSetup(sim : Simulation, project : Project):
     #
     # create symlinks from all the scenarios' local-xml dirs to shared one
     # under {projectName}/Workspace
-    # sandboxDir = sim.sandbox_dir
+    # sandboxDir = mapper.sandbox_dir
     #
     # wsXmlDir = pathjoin(runWorkspace, LOCAL_XML_NAME, create=True)
     #
@@ -204,61 +203,61 @@ def runStaticSetup(sim : Simulation, project : Project):
                 'run',
                 '--step', 'setup2',    # TBD: switch back to "setup" when pygcam 2.0 is released
                 '--scenario', scenarios_arg,
-                '--sandboxDir', sim.sim_local_xml]
+                '--sandboxDir', mapper.get_sim_local_xml()]
 
-    if sim.scenario_group:
-        toolArgs.extend(['-g', sim.scenario_group])
+    group = mapper.get_scenario_group()
+    if group:
+        toolArgs.extend(['-g', group])
 
     command = 'gt ' + ' '.join(toolArgs)
     _logger.debug(f'Running: {command}')
-    status = tool.main(argv=toolArgs, raiseError=True, sim=sim)
+    status = tool.main(argv=toolArgs, mapper=mapper, raiseError=True)
 
     if status != 0:
         raise GcamToolError(f'"{command}" exited with status {status}')
 
     return status
 
-def genSimulation(sim : Simulation, data_file, method):
+def genSimulation(mapper : SimFileMapper, data_file, method):
     '''
     Generate a simulation based on the given parameters.
     '''
-    from ..Database import getDatabase
+    from ..database import getDatabase
     from ..XMLParameterFile import XMLParameterFile
     from ...xmlScenario import XMLScenario
 
     # TBD: this structure needs to be reconsidered
     # Add symlink to workspace's input dir so we can find XML files using rel paths in config files
-    # symlink(sim.sandbox_workspace_input_dir, sim.sim_input_dir)
-    # symlink(sim.workspace_local_xml, sim.sim_local_xml)
+    # symlink(mapper.sandbox_workspace_input_dir, mapper.sim_input_dir)
+    # symlink(mapper.workspace_local_xml, mapper.sim_local_xml)
 
-    project = Project.readProjectFile(sim.project_name, groupName=sim.scenario_group)
+    project = Project.readProjectFile(mapper.project_name, groupName=mapper.scenario_group)
 
     # TBD: Should not be needed here. Setup must be run *after* datasystem runs (optional)
     #  to generate the base XML files the setup operates on.
     # Run static setup for all scenarios in the given group
-    # runStaticSetup(sim, project)
+    # runStaticSetup(mapper, project)
 
-    group_name = sim.scenario_group or project.scenarioSetup.defaultGroup
+    group_name = mapper.scenario_group or project.scenarioSetup.defaultGroup
 
-    xml_scenario = XMLScenario.get_instance(sim.scenarios_file)
+    xml_scenario = XMLScenario.get_instance(mapper.get_scenarios_file())
     scenarioNames = xml_scenario.scenariosInGroup(group_name)
     baseline = xml_scenario.baselineForGroup(group_name)
 
     # Copy the project's parameters.xml and results.xml files to {simDir}/app-xml
-    filecopy(sim.project_results_file, sim.app_xml_results_file)
-    filecopy(sim.param_file, sim.app_xml_param_file)
+    mapper.copy_app_xml_files()
 
-    paramFileObj = XMLParameterFile(sim.param_file)
+    paramFileObj = XMLParameterFile(mapper.get_param_file())
 
     # TBD: Do we really need to load input files at this point? Commenting this out seems ok.
-    # context = McsContext(projectName=sim.project_name, simId=sim.sim_id, groupName=group_name)
-    # paramFileObj.loadInputFiles(sim, context, scenarioNames, writeConfigFiles=True)
+    # context = McsContext(projectName=mapper.project_name, simId=mapper.sim_id, groupName=group_name)
+    # paramFileObj.loadInputFiles(mapper, context, scenarioNames, writeConfigFiles=True)
 
     # Define the experiments (scenarios) in the database
     db = getDatabase()
-    db.addExperiments(scenarioNames, baseline, sim.scenarios_file)
+    db.addExperiments(scenarioNames, baseline, mapper.get_scenarios_file())
 
-    if not sim.trial_count:
+    if not mapper.trial_count:
         _logger.warn("Simulation meta-data has been copied.")
         if not data_file:
             return
@@ -271,11 +270,11 @@ def genSimulation(sim : Simulation, data_file, method):
         rows = df.shape[0]
         _logger.info(f"Loaded data for {rows} trials from {data_file}")
     else:
-        _logger.info(f"Generating {sim.trial_count} trials to {sim.sim_dir}")
-        df = genTrialData(sim, paramFileObj, method)
+        _logger.info(f"Generating {mapper.trial_count} trials to {mapper.sim_dir}")
+        df = genTrialData(mapper, paramFileObj, method)
 
     # Save generated values to the database for post-processing
-    saveTrialData(sim, df)
+    saveTrialData(mapper, df)
 
 def _simplifyDistro(dataSrc):
     '''
@@ -449,34 +448,34 @@ def driver(args):
     if trials < 0:
         raise PygcamMcsUserError("Trials argument is required: must be an integer >= 0")
 
-    sim = Simulation(sim_id=simId, trial_count=trials, run_root=args.runRoot,
-                     project_name=args.projectName, group=args.group,
-                     param_file=args.paramFile)
+    mapper = SimFileMapper(project_name=args.projectName, scenario_group=args.group,
+                           sim_id=args.simId, trial_count=trials,
+                           param_file=args.paramFile)
 
     if args.exportVars:
-        _exportVars(sim.param_file, args.exportVars, args.paramPlots)
+        _exportVars(mapper.get_param_file(), args.exportVars, args.paramPlots)
         return
 
     if args.delete:
-        removeTreeSafely(sim.sandbox_dir, ignore_errors=False)
+        removeTreeSafely(mapper.sandbox_dir, ignore_errors=False)
 
-    if not os.path.exists(sim.sandbox_workspace):
-        copy_ref_workspace(sim.ref_workspace, sim.sandbox_workspace, force_create=True)
+    if not os.path.exists(mapper.sandbox_workspace):
+        mapper.copy_ref_workspace()
 
         if trials:
-            sim.create_database()
+            mapper.create_database()
 
     # Called with trials == 0 when setting up a local run directory on /scratch
     if trials:
         # The simId can be provided on command line, in which case we need
         # to delete existing parameter entries for this app and simId.
-        sim.create_sim(desc=desc)
+        mapper.create_sim(desc=desc)
 
-    genSimulation(sim, args.dataFile, args.method)
+    genSimulation(mapper, args.dataFile, args.method)
 
     if trials:
         # Save a copy of the arguments used to create this simulation
-        saveDict(vars(args), sim.args_save_file)
+        saveDict(vars(args), mapper.args_save_file)
 
 
 class GensimCommand(McsSubcommandABC):

@@ -16,12 +16,10 @@ def driver(args, tool):
     from ...config import getSection
 
     from ..context import McsContext
-    from ..Database import getDatabase
+    from ..database import getDatabase
     from ..error import PygcamMcsUserError
-    from ..mcsSandbox import McsSandbox
-    from ..simulation import Simulation
-    from .. import util as U
-    from ..util2 import sim_and_sbx_from_context
+    from ..util import parseTrialString
+    from ..sim_file_mapper import SimFileMapper
 
     simId    = args.simId
     command  = args.command
@@ -31,7 +29,7 @@ def driver(args, tool):
     projectName = getSection()
 
     if trialStr:
-        trials = U.parseTrialString(trialStr)
+        trials = parseTrialString(trialStr)
     else:
         db = getDatabase()
         count = db.getTrialCount(simId)
@@ -54,12 +52,12 @@ def driver(args, tool):
 
         for trial_num in trials:
             ctx.setVars(trialNum=trial_num)
-            sim, sbx = sim_and_sbx_from_context(ctx, scenario=scenario, create=False)
+            mapper = SimFileMapper(ctx)
 
             argDict['trialNum'] = trial_num
-            argDict['scenarioDir'] = sbx.sandbox_scenario_dir
-            argDict['trialDir'] = sim.trial_dir(context=ctx)
-            argDict['simDir'] = sbx.sim_dir
+            argDict['scenarioDir'] = mapper.sandbox_scenario_dir
+            argDict['trialDir'] = mapper.trial_dir(context=ctx)
+            argDict['simDir'] = mapper.sim_dir
 
             try:
                 cmd = command.format(**argDict)

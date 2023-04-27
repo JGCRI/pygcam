@@ -12,7 +12,7 @@ from ..config import getParam, pathjoin
 from ..log import getLogger
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
-from .Database import getDatabase
+from .database import getDatabase
 from .XML import XMLWrapper, findAndSave, getBooleanXML
 from ..utils import pygcam_version
 
@@ -271,13 +271,13 @@ class QueryResult(object):
 # A single result DF can have data for multiple outputs, so we cache the files
 outputCache = defaultdict(lambda: None)
 
-def getCachedFile(csvPath, loader=QueryResult, desc="query result"):
+def getCachedFile(csvPath):
     result = outputCache[csvPath]
     if not result:
         try:
-            outputCache[csvPath] = result = loader(csvPath)
+            outputCache[csvPath] = result = QueryResult(csvPath)
         except Exception as e:
-            _logger.warning('saveResults: Failed to read {}: {}'.format(desc, e))
+            _logger.warning(f'saveResults: Failed to read query result: {e}')
             raise FileMissingError(csvPath)
 
     return result
@@ -285,12 +285,12 @@ def getCachedFile(csvPath, loader=QueryResult, desc="query result"):
 
 def extractResult(context, scenario, outputDef, type):
     from .util import activeYears, YEAR_COL_PREFIX
-    from .util2 import sim_and_sbx_from_context
+    from .sim_file_mapper import SimFileMapper
 
-    _logger.debug("Extracting result for {}, name={}".format(context, outputDef.name))
+    _logger.debug(f"Extracting result for {context}, name={outputDef.name}")
 
-    sim, sbx = sim_and_sbx_from_context(context)
-    trial_scenario_dir = sim.trial_scenario_dir(context, scenario=scenario)
+    mapper = SimFileMapper(context)
+    trial_scenario_dir = mapper.trial_scenario_dir(scenario=scenario)
 
     subDir = 'queryResults' if type == RESULT_TYPE_SCENARIO else 'diffs'
     outputDir = pathjoin(trial_scenario_dir, subDir)
@@ -315,14 +315,14 @@ def extractResult(context, scenario, outputDef, type):
     count = selected.shape[0]
 
     if count == 0:
-        raise PygcamMcsUserError('Query for "{}" matched no results'.format(outputDef.name))
+        raise PygcamMcsUserError(f'Query for "{outputDef.name}" matched no results')
 
     if 'region' in selected.columns:
         firstRegion = selected.region.iloc[0]
         if count == 1:
             regionName = firstRegion
         else:
-            _logger.debug("Query yielded {} rows; year columns will be summed".format(count))
+            _logger.debug(f"Query yielded {count} rows; year columns will be summed")
             regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
     else:
         regionName = 'global'
@@ -359,7 +359,7 @@ def extractResult(context, scenario, outputDef, type):
 
     return resultDict
 
-def collectResults(sim, context, type):
+def collectResults(mapper, context, type):
     '''
     Called by worker to process results, return a list of dicts
     with data the master process can quickly write to the database.
@@ -370,7 +370,7 @@ def collectResults(sim, context, type):
     if type == RESULT_TYPE_DIFF and not context.baseline:
         raise PygcamMcsUserError("collectResults: must specify baseline for DIFF results")
 
-    resultsFile = sim.app_xml_results_file()
+    resultsFile = mapper.app_xml_results_file()
     rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 
@@ -385,7 +385,7 @@ def saveResults(context, resultList):
     '''
     Called on the master to save results to the database that were prepared by the worker.
     '''
-    from .Database import getDatabase
+    from .database import getDatabase
 
     runId = context.runId
 

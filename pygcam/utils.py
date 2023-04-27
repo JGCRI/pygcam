@@ -437,31 +437,6 @@ def getYearCols(years, timestep=5):
     cols = [str(y) for y in range(yearRange[0], yearRange[1]+1, timestep)]
     return cols
 
-# TBD: use Sandbox instead
-def getExeDir(workspace, chdir=False):
-    # expanduser => handle leading tilde in pathname
-    exeDir = pathjoin(workspace, 'exe', expanduser=True, abspath=True)
-
-    if chdir:
-        _logger.info("cd %s", exeDir)
-        os.chdir(exeDir)
-
-    return exeDir
-
-# TBD: use Sandbox instead
-def getBatchDir(scenario, resultsDir):
-    """
-    Get the name of the directory holding batch query results..
-
-    :param scenario: (str) the name of a scenario
-    :param resultsDir: (str) the directory in which the batch
-        results directory should be created
-    :return: (str) the pathname to the batch results directory
-    """
-    from .constants import QRESULTS_DIRNAME
-    pathname = pathjoin(resultsDir, scenario, QRESULTS_DIRNAME)
-    return pathname
-
 def loadModuleFromPath(modulePath, raiseOnError=True):
     """
     Load a module from a '.py' or '.pyc' file from a path that ends in the

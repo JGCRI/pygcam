@@ -2,7 +2,8 @@ import os
 import pytest
 from pygcam.config import setSection, getParam, pathjoin
 from pygcam.constants import LOCAL_XML_NAME
-from pygcam.sandbox import Sandbox, GcamPath, gcam_path, makeDirPath
+from pygcam.file_mapper import FileMapper
+from pygcam.gcam_path import makeDirPath, GcamPath, gcam_path
 from .utils_for_testing import load_config_from_string
 
 exe_dir = '/tmp/foo/exe'
@@ -70,23 +71,31 @@ def test_sandbox():
     # With group dir
     # scenario, projectName=None, scenarioGroup=None,
     #                  scenariosFile=None, parent=None, createDirs=True)
-    sbx = Sandbox(scenario, scenario_group=group_name, create_dirs=False)
+    mapper = FileMapper(scenario, scenario_group=group_name, create_dirs=False)
 
-    assert sbx.sandbox_workspace == pathjoin(sandbox_root, project_name, project_subdir, 'Workspace', normpath=True)
-    assert sbx.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "exe/gcam.exe", normpath=True)
-    assert gcam_path(sbx.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "input/gcamdata/xml", normpath=True)
+    assert mapper.sandbox_workspace == pathjoin(sandbox_root, project_name, project_subdir, 'Workspace', normpath=True)
+    assert mapper.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name,
+                                                scenario, "exe/gcam.exe", normpath=True)
+    assert gcam_path(mapper.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir,
+                                                               group_name, scenario, "input/gcamdata/xml",
+                                                               normpath=True)
 
     xmlsrc = getParam('GCAM.ProjectXmlsrc')
-    assert sbx.project_xml_src == xmlsrc
+    assert mapper.project_xml_src == xmlsrc
 
-    assert sbx.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name, LOCAL_XML_NAME, scenario, normpath=True)
+    assert mapper.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name,
+                                                   LOCAL_XML_NAME, scenario, normpath=True)
 
     # group2 sets useGroupDir=False [which is now deprecated, so this test is redundant, but we might reinstate that attribute...]
     group_name = 'group2'
-    sbx = Sandbox(scenario, scenario_group=group_name, create_dirs=True) # this one creates the directories; the one above does not
+    mapper = FileMapper(scenario, scenario_group=group_name, create_dirs=True) # this one creates the directories; the one above does not
 
-    assert sbx.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "exe/gcam.exe", normpath=True)
-    assert gcam_path(sbx.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario, "input/gcamdata/xml", normpath=True)
+    assert mapper.sandbox_exe_path == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario,
+                                               "exe/gcam.exe", normpath=True)
 
-    assert sbx.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name, LOCAL_XML_NAME, scenario, normpath=True)
+    assert gcam_path(mapper.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name,
+                                                               scenario, "input/gcamdata/xml", normpath=True)
+
+    assert mapper.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name,
+                                                   LOCAL_XML_NAME, scenario, normpath=True)
 

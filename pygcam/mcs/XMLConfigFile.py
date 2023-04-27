@@ -1,14 +1,12 @@
-# Copyright (c) 2015 Richard Plevin. See the file COPYRIGHT.txt for details.
+# Copyright (c) 2015-2023 Richard Plevin. See the file COPYRIGHT.txt for details.
 
-from copy import copy
 import os
 from lxml import etree as ET
 import shutil
 
 from ..config import getParam
 from ..log import getLogger
-from .mcsSandbox import McsSandbox
-from .simulation import Simulation
+from .sim_file_mapper import SimFileMapper
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError
 
@@ -40,15 +38,14 @@ class XMLConfigFile(XMLFile):
     '''
     instances = {}  # XMLConfigFile instances keyed by scenario name
 
-    def __init__(self, sim : Simulation, useCopy=False):
+    def __init__(self, mapper : SimFileMapper, useCopy=False):
         '''
         Read and cache a GCAM configuration file in self.tree.
         '''
         self.writePath = None
-        #self.context = copy(sim.context)   # TBD: any need to copy this?
+        #self.context = copy(mapper.context)   # TBD: any need to copy this?
 
-        self.sim = sim
-        ctx = sim.context
+        ctx = mapper.context
 
         # TBD
         #  If config.xml is not found in expected location, copy it from
@@ -57,7 +54,7 @@ class XMLConfigFile(XMLFile):
         #  or (iii) the reference config file if no parent was identified.
         #  (Note that 'parent' logic is not currently implemented.)
 
-        config_path = sim.scenario_config_file(ctx.scenario)
+        config_path = mapper.scenario_config_file(ctx.scenario)
 
         if not os.path.exists(config_path):
 
@@ -65,7 +62,7 @@ class XMLConfigFile(XMLFile):
                 copy_from = getParam('GCAM.RefConfigFile')
             else:
                 # TBD: scenario "parent" is not passed through. Read from scenarios.xml?
-                copy_from = sim.scenario_config_file(ctx.baseline)
+                copy_from = mapper.scenario_config_file(ctx.baseline)
 
             _logger.debug(f"XMLConfig copying '{copy_from}' to '{config_path}'")
             shutil.copy2(copy_from, config_path)
@@ -86,7 +83,7 @@ class XMLConfigFile(XMLFile):
         cls.instances = {}
 
     @classmethod
-    def configForScenario(cls, sim, scenario, useCopy=False):
+    def configForScenario(cls, mapper, scenario, useCopy=False):
         '''
         Return the path to the run-tree version of the config file
         for the given scenario.
@@ -96,17 +93,17 @@ class XMLConfigFile(XMLFile):
             return cls.instances[key]
 
         except KeyError:
-            obj = XMLConfigFile(sim, useCopy=useCopy)
+            obj = XMLConfigFile(mapper, useCopy=useCopy)
             cls.instances[key] = obj
             return obj
 
     @classmethod
-    def writeAll(cls, sim):
+    def writeAll(cls, mapper : SimFileMapper):
         """
         Write all configuration files to disk.
         """
         for cfg in cls.instances.values():
-            config_path = sim.scenario_config_file(cfg.context.scenario)
+            config_path = mapper.scenario_config_file(cfg.context.scenario)
             cfg.write(path=config_path)
 
     def copyOriginal(self, config_path):

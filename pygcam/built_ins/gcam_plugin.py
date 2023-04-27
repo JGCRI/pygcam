@@ -53,7 +53,7 @@ class GcamCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..gcam import runGCAM
-        from ..mcs.mcsSandbox import sandbox_for_mode
+        from ..mcs.sim_file_mapper import mapper_for_mode
 
-        sbx = sandbox_for_mode(args.scenario, scenarioGroup=args.group)
-        runGCAM(sbx, noRun=args.noRun, noWrapper=args.noWrapper)
+        mapper = mapper_for_mode(args.scenario, scenarioGroup=args.group)
+        runGCAM(mapper, noRun=args.noRun, noWrapper=args.noWrapper)

@@ -17,7 +17,7 @@ def driver(args, tool):
     if args.timeseries:
         import pandas as pd
         from ...config import getParam, pathjoin
-        from ..Database import getDatabase
+        from ..database import getDatabase
         from ..timeseriesPlot import plotTimeSeries, plotForcingSubplots
         from ..util import stripYearPrefix
 

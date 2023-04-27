@@ -8,8 +8,8 @@ _logger = getLogger(__name__)
 
 def driver(args):
     from ...project import Project
-    from ..master import Master, pidFileExists, startCluster, getTrialsToRedo
-    from ..Database import getDatabase
+    from ..monitor import Monitor, pidFileExists, startCluster, getTrialsToRedo
+    from ..database import getDatabase
     from ..util import parseTrialString
 
     if not (args.runLocal or args.redoListOnly):
@@ -53,7 +53,7 @@ def driver(args):
 
     args.groupName = args.groupName or Project.defaultGroupName()
 
-    Master(args).run()
+    Monitor(args).run()
 
 
 class RunSimCommand(McsSubcommandABC):
@@ -179,7 +179,7 @@ class RunSimCommand(McsSubcommandABC):
             args.noGCAM = args.noBatchQueries = args.noPostProcessor = args.runLocal = True
 
         if args.statuses:
-            from ..Database import RUN_STATUSES
+            from ..database import RUN_STATUSES
             from ...error import CommandlineError
 
             statusSet = set(args.statuses)

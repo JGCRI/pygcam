@@ -11,7 +11,7 @@ def driver(args, tool):
     Wall time allowed per engine is computed from these values and config file
     variable IPP.MinutesPerRun.
     """
-    from ..master import startCluster, stopCluster
+    from ..monitor import startCluster, stopCluster
 
     if args.mode == 'start':
         argDict = vars(args)

@@ -17,8 +17,8 @@ from lxml import etree as ET
 
 from .config import getParam, setParam, getConfigDict, unixPath, pathjoin
 from .error import PygcamException, CommandlineError, FileFormatError
+from .file_mapper import FileMapper
 from .log import getLogger
-from .sandbox import Sandbox
 from .temp_file import getTempFile
 from .utils import flatten, shellCommand, getBooleanXML, simpleFormat
 from .XMLFile import XMLFile
@@ -192,9 +192,9 @@ class Step(object):
     def __str__(self):
         return f"<Step name='{self.name}' seq='{self.seq}' runFor='{self.runFor}'>{self.command}</Step>"
 
-    def run(self, sbx : Sandbox, argDict, tool, noRun=False):
+    def run(self, mapper : FileMapper, argDict, tool, noRun=False):
         runFor = self.runFor
-        is_baseline = sbx.is_baseline
+        is_baseline = mapper.is_baseline
         is_policy = not is_baseline
 
         # See if this step should be run.
@@ -210,7 +210,7 @@ class Step(object):
         except KeyError as e:
             raise FileFormatError(f"{e} -- No such variable exists in the project XML file")
 
-        _logger.info("[%s, %s, %s] %s", sbx.scenario, self.seq, self.name, command)
+        _logger.info("[%s, %s, %s] %s", mapper.scenario, self.seq, self.name, command)
 
         if not noRun:
             if command[0] == '@':       # run internally in gt
@@ -509,7 +509,7 @@ class Project(XMLFile):
 
         return scenario_names
 
-    def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool): # TBD: pass sbx
+    def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool): # TBD: pass mapper
         """
         Command templates can include keywords curly braces that are substituted
         to create the command to execute in the shell. Variables are defined in
@@ -534,7 +534,7 @@ class Project(XMLFile):
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows
 
-        # TBD: With reliance on config vars and Sandbox many cmdline args may be
+        # TBD: With reliance on config vars and FileMapper many cmdline args may be
         #   obsolete and so many of these variables are, too
 
         # Add standard variables for use in step command template substitutions
@@ -600,10 +600,10 @@ class Project(XMLFile):
 
                 continue
 
-            # TBD: create and use a Sandbox
-            from .mcs.mcsSandbox import sandbox_for_mode
+            # TBD: create and use a FileMapper
+            from .mcs.sim_file_mapper import mapper_for_mode
             group_for_sandbox = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
-            sbx = sandbox_for_mode(scenarioName, scenario_group=group_for_sandbox)
+            mapper = mapper_for_mode(scenarioName, scenario_group=group_for_sandbox)
 
             # TBD: Just use the config variables. Helps consolidate pathname stuff.
             #argDict['scenarioSubdir'] = scenario.subdir or scenarioName     # deprecated
@@ -612,9 +612,9 @@ class Project(XMLFile):
 
 
             argDict['scenario'] = scenarioName
-            argDict['scenarioDir'] = sbx.sandbox_scenario_dir
-            argDict['batchDir'] = sbx.sandbox_query_results_dir
-            argDict['diffsDir'] = sbx.sandbox_diffs_dir
+            argDict['scenarioDir'] = mapper.sandbox_scenario_dir
+            argDict['batchDir'] = mapper.sandbox_query_results_dir
+            argDict['diffsDir'] = mapper.sandbox_diffs_dir
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
             # variables indicated in <tmpFile> or <queries> elements. This is in the scenario
@@ -635,7 +635,7 @@ class Project(XMLFile):
                             continue
 
                         argDict['step'] = step.name
-                        step.run(sbx, argDict, tool, noRun=args.noRun)
+                        step.run(mapper, argDict, tool, noRun=args.noRun)
 
             except PygcamException as e:
                 if quitProgram:

@@ -127,13 +127,13 @@ class GcamTool(object):
         if loadPlugins:
             self._cachePlugins()
 
-        self.sim = None     # used to transmit path info for MCS-related commands
+        self.mapper = None  # used to transmit path info for recursive commands
 
-    def set_sim(self, sim):
-        self.sim = sim
+    def set_mapper(self, mapper):
+        self.mapper = mapper
 
-    def get_sim(self):
-        return self.sim
+    def get_mapper(self):
+        return self.mapper
 
     def addParsers(self):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
@@ -496,7 +496,7 @@ def _showVersion(argv):
         print(VERSION)
         sys.exit(0)
 
-def _main(argv=None, sim=None):
+def _main(argv, mapper):
     configPath = userConfigPath()
     if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
         argSet = set(argv or sys.argv)
@@ -519,7 +519,7 @@ def _main(argv=None, sim=None):
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
 
-    tool.set_sim(sim)
+    tool.set_mapper(mapper)
 
     # This parser handles only --batch, --showBatch, --projectName, --set, and --mcs
     # args. If --batch is given, we need to create a script and call the
@@ -563,11 +563,11 @@ def _main(argv=None, sim=None):
         tool.run(args=args)
 
 
-def main(argv=None, raiseError=False, sim=None):
+def main(argv=None, mapper=None, raiseError=False):
     _logger = getLogger(__name__)
 
     try:
-        _main(argv=argv, sim=sim)
+        _main(argv, mapper)
         return 0
 
     except CommandlineError as e:
@@ -577,7 +577,7 @@ def main(argv=None, raiseError=False, sim=None):
         if raiseError:
             raise
 
-        _logger.error("%s: %s" % (PROGRAM, e))
+        _logger.error(f"{PROGRAM}: {e}")
         return e.signum
 
     except Exception as e:

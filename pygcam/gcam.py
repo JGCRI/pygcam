@@ -8,12 +8,12 @@ import os
 import re
 import subprocess
 
-from .config import getParam, getParamAsBoolean, pathjoin, unixPath
+from .config import getParam, getParamAsBoolean, pathjoin
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
+from .file_mapper import FileMapper
 from .file_utils import pushd
 from .log import getLogger
-from .sandbox import Sandbox
-from .utils import writeXmldbDriverProperties, getExeDir
+from .utils import writeXmldbDriverProperties
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -23,7 +23,7 @@ PROGRAM = os.path.basename(__file__)
 _PathVersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
 _VersionFlagPattern = re.compile('GCAM version (\d+(\.\d+)+)')
 
-# TBD: update this to use Sandbox
+# TBD: update this to use FileMapper?
 def getGcamVersion(exeDir, preferPath=False):
     '''
     Try to get GCAM version by running gcam with --version flag, but if that
@@ -232,9 +232,9 @@ def linkToMacJava():
         os.chdir(owd)
 
 
-def runGCAM(sbx : Sandbox, noRun=False, noWrapper=False):
+def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
     """
-    :param sbx: (Sandbox) contains file and directory information
+    :param mapper: (FileMapper) contains file and directory information
     :param scenario: (str) the scenario to run
     :param group: (str) the name of the scenario group to use
     :param configFile: (str) if scenario is not given, the name of a configuration
@@ -251,13 +251,13 @@ def runGCAM(sbx : Sandbox, noRun=False, noWrapper=False):
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    # TBD: Compute this in Sandbox as {GCAM.SandboxDir}/{optional-groupdir}/{scenario}
-    sandbox_scenario_dir = sbx.sandbox_scenario_dir
+    # TBD: Compute this in FileMapper as {GCAM.SandboxDir}/{optional-groupdir}/{scenario}
+    sandbox_scenario_dir = mapper.sandbox_scenario_dir
 
     if not os.path.lexists(sandbox_scenario_dir):
         raise PygcamException(f"Sandbox '{sandbox_scenario_dir}' does not exist.")
 
-    exeDir = sbx.sandbox_exe_dir
+    exeDir = mapper.sandbox_exe_dir
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
 
     # InMemoryDatabase implies RunQueriesInGCAM
@@ -265,7 +265,7 @@ def runGCAM(sbx : Sandbox, noRun=False, noWrapper=False):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    gcam_args = [sbx.sandbox_exe_path, '-C', sbx.config_path()]
+    gcam_args = [mapper.sandbox_exe_path, '-C', mapper.config_path()]
 
     command = ' '.join(gcam_args)
     if noRun:

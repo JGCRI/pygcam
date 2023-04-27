@@ -98,27 +98,27 @@ class SetupCommand(SubcommandABC):
 
         return parser   # for auto-doc generation
 
-    def run_scenario_setup(self, sbx, args):
+    def run_scenario_setup(self, mapper, args):
         """
         Run the setup steps indicated in scenarios.xml.
         """
-        editor_cls = sbx.editor_class(sbx.scenario, moduleSpec=args.moduleSpec, modulePath=args.modulePath)
+        editor_cls = mapper.editor_class(mapper.scenario, moduleSpec=args.moduleSpec, modulePath=args.modulePath)
 
         # TBD: this seems incorrect now
         # When called in 'trial' mode, we only run dynamic setup.
         # When run in 'gensim' mode, we do only static setup.
-        # args.dynamicOnly = args.dynamicOnly or sbx.mcs_mode == McsMode.TRIAL
+        # args.dynamicOnly = args.dynamicOnly or mapper.mcs_mode == McsMode.TRIAL
         #
-        # if sbx.mcs_mode == McsMode.GENSIM:
+        # if mapper.mcs_mode == McsMode.GENSIM:
         #     args.dynamicOnly = False
         #     args.staticOnly = True
 
-        obj = editor_cls(sbx)
+        obj = editor_cls(mapper)
         obj.setup(args)
 
     def run(self, args, tool):
         from ..error import CommandlineError
-        from ..mcs.mcsSandbox import sandbox_for_mode
+        from ..mcs.sim_file_mapper import mapper_for_mode
 
         if args.forceCreate:
             args.createSandbox = 'yes'  # implied argument
@@ -128,12 +128,12 @@ class SetupCommand(SubcommandABC):
 
         # don't bother creating if forceCreate, which removes the directory before recreating it
         create_dirs = not args.forceCreate
-        sbx = sandbox_for_mode(args.scenario, scenario_group=args.group, create_dirs=create_dirs)
+        mapper = mapper_for_mode(args.scenario, scenario_group=args.group, create_dirs=create_dirs)
 
-        if args.createSandbox == 'yes' and sbx.mcs_mode != McsMode.GENSIM:
-            sbx.create_sandbox(force_create=args.forceCreate)
+        if args.createSandbox == 'yes' and mapper.mcs_mode != McsMode.GENSIM:
+            mapper.create_sandbox(force_create=args.forceCreate)
 
         if args.runScenarioSetup == 'yes':
-            self.run_scenario_setup(sbx, args)
+            self.run_scenario_setup(mapper, args)
 
 

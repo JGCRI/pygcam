@@ -19,7 +19,7 @@ def driver(args, tool):
     import shutil
 
     from ...config import getParam
-    from ..Database import getDatabase
+    from ..database import getDatabase
     from ..error import PygcamMcsSystemError
 
     if args.deleteSims:

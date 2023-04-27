@@ -11,7 +11,7 @@ from ..config import getParam, getParamAsBoolean, pathjoin
 from ..log import getLogger
 
 from .error import PygcamMcsSystemError, PygcamMcsUserError
-from .Database import getDatabase, Input
+from .database import getDatabase, Input
 
 _logger = getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from pygcam.mcs.Database import getDatabase
+from pygcam.mcs.database import getDatabase
 from pygcam.mcs.util import createTrialString
 
 db = getDatabase(checkInit=False)
@@ -11,6 +11,6 @@ missing = db.getMissingTrials(simId, 'baseline')
 s = createTrialString(missing)
 print("Missing trials:", s)
 
-from pygcam.mcs.master import listTrialsToRedo
+from pygcam.mcs.monitor import listTrialsToRedo
 
 listTrialsToRedo(db, simId, ['baseline', 'corn'], ['missing', 'killed'])

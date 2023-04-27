@@ -12,7 +12,7 @@ def driver(args, tool):
     Set up the base coremcs database. Must call startDb() before calling this.
 
     '''
-    from ..Database import getDatabase
+    from ..database import getDatabase
 
     db = getDatabase()
     expId = db.createExp(args.expName, parent=args.parent, description=args.description)

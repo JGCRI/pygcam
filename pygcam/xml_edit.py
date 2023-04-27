@@ -8,7 +8,7 @@ import re
 from lxml import etree as ET
 
 from .error import SetupException, PygcamException
-from .sandbox import GcamPath
+from .gcam_path import GcamPath
 from .log import getLogger
 
 AttributePattern = re.compile(r'(.*)/@([-\w]*)$')
