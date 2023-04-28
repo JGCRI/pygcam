@@ -120,7 +120,7 @@ class IndustryCommand(SubcommandABC):
         parser.add_argument('-u', '--GCAM-USA', action="store_true",
                             help=clean_help('''If set, produce output compatible with GCAM-USA regions.'''))
 
-        parser.add_argument('-y', '--years', default='2015-2100',
+        parser.add_argument('-y', '--years', default='2020-2100',
                             help=clean_help('''A hyphen-separated range of timestep years to include in the generated template.
                             Default is "2015-2100"'''))
 
