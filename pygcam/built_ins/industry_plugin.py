@@ -108,7 +108,7 @@ class IndustryCommand(SubcommandABC):
                             Use an absolute path to generate the file to another location.'''.format(
                                 TECH_OUTPUT_FILE, ELEC_OUTPUT_FILE)))
 
-        parser.add_argument('-s', '--sectors', default="industrial energy use",
+        parser.add_argument('-s', '--sectors', default="other industrial energy use",
                             help=clean_help('''A comma-delimited list of sectors to include in the generated template. Use quotes 
                             around the argument if there are embedded blanks. By default, all known industry technology
                             sectors are included.'''))
@@ -133,7 +133,7 @@ class IndustryCommand(SubcommandABC):
 
         outputFile = args.outputFile or (ELEC_OUTPUT_FILE if args.electricOnly else TECH_OUTPUT_FILE)
 
-        main_xml_file = 'industry.xml'
+        main_xml_file = 'other_industry.xml'
         usa_xml_file = 'industry_USA.xml'
 
         main_xpath = '//supplysector/subsector/stub-technology/period/minicam-energy-input'
