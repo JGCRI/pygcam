@@ -2421,11 +2421,11 @@ class XMLEditor(object):
             fileRel, fileAbs = self.getLocalCopy(tag)
             fileObj = CachedFile.getFile(fileAbs)
             tree = fileObj.tree
-#            xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
-            if which == 'GCAM-USA':
-                xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
-            else:
-                xml_template = "//region[@name='{region}']/supplysector[@name='{sector}']/subsector[@name='{subsector}']/stub-technology[@name='{technology}']/"
+            xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
+#            if which == 'GCAM-USA':
+#                xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
+#           else:
+#                xml_template = "//region[@name='{region}']/supplysector[@name='{sector}']/subsector[@name='{subsector}']/stub-technology[@name='{technology}']/"
 
             subdf = df.query('which == "{}"'.format(which))
 
@@ -2440,7 +2440,7 @@ class XMLEditor(object):
                     if improvement == 0:
                         continue
 
-                    xpath = xpath_prefix + "period[@year='{year}']/minicam-energy-input[@name='{input}']/calibrated-value".format(year='2015', input=input)
+                    xpath = xpath_prefix + "period[@year='{year}']/minicam-energy-input[@name='{input}']/efficiency".format(year=year, input=input)
                     elts = tree.xpath(xpath)
 
                     if elts is None:
