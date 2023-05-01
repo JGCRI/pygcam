@@ -72,4 +72,5 @@ class DiffCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..diff import diffMain
-        diffMain(args)
+
+        diffMain(args, tool)

@@ -40,7 +40,6 @@ def random_sleep(low_secs, high_secs):
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists
-# TBD: Use this in all relevant cmd-line cases
 #
 class ParseCommaList(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
@@ -530,17 +529,3 @@ def printSeries(series, label, header='', asStr=False):
         return s
     else:
         print(s)
-
-
-# Deprecated?
-# def readScenarioName(configFile):
-#     """
-#     Read the file `configFile` and extract the scenario name.
-#
-#     :param configFile: (str) the path to a GCAM configuration file
-#     :return: (str) the name of the scenario defined in `configFile`
-#     """
-#     parser = ET.XMLParser(remove_blank_text=True)
-#     tree   = ET.parse(configFile, parser)
-#     scenarioName = tree.find('//Strings/Value[@name="scenarioName"]')
-#     return scenarioName.text

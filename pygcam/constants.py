@@ -19,6 +19,8 @@ SCENARIOS_XML = "scenarios.xml"
 PROJECT_XML = "project.xml"
 QUERY_DIRNAME  = "queries"
 QRESULTS_DIRNAME = 'queryResults'
+DIFFS_DIRNAME = 'diffs'
+OUTPUT_DIRNAME = 'output'
 
 from enum import Enum
 
@@ -33,11 +35,9 @@ class McsMode(Enum):
     def __eq__(self, value):
         return self.value == value
 
-
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 
-# TBD: keep in pygcam package
 DEFAULT_TIMESTEP = 5    # 5 years
 
 NUM_AEZS = 18

@@ -22,8 +22,6 @@ except:
     fast = morris = sobol = Ishigami = None
     morris_sampler = latin_sampler = finite_diff_sampler = None
 
-# TBD: Save data compressed (opt), with zlib or gzip pkgs.
-
 DFLT_PROBLEM_FILE = 'problem.csv'
 DFLT_INPUTS_FILE  = 'inputs.csv'
 DFLT_RESULTS_FILE = 'results.csv'

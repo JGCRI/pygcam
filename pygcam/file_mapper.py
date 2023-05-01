@@ -9,8 +9,8 @@
 import os
 
 from .config import getParam, getParamAsBoolean, getParamAsPath, pathjoin, mkdirs
-from .constants import LOCAL_XML_NAME, CONFIG_XML
-from .error import SetupException, PygcamException
+from .constants import CONFIG_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME
+from .error import SetupException
 from .file_utils import removeTreeSafely, removeFileOrTree, copyFileOrTree, symlinkOrCopyFile
 from .gcam_path import makeDirPath, GcamPath
 from .log import getLogger
@@ -81,8 +81,7 @@ class AbstractFileMapper(object):
     and SimFileMapper (for simulations), which have different structures to account for
     simulation and trial directories and other files required for MCS.
     """
-    def __init__(self, scenario, project_name=None, scenario_group=None,
-                 parent=None, create_dirs=True):
+    def __init__(self, scenario, project_name=None, scenario_group=None, parent=None, **kwargs):
         """
         Create a FileMapper instance from the given arguments.
 
@@ -96,7 +95,7 @@ class AbstractFileMapper(object):
         """
         self.scenario = scenario
         self.parent = parent
-        self.mcs_mode = getParam('MCS.Mode')
+        self.mcs_mode = None # getParam('MCS.Mode')
         self.project_name = project_name or getParam('GCAM.ProjectName')
 
         self.scenarios_file = getParamAsPath('GCAM.ScenariosFile')
@@ -116,16 +115,18 @@ class AbstractFileMapper(object):
 
         self.group_subdir = scenario_group if scenario_group and group_obj.useGroupDir else ''
 
-        if not (self.parent or self.is_baseline):
+        self.parent_mapper = None
+        if not self.is_baseline:
 
             # TBD: Modify to support out-of-scenario-group parent after groupSource
             #      logic is moved to ScenarioGroup (see xmlScenario.py)
             # self.parent = group_obj.baselineSource if self.is_baseline else None
 
             # Create Sandbox (or SimFileMapper) for baseline scenario to access config.xml
-            self.parent = self.__class__(scenario=self.baseline,
-                                         project_name=project_name,
-                                         scenario_group=scenario_group)
+            self.parent_mapper = self.__class__(scenario=self.baseline,
+                                                project_name=project_name,
+                                                scenario_group=scenario_group,
+                                                **kwargs)
 
         self.ref_workspace = getParamAsPath('GCAM.RefWorkspace')
         self.ref_workspace_exe_dir = getParamAsPath("GCAM.RefExeDir")
@@ -134,6 +135,7 @@ class AbstractFileMapper(object):
         # TBD: implement this for MCS?
         # self.copy_workspace = getParamAsBoolean('MCS.CopyWorkspace')
 
+        self.project_etc_dir = getParamAsPath('GCAM.ProjectEtc')
         self.project_xml_src = getParamAsPath('GCAM.ProjectXmlsrc')
         self.project_scenario_xml_src = pathjoin(self.project_xml_src, scenario) if scenario else None
 
@@ -255,24 +257,6 @@ class AbstractFileMapper(object):
         for filename in filesToLink:
             workspaceLinkOrCopy(filename, sandbox_workspace, sandbox_scenario_dir, copyFiles=False)
 
-    def create_dir_structure(self, force_create=False):
-        """
-        Create the directories required in the runtime structure for non-MCS GCAM runs.
-        Optionally, this includes a local copy of the full reference workspace, to
-        ensure isolation from changes to the reference workspace.
-
-        :return: nothing
-        """
-        self.copy_ref_workspace(force_create=force_create)
-        self.copy_sandbox_workspace()
-
-        def create_subdirs(parent, *children):
-            for child in children:
-                pathjoin(parent, child, create=True)
-
-        create_subdirs(self.sandbox_scenario_dir, 'output')
-        create_subdirs(self.sandbox_exe_dir, 'restart', 'logs')
-
     def create_sandbox(self, force_create=False):
         """
         Set up a run-time sandbox in which to run GCAM. This involves copying
@@ -286,7 +270,15 @@ class AbstractFileMapper(object):
             _logger.debug(f"Removing sandbox '{self.sandbox_scenario_dir}' before recreating")
             removeTreeSafely(self.sandbox_scenario_dir)
 
-        self.create_dir_structure()
+        self.copy_ref_workspace(force_create=force_create)
+        self.copy_sandbox_workspace()
+
+        def make_subdirs(parent, *children):
+            for child in children:
+                pathjoin(parent, child, create=True)
+
+        make_subdirs(self.sandbox_scenario_dir, OUTPUT_DIRNAME)
+        make_subdirs(self.sandbox_exe_dir, 'restart', 'logs')
 
     def editor_class(self, scenario, moduleSpec=None, modulePath=None):
         from importlib import import_module
@@ -349,7 +341,9 @@ class FileMapper(AbstractFileMapper):
         super().__init__(scenario, project_name=project_name, scenario_group=scenario_group,
                          parent=parent, create_dirs=create_dirs)
 
-        parent = self.parent    # may be computed by superclass
+        parent_mapper = self.parent_mapper    # may be computed by superclass
+        self.parent_scenario_path = (self.gcam_path_from_abs(parent_mapper.sandbox_scenario_dir)
+                                     if parent_mapper else None)
 
         # TBD: not implemented. Move this to SimFileMapper?
         # self.copy_workspace = copy_workspace or getParamAsBoolean("GCAM.CopyWorkspace")
@@ -360,15 +354,14 @@ class FileMapper(AbstractFileMapper):
         self.sandbox_dir = getParamAsPath('GCAM.SandboxDir')
 
         self.sandbox_scenario_dir = sbx_scen_dir = makeDirPath(self.sandbox_dir, scenario)
-        self.parent_scenario_path = self.gcam_path_from_abs(parent.sandbox_scenario_dir) if parent else None
 
         self.sandbox_exe_dir = makeDirPath(sbx_scen_dir, 'exe', create=create_dirs)
         self.sandbox_exe_path = pathjoin(self.sandbox_exe_dir, getParam('GCAM.Executable'))
 
         self.sandbox_output_dir = pathjoin(sbx_scen_dir, 'output')
         self.sandbox_xml_db = pathjoin(self.sandbox_output_dir, getParam('GCAM.DbFile'))
-        self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, 'queryResults')
-        self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, 'diffs')
+        self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, QRESULTS_DIRNAME)
+        self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, DIFFS_DIRNAME)
 
         # In non-MCS Sandbox, the "local-xml" directory is at the same level as scenario dirs.
         # In the SimFileMapper, "local-xml" is under the sim directory (e.g., sims/s001).

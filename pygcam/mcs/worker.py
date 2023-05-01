@@ -266,10 +266,12 @@ class Worker(object):
         errorMsg = None
 
         _logger.info(f'Running trial {trialNum}')
+
         try:
             exitCode = _runGcamTool(self.mapper, noGCAM=noGCAM,
                                     noBatchQueries=noBatchQueries,
                                     noPostProcessor=noPostProcessor)
+
             status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
         except TimeoutSignalException:
@@ -304,12 +306,12 @@ class Worker(object):
             errorMsg = str(e)
             status = RUN_ABORTED     # run-time error in loaded module
 
+            if getParamAsBoolean('GCAM.ShowStackTrace'):
+                import traceback
+                traceback.print_exc()
+
         if errorMsg:
             _logger.error(f"Trial status: {status}: {errorMsg}")
-            if status == RUN_ABORTED and getParamAsBoolean('GCAM.ShowStackTrace'):
-                import traceback
-                errorMsg = traceback.format_exc()
-                _logger.error(errorMsg)
         else:
             _logger.info(f'Trial status: {status}')
 

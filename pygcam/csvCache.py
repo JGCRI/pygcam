@@ -28,24 +28,26 @@ def readCachedCsv(filename, skiprows=1, cache=False):
 
     found = False
 
-    if cache and filename in _csvCache:
+    pathname = os.path.abspath(filename)
+
+    if cache and pathname in _csvCache:
         _logger.debug("Found %s in CSV cache", filename)
-        df = _csvCache[filename]
+        df = _csvCache[pathname]
         found = True
 
     else:
         try:
-            _logger.debug("Reading %s", filename)
-            df = pd.read_table(filename, sep=',', skiprows=skiprows, index_col=None)
+            _logger.debug("Reading %s", pathname)
+            df = pd.read_table(pathname, sep=',', skiprows=skiprows, index_col=None)
 
         except IOError as e:
-            raise FileMissingError(os.path.abspath(filename), e)
+            raise FileMissingError(pathname, e)
 
         except Exception as e:
-            raise PygcamException('Error reading %s: %s' % (filename, e))
+            raise PygcamException(f'Error reading {filename}: {e}')
 
     # Cache a copy, unless it was already in the cache
     if cache and not found:
-        _csvCache[filename] = df.copy()
+        _csvCache[pathname] = df.copy()
 
     return df

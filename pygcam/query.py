@@ -1064,22 +1064,21 @@ def csv2xlsx(inFiles, outFile, skiprows=0, interpolate=False, years=None, startY
             worksheet.write_url(1, 0, "internal:index!A1", linkFmt, "Back to index")
 
 
-def queryMain(args):
+def queryMain(args, tool):
     # """
     # Main driver for query sub-command
     #
     # :param args:
     # :return: none
     # """
-    from .mcs.sim_file_mapper import mapper_for_mode
+    from .mcs.sim_file_mapper import get_mapper
 
     miLogFile  = getParam('GCAM.MI.LogFile')
     outputDir  = args.outputDir or getParamAsPath('GCAM.QueryOutputDir')
     scenario   = args.scenario
 
-    mapper = mapper_for_mode(args.scenario, scenarioGroup=args.group)
+    mapper = tool.mapper or get_mapper(args.scenario, scenario_group=args.group)
 
-    sandbox_dir = mapper.sandbox_scenario_dir
     xmldb = mapper.sandbox_xml_db
 
     queryPath  = args.queryPath or getParam('GCAM.QueryPath')

@@ -60,28 +60,15 @@ class McsContext(object):
         return f"<{self.__class__.__name__} id={idTail} scn={self.scenario} grp={self.groupName} use={self.useGroupDir} sim={self.simId} trl={self.trialNum} run={self.runId} sta={self.status}>"
 
     # TBD: not sure we should be setting anything but status here
-    def setVars(self, projectName=None, scenario=None, baseline=None, groupName=None,
-                simId=None, trialNum=None, status=None):
+    def setVars(self, scenario=None, trial_num=None, status=None):
         """
-        Set instance vars of an McsContext for all args that are not None.
+        Set instance vars of an McsContext for any kwargs that are not None.
         """
-        if projectName:
-            self.projectName = projectName
-
         if scenario:
             self.scenario = scenario
 
-        if baseline:
-            self.baseline = baseline
-
-        if groupName:
-            self.groupName = groupName
-
-        if simId is not None:
-            self.simId = int(simId)
-
-        if trialNum is not None:
-            self.trialNum = int(trialNum)
+        if trial_num is not None:
+            self.trialNum = int(trial_num)
 
         if status:
             self.status = status

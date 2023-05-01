@@ -7,7 +7,7 @@ import shutil
 from ..log import getLogger
 from ..file_utils import pushd
 from .sim_file_mapper import SimFileMapper
-from .util import parseTrialString, parseMcsDir, getSimDir, dirFromNumber
+from .util import parseTrialString, parseMcsDir
 
 _logger = getLogger(__name__)
 
@@ -196,9 +196,12 @@ class GcamDataSystem(object):
         for trial in trial_list:
             _logger.info(f'Generating XML for trial {trial}')
 
-            sim_dir = getSimDir(sim_id)
-            trial_dir = dirFromNumber(trial, prefix=sim_dir, create=True)
-            sandbox_dir = self.trial_sandbox(trial)
+            # sim_dir = getSimDir(sim_id)
+            # trial_dir = dirFromNumber(trial, prefix=sim_dir, create=True)
+            trial_dir = mapper.trial_dir(create=True)
+
+            # sandbox_dir = self.trial_sandbox(trial)
+            sandbox_dir = mapper.trial_scenario_dir()
 
             self.trial_func(trial)
 

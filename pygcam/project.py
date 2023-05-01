@@ -601,9 +601,9 @@ class Project(XMLFile):
                 continue
 
             # TBD: create and use a FileMapper
-            from .mcs.sim_file_mapper import mapper_for_mode
+            from .mcs.sim_file_mapper import get_mapper
             group_for_sandbox = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
-            mapper = mapper_for_mode(scenarioName, scenario_group=group_for_sandbox)
+            mapper = get_mapper(scenarioName, scenario_group=group_for_sandbox)
 
             # TBD: Just use the config variables. Helps consolidate pathname stuff.
             #argDict['scenarioSubdir'] = scenario.subdir or scenarioName     # deprecated
@@ -612,6 +612,7 @@ class Project(XMLFile):
 
 
             argDict['scenario'] = scenarioName
+            argDict['sandboxDir'] = mapper.sandbox_dir
             argDict['scenarioDir'] = mapper.sandbox_scenario_dir
             argDict['batchDir'] = mapper.sandbox_query_results_dir
             argDict['diffsDir'] = mapper.sandbox_diffs_dir

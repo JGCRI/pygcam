@@ -70,10 +70,10 @@ class SubcommandABC(object):
         return SubcommandABC.Instances.get(name)
 
     # Deprecated?
-    @classmethod
-    def getParser(cls, name):
-        obj = cls.getInstance(name)
-        return obj.parser
+    # @classmethod
+    # def getParser(cls, name):
+    #     obj = cls.getInstance(name)
+    #     return obj.parser
 
     def __init__(self, name, subparsers, kwargs, group=None, label=None,
                  guiSuppress=False):

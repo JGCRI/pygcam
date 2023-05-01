@@ -27,7 +27,7 @@ from .context import McsContext
 from .database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
-from ..config import getParam, getParamAsInt
+from ..config import getParam, getParamAsInt, pathjoin
 from ..log import getLogger
 from ..utils import pygcam_version
 
@@ -686,7 +686,7 @@ def listTrialsToRedo(db, simId, scenarios, statuses):
 def templatePath(scheduler, profile, clusterId, process):
     profileDir = locate_profile(profile)
     basename = f'{scheduler}_{clusterId}_{process}.template'
-    filename = os.path.join(profileDir, basename)
+    filename = pathjoin(profileDir, basename)
     return filename
 
 def _saveBatchFiles(numTrials, argDict):
@@ -824,7 +824,7 @@ def pidFileExists(profile, clusterId):
     """
     profileDir = locate_profile(profile)
     basename = 'ipcluster-%s.pid' % clusterId
-    pidFile = os.path.join(profileDir, 'pid', basename)
+    pidFile = pathjoin(profileDir, 'pid', basename)
     return os.path.isfile(pidFile)
 
 

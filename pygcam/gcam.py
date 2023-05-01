@@ -251,7 +251,6 @@ def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    # TBD: Compute this in FileMapper as {GCAM.SandboxDir}/{optional-groupdir}/{scenario}
     sandbox_scenario_dir = mapper.sandbox_scenario_dir
 
     if not os.path.lexists(sandbox_scenario_dir):

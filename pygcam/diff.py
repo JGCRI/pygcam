@@ -5,10 +5,10 @@
 '''
 import os
 from .config import pathjoin, mkdirs, getParamAsPath
-from .log import getLogger
+from .constants import QRESULTS_DIRNAME, DIFFS_DIRNAME
 from .error import CommandlineError, FileFormatError
-from .constants import QRESULTS_DIRNAME
 from .file_utils import ensureCSV
+from .log import getLogger
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
@@ -251,7 +251,7 @@ def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', crea
     :param createDir: (bool) whether to create the diffs directory, if needed.
     :return: (str) the pathname of the CSV file
     """
-    diffsDir = diffsDir or pathjoin(workingDir, policy, 'diffs')
+    diffsDir = diffsDir or pathjoin(workingDir, policy, DIFFS_DIRNAME)
     if createDir:
         mkdirs(diffsDir)
 
@@ -273,9 +273,12 @@ def queryCsvPathname(query, scenario, workingDir='.'):
     pathname = pathjoin(workingDir, scenario, QRESULTS_DIRNAME, f'{query}-{scenario}.csv')
     return pathname
 
-def diffMain(args):
-    workingDir = args.workingDir or getParamAsPath('GCAM.SandboxDir')
-    # mkdirs(workingDir)
+def diffMain(args, tool):
+    from .mcs.sim_file_mapper import get_mapper
+
+    mapper = tool.mapper or get_mapper(args.scenario, scenario_group=args.group)
+
+    workingDir = args.workingDir or os.path.dirname(mapper.sandbox_scenario_dir)
     os.chdir(workingDir)
 
     _logger.debug('Working dir: %s', workingDir)

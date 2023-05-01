@@ -43,23 +43,6 @@ def dirFromNumber(n, prefix="", create=False):
     directory = pathjoin(prefix, str(level1).zfill(log), str(level2).zfill(log), create=create)
     return directory
 
-# TBD: rationalize this with SimFileMapper.
-#  Change to pass in Context? Or create SimFileMapper from McsContext?
-def getSimDir(simId, create=False):
-    '''
-    Return and optionally create the path to the top-level simulation
-    directory for the given simulation number, based on the SimsDir
-    parameter specified in the config file.
-    '''
-    simsDir = getParam('MCS.SandboxSimsDir')
-    if not simsDir:
-        raise PygcamMcsUserError("Missing required config parameter 'MCS.SandboxSimsDir'")
-
-    # name is of format ".../s001/"
-    simDir = pathjoin(simsDir, f's{simId:03d}', create=create)
-
-    return simDir
-
 # TBD: test this
 def newActiveYears(asInt=False):
     global _activeYearInts

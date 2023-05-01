@@ -51,7 +51,7 @@ def driver(args, tool):
         }
 
         for trial_num in trials:
-            ctx.setVars(trialNum=trial_num)
+            ctx.setVars(trial_num=trial_num)
             mapper = SimFileMapper(ctx)
 
             argDict['trialNum'] = trial_num

@@ -76,10 +76,6 @@ class SetupCommand(SubcommandABC):
         group1.add_argument('-T', '--staticOnly', action='store_true',
                             help=clean_help('''Generate only static XML for local-xml: don't create dynamic XML.'''))
 
-        # Deprecated? If not, change to -x for consistency (-x used to be --xmlSourceDir)
-        parser.add_argument('-w', '--sandbox',  # -w for backwards compatibility
-                            help=clean_help('''The pathname of the sandbox to operate on.'''))
-
         # Deprecated or pass to scenario?
         parser.add_argument('-y', '--years', default=defaultYears,
                             help=clean_help(f'''Years to generate constraints for. Must be of the form
@@ -93,6 +89,7 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('--setupXml', action=Deprecate)
         parser.add_argument('--stopPeriod', action=Deprecate, alt_text='Use --stopYear instead.')
         parser.add_argument('-u', '--useGroupDir', action=Deprecate)
+        parser.add_argument('-w', '--sandbox', action=Deprecate)
         parser.add_argument('-x', '--xmlSourceDir', action=Deprecate)
         parser.add_argument('-X', '--xmlOutputRoot', action=Deprecate)
 
@@ -118,7 +115,7 @@ class SetupCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..error import CommandlineError
-        from ..mcs.sim_file_mapper import mapper_for_mode
+        from ..mcs.sim_file_mapper import get_mapper
 
         if args.forceCreate:
             args.createSandbox = 'yes'  # implied argument
@@ -128,7 +125,7 @@ class SetupCommand(SubcommandABC):
 
         # don't bother creating if forceCreate, which removes the directory before recreating it
         create_dirs = not args.forceCreate
-        mapper = mapper_for_mode(args.scenario, scenario_group=args.group, create_dirs=create_dirs)
+        mapper = get_mapper(args.scenario, scenario_group=args.group, create_dirs=create_dirs)
 
         if args.createSandbox == 'yes' and mapper.mcs_mode != McsMode.GENSIM:
             mapper.create_sandbox(force_create=args.forceCreate)

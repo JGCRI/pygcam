@@ -103,4 +103,4 @@ class QueryCommand(SubcommandABC):
     def run(self, args, tool):
         from ..query import queryMain
 
-        queryMain(args)
+        queryMain(args, tool)

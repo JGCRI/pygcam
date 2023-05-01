@@ -505,7 +505,7 @@ def createXmlEditorSubclass(setupFile):
                 self.trial_xml_abs = pathjoin(mapper.sandbox_local_xml, 'trial-xml', normpath=True)
                 self.trial_xml_rel = pathjoin('../..', 'trial-xml')
 
-                scen_name = mapper.parent.name if mapper.parent else self.name
+                scen_name = mapper.parent if mapper.parent else self.name
                 self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, mapper.scenario_group,
                                           scen_name, MCSVALUES_FILE, normpath=True)
 

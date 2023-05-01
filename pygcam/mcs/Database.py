@@ -128,7 +128,6 @@ RUN_FAILURES  = [RUN_FAILED, RUN_KILLED, RUN_ABORTED, RUN_ALARMED, RUN_UNSOLVED,
 RUN_STATUSES  = [RUN_NEW, RUN_QUEUED, RUN_RUNNING, RUN_SUCCEEDED] + RUN_FAILURES
 
 
-# TBD: maybe drop this and store it from McsContext instead
 def beforeSavingRun(_mapper, _connection, run):
     '''
     Before inserting/updating a Run instance, set numerical status and
@@ -1154,23 +1153,6 @@ class GcamDatabase(CoreDatabase):
 
             self._yearColsAdded = True
 
-    # Deprecated
-    # def addRegions(self, regionMap):
-    #     # TBD: read region map from file identified in config file, or use default values
-    #     # For now, use default mapping
-    #     with self.sessionScope() as session:
-    #         for name, regId in regionMap.items():
-    #             self.addRegion(regId, name, session=session)
-    #
-    # def addRegion(self, regionId, name, session=None):
-    #     sess = session or self.Session()
-    #     obj = Region(regionId=regionId, displayName=name, canonName=canonicalizeRegion(name))
-    #     sess.add(obj)
-    #
-    #     if session:
-    #         sess.commit()
-    #         self.endSession(sess)
-
     # Deprecated: used only when pygcam_version < (2, 0, 0)
     def getRegionId(self, name):
         canonName = canonicalizeRegion(name)
@@ -1194,8 +1176,8 @@ class GcamDatabase(CoreDatabase):
         programId = self.getProgramId(GCAM_PROGRAM)
 
         # TBD: The following code is subject to a race condition, but we don't expect multiple users to
-        # TBD: generate simulations in the same model run dir simultaneously. If they do, this may break.
-        # TBD: Could handle this with a lock...
+        #  generate simulations in the same model run dir simultaneously. If they do, this may break.
+        #  Could handle this with a lock...
         pnames = [tup[0] for tup in tuples]
         rows = session.query(Input).filter(Input.programId == programId, Input.paramName.in_(pnames)).all()
         found = [row.paramName for row in rows]

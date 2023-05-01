@@ -128,12 +128,13 @@ class GcamTool(object):
             self._cachePlugins()
 
         self.mapper = None  # used to transmit path info for recursive commands
+        self.mcs_mode = None
 
-    def set_mapper(self, mapper):
+    def set_mcs_mode(self, mapper, mcs_mode):
         self.mapper = mapper
-
-    def get_mapper(self):
-        return self.mapper
+        self.mcs_mode = mcs_mode
+        if mapper:
+            mapper.mcs_mode = mcs_mode
 
     def addParsers(self):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
@@ -519,8 +520,6 @@ def _main(argv, mapper):
     tool = GcamTool.getInstance()
     tool._loadRequiredPlugins(argv)
 
-    tool.set_mapper(mapper)
-
     # This parser handles only --batch, --showBatch, --projectName, --set, and --mcs
     # args. If --batch is given, we need to create a script and call the
     # GCAM.BatchCommand on it. We grab --projectName so we can set PluginPath by project.
@@ -534,7 +533,8 @@ def _main(argv, mapper):
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 
-    setParam('MCS.Mode', ns.mcsMode or '')
+    tool.set_mcs_mode(mapper, ns.mcsMode)
+    # setParam('MCS.Mode', ns.mcsMode or '')      # TBD: eliminate this
 
     # Set specified config vars
     for arg in ns.configVars:

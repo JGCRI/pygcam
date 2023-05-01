@@ -11,9 +11,9 @@ import numpy as np
 import os
 import pandas as pd
 
-from ..config import getParam, mkdirs
+from ..config import getParam, mkdirs, pathjoin
 from ..log import getLogger
-from ..utils import importFromDotSpec, pathjoin
+from ..utils import importFromDotSpec
 from ..XMLFile import XMLFile
 
 from .database import getDatabase
@@ -909,7 +909,7 @@ class XMLInputFile(XMLWrapper):
             self.writeFuncDir = getParam('MCS.WriteFuncDir')
 
         modname, objname = funcRef.rsplit('.', 1)
-        modulePath = os.path.join(self.writeFuncDir, modname + '.py')
+        modulePath = pathjoin(self.writeFuncDir, modname + '.py')
         try:
             fn = loadObjectFromPath(objname, modulePath)
         except Exception as e:
@@ -955,7 +955,12 @@ class XMLInputFile(XMLWrapper):
         if self.fileType != 'xml':
             return
 
+        if not mapper.is_baseline:
+            _logger.debug(f"loadFiles: not loading files for non-baseline scenario {mapper.scenario}")
+            return
+
         compName = self.getComponentName()  # an identifier in the config file, e.g., "land2"
+        _logger.info(f"loadFiles: loading files for component {compName}")
 
         # TBD: need to clarify why this is necessary / useful
         useCopy = not writeConfigFiles  # if we're not writing the configs, use the saved original
@@ -964,30 +969,28 @@ class XMLInputFile(XMLWrapper):
         ctx = copy.copy(mapper.context)
         mapper.set_context(ctx)
 
-        # for scenario_name in scenario_names:
-        for scenario_name in [mapper.scenario]: # TBD: no need for loop
-            _logger.info(f"loadFiles: comp {compName}, scenario {scenario_name}")
+        scenario_name = mapper.scenario
 
-            ctx.setVars(scenario=scenario_name)
-            configFile = XMLConfigFile.configForScenario(mapper, scenario_name, useCopy=useCopy)   # TBD: use mapper?
+        ctx.setVars(scenario=scenario_name)
+        configFile = XMLConfigFile.configForScenario(mapper, scenario_name, useCopy=useCopy)   # TBD: use mapper?
 
-            # If compName ends in '.xml', assume its value is the full relative path, with
-            # substitution for {scenario}, e.g., "../local-xml/{scenario}/mcsValues.xml"
-            isXML = compName.lower().endswith('.xml')
-            relPath = compName if isXML else configFile.getComponentPathname(compName)
+        # If compName ends in '.xml', assume its value is the full relative path, with
+        # substitution for {scenario}, e.g., "../local-xml/{scenario}/mcsValues.xml"
+        isXML = compName.lower().endswith('.xml')
+        relPath = compName if isXML else configFile.getComponentPathname(compName)
 
-            # If another scenario "registered" this XML file, we don't do so again.
-            if not relPath in self.xmlFileMap:
-                xmlFile = XMLRelFile(mapper, self, relPath)
-                self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
-                self.xmlFiles.append(xmlFile)       # per input file in one scenario
+        # If another scenario "registered" this XML file, we don't do so again.
+        if not relPath in self.xmlFileMap:
+            xmlFile = XMLRelFile(mapper, self, relPath)
+            self.xmlFileMap[relPath] = xmlFile  # unique for all scenarios so we read once
+            self.xmlFiles.append(xmlFile)       # per input file in one scenario
 
-            # TBD: In either case, we need to update the config files' XML trees because
-            # TBD: some parameter(s) modify the file for this component, in all cases.
-            # TBD: This new path has to be coordinated between config file and actual file.
-            if writeConfigFiles and not isXML:
-                trialRelPath = trialRelativePath(relPath, '../..')
-                configFile.updateComponentPathname(compName, trialRelPath)
+        # TBD: In either case, we need to update the config files' XML trees because
+        # TBD: some parameter(s) modify the file for this component, in all cases.
+        # TBD: This new path has to be coordinated between config file and actual file.
+        if writeConfigFiles and not isXML:
+            trialRelPath = trialRelativePath(relPath, '../..')
+            configFile.updateComponentPathname(compName, trialRelPath)
 
     def runQueries(self):
         """

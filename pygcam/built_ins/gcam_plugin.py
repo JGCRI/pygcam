@@ -28,11 +28,6 @@ class GcamCommand(SubcommandABC):
         parser.add_argument('-s', '--scenario', default='',
                             help=clean_help('''The scenario to run.'''))
 
-        # Deprecated? Is this used or needed? Can use config var
-        # parser.add_argument('-S', '--scenariosDir', default='',
-        #                     help=clean_help('''Specify the directory holding scenario files. Default is the value of
-        #                     config variable GCAM.ScenariosDir, if set, otherwise it's the current directory.'''))
-
         parser.add_argument('-x', '--sandbox',
                             help=clean_help('''Specify the path to the GCAM sandbox to use. If the named workspace 
                             doesn't exist, an exception is raised. If not specified on the command-line, the path
@@ -43,7 +38,7 @@ class GcamCommand(SubcommandABC):
                             help=clean_help('''Do not run gcam within a wrapper that detects errors as early as possible
                             and terminates the model run. By default, the wrapper is used.'''))
 
-        # Deprecated
+        # Deprecated args
         parser.add_argument('-w', '--workspace', action=Deprecate, alt_text="Use -x / --sandbox instead.")
         parser.add_argument('-f', '--forceCreate', action=Deprecate)
         parser.add_argument('-r', '--refWorkspace', action=Deprecate)
@@ -53,7 +48,7 @@ class GcamCommand(SubcommandABC):
 
     def run(self, args, tool):
         from ..gcam import runGCAM
-        from ..mcs.sim_file_mapper import mapper_for_mode
+        from ..mcs.sim_file_mapper import get_mapper
 
-        mapper = mapper_for_mode(args.scenario, scenarioGroup=args.group)
+        mapper = get_mapper(args.scenario, scenario_group=args.group)
         runGCAM(mapper, noRun=args.noRun, noWrapper=args.noWrapper)

@@ -6,6 +6,7 @@ import re
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
 from .config import pathjoin, getParam, mkdirs
+from .constants import QRESULTS_DIRNAME
 from .log import getLogger
 from .XMLFile import XMLFile
 
@@ -624,7 +625,7 @@ def validate(scenario, csv_path, useGcamUSA):
     if useGcamUSA:
         query_name += 'ByState'
 
-    result_csv = pathjoin(sandboxDir, scenario, 'queryResults', '{}-{}.csv'.format(query_name, scenario))
+    result_csv = pathjoin(sandboxDir, scenario, QRESULTS_DIRNAME, f'{query_name}-{scenario}.csv')
 
     print("Reading", result_csv)
     result_df = pd.read_csv(result_csv, skiprows=1)

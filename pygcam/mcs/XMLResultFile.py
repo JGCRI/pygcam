@@ -9,6 +9,7 @@ from datetime import datetime
 import pandas as pd
 
 from ..config import getParam, pathjoin
+from ..constants import QRESULTS_DIRNAME, DIFFS_DIRNAME
 from ..log import getLogger
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
@@ -21,8 +22,6 @@ _logger = getLogger(__name__)
 RESULT_TYPE_DIFF = 'diff'
 RESULT_TYPE_SCENARIO = 'scenario'
 DEFAULT_RESULT_TYPE = RESULT_TYPE_SCENARIO
-
-QUERY_OUTPUT_DIR = 'queryResults'
 
 RESULT_ELT_NAME     = 'Result'
 FILE_ELT_NAME       = 'File'
@@ -292,7 +291,7 @@ def extractResult(context, scenario, outputDef, type):
     mapper = SimFileMapper(context)
     trial_scenario_dir = mapper.trial_scenario_dir(scenario=scenario)
 
-    subDir = 'queryResults' if type == RESULT_TYPE_SCENARIO else 'diffs'
+    subDir = QRESULTS_DIRNAME if type == RESULT_TYPE_SCENARIO else DIFFS_DIRNAME
     outputDir = pathjoin(trial_scenario_dir, subDir)
 
     baseline = None if type == RESULT_TYPE_SCENARIO else context.baseline
@@ -370,7 +369,7 @@ def collectResults(mapper, context, type):
     if type == RESULT_TYPE_DIFF and not context.baseline:
         raise PygcamMcsUserError("collectResults: must specify baseline for DIFF results")
 
-    resultsFile = mapper.app_xml_results_file()
+    resultsFile = mapper.app_xml_results_file
     rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 

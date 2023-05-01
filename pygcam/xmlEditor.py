@@ -162,7 +162,7 @@ class XMLEditor(object):
 
         self.config_path = config_path = mapper.config_path()
 
-        parent = mapper.parent
+        parent = mapper.parent_mapper
         parentConfigPath = parent.config_path() if parent else getParam('GCAM.RefConfigFile')
 
         _logger.info("Copy %s\n      to %s", parentConfigPath, config_path)
@@ -1645,7 +1645,8 @@ class XMLEditor(object):
     def transportTechEfficiency(self, csvFile, xmlTag='transportation'):
         import pandas as pd
 
-        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+
+        csvPath = pathjoin(self.mapper.project_etc_dir, csvFile)
 
         _logger.info("Called transportTechEfficiency('%s', '%s')", csvPath, xmlTag)
         df = pd.read_csv(csvPath)
@@ -1696,7 +1697,7 @@ class XMLEditor(object):
         the CSV input file.
 
         :param csvFile: (str) The name of the file to read. The given argument is interpreted as
-            relative to "{GCAM.ProjectDir}/etc/", but an absolute path can be provided to override
+            relative to "{GCAM.ProjectEtc}", but an absolute path can be provided to override
             this.
         :param xmlTag: (str) the tag in the config.xml file to use to find the relevant GCAM input
             XML file.
@@ -1707,7 +1708,7 @@ class XMLEditor(object):
         """
         import pandas as pd
 
-        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+        csvPath = pathjoin(self.mapper.project_etc_dir, csvFile)
 
         _logger.info("Called buildingTechEfficiency('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
 
@@ -1828,14 +1829,14 @@ class XMLEditor(object):
         Generate a building electrification policy XML file and incorporate it into the scenario's config.xml.
 
         :param csvFile: (str) the name of the CSV template file to read. Relative paths are assumed relative
-            to {GCAM.ProjectDir}/etc. Absolute paths override this.
+            to {GCAM.ProjectEtc}. Absolute paths override this.
         :param xmlTag: (str) a config file tag to use for the generated XML file.
         :param xmlFile: (str) the name of the generated XML file.
         :return:
         """
         from .buildingElectrification import generate_building_elec_xml
 
-        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+        csvPath = pathjoin(self.mapper.project_etc_dir, csvFile)
         _logger.info("Called buildingElectrification('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
 
         xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
@@ -1849,7 +1850,7 @@ class XMLEditor(object):
     def zevPolicy(self, csvFile, xmlTag='zev_policy', xmlFile='zev_policy.xml', transportTag='transportation', pMultiplier=1E9, outputRatio=1E-6):
         from .ZEVPolicy import generate_zev_xml
 
-        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+        csvPath = pathjoin(self.mapper.project_etc_dir, csvFile)
         _logger.info("Called zevPolicy('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
 
         xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
@@ -1865,7 +1866,7 @@ class XMLEditor(object):
         the CSV input file.
 
         :param csvFile: (str) The name of the file to read. The given argument is interpreted as
-            relative to "{GCAM.ProjectDir}/etc/", but an absolute path can be provided to override
+            relative to "{GCAM.ProjectEtc}", but an absolute path can be provided to override
             this.
         :param xmlTag: (str) the tag in the config.xml file to use to find the relevant GCAM input
             XML file.
@@ -1876,7 +1877,7 @@ class XMLEditor(object):
         """
         import pandas as pd
 
-        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+        csvPath = pathjoin(self.mapper.project_etc_dir, csvFile)
 
         _logger.info("Called industryTechEfficiency('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
 

@@ -8,8 +8,8 @@ import os
 from typing import Union
 
 from ..config import getParam, getParamAsBoolean, getParamAsPath, setParam, mkdirs, pathjoin
-from ..constants import (McsMode, LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML,
-                         RESULTS_XML, CONFIG_XML)
+from ..constants import (McsMode, LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML, CONFIG_XML,
+                         RESULTS_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME)
 from ..error import SetupException
 from ..file_utils import pushd, removeTreeSafely, removeFileOrTree, symlink
 from ..log import getLogger
@@ -61,7 +61,7 @@ class SimFileMapper(AbstractFileMapper):
         scenario = scenario or (context and context.scenario) or None
 
         super().__init__(scenario, project_name=project_name, scenario_group=scenario_group,
-                         parent=parent, create_dirs=False)
+                         parent=parent, create_dirs=False, context=context)
 
         self.sim_id = sim_id
         self.trial_count = trial_count
@@ -116,16 +116,17 @@ class SimFileMapper(AbstractFileMapper):
         # Reset dependent pathnames stored by FileMapper superclass
         trial_dir = self.trial_dir(create=True)
 
-        # TBD: from update dependent paths
         if trial_dir:
             # trial_dir is None when running gensim since no trial_num is defined
             self.sandbox_scenario_dir = sbx_scen_dir = makeDirPath(trial_dir, scenario)
             self.sandbox_exe_dir = makeDirPath(sbx_scen_dir, 'exe', create=create_dirs)
             self.sandbox_exe_path = pathjoin(self.sandbox_exe_dir, getParam('GCAM.Executable'))
+            self.parent_scenario_path = (self.gcam_path_from_abs(self.parent_mapper.sandbox_scenario_dir)
+                                         if self.parent_mapper else None)
 
-            self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, 'queryResults')
-            self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, 'diffs')
-            self.sandbox_output_dir = pathjoin(sbx_scen_dir, 'output')
+            self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, QRESULTS_DIRNAME)
+            self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, DIFFS_DIRNAME)
+            self.sandbox_output_dir = pathjoin(sbx_scen_dir, OUTPUT_DIRNAME)
             self.sandbox_xml_db = pathjoin(self.sandbox_output_dir, getParam('GCAM.DbFile'))
 
     # TBD: might not be useful since ivars are not reset to match context.
@@ -165,7 +166,7 @@ class SimFileMapper(AbstractFileMapper):
         return path
 
     def get_scenarios_file(self):
-        return self.scenarios_file  # TBD self.scenarios_file
+        return self.scenarios_file
 
     def scenario_config_file(self, scenario):
         """
@@ -179,7 +180,7 @@ class SimFileMapper(AbstractFileMapper):
         return self.project_parameters_file
 
     def get_scenario_group(self):
-        return self.scenario_group  # TBD self.scenario_group
+        return self.scenario_group
 
     def get_app_xml_param_file(self):
         return self.app_xml_param_file
@@ -253,12 +254,15 @@ class SimFileMapper(AbstractFileMapper):
         #     mkdirs(self.workspace_copy_dir)
             # TBD: copy ref workspace to self.workspace_copy_dir
 
-    def create_output_dir(self, output_dir):
-        removeFileOrTree(output_dir, raiseError=False)
+    def create_output_dir(self):
+        output_dir = self.sandbox_output_dir
         temp_output_dir = getParam('MCS.TempOutputDir')
+
 
         if temp_output_dir:
             from ..temp_file import getTempDir
+
+            removeFileOrTree(output_dir, raiseError=False)
 
             # We create this on /scratch which is purged automatically.
             new_dir = getTempDir(suffix='', tmpDir=temp_output_dir, delete=False)
@@ -288,18 +292,12 @@ class SimFileMapper(AbstractFileMapper):
         sandbox_dir = self.sandbox_dir
         sandbox_scenario_dir = self.sandbox_scenario_dir
 
-        mcs_mode = getParam('MCS.Mode')
+        mcs_mode = self.mcs_mode # getParam('MCS.Mode')
 
-        # TBD: take this from FileMapper, which should set these values in __init__()
-        srcWorkspace = self.ref_workspace if mcs_mode == McsMode.GENSIM else getParam("GCAM.SandboxWorkspace")
+        srcWorkspace = self.ref_workspace if mcs_mode == McsMode.GENSIM else self.sandbox_workspace
 
         if os.path.lexists(sandbox_dir) and os.path.samefile(sandbox_dir, srcWorkspace):
             raise SetupException("The run sandbox is the same as the run workspace; no setup performed")
-
-        # Deprecated. This doesn't run in non-MCS mode
-        # MCS "gensim" sub-command creates a shared workspace; for non-MCS we do it here if needed
-        # if not mcs_mode:
-        #     self.copy_ref_workspace(srcWorkspace, force_create=force_create)
 
         if mcs_mode and getParamAsBoolean('GCAM.CopyAllFiles'):
             # Not prohibited; just a disk-hogging, suboptimal choice
@@ -318,12 +316,13 @@ class SimFileMapper(AbstractFileMapper):
             with pushd(os.path.dirname(sandbox_dir)):
                 removeTreeSafely(sim_local_xml_scenario, ignore_errors=True)
                 mkdirs(sim_local_xml_scenario)
-
-                removeTreeSafely(sandbox_scenario_dir, ignore_errors=True)
                 removeTreeSafely(sandbox_scenario_xml, ignore_errors=True)
-                mkdirs(sandbox_scenario_xml)
 
-                # TBD: mapper.create_dir_structure() creates these and "output" directory
+                if force_create:
+                    removeTreeSafely(sandbox_scenario_dir, ignore_errors=True)
+                    mkdirs(sandbox_scenario_xml)
+
+                # mapper.create_dir_structure() creates these and "output" directory
                 # also makes sandbox and sandbox/exe (needed for pushd to return to 'exe'
                 self.logs_dir = pathjoin(sandbox_scenario_dir, 'exe', 'logs', create=True)
                 pathjoin(sandbox_scenario_dir, 'exe', 'restart', create=True)
@@ -336,8 +335,6 @@ class SimFileMapper(AbstractFileMapper):
         for filename in filesToLink:
             workspaceLinkOrCopy(filename, srcWorkspace, sandbox_scenario_dir, copyFiles=False)
 
-        output_dir = pathjoin(sandbox_scenario_dir, 'output')
-
         if mcs_mode:  # i.e., mcs_mode is 'trial' or 'gensim'
             # link {sandbox}/dyn-xml to ../dyn-xml
             # dynXmlDir = pathjoin('..', DYN_XML_NAME)
@@ -345,13 +342,13 @@ class SimFileMapper(AbstractFileMapper):
             # Deprecated?
             #  dynXmlAbsPath = pathjoin(os.path.dirname(sandbox_dir), DYN_XML_NAME, create=True)
 
-            self.create_output_dir(output_dir)  # deals with link and tmp dir...
+            self.create_output_dir()  # deals with link and tmp dir...
         else:
             # link {sandbox}/dyn-xml to {refWorkspace}/dyn-xml
             # dynXmlDir = pathjoin(srcWorkspace, DYN_XML_NAME)
 
             # Create a local output dir
-            mkdirs(output_dir)
+            mkdirs(self.sandbox_output_dir)
 
         # def _remakeSymLink(source, linkname):
         #     removeFileOrTree(linkname)
@@ -390,13 +387,13 @@ class SimFileMapper(AbstractFileMapper):
 
         df.to_csv(data_file, index_label='trialNum')
 
-def mapper_for_mode(scenario, **kwargs) -> Union[AbstractFileMapper]:
-    mcs_mode = getParam('MCS.Mode')
+def get_mapper(scenario, **kwargs) -> Union[FileMapper, SimFileMapper]:
+    tool = GcamTool.getInstance()
 
-    if mcs_mode:
-        tool = GcamTool.getInstance()
-        mapper = tool.get_mapper() or SimFileMapper(scenario=scenario, **kwargs)
-    else:
-        mapper = FileMapper(scenario, **kwargs)
+    if tool.mapper:
+        return tool.mapper
+
+    mapper = (SimFileMapper(scenario=scenario, **kwargs) if tool.mcs_mode
+              else FileMapper(scenario, **kwargs))
 
     return mapper
