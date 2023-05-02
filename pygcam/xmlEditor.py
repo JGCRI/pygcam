@@ -2372,7 +2372,7 @@ class XMLEditor(object):
         self.addScenarioComponent(xmlTag, xmlRel)
 
     @callableMethod
-    def industryTechEfficiency(self, csvFile, xmlTag='other_industry', xmlFile='industry_tech_improvements.xml', mode="mult"):
+    def industryTechEfficiency(self, csvFile, xmlTag='other_industry_efficiency_improvement', xmlFile='industry_tech_improvements.xml', mode="mult"):
         """
         Generate an XML file that implements industry technology efficiency policies based on
         the CSV input file.
@@ -2506,3 +2506,4 @@ class XMLEditor(object):
         tree.write(xmlAbs, xml_declaration=True, encoding='utf-8', pretty_print=True)
 
         self.addScenarioComponent(xmlTag, xmlRel)
+
