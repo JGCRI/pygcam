@@ -2372,7 +2372,7 @@ class XMLEditor(object):
         self.addScenarioComponent(xmlTag, xmlRel)
 
     @callableMethod
-    def industryTechEfficiency(self, csvFile, xmlTag='other_industry_efficiency_improvement', xmlFile='industry_tech_improvements.xml', mode="mult"):
+    def industryTechEfficiency(self, csvFile, xmlTag='other_industry_efficiency_improvement', xmlFile='other_industry_tech_improvements.xml', mode="mult"):
         """
         Generate an XML file that implements industry technology efficiency policies based on
         the CSV input file.
@@ -2501,9 +2501,144 @@ class XMLEditor(object):
                 efficElt   = ET.SubElement(inputElt, 'efficiency')
                 efficElt.text = str(value)
 
-        _logger.info("Writing industry tech changes to '%s'", xmlAbs)
+        _logger.info("Writing other industry tech changes to '%s'", xmlAbs)
         tree = ET.ElementTree(scenarioElt)
         tree.write(xmlAbs, xml_declaration=True, encoding='utf-8', pretty_print=True)
 
         self.addScenarioComponent(xmlTag, xmlRel)
 
+    @callableMethod
+    def IronSteelTechEfficiency(self, csvFile, xmlTag='iron_steel_efficiency_improvement', xmlFile='iron_steel_tech_improvements.xml', mode="mult"):
+        """
+        Generate an XML file that implements industry technology efficiency policies based on
+        the CSV input file.
+
+        :param csvFile: (str) The name of the file to read. The given argument is interpreted as
+            relative to "{GCAM.ProjectDir}/etc/", but an absolute path can be provided to override
+            this.
+        :param xmlTag: (str) the tag in the config.xml file to use to find the relevant GCAM input
+            XML file.
+        :param xmlFile: (str) the name of the XML policy file to generate. The file is written to
+            the "local-xml" dir for the current scenario, and it is added to the config.xml file.
+        :param mode: (str) Must be "mult" (the default) or "add", controlling how CSV data are processed.
+        :return: none
+        """
+
+        import pandas as pd
+
+        csvPath = pathjoin(getParam('GCAM.ProjectDir'), 'etc', csvFile)
+
+        _logger.info("Called IronSteelTechEfficiency('%s', '%s', '%s')", csvPath, xmlTag, xmlFile)
+
+        df = pd.read_csv(csvPath)
+        year_cols = [col for col in df.columns if col.isdigit()]
+
+        changes = []
+
+        if mode == 'mult':
+            # We treat the improvement as the change in the "inefficiency coefficient",
+            # best described by the algebra below...
+            def compute(old, improvement,tech):
+                new_efficiency = old * (1-improvement)
+                return new_efficiency
+
+        elif mode == 'add':
+            def compute(old, improvement, tech):
+                return old + improvement
+
+        else:
+            raise SetupException("IronSteelTechEfficiency: mode must be either 'add' or 'mult'; got '{}'".format(mode))
+
+        def runForFile(tag, which):
+            fileRel, fileAbs = self.getLocalCopy(tag)
+            fileObj = CachedFile.getFile(fileAbs)
+            tree = fileObj.tree
+            xml_template = "//region[@name='{region}']/supplysector[@name='{sector}']/subsector[@name='{subsector}']/stub-technology[@name='{technology}']/"
+            #            if which == 'GCAM-USA':
+            #                xml_template = "//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']/"
+            #           else:
+            #                xml_template = "//region[@name='{region}']/supplysector[@name='{sector}']/subsector[@name='{subsector}']/stub-technology[@name='{technology}']/"
+
+            subdf = df.query('which == "{}"'.format(which))
+
+            for (idx, row) in subdf.iterrows():
+                xpath_prefix = xml_template.format(**row)
+                input = row['input']
+                subsector = row['subsector']
+                pairs = []
+
+                for year in year_cols:
+                    improvement = row[year]
+                    if improvement == 0:
+                        continue
+
+                    xpath = xpath_prefix + "period[@year='{year}']/minicam-energy-input[@name='{input}']/coefficient".format(
+                        year=year, input=input)
+                    elts = tree.xpath(xpath)
+
+                    if elts is None:
+                        raise SetupException(
+                            'XPath query {} on file "{}" failed to find an element'.format(xpath, fileAbs))
+
+                    if len(elts) == 0:
+                        raise SetupException(
+                            'XPath query {} on file "{}" returned zero elements'.format(xpath, fileAbs))
+
+                    if len(elts) != 1:
+                        raise SetupException(
+                            'XPath query {} on file "{}" returned multiple elements'.format(xpath, fileAbs))
+
+                    elt = elts[0]
+                    old_value = float(elt.text)
+                    new_value = compute(old_value, improvement, subsector)
+                    pairs.append((year, new_value))
+
+                if pairs:
+                    changes.append((row, pairs))
+
+        which_values = set(df.which)
+
+        if 'GCAM-32' in which_values:
+            runForFile('iron_steel', 'GCAM-32')
+
+        if 'GCAM-USA' in which_values:
+            runForFile('iron_steel', 'GCAM-USA')
+
+        xmlAbs = pathjoin(self.scenario_dir_abs, xmlFile)
+        xmlRel = pathjoin(self.scenario_dir_rel, xmlFile)
+
+        scenarioElt = ET.Element('scenario')
+        worldElt = ET.SubElement(scenarioElt, 'world')
+
+        # find or create the sub-element described
+        def getSubElement(elt, tag, attr, value):
+            xpath = './{}[@{}="{}"]'.format(tag, attr, value)
+            subelt = elt.find(xpath)
+            if subelt is None:
+                subelt = ET.SubElement(elt, tag, attrib={attr: value})
+
+            return subelt
+
+        for (row, pairs) in changes:
+            region = row['region']
+            sector = row['sector']
+            subsect = row['subsector']
+            tech = row['technology']
+            input = row['input']
+
+            regionElt = getSubElement(worldElt, 'region', 'name', region)
+
+            for (year, value) in pairs:
+                sectorElt = getSubElement(regionElt, 'supplysector', 'name', sector)
+                subsectElt = getSubElement(sectorElt, 'subsector', 'name', subsect)
+                techElt = getSubElement(subsectElt, 'stub-technology', 'name', tech)
+                periodElt = getSubElement(techElt, 'period', 'year', year)
+                inputElt = getSubElement(periodElt, 'minicam-energy-input', 'name', input)
+                coeffElt = ET.SubElement(inputElt, 'coefficient')
+                coeffElt.text = str(value)
+
+        _logger.info("Writing iron and steel tech changes to '%s'", xmlAbs)
+        tree = ET.ElementTree(scenarioElt)
+        tree.write(xmlAbs, xml_declaration=True, encoding='utf-8', pretty_print=True)
+
+        self.addScenarioComponent(xmlTag, xmlRel)
