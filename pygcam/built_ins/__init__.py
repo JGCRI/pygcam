@@ -20,10 +20,11 @@ from .setup_plugin import SetupCommand
 from .compare_plugin import CompareCommand
 from .zev_plugin import ZEVCommand
 from.industry_plugin import IndustryCommand
+from.iron_steel_plugin import IronSteelCommand
 
 BuiltinSubcommands = [BatchCommand, BuildingCommand, BuildingElecCommand,
                       ChartCommand, CompareCommand, ConfigCommand,
                       DiffCommand, GcamCommand, GUICommand, IndustryCommand,
-                      InitCommand, MCSCommand, ModelInterfaceCommand, NewProjectCommand,
+                      InitCommand, IronSteelCommand, MCSCommand, ModelInterfaceCommand, NewProjectCommand,
                       ProtectLandCommand, QueryCommand, RESCommand, RunCommand,
                       SandboxCommand, SetupCommand, TransportCommand, ZEVCommand]
