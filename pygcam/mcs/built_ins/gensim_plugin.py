@@ -124,7 +124,7 @@ def genTrialData(mapper : SimFileMapper, paramFileObj, method):
     lhsAmend(trialData, linked, trials, shuffle=False)
 
     if method in ('montecarlo', 'full-factorial'):
-        mapper.writeTrialDataFile(trialData)
+        mapper.write_trial_data_file(trialData)
 
     df = DataFrame(data=trialData)
     return df

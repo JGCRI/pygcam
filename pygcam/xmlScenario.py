@@ -150,7 +150,8 @@ class XMLScenario(object):
             iterators = splitAndStrip(iterName, ',')
             iterateList(self, ScenarioGroup, templateGroup.node, expand, iterators)
 
-    def run(self, editor, directoryDict, dynamic=False):
+    def run(self, editor, directoryDict, dynamic=False,
+            runConfigSetup=True, runNonConfigSetup=True):
         """
         Run the setup for the given XmlEditor subclass.
 
@@ -158,7 +159,17 @@ class XMLScenario(object):
         :param directoryDict: (dict) directory with values for {scenarioDir}
             {baselineDir}
         :param dynamic: (bool) if True, run only "dynamic" actions; else
-           run only static (non-dynamic) actions.
+           run only static (non-dynamic) actions. (Dynamic actions are run for
+           policy scenarios in which XML file contents are computed from
+           baseline results.)
+        :param runConfigSetup: (bool) if True and dynamic is False,
+            run only static actions that modify scenario components, i.e.,
+            those that subclass ConfigEditor or are class "If". If dynamic
+            is True, this parameter is ignored.
+        :param runNonConfigSetup: (bool) if True and dynamic is False,
+            run only static actions that DO NOT modify scenario components, i.e.,
+            those that do not subclass ConfigEditor. If dynamic is True, this
+            parameter is ignored.
         :return: none
         """
         self.editor = editor
@@ -167,8 +178,11 @@ class XMLScenario(object):
         group = self.getGroup(mapper.scenario_group)
         scenario = group.getFinalScenario(mapper.scenario or mapper.baseline)
 
-        _logger.debug('Running %s setup for scenario %s', 'dynamic' if dynamic else 'static', scenario.name)
-        scenario.run(editor, directoryDict, dynamic=dynamic)
+        _logger.debug('Running %s setup for scenario %s',
+                      'dynamic' if dynamic else 'static', scenario.name)
+        scenario.run(editor, directoryDict, dynamic=dynamic,
+                     runConfigSetup=runConfigSetup,
+                     runNonConfigSetup=runNonConfigSetup)
 
 # Iterators for float and int that *include* the stop value.
 # That is, terminal condition is "<= stop", not "< stop" as
@@ -305,9 +319,19 @@ class Scenario(object):
     def __str__(self):
         return f"<scenario name='{self.name}'>"
 
-    def run(self, editor, directoryDict, dynamic=False):
+    def run(self, editor, directoryDict, dynamic=False,
+            runConfigSetup=True, runNonConfigSetup=True):
+
         for action in self.actions:
-            action.run(editor, directoryDict, dynamic=dynamic)
+            # If static mode and scenarioComponentsOnly is requested, run only actions
+            # that modify scenario components, i.e., subclass ConfigEditor, or is "If",
+            # which can contain actions that subclass ConfigEditor.
+            if (dynamic or
+                    (runConfigSetup and isinstance(action, (ConfigEditor, If))) or
+                    (runNonConfigSetup and not isinstance(action, (ConfigEditor)))):
+                action.run(editor, directoryDict, dynamic=dynamic)
+            else:
+                _logger.debug("Skipping scenario action %s", action)
 
     def formatContent(self, templateDict):
         # This converts only the iterators. The directories {scenarioDir}
@@ -354,7 +378,15 @@ class ConfigAction(ConfigActionBase):
             self.formatContent(directoryDict)
             self._run(editor)
 
-class Insert(ConfigAction):
+class ConfigEditor(ConfigAction):
+    """
+    This exists just to easily identify actions that merely edit the config file,
+    so these can be run before running the gcam data system, and other functions
+    run afterwards.
+    """
+    pass
+
+class Insert(ConfigEditor):
     def __init__(self, node):
         super().__init__(node)
         self.after = node.get('after')
@@ -368,15 +400,15 @@ class Insert(ConfigAction):
     def _run(self, editor):
         editor.insertScenarioComponent(self.name, self.formattedContent, self.after)
 
-class Add(ConfigAction):
+class Add(ConfigEditor):
     def _run(self, editor):
         editor.addScenarioComponent(self.name, self.formattedContent)
 
-class Replace(ConfigAction):
+class Replace(ConfigEditor):
     def _run(self, editor):
         editor.updateScenarioComponent(self.name, self.formattedContent)
 
-class Delete(ConfigAction):
+class Delete(ConfigEditor):
     def _run(self, editor):
         editor.deleteScenarioComponent(self.name)
 
@@ -513,6 +545,10 @@ def createXmlEditorSubclass(setupFile):
                                   'baselineDir': self.baseline_dir.rel if self.baseline_dir else None}
 
         def setupDynamic(self, args):
+            """"
+            Note: Dynamic actions are run for policy scenarios in which XML file contents are
+            computed from baseline results.
+            """
             self.groupName = args.group
 
             super().setupDynamic(args)
@@ -587,7 +623,9 @@ def createXmlEditorSubclass(setupFile):
 
             super().setupStatic(args)
 
-            scenarioSetup.run(self, directoryDict, dynamic=False)
+            scenarioSetup.run(self, directoryDict, dynamic=False,
+                              runConfigSetup=args.runConfigSetup == 'yes',
+                              runNonConfigSetup=args.runNonConfigSetup == 'yes')
             CachedFile.decacheAll()
 
     return XmlEditorSubclass

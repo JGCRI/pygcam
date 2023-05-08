@@ -5,18 +5,19 @@
 # See the https://opensource.org/licenses/MIT for license details.
 #
 import os
+import shutil
 from typing import Union
 
 from ..config import getParam, getParamAsBoolean, getParamAsPath, setParam, mkdirs, pathjoin
 from ..constants import (McsMode, LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML, CONFIG_XML,
-                         RESULTS_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME)
+                         RESULTS_XML, TRIAL_XML_NAME, QRESULTS_DIRNAME, DIFFS_DIRNAME,
+                         OUTPUT_DIRNAME)
 from ..error import SetupException
 from ..file_utils import pushd, removeTreeSafely, removeFileOrTree, symlink
 from ..log import getLogger
 from ..file_mapper import (AbstractFileMapper, FileMapper, getFilesToCopyAndLink,
                            workspaceLinkOrCopy, makeDirPath)
 from ..tool import GcamTool
-from ..xmlScenario import XMLScenario
 
 from .context import McsContext
 
@@ -158,6 +159,14 @@ class SimFileMapper(AbstractFileMapper):
         trial_dir = dirFromNumber(ctx.trialNum, prefix=self.sim_dir, create=create)
         return trial_dir
 
+    def trial_config_path(self, scenario) -> str:
+        """
+        Return the path to the config.xml file in the trial-xml.
+        """
+        trial_dir = self.trial_dir()
+        path = pathjoin(trial_dir, TRIAL_XML_NAME, scenario, CONFIG_XML)
+        return path
+
     def get_sim_local_xml(self):
         return self.sim_local_xml
 
@@ -172,9 +181,34 @@ class SimFileMapper(AbstractFileMapper):
         """
         Returns the path to sim's copy of the config.xml file for the given scenario.
         """
+        trial_cfg = self.trial_config_path(scenario)
+        if os.path.isfile(trial_cfg):
+            return trial_cfg
+
         dir = self.sim_local_xml_scenario(scenario, create=True)
         configFile = pathjoin(dir, CONFIG_XML)
         return configFile
+
+    def config_path(self):  # override AbstractFileMapper method
+        return self.scenario_config_file(self.scenario)
+
+    def get_final_config(self, scenario=None):
+
+        # if a setup step (e.g., the moirai_plugin) creates a config file in trial-xml,
+        # we use that rather than copying from a parent; the trial-xml config already
+        # was copied from that.
+        trial_cfg = self.trial_config_path(scenario or self.scenario)
+        if os.path.isfile(trial_cfg):
+            return trial_cfg            # no copy required
+
+        pmapper = self.parent_mapper
+        parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
+
+        cfg_path = self.config_path()
+        _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
+        shutil.copy(parent_config_path, cfg_path)
+        os.chmod(cfg_path, 0o664)
+        return cfg_path
 
     def get_param_file(self):
         return self.project_parameters_file
@@ -362,7 +396,7 @@ class SimFileMapper(AbstractFileMapper):
         # localXmlLink = pathjoin(sandbox_dir, LOCAL_XML_NAME)
         # _remakeSymLink(localXmlDir, localXmlLink)
 
-    def readTrialDataFile(self):
+    def read_trial_data_file(self):
         """
         Load trial data (e.g., saved by writeTrialDataFile) and return a DataFrame
         """
@@ -371,7 +405,7 @@ class SimFileMapper(AbstractFileMapper):
         df = pd.read_table(self.trial_data_file, sep=',', index_col='trialNum')
         return df
 
-    def writeTrialDataFile(self, df):
+    def write_trial_data_file(self, df):
         '''
         Save the trial DataFrame in the file 'trialData.csv' in the simDir.
         '''

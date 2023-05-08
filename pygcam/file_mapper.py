@@ -7,10 +7,11 @@
 # See the https://opensource.org/licenses/MIT for license details.
 #
 import os
+import shutil
 
 from .config import getParam, getParamAsBoolean, getParamAsPath, pathjoin, mkdirs
 from .constants import CONFIG_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME
-from .error import SetupException
+from .error import SetupException, PygcamException
 from .file_utils import removeTreeSafely, removeFileOrTree, copyFileOrTree, symlinkOrCopyFile
 from .gcam_path import makeDirPath, GcamPath
 from .log import getLogger
@@ -183,6 +184,9 @@ class AbstractFileMapper(object):
         :return: (str) the pathname to the XML configuration file.
         """
         return self.scenario_config_path
+
+    def get_final_config(self):
+        raise PygcamException(f"Called AbstractFileMapper's get_final_config(); subclass {self.__class__.__name__} must implement this.")
 
     def copy_ref_workspace(self, force_create=False, files_to_link_param=None):
         """
@@ -378,3 +382,12 @@ class FileMapper(AbstractFileMapper):
         # In SimFileMapper, update_dependent_paths() relocates this to "sims/s{sim_id}/local-xml/config.xml"
         self.scenario_config_path = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
 
+    def get_final_config(self):
+        pmapper = self.parent_mapper
+        parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
+
+        cfg_path = self.config_path()
+        _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
+        shutil.copy(parent_config_path, cfg_path)
+        os.chmod(cfg_path, 0o664)
+        return cfg_path

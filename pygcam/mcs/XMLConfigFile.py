@@ -4,7 +4,7 @@ import os
 from lxml import etree as ET
 import shutil
 
-from ..config import getParam
+from ..config import getParam, mkdirs
 from ..log import getLogger
 from .sim_file_mapper import SimFileMapper
 from ..XMLFile import XMLFile
@@ -137,7 +137,8 @@ class XMLConfigFile(XMLFile):
         :return:  none
         """
         if path:
-            self.writePath = path       # remember the new path if one is given
+            self.writePath = path           # remember the new path if one is given
+            mkdirs(os.path.dirname(path))   # make sure directory exists
         else:
             path = self.writePath
 

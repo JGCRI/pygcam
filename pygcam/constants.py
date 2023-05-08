@@ -9,6 +9,7 @@
 LOCAL_XML_NAME = 'local-xml'
 DYN_XML_NAME   = 'dyn-xml'
 APP_XML_NAME   = 'app-xml'
+TRIAL_XML_NAME = 'trial-xml'
 XML_SRC_NAME   = 'xmlsrc'
 PARAMETERS_XML = "parameters.xml"
 RESULTS_XML    = "results.xml"

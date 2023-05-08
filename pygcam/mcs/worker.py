@@ -121,7 +121,7 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
     if isBaseline and not noGCAM:
         paramFile = _readParameterInfo(mapper)
 
-        df = mapper.readTrialDataFile()
+        df = mapper.read_trial_data_file()
         columns = df.columns
 
         # add data for linked columns if not present

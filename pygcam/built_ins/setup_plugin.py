@@ -72,6 +72,16 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-s', '--scenario', required=True,
                             help=clean_help('''Identify the scenario to run.'''))
 
+        parser.add_argument('--runConfigSetup', choices=yes_or_no, default='yes',
+                            help=clean_help('''Whether to run only scenario setup steps that add/insert/delete/replace 
+                                elements in the <ScenarioComponents> section of the GCAM config XML file.
+                                Default is "yes"'''))
+
+        parser.add_argument('--runNonConfigSetup', choices=yes_or_no, default='yes',
+                            help=clean_help('''Whether to run only scenario setup steps that do not 
+                                add/insert/delete/replace elements in the <ScenarioComponents> section 
+                                of the GCAM config XML file. Default is "yes"'''))
+
         # mutually exclusive with --dynamicOnly
         group1.add_argument('-T', '--staticOnly', action='store_true',
                             help=clean_help('''Generate only static XML for local-xml: don't create dynamic XML.'''))

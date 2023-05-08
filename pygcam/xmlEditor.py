@@ -160,14 +160,7 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
-        self.config_path = config_path = mapper.config_path()
-
-        parent = mapper.parent_mapper
-        parentConfigPath = parent.config_path() if parent else getParam('GCAM.RefConfigFile')
-
-        _logger.info("Copy %s\n      to %s", parentConfigPath, config_path)
-        shutil.copy(parentConfigPath, config_path)
-        os.chmod(config_path, 0o664)
+        self.config_path = mapper.get_final_config()
 
         # set the scenario name
         self.updateConfigComponent('Strings', 'scenarioName', self.name)
