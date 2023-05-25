@@ -17,5 +17,5 @@ six==1.11.0
 sphinx-argparse==0.2.5
 sphinx-rtd-theme==0.4.3
 sqlalchemy==1.2.12
-tornado==4.5.3
+tornado==6.3.2
 traitlets==4.3.2
