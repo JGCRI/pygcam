@@ -992,8 +992,7 @@ def sumYearsByGroup(groupCol, files, skiprows=1, interpolate=False):
         outFile = f'{root}-groupby-{name}{ext}'
 
         cols = [groupCol] + digitColumns(df)
-        grouped = df[cols].groupby(groupCol)
-        df2 = grouped.aggregate(np.sum)
+        df2 = df[cols].groupby(groupCol).sum(numeric_only=True)
         df2['Units'] = units[0]         # add these units to all rows
 
         with open(outFile, 'w') as f:

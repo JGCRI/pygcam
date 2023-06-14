@@ -518,9 +518,10 @@ class Project(XMLFile):
         projectName = self.projectName
         scenarioGroupName = self.scenarioGroupName
 
-        if self.scenarioGroup.useGroupDir:
-            # Set the group subdir so config vars can access it
-            setParam('GCAM.ScenarioSubdir', scenarioGroupName, section=projectName)
+        # Deprecated
+        # if self.scenarioGroup.useGroupDir:
+        #     # Set the group subdir so config vars can access it
+        #     setParam('GCAM.ScenarioSubdir', scenarioGroupName, section=projectName)
 
         # Get the final value text for all config vars and allowing project
         # variables to override them.

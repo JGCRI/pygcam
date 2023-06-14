@@ -4,6 +4,8 @@ from pygcam.config import setSection, getParam, pathjoin
 from pygcam.constants import LOCAL_XML_NAME
 from pygcam.file_mapper import FileMapper
 from pygcam.gcam_path import makeDirPath, GcamPath, gcam_path
+from pygcam.mcs.context import McsContext
+from pygcam.mcs.sim_file_mapper import SimFileMapper
 from .utils_for_testing import load_config_from_string
 
 exe_dir = '/tmp/foo/exe'
@@ -43,7 +45,7 @@ def test_dir_path():
 
 def test_sandbox():
     scenario = 'tax-10'
-    group_name = 'group1'
+    group_name = 'group1'   # group1 has useSubdir="1"; group2 has "0"
 
     tmp_dir = '/tmp/test_gcam_sandbox'
     sandbox_root = f'{tmp_dir}/sandboxes'
@@ -62,6 +64,7 @@ def test_sandbox():
         GCAM.SandboxRoot = {sandbox_root}
         GCAM.SandboxProjectDir = {sandbox_root}/{project_name}
         GCAM.RefWorkspace = {ref_workspace}
+        MCS.SandboxRoot = {tmp_dir}/mcs
     """
 
     # load the config text and make the new section the default
@@ -76,26 +79,24 @@ def test_sandbox():
     assert mapper.sandbox_workspace == pathjoin(sandbox_root, project_name, project_subdir, 'Workspace', normpath=True)
     assert mapper.sandbox_exe_path  == pathjoin(sandbox_root, project_name, project_subdir, group_name,
                                                 scenario, "exe/gcam.exe", normpath=True)
-    assert gcam_path(mapper.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir,
-                                                               group_name, scenario, "input/gcamdata/xml",
-                                                               normpath=True)
+    assert gcam_path(mapper.sandbox_scenario_xml) == pathjoin(sandbox_root, project_name, project_subdir, LOCAL_XML_NAME, scenario, normpath=True)
 
     xmlsrc = getParam('GCAM.ProjectXmlsrc')
     assert mapper.project_xml_src == xmlsrc
 
-    assert mapper.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name,
-                                                   LOCAL_XML_NAME, scenario, normpath=True)
+    #
+    # MCS sandbox test
+    #
+    group_name = 'group2'    # group2 sets useGroupDir="0"
+    sim_id = 1
+    trial_num = 20
+    mcs_root = f"{tmp_dir}/mcs"
 
-    # group2 sets useGroupDir=False [which is now deprecated, so this test is redundant, but we might reinstate that attribute...]
-    group_name = 'group2'
-    mapper = FileMapper(scenario, scenario_group=group_name, create_dirs=True) # this one creates the directories; the one above does not
+    ctx = McsContext(projectName=project_name, scenario=scenario, groupName=group_name, simId=sim_id, trialNum=trial_num)
+    mapper = SimFileMapper(context=ctx, scenario_group=group_name, create_dirs=True) # this one creates the directories; the one above does not
 
-    assert mapper.sandbox_exe_path == pathjoin(sandbox_root, project_name, project_subdir, group_name, scenario,
-                                               "exe/gcam.exe", normpath=True)
+    assert mapper.sandbox_exe_path == pathjoin(mcs_root, project_name, project_subdir, # group_name,
+                                               f"sims/s{sim_id:03}/000/{trial_num:03}",
+                                               scenario, "exe/gcam.exe", normpath=True)
 
-    assert gcam_path(mapper.scenario_gcam_xml_dir) == pathjoin(sandbox_root, project_name, project_subdir, group_name,
-                                                               scenario, "input/gcamdata/xml", normpath=True)
-
-    assert mapper.sandbox_scenario_xml == pathjoin(sandbox_root, project_name, project_subdir, group_name,
-                                                   LOCAL_XML_NAME, scenario, normpath=True)
 

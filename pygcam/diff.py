@@ -276,13 +276,6 @@ def queryCsvPathname(query, scenario, workingDir='.'):
 def diffMain(args, tool):
     from .mcs.sim_file_mapper import get_mapper
 
-    mapper = tool.mapper or get_mapper(args.scenario, scenario_group=args.group)
-
-    workingDir = args.workingDir or os.path.dirname(mapper.sandbox_scenario_dir)
-    os.chdir(workingDir)
-
-    _logger.debug('Working dir: %s', workingDir)
-
     convertOnly = args.convertOnly
     skiprows    = args.skiprows
     interpolate = args.interpolate
@@ -306,6 +299,13 @@ def diffMain(args, tool):
 
         baseline, policy = args.csvFiles
 
+        mapper = tool.mapper or get_mapper(policy) #, scenario_group=args.group)
+        workingDir = os.path.dirname(mapper.sandbox_scenario_dir)
+        os.chdir(workingDir)
+
+        _logger.debug('Working dir: %s', workingDir)
+
+
         mainPart, extension = os.path.splitext(queryFile)
 
         if extension.lower() == '.xml':
@@ -328,6 +328,11 @@ def diffMain(args, tool):
                              interpolate=interpolate, years=years, startYear=startYear,
                              splitLand=splitLand, asPercentChange=asPercentChange)
     else:
+        if not args.workingDir:
+            raise CommandlineError("--workingDir/-D is required when --queryFile/-q is not specified")
+
+        os.chdir(args.workingDir)
+
         csvFiles = [ensureCSV(f) for f in args.csvFiles]
         referenceFile = csvFiles[0]
         otherFiles    = csvFiles[1:] if len(csvFiles) > 1 else []

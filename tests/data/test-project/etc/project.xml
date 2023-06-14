@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file defines the "tutorial" project. Feel free to edit it to your liking.
+Also see project2.xml, which offers a slightly more complex example.
+-->
+<projects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="project-schema.xsd">
+  <project name="test-project">
+    <vars>
+      <var name="startYear">2015</var>
+      <var name="endYear">2050</var>  <!-- stops at 2050 so tutorial runs faster -->
+      <var name="years" eval="1">{startYear}-{endYear}</var>
+    </vars>
+    <steps>
+      <!--
+      The names defined in steps can be used on the command-line to limit operations to
+      these steps. Steps are run in the order defined in this file, regardless of the
+      order specified to "gt run". If runFor="baseline", the step is run only for baseline
+      scenarios. If runFor="policy", the step is run only for non-baseline scenarios. If
+      not set (or set to any other value) the step is run for all scenarios.
+       -->
+      <step name="setup" runFor="baseline">
+        @setup -b "{baseline}" -g "{scenarioGroup}" -S "{scenarioSubdir}" -w "{scenarioDir}"
+               -p {endYear} -y {years}
+      </step>
+      <step name="gcam"  runFor="baseline">@gcam -s "{baseline}" -S "{projectXmlDir}"</step>
+      <step name="query" runFor="baseline">
+        @query -o "{batchDir}" -w "{scenarioDir}" -s "{scenario}" -q "{queryXmlFile}"
+      </step>
+
+      <!--
+        Explicitly require policy setup, gcam, and query steps to run after baseline to
+        allow baseline results to be used in constraints
+      -->
+      <step name="setup" runFor="policy">
+            @setup -b "{baseline}" -s "{scenario}" -g {scenarioGroup} -S "{scenarioSubdir}"
+                   -w "{scenarioDir}" -p {endYear} -y {years}
+      </step>
+      <step name="gcam"  runFor="policy">@gcam -s "{scenario}" -S "{projectXmlDir}"</step>
+      <step name="query" runFor="policy">
+        @query -o {batchDir} -w "{scenarioDir}" -s "{scenario}" -q "{queryXmlFile}"
+      </step>
+
+      <!--
+        Compute and plot differences between query results for policy and baseline scenarios
+      -->
+      <step name="diff"  runFor="policy">
+        @diff -D "{sandboxDir}" -y {years} -q "{queryXmlFile}" "{baseline}" "{scenario}"
+      </step>
+      <step name="plotDiff" runFor="policy">
+        @chart {diffPlotArgs} --reference "{baseline}" --scenario "{scenario}" --fromFile "{diffPlots}"
+      </step>
+
+      <!-- Generate an XLSX workbook from all CSV query result files -->
+      <step name="xlsx"  runFor="policy">
+        @diff -D "{diffsDir}" -c -y {years} -o diffs.xlsx {diffsDir}/*.csv
+      </step>
+    </steps>
+
+    <!--
+      Define which queries to run. This creates a text file whose name is stored
+      in a project variable, accessed as {queryXmlFile} in the "query" step.
+    -->
+    <queries varName="queryXmlFile">
+      <query name="LUC_emissions_by_region"/>
+      <query name="total_climate_forcing"/>
+      <query name="global_mean_temperature"/>
+    </queries>
+
+    <vars>
+      <!-- common arguments for 'diffPlots' -->
+      <var name="diffPlotArgs" eval="1">-D "{diffsDir}" --outputDir figures --years {years} --label --ygrid --zeroLine</var>
+    </vars>
+
+    <tmpFile varName="diffPlots">
+      <text>LUC_emissions_by_region-{scenario}-{reference}.csv -Y 'Tg CO$_2$' -m C_to_CO2 -i -n 4 -T '$\Delta$ LUC emissions' -I region -x by-region.png</text>
+
+      <!-- Forcing and temperature change -->
+      <text>total_climate_forcing-{scenario}-{reference}.csv   -Y 'W/m$^2$' --timeseries -T '$\Delta$ Total Climate Forcing'</text>
+      <text>global_mean_temperature-{scenario}-{reference}.csv -Y 'Degrees C' --timeseries -T '$\Delta$ Global Mean Temperature'</text>
+    </tmpFile>
+
+  </project>
+</projects>

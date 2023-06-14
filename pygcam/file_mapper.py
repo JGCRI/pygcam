@@ -355,7 +355,7 @@ class FileMapper(AbstractFileMapper):
         self.sandbox_workspace = getParamAsPath('GCAM.SandboxWorkspace')
         self.sandbox_workspace_exe_dir = getParamAsPath('GCAM.SandboxWorkspaceExeDir')
 
-        self.sandbox_dir = getParamAsPath('GCAM.SandboxDir')
+        self.sandbox_dir = pathjoin(getParamAsPath('GCAM.SandboxDir'), self.group_subdir)
 
         self.sandbox_scenario_dir = sbx_scen_dir = makeDirPath(self.sandbox_dir, scenario)
 

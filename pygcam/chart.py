@@ -245,8 +245,7 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
     #_logger.debug('plotStackedTimeSeries %s', sideLabel)
     setupPlot()
     df = dropExtraCols(df, inplace=False)
-    grouped = df.groupby(index)
-    df2 = grouped.aggregate(np.sum)
+    df2 = df.groupby(index).sum(numeric_only=True)
     df3 = df2.transpose()
 
     setupPalette(len(df3.columns), pal=palette)

@@ -31,7 +31,7 @@ class McsContext(object):
         self.scenario = scenario
         self.baseline = baseline
 
-        project = Project.readProjectFile(projectName)
+        project = Project.readProjectFile(projectName, groupName=groupName)
         self.groupName = groupName or project.scenarioSetup.defaultGroup
         self.useGroupDir = project.scenarioGroup.useGroupDir
         self.groupDir = self.groupName if self.useGroupDir else ''
