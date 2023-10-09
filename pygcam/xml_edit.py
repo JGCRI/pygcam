@@ -76,7 +76,7 @@ class CachedFile(object):
             return obj
 
         # realpath => operate on canonical pathnames
-        filename = obj.abs if isinstance(obj, GcamPath) else os.path.realpath(obj)
+        filename = os.path.realpath(obj.abs if isinstance(obj, GcamPath) else obj)
 
         try:
             item = cls.cache[filename]

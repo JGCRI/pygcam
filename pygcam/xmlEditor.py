@@ -227,7 +227,7 @@ class XMLEditor(object):
 
         return pathname
 
-    def getLocalCopy(self, configTag, gp=None):
+    def getLocalCopy(self, configTag):
         """
         Get the filename for the most local version (in terms of scenario hierarchy)
         of the XML file identified in the configuration file with ``configTag``, and
@@ -246,10 +246,10 @@ class XMLEditor(object):
 
         srcPath = GcamPath(mapper.sandbox_exe_dir, pathname)     # TBD: compare to above
 
-        if not srcPath.lexists():
-            pass
+        # if not srcPath.lexists():
+        #     pass
 
-        # TBD: test this
+        # TBD: test this. Not updating ref config.xml to point to local copy.
         if not os.path.lexists(srcAbsPath):
             _logger.debug("Didn't find %s; checking reference files", srcAbsPath)
             # look to sandbox workspace if not found locally
@@ -267,14 +267,14 @@ class XMLEditor(object):
         suffix2 = srcPath.basename()
         assert suffix == suffix2    # TBD: remove after testing
 
-        # TBD: Use GcamPath
         dstAbsPath = pathjoin(self.scenario_dir.abs, suffix)
         dstRelPath = pathjoin(self.scenario_dir.rel, suffix)
 
         # copyIfMissing(mapper.scenario_dir.abs, dstAbsPath, makedirs=True)
         copyIfMissing(srcAbsPath, dstAbsPath, makedirs=True)
 
-        return GcamPath(mapper.sandbox_exe_dir, pathname)
+        path = GcamPath(mapper.sandbox_exe_dir, dstRelPath)
+        return path
 
     @callableMethod
     def replaceValue(self, tag, xpath, value):
@@ -288,7 +288,7 @@ class XMLEditor(object):
             (the value is converted to string, so you can pass ints or floats.)
         """
         # use GcamPath
-        xmlFile = self.getLocalCopy(tag, gp=True)
+        xmlFile = self.getLocalCopy(tag)
         xmlEdit(xmlFile, [(xpath, str(value))])
         self.updateScenarioComponent(tag, xmlFile)
 
@@ -513,7 +513,7 @@ class XMLEditor(object):
         """
         _logger.info("multiply: tag='%s', xpath='%s', value=%s", tag, xpath, value)
 
-        xml_file = self.getLocalCopy(tag, gp=True)
+        xml_file = self.getLocalCopy(tag)
 
         xmlEdit(xml_file, [(xpath, value)], op='multiply')
         self.updateScenarioComponent(tag, xml_file)
@@ -531,7 +531,7 @@ class XMLEditor(object):
         """
         _logger.info(f"add: tag='{tag}', xpath='{xpath}', value={value}")
 
-        xml_file = self.getLocalCopy(tag, gp=True)
+        xml_file = self.getLocalCopy(tag)
 
         xmlEdit(xml_file, [(xpath, value)], op='add')
         self.updateScenarioComponent(tag, xml_file)
@@ -668,7 +668,7 @@ class XMLEditor(object):
         maxModelCalcs = coercibleAndPositive('maxModelCalcs', maxModelCalcs, int)
         maxIterations = coercibleAndPositive('maxIterations', maxIterations, int)
 
-        xml_file = self.getLocalCopy(SOLVER_TAG, gp=True)
+        xml_file = self.getLocalCopy(SOLVER_TAG)
 
         prefix = f"//scenario/user-configurable-solver[@year={year}]/"
         pairs = []
@@ -724,7 +724,7 @@ class XMLEditor(object):
         # as is currently the case in XmlEditor.makeScenarioComponentsUnique()
         for num in [2, 3]:
             fileTag  = 'land' + str(num)
-            landFile = self.getLocalCopy(fileTag, gp=True)
+            landFile = self.getLocalCopy(fileTag)
 
             protectLand(landFile.abs, landFile.abs, fraction, landClasses=landClasses,
                         otherArable=otherArable, regions=regions, unprotectFirst=unprotectFirst)
@@ -754,7 +754,7 @@ class XMLEditor(object):
         for prefix in ('', 'protected_'):
             for num in [2, 3]:
                 fileTag = f'{prefix}land{num}'
-                landFile = self.getLocalCopy(fileTag, gp=True)
+                landFile = self.getLocalCopy(fileTag)
 
                 landXmlFiles.append(landFile.abs)
                 self.updateScenarioComponent(fileTag, landFile)
@@ -868,7 +868,7 @@ class XMLEditor(object):
         :return: none
         """
         tag = 'socioeconomics'
-        xml_file = self.getLocalCopy(tag, gp=True)
+        xml_file = self.getLocalCopy(tag)
 
         prefix = f'//region[@name="{region}"]/demographics/populationMiniCAM'
         pairs = []
@@ -884,7 +884,7 @@ class XMLEditor(object):
         Freeze population after `year` at the value for that year.
         """
         tag = 'socioeconomics'
-        xml_file = self.getLocalCopy(tag, gp=True)
+        xml_file = self.getLocalCopy(tag)
 
         item = CachedFile.getFile(xml_file)
         tree = item.tree
@@ -927,7 +927,7 @@ class XMLEditor(object):
         msg = f"Set non-energy-cost of {technology} for {self.name} to:"
         _logger.info(printSeries(values, technology, header=msg, asStr=True))
 
-        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
 
         prefix = '//global-technology-database/location-info[@sector-name="%s" and @subsector-name="%s"]/technology[@name="%s"]' % \
                  (sector, subsector, technology)
@@ -960,7 +960,7 @@ class XMLEditor(object):
         """
         _logger.info("Set shutdown rate for (%s, %s) to %s for %s", sector, technology, values, self.name)
 
-        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
 
         prefix = "//global-technology-database/location-info[@sector-name='%s' and @subsector-name='%s']/technology[@name='%s']" % \
                  (sector, subsector, technology)
@@ -1009,7 +1009,7 @@ class XMLEditor(object):
         """
         _logger.info("Set price-elasticity for (%s, %s) to %s for %s", regions, sectors, values, self.name)
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         def listifyString(value, aliasForNone=None):
             if isinstance(value, str):
@@ -1083,7 +1083,7 @@ class XMLEditor(object):
         toYear = str(toYear)
         fromYear = str(fromYear)
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         item = CachedFile.getFile(xml_file)
         tree = item.tree
@@ -1207,7 +1207,7 @@ class XMLEditor(object):
         _logger.info("Insert shutdown functions for (%r, %r, %r, %r) for %r",
                      regions, supplysector, subsector, stubTechnologies, self.name)
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         item = CachedFile.getFile(xml_file)
         tree = item.tree
@@ -1293,7 +1293,7 @@ class XMLEditor(object):
         _logger.info("Insert nodes and attributes for (%r, %r, %r, %r) for %r",
                      regions, supplysector, subsector, stubTechnology, self.name)
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         item = CachedFile.getFile(xml_file)
         tree = item.tree
@@ -1354,7 +1354,7 @@ class XMLEditor(object):
         # from .utils import printSeries
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         item = CachedFile.getFile(xml_file)
         tree = item.tree
@@ -1417,7 +1417,7 @@ class XMLEditor(object):
                      regions, sector, subsector, stubTechnology, self.name)
         # _logger.info(printSeries(values, 'share-weights', asStr=True))
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         item = CachedFile.getFile(xml_file)
         tree = item.tree
@@ -1484,7 +1484,7 @@ class XMLEditor(object):
         _logger.info("Set global-technology-database share-weights for (%s, %s) to %s for %s",
                      sector, technology, values, self.name)
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         prefix = f"//global-technology-database/location-info[@sector-name='{sector}' and @subsector-name='{subsector}']/technology[@name='{technology}']"
 
@@ -1517,7 +1517,7 @@ class XMLEditor(object):
         _logger.info("Set coefficients for %s in global technology %s, subsector %s: %s",
                      energyInput, technology, subsector, values)
 
-        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+        xml_file = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
 
         prefix = f"//global-technology-database/location-info[@subsector-name='{subsector}']/technology[@name='{technology}']"
         suffix = f"minicam-energy-input[@name='{energyInput}']/coefficient"
@@ -1623,7 +1623,7 @@ class XMLEditor(object):
         _logger.info("Set Non-CO2 emissions for (%s, %s, %s, %s, %s) to %s for %s",
                      region, sector, subsector, stubTechnology, species, values, self.name)
 
-        xml_file = self.getLocalCopy(configFileTag, gp=True)
+        xml_file = self.getLocalCopy(configFileTag)
 
         # //region[@name='USA']/supplysector[@name='N fertilizer']/subsector[@name='gas']/stub-technology[@name='gas']/period[@year='2005']/Non-CO2[@name='CH4']/input-emissions
         # NOTE: the following uses '%s' since the list comprehension immediately below substitutes in the year.
@@ -1645,7 +1645,7 @@ class XMLEditor(object):
         df = pd.read_csv(csvPath)
         year_cols = [col for col in df.columns if col.isdigit()]
 
-        xml_file = self.getLocalCopy(xmlTag, gp=True)
+        xml_file = self.getLocalCopy(xmlTag)
         item = CachedFile.getFile(xml_file)
         tree = item.tree
 
@@ -1730,7 +1730,7 @@ class XMLEditor(object):
             raise SetupException(f"buildingTechEfficiency: mode must be either 'add' or 'mult'; got '{mode}'")
 
         def runForFile(tag, which):
-            xml_file = self.getLocalCopy(tag, gp=True)
+            xml_file = self.getLocalCopy(tag)
             item = CachedFile.getFile(xml_file)
             tree = item.tree
 
@@ -1899,7 +1899,7 @@ class XMLEditor(object):
             raise SetupException(f"industryTechEfficiency: mode must be either 'add' or 'mult'; got '{mode}'")
 
         def runForFile(tag, which):
-            xml_file = self.getLocalCopy(tag, gp=True)
+            xml_file = self.getLocalCopy(tag)
             item = CachedFile.getFile(xml_file)
             tree = item.tree
 

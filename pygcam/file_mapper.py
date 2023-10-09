@@ -82,7 +82,8 @@ class AbstractFileMapper(object):
     and SimFileMapper (for simulations), which have different structures to account for
     simulation and trial directories and other files required for MCS.
     """
-    def __init__(self, scenario, project_name=None, scenario_group=None, parent=None, **kwargs):
+    def __init__(self, scenario, project_name=None, parent=None,
+                 scenario_group=None, **kwargs):
         """
         Create a FileMapper instance from the given arguments.
 
@@ -90,8 +91,8 @@ class AbstractFileMapper(object):
         :param baseline: (str) the name of the baseline scenario, if not a baseline.
         :param project_name: (str) the name of the project, defaults to the value of
             config variable `GCAM.DefaultProject`
-        :param scenario_group: (str) the name of a scenario group defined in scenarios.xml
         :param parent: (Sandbox) Sandbox parent scenario, generally a baseline in the same group
+        :param scenario_group: (str) the name of a scenario group defined in scenarios.xml
         :param create_dirs: (bool) whether to create some dirs
         """
         self.scenario = scenario
@@ -328,7 +329,8 @@ class AbstractFileMapper(object):
         return cls
 
 class FileMapper(AbstractFileMapper):
-    def __init__(self, scenario, project_name=None, scenario_group=None,
+    def __init__(self, scenario, project_name=None,
+                 scenario_group=None, scenario_dir=None,
                  parent=None, create_dirs=True): # , copy_workspace=False):
         """
         Create a Sandbox instance from the given arguments.
@@ -337,12 +339,14 @@ class FileMapper(AbstractFileMapper):
         :param project_name: (str) the name of the project, defaults to the value of
             config variable `GCAM.DefaultProject`
         :param scenario_group: (str) the name of a scenario group defined in scenarios.xml
+        :param scenario_dir: (str) the name of a scenario subdirectory to use, if any
         :param parent: (Sandbox) Sandbox parent scenario, generally a baseline in the same group
         :param create_dirs: (bool) whether to create some dirs
         :param copy_workspace: (bool) if True, copy the entire reference workspace without
             using symlinks. This may provide performance benefits on some cluster file systems.
         """
-        super().__init__(scenario, project_name=project_name, scenario_group=scenario_group,
+        super().__init__(scenario, project_name=project_name,
+                         scenario_group=scenario_group, scenario_dir=scenario_dir,
                          parent=parent, create_dirs=create_dirs)
 
         parent_mapper = self.parent_mapper    # may be computed by superclass

@@ -216,6 +216,10 @@ class Step(object):
             if command[0] == '@':       # run internally in gt
                 argList = shlex.split(command[1:])
                 argList = flatten(map(lambda s: glob.glob(s) or [s], argList))  # expand shell wildcards
+
+                if '-g' not in argList and mapper.scenario_group:
+                    argList.extend(['-g', mapper.scenario_group])
+
                 tool.run(argList=argList)
             else:
                 shellCommand(command, shell=True)   # shell=True to expand shell wildcards and so on
@@ -540,7 +544,7 @@ class Project(XMLFile):
 
         # Add standard variables for use in step command template substitutions
         argDict['project']       = projectName
-        argDict['baseline']      = baseline = self.scenarioGroup.baseline
+        argDict['baseline']      = self.scenarioGroup.baseline
         argDict['scenarioGroup'] = scenarioGroupName
 
         #  'subdir' comes from <project subdir="xx">
@@ -603,8 +607,9 @@ class Project(XMLFile):
 
             # TBD: create and use a FileMapper
             from .mcs.sim_file_mapper import get_mapper
-            group_for_sandbox = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
-            mapper = get_mapper(scenarioName, scenario_group=group_for_sandbox)
+            # group_for_sandbox = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
+            # mapper = get_mapper(scenarioName, scenario_group=group_for_sandbox)
+            mapper = get_mapper(scenarioName, scenario_group=scenarioGroupName)
 
             # TBD: Just use the config variables. Helps consolidate pathname stuff.
             #argDict['scenarioSubdir'] = scenario.subdir or scenarioName     # deprecated

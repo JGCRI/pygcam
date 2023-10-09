@@ -20,7 +20,7 @@ class GcamCommand(SubcommandABC):
                             same "job" on the cluster.'''))
 
         parser.add_argument('-g', '--group', default='',
-                            help=clean_help('The scenario group directory name, if any.'))
+                            help=clean_help('The scenario group name, if any.'))
 
         parser.add_argument('-n', '--noRun', action='store_true',
                             help=clean_help('''Don't run GCAM; just print the command that would be run.'''))

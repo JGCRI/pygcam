@@ -61,8 +61,9 @@ class SimFileMapper(AbstractFileMapper):
         parent = parent or (context and context.baseline) or None
         scenario = scenario or (context and context.scenario) or None
 
-        super().__init__(scenario, project_name=project_name, scenario_group=scenario_group,
-                         parent=parent, create_dirs=False, context=context)
+        super().__init__(scenario, project_name=project_name,
+                         scenario_group=scenario_group, parent=parent,
+                         create_dirs=False, context=context)
 
         self.sim_id = sim_id
         self.trial_count = trial_count

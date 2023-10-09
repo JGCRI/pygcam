@@ -144,7 +144,7 @@ class BioenergyEditor(XMLEditor):
              (self.name, target, loTarget, loFract, loPrice, hiTarget, hiFract, hiPrice))
 
         # Create modified version of resbio_input.xml and modify config to use it
-        xml_file = self.getLocalCopy(RESBIO_INPUT_TAG, gp=True)
+        xml_file = self.getLocalCopy(RESBIO_INPUT_TAG)
 
         # Change all non-forest residue, all non-forest residue in the US, only corn residue in US, or corn residue everywhere.
         if target == 'all-crops':
@@ -174,7 +174,7 @@ class BioenergyEditor(XMLEditor):
 
     @callableMethod
     def setMswParameter(self, region, parameter, value):
-        xml_file = self.getLocalCopy(RESOURCES_TAG, gp=True)
+        xml_file = self.getLocalCopy(RESOURCES_TAG)
 
         xpath = f"//region[@name='{region}']/renewresource/smooth-renewable-subresource[@name='generic waste biomass']/{parameter}"
 
@@ -185,12 +185,12 @@ class BioenergyEditor(XMLEditor):
     def regionalizeBiomassMarket(self, region):
         _logger.info(f"Regionalize {region} biomass market for {self.name}")
 
-        resourcesFile = self.getLocalCopy(RESOURCES_TAG, gp=True)
+        resourcesFile = self.getLocalCopy(RESOURCES_TAG)
 
         xmlEdit(resourcesFile, [(f"//region[@name='{region}']/renewresource[@name='biomass']/market", region)])
         self.updateScenarioComponent("resources", resourcesFile)
 
-        agForPastBioFile = self.getLocalCopy(AG_BASE_TAG, gp=True)
+        agForPastBioFile = self.getLocalCopy(AG_BASE_TAG)
 
         xmlEdit(agForPastBioFile, [(f"//region[@name='{region}']/AgSupplySector[@name='biomass']/market", region)])
         self.updateScenarioComponent("ag_base", agForPastBioFile)
@@ -209,14 +209,14 @@ class BioenergyEditor(XMLEditor):
         # XPath applies to file energy-xml/en_supply.xml
         cornCoefXpath = '//technology[@name="regional corn for ethanol"]/period[@year>=2015]/minicam-energy-input[@name="Corn"]/coefficient'
 
-        enSupplyFile = self.getLocalCopy(ENERGY_SUPPLY_TAG, gp=True)
+        enSupplyFile = self.getLocalCopy(ENERGY_SUPPLY_TAG)
 
         xmlEdit(enSupplyFile, [(cornCoefXpath, cornCoef)])
 
         self.updateScenarioComponent(ENERGY_SUPPLY_TAG, enSupplyFile)
 
         if gasCoef or elecCoef:
-            enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+            enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
             pairs = []
             xpath = '//technology[@name="corn ethanol"]/period[@year>=2015]/minicam-energy-input[@name="%s"]/coefficient'
 
@@ -258,7 +258,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Turn off purpose-grown biomass technology in %s for %s" % (region, self.name))
 
-        landInputFile = self.getLocalCopy(LAND_INPUT3_TAG, gp=True)
+        landInputFile = self.getLocalCopy(LAND_INPUT3_TAG)
 
         if region == 'global':
              region='*'
@@ -281,7 +281,7 @@ class BioenergyEditor(XMLEditor):
         _logger.info(f"Adjust forest residue supply curves for {self.name}")
 
         # Create modified version of resbio_input.xml and modify config to use it
-        resbioFile = self.getLocalCopy(RESBIO_INPUT_TAG, gp=True)
+        resbioFile = self.getLocalCopy(RESBIO_INPUT_TAG)
 
         # Forest residue appears in two places. First, operate on AgSupplySector "Forest"
         xPrefix = "//region[@name='%s']/AgSupplySector[@name='Forest']/AgSupplySubsector" % region
@@ -332,7 +332,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Add corn ethanol stub technology in USA")
 
-        enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+        enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
         extractStubTechnology('USA', enTransFile.abs, self.cornEthanolUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol')
         extractStubTechnology('USA', enTransFile.abs, self.cornEthanolUsaAbs2, REFINING_SECTOR, BIOMASS_LIQUIDS, 'corn ethanol', fromRegion=True)
 
@@ -348,7 +348,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Add cellulosic ethanol stub-technology in USA")
 
-        enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+        enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
         extractStubTechnology('USA', enTransFile.abs, self.cellEthanolUsaAbs, REFINING_SECTOR, BIOMASS_LIQUIDS, 'cellulosic ethanol')
 
         self.insertScenarioComponent('cell-etoh-USA', self.cellEthanolUsaRel, 'energy_transformation')
@@ -360,7 +360,7 @@ class BioenergyEditor(XMLEditor):
         '''
         _logger.info("Add FT biofuels stub-technology in USA")
 
-        enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG, gp=True)
+        enTransFile = self.getLocalCopy(ENERGY_TRANSFORMATION_TAG)
         extractStubTechnology('USA', enTransFile.abs, self.ftBiofuelsUsaAbs,  REFINING_SECTOR, BIOMASS_LIQUIDS, 'FT biofuels')
 
         self.insertScenarioComponent('FT-biofuels-USA', self.ftBiofuelsUsaRel, 'energy_transformation')
