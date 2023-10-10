@@ -3,13 +3,16 @@
 
    See the https://opensource.org/licenses/MIT for license details.
 """
+from io import BytesIO
 import os
 import re
 from lxml import etree as ET
 
+from .config import getParam
 from .error import SetupException, PygcamException
 from .gcam_path import GcamPath
 from .log import getLogger
+from .utils import splitAndStrip
 
 AttributePattern = re.compile(r'(.*)/@([-\w]*)$')
 
@@ -62,12 +65,31 @@ class CachedFile(object):
     # Store parsed XML trees here and use with xmlSel/xmlEdit if useCache is True
     cache = {}
 
+    # Some files (e.g., cal_broyden_config.xml) have incorrect entities that don't
+    # parse correctly in lxml, so we change "&&" to "&amp;&amp;" on reading, and
+    # back on writing. This list is just file base names.
+    xml_files_to_correct = splitAndStrip(getParam('GCAM.XmlFilesToCorrect'), ' ')
+
     def __init__(self, filename):
         self.filename = filename = os.path.realpath(filename)
         self.edited = False
+        self.corrected = False  # if "&amp;" entities were corrected on reading
 
         _logger.debug("CachedFile: reading '%s'", filename)
-        self.tree = ET.parse(filename, self.parser)
+
+        corrected = None
+        basename = os.path.basename(filename)
+
+        if basename in self.xml_files_to_correct:
+            _logger.debug("CachedFile: correcting entities in '%s'", basename)
+
+            with open(filename) as f:
+                s = f.read().replace('&&', '&amp;&amp;')
+
+            corrected = BytesIO(s.encode('UTF-8'))
+            self.corrected = True
+
+        self.tree = ET.parse(corrected or filename, self.parser)
         self.cache[filename] = self
 
     @classmethod
@@ -89,8 +111,22 @@ class CachedFile(object):
         self.edited = True
 
     def write(self):
-        _logger.info("CachedFile: writing '%s'", self.filename)
-        self.tree.write(self.filename, xml_declaration=True, encoding='utf-8', pretty_print=True)
+        filename = self.filename
+        _logger.info("CachedFile: writing '%s'", filename)
+
+        corrected = self.corrected
+        out = BytesIO() if corrected else filename
+
+        # Write to string buffer or directly to file
+        self.tree.write(out, xml_declaration=True, encoding='utf-8', pretty_print=True)
+
+        if corrected:
+            _logger.debug("CachedFile: replacing '&amp;' entities in '%s'", filename)
+            text = out.getvalue().decode('UTF-8')
+            s = text.replace('&amp;', '&')
+            with open(filename, 'w') as f:
+                f.write(s)
+
         self.edited = False
 
     def decache(self):
