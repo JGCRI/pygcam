@@ -20,7 +20,12 @@ class DiffCommand(SubcommandABC):
                             help=clean_help('''The directory to change to before performing any operations.
                             Defaults to value of config variable GCAM.SandboxDir.'''))
 
-        parser.add_argument('-g', '--groupSum', default="",
+        # TBD: ideally would not be needed in the diff command, but eventually needs a FileMapper
+        parser.add_argument('-g', '--group',
+                            help=clean_help('''The name of the scenario group to process. If not specified,
+                            the group with attribute default="1" is processed.'''))
+
+        parser.add_argument('-G', '--groupSum', default="",
                             help=clean_help('''Group data for each timestep (or interpolated annual values) by the
                             given column, and sum all members of each group to produce a timeseries for
                             each group. Takes precedence over the simpler "-S" ("--sum") option.'''))

@@ -81,7 +81,7 @@ class CachedFile(object):
         basename = os.path.basename(filename)
 
         if basename in self.xml_files_to_correct:
-            _logger.debug("CachedFile: correcting entities in '%s'", basename)
+            _logger.debug("CachedFile: changing '&&' to '&amp;&amp;' '%s'", basename)
 
             with open(filename) as f:
                 s = f.read().replace('&&', '&amp;&amp;')

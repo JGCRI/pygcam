@@ -285,6 +285,7 @@ def diffMain(args, tool):
     queryFile   = args.queryFile
     yearStrs    = args.years.split('-')
     asPercentChange = args.asPercentChange
+    workingDir  = args.workingDir
 
     if len(yearStrs) == 2:
         years = yearStrs
@@ -299,8 +300,10 @@ def diffMain(args, tool):
 
         baseline, policy = args.csvFiles
 
-        mapper = tool.mapper or get_mapper(policy) #, scenario_group=args.group)
-        workingDir = os.path.dirname(mapper.sandbox_scenario_dir)
+        if not workingDir:
+            mapper = tool.mapper or get_mapper(policy, scenario_group=args.group)
+            workingDir = os.path.dirname(mapper.sandbox_scenario_dir)
+
         os.chdir(workingDir)
 
         _logger.debug('Working dir: %s', workingDir)
