@@ -25,7 +25,7 @@ import shutil
 from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean, unixPath, pathjoin, mkdirs
-from .constants import LOCAL_XML_NAME, CONFIG_XML, McsMode
+from .constants import LOCAL_XML_NAME, McsMode
 from .error import SetupException, PygcamException
 from .file_utils import (pushd, symlinkOrCopyFile, removeTreeSafely,
                          removeFileOrTree, copyIfMissing)
@@ -160,7 +160,7 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
-        self.config_path = mapper.get_final_config()
+        self.config_path = mapper.get_config_version()  # get the "most local" config file
 
         # set the scenario name
         self.updateConfigComponent('Strings', 'scenarioName', self.name)

@@ -1,8 +1,10 @@
 import os
 import pytest
-from pygcam.config import setSection, getParam, pathjoin
-from pygcam.constants import LOCAL_XML_NAME
-from pygcam.file_mapper import FileMapper
+
+from pygcam.config import setSection, getParam, pathjoin, mkdirs
+from pygcam.constants import LOCAL_XML_NAME, CONFIG_XML
+from pygcam.file_mapper import FileMapper, FileVersions
+from pygcam.file_utils import removeTreeSafely
 from pygcam.gcam_path import makeDirPath, GcamPath, gcam_path
 from pygcam.mcs.context import McsContext
 from pygcam.mcs.sim_file_mapper import SimFileMapper
@@ -50,6 +52,9 @@ def test_sandbox():
     tmp_dir = '/tmp/test_gcam_sandbox'
     sandbox_root = f'{tmp_dir}/sandboxes'
 
+    removeTreeSafely(tmp_dir)
+    mkdirs(tmp_dir)
+
     project_name = 'test-project'
     project_root = pathjoin(os.path.dirname(__file__), 'data')
     project_subdir = 'analysis_22'
@@ -84,6 +89,25 @@ def test_sandbox():
     xmlsrc = getParam('GCAM.ProjectXmlsrc')
     assert mapper.project_xml_src == xmlsrc
 
+    # Test config FileVersions
+    ref_config_path = mapper.get_config_version(FileVersions.REFERENCE)
+    assert ref_config_path == pathjoin(ref_workspace, 'exe', 'configuration_ref.xml')
+
+    base_config_path = mapper.get_config_version(FileVersions.BASELINE)
+    assert base_config_path == pathjoin(mapper.parent_mapper.sandbox_scenario_xml, CONFIG_XML)
+
+    local_config_path = mapper.get_config_version(FileVersions.LOCAL_XML)
+    assert local_config_path == pathjoin(mapper.sandbox_scenario_xml, CONFIG_XML)
+
+    next_config_path = mapper.create_next_config_version()
+    assert next_config_path == base_config_path
+
+    config_path = mapper.get_config_version(FileVersions.CURRENT)
+    assert config_path == base_config_path
+
+    config_path = mapper.get_config_version(FileVersions.NEXT)
+    assert config_path == local_config_path
+
     #
     # MCS sandbox test
     #
@@ -99,4 +123,27 @@ def test_sandbox():
                                                f"sims/s{sim_id:03}/000/{trial_num:03}",
                                                scenario, "exe/gcam.exe", normpath=True)
 
+    # Test config FileVersions
+    base_config_path = mapper.get_config_version(FileVersions.BASELINE)
+    assert base_config_path == pathjoin(mapper.parent_mapper.sandbox_scenario_xml, CONFIG_XML)
 
+    local_config_path = mapper.get_config_version(FileVersions.LOCAL_XML)
+    assert local_config_path == pathjoin(mapper.sandbox_scenario_xml, CONFIG_XML)
+
+    trial_config_path = mapper.get_config_version(FileVersions.TRIAL_XML)
+    assert trial_config_path == pathjoin(mapper.trial_xml_dir, CONFIG_XML)
+
+    curr_config_path = mapper.get_config_version(FileVersions.CURRENT)
+    assert curr_config_path == ref_config_path
+
+    next_config_path = mapper.create_next_config_version()
+    assert next_config_path == base_config_path
+
+    curr_config_path = mapper.get_config_version(FileVersions.CURRENT)
+    assert curr_config_path == base_config_path
+
+    next_config_path = mapper.create_next_config_version()
+    assert next_config_path == local_config_path
+
+    next_config_path = mapper.get_config_version(FileVersions.NEXT)
+    assert next_config_path == trial_config_path

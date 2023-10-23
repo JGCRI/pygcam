@@ -16,7 +16,7 @@ from ..error import SetupException
 from ..file_utils import pushd, removeTreeSafely, removeFileOrTree, symlink
 from ..log import getLogger
 from ..file_mapper import (AbstractFileMapper, FileMapper, getFilesToCopyAndLink,
-                           workspaceLinkOrCopy, makeDirPath)
+                           workspaceLinkOrCopy, makeDirPath, FileVersions)
 from ..tool import GcamTool
 
 from .context import McsContext
@@ -31,6 +31,10 @@ class SimFileMapper(AbstractFileMapper):
     A subclass of AbstractFileMapper that handles the slightly different structure required for
     Monte Carlo simulations. This is used by the gensim and runsim sub-commands.
     """
+    # the available file versions, ordered from most local to most generic
+    file_versions = (FileVersions.TRIAL_XML, FileVersions.LOCAL_XML,
+                     FileVersions.BASELINE, FileVersions.REFERENCE)
+
     def __init__(self, context=None, scenario=None, project_name=None,
                  scenario_group=None, sim_id=1, trial_count=None, trial_str=None,
                  param_file=None, parent=None, create_dirs=True):
@@ -70,8 +74,11 @@ class SimFileMapper(AbstractFileMapper):
         self.trial_str = trial_str
         self.trial_xml_file = None          # Deprecated? Needed by xmlScenario
 
+        param_file = (os.path.abspath(param_file) if param_file
+                      else getParamAsPath('MCS.ProjectParametersFile'))
+        self.project_parameters_file = param_file
+
         self.db_dir = getParamAsPath('MCS.SandboxDbDir')
-        self.project_parameters_file = getParamAsPath('MCS.ProjectParametersFile')
         self.project_results_file = getParamAsPath('MCS.ProjectResultsFile')
         self.run_root = getParamAsPath('MCS.SandboxRoot')
         self.sandbox_dir = getParamAsPath('MCS.SandboxDir')
@@ -126,6 +133,8 @@ class SimFileMapper(AbstractFileMapper):
             self.parent_scenario_path = (self.gcam_path_from_abs(self.parent_mapper.sandbox_scenario_dir)
                                          if self.parent_mapper else None)
 
+            self.trial_xml_dir = pathjoin(trial_dir, TRIAL_XML_NAME)
+
             self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, QRESULTS_DIRNAME)
             self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, DIFFS_DIRNAME)
             self.sandbox_output_dir = pathjoin(sbx_scen_dir, OUTPUT_DIRNAME)
@@ -160,6 +169,7 @@ class SimFileMapper(AbstractFileMapper):
         trial_dir = dirFromNumber(ctx.trialNum, prefix=self.sim_dir, create=create)
         return trial_dir
 
+    # TBD: might be deprecated
     def trial_config_path(self, scenario) -> str:
         """
         Return the path to the config.xml file in the trial-xml.
@@ -178,6 +188,7 @@ class SimFileMapper(AbstractFileMapper):
     def get_scenarios_file(self):
         return self.scenarios_file
 
+    # Deprecate?
     def scenario_config_file(self, scenario):
         """
         Returns the path to sim's copy of the config.xml file for the given scenario.
@@ -190,9 +201,11 @@ class SimFileMapper(AbstractFileMapper):
         configFile = pathjoin(dir, CONFIG_XML)
         return configFile
 
+    # Deprecate?
     def config_path(self):  # override AbstractFileMapper method
         return self.scenario_config_file(self.scenario)
 
+    # Deprecate
     def get_final_config(self, scenario=None):
 
         # if a setup step (e.g., the moirai_plugin) creates a config file in trial-xml,
@@ -210,6 +223,27 @@ class SimFileMapper(AbstractFileMapper):
         shutil.copy(parent_config_path, cfg_path)
         os.chmod(cfg_path, 0o664)
         return cfg_path
+
+    # Overrides parent method to support TRIAL_XML
+    def get_config_version(self, version: FileVersions = FileVersions.CURRENT):
+        if version == FileVersions.TRIAL_XML:
+            return pathjoin(self.trial_xml_dir, CONFIG_XML)
+        else:
+            return super().get_config_version(version=version)
+
+    # Overrides parent method to support TRIAL_XML
+    def get_file_version(self, tag: str, version: FileVersions = FileVersions.CURRENT):
+        """
+        Get the pathname of the file identified in config XML with this ``tag``.
+
+        Maybe: If ``version`` is CURRENT or NEXT (values of which are both < 0) a tuple is returned with
+        pathname and FileVersion of the file returned.
+        """
+        if version == FileVersions.TRIAL_XML:
+            pass # TBD do stuff
+        else:
+            return super().get_file_version(tag, version=version)
+
 
     def get_param_file(self):
         return self.project_parameters_file
