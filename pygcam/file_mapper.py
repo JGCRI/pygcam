@@ -6,29 +6,20 @@
 # Copyright (c) 2023 Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
 #
-from enum import Enum
 import os
-import shutil
 
 from .config import getParam, getParamAsBoolean, getParamAsPath, pathjoin, mkdirs
-from .constants import CONFIG_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME
-from .error import SetupException, PygcamException
+from .constants import CONFIG_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME, FileVersions
+from .error import SetupException, PygcamException, FileMissingError
 from .file_utils import removeTreeSafely, removeFileOrTree, copyFileOrTree, symlinkOrCopyFile
 from .gcam_path import makeDirPath, GcamPath
 from .log import getLogger
+from .XMLConfigFile import XMLConfigFile
 from .xmlScenario import XMLScenario
 
 _logger = getLogger(__name__)
 
 CONFIG_TAG = '_config_'
-
-class FileVersions(Enum):
-    CURRENT  = -2   # return the "most local" existing version of the file
-    NEXT     = -1   # the next "more local" version of the file
-    REFERENCE = 0   # the Workspace version
-    BASELINE  = 1   # the local-xml version for baseline scenario
-    LOCAL_XML = 2   # the local-xml version for current scenario
-    TRIAL_XML = 3   # the trial-xml version for current scenario
 
 
 def workspaceLinkOrCopy(src, srcWorkspace, dstSandbox, copyFiles=False):
@@ -194,19 +185,12 @@ class AbstractFileMapper(object):
     #     files = glob.glob(self.project_scenario_xml_src + '/*.xml')
     #     return files
 
-    def config_path(self):
-        """
-        Compute the name of the GCAM config file for the current scenario.
-
-        :return: (str) the pathname to the XML configuration file.
-        """
-        return self.scenario_config_path
-
-    def get_final_config(self):
-        # TBD: perhaps it's just:
-        # return self.get_pathname(version=FileVersions.CURRENT)
-
-        raise PygcamException(f"Called AbstractFileMapper's get_final_config(); subclass {self.__class__.__name__} must implement this.")
+    # Deprecated (unused)
+    # def get_final_config(self):
+    #     # TBD: perhaps it's just:
+    #     # return self.get_pathname(version=FileVersions.CURRENT)
+    #
+    #     raise PygcamException(f"Called AbstractFileMapper's get_final_config(); subclass {self.__class__.__name__} must implement this.")
 
     def copy_ref_workspace(self, force_create=False, files_to_link_param=None):
         """
@@ -348,18 +332,30 @@ class AbstractFileMapper(object):
         return cls
 
     def get_config_version(self, version: FileVersions = FileVersions.CURRENT):
+
+        if version == FileVersions.PARENT:
+            return self.parent_mapper.get_config_version(version=FileVersions.FINAL)
+
+        if version == FileVersions.FINAL:
+            version = FileVersions.LOCAL_XML
+
         if version in (FileVersions.CURRENT, FileVersions.NEXT):
             previous = self.get_config_version(self.file_versions[0]) if version == FileVersions.NEXT else None
 
             for v in self.file_versions:
                 pathname = self.get_config_version(version=v)
-                if os.path.exists(pathname):
-                    return pathname if version == FileVersions.CURRENT else previous
+                if pathname:
+                    if os.path.exists(pathname):
+                        return pathname if version == FileVersions.CURRENT else previous
 
-                previous = pathname
+                    previous = pathname
+
+            ref_file = self.get_config_version(FileVersions.REFERENCE)
+            raise FileMissingError(ref_file, "Missing reference config file")
 
         elif version == FileVersions.BASELINE:
-            return self.parent_mapper.scenario_config_path
+            pmapper = self.parent_mapper
+            return pmapper.scenario_config_path if pmapper else self.scenario_config_path
 
         elif version == FileVersions.REFERENCE:
             return getParam('GCAM.RefConfigFile')
@@ -369,50 +365,90 @@ class AbstractFileMapper(object):
 
         raise PygcamException(f"{version} of config file was not found")
 
-    def create_next_config_version(self):
+    def copy_config_version(self, old: FileVersions, new: FileVersions):
         from .file_utils import filecopy
 
-        curr_path = self.get_config_version(FileVersions.CURRENT)
-        next_path = self.get_config_version(FileVersions.NEXT)
-        # curr and next are the same for LOCAL_XML for non-MCS pr TRIAL_XML in MCS
-        if curr_path != next_path:
-            mkdirs(os.path.dirname(next_path))
-            filecopy(curr_path, next_path)
+        old_path = self.get_config_version(old)
+        new_path = self.get_config_version(new)
+        # curr and next are the same for LOCAL_XML for non-MCS or TRIAL_XML in MCS
+        if old_path != new_path:
+            _logger.info(f"copy_config_version: copying '{old_path}' to '{new_path}'")
+            mkdirs(os.path.dirname(new_path))
+            filecopy(old_path, new_path)
 
-        return next_path
+        return new_path
+
+    def create_next_config_version(self):
+        src = FileVersions.PARENT if not self.is_baseline else FileVersions.CURRENT
+        return self.copy_config_version(src, FileVersions.NEXT)
+
+    def create_final_config_version(self):
+        src = FileVersions.REFERENCE if self.is_baseline else FileVersions.PARENT
+        return self.copy_config_version(src, FileVersions.FINAL)
+
+    def _get_file_version(self, tag: str, version: FileVersions):
+        if version not in self.file_versions:
+            raise PygcamException(f"get_file_version: unrecognized version {version}")
+
+        if version == FileVersions.REFERENCE:
+            # Reference file location is relative to reference "exe" dir
+            exe_dir = self.ref_workspace_exe_dir
+
+        elif version == FileVersions.BASELINE:
+            exe_dir = self.sandbox_exe_dir if self.is_baseline else self.parent_mapper.sandbox_exe_dir
+
+        elif version == FileVersions.LOCAL_XML:
+            exe_dir = self.sandbox_exe_dir
+
+        else:
+            # should never occur
+            raise PygcamException("get_file_version failed to check all possible version types")
+
+        config_path = self.get_config_version(version=version)
+        xml_cfg = XMLConfigFile.get_instance(config_path)
+        rel_path = xml_cfg.get_component_pathname(tag)
+        path = pathjoin(exe_dir, rel_path, normpath=True)
+        return path
 
     def get_file_version(self, tag: str, version: FileVersions = FileVersions.CURRENT):
         """
         Get the pathname of the file identified in config XML with this ``tag``.
         """
-        config_path = self.get_config_version(version)
+        # config_path = self.get_config_version(version)
         # TBD: cache/load the config_path for later lookup
 
         if version in (FileVersions.CURRENT, FileVersions.NEXT):
-            previous = self.get_file_version(tag, self.file_versions[0]) if version == FileVersions.NEXT else None
+            previous = (self.get_file_version(tag, self.file_versions[0])
+                        if version == FileVersions.NEXT else None)
 
-            for version in self.file_versions:
-                pathname = self.get_file_version(tag, version=version)
+            for v in self.file_versions:
+                # if self.is_baseline and v == FileVersions.BASELINE:
+                #     continue    # skip the BASELINE version for baselines
+
+                pathname = self._get_file_version(tag, version=v)
                 if os.path.exists(pathname):
                     return pathname if version == FileVersions.CURRENT else previous
 
                 previous = pathname
 
-        # TBD: combine these two branches using different exe path?
-        elif version == FileVersions.REFERENCE:
-            # lookup tag in config_path, return path relative to REFERENCE exe
-            pass
-            # return pathname
+            ref_file = self._get_file_version(tag, FileVersions.REFERENCE)
+            raise FileMissingError(ref_file, "Missing reference file")
 
-        elif version == FileVersions.LOCAL_XML:
-            # lookup tag in config_path, return path relative to LOCAL_XML
-            pass
-            # return pathname
+        else:
+            return self._get_file_version(tag, version)
 
-        raise PygcamException(f"{version} of file with tag '{tag}' was not found")
+    def create_next_file_version(self, tag: str):
+        from .file_utils import filecopy
 
+        curr_path = self.get_file_version(tag, version=FileVersions.CURRENT)
+        next_path = self.get_file_version(tag, version=FileVersions.NEXT)
+        # curr and next are the same for LOCAL_XML for non-MCS or TRIAL_XML in MCS
+        if curr_path != next_path:
+            mkdirs(os.path.dirname(next_path))
+            _logger.info(f"create_next_file_version: copying '{curr_path}' to '{next_path}'")
+            filecopy(curr_path, next_path)
 
-
+        return next_path
 
 class FileMapper(AbstractFileMapper):
     def __init__(self, scenario, project_name=None,
@@ -468,16 +504,17 @@ class FileMapper(AbstractFileMapper):
                                       else makeDirPath(self.sandbox_local_xml, self.baseline,
                                                        create=create_dirs))
 
-        # In non-MCS Sandbox, config.xml is in '.../project/group/local-xml/scenario/config.xml'
-        # In SimFileMapper, update_dependent_paths() relocates this to "sims/s{sim_id}/local-xml/config.xml"
+        # In non-MCS Sandbox, config.xml is in '.../project/{group}/local-xml/{scenario}/config.xml'
+        # In SimFileMapper, update_dependent_paths() relocates this to "sims/s{sim_id}/local-xml/{scenario}/config.xml"
         self.scenario_config_path = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
 
-    def get_final_config(self):
-        pmapper = self.parent_mapper
-        parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
-
-        cfg_path = self.config_path()
-        _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
-        shutil.copy(parent_config_path, cfg_path)
-        os.chmod(cfg_path, 0o664)
-        return cfg_path
+    # Deprecated (unused)
+    # def get_final_config(self):
+    #     pmapper = self.parent_mapper
+    #     parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
+    #
+    #     cfg_path = self.config_path()
+    #     _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
+    #     shutil.copy(parent_config_path, cfg_path)
+    #     os.chmod(cfg_path, 0o664)
+    #     return cfg_path

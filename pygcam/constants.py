@@ -88,3 +88,13 @@ GCAM_USA_STATES = [
     'WY'
 ]
 
+
+class FileVersions(Enum):
+    FINAL    = -4   # => LOCAL_XML for non-MCS; TRIAL_XML for MCS
+    PARENT   = -3   # parent's FINAL
+    CURRENT  = -2   # return the "most local" existing version of the file
+    NEXT     = -1   # the next "more local" version of the file
+    REFERENCE = 0   # the Workspace version
+    BASELINE  = 1   # the local-xml version for baseline scenario
+    LOCAL_XML = 2   # the local-xml version for current scenario
+    TRIAL_XML = 3   # the trial-xml version for current scenario

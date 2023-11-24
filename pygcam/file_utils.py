@@ -219,14 +219,15 @@ def rename(direc, src, dest):
 
 
 def filecopy(src, dst, removeDst=True):
-    'Copy src file to dst, optionally removing dst first to avoid writing through symlinks'
-    from shutil import copy2        # equivalent to "cp -p"
-
-    _logger.debug("copyfile(%s,%s,%s)" % (src, dst, removeDst))
+    """
+    Copy src file to dst, optionally removing dst first to avoid writing through symlinks
+    """
+    _logger.debug("copyfile(%s, %s, removeDst=%s)" % (src, dst, removeDst))
     if removeDst and os.path.islink(dst):
         os.remove(dst)
 
-    copy2(src, dst)
+    # equivalent to "cp -p"
+    shutil.copy2(src, dst)
 
 
 def copyfiles(files, dstdir, removeDst=True):

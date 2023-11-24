@@ -4,9 +4,10 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import shutil
 
-from ..constants import TRIAL_XML_NAME
+from ..constants import TRIAL_XML_NAME, FileVersions
 from ..log import getLogger
 from ..file_utils import pushd
+from ..XMLConfigFile import XMLConfigFile
 from .sim_file_mapper import SimFileMapper
 from .util import parseTrialString, parseMcsDir
 
@@ -35,7 +36,7 @@ def load_R_code(code_str):
 
 class GcamDataSystem(object):
 
-    def __init__(self, mapper : SimFileMapper, scenario, renv_dir=None, xml_modifier=None):
+    def __init__(self, mapper : SimFileMapper, renv_dir=None, xml_modifier=None):
         """
         Class to manage running the GCAM data system in Monte Carlo Simulations.
         Designed to be subclassed with key methods handling application-specific
@@ -48,7 +49,6 @@ class GcamDataSystem(object):
             "driver_drake". Default is "__drake".
         """
         self.mapper = mapper
-        self.scenario = scenario
         self.renv_dir = renv_dir
         self.xml_modifier = xml_modifier or DEFAULT_MODIFIER
 
@@ -224,12 +224,12 @@ class GcamDataSystem(object):
             rel_dir = Path('../..', trial_rel_xml)
             self.update_scenario_config(rel_dir, abs_paths)
 
-    def update_scenario_config(self, rel_dir, abs_paths):
+    def update_scenario_config(self, rel_dir: Path, abs_paths):
         """
         Update the configuration XML file for the ``simId`` and ``scenario`` found in
         the saved ``mapper``,  substituting the path to the modified XML for the file
-        ending with the same basename. This, of course, assumes basenames within the
-        config file are unique.
+        ending with the same basename. This assumes basenames within the config file
+        are unique.
 
         :param rel_dir: (Path) the directory that holds the modified XML files,
             relative to the "exe" directory for the given scenario, suitable
@@ -238,22 +238,19 @@ class GcamDataSystem(object):
             files.
         :return: none
         """
-        from pygcam.mcs.XMLConfigFile import XMLConfigFile
+        mapper = self.mapper
 
-        # If prior version of trial-dir/{scenario}/config.xml exists, delete it
-        # so we read from the reference version.
-        config_path = self.mapper.trial_config_path(self.scenario)
-        if os.path.exists(config_path):
-            _logger.debug(f"gcamdata: deleting old config file '{config_path}'")
-            os.remove(config_path)
+        # We read from local-xml but write to trial-xml
+        local_cfg_path = mapper.get_config_version(version=FileVersions.LOCAL_XML)
 
-        scen_config = XMLConfigFile.configForScenario(self.mapper, self.scenario)
-        scen_config_path = scen_config.getFilename()
-        _logger.debug(f"gcamdata: reading config file '{scen_config_path}'")
+        _logger.debug(f"gcamdata: reading config file '{local_cfg_path}'")
 
-        # extract tuples of (file_tag, file_path) for all XML components
-        file_refs = scen_config.tree.xpath('//ScenarioComponents/Value')
-        file_dict = {os.path.basename(elt.text): (elt.attrib['name'], elt.text) for elt in file_refs}
+        # TBD: maybe don't use cached copy to avoid polluting other trials?
+        #scen_config = XMLConfigFile.get_instance(local_cfg_path)
+        scen_config = XMLConfigFile(local_cfg_path) # bypass cache code
+
+        # dict of file_basename => (tag, rel_path) for all ScenarioComponent elements
+        file_dict = scen_config.get_component_dict()
 
         # update the config file, which, for each scenario, is shared across trials
         for abs_path in abs_paths:
@@ -262,16 +259,17 @@ class GcamDataSystem(object):
                 tag, rel_path = file_dict[basename]
             except KeyError:
                 _logger.warning(
-                    f"Ignoring file with basename '{basename}': not found in ref config file '{scen_config_path}'")
+                    f"Ignoring file with basename '{basename}': not found in ref config file '{local_cfg_path}'")
                 continue
 
             new_path = rel_dir / basename
             _logger.debug(f"gcamdata: updating config component '{tag}' to path '{new_path}'")
 
-            scen_config.updateComponentPathname(tag, new_path)
+            scen_config.update_component_pathname(tag, new_path)
 
-        # Write this to trial-dir since each trial will be doing the same thing
-        scen_config.write(path=config_path)
+        # Write this to trial-xml dir since each trial will be doing the same thing
+        trial_config_path = mapper.get_config_version(version=FileVersions.TRIAL_XML)
+        scen_config.write(path=trial_config_path)
 
     def move_without_stem_modifier(self, src_paths, dst_dir):
         modifier_len = len(self.xml_modifier)

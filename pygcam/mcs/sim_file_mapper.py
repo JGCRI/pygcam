@@ -5,19 +5,19 @@
 # See the https://opensource.org/licenses/MIT for license details.
 #
 import os
-import shutil
 from typing import Union
 
 from ..config import getParam, getParamAsBoolean, getParamAsPath, setParam, mkdirs, pathjoin
 from ..constants import (McsMode, LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML, CONFIG_XML,
                          RESULTS_XML, TRIAL_XML_NAME, QRESULTS_DIRNAME, DIFFS_DIRNAME,
-                         OUTPUT_DIRNAME)
+                         OUTPUT_DIRNAME, FileVersions)
 from ..error import SetupException
 from ..file_utils import pushd, removeTreeSafely, removeFileOrTree, symlink
 from ..log import getLogger
 from ..file_mapper import (AbstractFileMapper, FileMapper, getFilesToCopyAndLink,
-                           workspaceLinkOrCopy, makeDirPath, FileVersions)
+                           workspaceLinkOrCopy, makeDirPath)
 from ..tool import GcamTool
+from ..XMLConfigFile import XMLConfigFile
 
 from .context import McsContext
 
@@ -122,6 +122,10 @@ class SimFileMapper(AbstractFileMapper):
             self.sandbox_scenario_xml = self.sandbox_dynamic_xml = None
             self.scenario_config_path = self.scenario_gcam_xml_dir = None
 
+        self._set_trial_dependent_ivars(scenario, create_dirs=create_dirs)
+
+
+    def _set_trial_dependent_ivars(self, scenario, create_dirs=True):
         # Reset dependent pathnames stored by FileMapper superclass
         trial_dir = self.trial_dir(create=True)
 
@@ -169,15 +173,6 @@ class SimFileMapper(AbstractFileMapper):
         trial_dir = dirFromNumber(ctx.trialNum, prefix=self.sim_dir, create=create)
         return trial_dir
 
-    # TBD: might be deprecated
-    def trial_config_path(self, scenario) -> str:
-        """
-        Return the path to the config.xml file in the trial-xml.
-        """
-        trial_dir = self.trial_dir()
-        path = pathjoin(trial_dir, TRIAL_XML_NAME, scenario, CONFIG_XML)
-        return path
-
     def get_sim_local_xml(self):
         return self.sim_local_xml
 
@@ -188,7 +183,16 @@ class SimFileMapper(AbstractFileMapper):
     def get_scenarios_file(self):
         return self.scenarios_file
 
-    # Deprecate?
+    # TBD: might be deprecated in favor of get_config_version?
+    def trial_config_path(self, scenario) -> str:
+        """
+        Return the path to the config.xml file in the trial-xml.
+        """
+        trial_dir = self.trial_dir()
+        path = pathjoin(trial_dir, TRIAL_XML_NAME, scenario, CONFIG_XML)
+        return path
+
+    # Deprecated in favor of get_config_version?
     def scenario_config_file(self, scenario):
         """
         Returns the path to sim's copy of the config.xml file for the given scenario.
@@ -201,46 +205,53 @@ class SimFileMapper(AbstractFileMapper):
         configFile = pathjoin(dir, CONFIG_XML)
         return configFile
 
-    # Deprecate?
-    def config_path(self):  # override AbstractFileMapper method
-        return self.scenario_config_file(self.scenario)
-
-    # Deprecate
-    def get_final_config(self, scenario=None):
-
-        # if a setup step (e.g., the moirai_plugin) creates a config file in trial-xml,
-        # we use that rather than copying from a parent; the trial-xml config already
-        # was copied from that.
-        trial_cfg = self.trial_config_path(scenario or self.scenario)
-        if os.path.isfile(trial_cfg):
-            return trial_cfg            # no copy required
-
-        pmapper = self.parent_mapper
-        parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
-
-        cfg_path = self.config_path()
-        _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
-        shutil.copy(parent_config_path, cfg_path)
-        os.chmod(cfg_path, 0o664)
-        return cfg_path
+    # Deprecated (unused)
+    # def get_final_config(self, scenario=None):
+    #
+    #     # if a setup step (e.g., the moirai_plugin) creates a config file in trial-xml,
+    #     # we use that rather than copying from a parent; the trial-xml config already
+    #     # was copied from that.
+    #     trial_cfg = self.trial_config_path(scenario or self.scenario)
+    #     if os.path.isfile(trial_cfg):
+    #         return trial_cfg            # no copy required
+    #
+    #     pmapper = self.parent_mapper
+    #     parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
+    #
+    #     cfg_path = self.config_path()
+    #     _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
+    #     shutil.copy(parent_config_path, cfg_path)
+    #     os.chmod(cfg_path, 0o664)
+    #     return cfg_path
 
     # Overrides parent method to support TRIAL_XML
     def get_config_version(self, version: FileVersions = FileVersions.CURRENT):
-        if version == FileVersions.TRIAL_XML:
-            return pathjoin(self.trial_xml_dir, CONFIG_XML)
+        if version == FileVersions.FINAL:
+            version = FileVersions.TRIAL_XML
+
+        if not self.is_baseline and version == FileVersions.BASELINE:
+            pmapper = self.parent_mapper
+            cfg_path = pathjoin(pmapper.trial_xml_dir, pmapper.scenario, CONFIG_XML)
+
+        elif version == FileVersions.TRIAL_XML:
+            cfg_path = pathjoin(self.trial_xml_dir, self.scenario, CONFIG_XML)
+
         else:
-            return super().get_config_version(version=version)
+            cfg_path = super().get_config_version(version=version)
+
+        return cfg_path
 
     # Overrides parent method to support TRIAL_XML
     def get_file_version(self, tag: str, version: FileVersions = FileVersions.CURRENT):
         """
         Get the pathname of the file identified in config XML with this ``tag``.
-
-        Maybe: If ``version`` is CURRENT or NEXT (values of which are both < 0) a tuple is returned with
-        pathname and FileVersion of the file returned.
         """
         if version == FileVersions.TRIAL_XML:
-            pass # TBD do stuff
+            exe_dir = self.sandbox_exe_dir
+            # TBD: test this approach:
+            cfg = XMLConfigFile.get_instance(self.scenario_config_path)
+            rel_path = cfg.get_component_pathname(tag)
+            return pathjoin(exe_dir, rel_path, normpath=True)
         else:
             return super().get_file_version(tag, version=version)
 
@@ -444,7 +455,6 @@ class SimFileMapper(AbstractFileMapper):
         '''
         Save the trial DataFrame in the file 'trialData.csv' in the simDir.
         '''
-        import pandas as pd
 
         data_file = self.trial_data_file
 

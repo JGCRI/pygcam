@@ -25,15 +25,16 @@ import shutil
 from lxml import etree as ET
 
 from .config import getParam, getParamAsBoolean, unixPath, pathjoin, mkdirs
-from .constants import LOCAL_XML_NAME, McsMode
+from .constants import LOCAL_XML_NAME, McsMode, FileVersions
 from .error import SetupException, PygcamException
 from .file_utils import (pushd, symlinkOrCopyFile, removeTreeSafely,
-                         removeFileOrTree, copyIfMissing)
+                         removeFileOrTree, copyIfMissing, deleteFile)
 from .log import getLogger
 from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
 from .gcam_path import GcamPath, gcam_path
 from .utils import (coercible, printSeries, splitAndStrip, getRegionList)
+from .XMLConfigFile import XMLConfigFile
 from .xml_edit import CachedFile, xmlSel, xmlIns, xmlEdit, expandYearRanges
 
 _logger = getLogger(__name__)
@@ -131,7 +132,7 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to link in %s", unixPath(scenDir, abspath=True))
 
-        CachedFile.decacheAll()     # TBD: this shouldn't be necessary
+        CachedFile.save_all_edits()     # TBD: shouldn't be necessary
 
     def setupStatic(self, args):
         """
@@ -144,6 +145,9 @@ class XMLEditor(object):
             sub-command.
         :return: none
         """
+        if not args.run_config_setup:
+            return
+
         _logger.info("Generating %s for scenario %s", LOCAL_XML_NAME, self.name)
         mapper = self.mapper
 
@@ -160,7 +164,14 @@ class XMLEditor(object):
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
-        self.config_path = mapper.get_config_version()  # get the "most local" config file
+        # remove old local-xml/{scenario}/config.xml or trial-xml/{scenario}/config.xml
+        self.config_path = config_path = mapper.get_config_version(version=FileVersions.FINAL)
+        deleteFile(config_path) # ignores error, e.g., if file doesn't exist
+
+        # recreate config.xml from prior "version"
+        next_config_path = mapper.create_final_config_version()
+        if config_path != next_config_path:
+            raise PygcamException(f"Expected next config version to be '{config_path}' but got '{next_config_path}'")
 
         # set the scenario name
         self.updateConfigComponent('Strings', 'scenarioName', self.name)
@@ -185,7 +196,7 @@ class XMLEditor(object):
         if getParam('GCAM.WriteRestartFiles'):
             self.updateConfigComponent('Files', 'restart', value=None,
                                        writeOutput=getParamAsBoolean('GCAM.WriteRestartFiles'))
-        CachedFile.decacheAll()
+        CachedFile.save_all_edits()
 
     def setup(self, args):
         """
@@ -198,20 +209,17 @@ class XMLEditor(object):
         _logger.debug('Called XMLEditor.setup(%s)', args)
         self.setupArgs = args   # some subclasses/functions might want access to these
 
-        if not args.dynamicOnly:
+        if not args.dynamic_only:
             self.setupStatic(args)
 
-        if not args.staticOnly:
+        if not args.static_only:
             self.setupDynamic(args)
 
-        CachedFile.decacheAll()
-
-    def cfgPath(self):
-        return self.config_path
+        CachedFile.save_all_edits()
 
     def cachedConfig(self, edited=None):
-        path = self.cfgPath()
-        item = CachedFile.getFile(path)
+        # item = XMLConfigFile.get_instance(self.config_path)
+        item = CachedFile.getFile(self.config_path)
 
         if edited is not None:
             item.edited = edited
@@ -219,7 +227,7 @@ class XMLEditor(object):
         return item
 
     def componentPath(self, tag, configPath=None):
-        configPath = configPath or self.cfgPath()
+        configPath = configPath or self.config_path
         pathname = xmlSel(configPath, f'//Value[@name="{tag}"]', asText=True)
 
         if pathname is None:
@@ -227,7 +235,8 @@ class XMLEditor(object):
 
         return pathname
 
-    def getLocalCopy(self, configTag):
+    # TBD: update to use mapper's get_config_version() and create_next_config_version()
+    def getLocalCopy(self, configTag) -> GcamPath:
         """
         Get the filename for the most local version (in terms of scenario hierarchy)
         of the XML file identified in the configuration file with ``configTag``, and
@@ -252,14 +261,19 @@ class XMLEditor(object):
         # TBD: test this. Not updating ref config.xml to point to local copy.
         if not os.path.lexists(srcAbsPath):
             _logger.debug("Didn't find %s; checking reference files", srcAbsPath)
+
+            next_file_path = mapper.create_next_file_version(configTag)
+            if not next_file_path == srcAbsPath:
+                raise PygcamException(f"Expected next_file_path ('{next_file_path}' to be '{srcAbsPath}'")
+
             # look to sandbox workspace if not found locally
-            sbxWorkspace = getParam('GCAM.SandboxWorkspace')
-            refConfigFile = getParam('GCAM.RefConfigFile')  # main RefWorkspace, not SandboxWorkspace
+            # sbxWorkspace = getParam('GCAM.SandboxWorkspace')
+            # refConfigFile = getParam('GCAM.RefConfigFile')  # main RefWorkspace, not SandboxWorkspace
 
-            assert mapper.ref_workspace == sbxWorkspace        # TBD: remove after testing
+            config_path = mapper.get_file_version(configTag)
 
-            pathname = self.componentPath(configTag, configPath=refConfigFile)
-            srcAbsPath = pathjoin(sbxWorkspace, 'exe', pathname, abspath=True)
+            pathname = self.componentPath(configTag, configPath=config_path)
+            srcAbsPath = pathjoin(mapper.sandbox_exe_dir, pathname, abspath=True)
 
             srcPath = GcamPath(mapper.sandbox_workspace_exe_dir, pathname)
 
@@ -292,12 +306,13 @@ class XMLEditor(object):
         xmlEdit(xmlFile, [(xpath, str(value))])
         self.updateScenarioComponent(tag, xmlFile)
 
-    def updateConfigComponent(self, group, name, value=None, writeOutput=None, appendScenarioName=None):
+    def updateConfigComponent(self, group, name, value=None,
+                              writeOutput=None, appendScenarioName=None):
         """
         Update the value of an arbitrary element in GCAM's configuration.xml file, i.e.,
         ``<{group}><Value name="{name}>{value}</Value></{group}>``
 
-        Optional args are used only for ``<Files>`` group, which has entries like
+        Optional args are used only for ``<Files>`` group only, which has entries like
         ``<Value write-output="1" append-scenario-name="0" name="outFileName">outFile.csv</Value>``
         Values for the optional args can be passed as any of ``[0, 1, "0", "1", True, False]``.
 
@@ -313,6 +328,7 @@ class XMLEditor(object):
         textArgs = f"name='{name}'"
         if writeOutput is not None:
             textArgs += " write-output='%d'" % (int(writeOutput))
+
         if appendScenarioName is not None:
             textArgs += " append-scenario-name='%d'" % (int(appendScenarioName))
 
@@ -479,7 +495,7 @@ class XMLEditor(object):
         valueNode = elt.find(f"Value[@name='{name}']")
         if valueNode is not None:
             elt.remove(valueNode)
-            item.setEdited()
+            item.bset_edited()
 
     # Deprecated? Appears to be unused.
     def renameScenarioComponent(self, name, xmlfile):
@@ -608,7 +624,6 @@ class XMLEditor(object):
             self.deleteScenarioComponent(policyTag)
             self.deleteScenarioComponent(constraintTag)
 
-    # TBD: recent versions of GCAM allow stop-year to be set directly; simplify this
     @callableMethod
     def setStopPeriod(self, yearOrPeriod):
         raise PygcamException("The callableMethod 'setStopPeriod' is deprecated. Please use 'setStopYear' instead.")

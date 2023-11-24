@@ -2,8 +2,8 @@ import os
 import pytest
 
 from pygcam.config import setSection, getParam, pathjoin, mkdirs
-from pygcam.constants import LOCAL_XML_NAME, CONFIG_XML
-from pygcam.file_mapper import FileMapper, FileVersions
+from pygcam.constants import LOCAL_XML_NAME, CONFIG_XML, FileVersions
+from pygcam.file_mapper import FileMapper
 from pygcam.file_utils import removeTreeSafely
 from pygcam.gcam_path import makeDirPath, GcamPath, gcam_path
 from pygcam.mcs.context import McsContext

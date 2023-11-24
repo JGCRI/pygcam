@@ -3,10 +3,10 @@
 import os
 from lxml import etree as ET
 
-from ..config import mkdirs
-from ..log import getLogger
-from ..XMLFile import XMLFile
-from .error import PygcamMcsUserError
+from pygcam.config import mkdirs
+from pygcam.log import getLogger
+from pygcam.XMLFile import XMLFile
+from pygcam.mcs.error import PygcamMcsUserError
 
 _logger = getLogger(__name__)
 
@@ -17,6 +17,12 @@ STRINGS_GROUP = 'Strings'
 INTS_GROUP    = 'Ints'
 BOOLS_GROUP   = 'Bools'
 DOUBLES_GROUP = 'Doubles'
+
+# TBD: Break out CachedFile as a separate class (from xml_edit.py) as CachedXML?
+#      Responsibility is loading, parsing, caching, writing, emptying cache. Not editing?
+#      Make class XmlConfigFile(CachedXML)?
+#      Any need for separate instance dict for config XMLs?
+#
 
 # TBD: Note that the functions here seem to duplicate some of XMLEditor.
 #  This class is used only in XMLParameterFile.py and gcamdata.py, i.e., for MCS only.
@@ -37,11 +43,13 @@ class XMLConfigFile(XMLFile):
         # Default writePath is where we were read from, but can be changed.
         self.writePath = config_path
 
+        self.dirty = False
+
         super(XMLConfigFile, self).__init__(config_path)
 
     @classmethod
     def decache(cls):
-        cls.instances = {}
+        cls.instances.clear()
 
     @classmethod
     def get_instance(cls, cfg_path):
@@ -95,6 +103,7 @@ class XMLConfigFile(XMLFile):
 
         _logger.debug("XMLConfigFile writing '%s'", path)
         self.tree.write(path, xml_declaration=True, pretty_print=True)
+        self.dirty = False
 
     def get_config_element(self, name, group):
         '''
@@ -138,7 +147,10 @@ class XMLConfigFile(XMLFile):
         if newValue:
             elt.text = str(newValue)    # in case it was passed as numeric or bool
 
+        self.dirty = True
+
     # TBD: used only by unused addComponent, below
+    # TBD: Should delete before adding as in xmlEditor
     def add_config_element(self, name, group, value):
         '''
         Append a new element with the given name and value to the given group.
@@ -146,6 +158,7 @@ class XMLConfigFile(XMLFile):
         groupElt = self.get_config_group(group)
         elt = ET.SubElement(groupElt, 'Value', name=name)
         elt.text = value
+        self.dirty = True
         return elt
 
     # TBD: used only by unused delete_component, below
@@ -159,6 +172,7 @@ class XMLConfigFile(XMLFile):
             raise PygcamMcsUserError(f'delete_config_element: element "{name}" was not found in group {group}')
 
         groupElt.remove(elt)
+        self.dirty = True
 
     def get_component_pathname(self, name):
         pathname = self.get_config_value(name, COMPONENTS_GROUP)
@@ -187,6 +201,7 @@ class XMLConfigFile(XMLFile):
         node.set('name', name)
         node.text = pathname
         groupElt.insert(index, node)
+        self.dirty = True
 
     # TBD: unused
     def delete_component(self, name):

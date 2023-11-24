@@ -12,7 +12,7 @@ import os
 import sys
 
 from .config import getParam, getParamAsPath, pathjoin
-from .constants import LOCAL_XML_NAME, McsMode
+from .constants import TRIAL_XML_NAME, McsMode
 from .error import PygcamException, SetupException
 from .log import getLogger
 from .utils import getBooleanXML, splitAndStrip
@@ -167,9 +167,9 @@ class XMLScenario(object):
             those that subclass ConfigEditor or are class "If". If dynamic
             is True, this parameter is ignored.
         :param runNonConfigSetup: (bool) if True and dynamic is False,
-            run only static actions that DO NOT modify scenario components, i.e.,
-            those that do not subclass ConfigEditor. If dynamic is True, this
-            parameter is ignored.
+            run only static actions that DO NOT modify config file scenario
+            components, i.e., those that do not subclass ConfigEditor. If
+            dynamic is True, this parameter is ignored.
         :return: none
         """
         self.editor = editor
@@ -177,6 +177,14 @@ class XMLScenario(object):
 
         group = self.getGroup(mapper.scenario_group)
         scenario = group.getFinalScenario(mapper.scenario or mapper.baseline)
+
+        # TBD: should this be done in xmlEditor's setupStatic()?
+        # if runConfigSetup:
+        #     # Copy reference config (if baseline) or baseline config (if non-baseline) to local-xml
+        #     src_version = FileVersions.REFERENCE if mapper.is_baseline else FileVersions.BASELINE
+        #     src_cfg = mapper.get_config_version(version=src_version)
+        #     dst_cfg = mapper.get_config_version(version=FileVersions.LOCAL_XML)
+        #     filecopy(src_cfg, dst_cfg)
 
         _logger.debug('Running %s setup for scenario %s',
                       'dynamic' if dynamic else 'static', scenario.name)
@@ -380,9 +388,9 @@ class ConfigAction(ConfigActionBase):
 
 class ConfigEditor(ConfigAction):
     """
-    This exists just to easily identify actions that merely edit the config file,
-    so these can be run before running the gcam data system, and other functions
-    run afterwards.
+    Subclasses of ``ConfigEditor`` are actions that merely edit the config file.
+    These can be run before running the gcam data system, and other functions that
+    modify other XML input files are run afterward.
     """
     pass
 
@@ -530,19 +538,26 @@ def createXmlEditorSubclass(setupFile):
             super().__init__(mapper, cleanXML=cleanXML)
             self.paramFile = None
 
+            # TBD: push this directory munging into SimFileMapper
             # Read shocks from mcsValues.xml if present
             if mapper.mcs_mode == McsMode.TRIAL:
-                # TBD: use FileMapper
-                # ../../trial-xml/local-xml/base-0/mcsValues.xml
-                self.trial_xml_abs = pathjoin(mapper.sandbox_local_xml, 'trial-xml', normpath=True)
-                self.trial_xml_rel = pathjoin('../..', 'trial-xml')
+                self.trial_xml_abs = mapper.trial_xml_dir
+                self.trial_xml_rel = pathjoin('../..', TRIAL_XML_NAME)
 
-                scen_name = mapper.parent if mapper.parent else self.name
-                self.paramFile = pathjoin(self.trial_xml_abs, LOCAL_XML_NAME, mapper.scenario_group,
-                                          scen_name, MCSVALUES_FILE, normpath=True)
+                parent_name = mapper.parent
 
-            self.directoryDict = {'scenarioDir': self.scenario_dir.rel,
-                                  'baselineDir': self.baseline_dir.rel if self.baseline_dir else None}
+                mcs_values_dir = pathjoin(self.trial_xml_abs, parent_name or mapper.scenario)
+                self.paramFile = pathjoin(mcs_values_dir, MCSVALUES_FILE, normpath=True)
+
+                scenario_dir = mapper.trial_scenario_dir()
+                baseline_dir = mapper.trial_scenario_dir(parent_name) if parent_name else None
+
+            else:
+                scenario_dir = self.scenario_dir.rel
+                baseline_dir = self.baseline_dir.rel if self.baseline_dir else None
+
+            self.directoryDict = {'scenarioDir': scenario_dir,
+                                  'baselineDir': baseline_dir}
 
         def setupDynamic(self, args):
             """"
@@ -583,7 +598,7 @@ def createXmlEditorSubclass(setupFile):
             #         if not os.path.lexists(dst):
             #             symlinkOrCopyFile(src, dst)
 
-            CachedFile.decacheAll()
+            CachedFile.save_all_edits()
 
         def setupStatic(self, args):
             self.groupName = args.group
@@ -621,12 +636,12 @@ def createXmlEditorSubclass(setupFile):
 
                 directoryDict['baselineDir'] = self.baseline_dir_rel = mapper.parent_scenario_path.rel
 
-            super().setupStatic(args)
+            super().setupStatic(args)   # copies fixed XML files, if any, and sets up basic config file
 
             scenarioSetup.run(self, directoryDict, dynamic=False,
-                              runConfigSetup=args.runConfigSetup == 'yes',
-                              runNonConfigSetup=args.runNonConfigSetup == 'yes')
-            CachedFile.decacheAll()
+                              runConfigSetup=args.run_config_setup,
+                              runNonConfigSetup=args.run_non_config_setup)
+            CachedFile.save_all_edits()
 
     return XmlEditorSubclass
 

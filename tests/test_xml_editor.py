@@ -2,7 +2,7 @@ import pytest
 from pygcam.mcs.error import PygcamMcsUserError
 from pygcam.sectorEditors import extractStubTechnology
 from pygcam.xml_edit import xmlSel, xmlEdit
-from pygcam.mcs.XMLConfigFile import XMLConfigFile, INTS_GROUP
+from pygcam.XMLConfigFile import XMLConfigFile, INTS_GROUP
 
 cfg_path = './data/xml/configuration_ref.xml'
 

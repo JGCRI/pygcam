@@ -6,6 +6,8 @@
 .. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import argparse
+
 from ..log import getLogger
 from ..subcommand import SubcommandABC, clean_help, Deprecate
 from ..constants import McsMode
@@ -24,20 +26,22 @@ class SetupCommand(SubcommandABC):
     def addArgs(self, parser):
         defaultYears = '2015-2100'
 
-        yes_or_no = ['yes', 'no']
-
         group1 = parser.add_mutually_exclusive_group()  # --dynamicOnly, --staticOnly
         group2 = parser.add_mutually_exclusive_group()  # --modulePath, --moduleSpec
 
-        parser.add_argument('--createSandbox', choices=yes_or_no, default='yes',
+        parser.add_argument('--create-sandbox', action=argparse.BooleanOptionalAction, default=True,
                             help='''Whether to create the run-time sandbox directory from the reference workspace.
-                                    Default is "yes".''')
+                                    Default is to create sandbox.''')
+
+        # parser.add_argument('--createSandbox', choices=yes_or_no, default='yes',
+        #                     help='''Whether to create the run-time sandbox directory from the reference workspace.
+        #                             Default is "yes".''')
 
         # mutually exclusive with --staticOnly
-        group1.add_argument('-d', '--dynamicOnly', action='store_true',
+        group1.add_argument('-d', '--dynamic-only', action='store_true',
                             help=clean_help('''Generate only dynamic XML for dyn-xml: don't create static XML.'''))
 
-        parser.add_argument('-f', '--forceCreate', action='store_true',
+        parser.add_argument('-f', '--force-create', action='store_true',
                             help=clean_help('''Re-create the sandbox, even if it already exists. 
                             Implies --createSandbox.'''))
 
@@ -64,26 +68,27 @@ class SetupCommand(SubcommandABC):
         parser.add_argument('-R', '--resultsDir',
                             help=clean_help('The parent directory holding the GCAM output workspaces'))
 
-        parser.add_argument('--runScenarioSetup', choices=yes_or_no, default='yes',
+        parser.add_argument('--run-scenario-setup', action=argparse.BooleanOptionalAction, default=True,
                             help=clean_help('''Whether to run the commands in scenarios.xml for the current scenario.
-                            Default is "yes".'''))
+                            Default is to run scenario setup.'''))
 
         # TBD: Eventually change this to -S for consistency (though -S is deprecated, below.)
         parser.add_argument('-s', '--scenario', required=True,
                             help=clean_help('''Identify the scenario to run.'''))
 
-        parser.add_argument('--runConfigSetup', choices=yes_or_no, default='yes',
+        parser.add_argument('--run-config-setup', action=argparse.BooleanOptionalAction, default=True,
                             help=clean_help('''Whether to run only scenario setup steps that add/insert/delete/replace 
                                 elements in the <ScenarioComponents> section of the GCAM config XML file.
-                                Default is "yes"'''))
+                                Default is to run config setup.'''))
 
-        parser.add_argument('--runNonConfigSetup', choices=yes_or_no, default='yes',
+        parser.add_argument('--run-non-config-setup', action=argparse.BooleanOptionalAction, default=True,
                             help=clean_help('''Whether to run only scenario setup steps that do not 
                                 add/insert/delete/replace elements in the <ScenarioComponents> section 
-                                of the GCAM config XML file. Default is "yes"'''))
+                                of the GCAM config XML file. (That is, commands that operate on other
+                                XML input files.) Default is "yes".'''))
 
-        # mutually exclusive with --dynamicOnly
-        group1.add_argument('-T', '--staticOnly', action='store_true',
+        # mutually exclusive with --dynamic-only
+        group1.add_argument('-T', '--static-only', action='store_true',
                             help=clean_help('''Generate only static XML for local-xml: don't create dynamic XML.'''))
 
         # Deprecated or pass to scenario?
@@ -114,11 +119,11 @@ class SetupCommand(SubcommandABC):
         # TBD: this seems incorrect now
         # When called in 'trial' mode, we only run dynamic setup.
         # When run in 'gensim' mode, we do only static setup.
-        # args.dynamicOnly = args.dynamicOnly or mapper.mcs_mode == McsMode.TRIAL
+        # args.dynamic_only = args.dynamic_only or mapper.mcs_mode == McsMode.TRIAL
         #
         # if mapper.mcs_mode == McsMode.GENSIM:
-        #     args.dynamicOnly = False
-        #     args.staticOnly = True
+        #     args.dynamic_only = False
+        #     args.static_only = True
 
         obj = editor_cls(mapper)
         obj.setup(args)
@@ -127,20 +132,20 @@ class SetupCommand(SubcommandABC):
         from ..error import CommandlineError
         from ..mcs.sim_file_mapper import get_mapper
 
-        if args.forceCreate:
-            args.createSandbox = 'yes'  # implied argument
+        if args.force_create:
+            args.create_sandbox = True  # implied argument
 
-        if args.createSandbox == 'no' and args.runScenarioSetup == 'no':
-            raise CommandlineError("Specified both --createSandbox='no' and --runScenarioSetup='no' so there's nothing to do.")
+        if not (args.create_sandbox or args.run_scenario_setup):
+            raise CommandlineError("Specified both --no-create-sandbox and --no-run-scenario-setup so there's nothing to do.")
 
         # don't bother creating if forceCreate, which removes the directory before recreating it
-        create_dirs = not args.forceCreate
+        create_dirs = not args.force_create
         mapper = get_mapper(args.scenario, scenario_group=args.group, create_dirs=create_dirs)
 
-        if args.createSandbox == 'yes' and mapper.mcs_mode != McsMode.GENSIM:
-            mapper.create_sandbox(force_create=args.forceCreate)
+        if args.create_sandbox and mapper.mcs_mode != McsMode.GENSIM:
+            mapper.create_sandbox(force_create=args.force_create)
 
-        if args.runScenarioSetup == 'yes':
+        if args.run_scenario_setup:
             self.run_scenario_setup(mapper, args)
 
 

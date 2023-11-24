@@ -4,9 +4,11 @@ import os
 import time
 import ipyparallel as ipp
 
-from ..config import (getConfig, getParam, setParam, getParamAsFloat, getParamAsBoolean,
-                      pathjoin)
+from ..config import (getConfig, getParam, setParam, getParamAsFloat,
+                      getParamAsBoolean)
+from ..constants import FileVersions
 from ..error import GcamError, GcamSolverError
+from ..file_utils import deleteFile
 from ..log import getLogger, configureLogs
 from ..signals import catchSignals, TimeoutSignalException, UserInterruptException
 
@@ -65,31 +67,20 @@ def _runPygcamSteps(steps, mapper, raiseError=True):
     _logger.info(f"_runPygcamSteps: {msg}")
     return status
 
-def _readParameterInfo(mapper):
-    from ..xmlScenario import XMLScenario
+def readParameterInfo(mapper):
+    param_file = XMLParameterFile(mapper.get_app_xml_param_file())  # reads cached copy from app-xml
 
-    paramFile = XMLParameterFile(mapper.get_app_xml_param_file())  # reads cached copy from app-xml
-    # xmlScenario = XMLScenario.get_instance(mapper.get_scenarios_file())
-    # scenarioNames = xmlScenario.scenariosInGroup(mapper.get_scenario_group())
-    # paramFile.loadInputFiles(mapper, scenarioNames, writeConfigFiles=False) # TBD: remove middle arg if this solves the problem
-    paramFile.loadInputFiles(mapper, writeConfigFiles=False)
-    paramFile.runQueries()
-    return paramFile
+    param_file.loadInputFiles(mapper)
+    param_file.runQueries()
+    return param_file
 
-def _applySingleTrialData(df, mapper, paramFile):
+def applySingleTrialData(df, mapper, paramFile):
     context = mapper.context
     trial_num = context.trialNum
-    trial_dir = mapper.trial_dir()
 
-    _logger.info(f'_applySingleTrialData for {context}, {paramFile.filename}')
+    _logger.info(f'applySingleTrialData for {context}, {paramFile.filename}')
     XMLParameter.applyTrial(context.simId, trial_num, df)   # Update all stochastic parameters
-    paramFile.writeLocalXmlFiles(trial_dir)                 # N.B. creates trial-xml subdir
-
-    # Deprecated?
-    # linkDest = pathjoin(trialDir, LOCAL_XML_NAME)       # does this require subdir?
-    # _logger.info(f'creating symlink to {linkDest}')
-    # symlink(f'../../../../Workspace/{LOCAL_XML_NAME}', linkDest)
-
+    paramFile.writeLocalXmlFiles(mapper)                 # N.B. creates trial-xml subdir
 
 def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
                 noPostProcessor=False):
@@ -104,6 +95,7 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
 
     # TBD: #### set to True to help debug ipyparallel issues ####
     debuggingOnly = False
+
     if debuggingOnly:
         time.sleep(30)
         return RUNNER_SUCCESS
@@ -115,11 +107,17 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
     # Run setup steps before applying trial data
     setup_steps = getParam('MCS.SetupSteps')
 
+    trial_cfg = mapper.get_config_version(FileVersions.TRIAL_XML)
+    deleteFile(trial_cfg)
+
     if setup_steps:
         _runPygcamSteps(setup_steps, mapper)
 
     if isBaseline and not noGCAM:
-        paramFile = _readParameterInfo(mapper)
+        # Copy local-xml config to trial-xml
+        mapper.copy_config_version(FileVersions.LOCAL_XML, FileVersions.TRIAL_XML)
+
+        paramFile = readParameterInfo(mapper)   # TBD: could update config.xml here, or in XMLInputFile.loadFiles()
 
         df = mapper.read_trial_data_file()
         columns = df.columns
@@ -130,14 +128,19 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
             if linkName not in columns:
                 df[linkName] = df[dataCol]
 
-        _applySingleTrialData(df, mapper, paramFile)
+        applySingleTrialData(df, mapper, paramFile) # TBD: Or, could update config.xml here, where trial-xml files are written
+
+    # TBD: error: overwrites edited config.xml with parent copy without renaming scenario
+    # if not isBaseline and not noGCAM:
+    #     mapper.copy_config_version(FileVersions.PARENT, FileVersions.TRIAL_XML)
 
     if noGCAM:
         _logger.info('_runGcamTool: skipping GCAM')
         gcamStatus = 0
+
     else:
         start = time.time()
-        gcamStatus = _runPygcamSteps('gcam2', mapper)        # TBD: set back to 'gcam' for pygcam 2.0
+        gcamStatus = _runPygcamSteps('gcam', mapper)
         stop = time.time()
 
         elapsed = _secondsToStr(stop - start)

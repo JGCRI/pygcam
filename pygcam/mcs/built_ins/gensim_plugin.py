@@ -339,7 +339,7 @@ def _simplifyDistro(dataSrc):
 
 # TBD: move this where gensim writes out the modified XML
 # from ...project import Project
-# from ...mcs.XMLConfigFile import XMLConfigFile
+# from ...XMLConfigFile import XMLConfigFile
 # from ...XMLFile import XMLFile
 #
 # projectName = getParam('GCAM.ProjectName')
@@ -353,7 +353,7 @@ def _simplifyDistro(dataSrc):
 # exe_dir = pathjoin(sandboxDir, baseline, 'exe', abspath=True)
 
 # comp_name = p.parent.getComponentName()     # either *.xml or the name of a config file component
-# xml_path = configFile.getComponentPathname(comp_name)
+# xml_path = configFile.get_component_pathname(comp_name)
 # with pushd(exe_dir):
 #     xml_file_obj = XMLFile(xml_path) # loads target file
 #
@@ -508,6 +508,7 @@ class GensimCommand(McsSubcommandABC):
                                 Note that in the only supported distribution types for the 'full-factorial' method, are: 
                                 Constant, Binary, Integer, Grid, and Sequence'''))
 
+        # TBD: drop this since it can be set from .pygcam.cfg and runsim has no method to process it
         paramFile = getParam('MCS.ProjectParametersFile')
         parser.add_argument('-p', '--paramFile', default=None,
                             help=clean_help(f'''Specify an XML file containing parameter definitions.

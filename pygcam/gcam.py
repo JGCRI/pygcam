@@ -264,7 +264,7 @@ def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    gcam_args = [mapper.sandbox_exe_path, '-C', mapper.config_path()]
+    gcam_args = [mapper.sandbox_exe_path, '-C', mapper.get_config_version()]
 
     command = ' '.join(gcam_args)
     if noRun:

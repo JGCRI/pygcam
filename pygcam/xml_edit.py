@@ -63,7 +63,7 @@ class CachedFile(object):
     parser = ET.XMLParser(remove_blank_text=True)
 
     # Store parsed XML trees here and use with xmlSel/xmlEdit if useCache is True
-    cache = {}
+    cache: dict[str, 'CachedFile']  = {}
 
     # Some files (e.g., cal_broyden_config.xml) have incorrect entities that don't
     # parse correctly in lxml, so we change "&&" to "&amp;&amp;" on reading, and
@@ -71,7 +71,7 @@ class CachedFile(object):
     xml_files_to_correct = splitAndStrip(getParam('GCAM.XmlFilesToCorrect'), ' ')
 
     def __init__(self, filename):
-        self.filename = filename = os.path.realpath(filename)
+        self.filename = filename = os.path.realpath(os.path.abspath(filename))
         self.edited = False
         self.corrected = False  # if "&amp;" entities were corrected on reading
 
@@ -93,8 +93,8 @@ class CachedFile(object):
         self.cache[filename] = self
 
     @classmethod
-    def getFile(cls, obj):
-        if isinstance(obj, CachedFile):
+    def getFile(cls, obj) -> 'CachedFile':
+        if isinstance(obj, CachedFile):     # TBD: pretty unexpected behavior
             return obj
 
         # realpath => operate on canonical pathnames
@@ -107,7 +107,7 @@ class CachedFile(object):
 
         return item
 
-    def setEdited(self):
+    def set_edited(self):
         self.edited = True
 
     def write(self):
@@ -129,17 +129,24 @@ class CachedFile(object):
 
         self.edited = False
 
-    def decache(self):
+    def save_edits(self):
         if self.edited:
             self.write()
 
     @classmethod
-    def decacheAll(cls):
+    def save_all_edits(cls):
         for item in cls.cache.values():
-            item.decache()
+            item.save_edits()
+
+    @classmethod
+    def decache(cls):
+        cls.save_all_edits()
+        cls.cache.clear()
 
     def __str__(self):
         return f"<CachedFile '{self.filename}' edited:{self.edited}>"
+
+# TBD: make xmlSel, xmlIns, xmlEdit methods of CachedFile (rename that CachedXml)
 
 def xmlSel(obj, xpath, asText=False):
     """
@@ -170,7 +177,7 @@ def xmlIns(obj, xpath, elt):
     :return: none
     """
     item = CachedFile.getFile(obj)
-    item.setEdited()
+    item.set_edited()
 
     parentElt = item.tree.find(xpath)
     if parentElt is None:
@@ -251,7 +258,7 @@ def xmlEdit(obj, pairs, op='set', useCache=True):
 
     if updated:
         if useCache:
-            item.setEdited()
+            item.set_edited()
         else:
             item.write()
 
