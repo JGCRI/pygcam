@@ -145,11 +145,13 @@ class XMLEditor(object):
             sub-command.
         :return: none
         """
+        mapper = self.mapper
+        self.config_path = config_path = mapper.get_config_version(version=FileVersions.FINAL)
+
         if not args.run_config_setup:
             return
 
         _logger.info("Generating %s for scenario %s", LOCAL_XML_NAME, self.name)
-        mapper = self.mapper
 
         scenDir = self.scenario_dir.abs
         mkdirs(scenDir)
@@ -165,7 +167,6 @@ class XMLEditor(object):
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
         # remove old local-xml/{scenario}/config.xml or trial-xml/{scenario}/config.xml
-        self.config_path = config_path = mapper.get_config_version(version=FileVersions.FINAL)
         deleteFile(config_path) # ignores error, e.g., if file doesn't exist
 
         # recreate config.xml from prior "version"

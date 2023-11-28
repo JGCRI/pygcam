@@ -115,7 +115,8 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
 
     if isBaseline and not noGCAM:
         # Copy local-xml config to trial-xml
-        mapper.copy_config_version(FileVersions.LOCAL_XML, FileVersions.TRIAL_XML)
+        # TBD: should have been done by setup_steps above
+        # mapper.copy_config_version(FileVersions.LOCAL_XML, FileVersions.TRIAL_XML)
 
         paramFile = readParameterInfo(mapper)   # TBD: could update config.xml here, or in XMLInputFile.loadFiles()
 
@@ -271,7 +272,8 @@ class Worker(object):
         _logger.info(f'Running trial {trialNum}')
 
         try:
-            exitCode = _runGcamTool(self.mapper, noGCAM=noGCAM,
+            exitCode = _runGcamTool(self.mapper,
+                                    noGCAM=noGCAM,
                                     noBatchQueries=noBatchQueries,
                                     noPostProcessor=noPostProcessor)
 
