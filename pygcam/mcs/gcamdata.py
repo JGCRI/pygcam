@@ -240,14 +240,10 @@ class GcamDataSystem(object):
         """
         mapper = self.mapper
 
-        # We read from local-xml but write to trial-xml
-        local_cfg_path = mapper.get_config_version(version=FileVersions.LOCAL_XML)
-
-        _logger.debug(f"gcamdata: reading config file '{local_cfg_path}'")
-
-        # TBD: maybe don't use cached copy to avoid polluting other trials?
-        #scen_config = XMLConfigFile.get_instance(local_cfg_path)
-        scen_config = XMLConfigFile(local_cfg_path) # bypass cache code
+        # We read and re-write trial-xml/{scenario}/config.xml
+        cfg_path = mapper.get_config_version(version=FileVersions.TRIAL_XML)
+        _logger.debug(f"gcamdata: reading config file '{cfg_path}'")
+        scen_config = XMLConfigFile.get_instance(cfg_path)
 
         # dict of file_basename => (tag, rel_path) for all ScenarioComponent elements
         file_dict = scen_config.get_component_dict()
@@ -259,7 +255,7 @@ class GcamDataSystem(object):
                 tag, rel_path = file_dict[basename]
             except KeyError:
                 _logger.warning(
-                    f"Ignoring file with basename '{basename}': not found in ref config file '{local_cfg_path}'")
+                    f"Ignoring file with basename '{basename}': not found in ref config file '{cfg_path}'")
                 continue
 
             new_path = rel_dir / basename

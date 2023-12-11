@@ -381,8 +381,7 @@ class GcamTool(object):
         depFlag = getParam('SLURM.DependencyFlag')
         format = "-w 'done(%s)'" if batchSystem == 'LSF' else "-d {}:%s".format(depFlag)    # i.e., '-d afterok:%s' or '-d after:%s'
 
-        # TBD: make this an expression eval'd with s.format(jobID=dependsOn)
-        # TBD: to support other syntaxes
+        # TBD: make this an expression eval'd with s.format(jobID=dependsOn) to support other syntaxes
         dependencies = format % dependsOn if dependsOn else ''
 
         scriptCommand = "gt " + ' '.join(shellArgs)
@@ -534,7 +533,6 @@ def _main(argv, mapper):
     ns, otherArgs = parser.parse_known_args(args=argv)
 
     tool.set_mcs_mode(mapper, ns.mcsMode)
-    # setParam('MCS.Mode', ns.mcsMode or '')      # TBD: eliminate this
 
     # Set specified config vars
     for arg in ns.configVars:

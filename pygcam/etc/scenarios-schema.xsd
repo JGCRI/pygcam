@@ -27,7 +27,6 @@
                 <xs:element ref='comment'/>
                 <xs:element ref='CONDITIONAL'/>
             </xs:choice>
-            <xs:attribute name='name' type='xs:string'/>            <!-- TBD: unused currently -->
             <xs:attribute name='defaultGroup' type='xs:string'/>
         </xs:complexType>
     </xs:element>

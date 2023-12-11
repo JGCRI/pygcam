@@ -110,11 +110,6 @@ class AbstractFileMapper(object):
         self.scenarios_file = getParamAsPath('GCAM.ScenariosFile')
         self.scenario_group = scenario_group or ''
 
-        # Deprecated?
-        # Ensure that GCAM.ScenarioGroup is set since system.cfg uses this in path construction
-        # if scenario_group:
-        #     setParam('GCAM.ScenarioGroup', scenario_group)
-
         scen_xml = XMLScenario.get_instance(self.scenarios_file)
         group_obj = scen_xml.getGroup(self.scenario_group)
         scen_obj = scenario and group_obj.getFinalScenario(scenario)
@@ -140,9 +135,6 @@ class AbstractFileMapper(object):
         self.ref_workspace = getParamAsPath('GCAM.RefWorkspace')
         self.ref_workspace_exe_dir = getParamAsPath("GCAM.RefExeDir")
         self.ref_gcamdata_dir = getParam('GCAM.RefGcamData')    # used if running data system
-
-        # TBD: implement this for MCS?
-        # self.copy_workspace = getParamAsBoolean('MCS.CopyWorkspace')
 
         self.project_etc_dir = getParamAsPath('GCAM.ProjectEtc')
         self.project_xml_src = getParamAsPath('GCAM.ProjectXmlsrc')
@@ -179,18 +171,6 @@ class AbstractFileMapper(object):
     def gcam_path_from_abs(self, abs_path, create=False):
         rel_path = os.path.relpath(abs_path, start=self.sandbox_exe_dir)
         return GcamPath(self.sandbox_exe_dir, rel_path, create=create)
-
-    # TBD: unused...
-    # def scenario_xmlsrc_files(self):
-    #     files = glob.glob(self.project_scenario_xml_src + '/*.xml')
-    #     return files
-
-    # Deprecated (unused)
-    # def get_final_config(self):
-    #     # TBD: perhaps it's just:
-    #     # return self.get_pathname(version=FileVersions.CURRENT)
-    #
-    #     raise PygcamException(f"Called AbstractFileMapper's get_final_config(); subclass {self.__class__.__name__} must implement this.")
 
     def copy_ref_workspace(self, force_create=False, files_to_link_param=None):
         """
@@ -331,10 +311,10 @@ class AbstractFileMapper(object):
 
         return cls
 
-    def get_config_version(self, version: FileVersions = FileVersions.CURRENT):
+    def get_config_version(self, version: FileVersions):
 
         if version == FileVersions.PARENT:
-            return self.parent_mapper.get_config_version(version=FileVersions.FINAL)
+            return self.parent_mapper.get_config_version(FileVersions.FINAL)
 
         if version == FileVersions.FINAL:
             version = FileVersions.LOCAL_XML
@@ -343,7 +323,7 @@ class AbstractFileMapper(object):
             previous = self.get_config_version(self.file_versions[0]) if version == FileVersions.NEXT else None
 
             for v in self.file_versions:
-                pathname = self.get_config_version(version=v)
+                pathname = self.get_config_version(v)
                 if pathname:
                     if os.path.exists(pathname):
                         return pathname if version == FileVersions.CURRENT else previous
@@ -378,9 +358,10 @@ class AbstractFileMapper(object):
 
         return new_path
 
-    def create_next_config_version(self):
-        src = FileVersions.PARENT if not self.is_baseline else FileVersions.CURRENT
-        return self.copy_config_version(src, FileVersions.NEXT)
+    # Deprecated (used only in test_sandbox)
+    # def create_next_config_version(self):
+    #     src = FileVersions.PARENT if not self.is_baseline else FileVersions.CURRENT
+    #     return self.copy_config_version(src, FileVersions.NEXT)
 
     def create_final_config_version(self):
         src = FileVersions.REFERENCE if self.is_baseline else FileVersions.PARENT
@@ -404,19 +385,16 @@ class AbstractFileMapper(object):
             # should never occur
             raise PygcamException("get_file_version failed to check all possible version types")
 
-        config_path = self.get_config_version(version=version)
+        config_path = self.get_config_version(version)
         xml_cfg = XMLConfigFile.get_instance(config_path)
         rel_path = xml_cfg.get_component_pathname(tag)
         path = pathjoin(exe_dir, rel_path, normpath=True)
         return path
 
-    def get_file_version(self, tag: str, version: FileVersions = FileVersions.CURRENT):
+    def get_file_version(self, tag: str, version: FileVersions):
         """
         Get the pathname of the file identified in config XML with this ``tag``.
         """
-        # config_path = self.get_config_version(version)
-        # TBD: cache/load the config_path for later lookup
-
         if version in (FileVersions.CURRENT, FileVersions.NEXT):
             previous = (self.get_file_version(tag, self.file_versions[0])
                         if version == FileVersions.NEXT else None)
@@ -425,7 +403,7 @@ class AbstractFileMapper(object):
                 # if self.is_baseline and v == FileVersions.BASELINE:
                 #     continue    # skip the BASELINE version for baselines
 
-                pathname = self._get_file_version(tag, version=v)
+                pathname = self._get_file_version(tag, v)
                 if os.path.exists(pathname):
                     return pathname if version == FileVersions.CURRENT else previous
 
@@ -440,8 +418,8 @@ class AbstractFileMapper(object):
     def create_next_file_version(self, tag: str):
         from .file_utils import filecopy
 
-        curr_path = self.get_file_version(tag, version=FileVersions.CURRENT)
-        next_path = self.get_file_version(tag, version=FileVersions.NEXT)
+        curr_path = self.get_file_version(tag, FileVersions.CURRENT)
+        next_path = self.get_file_version(tag, FileVersions.NEXT)
         # curr and next are the same for LOCAL_XML for non-MCS or TRIAL_XML in MCS
         if curr_path != next_path:
             mkdirs(os.path.dirname(next_path))
@@ -475,9 +453,6 @@ class FileMapper(AbstractFileMapper):
         self.parent_scenario_path = (self.gcam_path_from_abs(parent_mapper.sandbox_scenario_dir)
                                      if parent_mapper else None)
 
-        # TBD: not implemented. Move this to SimFileMapper?
-        # self.copy_workspace = copy_workspace or getParamAsBoolean("GCAM.CopyWorkspace")
-
         self.sandbox_workspace = getParamAsPath('GCAM.SandboxWorkspace')
         self.sandbox_workspace_exe_dir = getParamAsPath('GCAM.SandboxWorkspaceExeDir')
 
@@ -498,7 +473,7 @@ class FileMapper(AbstractFileMapper):
         self.sandbox_local_xml = getParamAsPath('GCAM.SandboxLocalXml')
 
         self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=create_dirs)
-        self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')      # TBD: new subdir under local-xml
+        self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')
 
         self.sandbox_baseline_xml = (None if self.is_baseline
                                       else makeDirPath(self.sandbox_local_xml, self.baseline,
@@ -507,14 +482,3 @@ class FileMapper(AbstractFileMapper):
         # In non-MCS Sandbox, config.xml is in '.../project/{group}/local-xml/{scenario}/config.xml'
         # In SimFileMapper, update_dependent_paths() relocates this to "sims/s{sim_id}/local-xml/{scenario}/config.xml"
         self.scenario_config_path = pathjoin(self.sandbox_scenario_xml, CONFIG_XML)
-
-    # Deprecated (unused)
-    # def get_final_config(self):
-    #     pmapper = self.parent_mapper
-    #     parent_config_path = pmapper.config_path() if pmapper else getParam('GCAM.RefConfigFile')
-    #
-    #     cfg_path = self.config_path()
-    #     _logger.info("Copy %s\n      to %s", parent_config_path, cfg_path)
-    #     shutil.copy(parent_config_path, cfg_path)
-    #     os.chmod(cfg_path, 0o664)
-    #     return cfg_path

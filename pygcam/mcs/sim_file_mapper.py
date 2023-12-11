@@ -242,7 +242,7 @@ class SimFileMapper(AbstractFileMapper):
         return cfg_path
 
     # Overrides parent method to support TRIAL_XML
-    def get_file_version(self, tag: str, version: FileVersions = FileVersions.CURRENT):
+    def get_file_version(self, tag: str, version: FileVersions):
         """
         Get the pathname of the file identified in config XML with this ``tag``.
         """
@@ -253,7 +253,7 @@ class SimFileMapper(AbstractFileMapper):
             rel_path = cfg.get_component_pathname(tag)
             return pathjoin(exe_dir, rel_path, normpath=True)
         else:
-            return super().get_file_version(tag, version=version)
+            return super().get_file_version(tag, version)
 
 
     def get_param_file(self):

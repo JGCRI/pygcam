@@ -519,13 +519,10 @@ class Project(XMLFile):
         to create the command to execute in the shell. Variables are defined in
         the <vars> section of the project XML file.
         """
+        from .mcs.sim_file_mapper import get_mapper
+
         projectName = self.projectName
         scenarioGroupName = self.scenarioGroupName
-
-        # Deprecated
-        # if self.scenarioGroup.useGroupDir:
-        #     # Set the group subdir so config vars can access it
-        #     setParam('GCAM.ScenarioSubdir', scenarioGroupName, section=projectName)
 
         # Get the final value text for all config vars and allowing project
         # variables to override them.
@@ -546,12 +543,6 @@ class Project(XMLFile):
         argDict['project']       = projectName
         argDict['baseline']      = self.scenarioGroup.baseline
         argDict['scenarioGroup'] = scenarioGroupName
-
-        #  'subdir' comes from <project subdir="xx">
-        # argDict['projectSubdir'] = subdir = self.subdir  # deprecated
-        # argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir # deprecated
-        # argDict['projectSrcDir'] = pathjoin('..', XML_SRC_NAME,   srcGroupDir, subdir)      # deprecated
-        # argDict['projectXmlDir'] = pathjoin('..', LOCAL_XML_NAME, groupDir,    subdir)      # deprecated
 
         knownGroups    = self.getKnownGroups()
         knownScenarios = self.getKnownScenarios()
@@ -574,9 +565,6 @@ class Project(XMLFile):
         run = not args.noRun
 
         scenarios = self.sortScenarios(scenarios)
-
-        # sandboxDir = argDict['GCAM.SandboxDir']
-        # argDict['baselineDir'] = pathjoin(sandboxDir, baseline) # Deprecated
 
         # Delete all variants of scenario specification from shellArgs
         # so we can queue these one at a time.
@@ -605,17 +593,7 @@ class Project(XMLFile):
 
                 continue
 
-            # TBD: create and use a FileMapper
-            from .mcs.sim_file_mapper import get_mapper
-            # group_for_sandbox = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
-            # mapper = get_mapper(scenarioName, scenario_group=group_for_sandbox)
             mapper = get_mapper(scenarioName, scenario_group=scenarioGroupName)
-
-            # TBD: Just use the config variables. Helps consolidate pathname stuff.
-            #argDict['scenarioSubdir'] = scenario.subdir or scenarioName     # deprecated
-            #argDict['sandboxDir']     = sandboxDir                          # deprecated
-            #argDict['scenarioDir']    = scenarioDir = pathjoin(sandboxDir, scenarioName)
-
 
             argDict['scenario'] = scenarioName
             argDict['sandboxDir'] = mapper.sandbox_dir

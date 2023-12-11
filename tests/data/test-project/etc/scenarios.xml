@@ -5,9 +5,9 @@ This file defines the "tutorial" scenarios. Feel free to edit it to your liking.
 Also see scenarios2.xml, which offers a slightly more complex example.
 -->
 
-<scenarios name="uniqueName" defaultGroup="group"
+<scenarios defaultGroup="group"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:noNamespaceSchemaLocation="scenarios-schema.xsd">
+       xsi:noNamespaceSchemaLocation="../../../../pygcam/etc/scenarios-schema.xsd">
 
     <scenarioGroup name="group1" useGroupDir="1">
         <scenario name="base" baseline="1">

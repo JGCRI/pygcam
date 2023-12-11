@@ -23,6 +23,8 @@ QRESULTS_DIRNAME = 'queryResults'
 DIFFS_DIRNAME = 'diffs'
 OUTPUT_DIRNAME = 'output'
 
+CO2_PER_C = 3.666666667     # the exact value used in PNNL scripts
+
 from enum import Enum
 
 class McsMode(Enum):

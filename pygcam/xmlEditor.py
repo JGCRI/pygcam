@@ -34,7 +34,6 @@ from .policy import (policyMarketXml, policyConstraintsXml, DEFAULT_MARKET_TYPE,
                      DEFAULT_POLICY_ELT, DEFAULT_POLICY_TYPE)
 from .gcam_path import GcamPath, gcam_path
 from .utils import (coercible, printSeries, splitAndStrip, getRegionList)
-from .XMLConfigFile import XMLConfigFile
 from .xml_edit import CachedFile, xmlSel, xmlIns, xmlEdit, expandYearRanges
 
 _logger = getLogger(__name__)
@@ -271,16 +270,14 @@ class XMLEditor(object):
             # sbxWorkspace = getParam('GCAM.SandboxWorkspace')
             # refConfigFile = getParam('GCAM.RefConfigFile')  # main RefWorkspace, not SandboxWorkspace
 
-            config_path = mapper.get_file_version(configTag)
+            config_path = mapper.get_file_version(configTag, FileVersions.CURRENT)
 
             pathname = self.componentPath(configTag, configPath=config_path)
             srcAbsPath = pathjoin(mapper.sandbox_exe_dir, pathname, abspath=True)
 
             srcPath = GcamPath(mapper.sandbox_workspace_exe_dir, pathname)
 
-        suffix = os.path.basename(srcAbsPath)
-        suffix2 = srcPath.basename()
-        assert suffix == suffix2    # TBD: remove after testing
+        suffix = srcPath.basename()
 
         dstAbsPath = pathjoin(self.scenario_dir.abs, suffix)
         dstRelPath = pathjoin(self.scenario_dir.rel, suffix)

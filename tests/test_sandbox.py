@@ -99,14 +99,15 @@ def test_sandbox():
     local_config_path = mapper.get_config_version(FileVersions.LOCAL_XML)
     assert local_config_path == pathjoin(mapper.sandbox_scenario_xml, CONFIG_XML)
 
-    next_config_path = mapper.create_next_config_version()
-    assert next_config_path == base_config_path
+    # Deprecated
+    # next_config_path = mapper.create_next_config_version()
+    # assert next_config_path == base_config_path
 
-    config_path = mapper.get_config_version(FileVersions.CURRENT)
-    assert config_path == base_config_path
+    # config_path = mapper.get_config_version(FileVersions.CURRENT)
+    # assert config_path == base_config_path
 
-    config_path = mapper.get_config_version(FileVersions.NEXT)
-    assert config_path == local_config_path
+    # config_path = mapper.get_config_version(FileVersions.NEXT)
+    # assert config_path == local_config_path
 
     #
     # MCS sandbox test
@@ -125,25 +126,26 @@ def test_sandbox():
 
     # Test config FileVersions
     base_config_path = mapper.get_config_version(FileVersions.BASELINE)
-    assert base_config_path == pathjoin(mapper.parent_mapper.sandbox_scenario_xml, CONFIG_XML)
+    pmapper = mapper.parent_mapper
+    assert base_config_path == pathjoin(pmapper.trial_xml_dir, pmapper.scenario, CONFIG_XML)
 
     local_config_path = mapper.get_config_version(FileVersions.LOCAL_XML)
     assert local_config_path == pathjoin(mapper.sandbox_scenario_xml, CONFIG_XML)
 
     trial_config_path = mapper.get_config_version(FileVersions.TRIAL_XML)
-    assert trial_config_path == pathjoin(mapper.trial_xml_dir, CONFIG_XML)
+    assert trial_config_path == pathjoin(mapper.trial_xml_dir, mapper.scenario, CONFIG_XML)
 
-    curr_config_path = mapper.get_config_version(FileVersions.CURRENT)
-    assert curr_config_path == ref_config_path
+    # curr_config_path = mapper.get_config_version(FileVersions.CURRENT)
+    # assert curr_config_path == ref_config_path
 
-    next_config_path = mapper.create_next_config_version()
-    assert next_config_path == base_config_path
+    # next_config_path = mapper.create_next_config_version()
+    # assert next_config_path == base_config_path
 
-    curr_config_path = mapper.get_config_version(FileVersions.CURRENT)
-    assert curr_config_path == base_config_path
+    # curr_config_path = mapper.get_config_version(FileVersions.CURRENT)
+    # assert curr_config_path == base_config_path
 
-    next_config_path = mapper.create_next_config_version()
-    assert next_config_path == local_config_path
+    # next_config_path = mapper.create_next_config_version()
+    # assert next_config_path == local_config_path
 
-    next_config_path = mapper.get_config_version(FileVersions.NEXT)
-    assert next_config_path == trial_config_path
+    # next_config_path = mapper.get_config_version(FileVersions.NEXT)
+    # assert next_config_path == trial_config_path
