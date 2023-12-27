@@ -168,7 +168,7 @@ class GcamDataSystem(object):
 
         return trial_sandbox_dir
 
-    def run_data_system(self, trials, user_modifications):
+    def run_data_system(self, trials, user_modifications, delete=True):
         """
         Run the GCAM data system using "driver_drake" to generate XML files with ``user_modifications``.
 
@@ -177,6 +177,8 @@ class GcamDataSystem(object):
         :param user_modifications: (str or list of str) names of "user modification" R functions
             to insert into the GCAM data system for use with drake. If None, just run the data
             system in the reference workspace, without any modifications to create the baesline.
+        :param delete: (bool) whether to delete the temporary directory in which the data system
+            is run. Can be helpful to set to False for debugging.
         :return: none
         """
         self.activate_renv()
@@ -209,7 +211,7 @@ class GcamDataSystem(object):
 
             self.trial_func(trial)
 
-            tmp_sandbox_dir = self.trial_sandbox(trial_num)
+            tmp_sandbox_dir = self.trial_sandbox(trial_num, delete=delete)
 
             # run driver_drake() in the reference workspace with user_modification established above
             with pushd(tmp_sandbox_dir):
