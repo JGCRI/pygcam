@@ -493,7 +493,7 @@ class XMLEditor(object):
         valueNode = elt.find(f"Value[@name='{name}']")
         if valueNode is not None:
             elt.remove(valueNode)
-            item.bset_edited()
+            item.set_edited()
 
     # Deprecated? Appears to be unused.
     def renameScenarioComponent(self, name, xmlfile):
