@@ -20,6 +20,7 @@ dependencies:
   - prompt_toolkit
   - python>=3.9.0,<3.10.0
   - retrying
+  - rpy2
   - semver
   - sphinx>=4.3.0
   - sphinx-argparse>=0.2.5

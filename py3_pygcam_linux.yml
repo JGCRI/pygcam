@@ -89,6 +89,7 @@ dependencies:
   - qt
   - readline
   - requests
+  - rpy2
   - scandir
   - scipy
   - seaborn
