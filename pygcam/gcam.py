@@ -247,6 +247,7 @@ def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
     import platform
+    from .constants import FileVersions
 
     if platform.system() == 'Darwin':
         linkToMacJava()
@@ -264,7 +265,7 @@ def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    gcam_args = [mapper.sandbox_exe_path, '-C', mapper.get_config_version()]
+    gcam_args = [mapper.sandbox_exe_path, '-C', mapper.get_config_version(FileVersions.FINAL)]
 
     command = ' '.join(gcam_args)
     if noRun:
