@@ -29,7 +29,7 @@ dependencies:
   - scipy
   - seaborn
   - setuptools
-  - sqlalchemy
+  - sqlalchemy<2.0.0
   - sqlite
   - werkzeug
   - xlsxwriter
