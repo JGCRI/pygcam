@@ -83,7 +83,7 @@ class McsData(object):
             setParam('GCAM.DefaultProject', project, DEFAULT_SECTION)
             setSection(project)
         else:
-            project = getParam('GCAM.DefaultProject')
+            project = getParam('GCAM.ProjectName')  # might be set in project section
 
         self.project = project
         self.inputsDF = None

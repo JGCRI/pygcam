@@ -97,7 +97,7 @@ class AbstractFileMapper(object):
         :param scenario: (str) the name of a policy scenario
         :param baseline: (str) the name of the baseline scenario, if not a baseline.
         :param project_name: (str) the name of the project, defaults to the value of
-            config variable `GCAM.DefaultProject`
+            config variable `GCAM.ProjectName`
         :param parent: (Sandbox) Sandbox parent scenario, generally a baseline in the same group
         :param scenario_group: (str) the name of a scenario group defined in scenarios.xml
         :param create_dirs: (bool) whether to create some dirs
@@ -437,7 +437,7 @@ class FileMapper(AbstractFileMapper):
 
         :param scenario: (str) the name of a policy scenario
         :param project_name: (str) the name of the project, defaults to the value of
-            config variable `GCAM.DefaultProject`
+            config variable `GCAM.ProjectName`
         :param scenario_group: (str) the name of a scenario group defined in scenarios.xml
         :param scenario_dir: (str) the name of a scenario subdirectory to use, if any
         :param parent: (Sandbox) Sandbox parent scenario, generally a baseline in the same group
