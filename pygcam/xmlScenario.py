@@ -86,7 +86,8 @@ class XMLScenario(object):
         # These serve as a no-op on the build-out pass. The directory vars are
         # converted when the scenario is run and the directories are known.
         self.templateDict = {'scenarioDir' : '{scenarioDir}',
-                             'baselineDir' : '{baselineDir}'}
+                             'baselineDir' : '{baselineDir}',
+                             'local-xml'   : '{local-xml}'}
 
         self.iterators = [Iterator(item) for item in root.findall('iterator')]
         self.iteratorDict = {obj.name : obj for obj in self.iterators}
@@ -557,7 +558,8 @@ def createXmlEditorSubclass(setupFile):
                 baseline_dir = self.baseline_dir.rel if self.baseline_dir else None
 
             self.directoryDict = {'scenarioDir': scenario_dir,
-                                  'baselineDir': baseline_dir}
+                                  'baselineDir': baseline_dir,
+                                  'local-xml'  : mapper.sandbox_local_xml_rel}
 
         def setupDynamic(self, args):
             """"

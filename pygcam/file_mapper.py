@@ -9,7 +9,8 @@
 import os
 
 from .config import getParam, getParamAsBoolean, getParamAsPath, pathjoin, mkdirs
-from .constants import CONFIG_XML, QRESULTS_DIRNAME, DIFFS_DIRNAME, OUTPUT_DIRNAME, FileVersions
+from .constants import (CONFIG_XML, LOCAL_XML_NAME, QRESULTS_DIRNAME, DIFFS_DIRNAME,
+                        OUTPUT_DIRNAME, FileVersions)
 from .error import SetupException, PygcamException, FileMissingError
 from .file_utils import removeTreeSafely, removeFileOrTree, copyFileOrTree, symlinkOrCopyFile
 from .gcam_path import makeDirPath, GcamPath
@@ -150,6 +151,7 @@ class AbstractFileMapper(object):
         self.sandbox_query_results_dir = None
         self.sandbox_diffs_dir = None
         self.sandbox_local_xml = None
+        self.sandbox_local_xml_rel = None   # relative to exe directory
         self.sandbox_scenario_xml = None
         self.sandbox_dynamic_xml = None
         self.sandbox_baseline_xml = None
@@ -471,6 +473,7 @@ class FileMapper(AbstractFileMapper):
         # In non-MCS Sandbox, the "local-xml" directory is at the same level as scenario dirs.
         # In the SimFileMapper, "local-xml" is under the sim directory (e.g., sims/s001).
         self.sandbox_local_xml = getParamAsPath('GCAM.SandboxLocalXml')
+        self.sandbox_local_xml_rel = os.path.relpath(self.sandbox_local_xml, self.sandbox_exe_dir)
 
         self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=create_dirs)
         self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')

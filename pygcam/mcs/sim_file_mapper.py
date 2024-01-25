@@ -139,6 +139,8 @@ class SimFileMapper(AbstractFileMapper):
 
             self.trial_xml_dir = pathjoin(trial_dir, TRIAL_XML_NAME)
 
+            self.sandbox_local_xml_rel = os.path.relpath(self.sandbox_local_xml, self.sandbox_exe_dir)
+
             self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, QRESULTS_DIRNAME)
             self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, DIFFS_DIRNAME)
             self.sandbox_output_dir = pathjoin(sbx_scen_dir, OUTPUT_DIRNAME)

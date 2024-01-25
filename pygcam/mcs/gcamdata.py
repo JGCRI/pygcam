@@ -211,7 +211,7 @@ class GcamDataSystem(object):
 
             self.trial_func(trial)
 
-            tmp_sandbox_dir = self.trial_sandbox(trial_num, delete=delete)
+            tmp_sandbox_dir = self.trial_sandbox(trial, delete=delete)
 
             # run driver_drake() in the reference workspace with user_modification established above
             with pushd(tmp_sandbox_dir):
