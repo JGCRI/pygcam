@@ -3,125 +3,34 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - alabaster
-  - asn1crypto
-  - babel
-  - blas
-  - certifi
-  - cffi
-  - chardet
-  - click
-  - configparser
-  - cryptography
-  - cryptography-vectors
-  - cycler
-  - dbus
-  - decorator
-  - docutils
-  - enum34
-  - expat
+  - dash>=2.5.1
   - flask
-  - fontconfig
-  - freetype
-  - functools32
-  - futures
-  - gettext
-  - glib
-  - gst-plugins-base
-  - gstreamer
-  - icu
-  - idna
-  - imagesize
-  - ipaddress
   - ipykernel
-  - ipyparallel
   - ipython
-  - ipython_genutils
-  - itsdangerous
-  - jinja2
-  - jpeg
-  - jsonschema
-  - jupyter_client
-  - jupyter_core
-  - kiwisolver
-  - libcxx
-  - libedit
-  - libffi
-  - libgfortran
-  - libgfortran-ng
-  - libiconv
-  - libpng
-  - libsodium
-  - libstdcxx-ng
-  - libuuid
-  - libxcb
+  - ipyparallel
   - libxml2
-  - libxslt
-  - llvm-meta
   - lxml
-  - markupsafe
   - matplotlib
-  - nbformat
-  - ncurses
-  - numexpr
+  - mkl
   - numpy
-  - openblas
-  - openssl
-  - packaging
   - pandas
   - pathlib2
-  - patsy
-  - pcre
-  - pexpect
-  - pickleshare
+  - pip
+  - plotly
   - prompt_toolkit
-  - pthread-stubs
-  - ptyprocess
-  - pycparser
-  - pygments
-  - pyopenssl
-  - pyparsing
-  - pyqt
-  - pysocks
-  - python-dateutil
-  - pytz
-  - pyzmq
-  - qt
-  - readline
-  - requests
+  - python>=3.9.0,<3.11.0
+  #- python>=3.9.0,<3.10.0
+  - retrying
   - rpy2
-  - scandir
+  - semver
+  - sphinx>=4.3.0
+  - sphinx-argparse>=0.2.5
+  - sphinx_rtd_theme>=0.5.1
+  - sphinxcontrib-serializinghtml
   - scipy
   - seaborn
   - setuptools
-  - simplegeneric
-  - singledispatch
-  - sip
-  - six
-  - snowballstemmer
-  - sphinx
-  - sphinxcontrib-websupport
-  - sqlalchemy
+  - sqlalchemy<2.0.0
   - sqlite
-  - ssl_match_hostname
-  - statsmodels
-  - subprocess32
-  - tk
-  - tornado
-  - traitlets
-  - typing
-  - urllib3
-  - wcwidth
   - werkzeug
-  - wheel
   - xlsxwriter
-  - xorg-libxau
-  - xorg-libxdmcp
-  - xz
-  - zeromq
-  - zlib
-  - ca-certificates
-  - filelock
-  - libgcc-ng
-  - libopenblas
-
