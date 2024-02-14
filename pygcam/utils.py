@@ -6,6 +6,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import argparse
+import datetime
 import io
 import os
 from lxml import etree as ET
@@ -14,6 +15,7 @@ import re
 import semver
 import subprocess
 import sys
+import time
 
 from .config import getParam, getParamAsBoolean, pathjoin, unixPath
 from .error import PygcamException, FileFormatError
@@ -24,6 +26,40 @@ from .version import VERSION
 _logger = getLogger(__name__)
 
 pygcam_version = semver.parse_version_info(VERSION)
+
+class Timer:
+    def __init__(self, feature_name, start=True):
+        self.feature_name = feature_name
+        self.start_time = None
+        self.stop_time  = None
+
+        if start:
+            self.start()
+
+    def start(self):
+        self.start_time = time.time()
+        return self
+
+    def stop(self):
+        self.stop_time = time.time()
+        return self
+
+    def duration(self):
+        seconds = self.stop_time - self.start_time
+        return datetime.timedelta(seconds=int(seconds))
+
+    def __str__(self):
+        if self.start_time is None:
+            status = "is uninitialized"
+        elif self.stop_time is None:
+            status = "is running"
+        else:
+            d = self.duration()
+            status = f"completed in {d}"
+
+        return f"<Timer '{self.feature_name}' {status}>"
+
+
 
 def random_sleep(low_secs, high_secs):
     """
