@@ -104,6 +104,11 @@ class XMLEditor(object):
             to setup sub-command
         :return: none
         """
+
+        # TBD: skipping this since it creates a race condition when running in parallel
+        _logger.info("xmlEditor: Skipping setupDynamic")
+        return
+
         _logger.info("Generating dyn-xml for scenario %s", self.name)
 
         mapper = self.mapper
