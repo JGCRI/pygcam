@@ -122,6 +122,7 @@ class SimFileMapper(AbstractFileMapper):
             self.sandbox_scenario_xml = self.sandbox_dynamic_xml = None
             self.scenario_config_path = self.scenario_gcam_xml_dir = None
 
+        self.logs_dir = None
         self._set_trial_dependent_ivars(scenario, create_dirs=create_dirs)
 
 
@@ -136,6 +137,7 @@ class SimFileMapper(AbstractFileMapper):
             self.sandbox_exe_path = pathjoin(self.sandbox_exe_dir, getParam('GCAM.Executable'))
             self.parent_scenario_path = (self.gcam_path_from_abs(self.parent_mapper.sandbox_scenario_dir)
                                          if self.parent_mapper else None)
+            self.logs_dir = pathjoin(sbx_scen_dir, 'exe', 'logs', create=create_dirs)
 
             self.trial_xml_dir = pathjoin(trial_dir, TRIAL_XML_NAME)
 
@@ -145,6 +147,7 @@ class SimFileMapper(AbstractFileMapper):
             self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, DIFFS_DIRNAME)
             self.sandbox_output_dir = pathjoin(sbx_scen_dir, OUTPUT_DIRNAME)
             self.sandbox_xml_db = pathjoin(self.sandbox_output_dir, getParam('GCAM.DbFile'))
+
 
     # TBD: might not be useful since ivars are not reset to match context.
     #   Used only in one place and use is questionable.
@@ -271,6 +274,7 @@ class SimFileMapper(AbstractFileMapper):
         return self.app_xml_results_file
 
     def get_log_file(self):
+
         path = pathjoin(self.logs_dir, 'pygcam.log')
         return path
 

@@ -13,46 +13,48 @@ _logger = getLogger(__name__)
 #
 FileChanges = {
     'ipcluster_config.py': (
-        ("#c.IPClusterEngines.engine_launcher_class = 'LocalEngineSetLauncher",
-         "c.IPClusterEngines.engine_launcher_class = '{scheduler}'"),
+        ("# c.Cluster.engine_launcher_class = 'ipyparallel.cluster.launcher.LocalEngineSetLauncher'",
+         "c.Cluster.engine_launcher_class = '{scheduler}'"),
 
-        ("#c.IPClusterEngines.n = ",    # not sure if number is constant across platforms...
-         "# Attempt to allocate ~8 GB per engine\nc.IPClusterEngines.n = {engines}"),
+        # Deprecated in latest ipyparallel?
+        # ("#c.IPClusterEngines.n = ",    # not sure if number is constant across platforms...
+        #  "# Attempt to allocate ~8 GB per engine\nc.IPClusterEngines.n = {engines}"),
 
-        ("#c.IPClusterStart.delay = 1.0",
-         "# No need to delay queuing engines with controller on login node\nc.IPClusterStart.delay = 0.1"),
+        ("# c.Cluster.delay = 1.0",
+         "# No need to delay queuing engines with controller on login node\nc.Cluster.delay = 0.1"),
 
-        ("#c.SlurmLauncher.account = u''",
-         "c.SlurmLauncher.account = u'{account}'"),
+        ("#c.SlurmLauncher.account = ''",
+         "c.SlurmLauncher.account = '{account}'"),
 
-        ("#c.SlurmLauncher.timelimit = u''",
-         "c.SlurmLauncher.timelimit = u'{walltime}'"),
+        ("#c.SlurmLauncher.timelimit = ''",
+         "c.SlurmLauncher.timelimit = '{walltime}'"),
 
-        ("#c.SlurmControllerLauncher.batch_file_name = u'slurm_controller.sbatch'",
-         "c.SlurmControllerLauncher.batch_template_file = u'slurm_mcs_controller.template'"),
+        ("#c.SlurmControllerLauncher.batch_file_name = 'slurm_controller.sbatch'",
+         "c.SlurmControllerLauncher.batch_template_file = 'slurm_mcs_controller.template'"),
 
-        ("#c.SlurmEngineSetLauncher.batch_file_name = u'slurm_engine.sbatch'",
-         "c.SlurmEngineSetLauncher.batch_template_file = u'slurm_mcs_engine.template'"),
+        ("#c.SlurmEngineSetLauncher.batch_template_file = ''",
+         "c.SlurmEngineSetLauncher.batch_template_file = 'slurm_mcs_engine.template'"),
 
-        ("#c.PBSControllerLauncher.batch_file_name = u'pbs_controller'",
-         "c.PBSControllerLauncher.batch_template_file = u'pbs_mcs_controller.template'"),
+        ("#c.PBSControllerLauncher.batch_file_name = 'pbs_controller'",
+         "c.PBSControllerLauncher.batch_template_file = 'pbs_mcs_controller.template'"),
 
-        ("#c.PBSEngineSetLauncher.batch_file_name = u'pbs_engine'",
-         "c.PBSEngineSetLauncher.batch_template_file = u'pbs_mcs_engine.template'"),
+        ("#c.PBSEngineSetLauncher.batch_file_name = 'pbs_engine'",
+         "c.PBSEngineSetLauncher.batch_template_file = 'pbs_mcs_engine.template'"),
 
-        ("#c.LSFControllerLauncher.batch_file_name = u'lsf_controller'",
-         "c.LSFControllerLauncher.batch_template_file = u'lsf_mcs_controller.template'"),
 
-        ("#c.LSFEngineSetLauncher.batch_file_name = u'lsf_engine'",
-         "c.LSFEngineSetLauncher.batch_template_file = u'lsf_mcs_engine.template'"),
+        ("#c.LSFControllerLauncher.batch_file_name = 'lsf_controller'",
+         "c.LSFControllerLauncher.batch_template_file = 'lsf_mcs_controller.template'"),
+
+        ("#c.LSFEngineSetLauncher.batch_file_name = 'lsf_engine'",
+         "c.LSFEngineSetLauncher.batch_template_file = 'lsf_mcs_engine.template'"),
     ),
 
     'ipcontroller_config.py': (
-        ("#c.HubFactory.client_ip = u''",
-         "c.HubFactory.client_ip = u'*'"),
+        ("#c.IPController.client_ip = ''",
+         "c.IPController.client_ip = '*'"),
 
-        ("#c.HubFactory.engine_ip = u''",
-         "c.HubFactory.engine_ip = u'*'"),
+        ("#c.IPController.engine_ip = ''",
+         "c.IPController.engine_ip = '*'"),
     )
 }
 
