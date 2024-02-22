@@ -62,9 +62,13 @@ def mkdirs(newdir, mode=0o770):
 
     try:
         os.makedirs(newdir, mode)
+
     except OSError as e:
         if e.errno != EEXIST:
             raise
+
+        elif not os.path.isdir(newdir):
+            raise FileExistsError(f"Can't create directory {newdir}; non-directory exists at that location.")
 
 def pathjoin(*elements, expanduser=False, abspath=False, normpath=False,
              realpath=False, create=False):

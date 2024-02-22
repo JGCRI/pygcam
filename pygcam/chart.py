@@ -15,7 +15,7 @@ import numpy as np
 import seaborn as sns
 import shlex
 
-from .config import pathjoin, unixPath
+from .config import pathjoin, unixPath, mkdirs
 from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
@@ -401,8 +401,7 @@ def chartGCAM(args, num=None, negate=False):
     # use outputDir if provided, else use parent dir of outFile
     outputDir = outputDir or os.path.dirname(outFile)
 
-    if not os.path.lexists(outputDir):
-        os.mkdir(outputDir, 0o755)
+    mkdirs(outputDir, mode=0o755)
 
     if outFile:
         imgFile = os.path.basename(outFile)
