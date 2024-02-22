@@ -181,7 +181,10 @@ class GcamDataSystem(object):
             is run. Can be helpful to set to False for debugging.
         :return: none
         """
-        self.activate_renv()
+
+        # Apparently, this is not re-entrant, causing MCS trials can abort. See if skipping this works.
+        # self.activate_renv()
+
         self.load_gcamdata()
         mapper = self.mapper
 
