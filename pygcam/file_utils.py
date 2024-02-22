@@ -206,7 +206,7 @@ def copyIfMissing(src, dst, makedirs=False):
         parentDir = os.path.dirname(dst)
         if makedirs and not os.path.isdir(parentDir):
             _logger.debug("mkdir '%s'", parentDir)
-            os.makedirs(parentDir, 0o755)
+            mkdirs(parentDir, mode=0o755)
 
         _logger.info("Copy %s\n      to %s", src, dst)
         shutil.copy(src, dst)
