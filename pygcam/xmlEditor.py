@@ -166,7 +166,8 @@ class XMLEditor(object):
         if xmlFiles:
             _logger.info(f"Copy {len(xmlFiles)} static XML files from {topDir} to {scenDir}")
             for src in xmlFiles:
-                shutil.copy2(src, scenDir)     # copy2 preserves metadata, e.g., timestamp
+                dst = pathjoin(scenDir, os.path.basename(src))
+                shutil.copy2(src, dst)     # copy2 preserves metadata, e.g., timestamp
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))
 
