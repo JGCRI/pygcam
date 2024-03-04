@@ -160,15 +160,18 @@ class XMLEditor(object):
         # Don't write to the shared local-xml directory; creates multiple writers problem
         # scenDir = self.scenario_dir.abs
         # mkdirs(scenDir)
-        trial_scen_dir = mapper.trial_xml_scenario_dir(self.name, create=True)
+        if mapper.mcs_mode == McsMode.TRIAL:
+            local_or_trial_scen_dir = mapper.trial_xml_scenario_dir(create=True)
+        else:
+            local_or_trial_scen_dir = mapper.sandbox_scenario_xml
 
         topDir = mapper.project_scenario_xml_src
         xmlFiles = glob.glob(f"{topDir}/*.xml")
 
         if xmlFiles:
-            _logger.info(f"Copy {len(xmlFiles)} static XML files from {topDir} to {trial_scen_dir}")
+            _logger.info(f"Copy {len(xmlFiles)} static XML files from {topDir} to {local_or_trial_scen_dir}")
             for src in xmlFiles:
-                dst = pathjoin(trial_scen_dir, os.path.basename(src))
+                dst = pathjoin(local_or_trial_scen_dir, os.path.basename(src))
                 shutil.copy2(src, dst)     # copy2 preserves metadata, e.g., timestamp
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))

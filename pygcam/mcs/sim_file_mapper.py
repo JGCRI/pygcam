@@ -188,11 +188,12 @@ class SimFileMapper(AbstractFileMapper):
     def get_scenarios_file(self):
         return self.scenarios_file
 
-    def trial_xml_scenario_dir(self, scenario, create=False) -> str:
+    def trial_xml_scenario_dir(self, scenario=None, create=False) -> str:
         """
         Return the path to the config.xml file in the trial-xml.
         """
         trial_dir = self.trial_dir()
+        scenario = scenario or self.scenario
         path = pathjoin(trial_dir, TRIAL_XML_NAME, scenario, create=create)
         return path
 
@@ -404,12 +405,12 @@ class SimFileMapper(AbstractFileMapper):
 
             # Delete the scenario directory under the sim-level local-xml directory
             # (.../sims/s001/local-xml/{scenario}) so the config file is recreated.
-            sim_local_xml_scenario = self.sim_local_xml_scenario(self.scenario)
+            #sim_local_xml_scenario = self.sim_local_xml_scenario(self.scenario)
 
             # avoid deleting the current directory
             with pushd(os.path.dirname(sandbox_dir)):
-                removeTreeSafely(sim_local_xml_scenario, ignore_errors=True)
-                mkdirs(sim_local_xml_scenario)
+                #removeTreeSafely(sim_local_xml_scenario, ignore_errors=True)
+                #mkdirs(sim_local_xml_scenario)
                 removeTreeSafely(sandbox_scenario_xml, ignore_errors=True)
 
                 if force_create:
