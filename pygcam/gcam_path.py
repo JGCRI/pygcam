@@ -23,6 +23,8 @@ def makeDirPath(*elements, require=False, normpath=True, create=False):
 
     if (create or require) and not os.path.lexists(path):
         if create:
+            # if ('local-xml' in path):
+            #     _logger.debug(f"Create local-xml path")
             _logger.debug(f"Creating directory '{path}'")
             mkdirs(path)
         elif require:

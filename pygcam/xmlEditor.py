@@ -73,7 +73,7 @@ class XMLEditor(object):
 
         #self.scenario_dir_rel = self.scenario_dir_abs =
         # TBD: rename self.scenario_dir -> self.scenario_xml_dir
-        self.scenario_dir = mapper.gcam_path_from_abs(mapper.sandbox_scenario_xml, create=True)
+        self.scenario_dir = mapper.gcam_path_from_abs(mapper.sandbox_scenario_xml, create=False) # True)
         self.baseline_dir = (mapper.gcam_path_from_abs(mapper.sandbox_baseline_xml, create=True)
                              if mapper.sandbox_baseline_xml else None)
 
@@ -155,18 +155,20 @@ class XMLEditor(object):
         if not args.run_config_setup:
             return
 
-        _logger.info("Generating %s for scenario %s", LOCAL_XML_NAME, self.name)
+        # _logger.info("Generating %s for scenario %s", LOCAL_XML_NAME, self.name)
 
-        scenDir = self.scenario_dir.abs
-        mkdirs(scenDir)
+        # Don't write to the shared local-xml directory; creates multiple writers problem
+        # scenDir = self.scenario_dir.abs
+        # mkdirs(scenDir)
+        trial_scen_dir = mapper.trial_xml_scenario_dir(self.name, create=True)
 
         topDir = mapper.project_scenario_xml_src
         xmlFiles = glob.glob(f"{topDir}/*.xml")
 
         if xmlFiles:
-            _logger.info(f"Copy {len(xmlFiles)} static XML files from {topDir} to {scenDir}")
+            _logger.info(f"Copy {len(xmlFiles)} static XML files from {topDir} to {trial_scen_dir}")
             for src in xmlFiles:
-                dst = pathjoin(scenDir, os.path.basename(src))
+                dst = pathjoin(trial_scen_dir, os.path.basename(src))
                 shutil.copy2(src, dst)     # copy2 preserves metadata, e.g., timestamp
         else:
             _logger.info("No XML files to copy in %s", unixPath(topDir, abspath=True))

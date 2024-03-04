@@ -188,13 +188,21 @@ class SimFileMapper(AbstractFileMapper):
     def get_scenarios_file(self):
         return self.scenarios_file
 
+    def trial_xml_scenario_dir(self, scenario, create=False) -> str:
+        """
+        Return the path to the config.xml file in the trial-xml.
+        """
+        trial_dir = self.trial_dir()
+        path = pathjoin(trial_dir, TRIAL_XML_NAME, scenario, create=create)
+        return path
+
     # TBD: might be deprecated in favor of get_config_version?
     def trial_config_path(self, scenario) -> str:
         """
         Return the path to the config.xml file in the trial-xml.
         """
-        trial_dir = self.trial_dir()
-        path = pathjoin(trial_dir, TRIAL_XML_NAME, scenario, CONFIG_XML)
+        trial_xml_scen_dir = self.trial_xml_scenario_dir(scenario)
+        path = pathjoin(trial_xml_scen_dir, CONFIG_XML)
         return path
 
     # Deprecated in favor of get_config_version?
