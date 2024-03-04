@@ -85,9 +85,11 @@ class XMLScenario(object):
 
         # These serve as a no-op on the build-out pass. The directory vars are
         # converted when the scenario is run and the directories are known.
-        self.templateDict = {'scenarioDir' : '{scenarioDir}',
-                             'baselineDir' : '{baselineDir}',
-                             'local-xml'   : '{local-xml}'}
+        self.templateDict = {
+            'scenarioDir' : '{scenarioDir}',
+            'baselineDir' : '{baselineDir}',
+            'local-xml'   : '{local-xml}',  # TBD: interpret differently in MCS mode (as trial-xml)?
+        }
 
         self.iterators = [Iterator(item) for item in root.findall('iterator')]
         self.iteratorDict = {obj.name : obj for obj in self.iterators}
@@ -547,19 +549,21 @@ def createXmlEditorSubclass(setupFile):
 
                 parent_name = mapper.parent
 
-                mcs_values_dir = pathjoin(self.trial_xml_abs, parent_name or mapper.scenario)
-                self.paramFile = pathjoin(mcs_values_dir, MCSVALUES_FILE, normpath=True)
+                trial_xml_scen_dir = pathjoin(self.trial_xml_abs, parent_name or mapper.scenario)
+                self.paramFile = pathjoin(trial_xml_scen_dir, MCSVALUES_FILE, normpath=True)
 
                 scenario_dir = mapper.trial_scenario_dir()
                 baseline_dir = mapper.trial_scenario_dir(parent_name) if parent_name else None
+                local_or_trial_xml_dir = mapper.trial_xml_dir
 
             else:
                 scenario_dir = self.scenario_dir.rel
                 baseline_dir = self.baseline_dir.rel if self.baseline_dir else None
+                local_or_trial_xml_dir = mapper.sandbox_local_xml_rel
 
             self.directoryDict = {'scenarioDir': scenario_dir,
                                   'baselineDir': baseline_dir,
-                                  'local-xml'  : mapper.sandbox_local_xml_rel}
+                                  'local-xml'  : local_or_trial_xml_dir}
 
         def setupDynamic(self, args):
             """"
