@@ -4,6 +4,7 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import shutil
 
+from ..config import getConfig
 from ..constants import TRIAL_XML_NAME, FileVersions
 from ..log import getLogger
 from ..file_utils import pushd
@@ -130,8 +131,11 @@ class GcamDataSystem(object):
 
         gcamdata_dir = self.mapper.ref_gcamdata_dir
 
-        # temp dir is automatically deleted when app exits
-        trial_sandbox_dir = getTempDir(suffix=f"-trial_{trial_num}", delete=delete)
+        # Use non-networked scratch dir for fastest I/O during the drake build.
+        local_scratch = getConfig('GCAM.LocalScratchDir')
+        trial_sandbox_dir = getTempDir(suffix=f"-trial_{trial_num}",
+                                       tmpDir=local_scratch,
+                                       delete=delete) # delete dir when app exits
         _logger.debug(f"Sandbox is {trial_sandbox_dir}")
 
         # Remember the pathname for subsequent calls
