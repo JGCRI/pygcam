@@ -187,7 +187,7 @@ class GcamDataSystem(object):
         """
 
         # Apparently, this is not re-entrant, causing MCS trials can abort. See if skipping this works.
-        self.activate_renv()
+        # self.activate_renv()
 
         self.load_gcamdata()
         mapper = self.mapper
