@@ -4,7 +4,7 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import shutil
 
-from ..config import getConfig
+from ..config import getParamAsPath
 from ..constants import TRIAL_XML_NAME, FileVersions
 from ..log import getLogger
 from ..file_utils import pushd
@@ -132,7 +132,7 @@ class GcamDataSystem(object):
         gcamdata_dir = self.mapper.ref_gcamdata_dir
 
         # Use non-networked scratch dir for fastest I/O during the drake build.
-        local_scratch = getConfig('GCAM.LocalScratchDir')
+        local_scratch = getParamAsPath('GCAM.LocalScratchDir')
         trial_sandbox_dir = getTempDir(suffix=f"-trial_{trial_num}",
                                        tmpDir=local_scratch,
                                        delete=delete) # delete dir when app exits
@@ -187,7 +187,7 @@ class GcamDataSystem(object):
         """
 
         # Apparently, this is not re-entrant, causing MCS trials can abort. See if skipping this works.
-        # self.activate_renv()
+        self.activate_renv()
 
         self.load_gcamdata()
         mapper = self.mapper
