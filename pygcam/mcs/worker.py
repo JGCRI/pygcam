@@ -30,7 +30,7 @@ def _secondsToStr(t):
     hours, minutes   = divmod(minutes, 60)
     return "%d:%02d:%02d" % (hours, minutes, seconds)
 
-def _runPygcamSteps(steps, mapper, raiseError=True):
+def _runPygcamSteps(steps, mapper, skipSteps=None, raiseError=True):
     """
     run "gt +P {project} --mcs=trial run -s {step[,step,...]} -S {scenarioName} ..."
     For Monte Carlo trials.
@@ -51,6 +51,9 @@ def _runPygcamSteps(steps, mapper, raiseError=True):
                 '--step', ','.join(map(str.strip, steps.split(','))),
                 '--scenario', context.scenario,
                 '--sandboxDir', trial_dir]
+
+    if skipSteps:
+        toolArgs.extend(['--skipStep', ','.join(map(str.strip, skipSteps.split(',')))])
 
     if context.groupName:
         toolArgs.extend(['--group', context.groupName])
@@ -104,14 +107,15 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
     baselineName = context.baseline
     isBaseline = not baselineName
 
-    # Run setup steps before applying trial data
-    setup_steps = getParam('MCS.SetupSteps')
-
     trial_cfg = mapper.get_config_version(FileVersions.TRIAL_XML)
     deleteFile(trial_cfg)
 
+    # Run setup steps before applying trial data
+    setup_steps = getParam('MCS.SetupSteps')
+    skip_steps  = getParam('MCS.SetupSkipSteps') or None
+    
     if setup_steps:
-        _runPygcamSteps(setup_steps, mapper)
+        _runPygcamSteps(setup_steps, mapper, skipSteps=skip_steps)
 
     if isBaseline and not noGCAM:
         # Copy local-xml config to trial-xml
