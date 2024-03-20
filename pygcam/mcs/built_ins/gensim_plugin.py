@@ -168,55 +168,55 @@ def saveTrialData(mapper : SimFileMapper, df, start=0):
     _logger.info(f'Saved {trials} trials for sim_id {sim_id}')
 
 # Deprecated? Or may need to be called by runsim
-def runStaticSetup(mapper : SimFileMapper, project : Project):
-    """
-    Run the --staticOnly setup in the MCS copy of the workspace, for all scenarios.
-    This is called from gensim, so we fake the "context" for trial 0, since all
-    trials have local-xml symlinked to the simulation's local-xml.
-    """
-    # TBD: not sure the comment above remains accurate when running the data system
-
-    from ... import tool
-    from ..error import GcamToolError
-
-    projectName = project.projectName
-    scenarios = project.getKnownScenarios()
-    scenarios_arg = ','.join(scenarios)
-
-    # useGroupDir = project.scenarioGroup.useGroupDir
-    # groupSubdir = groupName if useGroupDir else ''
-    #
-    # create symlinks from all the scenarios' local-xml dirs to shared one
-    # under {projectName}/Workspace
-    # sandboxDir = mapper.sandbox_dir
-    #
-    # wsXmlDir = pathjoin(runWorkspace, LOCAL_XML_NAME, create=True)
-    #
-    # for scenario in scenarios:
-    #     dirname = pathjoin(sandboxDir, scenario, create=True)
-    #     linkname  = pathjoin(dirname, LOCAL_XML_NAME)
-    #     symlink(wsXmlDir, linkname)
-
-     # N.B. RunWorkspace for gensim is pygcam's RefWorkspace
-    toolArgs = ['--projectName', projectName,
-                '--mcs', McsMode.GENSIM.value,
-                'run',
-                '--step', 'setup2',    # TBD: switch back to "setup" when pygcam 2.0 is released
-                '--scenario', scenarios_arg,
-                '--sandboxDir', mapper.get_sim_local_xml()]
-
-    group = mapper.get_scenario_group()
-    if group:
-        toolArgs.extend(['-g', group])
-
-    command = 'gt ' + ' '.join(toolArgs)
-    _logger.debug(f'Running: {command}')
-    status = tool.main(argv=toolArgs, mapper=mapper, raiseError=True)
-
-    if status != 0:
-        raise GcamToolError(f'"{command}" exited with status {status}')
-
-    return status
+# def runStaticSetup(mapper : SimFileMapper, project : Project):
+#     """
+#     Run the --staticOnly setup in the MCS copy of the workspace, for all scenarios.
+#     This is called from gensim, so we fake the "context" for trial 0, since all
+#     trials have local-xml symlinked to the simulation's local-xml.
+#     """
+#     # TBD: not sure the comment above remains accurate when running the data system
+#
+#     from ... import tool
+#     from ..error import GcamToolError
+#
+#     projectName = project.projectName
+#     scenarios = project.getKnownScenarios()
+#     scenarios_arg = ','.join(scenarios)
+#
+#     # useGroupDir = project.scenarioGroup.useGroupDir
+#     # groupSubdir = groupName if useGroupDir else ''
+#     #
+#     # create symlinks from all the scenarios' local-xml dirs to shared one
+#     # under {projectName}/Workspace
+#     # sandboxDir = mapper.sandbox_dir
+#     #
+#     # wsXmlDir = pathjoin(runWorkspace, LOCAL_XML_NAME, create=True)
+#     #
+#     # for scenario in scenarios:
+#     #     dirname = pathjoin(sandboxDir, scenario, create=True)
+#     #     linkname  = pathjoin(dirname, LOCAL_XML_NAME)
+#     #     symlink(wsXmlDir, linkname)
+#
+#      # N.B. RunWorkspace for gensim is pygcam's RefWorkspace
+#     toolArgs = ['--projectName', projectName,
+#                 '--mcs', McsMode.GENSIM.value,
+#                 'run',
+#                 '--step', 'setup2',    # TBD: switch back to "setup" when pygcam 2.0 is released
+#                 '--scenario', scenarios_arg,
+#                 '--sandboxDir', mapper.get_sim_local_xml()]
+#
+#     group = mapper.get_scenario_group()
+#     if group:
+#         toolArgs.extend(['-g', group])
+#
+#     command = 'gt ' + ' '.join(toolArgs)
+#     _logger.debug(f'Running: {command}')
+#     status = tool.main(argv=toolArgs, mapper=mapper, raiseError=True)
+#
+#     if status != 0:
+#         raise GcamToolError(f'"{command}" exited with status {status}')
+#
+#     return status
 
 def genSimulation(mapper : SimFileMapper, data_file, method):
     '''

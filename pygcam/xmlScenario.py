@@ -439,7 +439,7 @@ class Function(ConfigAction):
         try:
             eval(codeStr)
         except SyntaxError as e:
-            raise SetupException(f"Failed to evaluate expression {codeStr}: {e}")
+            raise SetupException(f"Function: Failed to evaluate expression {codeStr}: {e}")
 
     def __str__(self):
         tag = self.tag

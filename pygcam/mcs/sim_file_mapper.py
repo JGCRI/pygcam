@@ -101,30 +101,16 @@ class SimFileMapper(AbstractFileMapper):
         self.app_xml_param_file   = pathjoin(self.sim_app_xml, PARAMETERS_XML)
         self.app_xml_results_file = pathjoin(self.sim_app_xml, RESULTS_XML)
 
-        # In non-MCS Sandbox, the "local-xml" directory is at the same level as scenario dirs.
-        # In the SimFileMapper, "local-xml" is under the sim directory (e.g., sims/s001/local-xml).
-        self.sim_local_xml = pathjoin(sim_dir, LOCAL_XML_NAME, create=True)
-        self.sandbox_local_xml = self.sim_local_xml # so generic methods work properly
+        # used in xmlEditor only for non-MCS runs
+        # self.sandbox_local_xml_rel = None
 
-        self.sandbox_baseline_xml = (None if self.is_baseline
-                                      else makeDirPath(self.sandbox_local_xml, self.baseline,
-                                                       create=create_dirs))
-        if scenario:
-            # When used by gensim, no scenario is identified
-            self.sandbox_scenario_xml = makeDirPath(self.sandbox_local_xml, scenario, create=create_dirs)
-            self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')      # TBD: new subdir under local-xml
-            self.scenario_config_path = pathjoin(self.sim_local_xml, scenario, CONFIG_XML)
-
-            # Directories accessed from configuration XML files (so we store relative-to-exe and
-            # absolute paths. Note that gcam_path requires self.sandbox_exe_dir to be set first.
-            self.scenario_gcam_xml_dir = self.gcam_path('../input/gcamdata/xml')
-        else:
-            self.sandbox_scenario_xml = self.sandbox_dynamic_xml = None
-            self.scenario_config_path = self.scenario_gcam_xml_dir = None
+        self.sandbox_scenario_xml = None
+        self.sandbox_dynamic_xml = None
+        self.scenario_config_path = None
+        self.scenario_gcam_xml_dir = None
 
         self.logs_dir = None
         self._set_trial_dependent_ivars(scenario, create_dirs=create_dirs)
-
 
     def _set_trial_dependent_ivars(self, scenario, create_dirs=True):
         # Reset dependent pathnames stored by FileMapper superclass
@@ -139,15 +125,25 @@ class SimFileMapper(AbstractFileMapper):
                                          if self.parent_mapper else None)
             self.logs_dir = pathjoin(sbx_scen_dir, 'exe', 'logs', create=create_dirs)
 
-            self.trial_xml_dir = pathjoin(trial_dir, TRIAL_XML_NAME)
+            self.trial_xml_dir = trial_xml_dir = pathjoin(trial_dir, TRIAL_XML_NAME)
+            self.sandbox_local_xml = self.trial_xml_dir  # so generic methods work properly
 
-            self.sandbox_local_xml_rel = os.path.relpath(self.sandbox_local_xml, self.sandbox_exe_dir)
+            self.sandbox_baseline_xml = (None if self.is_baseline
+                                         else makeDirPath(self.trial_xml_dir, self.baseline,
+                                                          create=create_dirs))
 
             self.sandbox_query_results_dir = pathjoin(sbx_scen_dir, QRESULTS_DIRNAME)
             self.sandbox_diffs_dir = pathjoin(sbx_scen_dir, DIFFS_DIRNAME)
             self.sandbox_output_dir = pathjoin(sbx_scen_dir, OUTPUT_DIRNAME)
             self.sandbox_xml_db = pathjoin(self.sandbox_output_dir, getParam('GCAM.DbFile'))
 
+            self.sandbox_scenario_xml = makeDirPath(trial_xml_dir, scenario, create=create_dirs)
+            self.sandbox_dynamic_xml = pathjoin(self.sandbox_scenario_xml, 'dynamic')
+            self.scenario_config_path = pathjoin(trial_xml_dir, scenario, CONFIG_XML)
+
+        # Directories accessed from configuration XML files (so we store relative-to-exe and
+        # absolute paths. Note that gcam_path requires self.sandbox_exe_dir to be set first.
+        self.scenario_gcam_xml_dir = self.gcam_path('../input/gcamdata/xml')
 
     # TBD: might not be useful since ivars are not reset to match context.
     #   Used only in one place and use is questionable.
@@ -402,10 +398,6 @@ class SimFileMapper(AbstractFileMapper):
 
         if force_create or mcs_mode == McsMode.TRIAL:
             sandbox_scenario_xml = self.sandbox_scenario_xml
-
-            # Delete the scenario directory under the sim-level local-xml directory
-            # (.../sims/s001/local-xml/{scenario}) so the config file is recreated.
-            #sim_local_xml_scenario = self.sim_local_xml_scenario(self.scenario)
 
             # avoid deleting the current directory
             with pushd(os.path.dirname(sandbox_dir)):

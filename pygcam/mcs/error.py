@@ -52,7 +52,7 @@ class BaseSpecError(PygcamMcsSystemError):
 
     def __init__(self, message):
         if self.filename and self.lineNum:
-            self.message = 'File %s, line %i: ' % (self.filename, self.lineNum) + message
+            self.message = f'File {self.filename}, line {self.lineNum}: {message}'
         else:
             self.message = message
 

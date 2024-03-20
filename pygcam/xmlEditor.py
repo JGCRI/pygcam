@@ -68,7 +68,9 @@ class XMLEditor(object):
         self.setupArgs = None
         self.config_path = None
 
-        self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
+        # deprecated
+        # self.local_xml_rel = pathjoin("..", LOCAL_XML_NAME)
+
         self.trial_xml_rel = self.trial_xml_abs = None      # used by MCS only TBD: use GcamPath
 
         #self.scenario_dir_rel = self.scenario_dir_abs =
@@ -140,10 +142,9 @@ class XMLEditor(object):
 
     def setupStatic(self, args):
         """
-        Create static XML files in local-xml. By "static", we mean files whose contents are
-        constant, independent of baseline results. In comparison, policy scenarios may generate
-        dynamic XML files whose contents are computed from baseline results. While static XML
-        files can be shared across trials in an MCS, dynamic XMLs are distinct by trial.
+        Create static XML files in local-xml or trial-xml. By "static", we mean files whose
+        contents are constant, independent of baseline results. In comparison, policy scenarios
+        may generate dynamic XML files whose contents are computed from baseline results.
 
         :param args: (argparse.Namespace) arguments passed from the top-level call to setup
             sub-command.

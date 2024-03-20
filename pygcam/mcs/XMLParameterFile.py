@@ -327,7 +327,7 @@ class XMLDistribution(XMLTrialData):
                     self.otherArgs = eval(codeStr)
 
                 except SyntaxError as e:
-                    raise DistributionSpecError("Failed to evaluate expression {}: {}".format(codeStr, e))
+                    raise DistributionSpecError(f"XMLDistribution: failed to evaluate expression {codeStr}: {e}")
 
         self.child = element[0]
         self.distroName = self.child.tag.lower()

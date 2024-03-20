@@ -4,7 +4,7 @@ from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import shutil
 
-from ..config import getParamAsPath
+from ..config import getParamAsPath, getParamAsBoolean
 from ..constants import TRIAL_XML_NAME, FileVersions
 from ..log import getLogger
 from ..file_utils import pushd
@@ -186,8 +186,10 @@ class GcamDataSystem(object):
         :return: none
         """
 
-        # Apparently, this is not re-entrant, causing MCS trials can abort. See if skipping this works.
-        # self.activate_renv()
+        # Apparently, this is not re-entrant, so activating causes some MCS trials
+        # to abort. Skipping this works on the cluster but not locally on RP's Mac.
+        if getParamAsBoolean('GCAM.Renv.Activate'):
+            self.activate_renv()
 
         self.load_gcamdata()
         mapper = self.mapper
