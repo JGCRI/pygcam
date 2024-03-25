@@ -113,7 +113,7 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
     # Run setup steps before applying trial data
     setup_steps = getParam('MCS.SetupSteps')
     skip_steps  = getParam('MCS.SetupSkipSteps') or None
-    
+
     if setup_steps:
         _runPygcamSteps(setup_steps, mapper, skipSteps=skip_steps)
 

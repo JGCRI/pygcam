@@ -95,7 +95,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
     #     distplot(values[1])
 
     # Use the above instead of this:
-    ax = sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'shade': shade})
+    ax = sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'fill': shade})
 
     #sns.axlabel(xlabel=xlabel, ylabel=ylabel)
     if xlabel:
@@ -277,7 +277,7 @@ def plotConvergence(simId, expName, paramName, values, show=True, save=False):
     nValues = list(range(increment, count + increment - 1, increment))
 
     for N in nValues:
-        sublist = values[:N]
+        sublist = values.iloc[:N]
         results['Mean'].append(sublist.mean())
         results['Stdev'].append(sublist.std())
         results['Skewness'].append(sublist.skew())
