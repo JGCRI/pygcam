@@ -14,7 +14,7 @@ def clean_help(s):
 
 class Deprecate(argparse.Action):
     """
-    Support for deprecated arguments. Use ``alt_text`` to add to the
+    Support for argument deprecation. Use ``alt_text`` to add to the
     basic deprecation message, e.g., to suggest alternatives.
     """
     def __init__(self, option_strings, dest, alt_text='', **kwargs):
@@ -68,12 +68,6 @@ class SubcommandABC(object):
     @classmethod
     def getInstance(cls, name):
         return SubcommandABC.Instances.get(name)
-
-    # Deprecated?
-    # @classmethod
-    # def getParser(cls, name):
-    #     obj = cls.getInstance(name)
-    #     return obj.parser
 
     def __init__(self, name, subparsers, kwargs, group=None, label=None,
                  guiSuppress=False):

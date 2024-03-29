@@ -2,7 +2,7 @@
 '''
 Created on 4/26/15
 
-@author: rjp
+Author: Rich Plevin
 '''
 from ..subcommand import SubcommandABC, clean_help
 

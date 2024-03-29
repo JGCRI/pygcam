@@ -91,12 +91,8 @@ class QueryCommand(SubcommandABC):
                                     Defaults to value of config variable GCAM.SandboxDir.
                                     Overridden by the -d flag.'''))
 
-        # TBD: change to action='Deprecate'
-        parser.add_argument('-w', '--workspace', default='',
-                            help=clean_help('''[DEPRECATED: Use -x/--sandbox instead] 
-                                The sandbox directory in which to find the XML database.
-                                Defaults computed as {GCAM.SandboxDir}/{groupDir}/{scenario}.
-                                Overridden by the -d flag.'''))
+        # Deprecations
+        parser.add_argument('-w', '--workspace', action=Deprecate, alt_text="Use -x / --sandbox instead.")
 
         return parser
 

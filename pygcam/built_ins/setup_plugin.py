@@ -96,7 +96,7 @@ class SetupCommand(SubcommandABC):
                             help=clean_help(f'''Years to generate constraints for. Must be of the form
                             XXXX-YYYY. Default is "{defaultYears}"'''))
 
-        # Deprecated arguments
+        # Deprecations
         parser.add_argument('-b', '--baseline', action=Deprecate)
         parser.add_argument('-G', '--srcGroupDir', action=Deprecate)
         parser.add_argument('-r', '--refWorkspace', action=Deprecate)

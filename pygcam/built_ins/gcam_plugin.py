@@ -38,7 +38,7 @@ class GcamCommand(SubcommandABC):
                             help=clean_help('''Do not run gcam within a wrapper that detects errors as early as possible
                             and terminates the model run. By default, the wrapper is used.'''))
 
-        # Deprecated args
+        # Deprecations
         parser.add_argument('-w', '--workspace', action=Deprecate, alt_text="Use -x / --sandbox instead.")
         parser.add_argument('-f', '--forceCreate', action=Deprecate)
         parser.add_argument('-r', '--refWorkspace', action=Deprecate)

@@ -99,16 +99,6 @@ def test_sandbox():
     local_config_path = mapper.get_config_version(FileVersions.LOCAL_XML)
     assert local_config_path == pathjoin(mapper.sandbox_scenario_xml, CONFIG_XML)
 
-    # Deprecated
-    # next_config_path = mapper.create_next_config_version()
-    # assert next_config_path == base_config_path
-
-    # config_path = mapper.get_config_version(FileVersions.CURRENT)
-    # assert config_path == base_config_path
-
-    # config_path = mapper.get_config_version(FileVersions.NEXT)
-    # assert config_path == local_config_path
-
     #
     # MCS sandbox test
     #
