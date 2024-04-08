@@ -25,11 +25,15 @@ class ModelInterfaceCommand(SubcommandABC):
         parser.add_argument('-d', '--useDefault', action='store_true',
                             help=clean_help('''Use the Main_Queries.xml file from the GCAM
                             reference workspace.'''))
+        parser.add_argument('-g', '--glimpse', action='store_true',
+                            help=clean_help('''Use the GLIMPSE-ModelInterface rather than the standard one.'''))
         parser.add_argument('-u', '--updateProperties', action='store_true',
                             help=clean_help('''Update the "model_interface.properties" file in the directory
                             indicated by config var file GCAM.QueryDir so it refers to the query file
                             indicated by config var GCAM.MI.QueryFile, or if this does not refer
                             to an existing file, by var GCAM.MI.RefQueryFile.'''))
+        parser.add_argument('-q', '--queryFile', action='store_true',
+                            help=clean_help('''Specify the XML file to read query definitions from.'''))
         return parser
 
     def run(self, args, tool):
@@ -63,7 +67,13 @@ class ModelInterfaceCommand(SubcommandABC):
                 xmlEdit(propFile, pairs, useCache=False)
 
             # run ModelInterface
-            cmd = getParam('GCAM.MI.Command')
+            if args.glimpse:
+                cmd = getParam('GLIMPSE.MI.Command')
+                _logger.debug('GLIMPSE.MI.Command: %s', cmd)
+
+            else:
+                cmd = getParam('GCAM.MI.Command')
+
             _logger.debug(cmd)
             shellCommand(cmd, shell=True, raiseError=True)
 

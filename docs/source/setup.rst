@@ -14,7 +14,6 @@ are written to a directory called ``local-xml`` in the run-time
 :ref:`workspace <workspaces-label>`.
 
 .. seealso::
-
      Command-line usage is described on the :ref:`gt setup <setup>` page.
 
 Usage
@@ -151,9 +150,9 @@ Benefits
     requiring maintenance of ancillary files. (The script is
     the documentation.)
 
-  * Facilitates project file management using version control systems such
-    as ``svn`` or ``git`` by operating on small scripts rather than large
-    XML files.
+  * Facilitates use of version control systems such
+    as ``svn`` or ``git`` by operating on small scripts rather than
+    very large XML files.
 
   * Centralizes common functionality. Modifications to the Python xmlEditor
     module are immediately available to all projects.

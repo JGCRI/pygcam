@@ -33,9 +33,18 @@ def str_replace_from_dict(s, d):
     return s
 
 def load_R_code(code_str):
+    """
+    Loads a string containing R code into the R interpreter running within Python.
+
+    :param code_str: (str) R code string
+    :return: none
+    """
     robjects.r(code_str)
 
 class GcamDataSystem(object):
+    """
+    Class to run the GCAM data system within a Monte Carlo simulation
+    """
 
     def __init__(self, mapper : SimFileMapper, renv_dir=None, xml_modifier=None):
         """
@@ -56,7 +65,13 @@ class GcamDataSystem(object):
         self.trial_sandbox_dict = dict()  # key = trial num; value is pathname of temp dir
 
     def trial_func(self, trial_num):
-        # Subclass can define if needed
+        """
+        A function to call for each Monte Carlo trial. Does nothing in ``GcamDataSystem``;
+        subclass can define this if needed.
+
+        :param trial_num: (int) the trial being run
+        :return: none
+        """
         return None
 
     def activate_renv(self):
@@ -291,6 +306,15 @@ class GcamDataSystem(object):
         return dst_paths
 
     def move_modified_xml_files(self, src_dir, dst_dir):
+        """
+        Move modified XML files from the temporary source directory
+        ``src_dir`` to the destination directory ``dst_dir``.
+
+        :param src_dir: (str) the source directory
+        :param dst_dir: (str) the destination directory
+        :return: (list of str) the paths to the modified XML files
+           in the destination directory
+        """
         src_dir = Path(src_dir)
         modified = src_dir.glob(f'*{self.xml_modifier}.xml')
         if not modified:
