@@ -276,7 +276,7 @@ def getCachedFile(csvPath):
         try:
             outputCache[csvPath] = result = QueryResult(csvPath)
         except Exception as e:
-            _logger.warning(f'saveResults: Failed to read query result: {e}')
+            _logger.warning(f'getCachedFile: Failed to read query result: {e}')
             raise FileMissingError(csvPath)
 
     return result

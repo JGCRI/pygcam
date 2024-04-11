@@ -103,6 +103,8 @@ class TempFile(object):
         :raises: PygcamException if the path is not related to a TempFile instance.
         """
         from .log import getLogger
+        from .config import getParamAsBoolean
+
         _logger = getLogger(__name__)
 
         path = self.path
@@ -123,7 +125,8 @@ class TempFile(object):
 
         if self.delete:
             try:
-                removeFileOrTree(path, raiseError=True)
+                if not getParamAsBoolean('GCAM.DeleteTempFiles'):
+                    removeFileOrTree(path, raiseError=True)
             except Exception as e:
                 _logger.debug('Failed to delete "%s": %s', path, e)
 

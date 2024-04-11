@@ -1259,7 +1259,7 @@ class GcamDatabase(CoreDatabase):
         if pygcam_version < (2, 0, 0):
             ts = TimeSeries(runId=runId, outputId=outputId, regionId=region, units=units)
         else:
-            ts = TimeSeries(runId=runId, outputId=outputId, regionName=region, units=units)
+            ts = TimeSeries(runId=runId, outputId=outputId, region=region, units=units)
 
         for name, value in values.items():  # Set the values for "year" columns
             setattr(ts, name, value)
