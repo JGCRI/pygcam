@@ -505,7 +505,7 @@ class GensimCommand(McsSubcommandABC):
         parser.add_argument('-m', '--method', choices=methods,
                             default='montecarlo',
                             help=clean_help('''Use the specified method to generate trial data. Default is "montecarlo".
-                                Note that in the only supported distribution types for the 'full-factorial' method, are: 
+                                Note that the only supported distribution types for the 'full-factorial' method are: 
                                 Constant, Binary, Integer, Grid, and Sequence'''))
 
         # TBD: drop this since it can be set from .pygcam.cfg and runsim has no method to process it
