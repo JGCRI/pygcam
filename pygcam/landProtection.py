@@ -11,11 +11,11 @@ import sys
 
 from lxml import etree as ET
 
-from .config import getParam, parse_version_info, pathjoin
+from .config import getParam, parse_gcam_version, pathjoin, mkdirs
 from .constants import UnmanagedLandClasses
 from .error import FileFormatError, CommandlineError, PygcamException
 from .log import getLogger
-from .utils import mkdirs, flatten, getRegionList
+from .utils import flatten, getRegionList
 from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
@@ -84,7 +84,7 @@ class LandProtection(object):
 
         scenario = Scenario.getScenario(scenarioName)
         if not scenario:
-            raise FileFormatError("Scenario '%s' was not found" % scenarioName)
+            raise FileFormatError(f"Scenario '{scenarioName}' was not found")
 
         # Iterate over all definitions for this scenario, applying the protections
         # incrementally to the tree representing the XML file that was read in.
@@ -124,7 +124,7 @@ class LandProtection(object):
                 backupFile = outfile + '~'
                 os.rename(outfile, backupFile)
             except Exception as e:
-                PygcamException('Failed to create backup file "%s": %s', backupFile, e)
+                PygcamException(f'Failed to create backup file "{backupFile}": {e}')
 
         _logger.info("Writing '%s'...", outfile)
         tree.write(outfile, xml_declaration=True, pretty_print=True)
@@ -230,9 +230,9 @@ def _makeRegionXpath(regions):
     if isinstance(regions, str):
         regions = [regions]
 
-    patterns = map(lambda s: "@name='%s'" % s, regions)
+    patterns = map(lambda s: f"@name='{s}'", regions)
     regionPattern = ' or '.join(patterns)
-    xpath = "//region[%s]" % regionPattern
+    xpath = f"//region[{regionPattern}]"
     _logger.debug('regionXpath: ' + xpath)
     return xpath
 
@@ -241,9 +241,9 @@ def _makeLandClassXpath(landClasses, protected=False):
         landClasses = [landClasses]
 
     prefix = 'Protected' if protected else ''
-    patterns = ['starts-with(@name, "%s%s")' % (prefix, s) for s in landClasses]
+    patterns = [f'starts-with(@name, "{prefix}{s}")' for s in landClasses]
     landPattern = ' or '.join(patterns)
-    xpath = ".//UnmanagedLandLeaf[%s]" % landPattern
+    xpath = f".//UnmanagedLandLeaf[{landPattern}]"
     _logger.debug('landClassXpath: ' + xpath)
     return xpath
 
@@ -279,13 +279,13 @@ def unProtectLand(tree, landClasses=None, otherArable=False, regions=None):
         for node in protectedNodes:
             name = node.get('name')
             unProtectedName = name[len("Protected"):]
-            prefix = './/UnmanagedLandLeaf[@name="%s"]' % unProtectedName
+            prefix = f'.//UnmanagedLandLeaf[@name="{unProtectedName}"]'
 
             protectedAllocs = node.xpath(".//allocation|.//landAllocation")
 
             for alloc in protectedAllocs:
                 year = alloc.get('year')
-                xpath = prefix + '//%s[@year="%s"]' % (alloc.tag, year)
+                xpath = f'{prefix}//{alloc.tag}[@year="{year}"]'
                 unprotectedAlloc = landRoot.find(xpath)
                 originalArea = float(unprotectedAlloc.text) + float(alloc.text)
                 unprotectedAlloc.text = str(originalArea)
@@ -296,6 +296,7 @@ def unProtectLand(tree, landClasses=None, otherArable=False, regions=None):
             parent = landNode.getparent()
             parent.remove(landNode)
 
+# Deprecated
 def createProtected(tree, fraction, landClasses=None, otherArable=False,
                     regions=None, unprotectFirst=False):
     """
@@ -314,7 +315,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
            protecting.
     :return: None
     """
-    version = parse_version_info()
+    version = parse_gcam_version()
     if version >= VersionInfo(5, 0, 0):
         raise PygcamException("Called landProtection.createProtected on GCAM version >= 5.0. Use landProtectionUpdate.protectLand instead.")
 
@@ -348,7 +349,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
             node = nodes[0]
             regNodes = list(node.iterancestors(tag='region'))
             region = regNodes[0].get('name')
-            raise FileFormatError('Error: Land class %s is already protected in region %s' % (node.tag, region))
+            raise FileFormatError(f'Error: Land class {node.tag} is already protected in region {region}')
 
         nodes = landRoot.xpath(unmgdXpath)
 
@@ -359,7 +360,7 @@ def createProtected(tree, fraction, landClasses=None, otherArable=False,
             newName = 'Protected' + node.get('name')
             new.set('name', newName)
             landnode.set('name', newName)
-            landnode.set('fraction', "%.4f" %fraction)
+            landnode.set('fraction', f"{fraction:.4f}")
             landnode.append(new)
 
             originalAreas = node.xpath(allocXpath)
@@ -396,12 +397,9 @@ def protectLand(infile, outfile, fraction, landClasses=None, otherArable=False,
 
 # TBD: NEEDS TESTING
 def _landXmlPaths(workspace):
-    version = parse_version_info()
-    landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml'] \
-        if version >= VersionInfo(5, 1, 0) else ['land2.xml', 'land3.xml']
+    landXmlFiles = ['land_input_2.xml', 'land_input_3_IRR.xml', 'land_input_4_IRR_MGMT.xml', 'land_input_5_IRR_MGMT.xml']
 
-    subdir = 'aglu-xml' if version < (5, 1, 0) else ''
-    xmlDir = pathjoin(workspace, 'input', getParam('GCAM.DataDir'), 'xml', subdir)
+    xmlDir = pathjoin(workspace, 'input', 'gcamdata', 'xml')
     paths = [pathjoin(xmlDir, fname) for fname in landXmlFiles]
     return paths
 
@@ -440,7 +438,7 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
 
     landProtection = parseLandProtectionFile(scenarioFile=scenarioFile)
 
-    workspace = workspace or getParam('GCAM.SandboxRefWorkspace')
+    workspace = workspace or getParam('GCAM.SandboxWorkspace')
     xmlFiles = xmlFiles or _landXmlPaths(workspace)
 
     for inFile in xmlFiles:
@@ -449,7 +447,7 @@ def runProtectionScenario(scenarioName, outputDir=None, workspace=None,
 
         # check that we're not clobbering the input file
         if not inPlace and os.path.lexists(outFile) and os.path.samefile(inFile, outFile):
-            raise CommandlineError("Attempted to overwrite '%s' but --inPlace was not specified." % inFile)
+            raise CommandlineError(f"Attempted to overwrite '{inFile}' but --inPlace was not specified.")
 
         landProtection.protectLand(inFile, outFile, scenarioName, unprotectFirst=unprotectFirst)
 
@@ -475,8 +473,7 @@ def protectLandMain(args):
     # Process instructions from protection XML file
     if scenarioName:
         if not scenarioFile:
-            raise CommandlineError('Scenario "%s" was specified, but a scenario file was not identified',
-                                   scenarioName)
+            raise CommandlineError(f'Scenario "{scenarioName}" was specified, but a scenario file was not identified')
         runProtectionScenario(scenarioName, outDir, workspace=workspace,
                               scenarioFile=scenarioFile, xmlFiles=xmlFiles, inPlace=args.inPlace)
         return
@@ -577,7 +574,7 @@ def _landtype_basin_pairs(reg_dict):
 def _cache_land_nodes(tree, regions):
     d = {}
     for reg in regions:
-        nodes = tree.xpath('//region[@name="{}"]//UnmanagedLandLeaf'.format(reg))
+        nodes = tree.xpath(f'//region[@name="{reg}"]//UnmanagedLandLeaf')
         d[reg] = {eltname(node) : node for node in nodes}
     return d
 
@@ -590,7 +587,7 @@ def _protect_land(tree, prot_dict):
         for (landtype, basin, prot_frac) in prot_tups:
             for (l, b) in land_basin_pairs:
                 if landtype == l and (basin == b or not basin):
-                    _logger.debug("Processing {}, {}, {}".format(reg, landtype, b))
+                    _logger.debug(f"Processing {reg}, {landtype}, {b}")
                     total = _get_total_area(reg_dict, landtype, b)
                     prot_vals   = total * prot_frac
                     unprot_vals = total - prot_vals
@@ -615,7 +612,7 @@ def protectLandTree(tree, scenarioName):
 
     scenario = Scenario.getScenario(scenarioName)
     if not scenario:
-        raise FileFormatError("Protection scenario '%s' was not found" % scenarioName)
+        raise FileFormatError(f"Protection scenario '{scenarioName}' was not found")
 
     prot_dict = defaultdict(list)
 

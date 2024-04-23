@@ -2,6 +2,7 @@
 # See the https://opensource.org/licenses/MIT for license details.
 
 from ...log import getLogger
+from ...config import mkdirs
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
@@ -19,16 +20,16 @@ def driver(args, tool):
     import shutil
 
     from ...config import getParam
-    from ..Database import getDatabase
+    from ..database import getDatabase
     from ..error import PygcamMcsSystemError
 
     if args.deleteSims:
         # Remove the whole sims dir and remake it
-        runSimsDir = getParam('MCS.RunSimsDir')
+        runSimsDir = getParam('MCS.SandboxSimsDir')
         if os.path.exists(runSimsDir):
             try:
                 shutil.rmtree(runSimsDir)
-                os.mkdir(runSimsDir)
+                mkdirs(runSimsDir)
             except Exception as e:
                 raise PygcamMcsSystemError('Failed to recreate sim dir %s: %s' % (runSimsDir, e))
 

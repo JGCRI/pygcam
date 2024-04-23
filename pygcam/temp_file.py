@@ -2,7 +2,8 @@ import os
 from tempfile import mkstemp, mkdtemp
 
 from .error import PygcamException
-from .config import getParam
+from .config import getParam, mkdirs
+from .file_utils import removeFileOrTree
 
 def getTempFile(suffix='', tmpDir=None, text=True, delete=True):
     """
@@ -65,8 +66,6 @@ class TempFile(object):
             rather than a temporary file.
         :return: none
         """
-        from .utils import mkdirs
-
         self.suffix = suffix
         self.delete = delete
         self.fd = None
@@ -104,6 +103,8 @@ class TempFile(object):
         :raises: PygcamException if the path is not related to a TempFile instance.
         """
         from .log import getLogger
+        from .config import getParamAsBoolean
+
         _logger = getLogger(__name__)
 
         path = self.path
@@ -123,9 +124,9 @@ class TempFile(object):
         _logger.debug("%s TempFile file '%s'", deleting, path)
 
         if self.delete:
-            from .utils import removeFileOrTree
             try:
-                removeFileOrTree(path, raiseError=True)
+                if not getParamAsBoolean('GCAM.DeleteTempFiles'):
+                    removeFileOrTree(path, raiseError=True)
             except Exception as e:
                 _logger.debug('Failed to delete "%s": %s', path, e)
 

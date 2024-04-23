@@ -5,7 +5,8 @@ from copy import deepcopy
 import re
 from lxml import etree as ET
 from lxml.etree import Element, SubElement
-from .config import pathjoin, getParam
+from .config import pathjoin, getParam, mkdirs
+from .constants import QRESULTS_DIRNAME
 from .log import getLogger
 from .XMLFile import XMLFile
 
@@ -624,7 +625,7 @@ def validate(scenario, csv_path, useGcamUSA):
     if useGcamUSA:
         query_name += 'ByState'
 
-    result_csv = pathjoin(sandboxDir, scenario, 'queryResults', '{}-{}.csv'.format(query_name, scenario))
+    result_csv = pathjoin(sandboxDir, scenario, QRESULTS_DIRNAME, f'{query_name}-{scenario}.csv')
 
     print("Reading", result_csv)
     result_df = pd.read_csv(result_csv, skiprows=1)
@@ -703,7 +704,8 @@ def create_subsector_dict(useGcamUSA):
 def resPolicyMain(args):
     import os
     from .error import CommandlineError
-    from .utils import mkdirs, is_abspath, get_path
+    from .file_utils import is_abspath, get_path
+    from .constants import LOCAL_XML_NAME
 
     scenario   = args.scenario
     inputFile  = args.inputFile or getParam("GCAM.RESDescriptionFile")           # document these
@@ -711,10 +713,12 @@ def resPolicyMain(args):
     useGcamUSA = args.GCAM_USA
 
     if not scenario and not (outputXML and is_abspath(outputXML)):
-        raise CommandlineError("outputXML ({}) is not an absolute pathname; a scenario must be specified".format(outputXML))
+        raise CommandlineError(f"outputXML ({outputXML}) is not an absolute pathname; a scenario must be specified")
 
-    inPath   = get_path(inputFile, pathjoin(getParam("GCAM.ProjectDir"), "etc"))
-    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxRefWorkspace"), "local-xml", scenario))
+    inPath   = get_path(inputFile, getParam("GCAM.ProjectEtc"))
+
+    # TBD: get this path using Sandbox class to allow for group subdirs
+    outPath  = get_path(outputXML, pathjoin(getParam("GCAM.SandboxWorkspace"), LOCAL_XML_NAME, scenario))
 
     isCSV = (re.match('.*\.csv$', inPath, re.IGNORECASE) is not None)
 
@@ -725,7 +729,7 @@ def resPolicyMain(args):
 
     if args.display:
         if not isCSV:
-            raise CommandlineError("When using -d/--display, the input file must be in CSV format: '{}'.".format(inPath))
+            raise CommandlineError(f"When using -d/--display, the input file must be in CSV format: '{inPath}'.")
 
         validate(scenario, inPath, useGcamUSA)
         return  # exit

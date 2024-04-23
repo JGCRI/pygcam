@@ -1,5 +1,4 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 from dash.dependencies import Input, Output
 import shlex
 from ..log import getLogger
@@ -176,16 +175,16 @@ class ActionInfo(object):
 
 class StoreAction(ActionInfo):
     def __init__(self, pageId, action, default):
-        super(StoreAction, self).__init__(pageId, action, default)
+        super().__init__(pageId, action, default)
 
 class StoreConst(ActionInfo):
     def __init__(self, pageId, action, const, default):
-        super(StoreConst, self).__init__(pageId, action, default)
+        super().__init__(pageId, action, default)
         self.const = const
 
 class AppendAction(ActionInfo):
     def __init__(self, pageId, action, default):
-        super(AppendAction, self).__init__(pageId, action, default)
+        super().__init__(pageId, action, default)
 
 
 def getActionInstance(pageId, action):

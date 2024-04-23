@@ -13,46 +13,48 @@ _logger = getLogger(__name__)
 #
 FileChanges = {
     'ipcluster_config.py': (
-        ("#c.IPClusterEngines.engine_launcher_class = 'LocalEngineSetLauncher",
-         "c.IPClusterEngines.engine_launcher_class = '{scheduler}'"),
+        ("# c.Cluster.engine_launcher_class = 'ipyparallel.cluster.launcher.LocalEngineSetLauncher'",
+         "c.Cluster.engine_launcher_class = '{scheduler}'"),
 
-        ("#c.IPClusterEngines.n = ",    # not sure if number is constant across platforms...
-         "# Attempt to allocate ~8 GB per engine\nc.IPClusterEngines.n = {engines}"),
+        # Deprecated in latest ipyparallel?
+        # ("#c.IPClusterEngines.n = ",    # not sure if number is constant across platforms...
+        #  "# Attempt to allocate ~8 GB per engine\nc.IPClusterEngines.n = {engines}"),
 
-        ("#c.IPClusterStart.delay = 1.0",
-         "# No need to delay queuing engines with controller on login node\nc.IPClusterStart.delay = 0.1"),
+        ("# c.Cluster.delay = 1.0",
+         "# No need to delay queuing engines with controller on login node\nc.Cluster.delay = 0.1"),
 
-        ("#c.SlurmLauncher.account = u''",
-         "c.SlurmLauncher.account = u'{account}'"),
+        ("#c.SlurmLauncher.account = ''",
+         "c.SlurmLauncher.account = '{account}'"),
 
-        ("#c.SlurmLauncher.timelimit = u''",
-         "c.SlurmLauncher.timelimit = u'{walltime}'"),
+        ("#c.SlurmLauncher.timelimit = ''",
+         "c.SlurmLauncher.timelimit = '{walltime}'"),
 
-        ("#c.SlurmControllerLauncher.batch_file_name = u'slurm_controller.sbatch'",
-         "c.SlurmControllerLauncher.batch_template_file = u'slurm_mcs_controller.template'"),
+        ("#c.SlurmControllerLauncher.batch_file_name = 'slurm_controller.sbatch'",
+         "c.SlurmControllerLauncher.batch_template_file = 'slurm_mcs_controller.template'"),
 
-        ("#c.SlurmEngineSetLauncher.batch_file_name = u'slurm_engine.sbatch'",
-         "c.SlurmEngineSetLauncher.batch_template_file = u'slurm_mcs_engine.template'"),
+        ("#c.SlurmEngineSetLauncher.batch_template_file = ''",
+         "c.SlurmEngineSetLauncher.batch_template_file = 'slurm_mcs_engine.template'"),
 
-        ("#c.PBSControllerLauncher.batch_file_name = u'pbs_controller'",
-         "c.PBSControllerLauncher.batch_template_file = u'pbs_mcs_controller.template'"),
+        ("#c.PBSControllerLauncher.batch_file_name = 'pbs_controller'",
+         "c.PBSControllerLauncher.batch_template_file = 'pbs_mcs_controller.template'"),
 
-        ("#c.PBSEngineSetLauncher.batch_file_name = u'pbs_engine'",
-         "c.PBSEngineSetLauncher.batch_template_file = u'pbs_mcs_engine.template'"),
+        ("#c.PBSEngineSetLauncher.batch_file_name = 'pbs_engine'",
+         "c.PBSEngineSetLauncher.batch_template_file = 'pbs_mcs_engine.template'"),
 
-        ("#c.LSFControllerLauncher.batch_file_name = u'lsf_controller'",
-         "c.LSFControllerLauncher.batch_template_file = u'lsf_mcs_controller.template'"),
 
-        ("#c.LSFEngineSetLauncher.batch_file_name = u'lsf_engine'",
-         "c.LSFEngineSetLauncher.batch_template_file = u'lsf_mcs_engine.template'"),
+        ("#c.LSFControllerLauncher.batch_file_name = 'lsf_controller'",
+         "c.LSFControllerLauncher.batch_template_file = 'lsf_mcs_controller.template'"),
+
+        ("#c.LSFEngineSetLauncher.batch_file_name = 'lsf_engine'",
+         "c.LSFEngineSetLauncher.batch_template_file = 'lsf_mcs_engine.template'"),
     ),
 
     'ipcontroller_config.py': (
-        ("#c.HubFactory.client_ip = u''",
-         "c.HubFactory.client_ip = u'*'"),
+        ("#c.IPController.client_ip = ''",
+         "c.IPController.client_ip = '*'"),
 
-        ("#c.HubFactory.engine_ip = u''",
-         "c.HubFactory.engine_ip = u'*'"),
+        ("#c.IPController.engine_ip = ''",
+         "c.IPController.engine_ip = '*'"),
     )
 }
 
@@ -101,9 +103,10 @@ class IppSetupCommand(McsSubcommandABC):
     def run(self, args, tool):
         from IPython.paths import get_ipython_dir
         import subprocess as subp
+        from ...config import pathjoin
 
         minutes = args.minutes
-        walltime = '%d:%02d:00' % (minutes/60, minutes%60)
+        walltime = f'{minutes // 60 :02d}:{minutes % 60 :02d}:00'
 
         formatDict = {'account'  : args.account,
                       'engines'  : args.engines,
@@ -114,21 +117,21 @@ class IppSetupCommand(McsSubcommandABC):
         profile = args.profile
 
         ipythonDir = get_ipython_dir()
-        profileDir = os.path.join(ipythonDir, 'profile_' + profile)
+        profileDir = pathjoin(ipythonDir, 'profile_' + profile)
 
         if os.path.isdir(profileDir):
-            raise CommandlineError('Ipython profile directory "%s" already exists. Delete it or choose another name.' % profileDir)
+            raise CommandlineError(f'Ipython profile directory "{profileDir}" already exists. Delete it or choose another name.')
 
         cmd = 'ipython profile create --parallel ' + profile
-        _logger.info('Running command: %s', cmd)
+        _logger.info(f'Running command: {cmd}')
         subp.call(cmd, shell=True)
 
         for basename, tuples in FileChanges.items():
-            pathname = os.path.join(profileDir, basename)
+            pathname = pathjoin(profileDir, basename)
             backup   = pathname + '~'
 
             if not os.path.isfile(pathname):
-                raise CommandlineError('Missing configuration file: "%s"' % pathname)
+                raise CommandlineError(f'Missing configuration file: "{pathname}"')
 
             _logger.info('Editing config file: %s', pathname)
             os.rename(pathname, backup)

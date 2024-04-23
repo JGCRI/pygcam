@@ -8,7 +8,7 @@ def driver(args, tool):
     Start ipyparallel engines.
     """
     from ...config import getParam
-    from ..master import startEngines, templatePath
+    from ..monitor import startEngines, templatePath
 
     scheduler = getParam('IPP.Scheduler')
     batchTemplate = templatePath(scheduler, args.profile, args.clusterId, 'engine')

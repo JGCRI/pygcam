@@ -4,7 +4,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016  Richard Plevin
+.. Copyright (c) 2016-2023  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from datetime import datetime
@@ -15,8 +15,8 @@ def driver(args, tool):
     import os
     import re
     import shutil
-    from ..config import getParam, USR_CONFIG_FILE, pathjoin, unixPath
-    from ..utils import mkdirs, copyResource, getResource
+    from ..config import getParam, USR_CONFIG_FILE, pathjoin, unixPath, mkdirs
+    from ..utils import copyResource, getResource
     from ..error import CommandlineError
     from ..log import getLogger
 
@@ -30,7 +30,7 @@ def driver(args, tool):
     try:
         os.chdir(projectRoot)
     except Exception as e:
-        raise CommandlineError("Can't change dir to '%s': %s" % (projectRoot, e))
+        raise CommandlineError(f"Can't chdir to '{projectRoot}': {e}")
 
     try:
         mkdirs(projectDir)
@@ -38,7 +38,7 @@ def driver(args, tool):
         if e.errno == 17:   # already exists; ignore
             pass
     except Exception as e:
-        raise CommandlineError("Can't create to '%s': %s" % (projectDir, e))
+        raise CommandlineError(f"Can't create directory '{projectDir}': {e}")
 
     try:
         os.chdir(projectDir)
@@ -76,10 +76,11 @@ def driver(args, tool):
         if filename == 'project.xml':
             # For project.xml, we change the project name to the name given by user
             if not overwrite and os.path.lexists(dst):
-                raise CommandlineError("Refusing to overwrite '%s'" % unixPath(dst, abspath=True))
+                path = unixPath(dst, abspath=True)
+                raise CommandlineError(f"Refusing to overwrite '{path}'")
 
             oldText = getResource(src)
-            newText = re.sub('<project name="(\w*)">', '<project name="%s">' % projectName, oldText)
+            newText = re.sub('<project name="(\w*)">', f'<project name="{projectName}">', oldText)
             with open(dst, 'w') as fp:
                 fp.write(newText)
         else:
@@ -99,11 +100,11 @@ def driver(args, tool):
 
         # Add a project section to the .pygcam.cfg file
         with open(cfgFile, 'a') as f:
-            f.write('\n[%s]\n' % projectName)
-            f.write('# Added by "new" sub-command %s\n' % datetime.now().ctime())
-            f.write('GCAM.ProjectDir = %s\n' % dirName)
-            f.write('GCAM.ScenarioSetupFile = %(GCAM.ProjectDir)s/etc/scenarios.xml\n')
-            f.write('GCAM.RewriteSetsFile   = %(GCAM.ProjectDir)s/etc/rewriteSets.xml\n')
+            f.write(f'\n[{projectName}]\n')
+            f.write(f'# Added by "new" sub-command {datetime.now().ctime()}\n')
+            f.write(f'GCAM.ProjectDir = {dirName}\n')
+            f.write('GCAM.ScenariosFile = %(GCAM.ProjectDir)s/etc/scenarios.xml\n')
+            f.write('GCAM.RewriteSetsFile = %(GCAM.ProjectDir)s/etc/rewriteSets.xml\n')
 
 
 class NewProjectCommand(SubcommandABC):

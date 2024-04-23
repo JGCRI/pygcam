@@ -47,7 +47,7 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
    cluster : @replace
       .. _cluster:
 
-      Start an :doc:`ipyparallel <ipyparallel:intro>` cluster after generating batch
+      Start an :doc:`ipyparallel <ipyparallel:index>` cluster after generating batch
       file templates based on parameters in ``.pygcam.cfg`` and the number of tasks
       to run. Note that the :ref:`runsim <runsim>` sub-command will start a cluster
       if one is not already running. More often, this command is used to stop a cluster.

@@ -1,19 +1,19 @@
 '''
 .. Created on: 2/26/15
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
 import re
 import subprocess
-from semver import VersionInfo
 
-from .config import getParam, getParamAsBoolean, parse_version_info, pathjoin, unixPath
+from .config import getParam, getParamAsBoolean, pathjoin
 from .error import ProgramExecutionError, GcamError, GcamSolverError, PygcamException, ConfigFileError
+from .file_mapper import FileMapper
+from .file_utils import pushd
 from .log import getLogger
-from .scenarioSetup import createSandbox
-from .utils import writeXmldbDriverProperties, getExeDir, pushd
+from .utils import writeXmldbDriverProperties
 from .windows import IsWindows
 
 _logger = getLogger(__name__)
@@ -23,13 +23,14 @@ PROGRAM = os.path.basename(__file__)
 _PathVersionPattern = re.compile('.*-v(\d+(\.\d+)*)$')
 _VersionFlagPattern = re.compile('GCAM version (\d+(\.\d+)+)')
 
+# TBD: update this to use FileMapper?
 def getGcamVersion(exeDir, preferPath=False):
     '''
     Try to get GCAM version by running gcam with --version flag, but if that
     fails, try to extract it from the path.
     '''
     if preferPath:
-        # See if the version is explicit in the path, e.g., "...-v5.1.3"
+        # See if the version is explicit in the path, e.g., "...-v6.0"
         gcamDir = os.path.dirname(exeDir)
         m = re.match(_PathVersionPattern, gcamDir)
         if m:
@@ -46,7 +47,7 @@ def getGcamVersion(exeDir, preferPath=False):
         if m:
             return m.group(1)
         else:
-            raise PygcamException('Failed to extract version number from path {}'.format(gcamDir))
+            raise PygcamException(f'Failed to extract version number from path {gcamDir}')
 
     setJavaPath(exeDir)
     with pushd(exeDir):
@@ -56,13 +57,13 @@ def getGcamVersion(exeDir, preferPath=False):
 
         except subprocess.CalledProcessError:
             raise ConfigFileError(
-                "Attempt to run '%s --version' failed. If you're running GCAM < v4.3, set GCAM.VersionNumber manually" % exePath)
+                f"Attempt to run '{exePath} --version' failed. Versions of GCAM before v5.2 are no longer supported by pygcam")
 
     m = re.match(_VersionFlagPattern, versionStr)
     if m:
         return m.group(1)
     else:
-        raise ConfigFileError('GCAM --version returned "%s", which is not the expected format. Should start with "GCAM version "')
+        raise ConfigFileError(f'GCAM --version returned "{versionStr}", which is not the expected format. Should start with "GCAM version "')
 
 def setJavaPath(exeDir):
     '''
@@ -79,42 +80,37 @@ def setJavaPath(exeDir):
         # of the Java Runtime used to run it. Note if the runtime is not 64-bit it will only
         # print an error.
         with pushd(exeDir):
-            versionInfo = parse_version_info()
-            if versionInfo > VersionInfo(4, 2, 0):
-                classpath = getParam('GCAM.MI.ClassPath')
-                command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
-                msg_cmd = 'XMLDBDriver --print-java-home'
-            else:
-                command = 'java WriteLocalBaseXDB'
-                msg_cmd = command
+            classpath = getParam('GCAM.MI.ClassPath')
+            command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
+            msg_cmd = 'XMLDBDriver --print-java-home'
 
             try:
                 output = subprocess.check_output(str(command), shell=True)
                 javaHome = output.decode('utf-8').strip()
             except Exception as e:
-                raise PygcamException("Cannot get java home dir: %s" % e)
+                raise PygcamException(f"Cannot get java home dir: {e}")
 
         os.environ['JAVA_HOME'] = javaHome
 
         if not javaHome:
-            raise PygcamException("JAVA_HOME not set and failed to read java home directory from '%s'" % msg_cmd)
+            raise PygcamException(f"JAVA_HOME not set and failed to read java home directory from '{msg_cmd}'")
 
     if not os.path.isdir(javaHome):
-        raise PygcamException('Java home (%s) is not a directory' % javaHome)
+        raise PygcamException(f'Java home ({javaHome}) is not a directory')
 
     # Update the PATH to be able to find the Java dlls
     # SET PATH=%PATH%;%JAVA_HOME%\bin;%JAVA_HOME%\bin\server"
     javaBin = pathjoin(javaHome, 'bin')
     javaBinServer = pathjoin(javaBin, 'server')
     envPath = os.environ.get('PATH', '')
-    os.environ['PATH'] = path = envPath + ';' + javaBin + ';' + javaBinServer
+    os.environ['PATH'] = path = f"{envPath};{javaBin};{javaBinServer}"
     _logger.debug('PATH=%s', path)
 
     envClasspath = os.environ.get('CLASSPATH', '')
     envClasspath = ".;" + envClasspath if envClasspath else "."
 
     miClasspath = getParam('GCAM.MI.ClassPath')
-    os.environ['CLASSPATH'] = classpath = envClasspath + ';' + javaBinServer + ';' + miClasspath
+    os.environ['CLASSPATH'] = classpath = f"{envClasspath};{javaBinServer};{miClasspath}"
     _logger.debug('CLASSPATH=%s', classpath)
 
 def _wrapperFilter(line):
@@ -126,7 +122,7 @@ def _wrapperFilter(line):
         and terminates the GCAM process.
     """
     modelDidNotSolve = 'Model did not solve'
-    pattern = re.compile('(.*(BaseXException|%s).*)' % modelDidNotSolve)
+    pattern = re.compile(f'(.*(BaseXException|{modelDidNotSolve}).*)')
 
     match = re.search(pattern, line)
 
@@ -147,7 +143,7 @@ def _loadWrapperFilter(spec):
     try:
         modPath, dotSpec = spec.split(';', 1)
     except (ValueError, Exception):
-        raise ConfigFileError('GCAM.WrapperFilterFunction should be of the form "/path/to/moduleDirectory:module.functionName", got "{}"'.format(spec))
+        raise ConfigFileError(f'GCAM.WrapperFilterFunction should be of the form "/path/to/moduleDirectory:module.functionName", got "{spec}"')
 
     try:
         import sys
@@ -156,7 +152,7 @@ def _loadWrapperFilter(spec):
         func = importFromDotSpec(dotSpec)
 
     except PygcamException as e:
-        raise ConfigFileError("Can't load wrapper filter function '%s' from '%s': %s" % (dotSpec, modPath, e))
+        raise ConfigFileError(f"Can't load wrapper filter function '{dotSpec}' from '{modPath}': {e}")
 
     return func
 
@@ -167,7 +163,8 @@ def _gcamWrapper(args):
                                     stderr=subprocess.STDOUT, close_fds=True)
 
     except Exception as e:
-        msg = 'gcamWrapper failed to run command: {} ({})'.format(' '.join(args), e)
+        cmd = ' '.join(args)
+        msg = f'gcamWrapper failed to run command: {cmd} ({e})'
         raise PygcamException(msg)
 
     filterSpec = getParam('GCAM.WrapperFilterFunction')
@@ -214,7 +211,7 @@ def linkToMacJava():
         pass
 
     if not javaHome:
-        raise PygcamException('Could not find Java install location using "%s"' % cmd)
+        raise PygcamException(f'Could not find Java install location using "{cmd}"')
 
     # If javaHome contains "1.6", use the Apple supplied version of java 1.6
     libPath = 'lib-stub' if '1.6' in javaHome else javaHome + '/jre/lib/server'
@@ -227,31 +224,21 @@ def linkToMacJava():
         # Create a symlink to satisfy @rpath searches
         linkName = 'libs/java/lib'
         if not os.path.islink(linkName):
-            cmd = "ln -s %s %s" % (libPath, linkName)
+            cmd = f"ln -s {libPath} {linkName}"
             status = subp.call(cmd, shell=True)
             if status != 0:
-                raise PygcamException('Failed to create link using "%s"' % cmd)
+                raise PygcamException(f'Failed to create link using "{cmd}"')
     finally:
         os.chdir(owd)
 
-def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, groupDir='',
-            configFile=None, forceCreate=False, noRun=False, noWrapper=False):
-    """
 
+def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
+    """
+    :param mapper: (FileMapper) contains file and directory information
     :param scenario: (str) the scenario to run
-    :param workspace: (str) path to the workspace to run in, or None, in which
-       case the model is run in {GCAM.SandboxDir}/{scenario} if scenario is given
-       otherwise, the default scenario in the configuration.xml in the GCAM.RefWorkspace
-       is run.
-    :param refWorkspace: (str) a workspace to copy files from to create the sandbox,
-       if the workspace is not given, or doesn't exist.
-    :param scenariosDir: (str) the directory in which the config.xml file for the
-       given scenario is found. Defaults to GCAM.ScenariosDir, if given, or "."
-    :param groupDir: (str) the name of the scenario group if group sub-directories
-       are to be used when computing the location of the scenario's config.xml.
+    :param group: (str) the name of the scenario group to use
     :param configFile: (str) if scenario is not given, the name of a configuration
        file to run. If scenario is given, this parameter is ignored.
-    :param forceCreate: (bool) if True, recreate the sandbox even if it already exists.
     :param noRun: (bool) if True, don't run the model, just create the sandbox and
        display the command that would be executed.
     :param noWrapper: (bool) if True, don't run GCAM inside a "wrapper" that reads
@@ -260,52 +247,35 @@ def runGCAM(scenario, workspace=None, refWorkspace=None, scenariosDir=None, grou
     :raises ProgramExecutionError: if GCAM exits with non-zero status
     """
     import platform
+    from .constants import FileVersions
 
     if platform.system() == 'Darwin':
         linkToMacJava()
 
-    workspace = (workspace or
-                 (pathjoin(getParam('GCAM.SandboxDir'), scenario) if scenario else getParam('GCAM.RefWorkspace')))
+    sandbox_scenario_dir = mapper.sandbox_scenario_dir
 
-    if not os.path.lexists(workspace) or forceCreate:
-        createSandbox(workspace, refWorkspace, forceCreate=forceCreate)
+    if not os.path.lexists(sandbox_scenario_dir):
+        raise PygcamException(f"Sandbox '{sandbox_scenario_dir}' does not exist.")
 
-    exeDir = getExeDir(workspace, chdir=True)
+    exeDir = mapper.sandbox_exe_dir
     setJavaPath(exeDir)     # required for Windows; a no-op otherwise
 
-    version = parse_version_info()
-
-    # These features didn't exist in version 4.2
-    if version > VersionInfo(4, 2, 0) and not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or
-                                               getParamAsBoolean('GCAM.InMemoryDatabase')):    # this implies RunQueriesInGCAM
+    # InMemoryDatabase implies RunQueriesInGCAM
+    if not (getParamAsBoolean('GCAM.RunQueriesInGCAM') or getParamAsBoolean('GCAM.InMemoryDatabase')):
         # Write a "no-op" XMLDBDriver.properties file
         writeXmldbDriverProperties(inMemory=False, outputDir=exeDir)
 
-    if scenario:
-        # Translate scenario name into config file path, assuming that for scenario
-        # FOO, the configuration file is {scenariosDir}/{groupDir}/FOO/config.xml
-        scenariosDir = unixPath(scenariosDir or getParam('GCAM.ScenariosDir') or '.', abspath=True)
-        configFile   = pathjoin(scenariosDir, groupDir, scenario, "config.xml")
-    else:
-        configFile = unixPath(configFile or pathjoin(exeDir, 'configuration.xml'), abspath=True)
+    gcam_args = [mapper.sandbox_exe_path, '-C', mapper.get_config_version(FileVersions.FINAL)]
 
-    gcamPath = unixPath(getParam('GCAM.Executable'), abspath=True)
-    gcamArgs = [gcamPath, '-C%s' % configFile]  # N.B. GCAM (< 4.2) doesn't allow space between -C and filename
-
-    command = ' '.join(gcamArgs)
+    command = ' '.join(gcam_args)
     if noRun:
         print(command)
     else:
         _logger.info('Running: %s', command)
 
-        noWrapper = IsWindows or noWrapper     # never use the wrapper on Windows
-        exitCode = subprocess.call(gcamArgs, shell=False) if noWrapper else _gcamWrapper(gcamArgs)
+        noWrapper = IsWindows or noWrapper     # don't use the wrapper on Windows
+        with pushd(exeDir):
+            exitCode = subprocess.call(gcam_args, shell=False) if noWrapper else _gcamWrapper(gcam_args)
 
         if exitCode != 0:
             raise ProgramExecutionError(command, exitCode)
-
-
-def gcamMain(args):
-    runGCAM(args.scenario, workspace=args.workspace, refWorkspace=args.refWorkspace,
-            scenariosDir=args.scenariosDir, groupDir=args.groupDir, configFile=args.configFile,
-            forceCreate=args.forceCreate, noRun=args.noRun, noWrapper=args.noWrapper)

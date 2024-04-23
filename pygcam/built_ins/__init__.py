@@ -15,7 +15,6 @@ from .protect_plugin import ProtectLandCommand
 from .query_plugin import QueryCommand
 from .res_plugin import RESCommand
 from .run_plugin import RunCommand
-from .sandbox_plugin import SandboxCommand
 from .setup_plugin import SetupCommand
 from .compare_plugin import CompareCommand
 from .zev_plugin import ZEVCommand
@@ -26,4 +25,4 @@ BuiltinSubcommands = [BatchCommand, BuildingCommand, BuildingElecCommand,
                       DiffCommand, GcamCommand, GUICommand, IndustryCommand,
                       InitCommand, MCSCommand, ModelInterfaceCommand, NewProjectCommand,
                       ProtectLandCommand, QueryCommand, RESCommand, RunCommand,
-                      SandboxCommand, SetupCommand, TransportCommand, ZEVCommand]
+                      SetupCommand, TransportCommand, ZEVCommand]

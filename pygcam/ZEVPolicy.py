@@ -29,11 +29,21 @@ def element_path(elt):
     return (d['region'], d['sector'], d['subsector'], d['technology'])
 
 
+def scenarioXML(scenario, tag, groupName=None):
+    from .file_mapper import FileMapper    # TBD: doesn't work in MCS currently
+    from .xmlScenario import scenarioEditor
+
+    mapper = FileMapper(scenario, scenario_group=groupName, create_dirs=True)
+    editor = scenarioEditor(mapper)
+    rel_path = editor.componentPath(tag)
+    abs_path = pathjoin(getParam('GCAM.SandboxExeDir'), rel_path, abspath=True)
+    return abs_path
+
 def zevPolicyMain(args):
     import pandas as pd
     from .error import CommandlineError
-    from .xmlSetup import scenarioXML
-    from .utils import validate_years, get_path
+    from .utils import validate_years
+    from .file_utils import get_path
 
     years = validate_years(args.years)
     if years is None:
@@ -122,9 +132,9 @@ BtuToMJ = 1.055
 def generate_zev_xml(scenario, csvPath, xmlPath, transportTag, pMultiplier, outputRatio):
     import os
     import pandas as pd
-    from .utils import mkdirs
+    from .file_utils import mkdirs
     from .RESPolicy import write_xml
-    from .xmlSetup import scenarioXML
+    from .xmlScenario import scenarioXML
 
     df = pd.read_csv(csvPath, index_col=None)
 

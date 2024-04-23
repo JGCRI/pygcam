@@ -2,7 +2,9 @@ from datetime import datetime
 from sqlalchemy import (Column, Integer, String, Float, Boolean,
                         ForeignKey, DateTime, UniqueConstraint, Index)
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
+
 from ..log import getLogger
+from ..utils import pygcam_version
 
 _logger = getLogger(__name__)
 
@@ -18,7 +20,6 @@ class CoreMCSMixin(object):
         return cls.__name__.lower()
 
 class Code(CoreMCSMixin, ORMBase):
-    #codeId      = Column(Integer, primary_key=True, autoincrement=False)
     codeName    = Column(String(15), primary_key=True)
     description = Column(String(256))
 
@@ -91,12 +92,13 @@ class Sim(CoreMCSMixin, ORMBase):
     stamp       = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
-# Map region numbers to region names. Both ids and names must be unique.
-class Region(CoreMCSMixin, ORMBase):
-    regionId = Column(Integer, primary_key=True, autoincrement=False)
-    canonName = Column(String)        # canonical name for lookup (lowercase, "_" changed to " ")
-    displayName = Column(String)        # display name
-    __table_args__ = (Index("region_index1", "canonName", unique=True),)
+if pygcam_version < (2, 0, 0):
+    # Map region numbers to region names. Both ids and names must be unique.
+    class Region(CoreMCSMixin, ORMBase):
+        regionId = Column(Integer, primary_key=True, autoincrement=False)
+        canonName = Column(String)        # canonical name for lookup (lowercase, "_" changed to " ")
+        displayName = Column(String)        # display name
+        __table_args__ = (Index("region_index1", "canonName", unique=True),)
 
 
 class TimeSeries(CoreMCSMixin, ORMBase):
@@ -106,6 +108,13 @@ class TimeSeries(CoreMCSMixin, ORMBase):
     '''
     seriesId = Column(Integer, primary_key=True)
     runId = Column(Integer, ForeignKey('run.runId', ondelete="CASCADE"))
-    regionId = Column(Integer, ForeignKey('region.regionId', ondelete="CASCADE"))
+
+    # As of pygcam 2.0.0, we store region name rather than region ID, allowing
+    # us to support non-standard regionalizations.
+    if pygcam_version >= (2, 0, 0):
+        region = Column(String)
+    else:
+        regionId = Column(Integer, ForeignKey('region.regionId', ondelete="CASCADE"))
+
     outputId = Column(Integer, ForeignKey('output.outputId', ondelete="CASCADE"))
     units = Column(String)

@@ -8,20 +8,20 @@ from datetime import datetime
 
 import pandas as pd
 
-from ..config import getParam
+from ..config import getParam, pathjoin
+from ..constants import QRESULTS_DIRNAME, DIFFS_DIRNAME
 from ..log import getLogger
 from ..XMLFile import XMLFile
 from .error import PygcamMcsUserError, PygcamMcsSystemError, FileMissingError
-from .Database import getDatabase
+from .database import getDatabase
 from .XML import XMLWrapper, findAndSave, getBooleanXML
+from ..utils import pygcam_version
 
 _logger = getLogger(__name__)
 
 RESULT_TYPE_DIFF = 'diff'
 RESULT_TYPE_SCENARIO = 'scenario'
 DEFAULT_RESULT_TYPE = RESULT_TYPE_SCENARIO
-
-QUERY_OUTPUT_DIR = 'queryResults'
 
 RESULT_ELT_NAME     = 'Result'
 FILE_ELT_NAME       = 'File'
@@ -35,7 +35,7 @@ class XMLConstraint(XMLWrapper):
     strMatch = ['startswith', 'endswith', 'contains']
 
     def __init__(self, element):
-        super(XMLConstraint, self).__init__(element)
+        super().__init__(element)
         self.column = element.get('column')
         self.op = element.get('op')
         self.value = element.get('value')
@@ -79,7 +79,7 @@ class XMLConstraint(XMLWrapper):
 
 class XMLColumn(XMLWrapper):
     def __init__(self, element):
-        super(XMLColumn, self).__init__(element)
+        super().__init__(element)
 
 
 class XMLResult(XMLWrapper):
@@ -87,7 +87,7 @@ class XMLResult(XMLWrapper):
     Represents a single Result (model output) from the results.xml file.
     '''
     def __init__(self, element):
-        super(XMLResult, self).__init__(element)
+        super().__init__(element)
         self.name = element.get('name')
         self.type = element.get('type', DEFAULT_RESULT_TYPE)
         self.desc = element.get('desc')
@@ -139,7 +139,7 @@ class XMLResult(XMLWrapper):
         mainPart, extension = os.path.splitext(basename)
         middle =  scenario if type == RESULT_TYPE_SCENARIO else ("%s-%s" % (scenario, baseline))
         csvFile = "%s-%s.csv" % (mainPart, middle)
-        csvPath = os.path.abspath(os.path.join(outputDir, csvFile))
+        csvPath = os.path.abspath(pathjoin(outputDir, csvFile))
         return csvPath
 
     def columnName(self):
@@ -150,7 +150,6 @@ class XMLResultFile(XMLFile):
     """
     XMLResultFile manipulation class.
     """
-
     cache = {}
 
     @classmethod
@@ -163,7 +162,7 @@ class XMLResultFile(XMLFile):
             return obj
 
     def __init__(self, filename):
-        super(XMLResultFile, self).__init__(filename, load=True, schemaPath='mcs/etc/results-schema.xsd')
+        super().__init__(filename, load=True, schemaPath='mcs/etc/results-schema.xsd')
         root = self.tree.getroot()
 
         self.results = OrderedDict()    # the parsed fileNodes, keyed by filename
@@ -194,7 +193,7 @@ class XMLResultFile(XMLFile):
 
     @classmethod
     def addOutputs(cls):
-        resultsFile = getParam('MCS.ResultsFile')
+        resultsFile = getParam('MCS.ProjectResultsFile')
         obj = cls(resultsFile)
         obj.saveOutputDefs()
 
@@ -271,36 +270,36 @@ class QueryResult(object):
 # A single result DF can have data for multiple outputs, so we cache the files
 outputCache = defaultdict(lambda: None)
 
-def getCachedFile(csvPath, loader=QueryResult, desc="query result"):
+def getCachedFile(csvPath):
     result = outputCache[csvPath]
     if not result:
         try:
-            outputCache[csvPath] = result = loader(csvPath)
+            outputCache[csvPath] = result = QueryResult(csvPath)
         except Exception as e:
-            _logger.warning('saveResults: Failed to read {}: {}'.format(desc, e))
+            _logger.warning(f'getCachedFile: Failed to read query result: {e}')
             raise FileMissingError(csvPath)
 
     return result
 
-def getOutputDir(trialDir, scenario, type):
-    subDir = 'queryResults' if type == RESULT_TYPE_SCENARIO else 'diffs'
-    return os.path.join(trialDir, scenario, subDir)
-
 
 def extractResult(context, scenario, outputDef, type):
     from .util import activeYears, YEAR_COL_PREFIX
+    from .sim_file_mapper import SimFileMapper
 
-    _logger.debug("Extracting result for {}, name={}".format(context, outputDef.name))
+    _logger.debug(f"Extracting result for {context}, name={outputDef.name}")
 
-    trialDir = context.getTrialDir()
+    mapper = SimFileMapper(context)
+    trial_scenario_dir = mapper.trial_scenario_dir(scenario=scenario)
 
-    outputDir = getOutputDir(trialDir, scenario, type)
+    subDir = QRESULTS_DIRNAME if type == RESULT_TYPE_SCENARIO else DIFFS_DIRNAME
+    outputDir = pathjoin(trial_scenario_dir, subDir)
+
     baseline = None if type == RESULT_TYPE_SCENARIO else context.baseline
     csvPath = outputDef.csvPathname(scenario, outputDir=outputDir, baseline=baseline, type=type)
 
     queryResult = getCachedFile(csvPath)
     _logger.debug("queryResult:\n%s", queryResult.df)
- 
+
     paramName   = outputDef.name
     whereClause = outputDef.whereClause
     _logger.debug("whereClause: %s", whereClause)
@@ -315,14 +314,14 @@ def extractResult(context, scenario, outputDef, type):
     count = selected.shape[0]
 
     if count == 0:
-        raise PygcamMcsUserError('Query for "{}" matched no results'.format(outputDef.name))
+        raise PygcamMcsUserError(f'Query for "{outputDef.name}" matched no results')
 
     if 'region' in selected.columns:
         firstRegion = selected.region.iloc[0]
         if count == 1:
             regionName = firstRegion
         else:
-            _logger.debug("Query yielded {} rows; year columns will be summed".format(count))
+            _logger.debug(f"Query yielded {count} rows; year columns will be summed")
             regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
     else:
         regionName = 'global'
@@ -359,38 +358,33 @@ def extractResult(context, scenario, outputDef, type):
 
     return resultDict
 
-def collectResults(context, type):
+def collectResults(mapper, context, type):
     '''
     Called by worker to process results, return a list of dicts
     with data the master process can quickly write to the database.
     Returns a list of dicts with results for this trial.
     '''
-    from .util import getSimResultFile
-
     _logger.debug("Collecting results for %s", context)
 
-    baseline = context.baseline
-    scenario = context.scenario
+    if type == RESULT_TYPE_DIFF and not context.baseline:
+        raise PygcamMcsUserError("collectResults: must specify baseline for DIFF results")
 
-    if type == RESULT_TYPE_DIFF and not baseline:
-        raise PygcamMcsUserError("saveResults: must specify baseline for DIFF results")
-
-    resultsFile = getSimResultFile(context.simId)
+    resultsFile = mapper.app_xml_results_file
     rf = XMLResultFile.getInstance(resultsFile)
     outputDefs = rf.getResultDefs(type=type)
 
     if not outputDefs:
-        _logger.info('saveResults: No outputs defined for type %s', type)
+        _logger.info('collectResults: No outputs defined for type %s', type)
         return []
 
-    resultList = [extractResult(context, scenario, outputDef, type) for outputDef in outputDefs]
+    resultList = [extractResult(context, context.scenario, outputDef, type) for outputDef in outputDefs]
     return resultList
 
 def saveResults(context, resultList):
     '''
     Called on the master to save results to the database that were prepared by the worker.
     '''
-    from .Database import getDatabase
+    from .database import getDatabase
 
     runId = context.runId
 
@@ -404,18 +398,18 @@ def saveResults(context, resultList):
     db.commitWithRetry(session)
 
     for resultDict in resultList:
-        paramName  = resultDict['paramName']
-        value      = resultDict['value']
-        regionName = resultDict['regionName']
-        regionId = db.getRegionId(regionName)
+        paramName = resultDict['paramName']
+        value = resultDict['value']
 
         # Save the values to the database
         try:
             if resultDict['isScalar']:
                 db.setOutValue(runId, paramName, value, session=session)  # TBD: need regionId?
             else:
+                regionName = resultDict['regionName']
                 units = resultDict['units']
-                db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
+                region = regionName if pygcam_version >= (2, 0, 0) else db.getRegionId(regionName)
+                db.saveTimeSeries(runId, region, paramName, value, units=units, session=session)
 
         except Exception as e:
             session.rollback()

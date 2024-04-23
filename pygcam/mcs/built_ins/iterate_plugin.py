@@ -15,10 +15,11 @@ def driver(args, tool):
     from subprocess import call
     from ...config import getSection
 
-    from ..Database import getDatabase
+    from ..context import McsContext
+    from ..database import getDatabase
     from ..error import PygcamMcsUserError
-    from ..context import Context
-    from .. import util as U
+    from ..util import parseTrialString
+    from ..sim_file_mapper import SimFileMapper
 
     simId    = args.simId
     command  = args.command
@@ -28,7 +29,7 @@ def driver(args, tool):
     projectName = getSection()
 
     if trialStr:
-        trials = U.parseTrialString(trialStr)
+        trials = parseTrialString(trialStr)
     else:
         db = getDatabase()
         count = db.getTrialCount(simId)
@@ -36,7 +37,8 @@ def driver(args, tool):
 
     for scenario in args.scenarios:
         # TBD: Add groupName
-        context = Context(projectName=projectName, simId=simId, scenario=scenario)
+        ctx = McsContext(projectName=projectName, simId=simId, scenario=scenario)
+
         _logger.info('Running iterator for projectName=%s, simId=%d, scenario=%s, trials=%s, command="%s"',
                      projectName, simId, scenario, trialStr, command)
 
@@ -48,11 +50,14 @@ def driver(args, tool):
             'expName'     : scenario,
         }
 
-        for trialNum in trials:
-            argDict['trialNum'] = context.trialNum = trialNum
-            argDict['expDir']   = argDict['scenarioDir'] = context.getScenarioDir(create=True)
-            argDict['trialDir'] = context.getTrialDir()
-            argDict['simDir']   = context.getSimDir()
+        for trial_num in trials:
+            ctx.setVars(trial_num=trial_num)
+            mapper = SimFileMapper(ctx)
+
+            argDict['trialNum'] = trial_num
+            argDict['scenarioDir'] = mapper.sandbox_scenario_dir
+            argDict['trialDir'] = mapper.trial_dir(context=ctx)
+            argDict['simDir'] = mapper.sim_dir
 
             try:
                 cmd = command.format(**argDict)
@@ -74,8 +79,8 @@ class IterateCommand(McsSubcommandABC):
         kwargs = {'help' : '''Run a command in each trialDir, or if scenario is given, 
         in each expDir. The following arguments are available for use in the command string,
         specified within curly braces: projectName, simId, trialNum, scenario, expName (a
-        legacy alias for scenario), trialDir, scenarioDir, and expDir (a legacy alias for
-        scenarioDir). For example, to run the fictional program "foo" in each trialDir for 
+        legacy alias for scenario), trialDir, and scenarioDir.
+        For example, to run the fictional program "foo" in each trialDir for 
         a given set of parameters, you might write:
         gt iterate -s1 -c "foo -s{simId} -t{trialNum} -i{trialDir}/x -o{trialDir}/y/z.txt".'''}
         super(IterateCommand, self).__init__('iterate', subparsers, kwargs)

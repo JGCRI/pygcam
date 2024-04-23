@@ -16,8 +16,8 @@ def driver(args, tool):
 
     if args.timeseries:
         import pandas as pd
-        from ...config import getParam
-        from ..Database import getDatabase
+        from ...config import getParam, pathjoin
+        from ..database import getDatabase
         from ..timeseriesPlot import plotTimeSeries, plotForcingSubplots
         from ..util import stripYearPrefix
 
@@ -37,17 +37,16 @@ def driver(args, tool):
         db = getDatabase()
         trialCount = db.getTrialCount(simId)
 
-        plotDir  = getParam('MCS.PlotDir')
+        plotDir  = getParam('MCS.SandboxPlotDir')
         plotType = getParam('MCS.PlotType')
 
         allResults = db.getTimeSeries(simId, resultName, expList) # , regionName)
         if not allResults:
-            raise PygcamMcsUserError('No timeseries results for simId=%d, expList=%s, resultName=%s' \
-                                     % (simId, expList, resultName))
+            raise PygcamMcsUserError(f'No timeseries results for simId={simId} expList={expList} resultName={resultName}')
 
         def computeFilename(expName):
-            basename = "%s-s%d-%s.%s" % (resultName, simId, expName, plotType)
-            filename = os.path.join(plotDir, 's%d' % simId, basename)
+            basename = f"{resultName}-s{simId}-{expName}.{plotType}"
+            filename = pathjoin(plotDir, f's{simId}', basename)
             return filename
 
         # massage the data into the format required by plotTimeSeries
@@ -78,7 +77,7 @@ def driver(args, tool):
 
         for expName in expList:
             # create a copy so we can drop expName column for melt
-            df = resultDF.query("expName == '%s'" % expName).copy()
+            df = resultDF.query(f"expName == '{expName}'").copy()
             _logger.debug("Found %d result records for exp %s, result %s" % (len(df), expName, resultName))
 
             df.drop(['expName'], axis=1, inplace=True)
@@ -89,8 +88,8 @@ def driver(args, tool):
             _logger.debug('Saving timeseries plot to %s' % filename)
 
             reg = "" # '-' + regionName if regionName else ""
-            extra = "name=%s trials=%d/%d simId=%d scenario=%s%s" % \
-                    (resultName, resultDF.shape[0], trialCount, simId, expName, reg)
+            num = resultDF.shape[0]
+            extra = f"name={resultName} trials={num}/{trialCount} simId={simId} scenario={expName}{reg}"
 
             plotTimeSeries(df, 'year', 'runId', title=title, xlabel=xlabel, ylabel=units, ci=[95],
                            text_label=None, legend_name=None, legend_labels=None,

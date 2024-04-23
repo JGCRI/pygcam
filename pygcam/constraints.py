@@ -1,15 +1,14 @@
 #! /usr/bin/env python
 '''
 .. Created on 4/26/15
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 
 '''
 from .config import pathjoin
-from .constants import LOCAL_XML_NAME
 from .log import getLogger
 from .query import readQueryResult
-from .utils import mkdirs, getBatchDir, getYearCols, printSeries
+from .utils import getYearCols, printSeries
 
 _logger = getLogger(__name__)
 
@@ -70,19 +69,19 @@ def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, grou
                         policySrcDir=None): #, fromMCS=False):
     basename = '%s-%s' % (constraintName, policyType)
     constraintFile = basename + '-constraint.xml'
-    policyFile     = basename + '.xml'
+    #policyFile = basename + '.xml'
 
-    fullDirname = pathjoin(dirname, groupName, scenario)
-    mkdirs(fullDirname)
+    fullDirname = pathjoin(dirname, groupName, scenario, create=True)
 
     pathname = pathjoin(fullDirname, constraintFile)
     _logger.debug("Generating constraint file: %s", pathname)
+
     with open(pathname, 'w') as f:
         f.write(xml)
 
     # TBD: test this
-    prefix = '../../../' if groupName else '../../'
-    localxml = prefix + LOCAL_XML_NAME
+    # prefix = '../../../' if groupName else '../../'
+    # localxml = prefix + LOCAL_XML_NAME
 
     # ToDo: replace subdir with groupDir?
     #source   = pathjoin(localxml, subdir, scenario, policyFile)
@@ -105,6 +104,20 @@ def _saveConstraintFile(xml, dirname, constraintName, policyType, scenario, grou
     # if os.path.lexists(linkname):
     #     os.remove(linkname)
     # symlinkOrCopyFile(source, linkname)
+
+# TBD: use Sandbox instead?
+def _getBatchDir(scenario, resultsDir):
+    """
+    Get the name of the directory holding batch query results..
+
+    :param scenario: (str) the name of a scenario
+    :param resultsDir: (str) the directory in which the batch
+        results directory should be created
+    :return: (str) the pathname to the batch results directory
+    """
+    from .constants import QRESULTS_DIRNAME
+    pathname = pathjoin(resultsDir, scenario, QRESULTS_DIRNAME)
+    return pathname
 
 def parseStringPairs(argString, datatype=float):
     """
@@ -164,7 +177,7 @@ def genBioConstraints(**kwargs):
     coefficients = parseStringPairs(kwargs.get('coefficients', None) or DefaultCellulosicCoefficients)
     xmlOutputDir = kwargs['xmlOutputDir'] # required
 
-    batchDir = getBatchDir(baseline, resultsDir)
+    batchDir = _getBatchDir(baseline, resultsDir)
 
     refinedLiquidsDF = readQueryResult(batchDir, baseline, 'Refined-liquids-production-by-technology', cache=True)
     totalBiomassDF   = readQueryResult(batchDir, baseline, 'Total_biomass_consumption', cache=True)
@@ -276,7 +289,7 @@ def genDeltaConstraints(**kwargs):
     totalBiomassQuery   = kwargs.get('totalBiomassQuery',   'Total_biomass_consumption')
     purposeGrownQuery   = kwargs.get('purposeGrownQuery',   'Purpose-grown_biomass_production')
 
-    batchDir = getBatchDir(baseline, resultsDir)
+    batchDir = _getBatchDir(baseline, resultsDir)
     refinedLiquidsDF = readQueryResult(batchDir, baseline, refinedLiquidsQuery, cache=True)
 
     yearCols = getYearCols(kwargs['years'])

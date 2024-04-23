@@ -14,7 +14,6 @@ import stat
 import sys
 from time import sleep
 from IPython.paths import locate_profile
-
 import ipyparallel as ipp
 
 try:
@@ -24,14 +23,15 @@ except:
     # Prior location
     from ipyparallel.apps.ipclusterapp import ALREADY_STARTED, ALREADY_STOPPED, NO_CLUSTER
 
-from .context import Context
-from .Database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
+from .context import McsContext
+from .database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
-from ..config import getParam, getParamAsInt
+from ..config import getParam, getParamAsInt, pathjoin
 from ..log import getLogger
+from ..utils import pygcam_version
 
-# Exit values for Master.processTrials()
+# Exit values for Monitor.processTrials()
 CONTINUE = 1
 EXIT = 2
 
@@ -108,7 +108,8 @@ batchTemplates = {'slurm' : {'engine'     : _slurmEngineBatchTemplate,
                              'controller' : _lsfControllerBatchTemplate},
                   }
 
-class Master(object):
+# Instantiated only from runsim_plugin.py
+class Monitor(object):
 
     def __init__(self, args):
         self.args = args
@@ -117,7 +118,7 @@ class Master(object):
         self.finished = False
         self.idleEngines = set()
 
-        projectName = args.projectName
+        projectName = args.projectName      # "global" projectName argument added in tool.py
 
         # cache run definitions from the database and amend as necessary when creating runs
         for scenario in args.scenarios:
@@ -127,8 +128,8 @@ class Master(object):
             for row in rows:
                 assert len(row) == 4, 'db.getRunInfo failed to return 4 values'
                 runId, simId, trialNum, status = row
-                Context(projectName=projectName, runId=runId, simId=simId,
-                        trialNum=trialNum, scenario=scenario, status=status)
+                McsContext(projectName=projectName, runId=runId, simId=simId,
+                           trialNum=trialNum, scenario=scenario, status=status)
 
     # TBD: see client.wait_for_engines() method
     def waitForWorkers(self):
@@ -220,7 +221,7 @@ class Master(object):
         :param simId: (int) simulation ID
         :param scenario: (str) scenario name
         :param trialNums: (list of int) trial numbers
-        :return: list of Context instances
+        :return: list of McsContext instances
         '''
         db = self.db
         session = db.Session()
@@ -252,9 +253,9 @@ class Master(object):
         finally:
             db.endSession(session)
 
-        contexts = [Context(projectName=projectName, runId=r.runId, simId=simId,
-                            trialNum=r.trialNum, scenario=scenario, groupName=groupName,
-                            baseline=baseline, status=r.status) for r in runs]
+        contexts = [McsContext(projectName=projectName, runId=r.runId, simId=simId,
+                               trialNum=r.trialNum, scenario=scenario, groupName=groupName,
+                               baseline=baseline, status=r.status) for r in runs]
         return contexts
 
     def setRunStatuses(self, pairs):
@@ -278,7 +279,7 @@ class Master(object):
 
         status = status or context.status
 
-        cached = Context.getRunInfo(context.runId)
+        cached = McsContext.getRunInfo(context.runId)
         if cached:
             # _logger.debug('setRunStatus: cache hit: %s', cached)
 
@@ -406,9 +407,9 @@ class Master(object):
                     if resultDict['isScalar']:
                         db.setOutValue(runId, paramName, value, session=session)
                     else:
-                        regionId = db.getRegionId(regionName)   # cached; not a DB query
+                        region = regionName if pygcam_version >= (2, 0, 0) else db.getRegionId(regionName)   # cached; not a DB query
                         units = resultDict['units']
-                        db.saveTimeSeries(runId, regionId, paramName, value, units=units, session=session)
+                        db.saveTimeSeries(runId, region, paramName, value, units=units, session=session)
 
             db.commitWithRetry(session)
 
@@ -645,7 +646,7 @@ class Master(object):
                         asyncResults.append(result)
 
                 except Exception as e:
-                    _logger.error("Exception running 'runTrial': %s", e)
+                    _logger.error(f"Exception running 'runTrial': {e}")
 
             self.setRunStatuses(statusPairs)
 
@@ -684,8 +685,8 @@ def listTrialsToRedo(db, simId, scenarios, statuses):
 
 def templatePath(scheduler, profile, clusterId, process):
     profileDir = locate_profile(profile)
-    basename = '%s_%s_%s.template' % (scheduler, clusterId, process)
-    filename = os.path.join(profileDir, basename)
+    basename = f'{scheduler}_{clusterId}_{process}.template'
+    filename = pathjoin(profileDir, basename)
     return filename
 
 def _saveBatchFiles(numTrials, argDict):
@@ -745,7 +746,7 @@ def _saveBatchFiles(numTrials, argDict):
 
     # N.B. process is 'controller' or 'engine'
     for process, template in templates.items():
-        cmd_argv = [sys.executable, "-m", "ipyparallel.%s" % process]
+        cmd_argv = [sys.executable, "-m", f"ipyparallel.{process}"]
         text = template % ' '.join(map(pipes.quote, cmd_argv))  # insert command line
         text = text.format(**defaults)   # insert other parameters
 
@@ -771,7 +772,7 @@ def _clusterCommand(cmd):
             ALREADY_STARTED: 'Cluster already started',
             NO_CLUSTER:      'No cluster found',
         }
-        msg = statusStrings.get(status, 'Exit status: %d' % status)
+        msg = statusStrings.get(status, f'Exit status: {status}')
         _logger.warning(msg)
 
     return status
@@ -823,7 +824,7 @@ def pidFileExists(profile, clusterId):
     """
     profileDir = locate_profile(profile)
     basename = 'ipcluster-%s.pid' % clusterId
-    pidFile = os.path.join(profileDir, 'pid', basename)
+    pidFile = pathjoin(profileDir, 'pid', basename)
     return os.path.isfile(pidFile)
 
 

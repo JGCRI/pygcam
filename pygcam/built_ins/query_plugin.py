@@ -3,11 +3,11 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 
 """
-from ..subcommand import SubcommandABC, clean_help
+from ..subcommand import SubcommandABC, clean_help, Deprecate
 
 class QueryCommand(SubcommandABC):
 
@@ -43,9 +43,8 @@ class QueryCommand(SubcommandABC):
                             help=clean_help('''Don't delete any temporary file created by extracting a query from a query file. Used
                                     mainly for debugging.'''))
 
-        parser.add_argument('-g', '--groupDir', default='',
-                            help=clean_help('''The scenario group directory name, if any. Used with to compute default
-                            for --workspace argument.'''))
+        parser.add_argument('-g', '--group',
+                            help=clean_help('''The name of a scenario group, if not the default one.'''))
 
         parser.add_argument('-l', '--splitLand', action='store_true',
                             help=clean_help('''Split the Landleaf column into "land_use" and "basin" columns and add 
@@ -55,7 +54,7 @@ class QueryCommand(SubcommandABC):
                             help=clean_help("Show the command to be run, but don't run it"))
 
         parser.add_argument('-o', '--outputDir',
-                             help=clean_help('Where to output the result (default taken from config parameter "GCAM.OutputDir")'))
+                             help=clean_help('Where to output the result (default taken from config parameter "GCAM.QueryOutputDir")'))
 
         parser.add_argument('-p', '--prequery', action="store_true",
                             help=clean_help('''Generate the XMLDBDriver.properties file and associated batch file to be
@@ -87,14 +86,17 @@ class QueryCommand(SubcommandABC):
                             help=clean_help('''An XML file defining query maps by name (default taken from
                             config parameter "GCAM.RewriteSetsFile")'''))
 
-        parser.add_argument('-w', '--workspace', default='',
-                            help=clean_help('''The workspace directory in which to find the XML database.
-                                    Defaults computed as {GCAM.SandboxDir}/{groupDir}/{scenario}.
+        parser.add_argument('-x', '--sandbox', default='',
+                            help=clean_help('''The sandbox directory in which to find the XML database.
+                                    Defaults to value of config variable GCAM.SandboxDir.
                                     Overridden by the -d flag.'''))
+
+        # Deprecations
+        parser.add_argument('-w', '--workspace', action=Deprecate, alt_text="Use -x / --sandbox instead.")
 
         return parser
 
     def run(self, args, tool):
         from ..query import queryMain
 
-        queryMain(args)
+        queryMain(args, tool)

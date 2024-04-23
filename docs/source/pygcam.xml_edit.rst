@@ -1,4 +1,4 @@
-``pygcam.scenarioSetup``
+``pygcam.xml_edit``
 ==========================
 
 The :ref:`setup <setup>` sub-command reads instructions from a
@@ -6,9 +6,10 @@ The :ref:`setup <setup>` sub-command reads instructions from a
 input files necessary to run a project's scenarios. See
 :doc:`setup` for more information.
 
+
 API
 ---
 
-.. automodule:: pygcam.scenarioSetup
+.. automodule:: pygcam.xml_edit
    :members:
 

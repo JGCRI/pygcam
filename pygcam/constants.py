@@ -6,16 +6,41 @@
 # Constants shared across modules. Note: use utils.getRegionList() rather than the
 # hard-coded 32 regions to insulate against failures with different aggregations.
 #
-
-# TBD: move to gcamtool package
 LOCAL_XML_NAME = 'local-xml'
 DYN_XML_NAME   = 'dyn-xml'
+APP_XML_NAME   = 'app-xml'
+TRIAL_XML_NAME = 'trial-xml'
 XML_SRC_NAME   = 'xmlsrc'
+PARAMETERS_XML = "parameters.xml"
+RESULTS_XML    = "results.xml"
+
+# Common directory and filenames
+CONFIG_XML = "config.xml"
+SCENARIOS_XML = "scenarios.xml"
+PROJECT_XML = "project.xml"
+QUERY_DIRNAME  = "queries"
+QRESULTS_DIRNAME = 'queryResults'
+DIFFS_DIRNAME = 'diffs'
+OUTPUT_DIRNAME = 'output'
+
+CO2_PER_C = 3.666666667     # the exact value used in PNNL scripts
+
+from enum import Enum
+
+class McsMode(Enum):
+    TRIAL = 'trial'
+    GENSIM = 'gensim'
+
+    @classmethod
+    def values(cls):
+        return [x.value for x in cls.__members__.values()]
+
+    def __eq__(self, value):
+        return self.value == value
 
 # These are the "standard" unmanaged classes. 'OtherArableLand' can also be protected.
 UnmanagedLandClasses = ['UnmanagedPasture', 'UnmanagedForest', 'Shrubland', 'Grassland']
 
-# TBD: keep in pygcam package
 DEFAULT_TIMESTEP = 5    # 5 years
 
 NUM_AEZS = 18
@@ -65,3 +90,13 @@ GCAM_USA_STATES = [
     'WY'
 ]
 
+
+class FileVersions(Enum):
+    FINAL    = -4   # => LOCAL_XML for non-MCS; TRIAL_XML for MCS
+    PARENT   = -3   # parent's FINAL
+    CURRENT  = -2   # return the "most local" existing version of the file
+    NEXT     = -1   # the next "more local" version of the file
+    REFERENCE = 0   # the Workspace version
+    BASELINE  = 1   # the local-xml version for baseline scenario
+    LOCAL_XML = 2   # the local-xml version for current scenario
+    TRIAL_XML = 3   # the trial-xml version for current scenario

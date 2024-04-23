@@ -34,6 +34,11 @@ Who do I talk to?
 Release Notes
 ==============
 
+Version 1.12.0 (XX Feb 2023)
+-----------------------------
+* Dropped support for versions of GCAM older than v5.3. Note that v5.2 was released in
+  Feb 2019, four years ago.
+
 Version 1.11.1 (27 Jun 2022)
 ----------------------------
 * Updated system.cfg to include input files for GCAM 5.4 and 6.0.

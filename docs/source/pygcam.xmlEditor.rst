@@ -24,10 +24,11 @@ API
    :members:
 
 
-Sector-specific config editors
--------------------------------
+..
+    Sector-specific config editors
+    -------------------------------
 
-These classes subclass XMLEditor to create sector-specific setup functionality.
+    These classes subclass XMLEditor to create sector-specific setup functionality.
 
-.. automodule:: pygcam.sectorEditors
-   :members:
+    .. automodule:: pygcam.sectorEditors
+        :members:

@@ -1,10 +1,10 @@
-``pygcam.mcs.Database``
+``pygcam.mcs.database``
 ============================
 
 
 API
 ---
 
-.. automodule:: pygcam.mcs.Database
+.. automodule:: pygcam.mcs.database
    :members:
 

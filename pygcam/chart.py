@@ -15,11 +15,11 @@ import numpy as np
 import seaborn as sns
 import shlex
 
-from .config import pathjoin, unixPath
+from .config import pathjoin, unixPath, mkdirs
 from .error import CommandlineError
 from .log import getLogger
 from .query import dropExtraCols, readCsv
-from .utils import systemOpenFile, digitColumns
+from .utils import digitColumns
 
 _logger = getLogger(__name__)
 
@@ -55,6 +55,23 @@ def _amendFilename(filename, suffix):
     '''
     base, ext = os.path.splitext(filename)
     return base + '-' + suffix + ext
+
+
+def systemOpenFile(path):
+    """
+    Ask the operating system to open a file at the given pathname.
+
+    :param path: (str) the pathname of a file to open
+    :return: none
+    """
+    import platform
+    from .utils import shellCommand
+
+    if platform.system() == 'Windows':
+        shellCommand(['start', os.path.abspath(path)], shell=True)
+    else:
+        # "-g" => don't bring app to the foreground
+        shellCommand(['open', '-g', path], shell=False)
 
 
 def _finalizeFigure(fig, ax, outFile=None, yFormat=None, sideLabel=False,
@@ -228,8 +245,7 @@ def plotStackedTimeSeries(df, index='region', xlabel='', ylabel='', ncol=5, box=
     #_logger.debug('plotStackedTimeSeries %s', sideLabel)
     setupPlot()
     df = dropExtraCols(df, inplace=False)
-    grouped = df.groupby(index)
-    df2 = grouped.aggregate(np.sum)
+    df2 = df.groupby(index).sum(numeric_only=True)
     df3 = df2.transpose()
 
     setupPalette(len(df3.columns), pal=palette)
@@ -385,8 +401,7 @@ def chartGCAM(args, num=None, negate=False):
     # use outputDir if provided, else use parent dir of outFile
     outputDir = outputDir or os.path.dirname(outFile)
 
-    if not os.path.lexists(outputDir):
-        os.mkdir(outputDir, 0o755)
+    mkdirs(outputDir, mode=0o755)
 
     if outFile:
         imgFile = os.path.basename(outFile)

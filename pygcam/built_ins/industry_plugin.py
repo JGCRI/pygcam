@@ -146,9 +146,7 @@ class IndustryCommand(SubcommandABC):
         with open(outputPath, 'w') as f:
             years = validate_years(args.years)
             if years is None:
-                raise Exception(
-                    'Year argument must be two integers separated by a hyphen, with second > first. Got "{}"'.format(
-                        args.years))
+                raise Exception(f'Year argument must be two integers separated by a hyphen, with second > first. Got "{args.years}"')
 
             # column headers
             f.write("which,region,sector,subsector,technology,")

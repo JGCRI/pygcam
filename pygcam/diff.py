@@ -4,10 +4,11 @@
   See the https://opensource.org/licenses/MIT for license details.
 '''
 import os
-from .config import pathjoin
-from .log import getLogger
+from .config import pathjoin, mkdirs, getParamAsPath
+from .constants import QRESULTS_DIRNAME, DIFFS_DIRNAME
 from .error import CommandlineError, FileFormatError
-from .utils import mkdirs, ensureCSV, QueryResultsDir
+from .file_utils import ensureCSV
+from .log import getLogger
 from .query import readCsv, dropExtraCols, csv2xlsx, sumYears, sumYearsByGroup, QueryFile
 
 _logger = getLogger(__name__)
@@ -250,7 +251,7 @@ def diffCsvPathname(query, baseline, policy, diffsDir=None, workingDir='.', crea
     :param createDir: (bool) whether to create the diffs directory, if needed.
     :return: (str) the pathname of the CSV file
     """
-    diffsDir = diffsDir or pathjoin(workingDir, policy, 'diffs')
+    diffsDir = diffsDir or pathjoin(workingDir, policy, DIFFS_DIRNAME)
     if createDir:
         mkdirs(diffsDir)
 
@@ -269,15 +270,11 @@ def queryCsvPathname(query, scenario, workingDir='.'):
         and policy sandboxes.
     :return: (str) the pathname of the CSV file
     """
-    pathname = pathjoin(workingDir, scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
+    pathname = pathjoin(workingDir, scenario, QRESULTS_DIRNAME, f'{query}-{scenario}.csv')
     return pathname
 
-def diffMain(args):
-    workingDir = args.workingDir
-    mkdirs(workingDir)
-    os.chdir(workingDir)
-
-    _logger.debug('Working dir: %s', workingDir)
+def diffMain(args, tool):
+    from .mcs.sim_file_mapper import get_mapper
 
     convertOnly = args.convertOnly
     skiprows    = args.skiprows
@@ -288,6 +285,7 @@ def diffMain(args):
     queryFile   = args.queryFile
     yearStrs    = args.years.split('-')
     asPercentChange = args.asPercentChange
+    workingDir  = args.workingDir
 
     if len(yearStrs) == 2:
         years = yearStrs
@@ -302,8 +300,14 @@ def diffMain(args):
 
         baseline, policy = args.csvFiles
 
-        # def makePath(query, scenario):
-        #     return pathjoin(scenario, QueryResultsDir, '%s-%s.csv' % (query, scenario))
+        if not workingDir:
+            mapper = tool.mapper or get_mapper(policy, scenario_group=args.group)
+            workingDir = os.path.dirname(mapper.sandbox_scenario_dir)
+
+        os.chdir(workingDir)
+
+        _logger.debug('Working dir: %s', workingDir)
+
 
         mainPart, extension = os.path.splitext(queryFile)
 
@@ -327,6 +331,11 @@ def diffMain(args):
                              interpolate=interpolate, years=years, startYear=startYear,
                              splitLand=splitLand, asPercentChange=asPercentChange)
     else:
+        if not args.workingDir:
+            raise CommandlineError("--workingDir/-D is required when --queryFile/-q is not specified")
+
+        os.chdir(args.workingDir)
+
         csvFiles = [ensureCSV(f) for f in args.csvFiles]
         referenceFile = csvFiles[0]
         otherFiles    = csvFiles[1:] if len(csvFiles) > 1 else []

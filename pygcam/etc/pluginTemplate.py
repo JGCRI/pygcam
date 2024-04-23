@@ -11,7 +11,7 @@ class MyNewCommand(SubcommandABC):
                   'description' : '''Longer description for sub-command'''}
 
         # The first argument is the name of the new sub-command
-        super(MyNewCommand, self).__init__('subCmdName', subparsers, kwargs)
+        super().__init__('subCmdName', subparsers, kwargs)
 
     def addArgs(self):
         '''

@@ -3,7 +3,7 @@
 
 .. codeauthor:: Rich Plevin <rich@plevin.com>
 
-.. Copyright (c) 2019 Richard Plevin
+.. Copyright (c) 2019-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC, clean_help
@@ -20,16 +20,17 @@ class RESCommand(SubcommandABC):
                             help=clean_help('''A CSV or XML file defining the RES policy. Default is the value of
                             configuration file parameter GCAM.RESDescriptionFile. If set to a
                             relative pathname (i.e., not starting with "/", "\\", or drive specifier
-                            "[a-zA-Z]:"), it is assumed to be relative to %%(GCAM.ProjectDir)s/etc.
+                            "[a-zA-Z]:"), it is assumed to be relative to %%(GCAM.ProjectDir)s/etc/.
                             If a CSV file is given, it is converted to an intermediate RES policy XML 
                             file before translation to GCAM-readable input.'''))
 
+        # TODO: might need to change the path referenced in the help
         parser.add_argument('-o', '--outputXML', default=None,
                             help=clean_help('''The directory into which to write the modified files.
                                     Default is the value of configuration file parameter 
                                     GCAM.RESImplementationXmlFile. If set to a relative pathname,
                                     it is assumed to be relative to 
-                                    %%(GCAM.SandboxRefWorkspace)s/local-xml/{scenario}, in which
+                                    %%(GCAM.SandboxWorkspace)s/local-xml/{scenario}, in which
                                     case, the "-s/--scenario" argument is required.'''))
 
         parser.add_argument('-S', '--scenario', default=None,

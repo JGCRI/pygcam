@@ -16,13 +16,13 @@ import sys
 from lxml import etree as ET
 
 from .config import getParam, setParam, getConfigDict, unixPath, pathjoin
-from .constants import LOCAL_XML_NAME, XML_SRC_NAME
 from .error import PygcamException, CommandlineError, FileFormatError
+from .file_mapper import FileMapper
 from .log import getLogger
-from .utils import flatten, shellCommand, getBooleanXML, simpleFormat, QueryResultsDir
 from .temp_file import getTempFile
+from .utils import flatten, shellCommand, getBooleanXML, simpleFormat
 from .XMLFile import XMLFile
-from .xmlSetup import ScenarioSetup
+from .xmlScenario import XMLScenario
 
 _logger = getLogger(__name__)
 
@@ -105,7 +105,7 @@ class _TmpFile(_TmpFileBase):
         take default file contents, which are appended to or
         replaced by the list defined here.
         """
-        super(_TmpFile, self).__init__(node)
+        super().__init__(node)
 
         self.replace = getBooleanXML(node.get('replace', '0'))
         self.eval    = getBooleanXML(node.get('eval',    '1'))    # convert {args} before writing file
@@ -153,7 +153,7 @@ class Queries(_TmpFileBase):
     Actual reading/processing of contents is handled in queryFile.py.
     """
     def __init__(self, node):
-        super(Queries, self).__init__(node)
+        super().__init__(node)
         self.tree = ET.ElementTree(node)
         self.setInstance(self.varName, self)      # replace default with our own definition
 
@@ -181,7 +181,7 @@ class Step(object):
         self.command = minWhitespace(node.text)
 
         if not self.command:
-            raise FileFormatError("<step name='%s'> is missing command text" % self.name)
+            raise FileFormatError(f"<step name='{self.name}'> is missing command text")
 
         if self.seq:
             Step.maxStep = max(self.seq, self.maxStep)
@@ -190,16 +190,15 @@ class Step(object):
             self.seq = Step.maxStep
 
     def __str__(self):
-        return "<Step name='%s' seq='%s' runFor='%s'>%s</Step>" % \
-               (self.name, self.seq, self.runFor, self.command)
+        return f"<Step name='{self.name}' seq='{self.seq}' runFor='{self.runFor}'>{self.command}</Step>"
 
-    def run(self, project, baseline, scenario, argDict, tool, noRun=False):
+    def run(self, mapper : FileMapper, argDict, tool, noRun=False):
         runFor = self.runFor
-        isBaseline = (baseline == scenario.name)
-        isPolicy = not isBaseline
+        is_baseline = mapper.is_baseline
+        is_policy = not is_baseline
 
         # See if this step should be run.
-        if runFor != 'all' and ((isBaseline and runFor != 'baseline') or (isPolicy and runFor != 'policy')):
+        if runFor != 'all' and ((is_baseline and runFor != 'baseline') or (is_policy and runFor != 'policy')):
             return
 
         # User can substitute an empty command to delete a default step
@@ -209,14 +208,18 @@ class Step(object):
         try:
             command = simpleFormat(self.command, argDict)    # replace vars in template
         except KeyError as e:
-            raise FileFormatError("%s -- No such variable exists in the project XML file" % e)
+            raise FileFormatError(f"{e} -- No such variable exists in the project XML file")
 
-        _logger.info("[%s, %s, %s] %s", scenario.name, self.seq, self.name, command)
+        _logger.info("[%s, %s, %s] %s", mapper.scenario, self.seq, self.name, command)
 
         if not noRun:
             if command[0] == '@':       # run internally in gt
                 argList = shlex.split(command[1:])
                 argList = flatten(map(lambda s: glob.glob(s) or [s], argList))  # expand shell wildcards
+
+                if '-g' not in argList and mapper.scenario_group:
+                    argList.extend(['-g', mapper.scenario_group])
+
                 tool.run(argList=argList)
             else:
                 shellCommand(command, shell=True)   # shell=True to expand shell wildcards and so on
@@ -276,7 +279,7 @@ class Variable(SimpleVariable):
         name     = node.get('name')
         evaluate = getBooleanXML(node.get('eval', 0))
 
-        super(Variable, self).__init__(name, node.text, evaluate=evaluate)
+        super().__init__(name, node.text, evaluate=evaluate)
 
     @classmethod
     def evaluateVars(cls, argDict):
@@ -300,25 +303,25 @@ class Project(XMLFile):
     """
     def __init__(self, xmlFile, projectName, groupName=None):
 
-        xmlFile = xmlFile or getParam('GCAM.ProjectXmlFile') or DefaultProjectFile
+        xmlFile = xmlFile or getParam('GCAM.ProjectFile') or DefaultProjectFile
 
         self.projectName = projectName or getParam('GCAM.DefaultProject')
 
         if not self.projectName:
             raise CommandlineError("No project name specified and no default project set")
 
-        super(Project, self).__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
+        super().__init__(xmlFile, schemaPath='etc/project-schema.xsd', conditionalXML=True)
 
         self.scenarioGroupName = groupName
 
         tree = self.tree
-        projectNodes = tree.findall('project[@name="%s"]' % projectName)
+        projectNodes = tree.findall(f'project[@name="{projectName}"]')
 
         if len(projectNodes) == 0:
-            raise FileFormatError("Project '%s' is not defined" % projectName)
+            raise FileFormatError(f"Project '{projectName}' is not defined")
 
         if len(projectNodes) > 1:
-            raise FileFormatError("Project '%s' is defined %d times" % (projectName, len(projectNodes)))
+            raise FileFormatError(f"Project '{projectName}' is defined {len(projectNodes)} times")
 
         projectNode = projectNodes[0]
 
@@ -328,13 +331,14 @@ class Project(XMLFile):
         hasDefaults = defaultsNode is not None
 
         # Read referenced scenarios.xml file and add it as a child of projectNode
-        # If no 'scenariosFile' element is found, use the value of GCAM.ScenarioSetupFile
+        # If no 'scenariosFile' element is found, use the value of GCAM.ScenariosFile
         nodes = projectNode.findall('scenariosFile')
         if len(nodes) > 1:
-            raise FileFormatError("%s: <project> must define at most one <scenariosFile> element" % xmlFile)
-        filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenarioSetupFile')
+            raise FileFormatError(f"{xmlFile}: <project> must define at most one <scenariosFile> element")
+
+        filename = nodes[0].get('name') if len(nodes) == 1 else getParam('GCAM.ScenariosFile')
         setupFile = pathjoin(os.path.dirname(xmlFile), filename)    # interpret as relative to including file
-        self.scenarioSetup = ScenarioSetup.parse(setupFile)
+        self.scenarioSetup = XMLScenario(setupFile)
 
         filename = getParam('GCAM.ScenarioSetupOutputFile')
         if filename:
@@ -352,7 +356,7 @@ class Project(XMLFile):
         # project steps with same name and seq overwrite defaults
         self.stepsDict = stepsDict = {}
         for step in allSteps:
-            key = "%s-%d" % (step.name, step.seq)
+            key = f"{step.name}-{step.seq}"
             stepsDict[key] = step
 
         self.vars = {}
@@ -373,12 +377,12 @@ class Project(XMLFile):
     instance = None
 
     @classmethod
-    def readProjectFile(cls, projectName, groupName=None, projectFile=None):
+    def readProjectFile(cls, projectName, groupName=None):
 
-        # return cached project if already read, otherwise read project.xml
+        # return cached project if already read, otherwise read the project's project.xml
         if not cls.instance or cls.instance.projectName != projectName:
-            projectFile = projectFile or getParam('GCAM.ProjectXmlFile', section=projectName)
-            cls.instance = Project(projectFile, projectName, groupName)
+            projectXmlFile = getParam('GCAM.ProjectFile', section=projectName)
+            cls.instance = Project(projectXmlFile, projectName, groupName=groupName)
 
         return cls.instance
 
@@ -395,11 +399,10 @@ class Project(XMLFile):
         groupName = groupName or self.scenarioSetup.defaultGroup
 
         if groupName not in groupDict:
-            raise FileFormatError("Group '%s' is not defined for project '%s'" % (groupName, self.projectName))
+            raise FileFormatError(f"Group '{groupName}' is not defined for project '{self.projectName}'")
 
         self.scenarioGroupName = groupName
         self.scenarioGroup = scenarioGroup = groupDict[groupName]
-        self.baselineName  = scenarioGroup.baseline
         self.scenarioDict  = scenarioGroup.finalDict
 
         return self.scenarioGroup
@@ -432,7 +435,7 @@ class Project(XMLFile):
                 print('  ' + step.name + label)
 
         if args.vars:
-            varList = ["%15s = %s" % (name, value) for name, value in sorted(self.argDict.items())]
+            varList = [f"{name:>15s} = {value}" for name, value in sorted(self.argDict.items())]
             showList(varList, 'Vars:')
 
         if self.quit:
@@ -462,7 +465,7 @@ class Project(XMLFile):
         Return a list of known scenarios for the current project and scenarioGroup, baseline first
         '''
         # sorting by not(node.isBaseline) results in baseline preceding scenarios
-        sortedScenarios = sorted(self.scenarioDict.values(), key=lambda node: not node.isBaseline)
+        sortedScenarios = sorted(self.scenarioGroup.finalDict.values(), key=lambda node: not node.isBaseline)
         knownScenarios  = [node.name for node in sortedScenarios]
         return knownScenarios
 
@@ -489,56 +492,57 @@ class Project(XMLFile):
         unknownArgs = set(userArgs) - set(knownArgs)
         if unknownArgs:
             s = ' '.join(unknownArgs)
-            raise CommandlineError("Requested %s do not exist in project '%s', group '%s': %s" % \
-                                  (argName, self.projectName, self.scenarioGroupName, s))
+            raise CommandlineError(f"Requested {argName} do not exist in project '{self.projectName}', "
+                                   f"group '{self.scenarioGroupName}': {s}")
 
-    def sortScenarios(self, scenarioSet):
+    def getScenario(self, scenario_name):
+        return self.scenarioGroup.getFinalScenario(scenario_name)
+
+    def sortScenarios(self, scenario_set):
         """
         If a baseline is in the scenario set, move it to the front and return the new list
         """
-        scenarios = list(scenarioSet)
+        scenario_names = list(scenario_set)
 
-        for scenarioName in scenarios:
-            scenario = self.scenarioDict[scenarioName]
+        for name in scenario_names:
+            scenario = self.getScenario(name)
             if scenario.isBaseline:
-                scenarios.remove(scenarioName)
-                scenarios.insert(0, scenarioName)
+                scenario_names.remove(name)
+                scenario_names.insert(0, name)
                 break
 
-        return scenarios
+        return scenario_names
 
-    def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool):
+    def run(self, scenarios, skipScenarios, steps, skipSteps, args, tool): # TBD: pass mapper
         """
         Command templates can include keywords curly braces that are substituted
         to create the command to execute in the shell. Variables are defined in
         the <vars> section of the project XML file.
         """
+        from .mcs.sim_file_mapper import get_mapper
+
         projectName = self.projectName
         scenarioGroupName = self.scenarioGroupName
-        groupDir = scenarioGroupName if self.scenarioGroup.useGroupDir else ''
 
-        # Push the groupName back into config system so vars can use it
-        setParam('GCAM.ScenarioGroup', groupDir, section=projectName)
-
-        # Get the text values for all config variables, allowing variables
-        # defined in the project to override them.
+        # Get the final value text for all config vars and allowing project
+        # variables to override them.
         cfgDict = getConfigDict(section=projectName)
         for name, value in cfgDict.items():
             SimpleVariable(name, value)
 
         self.argDict = argDict = Variable.getDict()
 
-        # Add standard variables for use in step command substitutions
-        argDict['project']       = projectName
-        argDict['projectSubdir'] = subdir = self.subdir
-        argDict['baseline']      = argDict['reference'] = baseline = self.baselineName     # baseline is synonym for reference
-        argDict['scenarioGroup'] = scenarioGroupName
-        argDict['srcGroupDir']   = srcGroupDir = self.scenarioGroup.srcGroupDir or groupDir
-        argDict['projectSrcDir'] = pathjoin('..', XML_SRC_NAME,   srcGroupDir, subdir)
-        argDict['projectXmlDir'] = pathjoin('..', LOCAL_XML_NAME, groupDir,    subdir)
-
+        # path separators
         argDict['SEP']  = os.path.sep       # '/' on Unix; '\\' on Windows
         argDict['PSEP'] = os.path.pathsep   # ':' on Unix; ';' on Windows
+
+        # TBD: With reliance on config vars and FileMapper many cmdline args may be
+        #   obsolete and so many of these variables are, too
+
+        # Add standard variables for use in step command template substitutions
+        argDict['project']       = projectName
+        argDict['baseline']      = self.scenarioGroup.baseline
+        argDict['scenarioGroup'] = scenarioGroupName
 
         knownGroups    = self.getKnownGroups()
         knownScenarios = self.getKnownScenarios()
@@ -561,9 +565,6 @@ class Project(XMLFile):
         run = not args.noRun
 
         scenarios = self.sortScenarios(scenarios)
-        sandboxDir = args.sandboxDir or argDict['GCAM.SandboxDir']
-
-        argDict['baselineDir'] = pathjoin(sandboxDir, baseline)
 
         # Delete all variants of scenario specification from shellArgs
         # so we can queue these one at a time.
@@ -583,7 +584,7 @@ class Project(XMLFile):
             # Construct gt command that does this scenario's steps
             # setting the -S flag for one scenario at a time.
             if args.distribute:
-                newArgs = ['+P', projectName] + shellArgs + ['-S', scenarioName] + ['-g', scenarioGroupName]
+                newArgs = shellArgs + ['+P', projectName, '-S', scenarioName, '-g', scenarioGroupName]
                 jobId = tool.runBatch2(newArgs, jobName=scenarioName, queueName=args.queueName,
                                        logFile=args.logFile, minutes=args.minutes,
                                        dependsOn=baselineJobId, run=run)
@@ -592,15 +593,13 @@ class Project(XMLFile):
 
                 continue
 
-            # These get reset as each scenario is processed
-            argDict['scenario']       = scenarioName
-            argDict['scenarioSubdir'] = scenario.subdir or scenarioName
-            argDict['sandboxDir']     = sandboxDir
-            argDict['scenarioDir']    = scenarioDir = pathjoin(sandboxDir, scenarioName)
-            argDict['diffsDir']       = pathjoin(scenarioDir, 'diffs')
-            argDict['batchDir']       = pathjoin(scenarioDir, QueryResultsDir)
-            # set in case it wasn't already
-            setParam('GCAM.SandboxDir', sandboxDir, section=projectName)
+            mapper = get_mapper(scenarioName, scenario_group=scenarioGroupName)
+
+            argDict['scenario'] = scenarioName
+            argDict['sandboxDir'] = mapper.sandbox_dir
+            argDict['scenarioDir'] = mapper.sandbox_scenario_dir
+            argDict['batchDir'] = mapper.sandbox_query_results_dir
+            argDict['diffsDir'] = mapper.sandbox_diffs_dir
 
             # Evaluate dynamic variables and re-generate temporary files, saving paths in
             # variables indicated in <tmpFile> or <queries> elements. This is in the scenario
@@ -617,15 +616,17 @@ class Project(XMLFile):
                                                group == scenarioGroupName or           # exact match
                                                re.match(group, scenarioGroupName)):    # pattern match
                         # Skip optional steps unless explicitly mentioned
-                        if (step.optional and step.name not in explicitSteps):
+                        if step.optional and step.name not in explicitSteps:
                             continue
 
                         argDict['step'] = step.name
-                        step.run(self, baseline, scenario, argDict, tool, noRun=args.noRun)
+                        step.run(mapper, argDict, tool, noRun=args.noRun)
+
             except PygcamException as e:
                 if quitProgram:
                     raise
-                _logger.error("Error running step '%s': %s", step.name, e)
+
+                _logger.error(f"Error running step '{step.name}': {e}")
 
 
     def dump(self, steps, scenarios):
@@ -645,7 +646,9 @@ _project = None
 
 
 def projectMain(args, tool):
-
+    """
+    Main function for built-in 'run' command
+    """
     def listify(items):
         '''Convert a list of comma-delimited strings to a single list of strings'''
         return flatten(map(lambda s: s.split(','), items)) if items else None
@@ -655,9 +658,11 @@ def projectMain(args, tool):
     scenarios = listify(args.scenarios)
     skipScens = listify(args.skipScenarios)
 
-    project = Project(args.projectFile, args.projectName, args.group)
+    group = args.group
 
-    groups = project.getKnownGroups() if args.allGroups else [args.group]
+    project = Project(args.projectFile, args.projectName, groupName=group)
+
+    groups = project.getKnownGroups() if args.allGroups else [group]
 
     for group in groups:
         project.setGroup(group)

@@ -9,13 +9,14 @@ from glob import glob
 import os
 import pipes
 import re
-from semver import VersionInfo
 import subprocess
 import sys
 
 from .config import (pathjoin, getParam, getConfig, getParamAsBoolean, getParamAsFloat,
                      setParam, getSection, setSection, getSections, DEFAULT_SECTION,
-                     usingMCS, savePathMap, parse_version_info, setInputFilesByVersion)
+                     usingMCS, savePathMap, parse_gcam_version, setInputFilesByVersion,
+                     mkdirs, userConfigPath)
+from .constants import McsMode
 from .error import PygcamException, ProgramExecutionError, ConfigFileError, CommandlineError
 from .log import getLogger, setLogLevels, configureLogs
 from .signals import SignalException, catchSignals
@@ -105,7 +106,6 @@ class GcamTool(object):
         # address re-entry issue
         decacheVariables()
 
-        self.mcsMode = ''
         self.shellArgs = None
 
         self.parser = self.subparsers = None
@@ -126,6 +126,15 @@ class GcamTool(object):
         # Load external plug-ins found in plug-in path
         if loadPlugins:
             self._cachePlugins()
+
+        self.mapper = None  # used to transmit path info for recursive commands
+        self.mcs_mode = None
+
+    def set_mcs_mode(self, mapper, mcs_mode):
+        self.mapper = mapper
+        self.mcs_mode = mcs_mode
+        if mapper:
+            mapper.mcs_mode = mcs_mode
 
     def addParsers(self):
         self.parser = parser = argparse.ArgumentParser(prog=PROGRAM, prefix_chars='-+')
@@ -168,7 +177,8 @@ class GcamTool(object):
                             help=clean_help('''Set the number of minutes to allocate for the queued batch job.
                             Overrides config parameter GCAM.Minutes. (Linux only)'''))
 
-        parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'],
+
+        parser.add_argument('+M', '--mcs', dest='mcsMode', choices=McsMode.values(),
                             help=clean_help('''Used only when running gcamtool from pygcam-mcs.'''))
 
         parser.add_argument('+P', '--projectName', metavar='name', default=getParam('GCAM.DefaultProject'),
@@ -200,12 +210,6 @@ class GcamTool(object):
 
         self.subparsers = self.parser.add_subparsers(dest='subcommand', title='Subcommands',
                                description='''For help on subcommands, use the "-h" flag after the subcommand name''')
-
-    def setMcsMode(self, mode):
-        self.mcsMode = mode
-
-    def getMcsMode(self):
-        return self.mcsMode
 
     def instantiatePlugin(self, pluginClass):
         plugin = pluginClass(self.subparsers)
@@ -264,7 +268,6 @@ class GcamTool(object):
 
     def validateGcamVersion(self):
         from .gcam import getGcamVersion
-        from semver import VersionInfo
 
         exeDir  = pathjoin(getParam('GCAM.RefWorkspace'), 'exe')
         exeName = getParam('GCAM.Executable')
@@ -274,29 +277,28 @@ class GcamTool(object):
             raise ConfigFileError('GCAM executable "%s" was not found.' % exePath)
 
         # Starting with v4.3, gcam reports its version number
-        versionCfg = parse_version_info()
-        if versionCfg >= VersionInfo(4, 3, 0):
-            versionFile = pathjoin(exeDir, '.version')
+        versionCfg = parse_gcam_version()
+        versionFile = pathjoin(exeDir, '.version')
 
-            # Check for cached version info
-            if os.path.lexists(versionFile):
-                with open(versionFile, 'r') as f:
-                    versionNum = f.readline().strip()
-            else:
-                versionNum = getGcamVersion(exeDir)
+        # Check for cached version info
+        if os.path.lexists(versionFile):
+            with open(versionFile, 'r') as f:
+                versionNum = f.readline().strip()
+        else:
+            versionNum = getGcamVersion(exeDir)
 
-                # cache version number so we don't have to run 'gcam.exe --version' every time
-                with open(versionFile, 'w') as f:
-                    f.write(versionNum + '\n')
+            # cache version number so we don't have to run 'gcam.exe --version' every time
+            with open(versionFile, 'w') as f:
+                f.write(versionNum + '\n')
 
-            versionExe = parse_version_info(versionNum)
-            if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
-                # use only major.minor to identify GCAM version
-                versionNum = "{}.{}".format(versionExe.major, versionExe.minor)
-                setParam('GCAM.VersionNumber', versionNum)
+        versionExe = parse_gcam_version(versionNum)
+        if (versionCfg.major, versionCfg.minor) != (versionExe.major, versionExe.minor):
+            # use only major.minor to identify GCAM version
+            versionNum = "{}.{}".format(versionExe.major, versionExe.minor)
+            setParam('GCAM.VersionNumber', versionNum)
 
-                log = getLogger(__name__)
-                log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
+            log = getLogger(__name__)
+            log.warning("Setting GCAM.VersionNumber = %s to match GCAM version. (Set it in the config file to suppress this message.)", versionNum)
 
         setInputFilesByVersion()
 
@@ -354,7 +356,6 @@ class GcamTool(object):
     @staticmethod
     def runBatch2(shellArgs, jobName='gt', queueName=None, logFile=None, minutes=None,
                   dependsOn=None, run=True):
-        from .utils import mkdirs
 
         _logger = getLogger(__name__)
 
@@ -373,15 +374,14 @@ class GcamTool(object):
 
         if logFile:
             logDir = getParam('GCAM.BatchLogDir')
-            logFile = os.path.normpath(pathjoin(logDir, logFile))
-            mkdirs(os.path.dirname(logFile))
+            mkdirs(logDir)
+            logFile = pathjoin(logDir, logFile, normpath=True)
 
         # default is 'afterok', but user might want to use 'after' to run even if baseline fails
         depFlag = getParam('SLURM.DependencyFlag')
         format = "-w 'done(%s)'" if batchSystem == 'LSF' else "-d {}:%s".format(depFlag)    # i.e., '-d afterok:%s' or '-d after:%s'
 
-        # TBD: make this an expression eval'd with s.format(jobID=dependsOn)
-        # TBD: to support other syntaxes
+        # TBD: make this an expression eval'd with s.format(jobID=dependsOn) to support other syntaxes
         dependencies = format % dependsOn if dependsOn else ''
 
         scriptCommand = "gt " + ' '.join(shellArgs)
@@ -426,9 +426,9 @@ class GcamTool(object):
         import platform
 
         system = platform.system()
-        if system in ['Windows']: # , 'Darwin']:
+        if system in ['Windows', 'Darwin']:
             system = 'Mac OS X' if system == 'Darwin' else system
-            raise CommandlineError('Batch commands are not supported on %s' % system)
+            raise CommandlineError(f'Batch commands are not supported on {system}')
 
         shellArgs = [pipes.quote(arg) for arg in shellArgs]
         args = self.parser.parse_args(args=shellArgs)
@@ -475,19 +475,6 @@ def _setDefaultProject(argv):
         setParam('GCAM.DefaultProject', section, section=DEFAULT_SECTION)
         setSection(section)
 
-    # Set the data dir based on the version of the model used in this project
-    version = parse_version_info()
-
-    v_5_1_0 = VersionInfo(5, 1, 0)
-
-    dataDir = "gcamdata" if version >= v_5_1_0 else "gcam-data-system"
-    setParam('GCAM.DataDir', dataDir, section=section)
-
-    # ModelInterface was also relocated in v5.1, so we compute the path when setting the project
-    subdir = 'output/modelinterface' if version >= v_5_1_0 else 'input/gcam-data-system/_common/ModelInterface/src'
-    setParam('GCAM.MI.Subdir', subdir )
-
-
 def _saveDirMap():
     dirMapFile = os.getenv('DIRMAP_PATH')
     if not dirMapFile:
@@ -509,9 +496,7 @@ def _showVersion(argv):
         print(VERSION)
         sys.exit(0)
 
-def _main(argv=None):
-    from .config import userConfigPath
-
+def _main(argv, mapper):
     configPath = userConfigPath()
     if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
         argSet = set(argv or sys.argv)
@@ -543,11 +528,11 @@ def _main(argv=None):
     parser.add_argument('+B', '--showBatch', action="store_true")
     parser.add_argument('+P', '--projectName', dest='projectName', metavar='name')
     parser.add_argument('+s', '--set', dest='configVars', action='append', default=[])
-    parser.add_argument('+M', '--mcs', dest='mcsMode', choices=['trial','gensim'])
+    parser.add_argument('+M', '--mcs', dest='mcsMode', choices=McsMode.values())
 
     ns, otherArgs = parser.parse_known_args(args=argv)
 
-    tool.setMcsMode(ns.mcsMode)
+    tool.set_mcs_mode(mapper, ns.mcsMode)
 
     # Set specified config vars
     for arg in ns.configVars:
@@ -576,11 +561,11 @@ def _main(argv=None):
         tool.run(args=args)
 
 
-def main(argv=None, raiseError=False):
+def main(argv=None, mapper=None, raiseError=False):
     _logger = getLogger(__name__)
 
     try:
-        _main(argv)
+        _main(argv, mapper)
         return 0
 
     except CommandlineError as e:
@@ -590,7 +575,7 @@ def main(argv=None, raiseError=False):
         if raiseError:
             raise
 
-        _logger.error("%s: %s" % (PROGRAM, e))
+        _logger.error(f"{PROGRAM}: {e}")
         return e.signum
 
     except Exception as e:

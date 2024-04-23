@@ -27,7 +27,6 @@
                 <xs:element ref='comment'/>
                 <xs:element ref='CONDITIONAL'/>
             </xs:choice>
-            <xs:attribute name='name' type='xs:string'/>            <!-- TBD: unused currently -->
             <xs:attribute name='defaultGroup' type='xs:string'/>
         </xs:complexType>
     </xs:element>
@@ -78,7 +77,7 @@
             <xs:attribute name='active' type='xs:boolean' default='true'/>      <!-- TBD: drop this? -->
             <xs:attribute name='baseline' type='xs:boolean'/>
             <xs:attribute name='iterator' type='xs:string'/>
-            <xs:attribute name='subdir' type='xs:string'/>                      <!-- TBD-->
+            <!-- xs:attribute name='subdir' type='xs:string' -->   <!-- Dropped support for this attribute -->
 
         </xs:complexType>
     </xs:element>

@@ -1,18 +1,17 @@
 # Copyright (c) 2012-2022. The Regents of the University of California (Regents)
 # and Richard Plevin. See the file COPYRIGHT.txt for details.
-import os
 import numpy as np
+
 from ..matplotlibFix import plt
 
 import pandas as pd
 import seaborn as sns
 
-from ..config import getParam, getParamAsBoolean
+from ..config import getParam, getParamAsBoolean, pathjoin
 from ..log import getLogger
-from ..utils import mkdirs
 
 from .error import PygcamMcsSystemError, PygcamMcsUserError
-from .Database import getDatabase, Input
+from .database import getDatabase, Input
 
 _logger = getLogger(__name__)
 
@@ -20,11 +19,11 @@ DEFAULT_BIN_COUNT = 3
 DEFAULT_MAX_TORNADO_VARS = 15
 
 def makePlotPath(value, simId):
-    plotDir = getParam('MCS.PlotDir')
-    subDir  = os.path.join(plotDir, f"s{simId}")
-    mkdirs(subDir)
+    plotDir = getParam('MCS.SandboxPlotDir')
+    subDir  = pathjoin(plotDir, f"s{simId}", create=True)
+
     plotType = getParam('MCS.PlotType')
-    path = os.path.join(subDir, f"{value}.{plotType}")
+    path = pathjoin(subDir, f"{value}.{plotType}")
     return path
 
 def printExtraText(fig, text, loc='top', color='lightgrey', weight='ultralight', fontsize='xx-small'):
@@ -96,7 +95,7 @@ def plotHistogram(values, xlabel=None, ylabel=None, title=None, xmin=None, xmax=
     #     distplot(values[1])
 
     # Use the above instead of this:
-    ax = sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'shade': shade})
+    ax = sns.distplot(values, hist=hist, bins=bins, kde=kde, color=color, kde_kws={'fill': shade})
 
     #sns.axlabel(xlabel=xlabel, ylabel=ylabel)
     if xlabel:
@@ -278,7 +277,7 @@ def plotConvergence(simId, expName, paramName, values, show=True, save=False):
     nValues = list(range(increment, count + increment - 1, increment))
 
     for N in nValues:
-        sublist = values[:N]
+        sublist = values.iloc[:N]
         results['Mean'].append(sublist.mean())
         results['Stdev'].append(sublist.std())
         results['Skewness'].append(sublist.skew())
@@ -558,7 +557,7 @@ def exportResults(simId, resultList, expList, exportFile, sep=','):
             resultDf['expName'] = expName
             resultDf['resultName'] = resultName
 
-            resultDf.rename(columns = {resultName:'value'}, inplace=True)
+            resultDf.rename(columns = {resultName: 'value'}, inplace=True)
 
             if df is None:
                 df = resultDf
@@ -875,7 +874,7 @@ class Analysis(object):
                 # flip neg. correlated values to reduce line crossings
                 if corrDF.spearman[name] < 0:
                     inputDF[name] = 1 - inputDF[name]
-                    inputDF.rename(columns={name: "(1 - %s)" % name}, inplace=True)
+                    inputDF.rename(columns={name: f"(1 - {name})"}, inplace=True)
             cols = inputDF.columns
 
         # optionally quantize inputs into the given number of bins

@@ -1,19 +1,20 @@
-# Copyright (c) 2016-2022  Richard Plevin
+# Copyright (c) 2016-2023  Richard Plevin
 # See the https://opensource.org/licenses/MIT for license details.
+
 from ...log import getLogger
 from .McsSubcommandABC import McsSubcommandABC, clean_help
 
 _logger = getLogger(__name__)
 
-def driver(args, tool):
+def driver(args):
     from ...project import Project
-    from ..master import Master, pidFileExists, startCluster, getTrialsToRedo
-    from ..Database import getDatabase
+    from ..monitor import Monitor, pidFileExists, startCluster, getTrialsToRedo
+    from ..database import getDatabase
     from ..util import parseTrialString
 
     if not (args.runLocal or args.redoListOnly):
         # If the pid file doesn't exist, we assume the cluster is
-        # not running and we run it with the given profile and
+        # not running, and we run it with the given profile and
         # cluster ID, relying on the config file for other parameters.
         # To specify other params, use "gt cluster start" instead.
         if pidFileExists(args.profile, args.clusterId):
@@ -52,7 +53,7 @@ def driver(args, tool):
 
     args.groupName = args.groupName or Project.defaultGroupName()
 
-    Master(args).run()
+    Monitor(args).run()
 
 
 class RunSimCommand(McsSubcommandABC):
@@ -178,7 +179,7 @@ class RunSimCommand(McsSubcommandABC):
             args.noGCAM = args.noBatchQueries = args.noPostProcessor = args.runLocal = True
 
         if args.statuses:
-            from ..Database import RUN_STATUSES
+            from ..database import RUN_STATUSES
             from ...error import CommandlineError
 
             statusSet = set(args.statuses)
@@ -187,6 +188,7 @@ class RunSimCommand(McsSubcommandABC):
 
             unknown = statusSet - known
             if unknown:
-                raise CommandlineError("Unknown status code(s): %s" % ', '.join(map(repr, unknown)))
+                status_codes = ', '.join(map(repr, unknown))
+                raise CommandlineError(f"Unknown status code(s): {status_codes}")
 
-        driver(args, tool)
+        driver(args)

@@ -3,7 +3,7 @@ import os
 from glob import glob
 import shutil
 
-from pygcam.utils import TempFile, getTempFile
+from pygcam.temp_file import TempFile, getTempFile
 
 class TestTempFile(unittest.TestCase):
     def setUp(self):

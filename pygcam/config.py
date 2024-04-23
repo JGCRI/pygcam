@@ -1,19 +1,15 @@
 '''
-.. Copyright (c) 2016 Richard Plevin
+.. Copyright (c) 2016-2023 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+import configparser
 import os
-import sys
 import platform
-import re
 from pkg_resources import resource_string
-
-if sys.version_info.major == 2:
-    from backports import configparser
-else:
-    import configparser
+import re
 
 from .error import ConfigFileError, PygcamException
+
 DEFAULT_SECTION = 'DEFAULT'
 USR_CONFIG_FILE = '.pygcam.cfg'
 USR_DEFAULTS_FILE = '.pygcam.defaults'
@@ -30,7 +26,7 @@ _PathPattern = None     # compiled regex matching any mapped paths
 
 # The unixPath and pathjoin funcs are here rather than in utils.py
 # since this functionality is needed here and this avoids import loops.
-def unixPath(path, rmFinalSlash=False, abspath=False):
+def unixPath(path, rmFinalSlash=False, abspath=False, normpath=False):
     """
     Convert a path to use Unix-style slashes, optionally
     removing the final slash, if present.
@@ -43,6 +39,9 @@ def unixPath(path, rmFinalSlash=False, abspath=False):
     if abspath:
         path = os.path.abspath(path)
 
+    if normpath:
+        path = os.path.normpath(path)
+
     if PlatformName == 'Windows':
         path = path.replace('\\', '/')
 
@@ -51,22 +50,49 @@ def unixPath(path, rmFinalSlash=False, abspath=False):
 
     return path
 
-def pathjoin(*elements, **kwargs):
+# Duplicated here from file_utils to avoid an import cycle
+def mkdirs(newdir, mode=0o770):
+    """
+    Try to create the full path `newdir` and ignore the error if it already exists.
+
+    :param newdir: the directory to create (along with any needed parent directories)
+    :return: nothing
+    """
+    from errno import EEXIST
+
+    try:
+        os.makedirs(newdir, mode)
+
+    except OSError as e:
+        if e.errno != EEXIST:
+            raise
+
+        elif not os.path.isdir(newdir):
+            raise FileExistsError(f"Can't create directory {newdir}; non-directory exists at that location.")
+
+def pathjoin(*elements, expanduser=False, abspath=False, normpath=False,
+             realpath=False, create=False):
     path = os.path.join(*elements)
 
-    if kwargs.get('expanduser'):
+    if expanduser:
         path = os.path.expanduser(path)
 
-    if kwargs.get('abspath'):
+    if abspath:
         path = os.path.abspath(path)
 
-    if kwargs.get('normpath'):
+    if normpath:
         path = os.path.normpath(path)
 
-    if kwargs.get('realpath'):
+    if realpath:
         path = os.path.realpath(path)
 
-    return unixPath(path, rmFinalSlash=True)
+    path = unixPath(path, rmFinalSlash=True)
+
+    if create:
+        mkdirs(path)
+
+    return path
+
 
 def savePathMap(mapString):
     """
@@ -112,7 +138,7 @@ def _translatePath(value):
 
     return value
 
-def parse_version_info(vers=None):
+def parse_gcam_version(vers=None):
     import semver
 
     vers = vers or getParam('GCAM.VersionNumber')
@@ -131,9 +157,7 @@ def setInputFilesByVersion():
     "GCAM.InputFiles.5.1.2" is not defined, but "GCAM.InputFiles.5.1" is, we set "GCAM.InputFiles"
     to the value of parameter "GCAM.InputFiles.5.1".
     '''
-    from semver import VersionInfo
-
-    vers = parse_version_info()
+    vers = parse_gcam_version()
 
     major = str(vers.major)                     # e.g., "5"
     minor = '{}.{}'.format(major, vers.minor)   # e.g., "5.1"
@@ -303,7 +327,6 @@ def writeSystemDefaultsFile(systemDefaults):
     content += "# User's home directory\nHome = %s\n\n" % getParam('Home', raw=True)
     content += "# Name of gcam executable relative to 'exe' dir\nGCAM.Executable = %s\n\n" % getParam('GCAM.Executable', raw=True)
     content += "# Location of ModelInterface jar file\nGCAM.MI.JarFile = %s\n\n" % getParam('GCAM.MI.JarFile', raw=True)
-    content += "# Whether to use a virtual display when running ModelInterface\nGCAM.MI.UseVirtualBuffer = %s\n\n" % getParam('GCAM.MI.UseVirtualBuffer', raw=True)
     content += "# Editor command to invoke by 'gt config -e'\nGCAM.TextEditor = %s\n\n" % getParam('GCAM.TextEditor', raw=True)
 
     if PlatformName == 'Windows':   # convert line endings from '\n' to '\r\n' for Windows
@@ -324,6 +347,15 @@ def setMacJavaVars():
         javaLib = pathjoin(refWorkspace, 'libs/java/lib')
         os.environ['JAVA_LIB'] = javaLib
         setParam('$JAVA_LIB', javaLib)
+
+def readConfigFile(path_or_stream):
+    # N.B. doesn't handle Path-like objs but we aren't using them here
+    if isinstance(path_or_stream, (str, bytes)):
+        with open(path_or_stream) as f:
+            _ConfigParser.read_file(f)
+    else:
+        # test code passes a StringIO instance to set up test environment
+        _ConfigParser.read_file(path_or_stream)
 
 def readConfigFiles(allowMissing=False):
     """
@@ -367,25 +399,24 @@ def readConfigFiles(allowMissing=False):
     siteConfig = os.getenv('PYGCAM_SITE_CONFIG')
     if siteConfig:
         try:
-            with open(siteConfig) as f:
-               _ConfigParser.read_file(f)
+            readConfigFile(siteConfig)
+
         except Exception as e:
-            print("WARNING: Failed to read site config file: %s" % e)
+            print(f"WARNING: Failed to read site config file '{siteConfig}': {e}")
 
     # Customizations are stored in ~/.pygcam.cfg
     usrConfigPath = userConfigPath()
 
     # os.path.exists doesn't always work on Windows, so just try opening it.
     try:
-        with open(usrConfigPath) as f:
-           _ConfigParser.read_file(f)
+        readConfigFile(usrConfigPath)
 
     except IOError:
         if not allowMissing:
             if not os.path.lexists(usrConfigPath):
-                raise ConfigFileError("Missing configuration file %s" % usrConfigPath)
+                raise ConfigFileError(f"Missing user config file '{usrConfigPath}'")
             else:
-                raise ConfigFileError("Can't read configuration file %s" % usrConfigPath)
+                raise ConfigFileError(f"Can't read user config file '{usrConfigPath}'")
 
     try:
         # Write the system defaults to ~/.pygcam.defaults if necessary
@@ -394,7 +425,7 @@ def readConfigFiles(allowMissing=False):
             writeSystemDefaultsFile(systemDefaults)
     except Exception as e:
         if not allowMissing:
-            raise ConfigFileError("Failed to write %s: %s" % (defaultsPath, e))
+            raise ConfigFileError(f"Failed to write {defaultsPath}: {e}")
 
     # Dynamically set (if not defined) GCAM.ProjectName in each section, holding the
     # section (i.e., project) name. If user has set this, the value is unchanged.
@@ -457,7 +488,6 @@ def getParam(name, section=None, raw=False, raiseError=True):
        that variable names are case-insensitive. Note that environment
        variables are available using the '$' prefix as in a shell.
        To access the value of environment variable FOO, use getParam('$FOO').
-
     :param section: (str) the name of the section to read from, which
       defaults to the value used in the first call to ``getConfig``,
       ``readConfigFiles``, or any of the ``getParam`` variants.
@@ -479,13 +509,13 @@ def getParam(name, section=None, raw=False, raiseError=True):
 
     except configparser.NoSectionError:
         if raiseError:
-            raise PygcamException('getParam: unknown section "%s"' % section)
+            raise PygcamException(f'getParam: unknown section "{section}"')
         else:
             return None
 
     except configparser.NoOptionError:
         if raiseError:
-            raise PygcamException('getParam: unknown variable "%s"' % name)
+            raise PygcamException(f'getParam: unknown variable "{name}"')
         else:
             return None
 
@@ -508,7 +538,7 @@ def stringTrue(value, raiseError=True):
         return False
 
     if raiseError:
-        msg = 'Unrecognized boolean value: "{}". Must one of {}'.format(value, _True + _False)
+        msg = f'Unrecognized boolean value: "{value}". Must one of {_True + _False}'
         raise ConfigFileError(msg)
     else:
         return None
@@ -534,7 +564,7 @@ def getParamAsBoolean(name, section=None):
     result = stringTrue(value, raiseError=False)
 
     if result is None:
-        msg = 'The value of variable "{}", {}, could not converted to boolean.'.format(name, value)
+        msg = f'The value of variable "{name}", {value}, could not converted to boolean.'
         raise ConfigFileError(msg)
 
     return result
@@ -568,3 +598,16 @@ def getParamAsFloat(name, section=None):
     value = getParam(name, section=section)
     return float(value)
 
+def getParamAsPath(name, section=None):
+    """
+    Get the value of the configuration parameter `name` as a
+    UNIX path. Calls :py:func:`getConfig` if needed.
+
+    :param name: (str) the name of a configuration parameters.
+    :param section: (str) the name of the section to read from, which
+      defaults to the value used in the first call to ``getConfig``,
+      ``readConfigFiles``, or any of the ``getParam`` variants.
+    :return: (str) the path
+    """
+    value = getParam(name, section=section)
+    return unixPath(value, normpath=True)

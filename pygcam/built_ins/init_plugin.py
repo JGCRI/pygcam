@@ -7,7 +7,7 @@
 import itertools
 import os
 
-from ..config import getConfig, getHomeDir, pathjoin, unixPath
+from ..config import getConfig, getHomeDir, pathjoin, unixPath, mkdirs, USR_CONFIG_FILE
 from ..subcommand import SubcommandABC, clean_help
 
 class AbortInput(Exception):
@@ -55,11 +55,7 @@ def findGCAM():
 
     home = getHomeDir()
 
-    # TBD: drop support for v4?
-    withReleasePackages = ['gcam-v6.0', 'gcam-v5.4', 'gcam-v5.3', 'gcam-v5.2',
-                           'gcam-v5.1.3', 'gcam-v5.1.2', 'gcam-v5.1.1',
-                           'gcam-v4.4.1', 'gcam-v4.4']
-    versions = withReleasePackages + ['gcam-v4.3']
+    versions = ['gcam-v' + num for num in ('6.0', '5.4', '5.3', '5.2')]
     dirs = [home, home + '/GCAM', home + '/gcam', home + '/Documents/GCAM', home + '/Documents/gcam']
 
     system = platform.system()
@@ -70,13 +66,10 @@ def findGCAM():
     else:
         pkgName = None
 
-    if pkgName:
-        for version in reversed(withReleasePackages):   # so newest is first in versions
-            release = version + pkgName
-            versions.insert(0, release)
+    all = sorted([version + pkgName for version in versions] + versions, reverse=True) if pkgName else versions
 
-    for v, d in itertools.product(versions, dirs):
-        path = '%s/%s' % (d, v)
+    for v, d in itertools.product(all, dirs):
+        path = f'{d}/{v}'
         if os.path.isdir(path):
             return unixPath(path)
 
@@ -86,7 +79,7 @@ def askYesNo(msg, default=None):
     default = default and default.lower()
     y = 'Y' if default == 'y' else 'y'
     n = 'N' if default == 'n' else 'n'
-    prompt = msg + ' (%s/%s)? ' % (y, n)
+    prompt = msg + f' ({y}/{n})? '
 
     value = None
     while value is None:
@@ -103,7 +96,7 @@ def askYesNo(msg, default=None):
 def askString(msg, default):
     value = None
     while value is None:
-        value = input(msg + ' (default=%s): ' % default)
+        value = input(msg + f' (default={default}): ')
         value = value.strip()
         if value == '':
             value = default
@@ -118,8 +111,6 @@ def askDir(msg, default=''):
     except Exception:
         # prompt_toolkit 2
         from prompt_toolkit.completion import PathCompleter
-
-    from ..utils import mkdirs
 
     is_cygwin = isCygwin()
 
@@ -142,17 +133,17 @@ def askDir(msg, default=''):
 
         if path and not os.path.isdir(path):
             if os.path.lexists(path):
-                print('Path %s exists, but is not a directory. Try again.' % path)
+                print(f'Path {path} exists, but is not a directory. Try again.')
                 path = ''
                 continue
 
-            create = askYesNo("Path %s does not exist. Create it" % path, default='y')
+            create = askYesNo(f"Path {path} does not exist. Create it", default='y')
             if not create:
                 path = ''
                 continue
 
             mkdirs(path)
-            print('Created %s' % path)
+            print('Created', path)
 
     return path
 
@@ -170,6 +161,7 @@ def rerunForCygwin(args):
     A bit of an unfortunate work-around, but it works.
     """
     import subprocess as subp
+    from ..utils import shellCommand
 
     os.environ['PYTHONUNBUFFERED'] = '1'
 
@@ -195,9 +187,7 @@ def rerunForCygwin(args):
     if args.sandboxDir:
         argList += ['-s', args.sandboxDir]
 
-    command = ' '.join(argList)
-    # print('Re-running for cygwin: %s' % command)
-    subp.call(argList, shell=False)
+    shellCommand(argList, shell=False)
 
 
 class InitCommand(SubcommandABC):
@@ -250,8 +240,7 @@ class InitCommand(SubcommandABC):
         return parser
 
     def run(self, args, tool):
-        from ..config import USR_CONFIG_FILE
-        from ..utils import deleteFile, mkdirs
+        from ..file_utils import deleteFile
         from ..gcam import getGcamVersion
 
         # Detect cygwin terminals, which quite lamely cannot handle interactive input
@@ -273,14 +262,14 @@ class InitCommand(SubcommandABC):
 
             # make backup of configuration file if it exists and is not zero length
             if os.path.lexists(configPath) and os.stat(configPath).st_size > 0:
-                overwrite = args.overwrite or askYesNo('Overwrite %s' % configPath, default='n')
+                overwrite = args.overwrite or askYesNo(f'Overwrite {configPath}', default='n')
                 if not overwrite:
-                    raise AbortInput("Quitting to avoid overwriting %s" % configPath)
+                    raise AbortInput(f"Quitting to avoid overwriting {configPath}")
 
                 backup = configPath + '~'
                 deleteFile(backup)
                 os.rename(configPath, backup)
-                print('Moved %s to %s' % (configPath, backup))
+                print(f'Moved {configPath} to {backup}')
 
         except AbortInput as e:
             print(e)
@@ -297,7 +286,7 @@ class InitCommand(SubcommandABC):
         with open(configPath, 'w') as f:
             f.write(text)
 
-        print("Created %s with contents:\n\n%s" % (configPath, text))
+        print(f"Created {configPath} with contents:\n\n{text}")
 
         # reload the config info in case we use it below
         getConfig(reload=False)
@@ -306,19 +295,19 @@ class InitCommand(SubcommandABC):
             if not os.path.isdir(path):
                 mkdirs(path)
 
-        # These args default to None so we can test for explicit settings
-        createProj = True if args.createProject == True else (False if args.noCreateProject == True else None)
+        # These args default to None, so we can test for explicit settings
+        createProj = True if args.createProject is True else (False if args.noCreateProject is True else None)
         if createProj is None:
-            createProj = askYesNo('Create the project structure for "%s"' % dfltProject, default='y')
+            createProj = askYesNo(f'Create the project structure for "{dfltProject}"', default='y')
 
         if createProj:
             newProjectDir = pathjoin(projectDir, dfltProject)
-            overwrite = askYesNo('Overwrite existing project dir %s' % newProjectDir, 'n') if os.path.lexists(newProjectDir) else False
+            overwrite = askYesNo(f'Overwrite existing project dir {newProjectDir}', 'n') if os.path.lexists(newProjectDir) else False
 
             argList = ['new', dfltProject, '-r', projectDir] + (['--overwrite'] if overwrite else [])
 
             args = tool.parser.parse_args(args=argList)
             tool.run(args=args)
-            print('Created project "%s" in %s' % (dfltProject, newProjectDir))
+            print(f'Created project "{dfltProject}" in {newProjectDir}')
 
 PluginClass = InitCommand

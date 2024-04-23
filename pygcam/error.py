@@ -81,3 +81,9 @@ class SetupException(Exception):
     Raised from the setup sub-system.
     """
     pass
+
+class PluginException(Exception):
+    """
+    Raised from a non-pygcam plugin
+    """
+    pass
