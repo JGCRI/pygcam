@@ -30,8 +30,7 @@ requirements = [
     'semver',
     'sphinx-argparse',
     'sphinx-rtd-theme',
-    # 'salib>=1.1.3',
-    'sqlalchemy',
+    'sqlalchemy<2.0.0',
 ]
 
 long_description = '''
