@@ -1,4 +1,4 @@
- ``pygcam.subcommand``
+``pygcam.subcommand``
 ================================
 
 Gcamtool can be extended using plug-ins, i.e., python modules that
@@ -42,6 +42,7 @@ that the plugins appear in the generated documentation.
 The following template can be used to create new sub-commands. See also
 ``pygcam/etc/pluginTemplate.py``, which contains the code shown here.
 
+
 .. literalinclude:: ../../pygcam/etc/pluginTemplate.py
    :language: python
 
@@ -51,3 +52,4 @@ API
 
 .. automodule:: pygcam.subcommand
    :members:
+
