@@ -117,6 +117,22 @@ Generating a simulation
 
 To generate a simulation, the following steps are required:
 
+#. Run ``drake`` to create the baseline against which changes are detected:
+
+   ``gt moirai --create-baseline``
+
+#. Run the data system for each of 6 carbon statistics and collect the data into one CSV:
+
+   ``gt moirai --save-moirai-summary``
+
+   This produces the file ``moirai-summary-wide.csv``
+
+#. Generate the implied Beta distributions for each GLU, using min, q1, q3, and max:
+
+   ``gt moirai --save-beta-args``
+
+   This produces the file ``moirai-beta-args.csv``.
+
 #. Modify ``parameters.xml`` to draw percentile values from some distribution,
    e.g., Uniform(0.5, 0.99) to indicate the percentile value to read from
    the implied Beta distributions.
@@ -126,31 +142,92 @@ To generate a simulation, the following steps are required:
 
 #. Run the gcam data system with a "user modification" function that
    swaps in stochastic C values (re-scaled) for the default values to generate
-   the dependent XML files. (In GCAM v7, there are 6 of these.)
+   the dependent XML files. (In GCAM v7, there are 6 affected files.)
 
-#. Modify the GCAM config file via ``scenarios.xml`` to use the newly generated
-   XMLs rather than the standard ones.
+   The best way to do this is to add a ``step`` to the ``project.xml`` file, e.g.,
 
+.. code-block:: xml
 
-moirai-summary-wide.csv
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    <step name="moirai" runFor="baseline" optional="true">
+        @moirai --gen-xml -S {baseline} -t PATH
+    </step>
 
-All soil and veg C values for all values of ``R`` variable ``aglu.CARBON_STATE``.
+and to modify the ``pygcam`` configuration variable declaring the setup steps to use
+to run the new ``moirai`` step after setting up the sandbox and config file but before
+running configuration steps that reference XML files:
 
+.. code-block:: cfg
 
-moirai-beta-args.csv
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   MCS.SetupSteps = create-sandbox,config-setup,moirai,non-config-setup
 
-Values for the two parameters for the Beta distribution for each
-location and land type. These are the parameters to produce the
-standard form Beta, which has bounds of [0, 1]. The draws must by
-scaled, i.e., ``actual_value = draw * max_value + min_value``
-to produce C density values.
 
 Caveats
 ~~~~~~~~~~
 
-* The Beta distribution doesn’t fit well the bimodal distributions found in the some cases in the data.
+* The Beta distribution isn't a good fit for the bimodal distributions found in the some
+  of the carbon data.
 
 * In cases in which the minimum and Q1 values are the same in moirai, we substitute 20% of Q1
   for the minimum value.
+
+
+Example distributions for moirai carbon densities
+----------------------------------------------------
+
+The following snippet from a ``parameters.xml`` file defines distributions for the
+percentile values to draw from the Beta distribution implied by the statistics
+gleaned from the moirai data.
+
+.. code-block:: xml
+
+  <InputFile name="moirai-data" type="csv">
+    <!-- 'type=xml' is the default; use csv to affect a data system CSV file -->
+
+    <Parameter name="cropland-veg-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="pasture-veg-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="forest-veg-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="grass-shrub-veg-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="cropland-soil-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="pasture-soil-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="forest-soil-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+
+    <Parameter name="grass-shrub-soil-c">
+      <Distribution>
+        <Uniform min="0.5" max="0.99"/>
+      </Distribution>
+    </Parameter>
+  </InputFile>
