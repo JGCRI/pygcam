@@ -348,7 +348,7 @@ class XMLDistribution(XMLTrialData):
                 self.argDict[key] = float(val)    # these form the signature that identifies the distroElt function
 
         sig = DistroGen.signature(self.distroName, self.argDict.keys())
-        _logger.debug("<Distribution %s, %s>", ' '.join(map(lambda pair: '%s="%s"' % pair, element.items())), sig)
+        _logger.debug(f"Param: {param.name} <Distribution %s, %s>", ' '.join(map(lambda pair: '%s="%s"' % pair, element.items())), sig)
 
         gen = DistroGen.generator(sig)
         if gen is None:
