@@ -260,6 +260,10 @@ scenarios based on the values of the iterator, as described above.
 Actions: <add>, <insert>, <replace>, <delete>, <function>, and <if>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+   **New in pygcam 2.0**: Use ``{local-xml}`` in paths in to XML files to
+   refer to ``local-xml`` directory in non-MCS and ``trial-xml`` in MCS runs.
+
 There are five action elements that operate on the configuration file. The
 elements ``<add>``, ``<insert>``, ``<replace>``, and ``<delete>`` operate
 directly on XML configuration elements. The ``<function>`` element call

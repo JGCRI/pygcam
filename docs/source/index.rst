@@ -11,6 +11,7 @@ Introduction
    initialize
    config
    tutorial
+   release-notes
 
 The ``gt`` workflow management script
 --------------------------------------------------

@@ -26,6 +26,7 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
    :ref:`ippsetup <ippsetup>`,
    :ref:`iterate <iterate>`,
    :ref:`runsim <runsim>`,
+   :ref:`moirai <moirai>`
 
 
 .. argparse::
@@ -94,6 +95,14 @@ This page describes only the sub-commands provided by ``pygcam.mcs``. See the
       “foo” in each trialDir for a given set of parameters, you might write::
 
         gt iterate -s1 -c “foo -s{simId} -t{trialNum} -i{trialDir}/x -o{trialDir}/y/z.txt”.
+
+
+   moirai : @replace
+      .. _moirai:
+
+      Provides various options for setting up Monte Carlo simulations with
+      uncertainty in carbon stock data based on the underlying moirai data.
+      See :doc:`datasystem` for more information.
 
    parallelPlot : @replace
       .. _parallelPlot:
