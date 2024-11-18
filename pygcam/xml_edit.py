@@ -37,7 +37,7 @@ def expandYearRanges(seq):
     result = []
     try:
         seq = list(seq.items())     # convert dict or Series to list of pairs
-    except:                         # or quietly fail, and just use 'seq' as is
+    except Exception:               # or quietly fail, and just use 'seq' as is
         pass
 
     for year, value in seq:

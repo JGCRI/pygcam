@@ -411,9 +411,10 @@ def _exportVars(paramFile, outputFile, plotsDir):
         import csv
 
         writer = csv.writer(f, dialect='unix')
-        writer.writerow(['Category', 'Name', 'Distribution', 'Application', 'Description', 'XPath', 'Evidence', 'Rationale', 'Notes'])
+        writer.writerow(['Category', 'Name', 'FileTag', 'Distribution', 'Application', 'Description', 'XPath', 'Evidence', 'Rationale', 'Notes'])
 
         for category, pname, p in sorted_params:
+            tag = p.parent.name
             dist = getDistStr(p.dataSrc)
             modDict = p.dataSrc.modDict
             apply = modDict['apply']
@@ -424,7 +425,7 @@ def _exportVars(paramFile, outputFile, plotsDir):
             rationale = clean(p.rationale)
             notes     = clean(p.notes)
 
-            writer.writerow([category, pname, dist, apply, desc, xpath, evidence, rationale, notes])
+            writer.writerow([category, pname, tag, dist, apply, desc, xpath, evidence, rationale, notes])
 
         for pname, p in dataFileDict.items():
             fname = p.dataSrc.filename
@@ -441,11 +442,10 @@ def driver(args):
     from ...file_utils import removeTreeSafely
     from ..error import PygcamMcsUserError
 
-    simId  = args.simId
     desc   = args.desc
     trials = args.trials
 
-    if trials < 0:
+    if trials < 0 and not args.exportVars:
         raise PygcamMcsUserError("Trials argument is required: must be an integer >= 0")
 
     mapper = SimFileMapper(project_name=args.projectName, scenario_group=args.group,
