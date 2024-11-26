@@ -45,10 +45,19 @@ dev:
 remove-pygcam:
 	conda env remove -n pygcam3
 
-MAC_YML = py3_pygcam_macos.yml
+UNAME=$(strip $(shell uname))
 
-create-pygcam: $(MAC_YML)
-	conda env create -f $(MAC_YML)
+ifeq ($(UNAME), Darwin)
+    YML_FILE=py3_pygcam_macos.yml
+else ifeq ($(UNAME), Linux)
+    YML_FILE=py3_pygcam_linux.yml
+else
+    # of limited use since probably no "make" cmd
+    YML_FILE=py3_opgee_win10.yml
+endif
+
+create-pygcam: $(YML_FILE)
+	conda env create -f $(YML_FILE)
 
 install-pygcam:
 	bash -l -c 'conda activate pygcam3 && pip install -e .'

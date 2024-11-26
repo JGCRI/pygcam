@@ -217,7 +217,7 @@ class Step(object):
                 argList = shlex.split(command[1:])
                 argList = flatten(map(lambda s: glob.glob(s) or [s], argList))  # expand shell wildcards
 
-                if '-g' not in argList and mapper.scenario_group:
+                if '-g' not in argList and mapper.scenario_group != 'default':
                     argList.extend(['-g', mapper.scenario_group])
 
                 tool.run(argList=argList)
