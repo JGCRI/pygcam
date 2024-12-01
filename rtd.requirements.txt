@@ -6,7 +6,7 @@ filelock==3.0.8
 Flask==1.0.2
 future==0.17.1
 ipyparallel==6.2.2
-lxml==4.2.5
+lxml==4.9.1
 matplotlib==2.2.3
 numexpr==2.6.8
 numpy==1.15.2
