@@ -19,7 +19,6 @@ dependencies:
   - plotly
   - prompt_toolkit
   - python>=3.9.0,<3.11.0
-  #- python>=3.9.0,<3.10.0
   - retrying
   - rpy2
   - semver
