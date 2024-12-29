@@ -1,7 +1,5 @@
 import os
 from pathlib import Path
-from rpy2 import robjects
-from rpy2.robjects.packages import importr
 import shutil
 
 from ..config import getParamAsPath, getParamAsBoolean
@@ -39,6 +37,8 @@ def load_R_code(code_str):
     :param code_str: (str) R code string
     :return: none
     """
+    from rpy2 import robjects   # imported in func to avoid starting R when this module loads
+
     robjects.r(code_str)
 
 class GcamDataSystem(object):
@@ -81,8 +81,11 @@ class GcamDataSystem(object):
         :return: none
         """
         if self.renv_dir:
+            from rpy2.robjects.packages import importr
+
             #importr('assertthat')
             renv = importr("renv")
+            _logger.debug(f'Activating renv "{self.renv_dir}"')
             renv.activate(self.renv_dir)
 
     def load_gcamdata(self):
@@ -91,6 +94,8 @@ class GcamDataSystem(object):
 
         :return: none
         """
+        from rpy2.robjects.packages import importr
+
         gcamdata_dir = self.mapper.ref_gcamdata_dir
         devtools = importr('devtools')
         _logger.debug(f"Calling load_all('{gcamdata_dir}')")
@@ -107,6 +112,8 @@ class GcamDataSystem(object):
             to run "driver_drake".
         :return: none
         """
+        from rpy2 import robjects
+
         driver_drake = robjects.r["driver_drake"]
         with pushd(gcamdata_dir):
             driver_drake()
@@ -120,6 +127,9 @@ class GcamDataSystem(object):
             names to pass as the "user_modifications" to "driver_drake".
         :return: none
         """
+        from rpy2 import robjects
+        from rpy2.robjects.packages import importr
+
         drake = importr('drake')
         drake.clean(list=func_names)
 

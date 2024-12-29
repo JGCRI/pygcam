@@ -32,7 +32,7 @@ class ModelInterfaceCommand(SubcommandABC):
                             indicated by config var file GCAM.QueryDir so it refers to the query file
                             indicated by config var GCAM.MI.QueryFile, or if this does not refer
                             to an existing file, by var GCAM.MI.RefQueryFile.'''))
-        parser.add_argument('-q', '--queryFile', action='store_true',
+        parser.add_argument('-q', '--queryFile',
                             help=clean_help('''Specify the XML file to read query definitions from.'''))
         return parser
 

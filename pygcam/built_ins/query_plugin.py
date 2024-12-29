@@ -46,9 +46,10 @@ class QueryCommand(SubcommandABC):
         parser.add_argument('-g', '--group',
                             help=clean_help('''The name of a scenario group, if not the default one.'''))
 
-        parser.add_argument('-l', '--splitLand', action='store_true',
-                            help=clean_help('''Split the Landleaf column into "land_use" and "basin" columns and add 
-                            these to the output CSV'''))
+        # TBD: not implemented
+        # parser.add_argument('-l', '--splitLand', action='store_true',
+        #                     help=clean_help('''Split the Landleaf column into "land_use" and "basin" columns and add
+        #                     these to the output CSV'''))
 
         parser.add_argument('-n', '--noRun', action="store_true",
                             help=clean_help("Show the command to be run, but don't run it"))

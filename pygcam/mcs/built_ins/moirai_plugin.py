@@ -24,19 +24,11 @@ from pygcam.subcommand import SubcommandABC
 from pygcam.log import getLogger
 from pygcam.config import getParam, mkdirs
 from pygcam.utils import Timer
-from pygcam.mcs.gcamdata import GcamDataSystem, load_R_code, str_replace_from_dict
+from pygcam.mcs.gcamdata import GcamDataSystem, load_R_code, str_replace_from_dict, DEFAULT_MODIFIER
 
 _logger = getLogger('moirai_plugin')
 
-HOME = os.getenv('HOME')
-
-# TBD: make this a config variable. Default should probably be "renv-GCAM"
-
-# default dir where the lockfile for the required renv is found
-DEFAULT_RENV_DIR = f'{HOME}/renv-GCAM-T'
-
-# added to the base names of XML files that are updated by driver_drake()
-DEFAULT_MODIFIER = '__drake'
+USER_TMP = f'{os.getenv("HOME")}/tmp/moirai'
 
 USER_MOD_FUNC_NAME = 'usermod_stochastic_C'
 
@@ -348,13 +340,13 @@ def save_beta_args(summary_csv, beta_args_csv):
     df.to_csv(beta_args_csv, index=False)
 
     if _bad_minimum:
-        bad_min_csv = f'{HOME}/tmp/moirai/moirai-beta-args-bad-min.csv'
+        bad_min_csv = f'{USER_TMP}/moirai-beta-args-bad-min.csv'
         _logger.warning(f"Writing {len(_bad_minimum)} rows to '{bad_min_csv}'")
         bad_min_df = pd.DataFrame(data=_bad_minimum)
         bad_min_df.to_csv(bad_min_csv, index=False)
 
     if _anomalies:
-        anomalies_csv = f'{HOME}/tmp/moirai/moirai-beta-args-anomalies.csv'
+        anomalies_csv = f'{USER_TMP}/moirai-beta-args-anomalies.csv'
         _logger.warning(f"Writing {len(_anomalies)} rows to '{anomalies_csv}'")
         anom = pd.DataFrame(data=_anomalies)
         anom.to_csv(anomalies_csv, index=False)
@@ -477,12 +469,10 @@ class MoiraiCommand(SubcommandABC):
     def __init__(self, subparsers):
         import argparse
 
-        kwargs = {'help' : '''Setup up an MCS to use moirai data.''',
-                  'description' : f'''Perform various processing steps with data 
-                  from Moirai for use in an MCS with GCAM.
-                    
-{_instructions}''',
-                  'formatter_class': argparse.RawDescriptionHelpFormatter}
+        kwargs = {'help': '''Perform various processing steps with data from Moirai for use in an MCS with GCAM.''',
+                  'description': _instructions,
+                  'formatter_class': argparse.RawDescriptionHelpFormatter
+                  }
 
         super().__init__('moirai', subparsers, kwargs)
 
@@ -500,7 +490,7 @@ class MoiraiCommand(SubcommandABC):
                             help=f'''The pathname of the CSV file with the alpha and beta parameters
                                      defining each row's Beta distribution. Default is "{beta_args_csv}".''')
 
-        ref_gcamdata = getParam('GCAM.RefGcamData')
+        ref_gcamdata = getParam("GCAM.RefGcamData")
         parser.add_argument('-c', '--create-baseline', action='store_true',
                             help=f'''Run drake in the reference workspace's gcamdata directory (the 
                                 value of config variable "GCAM.RefGcamData", currently "{ref_gcamdata}"), 
@@ -534,8 +524,10 @@ class MoiraiCommand(SubcommandABC):
                             help='''Don't delete the temporary directory in which the data system is run.
                             May be useful for debugging.''')
 
-        parser.add_argument('-r', '--renv', default=DEFAULT_RENV_DIR,
-                            help=f'''An renv to load. Default is "{DEFAULT_RENV_DIR}".''')
+        renv_path = getParam("GCAM.Renv.Path")
+        parser.add_argument('-r', '--renv', default=renv_path,
+                            help=f'''An renv to load. Default is the value of configuration variable
+                            "GCAM.Renv.Path", currently set to "{renv_path}".''')
 
         parser.add_argument('-s', '--simId', type=int, default=1,
                             help="The integer ID for the simulation to operate on. Default is 1.")

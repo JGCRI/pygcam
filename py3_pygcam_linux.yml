@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - dash>=2.5.1
+  - dash
   - flask
   - ipykernel
   - ipython
@@ -23,9 +23,9 @@ dependencies:
   - r-base=4.0.2
   - rpy2
   - semver
-  - sphinx>=4.3.0
-  - sphinx-argparse>=0.2.5
-  - sphinx_rtd_theme>=0.5.1
+  - sphinx
+  - sphinx-argparse
+  - sphinx_rtd_theme
   - sphinxcontrib-serializinghtml
   - scipy
   - seaborn

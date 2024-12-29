@@ -81,7 +81,7 @@ def setJavaPath(exeDir):
         # print an error.
         with pushd(exeDir):
             classpath = getParam('GCAM.MI.ClassPath')
-            command = 'java -cp "%s" XMLDBDriver --print-java-home' % classpath
+            command = f'java -cp "{classpath}" XMLDBDriver --print-java-home'
             msg_cmd = 'XMLDBDriver --print-java-home'
 
             try:

@@ -431,7 +431,7 @@ def _exportVars(paramFile, outputFile, plotsDir):
             fname = p.dataSrc.filename
             notes = clean(p.notes)
             notes = f"{notes} {fname}" if notes else fname
-            writer.writerow([p.category, pname, 'empirical', 'direct', clean(p.desc), p.query.xpath,
+            writer.writerow([p.category, pname, 'empirical', 'data file', 'direct', clean(p.desc), p.query.xpath,
                              clean(p.evidence), clean(p.rationale), notes])
 
 

@@ -114,7 +114,7 @@ def readCsv(filename, skiprows=1, years=None, interpolate=False, startYear=0, ca
 
     :param filename: (str) the path to a CSV file
     :param skiprows: (int) the number of rows to skip before reading the data matrix
-    :param years: (iterable of two values coercible to int) the year columns to
+    :param years: (iterable of 2 values coercible to int) the year columns to
         keep; others are dropped
     :param interpolate: (bool) If True, interpolate annual values between time-steps
     :param startYear: (int) If interpolating, the year to begin interpolation
