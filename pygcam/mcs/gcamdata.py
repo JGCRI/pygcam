@@ -97,9 +97,11 @@ class GcamDataSystem(object):
         from rpy2.robjects.packages import importr
 
         gcamdata_dir = self.mapper.ref_gcamdata_dir
-        devtools = importr('devtools')
-        _logger.debug(f"Calling load_all('{gcamdata_dir}')")
-        devtools.load_all(gcamdata_dir)
+
+        with pushd(gcamdata_dir):
+            devtools = importr('devtools')
+            _logger.debug(f"Calling load_all('{gcamdata_dir}')")
+            devtools.load_all(gcamdata_dir)
 
     def run_drake(self, gcamdata_dir):
         """
