@@ -572,11 +572,10 @@ class MoiraiCommand(SubcommandABC):
                                    renv_dir=args.renv)
 
 
-            from pygcam.file_utils import pushd
-            with pushd(mapper.ref_gcamdata_dir):
-                # If we're creating the baseline, run the data system without any user modifications
-                obj.run_data_system(args.trials, None if create_baseline else USER_MOD_FUNC_NAME,
-                                    delete=delete)
+
+            # If we're creating the baseline, run the data system without any user modifications
+            obj.run_data_system(args.trials, None if create_baseline else USER_MOD_FUNC_NAME,
+                                delete=delete)
 
             _logger.debug("Finished running data system")
 
