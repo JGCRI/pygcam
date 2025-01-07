@@ -24,7 +24,7 @@ from pygcam.subcommand import SubcommandABC
 from pygcam.log import getLogger
 from pygcam.config import getParam, mkdirs
 from pygcam.utils import Timer
-from pygcam.mcs.gcamdata import GcamDataSystem, load_R_code, str_replace_from_dict, DEFAULT_MODIFIER
+from pygcam.mcs.gcamdata import GcamDataSystem, load_R_code, DEFAULT_MODIFIER
 
 _logger = getLogger('moirai_plugin')
 
@@ -33,6 +33,21 @@ USER_TMP = f'{os.getenv("HOME")}/tmp/moirai'
 USER_MOD_FUNC_NAME = 'usermod_stochastic_C'
 
 STATIC_LAND_TYPES = ('UrbanLand', 'RockIceDesert', 'Tundra')
+
+def _str_replace_from_dict(s, d):
+    """
+    Return a copy of ``s`` after replacing each key in the ``d`` dict found
+    in the ``s`` with the corresponding value.
+
+    :param s: (str) the string into which substitutions are made
+    :param d: (dict) dictionary of values that should be substituted
+        in the ``s``. Each instance of a key is replaced, if found, with its value.
+    :return:
+    """
+    for key, value in d.items():
+        s = s.replace(key, str(value))
+
+    return s
 
 # For GCAMv7, the module name to stop after (in the string below) changed to
 # 'module_aglu_L120.LC_GIS_R_LTgis_Yh_GLU', whereas previously it was
@@ -405,8 +420,8 @@ class MoiraiDataSystem(GcamDataSystem):
         self.saved_draws_csv = self.saved_draws_csv_for_trial(trial_num)
 
         # Insert the pathname of the CSV file containing the draws to use into the R string
-        r_code_str = str_replace_from_dict(r_code_template,
-                                           {'{{SAVED-DRAWS-CSV}}': self.saved_draws_csv,
+        r_code_str = _str_replace_from_dict(r_code_template,
+                                            {'{{SAVED-DRAWS-CSV}}': self.saved_draws_csv,
                                             '{{USER-MOD-FUNC-NAME}}': USER_MOD_FUNC_NAME})
 
         _logger.info(f"trial_func: loading R code to read C values from '{self.saved_draws_csv}'")

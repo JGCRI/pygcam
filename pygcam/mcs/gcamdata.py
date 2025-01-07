@@ -15,21 +15,6 @@ _logger = getLogger(__name__)
 # added to the base names of XML files that are updated by driver_drake()
 DEFAULT_MODIFIER = '__drake'
 
-def str_replace_from_dict(s, d):
-    """
-    Return a copy of ``s`` after replacing each key in the ``d`` dict found
-    in the ``s`` with the corresponding value.
-
-    :param s: (str) the string into which substitutions are made
-    :param d: (dict) dictionary of values that should be substituted
-        in the ``s``. Each instance of a key is replaced, if found, with its value.
-    :return:
-    """
-    for key, value in d.items():
-        s = s.replace(key, str(value))
-
-    return s
-
 def load_R_code(code_str):
     """
     Loads a string containing R code into the R interpreter running within Python.
@@ -63,6 +48,14 @@ class GcamDataSystem(object):
         self.xml_modifier = xml_modifier or DEFAULT_MODIFIER
 
         self.trial_sandbox_dict = dict()  # key = trial num; value is pathname of temp dir
+
+        # Try loading R devtools at the start
+        gcamdata_dir = mapper.ref_gcamdata_dir
+        with pushd(gcamdata_dir):
+            from rpy2.robjects.packages import importr
+            devtools = importr('devtools')
+            _logger.debug(f"Calling load_all('{gcamdata_dir}')")
+            devtools.load_all(gcamdata_dir)
 
     def trial_func(self, trial_num):
         """
@@ -215,10 +208,11 @@ class GcamDataSystem(object):
 
         # Apparently, this is not re-entrant, so activating causes some MCS trials
         # to abort. Skipping this works on the cluster but not locally on RP's Mac.
+        # Not clear why this is the case...
         if getParamAsBoolean('GCAM.Renv.Activate'):
             self.activate_renv()
 
-        self.load_gcamdata()
+        #self.load_gcamdata()
         mapper = self.mapper
 
         if user_modifications is None:
@@ -247,6 +241,8 @@ class GcamDataSystem(object):
 
             self.trial_func(trial)
 
+            # trial_sandbox returns the path to a temporary sandbox directory in which
+            # to build dependent XML files. It's created on demand and cached for re-use.
             tmp_sandbox_dir = self.trial_sandbox(trial, delete=delete)
 
             # run driver_drake() in the reference workspace with user_modification established above
