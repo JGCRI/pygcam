@@ -18,10 +18,12 @@ def pushd(directory):
     :return: none
     """
     owd = os.getcwd()
+    _logger.debug(f"pushd: chdir('{owd}')")
     try:
         os.chdir(directory)
         yield directory
     finally:
+        _logger.debug(f"pushd: returning to '{directory}'")
         os.chdir(owd)
 
 
