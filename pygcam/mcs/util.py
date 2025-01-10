@@ -315,6 +315,19 @@ def parseMcsDir(path, trialNum_only=False):
     simId = int(sim[1:])
     return (simId, trialNum, scenario)
 
+def get_trial_list(trials):
+    from pathlib import Path
+
+    if trials == 'PATH':
+        # extract the trial number from the current pathname (an "exe" dir)
+        cur_dir = Path(os.curdir).absolute()
+        trial_num = parseMcsDir(cur_dir, trialNum_only=True)
+        trial_list = [trial_num]
+    else:
+        trial_list = parseTrialString(trials)
+
+    return trial_list
+
 def hardlink_directory_contents(src_dir, dst_dir):
     """
     Recursively hard link all files in the source directory ``src_dir`` in the

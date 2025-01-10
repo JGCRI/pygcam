@@ -64,6 +64,9 @@
 			<xs:attribute name="type" use="required" type="ResultType"/>
 			<xs:attribute name="percentage" default="0" type="xs:boolean"/>
 			<xs:attribute name="cumulative" default="0" type="xs:boolean"/>
+
+			<!-- for scalar results, if constraints aren't matched, return zero -->
+			<xs:attribute name="allow_missing" default="0" type="xs:boolean"/>
 		</xs:complexType>
 	</xs:element>
 

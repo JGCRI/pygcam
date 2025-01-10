@@ -8,7 +8,7 @@ from ..log import getLogger
 from ..file_utils import pushd
 from ..XMLConfigFile import XMLConfigFile
 from .sim_file_mapper import SimFileMapper
-from .util import parseTrialString, parseMcsDir
+from .util import get_trial_list
 
 _logger = getLogger(__name__)
 
@@ -219,13 +219,7 @@ class GcamDataSystem(object):
             self.run_drake(mapper.ref_gcamdata_dir)
             return
 
-        if trials == 'PATH':
-            # extract the trial number from the current pathname (an "exe" dir)
-            cur_dir = Path(os.curdir).absolute()
-            trial_num = parseMcsDir(cur_dir, trialNum_only=True)
-            trial_list = [trial_num]
-        else:
-            trial_list = parseTrialString(trials)
+        trial_list = get_trial_list(trials)
 
         trial_rel_xml = Path(f'{TRIAL_XML_NAME}/input/gcamdata/xml')
 

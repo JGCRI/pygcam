@@ -5,7 +5,9 @@
 '''
 import os
 from .config import pathjoin, mkdirs, getParamAsPath
-from .constants import QRESULTS_DIRNAME, DIFFS_DIRNAME
+from .constants import (QRESULTS_DIRNAME, DIFFS_DIRNAME,
+                        LAND_LEAF, LAND_ALLOC, LAND_USE, BASIN,
+                        IRR_LEVEL, IRR_TYPE, SOIL_TYPE)
 from .error import CommandlineError, FileFormatError
 from .file_utils import ensureCSV
 from .log import getLogger
@@ -65,14 +67,6 @@ def computeDifference(df1, df2, resetIndex=True, dropna=True,
         diff.dropna(inplace=True)
 
     if resetIndex:
-        LAND_LEAF = 'LandLeaf'
-        LAND_ALLOC = 'land_allocation'
-        LAND_USE = 'land_use'
-        BASIN = 'basin'
-        IRR_LEVEL = 'irr_level'
-        IRR_TYPE  = 'irr_type'
-        SOIL_TYPE  = 'soil_type'
-
         diff.reset_index(inplace=True)      # convert multi-index back to regular column values
 
         # Only split 'Landleaf' / 'land_allocation' if we're resetting the index

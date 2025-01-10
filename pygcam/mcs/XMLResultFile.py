@@ -92,6 +92,7 @@ class XMLResult(XMLWrapper):
         self.type = element.get('type', DEFAULT_RESULT_TYPE)
         self.desc = element.get('desc')
         self.unit = element.get('unit', '') # default is no unit
+        self.allow_missing = getBooleanXML(element.get('allow_missing', 0))
         self.cumulative = getBooleanXML(element.get('cumulative', 0))
         self.percentage = getBooleanXML(element.get('percentage', 0))
         self.queryFile  = self._getPath(FILE_ELT_NAME)
@@ -298,7 +299,7 @@ def extractResult(context, scenario, outputDef, type):
     csvPath = outputDef.csvPathname(scenario, outputDir=outputDir, baseline=baseline, type=type)
 
     queryResult = getCachedFile(csvPath)
-    _logger.debug("queryResult:\n%s", queryResult.df)
+    _logger.debug("queryResult:\n%s", queryResult.df.head())
 
     paramName   = outputDef.name
     whereClause = outputDef.whereClause
@@ -313,6 +314,15 @@ def extractResult(context, scenario, outputDef, type):
 
     count = selected.shape[0]
 
+    isScalar = outputDef.isScalar()
+
+    # If allowed by result definition, return zero for missing values
+    if isScalar and count == 0 and outputDef.allow_missing:
+        resultDict = dict(regionName='missing', paramName=paramName,
+                          units=queryResult.units, isScalar=isScalar,
+                          value=0.0)
+        return resultDict
+
     if count == 0:
         raise PygcamMcsUserError(f'Query for "{outputDef.name}" matched no results')
 
@@ -325,8 +335,6 @@ def extractResult(context, scenario, outputDef, type):
             regionName = firstRegion if len(selected.region.unique()) == 1 else 'Multiple'
     else:
         regionName = 'global'
-
-    isScalar = outputDef.isScalar()
 
     # Create a dict to return. (context already has runId and scenario)
     resultDict = dict(regionName=regionName, paramName=paramName, units=queryResult.units, isScalar=isScalar)

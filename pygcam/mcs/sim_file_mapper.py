@@ -8,7 +8,7 @@ import os
 from typing import Union
 
 from ..config import getParam, getParamAsBoolean, getParamAsPath, setParam, mkdirs, pathjoin
-from ..constants import (McsMode, LOCAL_XML_NAME, APP_XML_NAME, PARAMETERS_XML, CONFIG_XML,
+from ..constants import (McsMode, APP_XML_NAME, PARAMETERS_XML, CONFIG_XML,
                          RESULTS_XML, TRIAL_XML_NAME, QRESULTS_DIRNAME, DIFFS_DIRNAME,
                          OUTPUT_DIRNAME, FileVersions)
 from ..error import SetupException

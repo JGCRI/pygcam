@@ -127,6 +127,51 @@ def basinsByISO():
 
     return result
 
+#
+# TBD: This function is derived from code in diffs.py:computeDifference().
+#      Refactor code in diffs.py once debugged.
+#
+def split_land(df, drop=None):
+    from .constants import (LAND_LEAF, LAND_ALLOC, LAND_USE, BASIN,
+                            IRR_LEVEL, IRR_TYPE, SOIL_TYPE)
+
+    columns = df.columns
+    column_set = set(columns)
+    yearCols = [col for col in columns if col.isdigit()]
+    nonYearCols = list(column_set - set(yearCols))
+
+    if LAND_LEAF in nonYearCols or LAND_ALLOC in nonYearCols:
+        # avoid overwriting existing columns of the target names
+        dupes = {LAND_USE, BASIN}.intersection(set(columns))
+        if dupes:
+            _logger.warning(f"Ignoring request to split {LAND_LEAF} column. Target column(s) {dupes} already exist.")
+            return df
+
+        land_col = LAND_LEAF if LAND_LEAF in nonYearCols else LAND_ALLOC
+        splits = df[land_col].str.split('_', expand=True)
+        cols = splits.shape[1]
+        if cols < 2:
+            _logger.warning(
+                f"Ignoring request to split {land_col} column. Expected split to produce at least 2 columns; got {cols}")
+            return df
+
+        loc = len(nonYearCols)
+        if cols > 4:
+            df.insert(loc, SOIL_TYPE, splits[4])
+            df.loc[df[SOIL_TYPE].isnull(), SOIL_TYPE] = 'Mineral'
+        if cols > 3:
+            df.insert(loc, IRR_LEVEL, splits[3])
+        if cols > 2:
+            df.insert(loc, IRR_TYPE, splits[2])
+
+        df.insert(loc, BASIN, splits[1])
+        df.insert(loc, LAND_USE, splits[0])
+
+    if drop:
+        df.drop(drop, axis='columns', inplace=True)
+
+    return df
+
 # Cache results of determining regions
 _RegionList = None
 _StateList  = None

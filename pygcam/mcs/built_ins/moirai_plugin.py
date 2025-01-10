@@ -586,8 +586,6 @@ class MoiraiCommand(SubcommandABC):
                                    moirai_beta_args_csv=moirai_beta_args_csv,
                                    renv_dir=args.renv)
 
-
-
             # If we're creating the baseline, run the data system without any user modifications
             obj.run_data_system(args.trials, None if create_baseline else USER_MOD_FUNC_NAME,
                                 delete=delete)

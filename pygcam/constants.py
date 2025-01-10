@@ -25,6 +25,16 @@ OUTPUT_DIRNAME = 'output'
 
 CO2_PER_C = 3.666666667     # the exact value used in PNNL scripts
 
+# Column names in land query files. Used to split compound GLU names
+# into constituent parts (e.g., in diff.py and query.py)
+LAND_LEAF = 'LandLeaf'
+LAND_ALLOC = 'land_allocation'
+LAND_USE = 'land_use'
+BASIN = 'basin'
+IRR_LEVEL = 'irr_level'
+IRR_TYPE = 'irr_type'
+SOIL_TYPE = 'soil_type'
+
 from enum import Enum
 
 class McsMode(Enum):

@@ -9,7 +9,7 @@ import re
 
 from lxml import etree as ET
 
-from .config import getParam, getParamAsPath, getParamAsBoolean, mkdirs, pathjoin, unixPath
+from .config import getParam, getParamAsPath, getParamAsBoolean, mkdirs, pathjoin
 from .error import PygcamException, ConfigFileError, FileFormatError, CommandlineError
 from .log import getLogger
 from .queryFile import QueryFile, RewriteSetParser, Query
