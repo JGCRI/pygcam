@@ -73,6 +73,9 @@ class XMLConstraint(XMLWrapper):
 
         elif self.op == 'contains':     # string or regex (note: quote regex chars if used literally)
             fn = col.str.contains
+        else:
+            # schema should prevent this, unless changed without updating this code
+            raise PygcamMcsUserError('Unknown operator in constraint: %s' % self.op)
 
         mask = fn(self.value)
         return df[mask]
@@ -386,6 +389,7 @@ def collectResults(mapper, context, type):
         return []
 
     resultList = [extractResult(context, context.scenario, outputDef, type) for outputDef in outputDefs]
+
     return resultList
 
 def saveResults(context, resultList):
