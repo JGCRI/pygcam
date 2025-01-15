@@ -86,9 +86,9 @@ class RunSimCommand(McsSubcommandABC):
                             "%s".''' % defaultClusterId))
 
         parser.add_argument('-C', '--collectResults', action='store_true',
-                            help=clean_help('''Equivalent to specifying --noGCAM --noBatchQueries 
-                            --noPostProcessor --runLocal. Useful if runs have actually
-                            succeeded but results have not been saved to the SQL database.'''))
+                            help=clean_help('''Equivalent to specifying --noSetup --noGCAM 
+                            --noBatchQueries --noPostProcessor --runLocal. Useful if runs have 
+                            actually succeeded but results have not been saved to the SQLite DB.'''))
 
         parser.add_argument('-D', '--noDatabase', dest='updateDatabase', action='store_false',
                             help=clean_help('''Don't save query results to the SQL database.'''))
@@ -128,6 +128,9 @@ class RunSimCommand(McsSubcommandABC):
                             help=clean_help('''The name of the ipython profile to use. Default is
                             the value of config var IPP.Profile, currently
                             "%s".''' % defaultProfile))
+
+        parser.add_argument('-P', '--noSetup', action="store_true",
+                            help=clean_help("Don't run setup steps. Generally used only by --collectResults."))
 
         # If alternative flags are added, the hack in run() must be updated
         parser.add_argument('--programArgs', type=str, default=getParam('MCS.ProgramArgs'),

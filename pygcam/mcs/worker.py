@@ -85,8 +85,8 @@ def applySingleTrialData(df, mapper, paramFile):
     XMLParameter.applyTrial(context.simId, trial_num, df)   # Update all stochastic parameters
     paramFile.writeLocalXmlFiles(mapper)                 # N.B. creates trial-xml subdir
 
-def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
-                noPostProcessor=False):
+def _runGcamTool(mapper, noSetup=False, noGCAM=False,
+                 noBatchQueries=False, noPostProcessor=False):
     '''
     Run GCAM in the current working directory and return exit status.
     '''
@@ -110,12 +110,13 @@ def _runGcamTool(mapper, noGCAM=False, noBatchQueries=False,
     trial_cfg = mapper.get_config_version(FileVersions.TRIAL_XML)
     deleteFile(trial_cfg)
 
-    # Run setup steps before applying trial data
-    setup_steps = getParam('MCS.SetupSteps')
-    skip_steps  = getParam('MCS.SetupSkipSteps') or None
+    if not noSetup:
+        # Run setup steps before applying trial data
+        setup_steps = getParam('MCS.SetupSteps')
+        skip_steps  = getParam('MCS.SetupSkipSteps') or None
 
-    if setup_steps:
-        _runPygcamSteps(setup_steps, mapper, skipSteps=skip_steps)
+        if setup_steps:
+            _runPygcamSteps(setup_steps, mapper, skipSteps=skip_steps)
 
     if isBaseline and not noGCAM:
         # Copy local-xml config to trial-xml
@@ -266,6 +267,7 @@ class Worker(object):
         context = self.context
         argDict = self.argDict
 
+        noSetup         = argDict.get('noSetup', False)
         noGCAM          = argDict.get('noGCAM', False)
         noBatchQueries  = argDict.get('noBatchQueries', False)
         noPostProcessor = argDict.get('noPostProcessor', False)
@@ -277,6 +279,7 @@ class Worker(object):
 
         try:
             exitCode = _runGcamTool(self.mapper,
+                                    noSetup=noSetup,
                                     noGCAM=noGCAM,
                                     noBatchQueries=noBatchQueries,
                                     noPostProcessor=noPostProcessor)
