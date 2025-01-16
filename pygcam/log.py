@@ -97,6 +97,7 @@ def parseLevels(levelStr=None):
 
 def _addHandler(logger, formatStr, logFile=None):
     if logFile:
+        _debug(f"Log file is '{logFile}'")
         mkdirs(os.path.dirname(logFile))
 
     handler = logging.FileHandler(logFile, mode='a') if logFile else logging.StreamHandler()
