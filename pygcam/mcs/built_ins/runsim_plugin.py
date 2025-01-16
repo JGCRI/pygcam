@@ -179,7 +179,8 @@ class RunSimCommand(McsSubcommandABC):
 
     def run(self, args, tool):
         if args.collectResults:
-            args.noGCAM = args.noBatchQueries = args.noPostProcessor = args.runLocal = True
+            args.noGCAM = args.noBatchQueries = True
+            args.noPostProcessor = args.runLocal = args.noSetup = True
 
         if args.statuses:
             from ..database import RUN_STATUSES

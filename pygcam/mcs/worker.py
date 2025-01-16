@@ -110,7 +110,9 @@ def _runGcamTool(mapper, noSetup=False, noGCAM=False,
     trial_cfg = mapper.get_config_version(FileVersions.TRIAL_XML)
     deleteFile(trial_cfg)
 
-    if not noSetup:
+    if noSetup:
+        _logger.info('_runGcamTool: skipping setup steps')
+    else:
         # Run setup steps before applying trial data
         setup_steps = getParam('MCS.SetupSteps')
         skip_steps  = getParam('MCS.SetupSkipSteps') or None
