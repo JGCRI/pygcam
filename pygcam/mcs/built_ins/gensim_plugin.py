@@ -448,7 +448,8 @@ def driver(args):
     if trials < 0 and not args.exportVars:
         raise PygcamMcsUserError("Trials argument is required: must be an integer >= 0")
 
-    mapper = SimFileMapper(project_name=args.projectName, scenario_group=args.group,
+    project_name = getParam("GCAM.ProjectName")
+    mapper = SimFileMapper(project_name=project_name, scenario_group=args.group,
                            sim_id=args.simId, trial_count=trials,
                            param_file=args.paramFile)
 
