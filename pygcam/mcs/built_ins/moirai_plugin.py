@@ -22,7 +22,7 @@ import shutil
 from pygcam.error import PygcamException
 from pygcam.subcommand import SubcommandABC
 from pygcam.log import getLogger
-from pygcam.config import getParam, mkdirs
+from pygcam.config import getParam, mkdirs, getParamAsBoolean
 from pygcam.utils import Timer
 from pygcam.mcs.gcamdata import GcamDataSystem, load_R_code, DEFAULT_MODIFIER
 
@@ -371,6 +371,7 @@ def save_beta_args(summary_csv, beta_args_csv):
 def var_name(land, pool):
     return f"{land}-{pool}-c"
 
+
 class MoiraiDataSystem(GcamDataSystem):
 
     def __init__(self, mapper, moirai_beta_args_csv=None, **kwargs):
@@ -590,7 +591,10 @@ class MoiraiCommand(SubcommandABC):
             obj.run_data_system(args.trials, None if create_baseline else USER_MOD_FUNC_NAME,
                                 delete=delete)
 
-            _logger.debug("Finished running data system")
+            if getParamAsBoolean('MCS.Debug.QuitR'):
+                _logger.debug("Finished running data system, quitting R")
+                obj.quit_R()
+                _logger.debug("Successfully quit R")
 
 
 PluginClass = MoiraiCommand

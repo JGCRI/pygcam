@@ -11,7 +11,7 @@ import numpy as np
 import os
 import pandas as pd
 
-from ..config import getParam, mkdirs, pathjoin
+from ..config import getParam, mkdirs, pathjoin, getParamAsBoolean
 from ..constants import TRIAL_XML_NAME, FileVersions
 from ..xml_edit import CachedFile
 from ..log import getLogger
@@ -1109,7 +1109,12 @@ class XMLParameterFile(XMLFile):
                 exe_rel_path = os.path.relpath(abs_path, start=mapper.sandbox_exe_dir)
                 config_file.update_component_pathname(comp_name, exe_rel_path)
 
+        if getParamAsBoolean('MCS.Debug.Decache'):
+            _logger.debug("Calling decache()")
+            decache()
+
         config_file.write()
+        _logger.debug("Exiting writeLocalXmlFiles")
 
     def dump(self):
         print(f"Parameter file: {self.getFilename()}")

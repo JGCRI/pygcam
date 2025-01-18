@@ -57,6 +57,11 @@ class GcamDataSystem(object):
             _logger.debug(f"Calling load_all('{gcamdata_dir}')")
             devtools.load_all(gcamdata_dir)
 
+    def quit_R(self):
+        from rpy2.rinterface import endr
+        fatal = 0
+        endr(fatal)
+
     def trial_func(self, trial_num):
         """
         A function to call for each Monte Carlo trial. Does nothing in ``GcamDataSystem``;
