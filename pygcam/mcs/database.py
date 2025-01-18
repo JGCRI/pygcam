@@ -625,6 +625,11 @@ class CoreDatabase(object):
         resultDF = DataFrame.from_records(rslt, columns=['trialNum', outputName], index='trialNum')
         return resultDF
 
+    def deleteOutputs(self):
+        # Delete all rows from outputs table, which cascades to delete all outValues, too
+        with self.sessionScope() as session:
+            session.query(Output).delete()
+
     def deleteRunResults(self, runId, outputIds=None, session=None):
         sess = session or self.Session()
 

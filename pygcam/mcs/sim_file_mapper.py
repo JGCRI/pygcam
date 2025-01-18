@@ -289,11 +289,12 @@ class SimFileMapper(AbstractFileMapper):
 
         super().copy_ref_workspace(force_create=force_create, files_to_link_param='MCS.WorkspaceFilesToLink')
 
-    def copy_app_xml_files(self):
+    def copy_app_xml_files(self, results_only=False):
         from ..file_utils import filecopy
 
         filecopy(self.project_results_file, self.get_app_xml_results_file())
-        filecopy(self.project_parameters_file, self.get_app_xml_param_file())
+        if not results_only:
+            filecopy(self.project_parameters_file, self.get_app_xml_param_file())
 
     def create_sim(self, desc=''):
         """
