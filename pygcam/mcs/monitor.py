@@ -27,9 +27,8 @@ from .context import McsContext
 from .database import RUN_NEW, RUN_RUNNING, RUN_SUCCEEDED, RUN_QUEUED, RUN_KILLED, ENG_TERMINATE, getDatabase
 from .error import IpyparallelError, PygcamMcsSystemError, PygcamMcsUserError
 from .util import parseTrialString, createTrialString
-from ..config import getParam, getParamAsInt, pathjoin
+from ..config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
 from ..log import getLogger
-from ..utils import pygcam_version
 
 # Exit values for Monitor.processTrials()
 CONTINUE = 1
@@ -370,6 +369,7 @@ class Monitor(object):
         '''
         Called on the master to save results to the database that were prepared by the worker.
         '''
+        _logger.info('Monitor saving results to database')
         db = getDatabase()
         session = db.Session()
 
@@ -407,11 +407,12 @@ class Monitor(object):
                     if resultDict['isScalar']:
                         db.setOutValue(runId, paramName, value, session=session)
                     else:
-                        region = regionName if pygcam_version >= (2, 0, 0) else db.getRegionId(regionName)   # cached; not a DB query
+                        region = regionName
                         units = resultDict['units']
                         db.saveTimeSeries(runId, region, paramName, value, units=units, session=session)
 
             db.commitWithRetry(session)
+            _logger.debug('Monitor saved results')
 
         except Exception as e:
             session.rollback()
@@ -647,6 +648,9 @@ class Monitor(object):
 
                 except Exception as e:
                     _logger.error(f"Exception running 'runTrial': {e}")
+                    if getParamAsBoolean('GCAM.ShowStackTrace'):
+                        import traceback
+                        traceback.print_exc()
 
             self.setRunStatuses(statusPairs)
 

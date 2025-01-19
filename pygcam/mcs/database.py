@@ -26,54 +26,12 @@ from sqlalchemy.orm import sessionmaker, load_only
 from ..config import getSection, getParam, getParamAsBoolean
 from ..file_utils import mkdirs
 from ..log import getLogger
-from ..utils import pygcam_version
 
 from .error import PygcamMcsUserError, PygcamMcsSystemError
 from .schema import (ORMBase, Run, Sim, Input, Output, InValue, OutValue, Experiment,
                      Program, Code, TimeSeries)
 
 _logger = getLogger(__name__)
-
-if pygcam_version < (2, 0, 0):
-    # Deprecated once TimeSeries uses region name rather than id
-    # Default region map for GCAM v4 through v6 (so far.)
-    RegionMap = {
-        'Multiple': -1,
-        'global': 0,
-        'USA': 1,
-        'Africa_Eastern': 2,
-        'Africa_Northern': 3,
-        'Africa_Southern': 4,
-        'Africa_Western': 5,
-        'Australia_NZ': 6,
-        'Brazil': 7,
-        'Canada': 8,
-        'Central America and Caribbean': 9,
-        'Central Asia': 10,
-        'China': 11,
-        'EU-12': 12,
-        'EU-15': 13,
-        'Europe_Eastern': 14,
-        'Europe_Non_EU': 15,
-        'European Free Trade Association': 16,
-        'India': 17,
-        'Indonesia': 18,
-        'Japan': 19,
-        'Mexico': 20,
-        'Middle East': 21,
-        'Pakistan': 22,
-        'Russia': 23,
-        'South Africa': 24,
-        'South America_Northern': 25,
-        'South America_Southern': 26,
-        'South Asia': 27,
-        'South Korea': 28,
-        'Southeast Asia': 29,
-        'Taiwan': 30,
-        'Argentina': 31,
-        'Colombia': 32
-    }
-
 
 def usingSqlite():
     '''
@@ -798,30 +756,6 @@ class CoreDatabase(object):
             if not session:
                 self.endSession(sess)
 
-    def getRunsWithStatus(self, simId, expList, statusList):
-        # Allow expList and statusList to be a single string,
-        # which we convert to lists
-        if isinstance(expList, str):
-            expList = [expList]
-
-        if isinstance(statusList, str):
-            statusList = [statusList]
-
-        session = self.Session()
-        query = session.query(Run.trialNum).filter_by(simId=simId)
-
-        if expList:
-            query = query.join(Experiment).filter(Run.status.in_(statusList), Experiment.expName.in_(expList))
-
-        rslt = query.order_by(Run.trialNum).all()
-        self.endSession(session)
-
-        if rslt:
-            rslt = [r[0] for r in rslt] # collapse list of singleton tuples into a single list
-
-        #_logger.debug("for simid=%d, expList=%s, status=%s, rslt=%s" % (simId, expList, status, rslt))
-        return rslt
-
     def getRunsByStatus(self, simId, scenario, statusList, groupName=None, projectName=None):
         '''
         By default, returns tuples of (runId, trialNum) for the given scenario that have
@@ -993,12 +927,6 @@ class GcamDatabase(CoreDatabase):
         self.outputIds = None                # output IDs by name
         self.canonicalRegionMap = {}
 
-        if pygcam_version < (2, 0, 0):
-            # Cache these to avoid database access in saveResults loop
-            for regionName, regionId in RegionMap.items():
-                canonName = canonicalizeRegion(regionName)
-                self.canonicalRegionMap[canonName] = regionId
-
     @classmethod
     def getDatabase(cls, checkInit=True):
         if cls.instance is None:
@@ -1022,8 +950,6 @@ class GcamDatabase(CoreDatabase):
 
         if args and args.empty:
             return
-
-        #self.addRegions(RegionMap)
 
     def startDb(self, checkInit=True):
         super().startDb(checkInit=checkInit)
@@ -1158,12 +1084,6 @@ class GcamDatabase(CoreDatabase):
 
             self._yearColsAdded = True
 
-    # Deprecated: used only when pygcam_version < (2, 0, 0)
-    def getRegionId(self, name):
-        canonName = canonicalizeRegion(name)
-        regionId = self.canonicalRegionMap[canonName]
-        return regionId
-
     def getParamId(self, pname):
         return self.paramIds[pname]
 
@@ -1261,10 +1181,7 @@ class GcamDatabase(CoreDatabase):
 
         outputId = row.outputId
 
-        if pygcam_version < (2, 0, 0):
-            ts = TimeSeries(runId=runId, outputId=outputId, regionId=region, units=units)
-        else:
-            ts = TimeSeries(runId=runId, outputId=outputId, region=region, units=units)
+        ts = TimeSeries(runId=runId, outputId=outputId, region=region, units=units)
 
         for name, value in values.items():  # Set the values for "year" columns
             setattr(ts, name, value)

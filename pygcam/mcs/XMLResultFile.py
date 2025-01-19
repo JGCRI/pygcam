@@ -345,7 +345,8 @@ def extractResult(context, scenario, outputDef, type):
     active = activeYears()
     if isScalar:
         if outputDef.cumulative:
-            total = selected[active].sum(axis=1)
+            # total = selected[active].sum(axis=1)
+            total = selected.sum(numeric_only=True, axis='columns')
             value = float(total.sum() if isinstance(total, pd.Series) else total)
         else:
             colName = outputDef.columnName()
@@ -420,8 +421,7 @@ def saveResults(context, resultList):
             else:
                 regionName = resultDict['regionName']
                 units = resultDict['units']
-                region = regionName if pygcam_version >= (2, 0, 0) else db.getRegionId(regionName)
-                db.saveTimeSeries(runId, region, paramName, value, units=units, session=session)
+                db.saveTimeSeries(runId, regionName, paramName, value, units=units, session=session)
 
         except Exception as e:
             session.rollback()
