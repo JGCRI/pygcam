@@ -118,8 +118,8 @@ def _wrapperFilter(line):
     Default filter for GCAM wrapper. Return True if process should be terminated.
 
     :param line: (str) a single line of text emitted by GCAM to stdout.
-    :return: (GcamError or None): If not None, caller raises the given error
-        and terminates the GCAM process.
+    :return: (GcamError, GcamSolverError or None): If not None, caller raises the
+        given error and terminates the GCAM process.
     """
     modelDidNotSolve = 'Model did not solve'
     pattern = re.compile(f'(.*(BaseXException|({modelDidNotSolve})).*)')
@@ -129,9 +129,9 @@ def _wrapperFilter(line):
     if match:
         msg = 'GCAM error: ' + match.group(0)
         if match.group(2) == modelDidNotSolve:
-            raise GcamSolverError(msg)
+            return GcamSolverError(msg)
         else:
-            raise GcamError(msg)
+            return GcamError(msg)
 
 def _loadWrapperFilter(spec):
     """
