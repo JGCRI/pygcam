@@ -122,13 +122,13 @@ def _wrapperFilter(line):
         and terminates the GCAM process.
     """
     modelDidNotSolve = 'Model did not solve'
-    pattern = re.compile(f'(.*(BaseXException|{modelDidNotSolve}).*)')
+    pattern = re.compile(f'(.*(BaseXException|({modelDidNotSolve})).*)')
 
     match = re.search(pattern, line)
 
     if match:
         msg = 'GCAM error: ' + match.group(0)
-        if match.group(1) == modelDidNotSolve:
+        if match.group(2) == modelDidNotSolve:
             raise GcamSolverError(msg)
         else:
             raise GcamError(msg)
