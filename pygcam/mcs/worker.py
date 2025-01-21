@@ -107,12 +107,12 @@ def _runGcamTool(mapper, noSetup=False, noGCAM=False,
     baselineName = context.baseline
     isBaseline = not baselineName
 
-    trial_cfg = mapper.get_config_version(FileVersions.TRIAL_XML)
-    deleteFile(trial_cfg)
-
     if noSetup:
         _logger.info('_runGcamTool: skipping setup steps')
     else:
+        trial_cfg = mapper.get_config_version(FileVersions.TRIAL_XML)
+        deleteFile(trial_cfg)
+
         # Run setup steps before applying trial data
         setup_steps = getParam('MCS.SetupSteps')
         skip_steps  = getParam('MCS.SetupSkipSteps') or None
@@ -376,6 +376,7 @@ def runTrial(context, argDict):
 
     worker = Worker(context, argDict)
     result = worker.runTrial()
+    _logger.debug(f"Worker returning result for {context.trialNum}")
     return result
 
 
