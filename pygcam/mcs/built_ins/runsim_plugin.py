@@ -90,7 +90,7 @@ class RunSimCommand(McsSubcommandABC):
                             --noBatchQueries --noPostProcessor --runLocal. Useful if runs have 
                             actually succeeded but results have not been saved to the SQLite DB.'''))
 
-        parser.add_argument('-D', '--noDatabase', dest='updateDatabase', action='store_false',
+        parser.add_argument('-D', '--noDatabase', action='store_true',
                             help=clean_help('''Don't save query results to the SQL database.'''))
 
         parser.add_argument('-e', '--maxEngines', type=int, default=defaultMaxEngines,

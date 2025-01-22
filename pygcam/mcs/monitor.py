@@ -467,6 +467,8 @@ class Monitor(object):
             listTrialsToRedo(self.db, args.simId, args.scenarios, args.statuses)
             return
 
+        noDatabase = args.noDatabase
+
         self.waitForWorkers()    # wait for engines to spin up
 
         shutdownWhenIdle = not args.dontShutdownWhenIdle
@@ -504,7 +506,8 @@ class Monitor(object):
 
                 results = self.getResults(finished)
                 if results:
-                    self.saveResults(results)
+                    if not noDatabase:
+                        self.saveResults(results)
                 else:
                     _logger.debug('Purging %d completed tasks with no results (engine died?)', len(finished))
                     self.client.purge_results(jobs=finished)
@@ -548,7 +551,7 @@ class Monitor(object):
 
         # Construct dict of args to pass to worker tasks
         argDict = {}
-        for key in ('runLocal', 'noGCAM', 'noBatchQueries', 'noPostProcessor'):
+        for key in ('runLocal','noSetup', 'noGCAM', 'noBatchQueries', 'noPostProcessor'):
             argDict[key] = args.get(key, False)
 
         simId       = args['simId']
@@ -558,6 +561,7 @@ class Monitor(object):
         groupName   = args['groupName']
         trialStr    = args['trials']
         runLocal    = args['runLocal']
+        noDatabase  = args['noDatabase']
 
         asyncResults = []
 
@@ -626,7 +630,8 @@ class Monitor(object):
                         self.setRunStatus(context, status=RUN_RUNNING)
                         ctx = copy.copy(context)    # use a copy to simulate what happens with remote call...
                         result = worker.runTrial(ctx, argDict)
-                        self.saveResults([result])
+                        if not noDatabase:
+                            self.saveResults([result])
 
                     else:
                         if isBaseline(scenario):

@@ -85,13 +85,17 @@ def applySingleTrialData(df, mapper, paramFile):
     XMLParameter.applyTrial(context.simId, trial_num, df)   # Update all stochastic parameters
     paramFile.writeLocalXmlFiles(mapper)                 # N.B. creates trial-xml subdir
 
-def _runGcamTool(mapper, noSetup=False, noGCAM=False,
-                 noBatchQueries=False, noPostProcessor=False):
+def _runGcamTool(mapper, argDict):
     '''
     Run GCAM in the current working directory and return exit status.
     '''
     context = mapper.context
     _logger.debug(f"_runGcamTool: {context}")
+
+    noSetup = argDict.get('noSetup', False)
+    noGCAM = argDict.get('noGCAM', False)
+    noBatchQueries = argDict.get('noBatchQueries', False)
+    noPostProcessor = argDict.get('noPostProcessor', False)
 
     # For running in an ipyparallel engine, forget instances from last run
     decache()
@@ -269,23 +273,13 @@ class Worker(object):
         context = self.context
         argDict = self.argDict
 
-        noSetup         = argDict.get('noSetup', False)
-        noGCAM          = argDict.get('noGCAM', False)
-        noBatchQueries  = argDict.get('noBatchQueries', False)
-        noPostProcessor = argDict.get('noPostProcessor', False)
-
         trialNum = context.trialNum
         errorMsg = None
 
         _logger.info(f'Running trial {trialNum}')
 
         try:
-            exitCode = _runGcamTool(self.mapper,
-                                    noSetup=noSetup,
-                                    noGCAM=noGCAM,
-                                    noBatchQueries=noBatchQueries,
-                                    noPostProcessor=noPostProcessor)
-
+            exitCode = _runGcamTool(self.mapper, self.argDict)
             status = RUN_SUCCEEDED if exitCode == 0 else RUN_FAILED
 
         except TimeoutSignalException:
@@ -378,15 +372,3 @@ def runTrial(context, argDict):
     result = worker.runTrial()
     _logger.debug(f"Worker returning result for {context.trialNum}")
     return result
-
-
-# if __name__ == '__main__':
-#     context = McsContext(runId=1001, simId=1, trialNum=2, scenario='baseline',
-#                       projectName='paper1', groupName='mcs', store=False)
-#
-#     argDict = {'runLocal': True,
-#                'noGCAM': False,
-#                'noBatchQueries': False,
-#                'noPostProcessor': False}
-#     result = runTrial(context, argDict)
-#     print(result)
