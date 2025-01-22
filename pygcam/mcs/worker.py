@@ -194,7 +194,7 @@ class WorkerResult(object):
                 if diffResults:
                     self.resultsList += diffResults
 
-            _logger.debug(f'Worker results saving {self.resultsList}')
+            _logger.info(f'Worker results: {self.resultsList}')
 
 
     def __str__(self):
