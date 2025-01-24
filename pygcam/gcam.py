@@ -252,6 +252,11 @@ def runGCAM(mapper : FileMapper, noRun=False, noWrapper=False):
     if platform.system() == 'Darwin':
         linkToMacJava()
 
+    # increase heap size for Java running from inside GCAM
+    java_args = getParam('GCAM.MI.JavaArgs')
+    if java_args:
+        os.environ['JAVA_OPTS'] = java_args
+
     sandbox_scenario_dir = mapper.sandbox_scenario_dir
 
     if not os.path.lexists(sandbox_scenario_dir):

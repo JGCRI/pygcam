@@ -35,30 +35,6 @@ def limitYears(df, years):
     df.drop(dropYears, axis=1, inplace=True)
     return df
 
-# TBD: simplify using this approach:
-
-def interp(df):
-    from numpy import nan
-
-    df = df.copy()
-    years = digitColumns(df, asInt=True)
-    all_years = range(years[0], years[-1] + 1)
-    interp_yrs = sorted(set(all_years) - set(years))
-
-    # create the annual cols and set values to NaN for interpolate()
-    for y in interp_yrs:
-        df[str(y)] = nan
-
-    df.sort_index(axis='columns', inplace=True)
-
-    year_cols = [str(col) for col in all_years]
-    interp_cols = [str(col) for col in interp_yrs]
-
-    new_df = df[year_cols].interpolate(axis=1)
-    df[interp_cols] = new_df[interp_cols]
-    return df
-
-
 def interpolateYears(df, startYear=0, inplace=False):
     """
     Interpolate linearly between each pair of years in the GCAM output. The
