@@ -4,6 +4,7 @@
 .. Copyright (c) 2016 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 '''
+from ..error import PygcamException
 from ..subcommand import SubcommandABC, clean_help
 
 DefaultProperties = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -46,9 +47,14 @@ class ModelInterfaceCommand(SubcommandABC):
 
         _logger = getLogger(__name__)
 
-        queryFile = getParam('GCAM.MI.QueryFile')
-        if args.useDefault or not os.path.lexists(queryFile):
-            queryFile = getParam('GCAM.MI.RefQueryFile')
+        if args.queryFile:
+            queryFile = args.queryFile
+        else:
+            queryFile = (getParam('GCAM.MI.RefQueryFile') if args.useDefault
+                         else  getParam('GCAM.MI.QueryFile'))
+
+        if not os.path.lexists(queryFile):
+            raise PygcamException(f"Query file '{queryFile}' does not exist")
 
         queryDir = getParam('GCAM.QueryDir')
 

@@ -7,7 +7,7 @@ import ipyparallel as ipp
 from ..config import (getConfig, getParam, setParam, getParamAsFloat,
                       getParamAsBoolean)
 from ..constants import FileVersions
-from ..error import GcamError, GcamSolverError
+from ..error import GcamError, GcamSolverError, FileMissingError
 from ..file_utils import deleteFile
 from ..log import getLogger, configureLogs
 from ..signals import catchSignals, TimeoutSignalException, UserInterruptException
@@ -302,6 +302,10 @@ class Worker(object):
             errorMsg = str(e)
             status = RUN_FAILED
 
+        except FileMissingError as e:
+            errorMsg = str(e)
+            status = RUN_FAILED
+
         except GcamSolverError as e:
             errorMsg = str(e)
             status = RUN_UNSOLVED
@@ -314,12 +318,12 @@ class Worker(object):
             errorMsg = str(e)
             status = RUN_ABORTED     # run-time error in loaded module
 
+        if errorMsg:
+            _logger.error(f"Trial status: {status}: {errorMsg}")
+
             if getParamAsBoolean('GCAM.ShowStackTrace'):
                 import traceback
                 traceback.print_exc()
-
-        if errorMsg:
-            _logger.error(f"Trial status: {status}: {errorMsg}")
         else:
             _logger.info(f'Trial status: {status}')
 
