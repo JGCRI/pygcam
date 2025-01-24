@@ -244,9 +244,14 @@ class QueryResult(object):
         the same as in the first row of data.
         '''
         _logger.debug("readCSV: reading %s", self.filename)
-        with open(self.filename) as f:
-            self.title  = f.readline().strip()
-            self.df = pd.read_table(f, sep=',', header=0, index_col=False, quoting=0)
+        try:
+            with open(self.filename) as f:
+                self.title  = f.readline().strip()
+                self.df = pd.read_table(f, sep=',', header=0, index_col=False, quoting=0)
+
+        except FileNotFoundError as e:
+            _logger.warning(f'readCSV: Query result file not found: {e}')
+            raise FileMissingError(self.filename)
 
         df = self.df
 
@@ -277,14 +282,9 @@ outputCache = defaultdict(lambda: None)
 def getCachedFile(csvPath):
     result = outputCache[csvPath]
     if not result:
-        try:
-            outputCache[csvPath] = result = QueryResult(csvPath)
-        except Exception as e:
-            _logger.warning(f'getCachedFile: Failed to read query result: {e}')
-            raise FileMissingError(csvPath)
+        outputCache[csvPath] = result = QueryResult(csvPath)
 
     return result
-
 
 def extractResult(context, scenario, outputDef, type):
     from .util import activeYears, YEAR_COL_PREFIX
