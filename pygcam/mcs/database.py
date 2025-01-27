@@ -1206,10 +1206,11 @@ class GcamDatabase(CoreDatabase):
 
         with self.sessionScope() as session:
             query = session.query(TimeSeries, Experiment.expName).options(load_only(*cols)). \
-                join(Run).filter_by(simId=simId).filter_by(status='succeeded'). \
-                join(Experiment).filter(Experiment.expName.in_(expList)). \
-                join(Output).filter_by(name=paramName)
-
+                join(Run, TimeSeries.runId == Run.runId). \
+                filter_by(simId=simId).filter_by(status='succeeded'). \
+                join(Experiment, Experiment.expId == Run.expId). \
+                filter(Experiment.expName.in_(expList)). \
+                join(Output, Output.outputId == TimeSeries.outputId).filter_by(name=paramName)
             rslt = query.all()
             return rslt
 
