@@ -17,7 +17,7 @@ from .analysis import printExtraText
 
 # TBD: Generalize this when integrating into pygcam
 def plotForcingSubplots(tsdata, filename=None, ci=95, cum_rf=False, show_figure=False, save_fig_kwargs=None):
-    sns.set()
+    sns.set_theme(style='darkgrid')
     sns.set_context('paper')
     expList = tsdata['expName'].unique()
 
@@ -26,8 +26,6 @@ def plotForcingSubplots(tsdata, filename=None, ci=95, cum_rf=False, show_figure=
     width  = 2.5 * ncols
     height = 2.5
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharey=True, figsize=(width, height))
-
-    # sns.lineplot()
 
     def dataForExp(expName):
         df = tsdata.query("expName == '%s'" % expName).copy()
@@ -199,6 +197,8 @@ def plotTimeSeries(datasets, timeCol, unit, valueCol='value', estimator=np.mean,
 
     elif ylim is not None:
         ax.set_ylim(ylim[0], ylim[1])
+
+    plt.tight_layout()
 
     # Save the file
     if filename:
