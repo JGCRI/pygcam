@@ -5,7 +5,7 @@ import os
 from pygcam.config import getParam, pathjoin, mkdirs
 from pygcam.error import PygcamException
 from pygcam.log import getLogger
-from pygcam.query import readCsv
+from pygcam.query import readCsv, dropExtraCols
 
 _logger = getLogger(__name__)
 
@@ -148,9 +148,11 @@ class PluginCommon(object):
     def readQueryResult(self, queryName, **kwargs):
         '''
         Read a single query result and return a DF holding the results.
+        Drop 'Unnamed: *' columns.
         '''
         path = self.queryPathname(queryName)
         df = readCsv(path, **kwargs)
+        dropExtraCols(df)
         return df
 
     def readQueryResults(self, **kwargs):
