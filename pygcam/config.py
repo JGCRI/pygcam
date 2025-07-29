@@ -239,7 +239,7 @@ def setUsingMCS(value):
 def usingMCS():
     """
     Check if the user environment is configured to use pygcam.mcs, which requires
-    that the file ~/.use_pycam_mcs exists. This lets gcamtool know whether to load
+    that the file ~/.use_pygcam_mcs exists. This lets gcamtool know whether to load
     the corresponding built-in sub-commands.
 
     :return: (bool) True if user environment indicates to use pygcam-mcs.

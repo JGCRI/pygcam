@@ -47,7 +47,7 @@ class ConfigCommand(SubcommandABC):
 
         requiredDirs = ['SandboxRoot', 'ProjectRoot', 'ProjectDir',
                         'QueryDir', 'MI.Dir', 'RefWorkspace', 'TempDir']
-        requiredFiles = ['ProjectXmlFile', 'RefConfigFile', 'MI.JarFile']
+        requiredFiles = ['ProjectFile', 'RefConfigFile', 'MI.JarFile']
         optionalDirs  = ['UserTempDir']
         optionalFiles = ['RegionMapFile', 'RewriteSetsFile']
 
