@@ -235,9 +235,10 @@ class Worker(object):
         """
         from ..utils import random_sleep
 
-        max_sleep = getParamAsFloat('MCS.MaxRandomSleep')
-        if max_sleep > 0:
-            random_sleep(0, max_sleep)     # try to avoid all trials accessing the same file at once
+        if not self.runLocal:
+            max_sleep = getParamAsFloat('MCS.MaxRandomSleep')
+            if max_sleep > 0:
+                random_sleep(0, max_sleep)     # try to avoid all trials accessing the same file at once
 
         exe_dir = self.mapper.sandbox_exe_dir
         _logger.info(f"exe_dir is {exe_dir}")

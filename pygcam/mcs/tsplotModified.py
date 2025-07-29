@@ -199,7 +199,7 @@ def tsplot(data, time=None, unit=None, condition=None, value=None,
     # Do a groupby with condition and plot each trace
     for c, (cond, df_c) in enumerate(data.groupby(condition, sort=False)):
 
-        df_c = df_c.pivot(unit, time, value)
+        df_c = df_c.pivot(index=unit, columns=time, values=value)
         x = df_c.columns.values.astype(np.float)
         # Bootstrap the data for confidence intervals
         #boot_data = algo.bootstrap(df_c.values, n_boot=n_boot,

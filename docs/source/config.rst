@@ -347,7 +347,7 @@ Console / file logs and message formatting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Note that the module name is shown in the console log messages. Setting
 ``GCAM.LogLevel`` to DEBUG produces the maximum number of log messages;
-setting it to FATAL minimizes message verbocity.
+setting it to FATAL minimizes message verbosity.
 
 Other relevant variables are shown here with their default values:
 

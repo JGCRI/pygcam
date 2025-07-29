@@ -199,7 +199,7 @@ def dropExtraCols(df, inplace=True):
     """
     columns = df.columns
     # eliminate any extra (empty) columns that appear to be query artifacts
-    dropCols = list(filter(lambda s: s.startswith('Unnamed:'), columns))
+    dropCols = [c for c in columns if c.startswith('Unnamed:')]
 
     param = 'GCAM.ColumnsToDrop'
     colString = getParam(param)

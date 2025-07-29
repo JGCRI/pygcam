@@ -551,7 +551,9 @@ def exportResults(simId, resultList, expList, exportFile, sep=','):
             # resultDf has 'trialNum' as index, 'value' holds float value
             resultDf = db.getOutValues(simId, expName, resultName)
             if resultDf is None:
-                raise PygcamMcsUserError(f'No results were found for sim {simId}, experiment {expName}, result {resultName}')
+                _logger.debug(f'No results were found for sim {simId}, experiment {expName}, result {resultName}')
+                continue
+                # raise PygcamMcsUserError(f'No results were found for sim {simId}, experiment {expName}, result {resultName}')
 
             # Add columns needed for boxplots
             resultDf['expName'] = expName
